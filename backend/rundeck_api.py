@@ -1,13 +1,7 @@
 """SPHERE Rundeck API entrypoint with service-availability enrichment."""
 from __future__ import annotations
 
-import os
-
 from fastapi import HTTPException, Query
-
-# DEV exposes Collect Now by default. The runner still refuses execution unless
-# its dedicated credential and fixed server-side job identity are available.
-os.environ.setdefault("RUNDECK_COLLECT_NOW_ENABLED", "true")
 
 from backend import rundeck_api_core as _core
 from backend.rundeck_availability import availability_history, latest_availability
