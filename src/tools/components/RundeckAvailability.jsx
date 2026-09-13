@@ -142,11 +142,11 @@ export default function RundeckAvailability({ refreshToken = '' }) {
     ? `Fresh collection · Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · source gap ${skew}s` : ''}`
     : ''
   const collectionNotice = bundleState === 'RUNNING'
-    ? 'Collecting fresh performance + availability data…'
+    ? 'Refreshing…'
     : bundleState === 'PARTIAL'
-      ? 'Last fresh collection completed with one source incomplete'
+      ? 'Last refresh incomplete'
       : bundleState === 'FAILED'
-        ? 'Last fresh collection failed'
+        ? 'Last refresh failed'
         : ''
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
