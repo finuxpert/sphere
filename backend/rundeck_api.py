@@ -1,10 +1,10 @@
 """SPHERE Rundeck API entrypoint with service-availability enrichment."""
 from __future__ import annotations
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 
 from backend import rundeck_api_core as _core
-from backend.rundeck_availability import latest_availability
+from backend.rundeck_availability import availability_history, latest_availability
 
 app = _core.app
 
@@ -16,7 +16,6 @@ app = _core.app
 
 @app.get("/availability/latest")
 def availability_latest():
-    """Return the latest parsed Service Availability report from Rundeck."""
     try:
         return latest_availability()
     except RuntimeError as error:
@@ -25,6 +24,20 @@ def availability_latest():
         raise HTTPException(503, f"Service availability unavailable: {type(error).__name__}") from None
 
 
+@app.get("/availability/history")
+def availability_history_endpoint(
+    range_key: str = Query("24h", alias="range"),
+    category: str = Query("SAP_APP"),
+):
+    try:
+        return availability_history(range_key=range_key, category=category)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Service availability history unavailable: {type(error).__name__}") from None
+
+
 def __getattr__(name):
-    """Keep compatibility for tests/importers that reference helpers from the old module."""
     return getattr(_core, name)
