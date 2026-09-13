@@ -1,4 +1,152 @@
-/* v1.20.6 availability presentation polish */
-.rundeckAvailabilityBody { display: grid; grid-template-columns: 1fr; gap: 7px; }
-.rundeckAvailabilityGroup { display: grid; grid-template-columns: 86px minmax(0,1fr); gap: 10px; }
-.rundeckAvailabilityMore > summary { font-weight: 650; }
+/* v1.20.6 final UI micro polish: availability hierarchy, density, and top-band alignment. */
+
+.rundeckAvailabilityBody {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+  margin-top: 8px !important;
+}
+
+.rundeckAvailabilityGroup {
+  display: grid !important;
+  grid-template-columns: 92px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.rundeckAvailabilityLabel {
+  font-size: 8.4px !important;
+  letter-spacing: .055em !important;
+}
+
+.rundeckAvailabilityApps,
+.rundeckAvailabilityInfra {
+  gap: 5px 12px !important;
+}
+
+.rundeckAvailabilityApps > span,
+.rundeckAvailabilityInfra > span {
+  font-size: 9.4px !important;
+}
+
+.rundeckAvailabilityHead > div > span,
+.rundeckMonitoringHead small,
+.rundeckServerSection small,
+.rundeckLandscapeMeta,
+.rundeckAvailabilityMuted {
+  font-size: 9px !important;
+}
+
+.rundeckAvailabilityMore {
+  margin-top: 7px !important;
+}
+
+.rundeckAvailabilityMore > summary {
+  font-size: 0 !important;
+  font-weight: 650 !important;
+}
+
+.rundeckAvailabilityMore > summary::before {
+  font-size: 8.8px !important;
+}
+
+.rundeckAvailabilityMore > summary::after {
+  content: 'More technical checks';
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8.8px;
+}
+
+.rundeckAvailabilityMoreBody {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+  margin-top: 7px !important;
+  padding-top: 7px !important;
+}
+
+.rundeckAvailabilityMoreBody > div {
+  display: grid !important;
+  grid-template-columns: 120px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: start !important;
+}
+
+/* Final density pass. */
+.rundeckLandscapeHeader {
+  padding-bottom: 8px !important;
+}
+
+.rundeckIncident.is-lean {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.rundeckJobExecutionHistory {
+  margin-top: 14px !important;
+}
+
+.rundeckEvaluationSummary.is-lean {
+  gap: 6px !important;
+}
+
+.rundeckHistoryTableWrap,
+.rundeckPlatformTableWrap {
+  max-height: 205px !important;
+}
+
+@media (min-width: 1181px) {
+  /* Keep the current-state and historical headers visually paired. */
+  .appShell:has(.rundeckPanel) .rundeckServerSection,
+  .appShell:has(.rundeckPanel) .rundeckMonitoringHead {
+    padding-top: 0 !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckServerSection {
+    margin-top: 12px !important;
+  }
+
+  /* The monitoring component is rendered after availability in DOM order.
+     Lift only the trend band visually so its header starts with SAP App Servers;
+     later workload/detail bands keep their own flow positions. */
+  .appShell:has(.rundeckPanel) .rundeckMonitoringHead,
+  .appShell:has(.rundeckPanel) .rundeckTrendToolbar,
+  .appShell:has(.rundeckPanel) .rundeckAdvancedControls,
+  .appShell:has(.rundeckPanel) .rundeckTrendChart,
+  .appShell:has(.rundeckPanel) .rundeckHistoryState,
+  .appShell:has(.rundeckPanel) .rundeckRcaHint {
+    transform: translateY(-154px);
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoringHead {
+    margin-top: 12px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailability {
+    padding-top: 9px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
+    padding-top: 9px !important;
+    padding-bottom: 10px !important;
+  }
+}
+
+@media (min-width: 1181px) and (max-width: 1440px) {
+  .appShell:has(.rundeckPanel) .rundeckMonitoringHead,
+  .appShell:has(.rundeckPanel) .rundeckTrendToolbar,
+  .appShell:has(.rundeckPanel) .rundeckAdvancedControls,
+  .appShell:has(.rundeckPanel) .rundeckTrendChart,
+  .appShell:has(.rundeckPanel) .rundeckHistoryState,
+  .appShell:has(.rundeckPanel) .rundeckRcaHint {
+    transform: translateY(-148px);
+  }
+}
+
+@media (max-width: 1180px) {
+  .rundeckAvailabilityGroup,
+  .rundeckAvailabilityMoreBody > div {
+    grid-template-columns: 1fr !important;
+    gap: 4px !important;
+  }
+}
