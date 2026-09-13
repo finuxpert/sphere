@@ -13,6 +13,7 @@ app = _core.app
 # rundeck_api_core.py; these markers keep the v1.20.3 contract checker stable.
 # 30m|1h|3h|6h|24h|7d|30d|90d
 # period: str = Query("1d"
+# DEV service owns RUNDECK_COLLECT_NOW_ENABLED=true; intentionally no runtime setdefault here.
 
 
 @app.get("/availability/latest")
