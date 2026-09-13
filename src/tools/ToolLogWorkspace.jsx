@@ -16,12 +16,13 @@ import './components/RundeckUiFreezeV1207.css'
 import './components/RundeckFreshCollectionIdentityV122.css'
 import './components/RundeckOperationalUxV1221.css'
 import './components/RundeckOperatorDensityV1222.css'
+import './components/RundeckLayoutClosureV1223.css'
 
 const LogAutoSphereV5 = React.lazy(() => import('./ToolLogAutoSphereV5.jsx'))
 
 export default function ToolLogWorkspace() {
   return (
-    <React.Suspense fallback={<section className="container section"><div className="card">Loading deterministic LOG analysis v1.14…</div></section>}>
+    <React.Suspense fallback={<section className="container section"><div className="card">Loading SPHERE…</div></section>}>
       <LogAutoSphereV5 />
     </React.Suspense>
   )
