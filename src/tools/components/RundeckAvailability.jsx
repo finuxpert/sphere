@@ -13,6 +13,11 @@ function roleMap(rows = []) {
   return Object.fromEntries(rows.map((row) => [row.name, row]))
 }
 
+function ServiceList({ rows = [], fallback = 'No data' }) {
+  if (!rows.length) return <span className="rundeckAvailabilityMuted">{fallback}</span>
+  return rows.map((row) => <span key={`${row.category}-${row.name}`} title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><b>{row.name}</b><Status value={row.status} /></span>)
+}
+
 export default function RundeckAvailability({ refreshToken = '' }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
@@ -56,33 +61,52 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const hana = roleMap(data?.hana_system_db || [])
   const web = roleMap(data?.web_dispatcher || [])
   const appDown = data?.summary?.sap_app_down || []
+  const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
 
-  return <section className={`rundeckAvailability ${appDown.length ? 'has-down' : ''}`} aria-label="SAP service availability">
+  return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
       <div>
         <h3><SphereIcon name="server" /> SAP Availability</h3>
-        <span title="Availability is read from the existing Rundeck Service Availability job. Resource usage is supporting evidence only.">
-          Rundeck service check{data?.execution_id ? ` · Run #${data.execution_id}` : ''}
+        <span title="Current snapshot from the existing Rundeck Service Availability job. Resource usage is supporting evidence only.">
+          Current service check{data?.execution_id ? ` · Run #${data.execution_id}` : ''}
           {data?.collected_at ? ` · ${formatWib(data.collected_at, true)} WIB` : ''}
         </span>
       </div>
-      <Status value={data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')} />
+      <Status value={serviceState} />
     </div>
 
     {error && !data && <div className="rundeckAvailabilityError">Service Availability data unavailable. Existing performance monitoring remains active.</div>}
 
-    {data && <div className="rundeckAvailabilityBody">
-      <div className="rundeckAvailabilityApps" aria-label="SAP application server availability">
-        {apps.map((row) => <span key={row.name} title={`${row.endpoint} · ${row.description}`}><b>{row.name}</b><Status value={row.status} /></span>)}
-        {!apps.length && <span><b>APP</b><Status value="UNKNOWN" /></span>}
+    {data && <>
+      <div className="rundeckAvailabilityBody">
+        <div className="rundeckAvailabilityGroup" aria-label="SAP application server availability">
+          <span className="rundeckAvailabilityLabel">SAP App</span>
+          <div className="rundeckAvailabilityApps"><ServiceList rows={apps} /></div>
+        </div>
+        <div className="rundeckAvailabilityGroup" aria-label="HANA availability">
+          <span className="rundeckAvailabilityLabel">HANA</span>
+          <div className="rundeckAvailabilityInfra">
+            <span>Primary <Status value={hana.PRIMARY?.status || 'UNKNOWN'} /></span>
+            <span>Secondary <Status value={hana.SECONDARY?.status || 'UNKNOWN'} /></span>
+            <span>DR <Status value={hana.DR?.status || 'UNKNOWN'} /></span>
+          </div>
+        </div>
+        <div className="rundeckAvailabilityGroup" aria-label="Web Dispatcher availability">
+          <span className="rundeckAvailabilityLabel">Web</span>
+          <div className="rundeckAvailabilityInfra">
+            <span>HTTP <Status value={web.HTTP?.status || 'UNKNOWN'} /></span>
+            <span>HTTPS <Status value={web.HTTPS?.status || 'UNKNOWN'} /></span>
+          </div>
+        </div>
       </div>
-      <div className="rundeckAvailabilityInfra" aria-label="Supporting SAP infrastructure availability">
-        <span>HANA Primary <Status value={hana.PRIMARY?.status || 'UNKNOWN'} /></span>
-        <span>Secondary <Status value={hana.SECONDARY?.status || 'UNKNOWN'} /></span>
-        <span>DR <Status value={hana.DR?.status || 'UNKNOWN'} /></span>
-        <span>Web HTTP <Status value={web.HTTP?.status || 'UNKNOWN'} /></span>
-        <span>HTTPS <Status value={web.HTTPS?.status || 'UNKNOWN'} /></span>
-      </div>
-    </div>}
+
+      <details className="rundeckAvailabilityMore">
+        <summary>More</summary>
+        <div className="rundeckAvailabilityMoreBody">
+          <div><span className="rundeckAvailabilityLabel">HANA Replication</span><div className="rundeckAvailabilityInfra"><ServiceList rows={data.hana_replication || []} /></div></div>
+          <div><span className="rundeckAvailabilityLabel">SSH Reachability</span><div className="rundeckAvailabilityInfra"><ServiceList rows={data.ssh || []} /></div></div>
+        </div>
+      </details>
+    </>}
   </section>
 }
