@@ -1,85 +1,193 @@
 /* Compact investigation workspace for the automatic Rundeck view.
-   Keep the workload list and selected workload history visible side by side on desktop. */
+   Desktop layout follows the SAP Basis investigation flow:
+   current APP state beside server trend, workload list beside selected workload,
+   SAP issues beside historical evaluation, and supporting platform data side by side. */
 
-.appShell:has(.rundeckPanel) .rundeckMonitoring {
-  display: grid;
-  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
-  grid-auto-flow: row dense;
-  column-gap: 18px;
-  align-items: start;
-}
+@media (min-width: 1181px) {
+  .appShell:has(.rundeckPanel) .rundeckPanel {
+    display: grid;
+    grid-template-columns: repeat(20, minmax(0, 1fr));
+    column-gap: 18px;
+    align-items: start;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckMonitoring > * {
-  grid-column: 1 / -1;
-  min-width: 0;
-}
+  .appShell:has(.rundeckPanel) .rundeckPanel > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckCurrentWorkload {
-  grid-column: 1;
-  margin-top: 10px;
-  padding-top: 8px;
-  padding-right: 14px;
-  border-right: 1px solid rgba(113, 128, 137, .12);
-}
+  .appShell:has(.rundeckPanel) .rundeckPanel > .rundeckMonitoring {
+    display: contents;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckJobHistory {
-  grid-column: 2;
-  margin-top: 10px;
-  padding-top: 8px;
-}
+  .appShell:has(.rundeckPanel) .rundeckPanel > .rundeckServerSection {
+    grid-column: 1 / 8;
+    grid-row: span 4;
+    align-self: stretch;
+    margin-top: 12px;
+    padding-right: 14px;
+    border-right: 1px solid rgba(113, 128, 137, .12);
+  }
 
-.appShell:has(.rundeckPanel) .rundeckMonitoring:not(:has(> .rundeckJobHistory)) > .rundeckCurrentWorkload {
-  grid-column: 1 / -1;
-  padding-right: 0;
-  border-right: 0;
-}
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckMonitoringHead,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckTrendToolbar,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckAdvancedControls,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckTrendChart,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckHistoryState {
+    grid-column: 8 / -1;
+    min-width: 0;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap {
-  max-height: 360px;
-}
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckMonitoringHead {
+    margin-top: 12px;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckJobHistoryHead > div > span {
-  font-size: 0;
-}
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckTrendChart {
+    height: 238px;
+    min-height: 225px;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckJobHistoryHead > div > span::after {
-  content: 'Selected Workload and Job';
-  color: var(--sphere-text-muted, #718089);
-  font-size: var(--sphere-font-micro, 8.5px);
-  font-weight: 800;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckRcaHint,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckRcaSection {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckJobHistoryOverview {
-  gap: 10px;
-}
+  .appShell:has(.rundeckPanel) .rundeckRcaSection {
+    margin-top: 7px;
+    padding: 7px 0 5px;
+    border-top: 1px solid rgba(113, 128, 137, .08);
+    border-bottom: 1px solid rgba(113, 128, 137, .08);
+  }
 
-.appShell:has(.rundeckPanel) .rundeckJobHistorySummary {
-  gap: 5px 10px;
-}
+  .appShell:has(.rundeckPanel) .rundeckRcaMetricStrip {
+    margin-top: 2px;
+    padding: 2px 0;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckJobTimeline {
-  margin-top: 6px;
-}
+  .appShell:has(.rundeckPanel) .rundeckRcaWorkload {
+    max-width: none;
+    padding: 2px 0 3px;
+  }
 
-.appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle {
-  margin-top: 8px;
-}
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckCurrentWorkload {
+    grid-column: 1 / 10;
+    min-width: 0;
+    margin-top: 10px;
+    padding-top: 8px;
+    padding-right: 14px;
+    border-right: 1px solid rgba(113, 128, 137, .12);
+  }
 
-.appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
-  margin-top: 6px;
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckJobHistory {
+    grid-column: 10 / -1;
+    min-width: 0;
+    margin-top: 10px;
+    padding-top: 8px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring:not(:has(> .rundeckJobHistory)) > .rundeckCurrentWorkload {
+    grid-column: 1 / -1;
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap {
+    max-height: 360px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryHead > div > span {
+    font-size: 0;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryHead > div > span::after {
+    content: 'Selected Workload and Job';
+    color: var(--sphere-text-muted, #718089);
+    font-size: var(--sphere-font-micro, 8.5px);
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryOverview {
+    gap: 10px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobHistorySummary {
+    gap: 5px 10px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobTimeline {
+    margin-top: 6px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle {
+    margin-top: 8px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
+    margin-top: 6px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckSapIssues {
+    grid-column: 1 / 9;
+    min-width: 0;
+    margin-top: 14px;
+    padding-right: 14px;
+    border-right: 1px solid rgba(113, 128, 137, .12);
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckEvaluation {
+    grid-column: 9 / -1;
+    min-width: 0;
+    margin-top: 14px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSapIssues .rundeckMiniTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTableWrap {
+    max-height: 330px;
+    overflow: auto;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 18px;
+    align-items: start;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData > .rundeckSupportingTitle {
+    grid-column: 1 / -1;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData > .rundeckHistory {
+    grid-column: 1;
+    min-width: 0;
+    padding-right: 14px;
+    border-right: 1px solid rgba(113, 128, 137, .12);
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData > .rundeckPlatformHealth {
+    grid-column: 2;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 1180px) {
   .appShell:has(.rundeckPanel) .rundeckMonitoring {
-    grid-template-columns: 1fr;
+    display: block;
   }
 
+  .appShell:has(.rundeckPanel) .rundeckServerSection,
   .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckCurrentWorkload,
-  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckJobHistory {
-    grid-column: 1;
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckJobHistory,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckSapIssues,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckEvaluation {
     padding-right: 0;
     border-right: 0;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData {
+    display: block;
   }
 }
