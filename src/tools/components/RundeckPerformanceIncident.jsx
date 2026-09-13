@@ -5,7 +5,6 @@ import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js
 import './RundeckPerformanceIncident.css'
 
 const API = `${import.meta.env.BASE_URL}api`
-const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
 
 const formatTime = (value, date = false) => {
   if (!value) return '—'
@@ -72,21 +71,6 @@ function scrollToSelectedWorkload() {
     target?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
   }
   window.requestAnimationFrame(navigate)
-}
-
-function WorkloadFacts({ workload }) {
-  const details = workload?.details || {}
-  const pss = details.total_pss_gb ?? details.pss_gb
-  const processes = Number(details.process_count || 0)
-  const facts = [
-    ['CPU', metric(workload?.cpu_pct, '%')],
-    ['PSS', pss === null || pss === undefined ? '—' : metric(pss, ' GB')],
-    ['Processes', Number.isFinite(processes) && processes > 0 ? metric(processes) : '1'],
-  ]
-
-  return <dl className="rundeckIncidentFacts">
-    {facts.map(([label, value]) => <div key={label}><dt title={label === 'CPU' ? CPU_HINT : undefined}>{label}</dt><dd>{value}</dd></div>)}
-  </dl>
 }
 
 export default function RundeckPerformanceIncident({
@@ -182,24 +166,20 @@ export default function RundeckPerformanceIncident({
 
     <section className="rundeckIncidentWorkloadBlock is-current">
       <div className="rundeckIncidentWorkloadLead">
-        <span>Current Workload</span>
+        <span>Top Active Workload</span>
         {currentContext ? <button
           type="button"
           className={`rundeckIncidentJobButton ${selectedJob?.key === currentContext.key && selectedJob?.host === currentContext.host ? 'is-selected' : ''}`}
           onClick={() => selectAndInspect(currentContext)}
-          title="Open selected workload detail"
+          title="Open workload detail. This is an observed workload on the affected APP, not a direct root-cause mapping."
           aria-label={`Open workload detail for ${current.consumer_key}`}
-        >{current.consumer_key}</button> : <strong>No current workload found</strong>}
+        >{current.consumer_key}</button> : <strong>No active workload found</strong>}
       </div>
-      {current && <WorkloadFacts workload={current} />}
     </section>
 
     <div className="rundeckIncidentOpsLine" aria-label="Affected App Server state">
-      <span><b>OS Resource</b><StatusPill value={resourceState} /></span>
+      <span><b>OS</b><StatusPill value={resourceState} /></span>
       <span><b>SAP Workload</b><StatusPill value={workloadState} /></span>
-      <span><b>CPU</b>{metric(hostMetrics.cpu_pct, '%')}</span>
-      <span><b>Memory</b>{metric(hostMetrics.ram_pct, '%')}</span>
-      <span><b>I/O Wait</b>{metric(hostMetrics.io_wait_pct, '%')}</span>
     </div>
 
     <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive={summary.active} />
