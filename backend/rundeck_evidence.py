@@ -15,6 +15,7 @@ from backend.rundeck_job_history import sap_job_history
 
 MAX_SKEW_MINUTES = max(1, int(os.getenv("SPHERE_CORRELATION_MAX_SKEW_MIN", "20")))
 WORKLOAD_LOOKBACK_DAYS = max(1, min(90, int(os.getenv("SPHERE_EVIDENCE_WORKLOAD_LOOKBACK_DAYS", "90"))))
+WORKLOAD_GAP_MINUTES = max(5, int(os.getenv("SPHERE_EVIDENCE_WORKLOAD_GAP_MINUTES", "25")))
 DEFAULT_AVAILABILITY_RANGE = os.getenv("SPHERE_EVIDENCE_AVAILABILITY_RANGE", "7d")
 if DEFAULT_AVAILABILITY_RANGE not in RANGE_HOURS:
     DEFAULT_AVAILABILITY_RANGE = "7d"
@@ -48,7 +49,11 @@ def _iso(value):
 
 def source_alignment(source_times: dict, max_skew_minutes: int | None = None) -> dict:
     threshold = int(max_skew_minutes or MAX_SKEW_MINUTES)
-    available = {name: _dt(value) for name, value in source_times.items() if _dt(value)}
+    available = {}
+    for name, value in source_times.items():
+        parsed = _dt(value)
+        if parsed:
+            available[name] = parsed
     if not available:
         return {"state": "INSUFFICIENT DATA", "max_skew_minutes": None, "threshold_minutes": threshold, "sources": []}
     newest = max(available.values())
@@ -112,6 +117,27 @@ def availability_transition_events(snapshots: list[dict], since=None) -> list[di
     return events
 
 
+def _latest_episode(items: list[dict]) -> list[dict]:
+    ordered = sorted(
+        [row for row in items if _dt(row.get("collected_at"))],
+        key=lambda row: _dt(row.get("collected_at")),
+    )
+    if not ordered:
+        return []
+    episodes = []
+    current = []
+    for row in ordered:
+        stamp = _dt(row.get("collected_at"))
+        previous = _dt(current[-1].get("collected_at")) if current else None
+        if current and stamp and previous and stamp - previous > timedelta(minutes=WORKLOAD_GAP_MINUTES):
+            episodes.append(current)
+            current = []
+        current.append(row)
+    if current:
+        episodes.append(current)
+    return episodes[-1]
+
+
 def _num(value, digits=1):
     try:
         return f"{float(value):.{digits}f}"
@@ -131,14 +157,17 @@ def _workload(incident: dict, job: str | None, host: str | None, consumer_type: 
         history = sap_job_history(key, since, host=resolved_host, consumer_type=resolved_type, limit=1000)
     except RuntimeError:
         return {"consumer_key": key, "consumer_type": resolved_type, "host": resolved_host, "checks": 0, "first_seen": None, "last_seen": None, "items": []}
+    episode = _latest_episode(history.get("items") or [])
+    first_seen = _dt(episode[0].get("collected_at")) if episode else None
+    last_seen = _dt(episode[-1].get("collected_at")) if episode else None
     return {
         "consumer_key": key,
         "consumer_type": resolved_type or history.get("consumer_type"),
         "host": resolved_host,
-        "checks": int(history.get("checks") or 0),
-        "first_seen": _iso(history.get("first_seen")),
-        "last_seen": _iso(history.get("last_seen")),
-        "items": history.get("items") or [],
+        "checks": len(episode),
+        "first_seen": _iso(first_seen),
+        "last_seen": _iso(last_seen),
+        "items": list(reversed(episode)),
     }
 
 
@@ -186,7 +215,7 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
             "kind": "workload-first-seen",
             "state": "OBSERVED",
             "title": "Selected workload first observed",
-            "detail": f"{workload.get('consumer_key')} · {workload.get('checks')} retained checks on {workload.get('host') or 'SAP App'}.",
+            "detail": f"{workload.get('consumer_key')} · {workload.get('checks')} checks in the latest continuous observation episode on {workload.get('host') or 'SAP App'}.",
         })
     if workload and workload.get("items"):
         latest_row = workload["items"][0]
@@ -227,6 +256,8 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
             interpretation.append(f"The selected workload was already observed {minutes // 60}h {minutes % 60}m before the current issue window; this timing does not establish causation.")
     if alignment.get("state") == "LIMITED":
         interpretation.append(f"Cross-source timing exceeds the {alignment.get('threshold_minutes')} minute alignment threshold, so correlation conclusions are limited.")
+    elif alignment.get("state") == "INSUFFICIENT DATA":
+        interpretation.append("Cross-source alignment cannot be evaluated because fewer than two timestamped evidence sources are available.")
     interpretation.append("SPHERE correlates supporting evidence to narrow investigation; root cause still requires validation through SAP and infrastructure diagnostic tools.")
 
     return {
