@@ -19,6 +19,7 @@ const files = {
   evaluation: read('src/tools/components/RundeckPerformanceEvaluation.jsx'),
   backendAvailability: read('backend/rundeck_availability.py'),
   backendEvidence: read('backend/rundeck_evidence.py'),
+  backendConsumers: read('backend/rundeck_consumers.py'),
   backendRunner: read('backend/rundeck_runner.py'),
   source: read('src/tools/components/RundeckSource.jsx'),
 }
@@ -40,7 +41,9 @@ const checks = [
   ['primary issue names the workload as observational context', files.incident.includes('Top Active Workload') && files.incident.includes('not a direct root-cause mapping') && !files.incident.includes('function WorkloadFacts')],
   ['primary issue avoids repeating host CPU memory and IO values', files.incident.includes('<b>OS</b>') && files.incident.includes('<b>SAP Workload</b>') && !files.incident.includes('<b>Memory</b>') && !files.incident.includes('<b>I/O Wait</b>')],
   ['current workload hides freshness copy until stale and keeps identity in tooltip', files.workload.includes('STALE_MINUTES = 15') && files.workload.includes('showFreshness') && files.workload.includes("push('SAP User'") && files.workload.includes("push('Client'") && files.workload.includes("push('Transaction'")],
+  ['backend retains optional client transaction and report identity when supplied', files.backendConsumers.includes('"client": _first(representative') && files.backendConsumers.includes('"transaction": _first(representative') && files.backendConsumers.includes('"report": _first(representative')],
   ['availability consumes role-aware backend issue wording', files.availability.includes('summary?.issue_text') && files.availability.includes('technical_down_count') && !files.availability.includes('primary service')],
+  ['availability preserves DR operator casing', files.availability.includes("replace(/\\bDr\\b/g, 'DR')")],
   ['availability surfaces stale data and large source skew only when abnormal', files.availability.includes('STALE_MINUTES = 20') && files.availability.includes('skew >= 300') && files.availability.includes('Source gap')],
   ['availability backend separates service and technical failures', files.backendAvailability.includes('SERVICE_CATEGORIES') && files.backendAvailability.includes('TECHNICAL_CATEGORIES') && files.backendAvailability.includes('service_down_count') && files.backendAvailability.includes('technical_down_count') && files.backendAvailability.includes('issue_text')],
   ['availability history exposes explicit transitions without treating missing checks as down', files.backendAvailability.includes('availability_change_events') && files.backendAvailability.includes('"transitions": availability_change_events') && files.backendAvailability.includes('Missing checks are not treated as DOWN')],
