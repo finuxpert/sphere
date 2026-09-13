@@ -47,7 +47,7 @@ function AvailabilityPortal({ refreshToken = '' }) {
           slot.className = 'rundeckAvailabilitySlotV1231'
           monitoring.appendChild(slot)
         }
-        const anchor = monitoring.querySelector('.rundeckCurrentWorkload, .rundeckJobHistory, .rundeckSapIssues, .rundeckEvaluation')
+        const anchor = monitoring.querySelector('.rundeckRcaHint, .rundeckRcaSection, .rundeckCurrentWorkload, .rundeckJobHistory, .rundeckSapIssues, .rundeckEvaluation')
         if (anchor && slot.nextSibling !== anchor) monitoring.insertBefore(slot, anchor)
         if (!cancelled) setTarget(slot)
         if (anchor) return
