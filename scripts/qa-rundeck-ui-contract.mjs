@@ -22,6 +22,7 @@ const files = {
   v122Css: read('src/tools/components/RundeckFreshCollectionIdentityV122.css'),
   operationalUx: read('src/tools/components/RundeckOperationalUxV1221.css'),
   operatorDensity: read('src/tools/components/RundeckOperatorDensityV1222.css'),
+  layoutClosure: read('src/tools/components/RundeckLayoutClosureV1223.css'),
   evidenceUi: read('src/tools/components/RundeckEvidenceTimeline.jsx'),
   evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
   workspace: read('src/tools/ToolLogWorkspace.jsx'),
@@ -66,15 +67,18 @@ const uiFreezeIndex = files.workspace.indexOf("./components/RundeckUiFreezeV1207
 const v122Index = files.workspace.indexOf("./components/RundeckFreshCollectionIdentityV122.css")
 const operationalUxIndex = files.workspace.indexOf("./components/RundeckOperationalUxV1221.css")
 const operatorDensityIndex = files.workspace.indexOf("./components/RundeckOperatorDensityV1222.css")
+const layoutClosureIndex = files.workspace.indexOf("./components/RundeckLayoutClosureV1223.css")
 
 const checks = [
-  ['version is v1.22.2 with the operator density revision', files.version.includes("APP_VERSION = '1.22.2'") && files.version.includes("APP_PREVIOUS_VERSION = '1.22.1'") && files.version.includes("LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.1'") && files.version.includes("LOG_UI_REVISION = 'operator-density-v1.22.2'")],
+  ['version is v1.22.3 with the layout closure revision', files.version.includes("APP_VERSION = '1.22.3'") && files.version.includes("APP_PREVIOUS_VERSION = '1.22.2'") && files.version.includes("LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.1'") && files.version.includes("LOG_UI_REVISION = 'layout-closure-v1.22.3'")],
   ['v1.20 operational CSS remains loaded', files.app.includes("./app/rundeck-v120.css")],
   ['v1.20.6 availability polish remains loaded', files.workspace.includes("./components/RundeckAvailabilityPolishV1206.css")],
-  ['UI overrides remain ordered from freeze through v1.22.2 operator density', uiFreezeIndex > releaseCandidateIndex && v122Index > uiFreezeIndex && operationalUxIndex > v122Index && operatorDensityIndex > operationalUxIndex],
+  ['UI overrides remain ordered from freeze through v1.22.3 layout closure', uiFreezeIndex > releaseCandidateIndex && v122Index > uiFreezeIndex && operationalUxIndex > v122Index && operatorDensityIndex > operationalUxIndex && layoutClosureIndex > operatorDensityIndex],
   ['v1.22.1 UX quiets normal states and allocates practical 40/60 operator rails', files.operationalUx.includes('.rundeckServerTable .rundeckStatus.is-normal') && files.operationalUx.includes('--sphere-left-rail: calc(40% - 10px)') && files.operationalUx.includes('--sphere-right-rail: calc(60% - 10px)')],
   ['v1.22.2 raises scan readability and compresses the trend canvas', files.operatorDensity.includes('--sphere-font-body: 10.6px') && files.operatorDensity.includes('height: 136px !important') && files.operatorDensity.includes('.rundeckCurrentWorkloadName small')],
-  ['v1.22.2 collapses selected workload facts and hides redundant latest badge', files.operatorDensity.includes('.rundeckJobHistoryGroup') && files.operatorDensity.includes('display: contents !important') && files.operatorDensity.includes('.rundeckJobHistoryHead em.is-current') && files.operatorDensity.includes('display: none !important')],
+  ['v1.22.3 closes desktop rails into explicit console bands', files.layoutClosure.includes('display: grid !important') && files.layoutClosure.includes('grid-template-columns: minmax(0, 40fr) minmax(0, 60fr)') && files.layoutClosure.includes('.rundeckSapIssues') && files.layoutClosure.includes('grid-column: 1 / -1')],
+  ['v1.22.3 makes evaluation reason-only and unifies supporting footer', files.layoutClosure.includes('.rundeckEvaluationAssessment') && files.layoutClosure.includes('display: none !important') && files.layoutClosure.includes('.rundeckSupportingData') && files.layoutClosure.includes('grid-template-columns: repeat(2, minmax(0, 1fr))')],
+  ['v1.22.3 labels historical process count as an average', files.layoutClosure.includes("content: 'Avg Processes'")],
   ['production-safe report URL uses current origin and base', files.source.includes('window.location.origin') && files.source.includes('import.meta.env.BASE_URL')],
   ['PDF trend context follows selected metric instead of stale trend response', files.monitoring.includes('metricLabelForTrend') && files.monitoring.includes('selectedMetric') && files.monitoring.includes('onTrendContext={forwardTrendContext}')],
 
@@ -176,8 +180,8 @@ const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.22.2 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.22.3 contract check(s) failed.`)
   process.exit(1)
 }
 
-console.log('\nRundeck v1.22.2 contract checks passed.')
+console.log('\nRundeck v1.22.3 contract checks passed.')
