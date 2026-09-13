@@ -1,0 +1,280 @@
+/* Final density and responsive polish for the automatic Rundeck workspace.
+   Presentation-only overrides: no monitoring thresholds, API semantics, or evaluation logic. */
+
+.appShell:has(.rundeckPanel) .rundeckPanel {
+  --rundeck-major-gap: 14px;
+  --rundeck-minor-gap: 7px;
+}
+
+@media (min-width: 1181px) {
+  /* Summary: tighter vertical rhythm and complete current-status context. */
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean {
+    padding-top: 7px;
+    padding-bottom: 5px;
+    row-gap: 2px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean > .rundeckIncidentWorkloadBlock {
+    margin-top: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean > .rundeckIncidentHostContext {
+    align-self: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 16px;
+    padding-top: 7px;
+    padding-bottom: 5px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean > .rundeckIncidentHostContext .rundeckIncidentSapState {
+    display: inline-flex !important;
+  }
+
+  /* Current state on the left, historical trend on the right. */
+  .appShell:has(.rundeckPanel) .rundeckPanel > .rundeckServerSection {
+    margin-top: 9px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckPanel > .rundeckAvailability {
+    margin-top: 2px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityHead {
+    margin-bottom: 4px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityBody {
+    gap: 4px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityGroup {
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 7px;
+    min-height: 18px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityLabel {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityApps,
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityInfra {
+    gap: 4px 9px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityMore {
+    margin-top: 3px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckMonitoringHead {
+    margin-top: 9px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckTrendToolbar {
+    margin-top: 3px;
+    row-gap: 1px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckTrendChart {
+    height: 204px;
+    min-height: 194px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring:has(.rundeckTrendToolbar > .rundeckTrendGroup:first-child .rundeckSegmented button:nth-child(5).is-active) > .rundeckTrendChart {
+    height: 158px;
+    min-height: 150px;
+  }
+
+  /* Master-detail workload area: keep the approved proportions, only tighten spacing. */
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckCurrentWorkload,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckJobHistory {
+    margin-top: 7px;
+    padding-top: 6px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap {
+    max-height: 324px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryOverview {
+    gap: 6px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobTimeline,
+  .appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle,
+  .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
+    margin-top: 4px;
+  }
+
+  /* Active issues first: resolved lifecycle stays counted in the header but is hidden by default. */
+  .appShell:has(.rundeckPanel) .rundeckSapIssues .rundeckIncidentTable tbody tr:not(.is-active-incident):not(:only-child) {
+    display: none;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckSapIssues,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckEvaluation {
+    margin-top: 10px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSapIssues .rundeckMiniTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTableWrap {
+    max-height: 292px;
+  }
+
+  /* Historical evaluation: dense enough for desktop, without sacrificing readability. */
+  .appShell:has(.rundeckPanel) .rundeckEvaluationHead {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationControls {
+    margin-left: auto;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationQuality {
+    margin-top: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationSummary.is-lean {
+    gap: 6px;
+    margin-top: 5px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationSummary.is-lean > div {
+    min-height: 48px;
+    padding: 6px 8px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationSortBar {
+    margin-top: 5px;
+    margin-bottom: 3px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTable th,
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTable td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  /* Supporting data is secondary information: compact when closed, balanced when opened. */
+  .appShell:has(.rundeckPanel) .rundeckSupportingData {
+    margin-top: 9px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData > .rundeckSupportingTitle {
+    margin-bottom: 3px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData > details {
+    min-height: 30px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData > details:not([open]) {
+    padding-bottom: 4px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingData > details summary {
+    min-height: 18px;
+    align-items: center;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckHistoryTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckPlatformTableWrap {
+    max-height: 260px;
+    overflow: auto;
+  }
+}
+
+/* Laptop: retain the master-detail concept but reduce oversized gaps. */
+@media (min-width: 1181px) and (max-width: 1440px) {
+  .appShell:has(.rundeckPanel) .rundeckPanel {
+    column-gap: 14px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckPanel > .rundeckServerSection,
+  .appShell:has(.rundeckPanel) .rundeckPanel > .rundeckAvailability {
+    padding-right: 10px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckCurrentWorkload,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring > .rundeckSapIssues {
+    padding-right: 10px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean {
+    grid-template-columns: minmax(0, 1.55fr) minmax(270px, 1fr);
+    column-gap: 24px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityGroup {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationSummary.is-lean > div {
+    min-height: 44px;
+  }
+}
+
+/* Tablet and smaller: stack cleanly with consistent vertical rhythm. */
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean,
+  .appShell:has(.rundeckPanel) .rundeckServerSection,
+  .appShell:has(.rundeckPanel) .rundeckAvailability,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring,
+  .appShell:has(.rundeckPanel) .rundeckSupportingData {
+    margin-top: 8px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityGroup {
+    margin-top: 3px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckTrendToolbar {
+    gap: 3px 8px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckTrendChart {
+    height: 220px;
+    min-height: 210px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationHead {
+    gap: 7px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationControls {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .appShell:has(.rundeckPanel) .rundeckIncidentHostContext,
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityApps,
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityInfra,
+  .appShell:has(.rundeckPanel) .rundeckEvaluationControls {
+    row-gap: 5px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckTrendToolbar > .rundeckTrendGroup,
+  .appShell:has(.rundeckPanel) .rundeckEvaluationControls > * {
+    max-width: 100%;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTableWrap {
+    max-height: 280px;
+  }
+}
