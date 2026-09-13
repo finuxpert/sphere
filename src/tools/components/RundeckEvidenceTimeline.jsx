@@ -61,11 +61,20 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const state = alignment.state || (loading ? 'LOADING' : error ? 'UNAVAILABLE' : 'UNKNOWN')
   const skew = alignment.max_skew_minutes
   const hasSkew = skew !== null && skew !== undefined && Number.isFinite(Number(skew))
+  const threshold = Number(alignment.threshold_minutes)
+  const hasThreshold = Number.isFinite(threshold)
+  const alignmentHint = state === 'ALIGNED'
+    ? `Source timestamps are within the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Timing alignment supports correlation only; it does not establish causation.`
+    : state === 'LIMITED'
+      ? `Source timestamps exceed the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Cross-source conclusions are limited.`
+      : state === 'INSUFFICIENT DATA'
+        ? 'Fewer than two timestamped evidence sources are available, so cross-source alignment cannot be evaluated.'
+        : 'Cross-source evidence timing status.'
 
   return <details className="rundeckEvidenceTimeline">
     <summary>
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Evidence Timeline</span>
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`}>{state}</span>
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state}</span>
       <small>{hasSkew ? `max skew ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'cross-source timing'}{events.length ? ` · ${events.length} events` : ''}</small>
     </summary>
 
@@ -81,6 +90,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
             <em className={source.within_window ? 'is-aligned' : 'is-limited'}>{source.delta_minutes}m</em>
           </span>)}
           <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} snapshots</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no retained history'}</em></span>
+          <span><b>Alignment Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>timing only · not causation</em></span>
         </div>
 
         <div className="rundeckEvidenceEvents" aria-label="Evidence events">
