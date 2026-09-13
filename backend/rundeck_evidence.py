@@ -1,4 +1,4 @@
-"""Cross-source evidence correlation for SPHERE Rundeck monitoring.
+"""Cross-source operational evidence for SPHERE Rundeck monitoring.
 
 This module aligns SAP performance observations, selected workload history and
 retained Service Availability snapshots. It provides supporting evidence only;
@@ -9,7 +9,12 @@ from __future__ import annotations
 import os
 from datetime import datetime, timedelta, timezone
 
-from backend.rundeck_availability import RANGE_HOURS, _history_snapshots, latest_availability
+from backend.rundeck_availability import (
+    RANGE_HOURS,
+    _history_snapshots,
+    availability_change_events,
+    latest_availability,
+)
 from backend.rundeck_incident import performance_incident_summary
 from backend.rundeck_job_history import sap_job_history
 
@@ -19,14 +24,6 @@ WORKLOAD_GAP_MINUTES = max(5, int(os.getenv("SPHERE_EVIDENCE_WORKLOAD_GAP_MINUTE
 DEFAULT_AVAILABILITY_RANGE = os.getenv("SPHERE_EVIDENCE_AVAILABILITY_RANGE", "7d")
 if DEFAULT_AVAILABILITY_RANGE not in RANGE_HOURS:
     DEFAULT_AVAILABILITY_RANGE = "7d"
-
-CATEGORY_LABEL = {
-    "SAP_APP": "SAP App",
-    "HANA_SYSTEM_DB": "HANA",
-    "HANA_REPLICATION": "Replication",
-    "SSH": "SSH",
-    "WEB_DISPATCHER": "Web",
-}
 
 
 def _dt(value):
@@ -73,48 +70,6 @@ def source_alignment(source_times: dict, max_skew_minutes: int | None = None) ->
         "reference_at": newest.astimezone(timezone.utc).isoformat(),
         "sources": sources,
     }
-
-
-def availability_transition_events(snapshots: list[dict], since=None) -> list[dict]:
-    cutoff = _dt(since)
-    previous = {}
-    events = []
-    ordered = sorted(snapshots, key=lambda row: _dt(row.get("collected_at")) or datetime.min.replace(tzinfo=timezone.utc))
-    for snapshot in ordered:
-        stamp = _dt(snapshot.get("collected_at"))
-        if not stamp:
-            continue
-        for service in snapshot.get("services", []):
-            category = str(service.get("category") or "").upper()
-            name = str(service.get("name") or "UNKNOWN")
-            status = str(service.get("status") or "UNKNOWN").upper()
-            if category not in CATEGORY_LABEL or status not in {"UP", "DOWN"}:
-                continue
-            key = (category, name)
-            before = previous.get(key)
-            previous[key] = status
-            if cutoff and stamp < cutoff:
-                continue
-            label = f"{CATEGORY_LABEL[category]} {name}"
-            if before is None and status == "DOWN":
-                events.append({
-                    "at": stamp.astimezone(timezone.utc).isoformat(),
-                    "source": "Availability",
-                    "kind": "availability-observed-down",
-                    "state": "DOWN",
-                    "title": f"{label} observed DOWN",
-                    "detail": "First retained availability observation is DOWN; earlier state is unknown.",
-                })
-            elif before and before != status:
-                events.append({
-                    "at": stamp.astimezone(timezone.utc).isoformat(),
-                    "source": "Availability",
-                    "kind": "availability-transition",
-                    "state": status,
-                    "title": f"{label} {before} → {status}",
-                    "detail": "Observed status change in retained Rundeck availability history.",
-                })
-    return events
 
 
 def _latest_episode(items: list[dict]) -> list[dict]:
@@ -171,6 +126,20 @@ def _workload(incident: dict, job: str | None, host: str | None, consumer_type: 
     }
 
 
+def _availability_evidence(snapshots: list[dict], since=None) -> list[dict]:
+    events = []
+    for change in availability_change_events(snapshots, since=since):
+        events.append({
+            "at": change.get("at"),
+            "source": "Availability",
+            "kind": f"availability-{change.get('kind') or 'transition'}",
+            "state": change.get("to") or "UNKNOWN",
+            "title": change.get("title") or "Availability changed",
+            "detail": "Retained Rundeck availability observation.",
+        })
+    return events
+
+
 def evidence_timeline(job=None, host=None, consumer_type=None, availability_range=DEFAULT_AVAILABILITY_RANGE) -> dict:
     if availability_range not in RANGE_HOURS:
         raise ValueError("Unsupported availability range")
@@ -188,7 +157,7 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
 
     issue_start = _dt(incident.get("signal_active_since"))
     availability_since = issue_start - timedelta(hours=2) if issue_start else None
-    availability_events = availability_transition_events(snapshots, availability_since)
+    availability_events = _availability_evidence(snapshots, availability_since)
     latest_availability_snapshot = snapshots[-1] if snapshots else None
 
     performance_at = incident.get("last_observed") or incident.get("collection_finished_at")
@@ -204,8 +173,8 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
             "source": "SAP Signal",
             "kind": "issue-start",
             "state": incident.get("status") or signal.get("severity") or "ATTENTION",
-            "title": f"{signal.get('label') or 'SAP performance signal'} issue window started",
-            "detail": f"{incident.get('affected_server') or 'SAP App'} · first continuous observation in the current issue window.",
+            "title": f"{signal.get('label') or 'SAP performance signal'} started",
+            "detail": f"{incident.get('affected_server') or 'SAP App'} · current continuous issue window.",
         })
 
     if workload and workload.get("first_seen"):
@@ -214,9 +183,10 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
             "source": "Workload",
             "kind": "workload-first-seen",
             "state": "OBSERVED",
-            "title": "Selected workload first observed",
-            "detail": f"{workload.get('consumer_key')} · {workload.get('checks')} checks in the latest continuous observation episode on {workload.get('host') or 'SAP App'}.",
+            "title": f"{workload.get('consumer_key')} first observed",
+            "detail": f"{workload.get('checks')} checks in the latest continuous episode on {workload.get('host') or 'SAP App'}.",
         })
+
     if workload and workload.get("items"):
         latest_row = workload["items"][0]
         details = latest_row.get("details") or {}
@@ -226,7 +196,7 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
             "source": "Workload",
             "kind": "workload-latest",
             "state": "OBSERVED",
-            "title": "Selected workload latest observation",
+            "title": f"{workload.get('consumer_key')} observed",
             "detail": f"CPU {_num(latest_row.get('cpu_pct'))}% · PSS {_num(pss, 2)} GB.",
         })
 
@@ -237,28 +207,25 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
             "source": "Host",
             "kind": "host-latest",
             "state": metrics.get("resource_health") or ("WARNING" if incident.get("host_resource_pressure") else "NORMAL"),
-            "title": "Latest affected host observation",
+            "title": f"{incident.get('affected_server') or 'SAP App'} host observed",
             "detail": f"CPU {_num(metrics.get('cpu_pct'))}% · Memory {_num(metrics.get('ram_pct'))}% · I/O Wait {_num(metrics.get('io_wait_pct'))}% · Critical WP {_num(metrics.get('wp_critical'), 0)}.",
         })
 
     events.extend(availability_events)
     events = [row for row in events if row.get("at")]
     events.sort(key=lambda row: _dt(row.get("at")) or datetime.min.replace(tzinfo=timezone.utc))
-    events = events[-24:]
+    events = events[-16:]
 
     interpretation = []
-    if incident.get("active"):
-        interpretation.append(incident.get("resource_assessment") or "Current host resource condition is available as supporting evidence.")
     if issue_start and workload and _dt(workload.get("first_seen")):
         first = _dt(workload.get("first_seen"))
         if first < issue_start:
             minutes = int((issue_start - first).total_seconds() // 60)
-            interpretation.append(f"The selected workload was already observed {minutes // 60}h {minutes % 60}m before the current issue window; this timing does not establish causation.")
+            interpretation.append(f"Selected workload was already observed {minutes // 60}h {minutes % 60}m before the current issue window.")
     if alignment.get("state") == "LIMITED":
-        interpretation.append(f"Cross-source timing exceeds the {alignment.get('threshold_minutes')} minute alignment threshold, so correlation conclusions are limited.")
+        interpretation.append(f"Source timing exceeds the {alignment.get('threshold_minutes')} minute alignment window.")
     elif alignment.get("state") == "INSUFFICIENT DATA":
-        interpretation.append("Cross-source alignment cannot be evaluated because fewer than two timestamped evidence sources are available.")
-    interpretation.append("SPHERE correlates supporting evidence to narrow investigation; root cause still requires validation through SAP and infrastructure diagnostic tools.")
+        interpretation.append("Cross-source timing needs at least two timestamped sources.")
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -273,6 +240,13 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "selected_workload": {key: value for key, value in (workload or {}).items() if key != "items"} if workload else None,
         "alignment": alignment,
+        "summary": {
+            "alignment": alignment.get("state"),
+            "source_skew_minutes": alignment.get("max_skew_minutes"),
+            "event_count": len(events),
+            "availability_change_count": len(availability_events),
+            "workload_checks": int(workload.get("checks") or 0) if workload else 0,
+        },
         "coverage": {
             "workload_observations": int(workload.get("checks") or 0) if workload else 0,
             "availability_snapshots": len(snapshots),
@@ -281,5 +255,5 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "events": events,
         "interpretation": interpretation,
-        "note": "Evidence timing and co-observation narrow the investigation scope; this correlation does not establish automatic root cause.",
+        "note": "Timing and co-observation are supporting evidence only; root cause still requires SAP and infrastructure validation.",
     }
