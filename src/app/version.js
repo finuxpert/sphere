@@ -8,7 +8,7 @@ export const APP_IS_DEV = /dev/i.test(APP_ENV) || String(import.meta.env.BASE_UR
 export const APP_DISPLAY_VERSION = `v${APP_VERSION}${APP_IS_DEV ? '-dev' : ''}${APP_BUILD ? ` · ${APP_BUILD}` : ''}`
 export const APP_BUILD_LABEL = `Build ${APP_DISPLAY_VERSION}`
 export const LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.1'
-export const LOG_UI_REVISION = 'layout-closure-v1.22.3'
+export const LOG_UI_REVISION = 'operator-density-hotfix-v1.22.3'
 
 export function formatAppTitle(section = '') {
   return `${section ? `${section} · ` : ''}${APP_NAME} v${APP_VERSION}`
