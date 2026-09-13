@@ -52,7 +52,7 @@ const monitoringSapIssuesIndex = files.monitoring.indexOf('<SapIssues')
 const monitoringEvaluationIndex = files.monitoring.indexOf('<RundeckPerformanceEvaluation')
 
 const checks = [
-  ['version is v1.20.3', files.version.includes("APP_VERSION = '1.20.3'") && files.version.includes("APP_PREVIOUS_VERSION = '1.20.2'") && files.version.includes('final-semantic-polish-v1.20.3')],
+  ['version is v1.20.5', files.version.includes("APP_VERSION = '1.20.5'") && files.version.includes("APP_PREVIOUS_VERSION = '1.20.4'") && files.version.includes('observation-history-full-width-v1.20.5')],
   ['v1.20 operational CSS remains loaded', files.app.includes("./app/rundeck-v120.css")],
   ['production-safe report URL uses current origin and base', files.source.includes('window.location.origin') && files.source.includes('import.meta.env.BASE_URL')],
 
@@ -119,8 +119,8 @@ const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.20.3 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.20.5 contract check(s) failed.`)
   process.exit(1)
 }
 
-console.log('\nRundeck v1.20.3 contract checks passed.')
+console.log('\nRundeck v1.20.5 contract checks passed.')
