@@ -79,13 +79,13 @@ function WorkloadFacts({ workload }) {
   const pss = details.total_pss_gb ?? details.pss_gb
   const processes = Number(details.process_count || 0)
   const facts = [
-    ['CPU Usage', metric(workload?.cpu_pct, '%')],
-    ['PSS Memory', pss === null || pss === undefined ? '—' : metric(pss, ' GB')],
+    ['CPU', metric(workload?.cpu_pct, '%')],
+    ['PSS', pss === null || pss === undefined ? '—' : metric(pss, ' GB')],
     ['Processes', Number.isFinite(processes) && processes > 0 ? metric(processes) : '1'],
   ]
 
   return <dl className="rundeckIncidentFacts">
-    {facts.map(([label, value]) => <div key={label}><dt title={label.includes('CPU') ? CPU_HINT : undefined}>{label}</dt><dd>{value}</dd></div>)}
+    {facts.map(([label, value]) => <div key={label}><dt title={label === 'CPU' ? CPU_HINT : undefined}>{label}</dt><dd>{value}</dd></div>)}
   </dl>
 }
 
@@ -170,7 +170,7 @@ export default function RundeckPerformanceIncident({
     <div className="rundeckIncidentHeader">
       <div>
         <span className="rundeckIncidentEyebrow">Primary Issue</span>
-        <h3>{shortHost(summary.affected_server)} — {issueSignalText(signal.label, signalValue)}</h3>
+        <h3>{shortHost(summary.affected_server)} · {issueSignalText(signal.label, signalValue)}</h3>
       </div>
       {showStatus && <StatusPill value={summary.status || 'WARNING'} />}
     </div>
@@ -194,9 +194,9 @@ export default function RundeckPerformanceIncident({
       {current && <WorkloadFacts workload={current} />}
     </section>
 
-    <div className="rundeckIncidentHostContext">
+    <div className="rundeckIncidentOpsLine" aria-label="Affected App Server state">
       <span><b>OS Resource</b><StatusPill value={resourceState} /></span>
-      <span className="rundeckIncidentSapState"><b>SAP Workload</b><StatusPill value={workloadState} /></span>
+      <span><b>SAP Workload</b><StatusPill value={workloadState} /></span>
       <span><b>CPU</b>{metric(hostMetrics.cpu_pct, '%')}</span>
       <span><b>Memory</b>{metric(hostMetrics.ram_pct, '%')}</span>
       <span><b>I/O Wait</b>{metric(hostMetrics.io_wait_pct, '%')}</span>
