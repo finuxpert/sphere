@@ -60,7 +60,6 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const apps = data?.sap_app || []
   const hana = roleMap(data?.hana_system_db || [])
   const web = roleMap(data?.web_dispatcher || [])
-  const appDown = data?.summary?.sap_app_down || []
   const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
