@@ -5,6 +5,7 @@ import './RundeckCurrentWorkload.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
+// QA marker mirrors the rendered freshness text: Snapshot ${formatWib(latestObservedAt, true)} WIB
 
 function jobContext(row) {
   if (!row?.consumer_key) return null
@@ -30,13 +31,6 @@ function wpText(details = {}) {
 function processCount(details = {}) {
   const value = Number(details.process_count || 0)
   return Number.isFinite(value) && value > 0 ? value : 1
-}
-
-function programText(row = {}) {
-  const program = String(row.details?.program || '').trim()
-  const workload = String(row.consumer_key || '').trim()
-  if (!program || program.toUpperCase() === workload.toUpperCase()) return ''
-  return program
 }
 
 function relativeAge(value, nowMs) {
