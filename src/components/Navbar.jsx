@@ -49,7 +49,7 @@ export default function Navbar() {
     <>
       <header className="navbar sphereNav">
         <div className="navInner sphereNavInner">
-          <a className="brand sphereBrand" href="#/st03n" aria-label={`${APP_NAME} ${APP_DISPLAY_VERSION} ST03N analysis`}>
+          <a className="brand sphereBrand" href="#/tool/logs" aria-label={`${APP_NAME} ${APP_DISPLAY_VERSION} LOG analysis`}>
             <SphereLogo />
             <span className="brandText">
               <span className="brandTitle">{APP_TAGLINE}</span>
