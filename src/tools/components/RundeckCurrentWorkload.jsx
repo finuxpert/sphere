@@ -51,16 +51,19 @@ function identitySummary(row = {}) {
   const jobName = String(details.job_name || '').trim()
   const program = String(details.program || '').trim()
   const processes = processCount(details)
-  const representativeWp = wpText(details)
+  const wp = wpText(details)
   const pid = String(details.pid || '').trim()
-  const user = String(details.user || '').trim()
   const parts = []
 
-  if (type !== 'JOB' && jobName && jobName.toUpperCase() !== workload.toUpperCase()) parts.push(`Job ${jobName}`)
-  if (type !== 'PROGRAM' && program && program.toUpperCase() !== workload.toUpperCase()) parts.push(`Program ${program}`)
-  if (representativeWp !== '—') parts.push(`${processes > 1 ? 'Representative ' : ''}${representativeWp}`)
-  if (pid) parts.push(`PID ${pid}${processes > 1 ? ` (+${processes - 1})` : ''}`)
-  if (user) parts.push(`User ${user}`)
+  const related = type === 'JOB'
+    ? program
+    : type === 'PROGRAM'
+      ? jobName
+      : program || jobName
+  if (related && related.toUpperCase() !== workload.toUpperCase()) parts.push(related)
+  if (wp !== '—') parts.push(wp)
+  if (pid) parts.push(`PID ${pid}`)
+  if (processes > 1) parts.push(`${processes} proc`)
   return parts.join(' · ') || workloadTypeLabel(row.consumer_type)
 }
 
