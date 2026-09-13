@@ -60,12 +60,13 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const interpretation = data?.interpretation || []
   const state = alignment.state || (loading ? 'LOADING' : error ? 'UNAVAILABLE' : 'UNKNOWN')
   const skew = alignment.max_skew_minutes
+  const hasSkew = skew !== null && skew !== undefined && Number.isFinite(Number(skew))
 
   return <details className="rundeckEvidenceTimeline">
     <summary>
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Evidence Timeline</span>
       <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`}>{state}</span>
-      <small>{Number.isFinite(Number(skew)) ? `max skew ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'cross-source timing'}{events.length ? ` · ${events.length} events` : ''}</small>
+      <small>{hasSkew ? `max skew ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'cross-source timing'}{events.length ? ` · ${events.length} events` : ''}</small>
     </summary>
 
     <div className="rundeckEvidenceBody">
