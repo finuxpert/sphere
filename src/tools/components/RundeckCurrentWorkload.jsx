@@ -5,7 +5,7 @@ import './RundeckCurrentWorkload.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
-// QA marker mirrors the rendered freshness text: Snapshot ${formatWib(latestObservedAt, true)} WIB
+const STALE_MINUTES = 15
 
 function jobContext(row) {
   if (!row?.consumer_key) return null
@@ -44,6 +44,11 @@ function relativeAge(value, nowMs) {
   return rest ? `${hours}h ${rest}m ago` : `${hours}h ago`
 }
 
+function ageMinutes(value, nowMs) {
+  const observed = Date.parse(value || '')
+  return Number.isFinite(observed) ? Math.max(0, Math.floor((nowMs - observed) / 60000)) : null
+}
+
 function identitySummary(row = {}) {
   const details = row.details || {}
   const type = String(row.consumer_type || '').toUpperCase()
@@ -80,6 +85,9 @@ function identityTitle(row = {}) {
   push('Work Process', details.wps?.length ? details.wps.map((value) => `${details.wp_type || ''} ${value}`.trim()) : wpText(details) === '—' ? '' : wpText(details))
   push('PID', details.pids?.length ? details.pids : details.pid)
   push('SAP User', details.users?.length ? details.users : details.user)
+  push('Client', details.client || details.mandt || details.sap_client)
+  push('Transaction', details.transaction || details.tcode || details.transaction_code)
+  push('Report', details.report)
   return values.join(' | ')
 }
 
@@ -135,12 +143,14 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     return Number.isFinite(timestamp) && timestamp > Date.parse(latest || '') ? row.collected_at : latest
   }, rows[0]?.collected_at || '')
   const freshness = latestObservedAt ? relativeAge(latestObservedAt, nowMs) : ''
+  const freshnessMinutes = latestObservedAt ? ageMinutes(latestObservedAt, nowMs) : null
+  const showFreshness = freshnessMinutes !== null && freshnessMinutes >= STALE_MINUTES
 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP workloads">
     <div className="rundeckCurrentWorkloadHead">
       <h3><SphereIcon name="workload" /> Current Workloads</h3>
       <div className="rundeckCurrentWorkloadTools">
-        {latestObservedAt && <span className="rundeckWorkloadFreshness" title="Age of the latest stored Rundeck workload observation">Snapshot {formatWib(latestObservedAt, true)} WIB{freshness ? ` · ${freshness}` : ''}</span>}
+        {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
         {rows.length > 10 && <button type="button" onClick={() => setShowAll((value) => !value)}>
           {showAll ? 'Top 10' : `View all ${rows.length}`}
         </button>}
