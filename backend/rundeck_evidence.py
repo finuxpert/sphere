@@ -281,5 +281,5 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "events": events,
         "interpretation": interpretation,
-        "note": "Evidence timing and co-observation narrow the investigation scope; they do not establish automatic root cause.",
+        "note": "Evidence timing and co-observation narrow the investigation scope; this correlation does not establish automatic root cause.",
     }
