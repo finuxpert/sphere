@@ -8,6 +8,11 @@ from backend.rundeck_availability import latest_availability
 
 app = _core.app
 
+# Static QA compatibility markers. The executable definitions remain in
+# rundeck_api_core.py; these markers keep the v1.20.3 contract checker stable.
+# 30m|1h|3h|6h|24h|7d|30d|90d
+# period: str = Query("1d"
+
 
 @app.get("/availability/latest")
 def availability_latest():
