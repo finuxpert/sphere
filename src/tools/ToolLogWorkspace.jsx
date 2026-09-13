@@ -9,6 +9,7 @@ import './components/RundeckWorkspaceFinalPolish.css'
 import './components/RundeckWorkspaceRails.css'
 import './components/RundeckWorkspaceAlignedBands.css'
 import './components/RundeckWorkspaceFlowBands.css'
+import './components/RundeckAvailabilityPolishV1206.css'
 
 const LogAutoSphereV5 = React.lazy(() => import('./ToolLogAutoSphereV5.jsx'))
 
