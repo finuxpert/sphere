@@ -146,8 +146,10 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const bundleState = String(bundle?.bundle_status || '').toUpperCase()
   const skew = Number(bundle?.source_skew_seconds)
   const skewWarning = Number.isFinite(skew) && skew >= 300
+  const bundleAbnormal = ['RUNNING', 'PARTIAL', 'FAILED'].includes(bundleState)
+  const showCollectionGap = bundleAbnormal && skewWarning
   const bundleTitle = bundle?.requested_at
-    ? `Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · source gap ${skew}s` : ''}`
+    ? `Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · collection gap ${skew}s` : ''}`
     : ''
   const collectionNotice = bundleState === 'RUNNING'
     ? 'Refreshing…'
@@ -156,6 +158,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       : bundleState === 'FAILED'
         ? 'Refresh failed'
         : ''
+  const showDataTrust = Boolean(collectionNotice || stale || showCollectionGap)
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
@@ -165,15 +168,18 @@ export default function RundeckAvailability({ refreshToken = '' }) {
           {data?.collected_at ? `Updated ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
           {data?.execution_id ? ` · Run #${data.execution_id}` : ''}
         </span>
-        {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
-        {stale && <small className="rundeckAvailabilityTrust is-warning">STALE {availabilityAge}m</small>}
-        {skewWarning && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Source gap {Math.round(skew / 60)}m</small>}
       </div>
       <div className="rundeckAvailabilityState">
         <Status value={serviceState} />
         {issueText && <small>{issueText}</small>}
       </div>
     </div>
+
+    {showDataTrust && <div className="rundeckAvailabilityDataTrust" aria-label="Availability data quality">
+      {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
+      {stale && <small className="rundeckAvailabilityTrust is-warning">STALE · {availabilityAge}m old</small>}
+      {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Collection gap {Math.round(skew / 60)}m</small>}
+    </div>}
 
     {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}
 
@@ -200,7 +206,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
         </div>
       </div>
 
-      <details className="rundeckAvailabilityMore">
+      <details className="rundeckAvailabilityMore" open={technicalDownCount > 0 ? true : undefined}>
         <summary>Technical checks{technicalDownCount > 0 && <span>{technicalDownCount} down</span>}</summary>
         <div className="rundeckAvailabilityMoreBody">
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
