@@ -71,7 +71,14 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const appSsh = sshRows.filter((row) => /^APP\d+$/i.test(String(row.name || '')))
   const otherSsh = sshRows.filter((row) => !/^(PRIMARY|SECONDARY|DR|APP\d+)$/i.test(String(row.name || '')))
   const primaryRows = [...apps, ...Object.values(hana), ...Object.values(web)]
-  const downCount = primaryRows.filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length
+  const primaryServiceDownCount = primaryRows.filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length
+  const matrixTechnicalRows = [
+    ...Object.values(replication),
+    ssh.PRIMARY,
+    ssh.SECONDARY,
+    ssh.DR,
+  ].filter(Boolean)
+  const technicalDownCount = matrixTechnicalRows.filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length
   const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
@@ -85,7 +92,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       </div>
       <div className="rundeckAvailabilityState">
         <Status value={serviceState} />
-        {data && downCount > 0 && <small>{downCount} service check{downCount === 1 ? '' : 's'} down</small>}
+        {data && primaryServiceDownCount > 0 && <small>{primaryServiceDownCount} primary service{primaryServiceDownCount === 1 ? '' : 's'} down</small>}
       </div>
     </div>
 
@@ -115,7 +122,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       </div>
 
       <details className="rundeckAvailabilityMore">
-        <summary>More technical checks</summary>
+        <summary>More technical checks{technicalDownCount > 0 && <span>{technicalDownCount} down</span>}</summary>
         <div className="rundeckAvailabilityMoreBody">
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
             <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>
