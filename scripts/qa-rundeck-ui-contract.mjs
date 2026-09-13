@@ -61,11 +61,12 @@ const releaseCandidateIndex = files.workspace.indexOf("./components/RundeckRelea
 const uiFreezeIndex = files.workspace.indexOf("./components/RundeckUiFreezeV1207.css")
 
 const checks = [
-  ['version is v1.21.0 with v1.20.7 UI freeze retained', files.version.includes("APP_VERSION = '1.21.0'") && files.version.includes("APP_PREVIOUS_VERSION = '1.20.7'") && files.version.includes("LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.0'") && files.version.includes("LOG_UI_REVISION = 'operational-clarity-ui-freeze-v1.20.7'")],
+  ['version is v1.21.1 with v1.20.7 UI freeze retained', files.version.includes("APP_VERSION = '1.21.1'") && files.version.includes("APP_PREVIOUS_VERSION = '1.21.0'") && files.version.includes("LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.1'") && files.version.includes("LOG_UI_REVISION = 'operational-clarity-ui-freeze-v1.20.7'")],
   ['v1.20 operational CSS remains loaded', files.app.includes("./app/rundeck-v120.css")],
   ['v1.20.6 availability polish remains loaded', files.workspace.includes("./components/RundeckAvailabilityPolishV1206.css")],
   ['v1.20.7 UI freeze polish loads last', uiFreezeIndex > releaseCandidateIndex && uiFreezeIndex >= 0],
   ['production-safe report URL uses current origin and base', files.source.includes('window.location.origin') && files.source.includes('import.meta.env.BASE_URL')],
+  ['PDF trend context follows selected metric instead of stale trend response', files.monitoring.includes('metricLabelForTrend') && files.monitoring.includes('selectedMetric') && files.monitoring.includes('onTrendContext={forwardTrendContext}')],
 
   ['host resource excludes WP-only attention', hostResourceState(wpAttention) === 'NORMAL'],
   ['WP 1-2 maps to ATTENTION', sapWorkloadState(wpAttention) === 'ATTENTION' && overallOperationalState([wpAttention]) === 'ATTENTION'],
@@ -106,6 +107,7 @@ const checks = [
   ['evidence wording stays correlation-safe', files.backendEvidence.includes('supporting evidence') && files.backendEvidence.includes('does not establish automatic root cause') && files.backendEvidence.includes('root cause still requires validation')],
   ['evidence timeline stays secondary and collapsed', files.incident.includes('<RundeckEvidenceTimeline') && files.evidenceUi.includes('<details className="rundeckEvidenceTimeline">') && !files.evidenceUi.includes('<details open')],
   ['evidence timeline exposes alignment coverage and interpretation', files.evidenceUi.includes('Evidence Timeline') && files.evidenceUi.includes('max skew') && files.evidenceUi.includes('Availability History') && files.evidenceUi.includes('Evidence interpretation')],
+  ['evidence alignment explicitly means timing not causation', files.evidenceUi.includes('Alignment Window') && files.evidenceUi.includes('Timing alignment supports correlation only') && files.evidenceUi.includes('timing only · not causation')],
   ['evidence timeline semantic states are styled without dashboard redesign', files.evidenceCss.includes('.rundeckEvidenceAlignment.is-aligned') && files.evidenceCss.includes('.rundeckEvidenceAlignment.is-limited') && files.evidenceCss.includes('.rundeckEvidenceTimeline > summary')],
 
   ['evaluation defaults to one day in UI and API', files.evaluation.includes("useState('1d')") && files.backendApi.includes('period: str = Query("1d"') && files.backendEvaluation.includes('evaluation_report(period: str = "1d"')],
@@ -154,8 +156,8 @@ const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.21.0 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.21.1 contract check(s) failed.`)
   process.exit(1)
 }
 
-console.log('\nRundeck v1.21.0 contract checks passed.')
+console.log('\nRundeck v1.21.1 contract checks passed.')
