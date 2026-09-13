@@ -1,7 +1,7 @@
-/* Hybrid aligned desktop bands.
-   Independent rails removed row-coupling whitespace, but the left rail could advance
-   much earlier than the analysis rail. These desktop-only constraints keep the major
-   operational pairs visually aligned while retaining internal scrolling. */
+/* Aligned desktop monitoring bands.
+   The workspace keeps the left/right operational split, but each major pair now uses
+   the same visual envelope so the next pair starts on the same baseline. Long content
+   scrolls inside its panel instead of pushing the opposite rail down. */
 
 @media (min-width: 1181px) {
   .appShell:has(.rundeckPanel) .rundeckPanel {
@@ -11,21 +11,26 @@
     --sphere-support-band-h: 250px;
   }
 
-  /* Band 1 remains content-driven: SAP App Servers + Availability on the left,
-     Server Trend on the right. The lower edge is already naturally aligned by
-     the existing compact chart sizing. */
+  /* Band 1 — SAP current state versus Server Trend. */
   .appShell:has(.rundeckPanel) .rundeckServerSection,
   .appShell:has(.rundeckPanel) .rundeckMonitoringHead {
     margin-top: 12px !important;
   }
 
-  /* Band 2 — candidate workload list versus selected workload analysis.
-     Use the available height for useful rows instead of leaving dead whitespace. */
-  .appShell:has(.rundeckPanel) .rundeckCurrentWorkload {
+  /* Keep the hand-off into Band 2 visually level. */
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkload,
+  .appShell:has(.rundeckPanel) .rundeckJobHistory {
+    margin-top: var(--sphere-band-gap) !important;
     min-height: var(--sphere-workload-band-h);
     max-height: var(--sphere-workload-band-h);
+    height: var(--sphere-workload-band-h);
     overflow: hidden;
-    margin-top: var(--sphere-band-gap) !important;
+    box-sizing: border-box;
+  }
+
+  /* LEFT — use the envelope for useful workload rows. */
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkload {
+    padding-top: 8px !important;
   }
 
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap {
@@ -35,14 +40,34 @@
     scrollbar-gutter: stable;
   }
 
-  .appShell:has(.rundeckPanel) .rundeckRcaSection {
-    min-height: calc(var(--sphere-workload-band-h) - 48px);
-    box-sizing: border-box;
+  /* RIGHT — Selected Workload + Workload Performance stay inside the same envelope.
+     Observation History may expand, but it scrolls inside the panel instead of moving
+     Performance Evaluation lower than SAP Issues. */
+  .appShell:has(.rundeckPanel) .rundeckJobHistory {
+    padding-top: 8px !important;
   }
 
-  .appShell:has(.rundeckPanel) .rundeckJobHistory {
-    min-height: 34px;
-    margin-top: 8px !important;
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryContent {
+    max-height: calc(var(--sphere-workload-band-h) - 58px);
+    overflow: auto;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory[open] .rundeckJobHistoryTableWrap {
+    max-height: 138px !important;
+    overflow: auto !important;
+    scrollbar-gutter: stable;
+  }
+
+  /* Historical point drill-down is supporting context; cap it so the selected workload
+     band remains deterministic when a point is inspected. */
+  .appShell:has(.rundeckPanel) .rundeckRcaSection {
+    max-height: 170px;
+    overflow: auto;
+    box-sizing: border-box;
+    margin-top: 6px !important;
+    scrollbar-gutter: stable;
   }
 
   /* Band 3 — SAP Issues versus Performance Evaluation. */
@@ -50,22 +75,17 @@
   .appShell:has(.rundeckPanel) .rundeckEvaluation {
     min-height: var(--sphere-review-band-h);
     max-height: var(--sphere-review-band-h);
+    height: var(--sphere-review-band-h);
     box-sizing: border-box;
     margin-top: var(--sphere-band-gap) !important;
-  }
-
-  .appShell:has(.rundeckPanel) .rundeckSapIssues {
     overflow: hidden;
   }
 
   .appShell:has(.rundeckPanel) .rundeckSapIssues .rundeckEvidenceBody {
+    height: calc(var(--sphere-review-band-h) - 38px);
     max-height: calc(var(--sphere-review-band-h) - 38px);
     overflow: auto;
     scrollbar-gutter: stable;
-  }
-
-  .appShell:has(.rundeckPanel) .rundeckEvaluation {
-    overflow: hidden;
   }
 
   .appShell:has(.rundeckPanel) .rundeckEvaluationTableWrap {
@@ -74,11 +94,12 @@
     scrollbar-gutter: stable;
   }
 
-  /* Band 4 — supporting data. Both sides share the same visual envelope. */
+  /* Band 4 — supporting data shares one baseline and one envelope. */
   .appShell:has(.rundeckPanel) .rundeckHistory,
   .appShell:has(.rundeckPanel) .rundeckPlatformHealth {
     min-height: var(--sphere-support-band-h);
     max-height: var(--sphere-support-band-h);
+    height: var(--sphere-support-band-h);
     overflow: hidden;
     box-sizing: border-box;
     margin-top: var(--sphere-band-gap) !important;
@@ -86,23 +107,25 @@
 
   .appShell:has(.rundeckPanel) .rundeckHistoryTableWrap,
   .appShell:has(.rundeckPanel) .rundeckPlatformTableWrap {
+    height: calc(var(--sphere-support-band-h) - 42px) !important;
     max-height: calc(var(--sphere-support-band-h) - 42px) !important;
     overflow: auto !important;
     scrollbar-gutter: stable;
   }
 
-  /* Keep paired section headers on a consistent baseline. */
+  /* Paired headings use an identical baseline box. */
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkload > h3,
-  .appShell:has(.rundeckPanel) .rundeckRcaHeader,
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryHead,
   .appShell:has(.rundeckPanel) .rundeckSapIssues > summary,
   .appShell:has(.rundeckPanel) .rundeckEvaluationHead,
   .appShell:has(.rundeckPanel) .rundeckHistory > summary,
   .appShell:has(.rundeckPanel) .rundeckPlatformHealth > summary {
     min-height: 28px;
     box-sizing: border-box;
+    margin-top: 0 !important;
   }
 
-  /* Long lower sections are outside the initial viewport on most desktops. */
+  /* Lower sections are outside the initial viewport on most desktops. */
   .appShell:has(.rundeckPanel) .rundeckSapIssues,
   .appShell:has(.rundeckPanel) .rundeckEvaluation,
   .appShell:has(.rundeckPanel) .rundeckHistory,
@@ -118,10 +141,15 @@
     --sphere-review-band-h: 340px;
     --sphere-support-band-h: 232px;
   }
+
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryContent {
+    max-height: calc(var(--sphere-workload-band-h) - 56px);
+  }
 }
 
 @media (max-width: 1180px) {
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkload,
+  .appShell:has(.rundeckPanel) .rundeckJobHistory,
   .appShell:has(.rundeckPanel) .rundeckRcaSection,
   .appShell:has(.rundeckPanel) .rundeckSapIssues,
   .appShell:has(.rundeckPanel) .rundeckEvaluation,
@@ -129,16 +157,20 @@
   .appShell:has(.rundeckPanel) .rundeckPlatformHealth {
     min-height: 0;
     max-height: none;
+    height: auto;
     overflow: visible;
     content-visibility: visible;
   }
 
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryContent,
+  .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory .rundeckJobHistoryTableWrap,
   .appShell:has(.rundeckPanel) .rundeckSapIssues .rundeckEvidenceBody,
   .appShell:has(.rundeckPanel) .rundeckEvaluationTableWrap,
   .appShell:has(.rundeckPanel) .rundeckHistoryTableWrap,
   .appShell:has(.rundeckPanel) .rundeckPlatformTableWrap {
     height: auto !important;
     max-height: none !important;
+    overflow: visible;
   }
 }
