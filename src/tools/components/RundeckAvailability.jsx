@@ -4,6 +4,7 @@ import { formatWib } from './sapUiFormat.js'
 import './RundeckAvailability.css'
 
 const API = `${import.meta.env.BASE_URL}api`
+const STALE_MINUTES = 20
 
 function Status({ value = 'UNKNOWN' }) {
   return <span className={`rundeckAvailabilityStatus is-${String(value).toLowerCase()}`}>{value}</span>
@@ -31,6 +32,12 @@ function bundleSourceStatus(bundle, key) {
   if (status === 'RUNNING' || status === 'SCHEDULED') return 'RUNNING'
   if (['FAILED', 'ABORTED', 'TIMEDOUT'].includes(status)) return 'FAILED'
   return String(source.ingest_status || status || 'WAITING').toUpperCase()
+}
+
+function ageMinutes(value) {
+  const timestamp = Date.parse(value || '')
+  if (!Number.isFinite(timestamp)) return null
+  return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
 }
 
 export default function RundeckAvailability({ refreshToken = '' }) {
@@ -124,48 +131,51 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const ssh = roleMap(sshRows)
   const appSsh = sshRows.filter((row) => /^APP\d+$/i.test(String(row.name || '')))
   const otherSsh = sshRows.filter((row) => !/^(PRIMARY|SECONDARY|DR|APP\d+)$/i.test(String(row.name || '')))
-  const primaryRows = [...apps, ...Object.values(hana), ...Object.values(web)]
-  const primaryServiceDownCount = primaryRows.filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length
-  const matrixTechnicalRows = [
+  const technicalDownCount = Number(data?.summary?.technical_down_count ?? [
     ...Object.values(replication),
     ssh.PRIMARY,
     ssh.SECONDARY,
     ssh.DR,
-  ].filter(Boolean)
-  const technicalDownCount = matrixTechnicalRows.filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length
+  ].filter(Boolean).filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length)
   const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
+  const issueText = String(data?.summary?.issue_text || '').trim()
+  const availabilityAge = ageMinutes(data?.collected_at)
+  const stale = availabilityAge !== null && availabilityAge >= STALE_MINUTES
   const bundlePerformance = bundleSourceStatus(bundle, 'performance')
   const bundleAvailability = bundleSourceStatus(bundle, 'availability')
   const bundleState = String(bundle?.bundle_status || '').toUpperCase()
   const skew = Number(bundle?.source_skew_seconds)
+  const skewWarning = Number.isFinite(skew) && skew >= 300
   const bundleTitle = bundle?.requested_at
-    ? `Fresh collection · Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · source gap ${skew}s` : ''}`
+    ? `Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · source gap ${skew}s` : ''}`
     : ''
   const collectionNotice = bundleState === 'RUNNING'
     ? 'Refreshing…'
     : bundleState === 'PARTIAL'
-      ? 'Last refresh incomplete'
+      ? 'Refresh incomplete'
       : bundleState === 'FAILED'
-        ? 'Last refresh failed'
+        ? 'Refresh failed'
         : ''
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
       <div>
         <h3><SphereIcon name="server" /> SAP Availability</h3>
-        <span title="Current snapshot from the existing Rundeck Service Availability job. Resource usage is supporting evidence only.">
+        <span title="Current snapshot from the Rundeck Service Availability job.">
           {data?.collected_at ? `Updated ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
           {data?.execution_id ? ` · Run #${data.execution_id}` : ''}
         </span>
         {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
+        {stale && <small className="rundeckAvailabilityTrust is-warning">STALE {availabilityAge}m</small>}
+        {skewWarning && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Source gap {Math.round(skew / 60)}m</small>}
       </div>
       <div className="rundeckAvailabilityState">
         <Status value={serviceState} />
-        {data && primaryServiceDownCount > 0 && <small>{primaryServiceDownCount} primary service{primaryServiceDownCount === 1 ? '' : 's'} down</small>}
+        {issueText && <small>{issueText}</small>}
       </div>
     </div>
 
-    {error && !data && <div className="rundeckAvailabilityError">Service Availability data unavailable. Existing performance monitoring remains active.</div>}
+    {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}
 
     {data && <>
       <div className="rundeckAvailabilityBody">
@@ -191,7 +201,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       </div>
 
       <details className="rundeckAvailabilityMore">
-        <summary>More technical checks{technicalDownCount > 0 && <span>{technicalDownCount} down</span>}</summary>
+        <summary>Technical checks{technicalDownCount > 0 && <span>{technicalDownCount} down</span>}</summary>
         <div className="rundeckAvailabilityMoreBody">
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
             <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>
