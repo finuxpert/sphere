@@ -27,6 +27,15 @@ INSTANCE_RE = re.compile(r"instance\s*(\d+)", re.IGNORECASE)
 DISPATCHER_RE = re.compile(r"dispatcher\s*(\d+)", re.IGNORECASE)
 RANGE_HOURS = {"30m": 0.5, "1h": 1, "3h": 3, "6h": 6, "24h": 24, "7d": 168, "30d": 720}
 ALLOWED_CATEGORIES = {"SAP_APP", "HANA_SYSTEM_DB", "HANA_REPLICATION", "SSH", "WEB_DISPATCHER"}
+SERVICE_CATEGORIES = {"SAP_APP", "HANA_SYSTEM_DB", "WEB_DISPATCHER"}
+TECHNICAL_CATEGORIES = {"HANA_REPLICATION", "SSH"}
+CATEGORY_LABEL = {
+    "SAP_APP": "SAP App",
+    "HANA_SYSTEM_DB": "HANA",
+    "HANA_REPLICATION": "Replication",
+    "SSH": "SSH",
+    "WEB_DISPATCHER": "Web",
+}
 HISTORY_FILE = ROOT / "availability-history.jsonl"
 
 
@@ -139,27 +148,80 @@ def _indexed(services: list[dict], category: str) -> list[dict]:
     return sorted(rows, key=lambda row: (role_order.get(str(row.get("name") or ""), 50), str(row.get("name") or "")))
 
 
+def _status_by_name(services: list[dict], category: str) -> dict[str, str]:
+    return {
+        str(row.get("name") or "UNKNOWN").upper(): str(row.get("status") or "UNKNOWN").upper()
+        for row in _indexed(services, category)
+    }
+
+
+def _issue_labels(services: list[dict]) -> list[str]:
+    down = [row for row in services if row.get("category") in ALLOWED_CATEGORIES and str(row.get("status") or "").upper() == "DOWN"]
+    labels: list[str] = []
+
+    apps = [str(row.get("name") or "SAP App") for row in down if row.get("category") == "SAP_APP"]
+    labels.extend(f"{name} DOWN" for name in apps)
+
+    hana_down = {str(row.get("name") or "UNKNOWN").upper() for row in down if row.get("category") == "HANA_SYSTEM_DB"}
+    replication_down = {str(row.get("name") or "UNKNOWN").upper() for row in down if row.get("category") == "HANA_REPLICATION"}
+    for role in ("PRIMARY", "SECONDARY", "DR"):
+        if role in hana_down and role in replication_down:
+            labels.append(f"{role.title()} service + replication DOWN")
+        elif role in hana_down:
+            labels.append(f"HANA {role.title()} DOWN")
+        elif role in replication_down:
+            labels.append(f"{role.title()} replication DOWN")
+
+    web = [str(row.get("name") or "Web") for row in down if row.get("category") == "WEB_DISPATCHER"]
+    labels.extend(f"Web {name} DOWN" for name in web)
+
+    ssh = [str(row.get("name") or "SSH") for row in down if row.get("category") == "SSH"]
+    labels.extend(f"{name} SSH DOWN" for name in ssh)
+    return labels
+
+
+def _issue_text(labels: list[str]) -> str:
+    if not labels:
+        return ""
+    if len(labels) <= 2:
+        return " · ".join(labels)
+    return f"{' · '.join(labels[:2])} · +{len(labels) - 2}"
+
+
 def summarize_services(services: list[dict]) -> dict:
+    tracked = [row for row in services if row.get("category") in ALLOWED_CATEGORIES]
     apps = _indexed(services, "SAP_APP")
     app_down = [row["name"] for row in apps if row["status"] == "DOWN"]
-    non_app_down = [row for row in services if row.get("category") in ALLOWED_CATEGORIES - {"SAP_APP"} and row.get("status") == "DOWN"]
+    service_down = [row for row in tracked if row.get("category") in SERVICE_CATEGORIES and row.get("status") == "DOWN"]
+    technical_down = [row for row in tracked if row.get("category") in TECHNICAL_CATEGORIES and row.get("status") == "DOWN"]
+    any_down = service_down or technical_down
+    labels = _issue_labels(services)
+
     if app_down:
         service_state = "CRITICAL"
-    elif non_app_down:
+    elif any_down:
         service_state = "ATTENTION"
-    elif apps and all(row["status"] == "UP" for row in services if row.get("category") in ALLOWED_CATEGORIES):
+    elif tracked and all(row.get("status") == "UP" for row in tracked):
         service_state = "NORMAL"
-    elif services:
+    elif tracked:
         service_state = "ATTENTION"
     else:
         service_state = "UNKNOWN"
+
     return {
         "service_state": service_state,
         "sap_state": "CRITICAL" if app_down else ("NORMAL" if apps and all(row["status"] == "UP" for row in apps) else "ATTENTION" if apps else "UNKNOWN"),
         "sap_app_down": app_down,
-        "service_count": len(services),
-        "down_count": sum(1 for row in services if row["status"] == "DOWN"),
-        "supporting_down_count": len(non_app_down),
+        "service_count": len(tracked),
+        "down_count": len(service_down) + len(technical_down),
+        "service_down_count": len(service_down),
+        "technical_down_count": len(technical_down),
+        "supporting_down_count": len(technical_down),
+        "issue_labels": labels,
+        "issue_text": _issue_text(labels),
+        "hana": _status_by_name(services, "HANA_SYSTEM_DB"),
+        "replication": _status_by_name(services, "HANA_REPLICATION"),
+        "web": _status_by_name(services, "WEB_DISPATCHER"),
     }
 
 
@@ -235,6 +297,47 @@ def _history_snapshots(hours: float) -> list[dict]:
     return rows
 
 
+def availability_change_events(snapshots: list[dict], since=None, limit: int | None = None, category: str | None = None) -> list[dict]:
+    cutoff = _parse_timestamp(since) if isinstance(since, str) else since
+    category_filter = str(category or "").upper()
+    previous: dict[tuple[str, str], str] = {}
+    events: list[dict] = []
+    ordered = sorted(snapshots, key=lambda row: _parse_timestamp(row.get("collected_at")) or datetime.min.replace(tzinfo=timezone.utc))
+    for snapshot in ordered:
+        stamp = _parse_timestamp(snapshot.get("collected_at"))
+        if not stamp:
+            continue
+        for service in snapshot.get("services", []):
+            service_category = str(service.get("category") or "").upper()
+            name = str(service.get("name") or "UNKNOWN").upper()
+            status = str(service.get("status") or "UNKNOWN").upper()
+            if service_category not in ALLOWED_CATEGORIES or status not in {"UP", "DOWN"}:
+                continue
+            key = (service_category, name)
+            before = previous.get(key)
+            previous[key] = status
+            if cutoff and stamp < cutoff:
+                continue
+            if category_filter and service_category != category_filter:
+                continue
+            if before is None and status != "DOWN":
+                continue
+            if before == status:
+                continue
+            label = f"{CATEGORY_LABEL.get(service_category, service_category)} {name}"
+            events.append({
+                "at": stamp.astimezone(timezone.utc).isoformat(),
+                "execution_id": snapshot.get("execution_id"),
+                "category": service_category,
+                "name": name,
+                "from": before or "UNKNOWN",
+                "to": status,
+                "kind": "observed-down" if before is None else "transition",
+                "title": f"{label} {'observed DOWN' if before is None else f'{before} → {status}'}",
+            })
+    return events[-limit:] if limit and limit > 0 else events
+
+
 def latest_availability() -> dict:
     execution = _latest_execution()
     state = str(execution.get("status") or "").lower()
@@ -271,6 +374,7 @@ def latest_availability() -> dict:
         "services": services,
     }
     _persist_snapshot(payload)
+    payload["recent_changes"] = availability_change_events(_history_snapshots(24), limit=8)
     return payload
 
 
@@ -281,7 +385,6 @@ def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> d
     if category not in ALLOWED_CATEGORIES:
         raise ValueError("Unsupported availability category")
 
-    # Refresh once so the newest Rundeck execution is present in local history.
     latest_availability()
     snapshots = _history_snapshots(RANGE_HOURS[range_key])
     items: list[dict] = []
@@ -328,6 +431,7 @@ def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> d
         "critical": None,
         "items": items,
         "uptime": uptime,
+        "transitions": availability_change_events(snapshots, category=category),
         "history_started_at": snapshots[0].get("collected_at") if snapshots else None,
         "note": "Availability history is retained from Service Availability executions observed by SPHERE. Missing checks are not treated as DOWN.",
     }
