@@ -19,6 +19,7 @@ const files = {
   availability: read('src/tools/components/RundeckAvailability.jsx'),
   availabilityPolish: read('src/tools/components/RundeckAvailabilityPolishV1206.css'),
   uiFreeze: read('src/tools/components/RundeckUiFreezeV1207.css'),
+  v122Css: read('src/tools/components/RundeckFreshCollectionIdentityV122.css'),
   evidenceUi: read('src/tools/components/RundeckEvidenceTimeline.jsx'),
   evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
   workspace: read('src/tools/ToolLogWorkspace.jsx'),
@@ -31,6 +32,7 @@ const files = {
   backendEvaluation: read('backend/rundeck_evaluation.py'),
   backendTrends: read('backend/rundeck_trends.py'),
   backendApi: read('backend/rundeck_api.py'),
+  backendRunner: read('backend/rundeck_runner.py'),
   backendEvidence: read('backend/rundeck_evidence.py'),
   backfill: read('ops/rundeck/backfill-consumers.py'),
   deployDev: read('ops/rundeck/deploy-dev.sh'),
@@ -59,12 +61,13 @@ const monitoringSapIssuesIndex = files.monitoring.indexOf('<SapIssues')
 const monitoringEvaluationIndex = files.monitoring.indexOf('<RundeckPerformanceEvaluation')
 const releaseCandidateIndex = files.workspace.indexOf("./components/RundeckReleaseCandidatePolish.css")
 const uiFreezeIndex = files.workspace.indexOf("./components/RundeckUiFreezeV1207.css")
+const v122Index = files.workspace.indexOf("./components/RundeckFreshCollectionIdentityV122.css")
 
 const checks = [
-  ['version is v1.21.1 with v1.20.7 UI freeze retained', files.version.includes("APP_VERSION = '1.21.1'") && files.version.includes("APP_PREVIOUS_VERSION = '1.21.0'") && files.version.includes("LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.1'") && files.version.includes("LOG_UI_REVISION = 'operational-clarity-ui-freeze-v1.20.7'")],
+  ['version is v1.22.0 with v1.20.7 UI freeze retained', files.version.includes("APP_VERSION = '1.22.0'") && files.version.includes("APP_PREVIOUS_VERSION = '1.21.1'") && files.version.includes("LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.1'") && files.version.includes("LOG_UI_REVISION = 'operational-clarity-ui-freeze-v1.20.7'")],
   ['v1.20 operational CSS remains loaded', files.app.includes("./app/rundeck-v120.css")],
   ['v1.20.6 availability polish remains loaded', files.workspace.includes("./components/RundeckAvailabilityPolishV1206.css")],
-  ['v1.20.7 UI freeze polish loads last', uiFreezeIndex > releaseCandidateIndex && uiFreezeIndex >= 0],
+  ['v1.20.7 UI freeze remains base for v1.22 functional polish', uiFreezeIndex > releaseCandidateIndex && v122Index > uiFreezeIndex],
   ['production-safe report URL uses current origin and base', files.source.includes('window.location.origin') && files.source.includes('import.meta.env.BASE_URL')],
   ['PDF trend context follows selected metric instead of stale trend response', files.monitoring.includes('metricLabelForTrend') && files.monitoring.includes('selectedMetric') && files.monitoring.includes('onTrendContext={forwardTrendContext}')],
 
@@ -86,6 +89,9 @@ const checks = [
   ['primary issue removes recurring workload block', !files.incident.includes('Recurring Workload') && files.incident.includes('Current Workload')],
   ['current workloads use lean columns', files.workload.includes('Current Workloads') && files.workload.includes('CPU Usage') && files.workload.includes('PSS Memory') && files.workload.includes('Processes') && !files.workload.includes('<th>Type</th>')],
   ['current workload type remains available as sublabel', files.workload.includes('workloadTypeLabel(row.consumer_type)')],
+  ['current workload shows retained snapshot freshness', files.workload.includes('rundeckWorkloadFreshness') && files.workload.includes('Snapshot ${formatWib(latestObservedAt, true)} WIB') && files.workload.includes('relativeAge')],
+  ['current workload exposes SAP identity without claiming direct process mapping', files.workload.includes('Job Name') && files.workload.includes('ABAP Program') && files.workload.includes('Representative ') && files.workload.includes("push('PID'") && files.workload.includes("push('SAP User'")],
+  ['latest collection badge no longer claims realtime CURRENT', files.v122Css.includes("content: 'LATEST SNAPSHOT'") && files.v122Css.includes('.rundeckJobHistoryHead em.is-current')],
   ['selected workload keeps observation performance and issue timeline', files.history.includes('>Observation<') && files.history.includes('>Performance<') && files.history.includes('Issue Timeline') && files.history.includes('Observed Checks')],
   ['timeline wording stays observational not causal', files.history.includes('Workload was already observed') && files.history.includes('Workload first observed') && !files.history.includes('before issue start')],
   ['observation history remains collapsed by default', files.history.includes('<details className="rundeckJobExecutionHistory">')],
@@ -109,6 +115,12 @@ const checks = [
   ['evidence timeline exposes alignment coverage and interpretation', files.evidenceUi.includes('Evidence Timeline') && files.evidenceUi.includes('max skew') && files.evidenceUi.includes('Availability History') && files.evidenceUi.includes('Evidence interpretation')],
   ['evidence alignment explicitly means timing not causation', files.evidenceUi.includes('Alignment Window') && files.evidenceUi.includes('Timing alignment supports correlation only') && files.evidenceUi.includes('timing only · not causation')],
   ['evidence timeline semantic states are styled without dashboard redesign', files.evidenceCss.includes('.rundeckEvidenceAlignment.is-aligned') && files.evidenceCss.includes('.rundeckEvidenceAlignment.is-limited') && files.evidenceCss.includes('.rundeckEvidenceTimeline > summary')],
+
+  ['Collect Now is visible by default but remains runner-credential guarded', files.backendApi.includes('RUNDECK_COLLECT_NOW_ENABLED') && files.backendApi.includes('setdefault') && files.backendRunner.includes('RUNNER_CREDENTIAL_MISSING') && files.backendRunner.includes('"allowed": ready and not running and not cooldown')],
+  ['Collect Now resolves only fixed server-side Rundeck identity', files.backendRunner.includes('RUNDECK_JOB_GROUP') && files.backendRunner.includes('RUNDECK_JOB_NAME') && files.backendRunner.includes('_discover_job_id') && files.backendRunner.includes('groupPathExact') && files.backendRunner.includes('jobFilter')],
+  ['Collect Now uses dedicated runner credential and never browser job id', files.backendRunner.includes('rundeck-runner') && files.backendRunner.includes('RUNDECK_RUNNER_TOKEN_FILE') && files.backendRunner.includes('actor: str | None = None')],
+  ['Collect Now watches execution and ingests fresh result with poller fallback', files.backendRunner.includes('_watch_execution') && files.backendRunner.includes('output_text') && files.backendRunner.includes('ingest(') && files.backendRunner.includes('PENDING_POLLER')],
+  ['Collect Now UI keeps cooldown and approved action header', files.source.includes('/collect-now/status') && files.source.includes("'X-SPHERE-Action': 'collect-now'") && files.source.includes('Cooldown') && files.source.includes('Running #')],
 
   ['evaluation defaults to one day in UI and API', files.evaluation.includes("useState('1d')") && files.backendApi.includes('period: str = Query("1d"') && files.backendEvaluation.includes('evaluation_report(period: str = "1d"')],
   ['evaluation quality header is lean', ['Data Coverage', 'Collection Checks', 'Historical Baseline'].every((value) => files.evaluation.includes(value)) && !files.evaluation.includes('Persisted Depth')],
@@ -156,8 +168,8 @@ const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.21.1 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.22.0 contract check(s) failed.`)
   process.exit(1)
 }
 
-console.log('\nRundeck v1.21.1 contract checks passed.')
+console.log('\nRundeck v1.22.0 contract checks passed.')
