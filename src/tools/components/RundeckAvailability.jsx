@@ -23,9 +23,30 @@ function MatrixCell({ row }) {
   return <span title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><Status value={row.status} /></span>
 }
 
+function bundleSourceStatus(bundle, key) {
+  const source = bundle?.sources?.[key]
+  if (!source) return 'WAITING'
+  const status = String(source.status || '').toUpperCase()
+  if (status === 'SUCCEEDED' && source.ingest_status === 'READY') return 'READY'
+  if (status === 'RUNNING' || status === 'SCHEDULED') return 'RUNNING'
+  if (['FAILED', 'ABORTED', 'TIMEDOUT'].includes(status)) return 'FAILED'
+  return String(source.ingest_status || status || 'WAITING').toUpperCase()
+}
+
 export default function RundeckAvailability({ refreshToken = '' }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
+  const [bundle, setBundle] = React.useState(null)
+  const previousBundleRunning = React.useRef(false)
+
+  const loadAvailability = React.useCallback(async (signal) => {
+    const response = await fetch(`${API}/availability/latest`, { cache: 'no-store', signal })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body.detail || `Availability unavailable (${response.status})`)
+    }
+    return response.json()
+  }, [])
 
   React.useEffect(() => {
     let active = true
@@ -34,14 +55,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
     const load = () => {
       controller.abort()
       controller = new AbortController()
-      fetch(`${API}/availability/latest`, { cache: 'no-store', signal: controller.signal })
-        .then(async (response) => {
-          if (!response.ok) {
-            const body = await response.json().catch(() => ({}))
-            throw new Error(body.detail || `Availability unavailable (${response.status})`)
-          }
-          return response.json()
-        })
+      loadAvailability(controller.signal)
         .then((result) => {
           if (!active) return
           setData(result)
@@ -60,7 +74,47 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       window.clearInterval(timer)
       controller.abort()
     }
-  }, [refreshToken])
+  }, [loadAvailability, refreshToken])
+
+  React.useEffect(() => {
+    let active = true
+    let controller = new AbortController()
+
+    const checkBundle = async () => {
+      controller.abort()
+      controller = new AbortController()
+      try {
+        const response = await fetch(`${API}/collect-now/status`, { cache: 'no-store', signal: controller.signal })
+        if (!response.ok) return
+        const result = await response.json()
+        if (!active) return
+        const wasRunning = previousBundleRunning.current
+        const isRunning = Boolean(result.running)
+        previousBundleRunning.current = isRunning
+        setBundle(result)
+        if (wasRunning && !isRunning) {
+          try {
+            const latest = await loadAvailability(controller.signal)
+            if (!active) return
+            setData(latest)
+            setError('')
+          } catch (failure) {
+            if (failure.name !== 'AbortError' && active) setError(failure.message || 'Availability unavailable')
+          }
+        }
+      } catch (failure) {
+        if (failure.name !== 'AbortError' && active) setBundle((current) => current)
+      }
+    }
+
+    checkBundle()
+    const timer = window.setInterval(checkBundle, 4000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+      controller.abort()
+    }
+  }, [loadAvailability])
 
   const apps = data?.sap_app || []
   const hana = roleMap(data?.hana_system_db || [])
@@ -80,6 +134,10 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   ].filter(Boolean)
   const technicalDownCount = matrixTechnicalRows.filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length
   const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
+  const bundlePerformance = bundleSourceStatus(bundle, 'performance')
+  const bundleAvailability = bundleSourceStatus(bundle, 'availability')
+  const showBundle = Boolean(bundle?.requested_at) && ['RUNNING', 'READY', 'PARTIAL', 'FAILED', 'WAITING'].includes(String(bundle?.bundle_status || '').toUpperCase())
+  const skew = Number(bundle?.source_skew_seconds)
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
@@ -89,6 +147,10 @@ export default function RundeckAvailability({ refreshToken = '' }) {
           Current service check{data?.execution_id ? ` · Run #${data.execution_id}` : ''}
           {data?.collected_at ? ` · ${formatWib(data.collected_at, true)} WIB` : ''}
         </span>
+        {showBundle && <small className={`rundeckAvailabilityBundle is-${String(bundle.bundle_status || '').toLowerCase()}`} title="Collect Now runs the approved performance and availability Rundeck jobs as one bundle.">
+          Fresh Collection · Performance {bundlePerformance} · Availability {bundleAvailability}
+          {Number.isFinite(skew) ? ` · skew ${skew}s` : ''}
+        </small>}
       </div>
       <div className="rundeckAvailabilityState">
         <Status value={serviceState} />
