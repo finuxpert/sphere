@@ -1,4 +1,5 @@
 import React from 'react'
+import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
 import { shortHost } from './sapUiFormat.js'
 import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
 import './RundeckPerformanceIncident.css'
@@ -145,6 +146,7 @@ export default function RundeckPerformanceIncident({
   const signal = summary.primary_signal || {}
   const current = summary.current_workload
   const currentContext = jobContext(current, summary.affected_server, 'current')
+  const evidenceJob = selectedJob || currentContext
   const hostMetrics = summary.current_host_metrics || {}
   const signalValue = metric(signal.value, signal.unit || '')
   const resourceState = hostResourceState(hostMetrics)
@@ -199,5 +201,7 @@ export default function RundeckPerformanceIncident({
       <span><b>Memory</b>{metric(hostMetrics.ram_pct, '%')}</span>
       <span><b>I/O Wait</b>{metric(hostMetrics.io_wait_pct, '%')}</span>
     </div>
+
+    <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive={summary.active} />
   </section>
 }
