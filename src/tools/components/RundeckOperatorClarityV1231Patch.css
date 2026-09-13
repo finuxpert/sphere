@@ -1,4 +1,9 @@
 /* v1.23.1 final micro-cleanup: remove implementation copy that duplicates visible state. */
+.appShell:has(.rundeckPanel) .sphereToolTabs {
+  padding-left: 0 !important;
+  border-left: 0 !important;
+}
+
 .appShell:has(.rundeckPanel) .rundeckServerSection .rundeckSectionTitle::after,
 .appShell:has(.rundeckPanel) .rundeckTrendToolbar::after {
   display: none !important;
