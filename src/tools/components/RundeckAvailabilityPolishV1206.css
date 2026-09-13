@@ -1,10 +1,10 @@
-/* v1.20.6 final UI micro polish: availability hierarchy, density, and top-band alignment. */
+/* v1.20.6 final UI freeze polish: availability matrix, summary density, and evaluation scanability. */
 
 .rundeckAvailabilityBody {
   display: grid !important;
   grid-template-columns: 1fr !important;
   gap: 7px !important;
-  margin-top: 8px !important;
+  margin-top: 7px !important;
 }
 
 .rundeckAvailabilityGroup {
@@ -38,7 +38,7 @@
 }
 
 .rundeckAvailabilityMore {
-  margin-top: 7px !important;
+  margin-top: 6px !important;
 }
 
 .rundeckAvailabilityMore > summary {
@@ -64,29 +64,141 @@
   padding-top: 7px !important;
 }
 
-.rundeckAvailabilityMoreBody > div {
+/* Keep the HANA technical matrix as a real 4-column matrix. The previous
+   broad child selector flattened it into a two-column technical row. */
+.rundeckAvailabilityMatrix {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  min-width: 0;
+}
+
+.rundeckAvailabilityMatrix > div {
+  display: grid !important;
+  grid-template-columns: minmax(86px, 1fr) repeat(3, minmax(72px, .72fr)) !important;
+  gap: 0 !important;
+  align-items: center !important;
+  min-height: 24px !important;
+}
+
+.rundeckAvailabilityMatrix > div > * {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.rundeckAvailabilityMatrix .is-head > span:not(:first-child),
+.rundeckAvailabilityMatrix > div > span:not(:first-child) {
+  justify-content: flex-start;
+}
+
+.rundeckAvailabilityMoreBody > .rundeckAvailabilityTechnicalRow {
   display: grid !important;
   grid-template-columns: 120px minmax(0, 1fr) !important;
   gap: 10px !important;
   align-items: start !important;
 }
 
-/* Final density pass. */
+/* Make the overall state explicit without turning the header into another card. */
+.rundeckOperationalState {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.rundeckOperationalState > span:first-child {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.7px;
+  font-weight: 760;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Final density pass: compact only the primary summary, not the analysis bands. */
 .rundeckLandscapeHeader {
-  padding-bottom: 8px !important;
+  min-height: 34px !important;
+  padding-top: 3px !important;
+  padding-bottom: 4px !important;
 }
 
 .rundeckIncident.is-lean {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.rundeckIncident.is-lean > .rundeckIncidentWorkloadBlock {
+  margin-top: 2px !important;
 }
 
 .rundeckJobExecutionHistory {
   margin-top: 14px !important;
 }
 
+/* Performance Evaluation: denser controls and cards, stronger sticky header. */
+.rundeckEvaluationHead {
+  gap: 8px !important;
+}
+
+.rundeckEvaluationHead p {
+  margin-top: 2px !important;
+}
+
+.rundeckEvaluationControls {
+  gap: 2px !important;
+}
+
+.rundeckEvaluationSegmented {
+  gap: 1px !important;
+}
+
+.rundeckEvaluationSegmented button {
+  min-height: 20px !important;
+  padding: 1px 6px !important;
+}
+
+.rundeckEvaluationQuality.is-lean {
+  margin-top: 6px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
 .rundeckEvaluationSummary.is-lean {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 6px !important;
+  margin-top: 6px !important;
+}
+
+.rundeckEvaluationSummary.is-lean > div {
+  min-height: 38px !important;
+  padding: 4px 7px !important;
+}
+
+.rundeckEvaluationSummary.is-lean strong {
+  margin-top: 1px !important;
+  margin-bottom: 0 !important;
+  font-size: clamp(14px, .9vw, 16px) !important;
+}
+
+.rundeckEvaluationSortBar {
+  margin-top: 5px !important;
+}
+
+.rundeckEvaluationTableWrap {
+  position: relative;
+  max-height: 282px !important;
+  margin-top: 5px !important;
+  overflow: auto;
+}
+
+.rundeckEvaluationTable thead th {
+  position: sticky !important;
+  top: 0;
+  z-index: 3 !important;
+  background: #11191e !important;
+  color: var(--sphere-text-secondary, #a9b5bb) !important;
+  box-shadow: 0 1px 0 rgba(113, 128, 137, .18), 0 4px 8px rgba(0, 0, 0, .10) !important;
 }
 
 .rundeckHistoryTableWrap,
@@ -145,8 +257,22 @@
 
 @media (max-width: 1180px) {
   .rundeckAvailabilityGroup,
-  .rundeckAvailabilityMoreBody > div {
+  .rundeckAvailabilityMoreBody > .rundeckAvailabilityTechnicalRow {
     grid-template-columns: 1fr !important;
     gap: 4px !important;
+  }
+
+  .rundeckAvailabilityMatrix > div {
+    grid-template-columns: minmax(78px, 1fr) repeat(3, minmax(64px, .8fr)) !important;
+  }
+
+  .rundeckOperationalState > span:first-child {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .rundeckEvaluationSummary.is-lean {
+    grid-template-columns: 1fr !important;
   }
 }
