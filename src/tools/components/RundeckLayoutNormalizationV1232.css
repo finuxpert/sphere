@@ -1,0 +1,78 @@
+/* SPHERE v1.23.2 — layout normalization only.
+   Keep the v1.23.1 information model and normalize the float hand-offs between
+   Server/App state, trend, availability, workload detail, and operational events. */
+
+@media (min-width: 1181px) {
+  /* Band 1 must start from one baseline: APP state on the left, Server Trend on the right.
+     The left rail owns the clear; the right rail joins that same float line. */
+  .appShell:has(.rundeckPanel) .rundeckServerSection {
+    float: left !important;
+    clear: both !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoringHead {
+    float: right !important;
+    clear: none !important;
+  }
+
+  /* Availability is a true standalone band. Making the slot itself a full-width float
+     gives CSS clear semantics a deterministic hand-off from both rails. */
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 {
+    display: block !important;
+    float: left !important;
+    clear: both !important;
+    width: 100% !important;
+    margin: 14px 0 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 .rundeckAvailability {
+    float: none !important;
+    clear: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px 0 11px !important;
+    border-right: 0 !important;
+  }
+
+  /* Band 2 begins only after standalone Availability. */
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 + .rundeckCurrentWorkload {
+    margin-top: 14px !important;
+  }
+
+  /* A pinned workload is an explicit operator context. Do not leave an unrelated
+     historical chart selection visible beside it. */
+  .appShell:has(.rundeckPanel) .rundeckMonitoring.is-workload-pinned-v1232 > .rundeckRcaSection,
+  .appShell:has(.rundeckPanel) .rundeckMonitoring.is-workload-pinned-v1232 > .rundeckRcaHint {
+    display: none !important;
+  }
+}
+
+/* Operational Events stays useful on demand without taking over the first viewport. */
+.appShell:has(.rundeckPanel) .rundeckEvidenceTimeline[open] > .rundeckEvidenceBody {
+  max-height: 238px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceTimeline[open] > summary {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--sphere-page, #0f151a);
+}
+
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) .rundeckEvidenceTimeline[open] > .rundeckEvidenceBody {
+    max-height: 300px;
+  }
+}
