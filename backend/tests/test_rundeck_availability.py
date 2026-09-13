@@ -1,6 +1,6 @@
 import unittest
 
-from backend.rundeck_availability import parse_availability_report
+from backend.rundeck_availability import parse_availability_report, summarize_services
 
 
 SAMPLE = """
@@ -39,6 +39,20 @@ class AvailabilityParserTests(unittest.TestCase):
         ssh5 = [row for row in rows if row["category"] == "SSH" and row["name"] == "APP5"]
         self.assertEqual(app5[0]["status"], "DOWN")
         self.assertEqual(ssh5[0]["status"], "UP")
+
+    def test_app_down_is_critical(self):
+        summary = summarize_services(parse_availability_report(SAMPLE))
+        self.assertEqual(summary["service_state"], "CRITICAL")
+        self.assertEqual(summary["sap_state"], "CRITICAL")
+
+    def test_supporting_service_down_is_attention_when_apps_are_up(self):
+        rows = parse_availability_report(SAMPLE)
+        for row in rows:
+            if row["category"] == "SAP_APP":
+                row["status"] = "UP"
+        summary = summarize_services(rows)
+        self.assertEqual(summary["sap_state"], "NORMAL")
+        self.assertEqual(summary["service_state"], "ATTENTION")
 
 
 if __name__ == "__main__":
