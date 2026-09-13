@@ -136,21 +136,28 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
   const bundlePerformance = bundleSourceStatus(bundle, 'performance')
   const bundleAvailability = bundleSourceStatus(bundle, 'availability')
-  const showBundle = Boolean(bundle?.requested_at) && ['RUNNING', 'READY', 'PARTIAL', 'FAILED', 'WAITING'].includes(String(bundle?.bundle_status || '').toUpperCase())
+  const bundleState = String(bundle?.bundle_status || '').toUpperCase()
   const skew = Number(bundle?.source_skew_seconds)
+  const bundleTitle = bundle?.requested_at
+    ? `Fresh collection · Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · source gap ${skew}s` : ''}`
+    : ''
+  const collectionNotice = bundleState === 'RUNNING'
+    ? 'Collecting fresh performance + availability data…'
+    : bundleState === 'PARTIAL'
+      ? 'Last fresh collection completed with one source incomplete'
+      : bundleState === 'FAILED'
+        ? 'Last fresh collection failed'
+        : ''
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
       <div>
         <h3><SphereIcon name="server" /> SAP Availability</h3>
         <span title="Current snapshot from the existing Rundeck Service Availability job. Resource usage is supporting evidence only.">
-          Current service check{data?.execution_id ? ` · Run #${data.execution_id}` : ''}
-          {data?.collected_at ? ` · ${formatWib(data.collected_at, true)} WIB` : ''}
+          {data?.collected_at ? `Updated ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
+          {data?.execution_id ? ` · Run #${data.execution_id}` : ''}
         </span>
-        {showBundle && <small className={`rundeckAvailabilityBundle is-${String(bundle.bundle_status || '').toLowerCase()}`} title="Collect Now runs the approved performance and availability Rundeck jobs as one bundle.">
-          Fresh Collection · Performance {bundlePerformance} · Availability {bundleAvailability}
-          {Number.isFinite(skew) ? ` · skew ${skew}s` : ''}
-        </small>}
+        {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
       </div>
       <div className="rundeckAvailabilityState">
         <Status value={serviceState} />
