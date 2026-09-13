@@ -11,6 +11,7 @@ Group=sphere
 WorkingDirectory=/opt/sphere-rundeck-dev/current
 Environment=SPHERE_INGESTION_ROOT=/var/lib/sphere/ingestion
 Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=RUNDECK_COLLECT_NOW_ENABLED=true
 EnvironmentFile=-/etc/sphere/rundeck-dev.env
 ExecStart=/opt/sphere-rundeck-dev/venv/bin/python -m uvicorn backend.rundeck_api:app --host 127.0.0.1 --port 8091
 Restart=on-failure
