@@ -10,7 +10,8 @@
 .rundeckAvailabilityBody,
 .rundeckAvailabilityApps,
 .rundeckAvailabilityInfra,
-.rundeckAvailabilityHead > div {
+.rundeckAvailabilityHead > div,
+.rundeckAvailabilityGroup {
   display: flex;
   align-items: center;
 }
@@ -39,7 +40,8 @@
 }
 
 .rundeckAvailabilityHead span,
-.rundeckAvailabilityError {
+.rundeckAvailabilityError,
+.rundeckAvailabilityMuted {
   color: var(--sphere-text-muted, #718089);
   font-size: 8.7px;
 }
@@ -47,8 +49,22 @@
 .rundeckAvailabilityBody {
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px 18px;
+  gap: 7px 20px;
   margin-top: 6px;
+}
+
+.rundeckAvailabilityGroup {
+  gap: 8px;
+  min-width: 0;
+}
+
+.rundeckAvailabilityLabel {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .rundeckAvailabilityApps,
@@ -67,7 +83,8 @@
   font-size: 9.2px;
 }
 
-.rundeckAvailabilityApps b {
+.rundeckAvailabilityApps b,
+.rundeckAvailabilityInfra b {
   color: var(--sphere-text, #e7edf0);
 }
 
@@ -99,13 +116,50 @@
   border-bottom-color: rgba(219, 125, 134, .28);
 }
 
+.rundeckAvailability.has-attention {
+  border-bottom-color: rgba(216, 179, 95, .24);
+}
+
 .rundeckAvailabilityError {
   margin-top: 5px;
 }
 
+.rundeckAvailabilityMore {
+  margin-top: 4px;
+}
+
+.rundeckAvailabilityMore > summary {
+  width: max-content;
+  color: var(--sphere-text-muted, #718089);
+  cursor: pointer;
+  font-size: 8.5px;
+  list-style: none;
+}
+
+.rundeckAvailabilityMore > summary::-webkit-details-marker { display: none; }
+.rundeckAvailabilityMore > summary::before { content: '▸ '; }
+.rundeckAvailabilityMore[open] > summary::before { content: '▾ '; }
+
+.rundeckAvailabilityMoreBody {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(113, 128, 137, .06);
+}
+
+.rundeckAvailabilityMoreBody > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 @media (max-width: 900px) {
   .rundeckAvailabilityHead,
-  .rundeckAvailabilityBody {
+  .rundeckAvailabilityBody,
+  .rundeckAvailabilityGroup,
+  .rundeckAvailabilityMoreBody > div {
     align-items: flex-start;
     flex-direction: column;
   }
