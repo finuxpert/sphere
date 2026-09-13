@@ -24,6 +24,7 @@
 .rundeckAvailabilityHead > div:first-child {
   min-width: 0;
   gap: 9px;
+  flex-wrap: wrap;
 }
 
 .rundeckAvailabilityHead h3 {
@@ -45,6 +46,25 @@
   color: var(--sphere-text-muted, #718089);
   font-size: 8.7px;
 }
+
+.rundeckAvailabilityBundle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 2px 6px;
+  border: 1px solid rgba(113, 128, 137, .14);
+  border-radius: 999px;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rundeckAvailabilityBundle.is-running,
+.rundeckAvailabilityBundle.is-waiting { color: var(--sphere-attention, #6aa2d8); }
+.rundeckAvailabilityBundle.is-ready { color: var(--sphere-positive, #75cfa5); }
+.rundeckAvailabilityBundle.is-partial { color: var(--sphere-warning, #d8b35f); }
+.rundeckAvailabilityBundle.is-failed { color: var(--sphere-danger, #db7d86); }
 
 .rundeckAvailabilityState {
   display: flex;
@@ -226,6 +246,10 @@
 
   .rundeckAvailabilityState {
     align-items: flex-start;
+  }
+
+  .rundeckAvailabilityBundle {
+    white-space: normal;
   }
 
   .rundeckAvailabilityMoreBody {
