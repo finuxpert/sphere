@@ -10,12 +10,17 @@ function Status({ value = 'UNKNOWN' }) {
 }
 
 function roleMap(rows = []) {
-  return Object.fromEntries(rows.map((row) => [row.name, row]))
+  return Object.fromEntries(rows.map((row) => [String(row.name || '').toUpperCase(), row]))
 }
 
 function ServiceList({ rows = [], fallback = 'No data' }) {
   if (!rows.length) return <span className="rundeckAvailabilityMuted">{fallback}</span>
-  return rows.map((row) => <span key={`${row.category}-${row.name}`} title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><b>{row.name}</b><Status value={row.status} /></span>)
+  return rows.map((row) => <span key={`${row.category}-${row.name}-${row.endpoint || ''}`} title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><b>{row.name}</b><Status value={row.status} /></span>)
+}
+
+function MatrixCell({ row }) {
+  if (!row) return <span className="rundeckAvailabilityMuted">—</span>
+  return <span title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><Status value={row.status} /></span>
 }
 
 export default function RundeckAvailability({ refreshToken = '' }) {
@@ -60,6 +65,13 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const apps = data?.sap_app || []
   const hana = roleMap(data?.hana_system_db || [])
   const web = roleMap(data?.web_dispatcher || [])
+  const replication = roleMap(data?.hana_replication || [])
+  const sshRows = data?.ssh || []
+  const ssh = roleMap(sshRows)
+  const appSsh = sshRows.filter((row) => /^APP\d+$/i.test(String(row.name || '')))
+  const otherSsh = sshRows.filter((row) => !/^(PRIMARY|SECONDARY|DR|APP\d+)$/i.test(String(row.name || '')))
+  const primaryRows = [...apps, ...Object.values(hana), ...Object.values(web)]
+  const downCount = primaryRows.filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length
   const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
@@ -71,7 +83,10 @@ export default function RundeckAvailability({ refreshToken = '' }) {
           {data?.collected_at ? ` · ${formatWib(data.collected_at, true)} WIB` : ''}
         </span>
       </div>
-      <Status value={serviceState} />
+      <div className="rundeckAvailabilityState">
+        <Status value={serviceState} />
+        {data && downCount > 0 && <small>{downCount} service check{downCount === 1 ? '' : 's'} down</small>}
+      </div>
     </div>
 
     {error && !data && <div className="rundeckAvailabilityError">Service Availability data unavailable. Existing performance monitoring remains active.</div>}
@@ -100,10 +115,21 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       </div>
 
       <details className="rundeckAvailabilityMore">
-        <summary>More</summary>
+        <summary>More technical checks</summary>
         <div className="rundeckAvailabilityMoreBody">
-          <div><span className="rundeckAvailabilityLabel">HANA Replication</span><div className="rundeckAvailabilityInfra"><ServiceList rows={data.hana_replication || []} /></div></div>
-          <div><span className="rundeckAvailabilityLabel">SSH Reachability</span><div className="rundeckAvailabilityInfra"><ServiceList rows={data.ssh || []} /></div></div>
+          <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
+            <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>
+            <div><b>Replication</b><MatrixCell row={replication.PRIMARY} /><MatrixCell row={replication.SECONDARY} /><MatrixCell row={replication.DR} /></div>
+            <div><b>SSH</b><MatrixCell row={ssh.PRIMARY} /><MatrixCell row={ssh.SECONDARY} /><MatrixCell row={ssh.DR} /></div>
+          </div>
+          <div className="rundeckAvailabilityTechnicalRow">
+            <span className="rundeckAvailabilityLabel">SAP App SSH</span>
+            <div className="rundeckAvailabilityInfra"><ServiceList rows={appSsh} /></div>
+          </div>
+          {otherSsh.length > 0 && <div className="rundeckAvailabilityTechnicalRow">
+            <span className="rundeckAvailabilityLabel">Other SSH</span>
+            <div className="rundeckAvailabilityInfra"><ServiceList rows={otherSsh} /></div>
+          </div>}
         </div>
       </details>
     </>}
