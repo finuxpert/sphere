@@ -19,6 +19,8 @@ const files = {
   availability: read('src/tools/components/RundeckAvailability.jsx'),
   availabilityPolish: read('src/tools/components/RundeckAvailabilityPolishV1206.css'),
   uiFreeze: read('src/tools/components/RundeckUiFreezeV1207.css'),
+  evidenceUi: read('src/tools/components/RundeckEvidenceTimeline.jsx'),
+  evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
   workspace: read('src/tools/ToolLogWorkspace.jsx'),
   evaluation: read('src/tools/components/RundeckPerformanceEvaluation.jsx'),
   explain: read('src/tools/components/rundeckEvaluationExplain.js'),
@@ -29,6 +31,7 @@ const files = {
   backendEvaluation: read('backend/rundeck_evaluation.py'),
   backendTrends: read('backend/rundeck_trends.py'),
   backendApi: read('backend/rundeck_api.py'),
+  backendEvidence: read('backend/rundeck_evidence.py'),
   backfill: read('ops/rundeck/backfill-consumers.py'),
   deployDev: read('ops/rundeck/deploy-dev.sh'),
   nginxUpdater: read('ops/rundeck/update-nginx-block.py'),
@@ -58,7 +61,7 @@ const releaseCandidateIndex = files.workspace.indexOf("./components/RundeckRelea
 const uiFreezeIndex = files.workspace.indexOf("./components/RundeckUiFreezeV1207.css")
 
 const checks = [
-  ['version is v1.20.7', files.version.includes("APP_VERSION = '1.20.7'") && files.version.includes("APP_PREVIOUS_VERSION = '1.20.6'") && files.version.includes('operational-clarity-ui-freeze-v1.20.7')],
+  ['version is v1.21.0 with v1.20.7 UI freeze retained', files.version.includes("APP_VERSION = '1.21.0'") && files.version.includes("APP_PREVIOUS_VERSION = '1.20.7'") && files.version.includes("LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.0'") && files.version.includes("LOG_UI_REVISION = 'operational-clarity-ui-freeze-v1.20.7'")],
   ['v1.20 operational CSS remains loaded', files.app.includes("./app/rundeck-v120.css")],
   ['v1.20.6 availability polish remains loaded', files.workspace.includes("./components/RundeckAvailabilityPolishV1206.css")],
   ['v1.20.7 UI freeze polish loads last', uiFreezeIndex > releaseCandidateIndex && uiFreezeIndex >= 0],
@@ -95,6 +98,15 @@ const checks = [
   ['availability distinguishes primary service and technical down counts', files.availability.includes('primaryServiceDownCount') && files.availability.includes('primary service') && files.availability.includes('technicalDownCount') && files.availability.includes('More technical checks')],
   ['availability final polish preserves four-column matrix', files.availabilityPolish.includes('.rundeckAvailabilityMatrix > div') && files.availabilityPolish.includes('repeat(3, minmax(72px, .72fr))') && files.availabilityPolish.includes('.rundeckAvailabilityMoreBody > .rundeckAvailabilityTechnicalRow') && !files.availabilityPolish.includes('.rundeckAvailabilityMoreBody > div {')],
   ['technical check count remains visible after legacy pseudo label', files.uiFreeze.includes('.rundeckAvailabilityMore > summary::after') && files.uiFreeze.includes('content: none !important') && files.uiFreeze.includes('.rundeckAvailabilityMore > summary > span')],
+
+  ['v1.21 evidence API is exposed', files.backendApi.includes('@app.get("/analysis/evidence")') && files.backendApi.includes('evidence_timeline')],
+  ['evidence correlation has configurable source skew', files.backendEvidence.includes('SPHERE_CORRELATION_MAX_SKEW_MIN') && files.backendEvidence.includes('"ALIGNED"') && files.backendEvidence.includes('"LIMITED"') && files.backendEvidence.includes('"INSUFFICIENT DATA"')],
+  ['evidence workload uses latest continuous observation episode', files.backendEvidence.includes('SPHERE_EVIDENCE_WORKLOAD_GAP_MINUTES') && files.backendEvidence.includes('_latest_episode')],
+  ['availability first DOWN is not misreported as a transition', files.backendEvidence.includes('availability-observed-down') && files.backendEvidence.includes('earlier state is unknown') && files.backendEvidence.includes('availability-transition')],
+  ['evidence wording stays correlation-safe', files.backendEvidence.includes('supporting evidence') && files.backendEvidence.includes('does not establish automatic root cause') && files.backendEvidence.includes('root cause still requires validation')],
+  ['evidence timeline stays secondary and collapsed', files.incident.includes('<RundeckEvidenceTimeline') && files.evidenceUi.includes('<details className="rundeckEvidenceTimeline">') && !files.evidenceUi.includes('<details open')],
+  ['evidence timeline exposes alignment coverage and interpretation', files.evidenceUi.includes('Evidence Timeline') && files.evidenceUi.includes('max skew') && files.evidenceUi.includes('Availability History') && files.evidenceUi.includes('Evidence interpretation')],
+  ['evidence timeline semantic states are styled without dashboard redesign', files.evidenceCss.includes('.rundeckEvidenceAlignment.is-aligned') && files.evidenceCss.includes('.rundeckEvidenceAlignment.is-limited') && files.evidenceCss.includes('.rundeckEvidenceTimeline > summary')],
 
   ['evaluation defaults to one day in UI and API', files.evaluation.includes("useState('1d')") && files.backendApi.includes('period: str = Query("1d"') && files.backendEvaluation.includes('evaluation_report(period: str = "1d"')],
   ['evaluation quality header is lean', ['Data Coverage', 'Collection Checks', 'Historical Baseline'].every((value) => files.evaluation.includes(value)) && !files.evaluation.includes('Persisted Depth')],
@@ -142,8 +154,8 @@ const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.20.7 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.21.0 contract check(s) failed.`)
   process.exit(1)
 }
 
-console.log('\nRundeck v1.20.7 contract checks passed.')
+console.log('\nRundeck v1.21.0 contract checks passed.')
