@@ -1,14 +1,14 @@
 export const APP_NAME = 'SPHERE'
 export const APP_TAGLINE = 'SAP Performance Health Evaluation & Reporting'
-export const APP_VERSION = '1.22.0'
-export const APP_PREVIOUS_VERSION = '1.21.1'
+export const APP_VERSION = '1.22.1'
+export const APP_PREVIOUS_VERSION = '1.22.0'
 export const APP_BUILD = String(import.meta.env.VITE_GIT_SHA || '').slice(0, 7)
 export const APP_ENV = String(import.meta.env.VITE_APP_ENV || '')
 export const APP_IS_DEV = /dev/i.test(APP_ENV) || String(import.meta.env.BASE_URL || '').includes('dev')
 export const APP_DISPLAY_VERSION = `v${APP_VERSION}${APP_IS_DEV ? '-dev' : ''}${APP_BUILD ? ` · ${APP_BUILD}` : ''}`
 export const APP_BUILD_LABEL = `Build ${APP_DISPLAY_VERSION}`
 export const LOG_ANALYTICS_ENGINE = 'evidence-correlation-v1.21.1'
-export const LOG_UI_REVISION = 'operational-clarity-ui-freeze-v1.20.7'
+export const LOG_UI_REVISION = 'operational-ux-v1.22.1'
 
 export function formatAppTitle(section = '') {
   return `${section ? `${section} · ` : ''}${APP_NAME} v${APP_VERSION}`
