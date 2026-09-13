@@ -1,0 +1,86 @@
+/* SPHERE v1.20.7 final UI freeze: operational clarity micro-polish only.
+   No threshold, API, correlation, evaluation, or SAP status semantics changes. */
+
+/* Availability wording now distinguishes primary service checks from technical checks. */
+.rundeckAvailabilityMore > summary {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  font-size: 8.8px !important;
+}
+
+.rundeckAvailabilityMore > summary::after {
+  content: none !important;
+}
+
+.rundeckAvailabilityMore > summary > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 16px;
+  padding: 0 5px;
+  border: 1px solid rgba(219, 125, 134, .32);
+  border-radius: 999px;
+  color: var(--sphere-danger, #db7d86);
+  font-size: 7.7px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+/* Operational State remains compact but the label is now readable at a glance. */
+.rundeckOperationalState > span:first-child {
+  color: var(--sphere-text-secondary, #a9b5bb) !important;
+  font-size: 8.4px !important;
+  font-weight: 780 !important;
+  letter-spacing: .05em !important;
+}
+
+/* Final top-summary density pass. Keep the approved structure and reduce only vertical slack. */
+@media (min-width: 1181px) {
+  .appShell:has(.rundeckPanel) .rundeckLandscapeHeader {
+    min-height: 32px !important;
+    padding-top: 2px !important;
+    padding-bottom: 3px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean .rundeckIncidentMeta {
+    margin-top: 3px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean > .rundeckIncidentWorkloadBlock {
+    margin-top: 1px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean > .rundeckIncidentHostContext {
+    margin-top: 4px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    gap: 3px 12px !important;
+  }
+}
+
+/* Give evaluation status + reason one extra beat without expanding the section structure. */
+.rundeckEvaluationTable.is-lean td {
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+}
+
+.rundeckEvaluationAssessmentWrap {
+  gap: 3px !important;
+}
+
+.rundeckEvaluationAssessmentWrap > small {
+  line-height: 1.3 !important;
+}
+
+@media (max-width: 1180px) {
+  .rundeckOperationalState > span:first-child {
+    display: none;
+  }
+}
