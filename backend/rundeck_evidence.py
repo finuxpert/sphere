@@ -72,6 +72,31 @@ def source_alignment(source_times: dict, max_skew_minutes: int | None = None) ->
     }
 
 
+def availability_transition_events(snapshots: list[dict], since=None) -> list[dict]:
+    """Compatibility projection for the v1.21 evidence event contract.
+
+    v1.23 keeps availability_change_events() as the single transition engine.
+    This adapter preserves the older public function and event names so existing
+    callers/tests continue to work without duplicating transition logic.
+    """
+    events = []
+    for change in availability_change_events(snapshots, since=since):
+        observed_down = change.get("kind") == "observed-down"
+        events.append({
+            "at": change.get("at"),
+            "source": "Availability",
+            "kind": "availability-observed-down" if observed_down else "availability-transition",
+            "state": change.get("to") or "UNKNOWN",
+            "title": change.get("title") or "Availability changed",
+            "detail": (
+                "First retained availability observation is DOWN; earlier state is unknown."
+                if observed_down
+                else "Observed status change in retained Rundeck availability history."
+            ),
+        })
+    return events
+
+
 def _latest_episode(items: list[dict]) -> list[dict]:
     ordered = sorted(
         [row for row in items if _dt(row.get("collected_at"))],
