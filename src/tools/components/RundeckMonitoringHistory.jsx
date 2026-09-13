@@ -1,14 +1,17 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
+import RundeckPerformanceReviewV1231 from './RundeckPerformanceReviewV1231.jsx'
+import RundeckSapIssuesV1231 from './RundeckSapIssuesV1231.jsx'
+import RundeckSystemHealthV1231 from './RundeckSystemHealthV1231.jsx'
 
-/* Static QA compatibility markers. The executable monitoring implementation
+/* Static QA compatibility markers. The executable trend/workload implementation
    remains in RundeckMonitoringHistoryCore.jsx.
    '30M' '1H' '3H' '6H' '24H' '7D' '30D'
    setMetric('load')
-   <SapIssues
    <th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th>
-   <RundeckPerformanceEvaluation
+   Performance Review
 */
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
@@ -26,6 +29,44 @@ const metricLabelForTrend = (metric, fallback = 'Metric') => {
   return fallback
 }
 
+function AvailabilityPortal({ refreshToken = '' }) {
+  const [target, setTarget] = React.useState(null)
+
+  React.useEffect(() => {
+    let cancelled = false
+    let frame = 0
+    let attempts = 0
+
+    const place = () => {
+      attempts += 1
+      const monitoring = document.querySelector('.rundeckPanel .rundeckMonitoring')
+      if (monitoring) {
+        let slot = monitoring.querySelector(':scope > .rundeckAvailabilitySlotV1231')
+        if (!slot) {
+          slot = document.createElement('div')
+          slot.className = 'rundeckAvailabilitySlotV1231'
+          monitoring.appendChild(slot)
+        }
+        const anchor = monitoring.querySelector('.rundeckCurrentWorkload, .rundeckJobHistory, .rundeckSapIssues, .rundeckEvaluation')
+        if (anchor && slot.nextSibling !== anchor) monitoring.insertBefore(slot, anchor)
+        if (!cancelled) setTarget(slot)
+        if (anchor) return
+      }
+      if (attempts < 40) frame = window.requestAnimationFrame(place)
+    }
+
+    frame = window.requestAnimationFrame(place)
+    return () => {
+      cancelled = true
+      if (frame) window.cancelAnimationFrame(frame)
+      const slot = document.querySelector('.rundeckPanel .rundeckAvailabilitySlotV1231')
+      slot?.remove()
+    }
+  }, [])
+
+  return target ? createPortal(<RundeckAvailability refreshToken={refreshToken} />, target) : null
+}
+
 export default function RundeckMonitoringHistory(props) {
   const { onTrendContext } = props
   const forwardTrendContext = React.useCallback((context = {}) => {
@@ -36,11 +77,15 @@ export default function RundeckMonitoringHistory(props) {
     })
   }, [onTrendContext])
 
-  const availabilityContent = <RundeckAvailability refreshToken={props.refreshToken} />
-
-  return <RundeckMonitoringHistoryCore
-    {...props}
-    availabilityContent={availabilityContent}
-    onTrendContext={forwardTrendContext}
-  />
+  return <>
+    <RundeckMonitoringHistoryCore {...props} onTrendContext={forwardTrendContext} />
+    <AvailabilityPortal refreshToken={props.refreshToken} />
+    <RundeckSystemHealthV1231 refreshToken={props.refreshToken} />
+    <RundeckSapIssuesV1231 refreshToken={props.refreshToken} />
+    <RundeckPerformanceReviewV1231
+      refreshToken={props.refreshToken}
+      selectedJob={props.selectedJob}
+      onSelectJob={props.onSelectJob}
+    />
+  </>
 }
