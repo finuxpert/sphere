@@ -16,6 +16,7 @@ import './components/RundeckUiFreezeV1207.css'
 import './components/RundeckFreshCollectionIdentityV122.css'
 import './components/RundeckOperationalUxV1221.css'
 import './components/RundeckOperatorDensityV1222.css'
+import './components/RundeckLeanOpsV123.css'
 
 const LogAutoSphereV5 = React.lazy(() => import('./ToolLogAutoSphereV5.jsx'))
 
