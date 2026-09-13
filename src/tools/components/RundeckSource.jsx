@@ -134,6 +134,22 @@ function reportDuration(seconds) {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
+const STATE_RANK = { UNKNOWN: -1, NORMAL: 0, ATTENTION: 1, WARNING: 2, CRITICAL: 3 }
+
+function aggregateOperationalState(values = []) {
+  if (!values.length) return 'UNKNOWN'
+  return values.reduce((selected, raw) => {
+    const value = String(raw || 'UNKNOWN').toUpperCase()
+    return (STATE_RANK[value] ?? -1) > (STATE_RANK[selected] ?? -1) ? value : selected
+  }, 'UNKNOWN')
+}
+
+function availabilityStatus(rows = [], name = '') {
+  const key = String(name || '').toUpperCase()
+  const row = rows.find((item) => String(item?.name || '').toUpperCase() === key)
+  return String(row?.status || 'UNKNOWN').toUpperCase()
+}
+
 export default function RundeckSource({ onCollection }) {
   const [latest, setLatest] = React.useState(null)
   const [health, setHealth] = React.useState(null)
@@ -291,11 +307,12 @@ export default function RundeckSource({ onCollection }) {
     setExporting(true)
     setError('')
     try {
-      const [{ default: html2canvas }, { jsPDF }, workloadResult, evaluationResult, brandLogo] = await Promise.all([
+      const [{ default: html2canvas }, { jsPDF }, workloadResult, evaluationResult, availabilityResult, brandLogo] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
         latest?.collection_id ? json(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latest.collection_id)}&limit=4`) : Promise.resolve({ items: [] }),
         json(`${API}/evaluation/workloads?period=1d&type=ALL&limit=100`).catch(() => ({ items: [] })),
+        json(`${API}/availability/latest`).catch(() => null),
         loadImage(BRAND_LOGO),
       ])
 
@@ -339,7 +356,18 @@ export default function RundeckSource({ onCollection }) {
       else pdf.text(APP_TAGLINE, brandX, 17)
 
       const status = overallHealth || 'NORMAL'
+      const osState = aggregateOperationalState(operationalHosts.map((host) => hostResourceState(host)))
+      const sapState = aggregateOperationalState(operationalHosts.map((host) => sapWorkloadState(host)))
+      const availabilityState = String(availabilityResult?.summary?.service_state || availabilityResult?.summary?.sap_state || 'UNKNOWN').toUpperCase()
+      const availabilityApps = availabilityResult?.sap_app || []
+      const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
+      const hanaRows = availabilityResult?.hana_system_db || []
+      const webRows = availabilityResult?.web_dispatcher || []
       const [sr, sg, sb] = pdfStatusColor(status)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(5.8)
+      pdf.setTextColor(153, 168, 177)
+      pdf.text('OPERATIONAL STATE', W - margin - 28, 15.6, { align: 'right' })
       pdf.setFillColor(sr, sg, sb)
       pdf.rect(W - margin - 25, 11, 21, 7, 'F')
       pdf.setTextColor(255, 255, 255)
@@ -348,9 +376,9 @@ export default function RundeckSource({ onCollection }) {
       pdf.text(status, W - margin - 14.5, 15.7, { align: 'center' })
 
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.8)
+      pdf.setFontSize(7.4)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
+      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}  ·  OS Resource ${osState}  ·  SAP Workload ${sapState}  ·  Availability ${availabilityState}`, margin, 29)
 
       const affected = shortHost(incidentSummary?.affected_server || '')
       const signal = incidentSummary?.primary_signal || {}
@@ -369,19 +397,34 @@ export default function RundeckSource({ onCollection }) {
       const currentProgram = distinctProgramText(current)
       pdf.setFillColor(235, 240, 242)
       pdf.roundedRect(margin, 45, contentW, 21, 1, 1, 'F')
+      const summarySplit = margin + contentW * .62
+      pdf.setDrawColor(210, 217, 221)
+      pdf.line(summarySplit, 48, summarySplit, 63)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.5)
       pdf.setTextColor(71, 87, 97)
       pdf.text('CURRENT WORKLOAD', margin + 4, 50)
       pdf.setTextColor(22, 31, 38)
       pdf.setFontSize(9.1)
-      pdf.text(clipped(current.consumer_key, 72), margin + 4, 55)
+      pdf.text(clipped(current.consumer_key, 52), margin + 4, 55)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.9)
       pdf.setTextColor(92, 105, 114)
-      if (currentProgram) pdf.text(`Program ${clipped(currentProgram, 68)}`, margin + 4, 59)
+      if (currentProgram) pdf.text(`Program ${clipped(currentProgram, 48)}`, margin + 4, 59)
       pdf.setFontSize(7.3)
       pdf.text(`CPU ${metric(current.cpu_pct, '%')}  ·  PSS ${pssText(current)}  ·  Processes ${processText(current)}`, margin + 4, 63)
+
+      const availabilityX = summarySplit + 4
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.5)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('AVAILABILITY', availabilityX, 50)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.9)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(`SAP APP  ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, availabilityX, 55)
+      pdf.text(`HANA  P ${availabilityStatus(hanaRows, 'PRIMARY')}  ·  S ${availabilityStatus(hanaRows, 'SECONDARY')}  ·  DR ${availabilityStatus(hanaRows, 'DR')}`, availabilityX, 59)
+      pdf.text(`WEB  HTTP ${availabilityStatus(webRows, 'HTTP')}  ·  HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, availabilityX, 63)
 
       let y = 73
       pdf.setFont('helvetica', 'bold')
@@ -416,7 +459,7 @@ export default function RundeckSource({ onCollection }) {
       }
 
       const workY = 154
-      const leftW = contentW * .70
+      const leftW = contentW * .66
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
       const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
@@ -459,7 +502,7 @@ export default function RundeckSource({ onCollection }) {
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7.3)
-        pdf.text(`${index + 1}. ${shortHost(row.host)}  ${clipped(row.consumer_key, 28)}`, sideX, sideY)
+        pdf.text(`${index + 1}. ${shortHost(row.host)}  ${clipped(row.consumer_key, 32)}`, sideX, sideY)
         pdf.setTextColor(92, 105, 114)
         pdf.setFontSize(6.8)
         pdf.text(`CPU ${metric(row.cpu_pct, '%')}  ·  PSS ${pssText(row)}  ·  Proc ${processText(row)}`, sideX, sideY + 3.2)
@@ -467,7 +510,7 @@ export default function RundeckSource({ onCollection }) {
           pdf.setFont('helvetica', 'bold')
           pdf.setTextColor(71, 87, 97)
           pdf.setFontSize(6.4)
-          pdf.text(clipped(`${evaluationStatus}${evaluationReason ? ` · ${evaluationReason}` : ''}`, 42), sideX, sideY + 6.2)
+          pdf.text(clipped(`${evaluationStatus}${evaluationReason ? ` · ${evaluationReason}` : ''}`, 46), sideX, sideY + 6.2)
           sideY += 10.4
         } else {
           sideY += 8
@@ -538,7 +581,10 @@ export default function RundeckSource({ onCollection }) {
         </div>
       </div>
       <div className="rundeckActions">
-        <StatusPill value={overallHealth} title={statusHint} />
+        <div className="rundeckOperationalState">
+          <span>Operational State</span>
+          <StatusPill value={overallHealth} title={statusHint} />
+        </div>
         <div className="rundeckModeSwitch" role="group" aria-label="Data source">
           <button type="button" className="is-active" aria-pressed="true" title="Automatic Rundeck source"><SphereIcon name="refresh" /> Rundeck</button>
           <button type="button" onClick={() => switchParentSource('manual')} title="Manual Upload Logs"><SphereIcon name="upload" /> Manual</button>
