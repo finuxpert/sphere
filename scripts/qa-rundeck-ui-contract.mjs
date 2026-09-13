@@ -16,6 +16,9 @@ const files = {
   workload: read('src/tools/components/RundeckCurrentWorkload.jsx'),
   history: read('src/tools/components/RundeckJobHistory.jsx'),
   monitoring: read('src/tools/components/RundeckMonitoringHistory.jsx'),
+  availability: read('src/tools/components/RundeckAvailability.jsx'),
+  availabilityPolish: read('src/tools/components/RundeckAvailabilityPolishV1206.css'),
+  workspace: read('src/tools/ToolLogWorkspace.jsx'),
   evaluation: read('src/tools/components/RundeckPerformanceEvaluation.jsx'),
   explain: read('src/tools/components/rundeckEvaluationExplain.js'),
   backendStatus: read('backend/rundeck_status.py'),
@@ -52,8 +55,9 @@ const monitoringSapIssuesIndex = files.monitoring.indexOf('<SapIssues')
 const monitoringEvaluationIndex = files.monitoring.indexOf('<RundeckPerformanceEvaluation')
 
 const checks = [
-  ['version is v1.20.5', files.version.includes("APP_VERSION = '1.20.5'") && files.version.includes("APP_PREVIOUS_VERSION = '1.20.4'") && files.version.includes('observation-history-full-width-v1.20.5')],
+  ['version is v1.20.6', files.version.includes("APP_VERSION = '1.20.6'") && files.version.includes("APP_PREVIOUS_VERSION = '1.20.5'") && files.version.includes('dashboard-ui-freeze-v1.20.6')],
   ['v1.20 operational CSS remains loaded', files.app.includes("./app/rundeck-v120.css")],
+  ['v1.20.6 final polish remains loaded', files.workspace.includes("./components/RundeckAvailabilityPolishV1206.css")],
   ['production-safe report URL uses current origin and base', files.source.includes('window.location.origin') && files.source.includes('import.meta.env.BASE_URL')],
 
   ['host resource excludes WP-only attention', hostResourceState(wpAttention) === 'NORMAL'],
@@ -62,6 +66,7 @@ const checks = [
   ['resource warning remains WARNING', hostResourceState(resourceWarning) === 'WARNING' && overallOperationalState([resourceWarning]) === 'WARNING'],
   ['resource critical remains CRITICAL', hostResourceState(resourceCritical) === 'CRITICAL' && overallOperationalState([resourceCritical]) === 'CRITICAL'],
   ['resolved SAP issue closes as CLEARED', files.backendIncidents.includes('"CLEARED" if incident.get("state") == "RESOLVED"')],
+  ['overall dashboard state is explicitly labelled', files.source.includes('rundeckOperationalState') && files.source.includes('Operational State')],
 
   ['short trend ranges are exposed in UI', ['30M', '1H', '3H', '6H', '24H', '7D', '30D'].every((value) => files.monitoring.includes(`'${value}'`))],
   ['short trend ranges are accepted by API', files.backendApi.includes('30m|1h|3h|6h|24h|7d|30d|90d')],
@@ -78,12 +83,18 @@ const checks = [
   ['active SAP Issues open automatically', files.monitoring.includes('open={activeCount > 0}')],
   ['SAP Issues table uses lean six-column view', files.monitoring.includes('<th>APP</th><th>SAP Signal</th><th>State</th><th>Current</th><th>Peak</th><th>Duration</th>') && !files.monitoring.includes('<th>First Seen</th><th>Last Seen</th><th>Duration</th><th>Evidence</th>')],
 
+  ['availability keeps primary SAP APP HANA and Web grouping', ['SAP App', 'HANA', 'Web'].every((value) => files.availability.includes(value))],
+  ['availability technical checks use Primary Secondary DR matrix', files.availability.includes('rundeckAvailabilityMatrix') && files.availability.includes('<span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span>') && files.availability.includes('<b>Replication</b>') && files.availability.includes('<b>SSH</b>')],
+  ['availability keeps SAP App SSH separate', files.availability.includes('SAP App SSH') && files.availability.includes('appSsh')],
+  ['availability final polish preserves four-column matrix', files.availabilityPolish.includes('.rundeckAvailabilityMatrix > div') && files.availabilityPolish.includes('repeat(3, minmax(72px, .72fr))') && files.availabilityPolish.includes('.rundeckAvailabilityMoreBody > .rundeckAvailabilityTechnicalRow') && !files.availabilityPolish.includes('.rundeckAvailabilityMoreBody > div {')],
+
   ['evaluation defaults to one day in UI and API', files.evaluation.includes("useState('1d')") && files.backendApi.includes('period: str = Query("1d"') && files.backendEvaluation.includes('evaluation_report(period: str = "1d"')],
   ['evaluation quality header is lean', ['Data Coverage', 'Collection Checks', 'Historical Baseline'].every((value) => files.evaluation.includes(value)) && !files.evaluation.includes('Persisted Depth')],
   ['low coverage limits conclusions explicitly', files.evaluation.includes('Historical window is not fully covered. Conclusions are limited.')],
   ['evaluation summary focuses on review spike and increase', files.evaluation.includes('Review Required') && files.evaluation.includes('CPU Spike') && files.evaluation.includes('CPU Increase') && !files.evaluation.includes('<span>CPU Shift</span>') && !files.evaluation.includes('<span>Workloads</span>')],
   ['review card does not imply high CPU and memory are a breakdown', files.evaluation.includes('workloads requiring review') && !files.evaluation.includes('summary.sustained_high_cpu') && !files.evaluation.includes('summary.high_memory')],
   ['evaluation table is lean', ['Status', 'Observed Checks', 'Avg CPU', 'Peak CPU', 'PSS Memory'].every((value) => files.evaluation.includes(value)) && !files.evaluation.includes('<th>Data Confidence</th>') && !files.evaluation.includes('label="Critical WP Overlap"')],
+  ['evaluation density keeps three summary cards and sticky header polish', files.availabilityPolish.includes('grid-template-columns: repeat(3, minmax(0, 1fr))') && files.availabilityPolish.includes('.rundeckEvaluationTable thead th') && files.availabilityPolish.includes('position: sticky !important')],
   ['status shows concise deterministic reason instead of confidence sublabel', files.evaluation.includes('rundeckEvaluationReason') && files.evaluation.includes('evaluationReasonText(row)') && !files.evaluation.includes('rundeckEvaluationConfidence ${confidenceClass(confidence)}')],
   ['review reason explains high CPU and baseline evidence', evaluationReasonText(reviewAboveBaseline) === 'High CPU · Above Baseline'],
   ['review reason qualifies Critical WP as supporting evidence', evaluationReasonText(reviewCriticalWp) === 'High CPU · Critical WP Evidence'],
@@ -103,6 +114,9 @@ const checks = [
   ['PDF summary contains only current workload', files.source.includes("pdf.text('CURRENT WORKLOAD'") && !files.source.includes("pdf.text('RECURRING WORKLOAD'")],
   ['PDF SAP App Server status uses lean columns', files.source.includes("['APP', 'OS RESOURCE', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP']") && !files.source.includes("['APP', 'OS RESOURCE', 'SAP WORKLOAD', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP']")],
   ['PDF keeps one-page triage sections', ['PRIMARY ISSUE', 'SAP APP SERVER STATUS', 'SERVER ${trendMetric} TREND', 'SELECTED WORKLOAD', 'TOP ACTIVE WORKLOADS'].every((value) => files.source.includes(value))],
+  ['PDF adds explicit operational state domains', files.source.includes("pdf.text('OPERATIONAL STATE'") && files.source.includes('OS Resource ${osState}') && files.source.includes('SAP Workload ${sapState}') && files.source.includes('Availability ${availabilityState}')],
+  ['PDF adds compact Availability summary from current endpoint', files.source.includes('/availability/latest') && files.source.includes("pdf.text('AVAILABILITY'") && files.source.includes('availabilityAppUp') && files.source.includes("availabilityStatus(hanaRows, 'PRIMARY')")],
+  ['PDF balances Selected Workload and Top Active Workloads', files.source.includes('const leftW = contentW * .66')],
   ['PDF carries the same qualified evaluation reason when available', files.source.includes('/evaluation/workloads?period=1d&type=ALL&limit=100') && files.source.includes('evaluationReasonText(evaluation)') && files.explain.includes('Critical WP Evidence')],
 
   ['deployment uses isolated managed nginx block updater', files.nginxUpdater.includes('BEGIN SPHERE') && files.nginxUpdater.includes('END SPHERE') && files.deployDev.includes('update-nginx-block.py') && files.deployDev.includes('--name DEV')],
@@ -119,8 +133,8 @@ const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.20.5 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.20.6 contract check(s) failed.`)
   process.exit(1)
 }
 
-console.log('\nRundeck v1.20.5 contract checks passed.')
+console.log('\nRundeck v1.20.6 contract checks passed.')
