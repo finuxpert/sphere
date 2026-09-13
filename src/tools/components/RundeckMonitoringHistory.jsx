@@ -77,6 +77,14 @@ export default function RundeckMonitoringHistory(props) {
     })
   }, [onTrendContext])
 
+  React.useEffect(() => {
+    const monitoring = document.querySelector('.rundeckPanel .rundeckMonitoring')
+    if (!monitoring) return undefined
+    const pinned = Boolean(props.selectedJob?.pinned)
+    monitoring.classList.toggle('is-workload-pinned-v1232', pinned)
+    return () => monitoring.classList.remove('is-workload-pinned-v1232')
+  }, [props.selectedJob?.pinned])
+
   return <>
     <RundeckMonitoringHistoryCore {...props} onTrendContext={forwardTrendContext} />
     <AvailabilityPortal refreshToken={props.refreshToken} />
