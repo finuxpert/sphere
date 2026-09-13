@@ -104,6 +104,12 @@ def _discover_exact_job_id(project: str, group: str, name: str) -> str:
     return str(matches[0]["id"]).strip()
 
 
+def _discover_job_id() -> str:
+    """Backward-compatible performance collector resolver used by older QA contracts."""
+    project, group, name = _performance_identity()
+    return _discover_exact_job_id(project, group, name)
+
+
 def _job_specs() -> dict[str, dict]:
     perf_project, perf_group, perf_name = _performance_identity()
     avail_project, avail_group, avail_name = _availability_identity()
@@ -342,6 +348,11 @@ def _watch_bundle(execution_ids: dict[str, str]) -> None:
     write_json(_state_file(), state)
 
 
+def _watch_execution(execution_id: str) -> None:
+    """Backward-compatible single-source watcher; new Collect Now uses _watch_bundle."""
+    _watch_bundle({"performance": execution_id})
+
+
 def status() -> dict:
     state = _read_state()
     auth_mode = credential_mode("rundeck-runner", "RUNDECK_RUNNER_TOKEN_FILE")
@@ -403,7 +414,6 @@ def status() -> dict:
         "readiness_reason": readiness_reason,
         "jobs_resolved": {key: bool(spec.get("job_id")) for key, spec in specs.items()},
         "credential_mode": auth_mode,
-        # Backward-compatible performance fields used by the existing header UI.
         "execution_id": performance.get("execution_id"),
         "job_id": performance.get("job_id"),
         "job_project": performance.get("job_project"),
