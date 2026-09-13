@@ -1,5 +1,5 @@
 const ROUTE_ALIASES = {
-  '/': '/tool/analyzer',
+  '/': '/tool/logs',
   '/st03n': '/tool/analyzer',
   '/log': '/tool/logs',
   '/wpscout': '/tool/logs/process',
@@ -19,7 +19,7 @@ export function normalizeHashRoute(value = '/') {
 }
 
 export function getCurrentHashRoute() {
-  if (typeof window === 'undefined') return '/tool/analyzer'
+  if (typeof window === 'undefined') return '/tool/logs'
   return normalizeHashRoute(window.location.hash.replace('#', '') || '/')
 }
 
