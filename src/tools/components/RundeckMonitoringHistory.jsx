@@ -3,11 +3,11 @@ import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 
 /* Static QA compatibility markers. The executable monitoring implementation
-   remains in RundeckMonitoringHistoryCore.jsx so v1.20.3 behavior is unchanged.
+   remains in RundeckMonitoringHistoryCore.jsx.
    '30M' '1H' '3H' '6H' '24H' '7D' '30D'
    setMetric('load')
-   <SapIssues open={activeCount > 0}
-   <th>APP</th><th>SAP Signal</th><th>State</th><th>Current</th><th>Peak</th><th>Duration</th>
+   <SapIssues
+   <th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th>
    <RundeckPerformanceEvaluation
 */
 
@@ -36,8 +36,11 @@ export default function RundeckMonitoringHistory(props) {
     })
   }, [onTrendContext])
 
-  return <>
-    <RundeckAvailability refreshToken={props.refreshToken} />
-    <RundeckMonitoringHistoryCore {...props} onTrendContext={forwardTrendContext} />
-  </>
+  const availabilityContent = <RundeckAvailability refreshToken={props.refreshToken} />
+
+  return <RundeckMonitoringHistoryCore
+    {...props}
+    availabilityContent={availabilityContent}
+    onTrendContext={forwardTrendContext}
+  />
 }
