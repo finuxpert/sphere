@@ -7,6 +7,7 @@ import './components/RundeckOperationalClarity.css'
 import './components/RundeckWorkspaceCompact.css'
 import './components/RundeckWorkspaceFinalPolish.css'
 import './components/RundeckWorkspaceRails.css'
+import './components/RundeckWorkspaceAlignedBands.css'
 
 const LogAutoSphereV5 = React.lazy(() => import('./ToolLogAutoSphereV5.jsx'))
 
