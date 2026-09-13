@@ -1,0 +1,100 @@
+/* Final presentation polish for the v1.20.5 dashboard release candidate.
+   Layout-only adjustments: no API, threshold, evaluation, or SAP status semantics. */
+
+@media (min-width: 1181px) {
+  /* Compact the summary so monitoring content enters the viewport earlier. */
+  .appShell:has(.rundeckPanel) .rundeckLandscapeHeader {
+    min-height: 38px;
+    padding-top: 4px;
+    padding-bottom: 5px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean {
+    padding-top: 4px;
+    padding-bottom: 3px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean > .rundeckIncidentWorkloadBlock {
+    margin-top: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckIncident.is-lean > .rundeckIncidentHostContext {
+    padding-top: 4px;
+    padding-bottom: 3px;
+    gap: 3px 14px;
+  }
+
+  /* Keep workload list useful on 1080p without letting it dominate the page. */
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap {
+    max-height: clamp(250px, 31vh, 330px);
+  }
+
+  /* Evaluation remains dense and operational; sticky header improves long review lists. */
+  .appShell:has(.rundeckPanel) .rundeckEvaluationSummary.is-lean > div {
+    min-height: 42px;
+    padding: 5px 7px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationControls {
+    gap: 2px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationControls button {
+    min-height: 21px;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTableWrap {
+    position: relative;
+    max-height: 282px;
+    overflow: auto;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--sphere-page, #0f151a);
+    box-shadow: 0 1px 0 rgba(113, 128, 137, .10);
+  }
+
+  /* Full-width observation evidence gets a clearer visual boundary. */
+  .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border-top: 1px solid rgba(113, 128, 137, .09);
+    border-bottom: 1px solid rgba(113, 128, 137, .07);
+  }
+
+  /* Supporting data stays visibly secondary. */
+  .appShell:has(.rundeckPanel) .rundeckHistory,
+  .appShell:has(.rundeckPanel) .rundeckPlatformHealth {
+    opacity: .94;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckHistoryTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckPlatformTableWrap {
+    max-height: 235px;
+  }
+}
+
+@media (min-width: 1181px) and (max-height: 820px) {
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap {
+    max-height: 235px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckTrendChart {
+    height: 178px !important;
+    min-height: 170px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckEvaluationTableWrap {
+    max-height: 300px;
+  }
+}
