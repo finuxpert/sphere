@@ -1,7 +1,7 @@
 export const APP_NAME = 'SPHERE'
 export const APP_TAGLINE = 'SAP Performance Health Evaluation & Reporting'
-export const APP_VERSION = '1.21.1'
-export const APP_PREVIOUS_VERSION = '1.21.0'
+export const APP_VERSION = '1.22.0'
+export const APP_PREVIOUS_VERSION = '1.21.1'
 export const APP_BUILD = String(import.meta.env.VITE_GIT_SHA || '').slice(0, 7)
 export const APP_ENV = String(import.meta.env.VITE_APP_ENV || '')
 export const APP_IS_DEV = /dev/i.test(APP_ENV) || String(import.meta.env.BASE_URL || '').includes('dev')
