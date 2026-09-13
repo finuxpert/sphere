@@ -8,10 +8,21 @@ function StatusPill({ value = 'UNKNOWN', title = '' }) {
   return <span className={`rundeckStatus is-${String(value).toLowerCase()}`} title={title || undefined}>{value}</span>
 }
 
+function observedServiceImpact(payload) {
+  const apps = payload?.sap_app || []
+  const hana = payload?.hana_system_db || []
+  const web = payload?.web_dispatcher || []
+  const appDown = apps.some((row) => String(row?.status || '').toUpperCase() === 'DOWN')
+  const hanaPrimaryDown = hana.some((row) => String(row?.name || '').toUpperCase() === 'PRIMARY' && String(row?.status || '').toUpperCase() === 'DOWN')
+  const webDown = web.length > 0 && web.every((row) => String(row?.status || '').toUpperCase() === 'DOWN')
+  return appDown || hanaPrimaryDown || webDown
+}
+
 export default function RundeckSystemHealthV1231({ refreshToken = '' }) {
   const [target, setTarget] = React.useState(null)
   const [hosts, setHosts] = React.useState([])
   const [availability, setAvailability] = React.useState('UNKNOWN')
+  const [serviceCritical, setServiceCritical] = React.useState(false)
   const [stale, setStale] = React.useState(false)
 
   React.useEffect(() => {
@@ -43,7 +54,9 @@ export default function RundeckSystemHealthV1231({ refreshToken = '' }) {
       if (controller.signal.aborted) return
       if (hostResult.status === 'fulfilled' && hostResult.value) setHosts(hostResult.value.items || [])
       if (availabilityResult.status === 'fulfilled' && availabilityResult.value) {
-        setAvailability(String(availabilityResult.value.summary?.service_state || availabilityResult.value.summary?.sap_state || 'UNKNOWN').toUpperCase())
+        const payload = availabilityResult.value
+        setAvailability(String(payload.summary?.service_state || payload.summary?.sap_state || 'UNKNOWN').toUpperCase())
+        setServiceCritical(observedServiceImpact(payload))
       }
       if (healthResult.status === 'fulfilled' && healthResult.value) setStale(Boolean(healthResult.value.rundeck_stale))
     }
@@ -53,8 +66,8 @@ export default function RundeckSystemHealthV1231({ refreshToken = '' }) {
 
   if (!target) return null
 
-  const state = systemHealthState(hosts, { availabilityState: availability, stale, aligned: true })
-  const title = `System Health combines service availability and OS resource impact. SAP workload signals can raise ATTENTION without declaring an outage. Availability ${availability}${stale ? ' · performance data stale' : ''}.`
+  const state = systemHealthState(hosts, { availabilityState: availability, serviceCritical, stale, aligned: true })
+  const title = `System Health reflects service impact and OS resource pressure. SAP workload signals can raise ATTENTION without declaring an outage. Availability ${availability}${stale ? ' · performance data stale' : ''}.`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
