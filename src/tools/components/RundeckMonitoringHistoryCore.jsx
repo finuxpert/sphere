@@ -35,13 +35,26 @@ const METRICS = [
   ['ram', 'Memory'],
   ['iowait', 'I/O Wait'],
   ['wp', 'Critical WP'],
+  ['availability', 'Availability'],
 ]
+
+const AVAILABILITY_CATEGORIES = {
+  availability: 'SAP_APP',
+  hana: 'HANA_SYSTEM_DB',
+  replication: 'HANA_REPLICATION',
+  ssh: 'SSH',
+  web: 'WEB_DISPATCHER',
+}
 
 const RANGE_HOURS = { '30m': .5, '1h': 1, '3h': 3, '6h': 6, '24h': 24, '7d': 168, '30d': 720, '90d': 2160 }
 
 const metricLabel = (value, fallback = 'Metric') => {
   if (value === 'swap') return 'Swap I/O'
   if (value === 'load') return 'Load'
+  if (value === 'hana') return 'HANA Availability'
+  if (value === 'replication') return 'Replication Availability'
+  if (value === 'ssh') return 'SSH Reachability'
+  if (value === 'web') return 'Web Dispatcher Availability'
   return METRICS.find(([key]) => key === value)?.[1] || fallback
 }
 
@@ -175,11 +188,12 @@ function TrendChart({ trend, mode, range, onSelect }) {
     const rows = trend?.items || []
     const hosts = Array.from(new Set(rows.map((row) => row.host))).sort()
     const byHost = new Map(hosts.map((host) => [host, rows.filter((row) => row.host === host)]))
-    const suffix = trend?.unit ? ` ${trend.unit}` : ''
+    const availabilityMode = trend?.metric === 'availability'
+    const suffix = availabilityMode ? '' : (trend?.unit ? ` ${trend.unit}` : '')
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
     const thresholdLines = []
 
-    if (trend?.warning !== null && trend?.warning !== undefined) {
+    if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) {
       thresholdLines.push({
         yAxis: Number(trend.warning),
         name: 'Warn',
@@ -187,7 +201,7 @@ function TrendChart({ trend, mode, range, onSelect }) {
         label: { formatter: `Warn ${trend.warning}${suffix}`, color: palette.warning, fontSize: 8, position: 'insideEndTop', distance: 4 },
       })
     }
-    if (trend?.critical !== null && trend?.critical !== undefined) {
+    if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) {
       thresholdLines.push({
         yAxis: Number(trend.critical),
         name: 'Crit',
@@ -231,6 +245,7 @@ function TrendChart({ trend, mode, range, onSelect }) {
           const title = `<b>${formatWib(first.bucket || first.value?.[0], true)} WIB</b>`
           const body = items.map((item) => {
             const row = item.data || {}
+            if (availabilityMode) return `${item.marker}${item.seriesName}: <b>${row.status || (Number(row.value?.[1]) >= 100 ? 'UP' : 'DOWN')}</b>`
             const value = mode === 'max' ? row.max : row.avg
             return `${item.marker}${item.seriesName}: <b>${numberText(value, trend?.metric === 'wp' ? 0 : 1)}${suffix}</b>`
           }).join('<br/>')
@@ -255,14 +270,18 @@ function TrendChart({ trend, mode, range, onSelect }) {
       },
       yAxis: {
         type: 'value',
-        name: `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`,
+        name: availabilityMode ? 'Availability' : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`,
         nameTextStyle: { color: palette.muted, fontSize: 9 },
-        axisLabel: { color: palette.muted, fontSize: 9, formatter: (value) => `${value}${trend?.unit === '%' ? '%' : ''}` },
+        axisLabel: {
+          color: palette.muted,
+          fontSize: 9,
+          formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`),
+        },
         axisTick: { show: false },
         axisLine: { show: false },
         splitLine: { lineStyle: { color: palette.grid, type: 'solid', width: 1 } },
-        min: trend?.unit === '%' ? 0 : undefined,
-        max: trend?.unit === '%' ? 100 : undefined,
+        min: availabilityMode || trend?.unit === '%' ? 0 : undefined,
+        max: availabilityMode || trend?.unit === '%' ? 100 : undefined,
         splitNumber: 2,
       },
       dataZoom,
@@ -271,12 +290,13 @@ function TrendChart({ trend, mode, range, onSelect }) {
         return {
           name: shortHost(host),
           type: 'line',
+          step: availabilityMode ? 'end' : false,
           connectNulls: false,
-          showSymbol: ['30m', '1h', '3h', '6h'].includes(range) && hostRows.length <= 48,
-          symbolSize: 4,
-          lineStyle: { width: 1.5 },
+          showSymbol: availabilityMode || (['30m', '1h', '3h', '6h'].includes(range) && hostRows.length <= 48),
+          symbolSize: availabilityMode ? 5 : 4,
+          lineStyle: { width: availabilityMode ? 2 : 1.5 },
           emphasis: { focus: 'series', scale: 1.35 },
-          data: hostRows.map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value })),
+          data: hostRows.map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status, executionId: row.execution_id })),
           markLine: index === 0 && thresholdLines.length ? { silent: true, symbol: ['none', 'none'], data: thresholdLines } : undefined,
         }
       }),
@@ -288,8 +308,9 @@ function TrendChart({ trend, mode, range, onSelect }) {
     if (!nearest?.data) return
     chart.dispatchAction({ type: 'showTip', seriesIndex: nearest.seriesIndex, dataIndex: nearest.dataIndex })
     const data = nearest.data
-    onSelect?.({ host: data.host, at: data.peakAt || data.bucket, collectionId: data.peakCollectionId || '', bucket: data.bucket, avg: data.avg, max: data.max, value: mode === 'max' ? data.max : data.avg, mode, metricLabel: trend?.metric_label || '', unit: trend?.unit || '' })
-  }, [mode, onSelect, option, trend?.metric_label, trend?.unit])
+    const availability = trend?.metric === 'availability'
+    onSelect?.({ host: data.host, at: data.peakAt || data.bucket, collectionId: data.peakCollectionId || '', bucket: data.bucket, avg: data.avg, max: data.max, value: availability ? data.status : (mode === 'max' ? data.max : data.avg), status: data.status, availability, mode, metricLabel: trend?.metric_label || '', unit: availability ? '' : (trend?.unit || '') })
+  }, [mode, onSelect, option, trend?.metric, trend?.metric_label, trend?.unit])
 
   const ref = useEChart(option, click)
   return <div ref={ref} className="rundeckTrendChart" role="img" aria-label={`${trend?.metric_label || 'Metric'} trend for SAP App Servers`} />
@@ -309,7 +330,8 @@ function HistoricalRca({ selected, data, loading, error, panelRef, selectedJob, 
   if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click the chart to inspect workload context at that time.</div>
 
   const rows = data?.items || []
-  const selectedRow = rows.find((row) => row.host === selected?.host) || rows[0] || null
+  const selectedIsApp = /^APP\d+$/i.test(String(selected?.host || ''))
+  const selectedRow = selectedIsApp ? (rows.find((row) => shortHost(row.host) === shortHost(selected?.host)) || rows.find((row) => row.host === selected?.host) || null) : null
   const consumer = selectedRow?.top_consumers?.[0] || null
   const details = consumer?.details || {}
   const selectedJobContext = consumer?.consumer_key ? { key: consumer.consumer_key, host: selectedRow?.host || selected?.host || '', consumerType: consumer.consumer_type || '', source: 'selected-time', at: selected?.at || '' } : null
@@ -328,15 +350,17 @@ function HistoricalRca({ selected, data, loading, error, panelRef, selectedJob, 
         <h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4>
         <small>{selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Loading'}</small>
       </div>
-      {selectedRow && <InlineStatus value={hostResourceState(selectedRow)} />}
+      {selected?.availability ? <InlineStatus value={selected?.status || 'UNKNOWN'} /> : selectedRow ? <InlineStatus value={hostResourceState(selectedRow)} /> : null}
     </div>
 
     {loading && <div className="rundeckHistoryState">Loading workload…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
 
+    {!loading && !error && selected?.availability && !selectedRow && <div className="rundeckRcaMetricStrip"><span><b>{selected?.metricLabel || 'Availability'}</b>{selected?.status || 'UNKNOWN'}</span></div>}
+
     {!loading && !error && selectedRow && <>
       <div className="rundeckRcaMetricStrip">
-        <span><b>{selected?.metricLabel || 'Metric'}</b>{numberText(selected?.value)}{selected?.unit ? ` ${selected.unit}` : ''}</span>
+        <span><b>{selected?.metricLabel || 'Metric'}</b>{selected?.availability ? (selected?.status || 'UNKNOWN') : `${numberText(selected?.value)}${selected?.unit ? ` ${selected.unit}` : ''}`}</span>
         {!selectedMetricIsCpu && <span><b>CPU</b>{numberText(selectedRow.cpu_pct)}%</span>}
         <span><b>Memory</b>{numberText(selectedRow.ram_pct)}%</span>
         <span><b>I/O Wait</b>{numberText(selectedRow.io_wait_pct)}%</span>
@@ -353,7 +377,7 @@ function HistoricalRca({ selected, data, loading, error, panelRef, selectedJob, 
       </div>
     </>}
 
-    {!loading && !error && data && !selectedRow && <div className="rundeckHistoryState">No SAP data found for this time.</div>}
+    {!loading && !error && data && !selectedRow && !selected?.availability && <div className="rundeckHistoryState">No SAP data found for this time.</div>}
   </section>
 }
 
@@ -448,10 +472,14 @@ export default function RundeckMonitoringHistory({
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
+    const availabilityCategory = AVAILABILITY_CATEGORIES[metric]
     setTrendLoading(true)
     setTrendError('')
-    json(`${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`, controller.signal)
-      .then(setTrend)
+    const url = availabilityCategory
+      ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(availabilityCategory)}`
+      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`
+    json(url, controller.signal)
+      .then((result) => setTrend(availabilityCategory ? { ...result, metric_label: metricLabel(metric) } : result))
       .catch((error) => { if (error.name !== 'AbortError') setTrendError(error.message || 'Unable to load trend.') })
       .finally(() => { if (!controller.signal.aborted) setTrendLoading(false) })
     return () => controller.abort()
@@ -485,6 +513,11 @@ export default function RundeckMonitoringHistory({
     setTimeline(null)
     setTimelineError('')
     if (!point?.at) return
+    if (point?.availability && !/^APP\d+$/i.test(String(point.host || ''))) {
+      setTimelineLoading(false)
+      setTimeline({ items: [] })
+      return
+    }
     setTimelineLoading(true)
     const collectionQuery = point.collectionId ? `&collection_id=${encodeURIComponent(point.collectionId)}` : ''
     json(`${API}/history/timeline?at=${encodeURIComponent(point.at)}&window_minutes=5${collectionQuery}`)
@@ -505,6 +538,7 @@ export default function RundeckMonitoringHistory({
   })
   const activeCount = visibleAlerts.filter((row) => row.state === 'ACTIVE').length
   const resolvedCount = visibleAlerts.filter((row) => row.state === 'RESOLVED').length
+  const availabilityMetric = Boolean(AVAILABILITY_CATEGORIES[metric])
 
   return <section className="rundeckMonitoring">
     <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
@@ -512,7 +546,7 @@ export default function RundeckMonitoringHistory({
     <div className="rundeckTrendToolbar">
       <div className="rundeckTrendGroup"><Segmented options={METRICS} value={metric} onChange={setMetric} ariaLabel="Performance metric" /></div>
       <div className="rundeckTrendGroup"><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Time period" /></div>
-      <div className="rundeckTrendGroup"><Segmented options={[["avg", "Avg"], ["max", "Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>
+      {!availabilityMetric && <div className="rundeckTrendGroup"><Segmented options={[["avg", "Avg"], ["max", "Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>}
     </div>
 
     <details className="rundeckAdvancedControls">
@@ -520,15 +554,19 @@ export default function RundeckMonitoringHistory({
       <div>
         <button type="button" className={metric === 'load' ? 'is-active' : ''} onClick={() => setMetric('load')}>Load</button>
         <button type="button" className={metric === 'swap' ? 'is-active' : ''} onClick={() => setMetric('swap')}>Swap I/O</button>
-        <button type="button" className={range === '90d' ? 'is-active' : ''} onClick={() => setRange('90d')}>90D</button>
-        <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />
+        <button type="button" className={metric === 'hana' ? 'is-active' : ''} onClick={() => setMetric('hana')}>HANA</button>
+        <button type="button" className={metric === 'replication' ? 'is-active' : ''} onClick={() => setMetric('replication')}>Replication</button>
+        <button type="button" className={metric === 'ssh' ? 'is-active' : ''} onClick={() => setMetric('ssh')}>SSH</button>
+        <button type="button" className={metric === 'web' ? 'is-active' : ''} onClick={() => setMetric('web')}>Web Dispatcher</button>
+        <button type="button" className={range === '90d' ? 'is-active' : ''} onClick={() => setRange('90d')} disabled={availabilityMetric}>90D</button>
+        {!availabilityMetric && <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}
       </div>
     </details>
 
     {trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
     {trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
     {!trendLoading && !trendError && trend && trend.items?.length > 0 && <TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} />}
-    {!trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
+    {!trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">{availabilityMetric ? 'Availability history starts when SPHERE observes Service Availability executions. No stored checks in this range yet.' : 'No stored data in this range yet.'}</div>}
 
     <HistoricalRca selected={selected} data={timeline} loading={timelineLoading} error={timelineError} panelRef={rcaRef} selectedJob={selectedJob} onSelectJob={onSelectJob} />
 
