@@ -1,4 +1,4 @@
-"""Read and normalize the existing Rundeck Service Availability report.
+"""Read, normalize and retain the existing Rundeck Service Availability report.
 
 Availability is determined from the operational port checks already executed by Rundeck.
 Resource changes in SPHERE remain supporting evidence and are not used here to infer UP/DOWN.
@@ -8,10 +8,13 @@ from __future__ import annotations
 import json
 import os
 import re
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from urllib.parse import quote, urlencode
 
 from backend.rundeck_credentials import credential_mode, read_credential
 from backend.rundeck_poller import API_VERSION, request, output_text
+from backend.rundeck_store import ROOT
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 SERVICE_RE = re.compile(
@@ -22,6 +25,9 @@ SERVICE_RE = re.compile(
 )
 INSTANCE_RE = re.compile(r"instance\s*(\d+)", re.IGNORECASE)
 DISPATCHER_RE = re.compile(r"dispatcher\s*(\d+)", re.IGNORECASE)
+RANGE_HOURS = {"30m": 0.5, "1h": 1, "3h": 3, "6h": 6, "24h": 24, "7d": 168, "30d": 720}
+ALLOWED_CATEGORIES = {"SAP_APP", "HANA_SYSTEM_DB", "HANA_REPLICATION", "SSH", "WEB_DISPATCHER"}
+HISTORY_FILE = ROOT / "availability-history.jsonl"
 
 
 def _settings() -> tuple[str, str, str]:
@@ -129,26 +135,104 @@ def _indexed(services: list[dict], category: str) -> list[dict]:
     rows = [row for row in services if row.get("category") == category]
     if category == "SAP_APP":
         return sorted(rows, key=lambda row: int(re.sub(r"\D", "", row.get("name", "")) or 999))
-    return rows
+    role_order = {"PRIMARY": 0, "SECONDARY": 1, "DR": 2, "HTTP": 0, "HTTPS": 1}
+    return sorted(rows, key=lambda row: (role_order.get(str(row.get("name") or ""), 50), str(row.get("name") or "")))
 
 
-def _summary(services: list[dict]) -> dict:
+def summarize_services(services: list[dict]) -> dict:
     apps = _indexed(services, "SAP_APP")
     app_down = [row["name"] for row in apps if row["status"] == "DOWN"]
+    non_app_down = [row for row in services if row.get("category") in ALLOWED_CATEGORIES - {"SAP_APP"} and row.get("status") == "DOWN"]
     if app_down:
-        sap_state = "CRITICAL"
-    elif len(apps) >= 5 and all(row["status"] == "UP" for row in apps):
-        sap_state = "NORMAL"
-    elif apps:
-        sap_state = "ATTENTION"
+        service_state = "CRITICAL"
+    elif non_app_down:
+        service_state = "ATTENTION"
+    elif apps and all(row["status"] == "UP" for row in services if row.get("category") in ALLOWED_CATEGORIES):
+        service_state = "NORMAL"
+    elif services:
+        service_state = "ATTENTION"
     else:
-        sap_state = "UNKNOWN"
+        service_state = "UNKNOWN"
     return {
-        "sap_state": sap_state,
+        "service_state": service_state,
+        "sap_state": "CRITICAL" if app_down else ("NORMAL" if apps and all(row["status"] == "UP" for row in apps) else "ATTENTION" if apps else "UNKNOWN"),
         "sap_app_down": app_down,
         "service_count": len(services),
         "down_count": sum(1 for row in services if row["status"] == "DOWN"),
+        "supporting_down_count": len(non_app_down),
     }
+
+
+def _parse_timestamp(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def _compact_snapshot(payload: dict) -> dict:
+    return {
+        "execution_id": payload.get("execution_id"),
+        "collected_at": payload.get("collected_at"),
+        "services": [
+            {
+                "category": row.get("category"),
+                "name": row.get("name"),
+                "status": row.get("status"),
+            }
+            for row in payload.get("services", [])
+            if row.get("category") in ALLOWED_CATEGORIES
+        ],
+    }
+
+
+def _persist_snapshot(payload: dict) -> None:
+    snapshot = _compact_snapshot(payload)
+    if not snapshot.get("execution_id") or not snapshot.get("collected_at"):
+        return
+    ROOT.mkdir(parents=True, exist_ok=True)
+    last_execution = None
+    if HISTORY_FILE.exists():
+        try:
+            with HISTORY_FILE.open("rb") as stream:
+                stream.seek(0, 2)
+                size = stream.tell()
+                stream.seek(max(0, size - 8192))
+                tail = stream.read().decode("utf-8", errors="ignore").splitlines()
+                if tail:
+                    last_execution = json.loads(tail[-1]).get("execution_id")
+        except (OSError, json.JSONDecodeError):
+            last_execution = None
+    if str(last_execution or "") == str(snapshot["execution_id"]):
+        return
+    try:
+        with HISTORY_FILE.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(snapshot, separators=(",", ":"), sort_keys=True) + "\n")
+    except OSError:
+        return
+
+
+def _history_snapshots(hours: float) -> list[dict]:
+    if not HISTORY_FILE.exists():
+        return []
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    rows: list[dict] = []
+    try:
+        with HISTORY_FILE.open("r", encoding="utf-8") as stream:
+            for line in stream:
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                stamp = _parse_timestamp(row.get("collected_at"))
+                if stamp and stamp.astimezone(timezone.utc) >= cutoff:
+                    rows.append(row)
+    except OSError:
+        return []
+    return rows
 
 
 def latest_availability() -> dict:
@@ -167,7 +251,7 @@ def latest_availability() -> dict:
 
     job = execution.get("job") or {}
     finished_at = (execution.get("date-ended") or {}).get("date") or (execution.get("date-started") or {}).get("date")
-    return {
+    payload = {
         "source": "rundeck-service-availability",
         "credential_mode": credential_mode("rundeck-reader", "RUNDECK_TOKEN_FILE"),
         "execution_id": execution_id,
@@ -178,11 +262,72 @@ def latest_availability() -> dict:
             "group": job.get("group"),
             "name": job.get("name"),
         },
-        "summary": _summary(services),
+        "summary": summarize_services(services),
         "sap_app": _indexed(services, "SAP_APP"),
         "hana_system_db": _indexed(services, "HANA_SYSTEM_DB"),
         "hana_replication": _indexed(services, "HANA_REPLICATION"),
         "web_dispatcher": _indexed(services, "WEB_DISPATCHER"),
         "ssh": _indexed(services, "SSH"),
         "services": services,
+    }
+    _persist_snapshot(payload)
+    return payload
+
+
+def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> dict:
+    if range_key not in RANGE_HOURS:
+        raise ValueError("Unsupported availability range")
+    category = str(category or "SAP_APP").upper()
+    if category not in ALLOWED_CATEGORIES:
+        raise ValueError("Unsupported availability category")
+
+    # Refresh once so the newest Rundeck execution is present in local history.
+    latest_availability()
+    snapshots = _history_snapshots(RANGE_HOURS[range_key])
+    items: list[dict] = []
+    counters: dict[str, dict[str, int]] = {}
+    for snapshot in snapshots:
+        bucket = snapshot.get("collected_at")
+        for row in snapshot.get("services", []):
+            if row.get("category") != category:
+                continue
+            name = str(row.get("name") or "UNKNOWN")
+            status = str(row.get("status") or "UNKNOWN").upper()
+            if status not in {"UP", "DOWN"}:
+                continue
+            value = 100 if status == "UP" else 0
+            items.append({
+                "bucket": bucket,
+                "host": name,
+                "avg_value": value,
+                "max_value": value,
+                "status": status,
+                "execution_id": snapshot.get("execution_id"),
+            })
+            counter = counters.setdefault(name, {"up": 0, "down": 0})
+            counter["up" if status == "UP" else "down"] += 1
+
+    uptime = []
+    for name, counts in sorted(counters.items()):
+        checks = counts["up"] + counts["down"]
+        uptime.append({
+            "name": name,
+            "checks": checks,
+            "up": counts["up"],
+            "down": counts["down"],
+            "uptime_pct": round((counts["up"] / checks) * 100, 2) if checks else None,
+        })
+
+    return {
+        "range": range_key,
+        "category": category,
+        "metric": "availability",
+        "metric_label": "Availability",
+        "unit": "%",
+        "warning": None,
+        "critical": None,
+        "items": items,
+        "uptime": uptime,
+        "history_started_at": snapshots[0].get("collected_at") if snapshots else None,
+        "note": "Availability history is retained from Service Availability executions observed by SPHERE. Missing checks are not treated as DOWN.",
     }
