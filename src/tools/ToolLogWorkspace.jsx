@@ -19,6 +19,7 @@ import './components/RundeckOperatorDensityV1222.css'
 import './components/RundeckLeanOpsV123.css'
 import './components/RundeckOperatorClarityV1231.css'
 import './components/RundeckOperatorClarityV1231Patch.css'
+import './components/RundeckLayoutNormalizationV1232.css'
 
 const LogAutoSphereV5 = React.lazy(() => import('./ToolLogAutoSphereV5.jsx'))
 
