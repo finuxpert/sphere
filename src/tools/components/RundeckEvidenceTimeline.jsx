@@ -44,7 +44,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         setError('')
       })
       .catch((failure) => {
-        if (failure.name !== 'AbortError') setError(failure.message || 'Evidence correlation unavailable')
+        if (failure.name !== 'AbortError') setError(failure.message || 'Operational events unavailable')
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
@@ -68,49 +68,49 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     : state === 'LIMITED'
       ? `Source timestamps exceed the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Cross-source conclusions are limited.`
       : state === 'INSUFFICIENT DATA'
-        ? 'Fewer than two timestamped evidence sources are available, so cross-source alignment cannot be evaluated.'
-        : 'Cross-source evidence timing status.'
+        ? 'Fewer than two timestamped evidence sources are available.'
+        : 'Cross-source timing status.'
 
   return <details className="rundeckEvidenceTimeline">
     <summary>
-      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Evidence Timeline</span>
+      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Operational Events</span>
       <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state}</span>
-      <small>{hasSkew ? `max skew ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'cross-source timing'}{events.length ? ` · ${events.length} events` : ''}</small>
+      <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m skew` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
     </summary>
 
     <div className="rundeckEvidenceBody">
-      {loading && !data && <div className="rundeckEvidenceState">Loading cross-source evidence…</div>}
+      {loading && !data && <div className="rundeckEvidenceState">Loading events…</div>}
       {error && !data && <div className="rundeckEvidenceState is-error">{error}</div>}
 
       {data && <>
-        <div className="rundeckEvidenceSources" aria-label="Source alignment">
-          {alignment.sources?.map((source) => <span key={source.name}>
-            <b>{source.name}</b>
-            <strong>{formatWib(source.observed_at, true)} WIB</strong>
-            <em className={source.within_window ? 'is-aligned' : 'is-limited'}>{source.delta_minutes}m</em>
-          </span>)}
-          <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} snapshots</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no retained history'}</em></span>
-          <span><b>Alignment Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>timing only · not causation</em></span>
-        </div>
-
-        <div className="rundeckEvidenceEvents" aria-label="Evidence events">
-          {events.map((event, index) => <div className="rundeckEvidenceEvent" key={`${event.at}-${event.kind}-${index}`}>
+        <div className="rundeckEvidenceEvents" aria-label="Operational events">
+          {events.map((event, index) => <div className="rundeckEvidenceEvent" key={`${event.at}-${event.kind}-${index}`} title={event.detail || undefined}>
             <time>{formatWib(event.at, true)} WIB</time>
             <span className={`rundeckEvidenceDot is-${String(event.source || '').toLowerCase().replaceAll(' ', '-')}`} />
             <div>
               <strong>{event.title}</strong>
               <small>{event.source}{event.state ? ` · ${event.state}` : ''}</small>
-              {event.detail && <p>{event.detail}</p>}
             </div>
           </div>)}
-          {!events.length && <div className="rundeckEvidenceState">No cross-source evidence events are retained for this window yet.</div>}
+          {!events.length && <div className="rundeckEvidenceState">No retained event in this window.</div>}
         </div>
 
-        {interpretation.length > 0 && <div className="rundeckEvidenceInterpretation">
-          <strong>Evidence interpretation</strong>
-          <ul>{interpretation.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
-        </div>}
-        <p className="rundeckEvidenceNote">{data.note}</p>
+        <details className="rundeckEvidenceTechnical">
+          <summary>Correlation details</summary>
+          <div className="rundeckEvidenceSources" aria-label="Source alignment">
+            {alignment.sources?.map((source) => <span key={source.name}>
+              <b>{source.name}</b>
+              <strong>{formatWib(source.observed_at, true)} WIB</strong>
+              <em className={source.within_window ? 'is-aligned' : 'is-limited'}>{source.delta_minutes}m</em>
+            </span>)}
+            <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} snapshots</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no retained history'}</em></span>
+            <span><b>Alignment Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>timing only</em></span>
+          </div>
+          {interpretation.length > 0 && <div className="rundeckEvidenceInterpretation">
+            <ul>{interpretation.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
+          </div>}
+          <p className="rundeckEvidenceNote">{data.note}</p>
+        </details>
       </>}
     </div>
   </details>
