@@ -45,6 +45,8 @@ const checks = [
   ['OS warning maps system health to WARNING', systemHealthState([warningResource], { availabilityState: 'NORMAL' }) === 'WARNING'],
   ['OS critical maps system health to CRITICAL', systemHealthState([criticalResource], { availabilityState: 'NORMAL' }) === 'CRITICAL'],
   ['critical availability maps system health to CRITICAL', systemHealthState([normalHost], { availabilityState: 'CRITICAL' }) === 'CRITICAL'],
+  ['observed primary service impact maps system health to CRITICAL', systemHealthState([normalHost], { availabilityState: 'ATTENTION', serviceCritical: true }) === 'CRITICAL'],
+  ['data freshness stays separate from system health semantics', systemHealthState([normalHost], { availabilityState: 'NORMAL', stale: true }) === 'NORMAL'],
   ['healthy sources map system health to NORMAL', systemHealthState([normalHost], { availabilityState: 'NORMAL' }) === 'NORMAL'],
   ['availability is portaled as a standalone section before workload anchors', files.wrapper.includes('AvailabilityPortal') && files.wrapper.includes('rundeckAvailabilitySlotV1231') && files.wrapper.includes(".rundeckCurrentWorkload, .rundeckJobHistory")],
   ['availability separates health from abnormal data trust', files.availability.includes('rundeckAvailabilityDataTrust') && files.availability.includes('Collection gap') && !files.availability.includes('Source gap') && files.availability.includes('technicalDownCount > 0')],
