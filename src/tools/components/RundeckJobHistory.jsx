@@ -138,9 +138,9 @@ function temporalText(issueStart, firstSeen) {
   const hours = Math.floor(absMinutes / 60)
   const minutes = absMinutes % 60
   const duration = [hours ? `${hours}h` : '', minutes ? `${minutes}m` : ''].filter(Boolean).join(' ') || '<1m'
-  if (delta > 0) return `First observed ${duration} after issue start`
-  if (delta < 0) return `First observed ${duration} before issue start`
-  return 'First observed at issue start'
+  if (delta > 0) return `Workload first observed ${duration} after incident start`
+  if (delta < 0) return `Workload was already observed ${duration} before incident start`
+  return 'Workload first observed at incident start'
 }
 
 function nearestRow(rows, value) {
