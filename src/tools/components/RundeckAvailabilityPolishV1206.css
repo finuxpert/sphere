@@ -1,0 +1,4 @@
+/* v1.20.6 availability presentation polish */
+.rundeckAvailabilityBody { display: grid; grid-template-columns: 1fr; gap: 7px; }
+.rundeckAvailabilityGroup { display: grid; grid-template-columns: 86px minmax(0,1fr); gap: 10px; }
+.rundeckAvailabilityMore > summary { font-weight: 650; }
