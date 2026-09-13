@@ -18,47 +18,78 @@ class RundeckRunnerTests(unittest.TestCase):
             self.assertFalse(result['allowed'])
             self.assertEqual(result['readiness_reason'], 'RUNNER_CREDENTIAL_MISSING')
 
-    def test_job_id_is_discovered_only_from_fixed_server_side_identity(self):
-        with TemporaryDirectory() as directory, \
-                patch.object(runner, 'ROOT', Path(directory)), \
-                patch.dict(os.environ, {
-                    'RUNDECK_PROJECT': 'Linux',
-                    'RUNDECK_JOB_GROUP': 'SAP/AOP',
-                    'RUNDECK_JOB_NAME': '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check',
-                    'RUNDECK_RUN_JOB_ID': '',
-                }, clear=False), \
-                patch.object(runner, '_request', return_value=[
-                    {
-                        'id': 'approved-job-id',
-                        'group': 'SAP/AOP',
-                        'name': '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check',
-                    },
-                    {
-                        'id': 'other-job-id',
-                        'group': 'SAP/OTHER',
-                        'name': '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check',
-                    },
-                ]):
-            self.assertEqual(runner._job_id(), 'approved-job-id')
+    def test_job_specs_are_fixed_server_side_for_both_collectors(self):
+        with patch.dict(os.environ, {
+            'RUNDECK_PROJECT': 'Linux',
+            'RUNDECK_JOB_GROUP': 'SAP/AOP',
+            'RUNDECK_JOB_NAME': '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check',
+            'RUNDECK_PERF_JOB_ID': 'perf-approved-id',
+            'RUNDECK_AVAIL_JOB_ID': 'availability-approved-id',
+            'RUNDECK_AVAILABILITY_PROJECT': 'Linux',
+            'RUNDECK_AVAILABILITY_JOB_GROUP': 'SAP/AOP',
+        }, clear=False):
+            specs = runner._job_specs()
+            self.assertEqual(specs['performance']['job_id'], 'perf-approved-id')
+            self.assertEqual(specs['availability']['job_id'], 'availability-approved-id')
+            self.assertEqual(specs['performance']['group'], 'SAP/AOP')
+            self.assertEqual(specs['availability']['group'], 'SAP/AOP')
 
-    def test_collect_now_accepts_api_actor_without_allowing_job_selection(self):
+    def test_collect_now_starts_both_approved_jobs_without_browser_job_selection(self):
+        specs = {
+            'performance': {
+                'key': 'performance', 'label': 'Performance', 'job_id': 'perf-approved-id',
+                'project': 'Linux', 'group': 'SAP/AOP', 'name': 'Performance Collector',
+            },
+            'availability': {
+                'key': 'availability', 'label': 'Availability', 'job_id': 'availability-approved-id',
+                'project': 'Linux', 'group': 'SAP/AOP', 'name': 'Availability Collector',
+            },
+        }
+        calls = []
+
+        def fake_request(path, method='GET'):
+            calls.append((path, method))
+            if 'perf-approved-id' in path:
+                return {'id': 523100, 'status': 'running'}
+            if 'availability-approved-id' in path:
+                return {'id': 523101, 'status': 'running'}
+            raise AssertionError(path)
+
         with TemporaryDirectory() as directory, \
                 patch.object(runner, 'ROOT', Path(directory)), \
-                patch.object(runner, 'status', side_effect=[
-                    {'allowed': True, 'job_id': 'approved-job-id'},
-                    {'allowed': False, 'job_id': 'approved-job-id'},
-                ]), \
-                patch.object(runner, '_job_identity', return_value=(
-                    'Linux', 'SAP/AOP', '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check'
-                )), \
-                patch.object(runner, '_request', return_value={'id': 523100, 'status': 'running'}), \
+                patch.object(runner, '_job_specs', return_value=specs), \
+                patch.object(runner, 'status', side_effect=[{'allowed': True}, {'allowed': False}]), \
+                patch.object(runner, '_request', side_effect=fake_request), \
                 patch.object(runner.threading, 'Thread') as thread:
             runner.collect_now(actor='basis-user')
             state = json.loads((Path(directory) / 'collect-now.json').read_text())
             self.assertEqual(state['requested_by'], 'basis-user')
-            self.assertEqual(state['job_id'], 'approved-job-id')
-            self.assertEqual(state['execution_id'], '523100')
+            self.assertEqual(state['sources']['performance']['execution_id'], '523100')
+            self.assertEqual(state['sources']['availability']['execution_id'], '523101')
+            self.assertEqual(
+                [path for path, method in calls if method == 'POST'],
+                [
+                    '/api/44/job/perf-approved-id/run',
+                    '/api/44/job/availability-approved-id/run',
+                ],
+            )
             thread.return_value.start.assert_called_once()
+
+    def test_bundle_ready_requires_both_sources_and_reports_skew(self):
+        sources = {
+            'performance': {
+                'status': 'succeeded', 'ingest_status': 'READY', 'collection_status': 'READY',
+                'finished_at': '2026-09-13T13:40:00+00:00',
+            },
+            'availability': {
+                'status': 'succeeded', 'ingest_status': 'READY',
+                'finished_at': '2026-09-13T13:40:12+00:00',
+            },
+        }
+        self.assertEqual(runner._bundle_status(sources), 'READY')
+        self.assertEqual(runner._source_skew_seconds(sources), 12)
+        sources['availability']['ingest_status'] = 'PENDING_REFRESH'
+        self.assertEqual(runner._bundle_status(sources), 'PARTIAL')
 
 
 if __name__ == '__main__':
