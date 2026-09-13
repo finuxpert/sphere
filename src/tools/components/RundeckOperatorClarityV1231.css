@@ -1,0 +1,456 @@
+/* SPHERE v1.23.1 — Operator Clarity & Health Semantics.
+   Final presentation layer on top of v1.23.0. No parent dashboard grid is introduced. */
+
+/* ---------- Shell / navbar ---------- */
+.appShell:has(.rundeckPanel) .sphereNavInner {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 28px !important;
+}
+
+.appShell:has(.rundeckPanel) .sphereBrand .brandTitle {
+  color: #aab6bc !important;
+  font-weight: 680 !important;
+}
+
+.appShell:has(.rundeckPanel) .sphereBrand .brandSub {
+  color: #65747c !important;
+  font-size: 8.5px !important;
+  font-weight: 560 !important;
+}
+
+.appShell:has(.rundeckPanel) .sphereToolTabs {
+  grid-column: 2 !important;
+  justify-self: end !important;
+  gap: 18px !important;
+}
+
+.appShell:has(.rundeckPanel) .sphereToolTabs a {
+  min-height: 44px !important;
+  padding: 0 2px !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #7c8991 !important;
+  font-size: 10.5px !important;
+  font-weight: 680 !important;
+}
+
+.appShell:has(.rundeckPanel) .sphereToolTabs a:hover {
+  color: #cbd5da !important;
+  background: transparent !important;
+}
+
+.appShell:has(.rundeckPanel) .sphereToolTabs a[data-active='true'] {
+  color: #e8eff1 !important;
+  border-bottom-color: var(--sphere-accent, #4fc6c8) !important;
+  background: transparent !important;
+}
+
+/* ---------- Top console header ---------- */
+.appShell:has(.rundeckPanel) .rundeckLandscapeHeader {
+  min-height: 42px !important;
+  padding: 5px 0 7px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckLandscapeHeader h2 {
+  font-size: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckLandscapeHeader h2::after {
+  content: 'SAP Performance';
+  color: var(--sphere-text, #e7edf0);
+  font-size: 15px;
+  font-weight: 730;
+  letter-spacing: -.012em;
+}
+
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta {
+  margin-top: 3px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta::before,
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta::after,
+.appShell:has(.rundeckPanel) .rundeckTitleBlock::before,
+.appShell:has(.rundeckPanel) .rundeckTitleBlock::after {
+  display: none !important;
+  content: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckOperationalState {
+  display: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSystemHealthV1231 {
+  order: -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSystemHealthV1231 > span:first-child {
+  color: #75838b;
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSystemHealthV1231 .rundeckStatus {
+  border-radius: 3px !important;
+  background: color-mix(in srgb, currentColor 8%, transparent) !important;
+}
+
+/* ---------- Incident hierarchy ---------- */
+.appShell:has(.rundeckPanel) .rundeckIncident.is-lean {
+  padding: 13px 0 11px !important;
+  border-bottom: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentHeader h3 {
+  font-size: clamp(17px, 1.05vw, 19px) !important;
+  line-height: 1.2 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentMeta {
+  display: flex !important;
+  gap: 6px !important;
+  margin-top: 4px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentMeta > span {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 4px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentMeta > span + span::before {
+  content: '·';
+  margin-right: 2px;
+  color: #68777f;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentWorkloadBlock.is-current {
+  max-width: 900px !important;
+  margin-top: 9px !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentWorkloadLead {
+  display: flex !important;
+  align-items: baseline !important;
+  flex-wrap: wrap !important;
+  gap: 5px 10px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentWorkloadLead > span {
+  display: inline !important;
+  color: #75838b !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentJobButton {
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine {
+  margin-top: 10px !important;
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceTimeline {
+  margin-top: 14px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(126, 147, 158, .09) !important;
+}
+
+/* Historical storage wording is implementation detail, not operator content. */
+.appShell:has(.rundeckPanel) .rundeckMonitoringHead::after,
+.appShell:has(.rundeckPanel) .rundeckMonitoringHead > small,
+.appShell:has(.rundeckPanel) .rundeckMonitoringHead > span {
+  display: none !important;
+  content: none !important;
+}
+
+/* ---------- Standalone Availability ---------- */
+.appShell:has(.rundeckPanel) .rundeckAvailabilityDataTrust {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  margin: 4px 0 0;
+  color: var(--sphere-warning, #d8b35f);
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityDataTrust small {
+  margin: 0 !important;
+  color: var(--sphere-warning, #d8b35f) !important;
+  font-size: 8.6px !important;
+  font-weight: 680 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityState .rundeckAvailabilityStatus.is-normal,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityState .rundeckAvailabilityStatus.is-up {
+  color: var(--sphere-positive, #75cfa5) !important;
+}
+
+@media (min-width: 1181px) {
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 {
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    padding-top: 12px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 .rundeckAvailability {
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 11px 0 12px !important;
+    border-top: 1px solid rgba(126, 147, 158, .10) !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(126, 147, 158, .10) !important;
+    container-type: normal !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 .rundeckAvailabilityBody {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, .8fr) !important;
+    gap: 10px 24px !important;
+    margin-top: 8px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 .rundeckAvailabilityGroup {
+    min-width: 0;
+  }
+}
+
+/* ---------- Replace dense legacy review pair ---------- */
+.appShell:has(.rundeckPanel) .rundeckSapIssues,
+.appShell:has(.rundeckPanel) .rundeckEvaluation {
+  display: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesV1231,
+.appShell:has(.rundeckPanel) .rundeckPerformanceReviewV1231 {
+  float: none !important;
+  clear: both !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: auto !important;
+  box-sizing: border-box;
+  margin: 16px 0 0 !important;
+  padding: 10px 0 0 !important;
+  border-top: 1px solid rgba(126, 147, 158, .10);
+  color: var(--sphere-text, #e7edf0);
+  content-visibility: visible !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesV1231 > header,
+.appShell:has(.rundeckPanel) .rundeckReviewHeadV1231 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 30px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesV1231 h3,
+.appShell:has(.rundeckPanel) .rundeckReviewHeadV1231 h3 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 13.5px;
+  font-weight: 710;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesV1231 > header > span,
+.appShell:has(.rundeckPanel) .rundeckReviewHeadV1231 > div:first-child > span {
+  color: #7e8b92;
+  font-size: 9.3px;
+  font-weight: 560;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesTableWrap,
+.appShell:has(.rundeckPanel) .rundeckReviewTableWrapV1231 {
+  width: 100%;
+  max-height: 320px;
+  margin-top: 6px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesTableV1231,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 10.4px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesTableV1231 th,
+.appShell:has(.rundeckPanel) .rundeckSapIssuesTableV1231 td,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td {
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(113, 128, 137, .075);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesTableV1231 th,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--sphere-page, #0f151a);
+  color: #74828a;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssuesTableV1231 td:first-child strong {
+  color: var(--sphere-text, #e7edf0);
+}
+
+.appShell:has(.rundeckPanel) .rundeckIssueNowV1231 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIssueNowV1231 > strong {
+  min-width: 18px;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 11px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIssueNowV1231 .rundeckInlineStatus {
+  font-size: 9.2px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewControlsV1231 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewSegmented {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewSegmented button {
+  min-height: 24px;
+  padding: 2px 7px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #75838b;
+  font: inherit;
+  font-size: 9.3px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewSegmented button.is-active {
+  background: rgba(79, 198, 200, .10);
+  color: var(--sphere-accent, #4fc6c8);
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231 button {
+  display: block;
+  max-width: 520px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sphere-text, #e7edf0);
+  font: inherit;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231 small {
+  display: block;
+  margin-top: 2px;
+  color: #6f7d84;
+  font-size: 8.8px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tr.is-selected {
+  background: rgba(79, 198, 200, .055);
+  box-shadow: inset 2px 0 0 rgba(79, 198, 200, .65);
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewQualityWarning {
+  display: flex;
+  gap: 12px;
+  margin-top: 5px;
+  color: var(--sphere-warning, #d8b35f);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewState {
+  padding: 7px 0;
+  color: #87959d;
+  font-size: 9.5px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckReviewState.is-error {
+  color: var(--sphere-danger, #db7d86);
+}
+
+/* Supporting data starts after both full-width review sections. */
+@media (min-width: 1181px) {
+  .appShell:has(.rundeckPanel) .rundeckSupportingData {
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+    padding-top: 8px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSupportingTitle {
+    display: block !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) .sphereNavInner {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilitySlotV1231 {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckAvailabilityBody {
+    grid-template-columns: 1fr !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSapIssuesV1231,
+  .appShell:has(.rundeckPanel) .rundeckPerformanceReviewV1231 {
+    overflow-x: auto;
+  }
+}
