@@ -1,0 +1,33 @@
+.rundeckCurrentWorkloadTools {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rundeckWorkloadFreshness {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.8px;
+  font-weight: 680;
+  white-space: nowrap;
+}
+
+.rundeckCurrentWorkloadName small {
+  max-width: 430px;
+}
+
+.rundeckJobHistoryHead em.is-current {
+  font-size: 0 !important;
+}
+
+.rundeckJobHistoryHead em.is-current::after {
+  content: 'LATEST SNAPSHOT';
+  font-size: 7.4px;
+  letter-spacing: .035em;
+}
+
+.rundeckCollectButton:disabled {
+  cursor: not-allowed;
+  opacity: .62;
+}
