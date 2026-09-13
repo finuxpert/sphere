@@ -138,7 +138,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
     ssh.DR,
   ].filter(Boolean).filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length)
   const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
-  const issueText = String(data?.summary?.issue_text || '').trim()
+  const issueText = String(data?.summary?.issue_text || '').replace(/\bDr\b/g, 'DR').trim()
   const availabilityAge = ageMinutes(data?.collected_at)
   const stale = availabilityAge !== null && availabilityAge >= STALE_MINUTES
   const bundlePerformance = bundleSourceStatus(bundle, 'performance')
