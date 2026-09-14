@@ -1,0 +1,82 @@
+.rundeckObservationHistoryV1234 {
+  width: 100%;
+  min-width: 0;
+}
+
+.rundeckObservationHistoryV1234 > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  cursor: pointer;
+  font-size: var(--sphere-font-body, 9.4px);
+  font-weight: 700;
+}
+
+.rundeckObservationHistoryV1234 > summary .sphereIcon {
+  color: var(--sphere-text-muted, #718089);
+}
+
+.rundeckObservationHistoryV1234 > summary span {
+  margin-left: 2px;
+  color: var(--sphere-text-muted, #718089);
+  font-weight: 500;
+}
+
+.rundeckObservationHistoryTableWrap {
+  overflow: auto;
+  max-height: 260px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(113, 128, 137, .08);
+  scrollbar-gutter: stable;
+}
+
+.rundeckObservationHistoryV1234 table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  table-layout: auto;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: var(--sphere-font-body, 9.4px);
+}
+
+.rundeckObservationHistoryV1234 th,
+.rundeckObservationHistoryV1234 td {
+  padding: 5px 7px;
+  border-bottom: 1px solid rgba(113, 128, 137, .08);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.rundeckObservationHistoryV1234 th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--sphere-page, #0f151a);
+  color: var(--sphere-text-muted, #718089);
+  font-size: var(--sphere-font-micro, 8.5px);
+  font-weight: 760;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.rundeckObservationHistoryV1234 tbody tr:hover {
+  background: rgba(79, 198, 200, .025);
+}
+
+.rundeckObservationHistoryState {
+  padding: 8px 0;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: var(--sphere-font-body, 9.4px);
+}
+
+.rundeckObservationHistoryState.is-error {
+  color: var(--sphere-danger, #db7d86);
+}
+
+@media (max-width: 1180px) {
+  .rundeckObservationHistoryTableWrap {
+    max-height: 220px;
+  }
+}

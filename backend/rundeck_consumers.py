@@ -48,6 +48,14 @@ def _parse_time(value: Any, fallback: datetime | None = None) -> datetime:
     return fallback or datetime.now(timezone.utc)
 
 
+def _first(row: dict[str, str], *keys: str) -> str:
+    for key in keys:
+        value = _clean(row.get(key))
+        if value:
+            return value
+    return ""
+
+
 def _kv_blocks(raw_text: str) -> list[dict[str, str]]:
     blocks = re.findall(
         r"^## RCA-SNAPSHOT-V2\.2-BEGIN\s*\n(.*?)^## RCA-SNAPSHOT-V2\.2-END\s*$",
@@ -118,12 +126,7 @@ def parse_top_consumers(
         pid = _clean(row.get("pid"))
         wp = _clean(row.get("wp"))
         wp_type = _clean(row.get("type"))
-        user = (
-            _clean(row.get("user"))
-            or _clean(row.get("sap_user"))
-            or _clean(row.get("username"))
-            or _clean(row.get("bname"))
-        )
+        user = _first(row, "user", "sap_user", "username", "bname")
 
         if job_name:
             consumer_type, consumer_key = "JOB", job_name
@@ -201,12 +204,10 @@ def parse_top_consumers(
             "program": _clean(representative.get("program")),
             "wp": _clean(representative.get("wp")),
             "wp_type": _clean(representative.get("type")),
-            "user": (
-                _clean(representative.get("user"))
-                or _clean(representative.get("sap_user"))
-                or _clean(representative.get("username"))
-                or _clean(representative.get("bname"))
-            ),
+            "user": _first(representative, "user", "sap_user", "username", "bname"),
+            "client": _first(representative, "client", "mandt", "sap_client"),
+            "transaction": _first(representative, "transaction", "tcode", "transaction_code"),
+            "report": _first(representative, "report", "report_name"),
             "pid": _clean(representative.get("pid")),
             "state": _clean(representative.get("state")),
             # Compatibility fields now represent the aggregate consumer footprint.

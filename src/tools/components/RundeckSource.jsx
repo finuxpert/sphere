@@ -4,7 +4,7 @@ import RundeckMonitoringHistory from './RundeckMonitoringHistory.jsx'
 import RundeckPerformanceIncident from './RundeckPerformanceIncident.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
-import { numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
+import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
 import { hostResourceState, overallOperationalState, sapWorkloadState, statusExplanation } from './rundeckStatusSemantics.js'
 import './RundeckSource.css'
@@ -13,7 +13,6 @@ import './RundeckPlatformHealth.css'
 const API = `${import.meta.env.BASE_URL}api`
 const BRAND_LOGO = `${import.meta.env.BASE_URL}branding/logo/sphere-logo-navbar-dark.png`
 const REPORT_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}#/tool/logs`
-const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
 
 const formatTime = (value, compact = false) => {
   if (!value) return '—'
@@ -55,8 +54,6 @@ const processText = (row = {}) => {
   const value = Number(row.details?.process_count || 0)
   return Number.isFinite(value) && value > 0 ? numberText(value, 0) : '1'
 }
-
-const wpText = (row = {}) => [row.details?.wp_type, row.details?.wp].filter(Boolean).join(' ') || '—'
 
 const programText = (row = {}) => {
   const program = row.details?.program
@@ -134,6 +131,22 @@ function reportDuration(seconds) {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
+const STATE_RANK = { UNKNOWN: -1, NORMAL: 0, ATTENTION: 1, WARNING: 2, CRITICAL: 3 }
+
+function aggregateOperationalState(values = []) {
+  if (!values.length) return 'UNKNOWN'
+  return values.reduce((selected, raw) => {
+    const value = String(raw || 'UNKNOWN').toUpperCase()
+    return (STATE_RANK[value] ?? -1) > (STATE_RANK[selected] ?? -1) ? value : selected
+  }, 'UNKNOWN')
+}
+
+function availabilityStatus(rows = [], name = '') {
+  const key = String(name || '').toUpperCase()
+  const row = rows.find((item) => String(item?.name || '').toUpperCase() === key)
+  return String(row?.status || 'UNKNOWN').toUpperCase()
+}
+
 export default function RundeckSource({ onCollection }) {
   const [latest, setLatest] = React.useState(null)
   const [health, setHealth] = React.useState(null)
@@ -148,7 +161,6 @@ export default function RundeckSource({ onCollection }) {
   const [pdfPreview, setPdfPreview] = React.useState(null)
   const [selectedJob, setSelectedJob] = React.useState(null)
   const [incidentSummary, setIncidentSummary] = React.useState(null)
-  const [wpDrilldown, setWpDrilldown] = React.useState(null)
   const [trendContext, setTrendContext] = React.useState({ metricLabel: 'CPU', rangeLabel: '6H', mode: 'max' })
   const loaded = React.useRef('')
   const panelRef = React.useRef(null)
@@ -268,34 +280,18 @@ export default function RundeckSource({ onCollection }) {
     }
   }
 
-  async function toggleCriticalWp(host) {
-    const hostName = host?.host || ''
-    if (!hostName || !latest?.collection_id) return
-    if (wpDrilldown?.host === hostName) {
-      setWpDrilldown(null)
-      return
-    }
-    setWpDrilldown({ host: hostName, count: Number(host.wp_critical || 0), loading: true, rows: [], error: '' })
-    try {
-      const result = await json(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latest.collection_id)}&limit=50`)
-      const rows = (result.items || []).filter((row) => row.host === hostName).slice(0, 10)
-      setWpDrilldown({ host: hostName, count: Number(host.wp_critical || 0), loading: false, rows, error: '' })
-    } catch (failure) {
-      setWpDrilldown({ host: hostName, count: Number(host.wp_critical || 0), loading: false, rows: [], error: failure.message || 'Workload detail unavailable.' })
-    }
-  }
-
   async function exportPdf() {
     const panel = panelRef.current
     if (!panel || exporting) return
     setExporting(true)
     setError('')
     try {
-      const [{ default: html2canvas }, { jsPDF }, workloadResult, evaluationResult, brandLogo] = await Promise.all([
+      const [{ default: html2canvas }, { jsPDF }, workloadResult, evaluationResult, availabilityResult, brandLogo] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
         latest?.collection_id ? json(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latest.collection_id)}&limit=4`) : Promise.resolve({ items: [] }),
         json(`${API}/evaluation/workloads?period=1d&type=ALL&limit=100`).catch(() => ({ items: [] })),
+        json(`${API}/availability/latest`).catch(() => null),
         loadImage(BRAND_LOGO),
       ])
 
@@ -339,7 +335,18 @@ export default function RundeckSource({ onCollection }) {
       else pdf.text(APP_TAGLINE, brandX, 17)
 
       const status = overallHealth || 'NORMAL'
+      const osState = aggregateOperationalState(operationalHosts.map((host) => hostResourceState(host)))
+      const sapState = aggregateOperationalState(operationalHosts.map((host) => sapWorkloadState(host)))
+      const availabilityState = String(availabilityResult?.summary?.service_state || availabilityResult?.summary?.sap_state || 'UNKNOWN').toUpperCase()
+      const availabilityApps = availabilityResult?.sap_app || []
+      const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
+      const hanaRows = availabilityResult?.hana_system_db || []
+      const webRows = availabilityResult?.web_dispatcher || []
       const [sr, sg, sb] = pdfStatusColor(status)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(5.8)
+      pdf.setTextColor(153, 168, 177)
+      pdf.text('OPERATIONAL STATE', W - margin - 28, 15.6, { align: 'right' })
       pdf.setFillColor(sr, sg, sb)
       pdf.rect(W - margin - 25, 11, 21, 7, 'F')
       pdf.setTextColor(255, 255, 255)
@@ -348,9 +355,9 @@ export default function RundeckSource({ onCollection }) {
       pdf.text(status, W - margin - 14.5, 15.7, { align: 'center' })
 
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.8)
+      pdf.setFontSize(7.4)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
+      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}  ·  OS Resource ${osState}  ·  SAP Workload ${sapState}  ·  Availability ${availabilityState}`, margin, 29)
 
       const affected = shortHost(incidentSummary?.affected_server || '')
       const signal = incidentSummary?.primary_signal || {}
@@ -369,19 +376,34 @@ export default function RundeckSource({ onCollection }) {
       const currentProgram = distinctProgramText(current)
       pdf.setFillColor(235, 240, 242)
       pdf.roundedRect(margin, 45, contentW, 21, 1, 1, 'F')
+      const summarySplit = margin + contentW * .62
+      pdf.setDrawColor(210, 217, 221)
+      pdf.line(summarySplit, 48, summarySplit, 63)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.5)
       pdf.setTextColor(71, 87, 97)
       pdf.text('CURRENT WORKLOAD', margin + 4, 50)
       pdf.setTextColor(22, 31, 38)
       pdf.setFontSize(9.1)
-      pdf.text(clipped(current.consumer_key, 72), margin + 4, 55)
+      pdf.text(clipped(current.consumer_key, 52), margin + 4, 55)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.9)
       pdf.setTextColor(92, 105, 114)
-      if (currentProgram) pdf.text(`Program ${clipped(currentProgram, 68)}`, margin + 4, 59)
+      if (currentProgram) pdf.text(`Program ${clipped(currentProgram, 48)}`, margin + 4, 59)
       pdf.setFontSize(7.3)
       pdf.text(`CPU ${metric(current.cpu_pct, '%')}  ·  PSS ${pssText(current)}  ·  Processes ${processText(current)}`, margin + 4, 63)
+
+      const availabilityX = summarySplit + 4
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.5)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('AVAILABILITY', availabilityX, 50)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.9)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(`SAP APP  ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, availabilityX, 55)
+      pdf.text(`HANA  P ${availabilityStatus(hanaRows, 'PRIMARY')}  ·  S ${availabilityStatus(hanaRows, 'SECONDARY')}  ·  DR ${availabilityStatus(hanaRows, 'DR')}`, availabilityX, 59)
+      pdf.text(`WEB  HTTP ${availabilityStatus(webRows, 'HTTP')}  ·  HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, availabilityX, 63)
 
       let y = 73
       pdf.setFont('helvetica', 'bold')
@@ -416,7 +438,7 @@ export default function RundeckSource({ onCollection }) {
       }
 
       const workY = 154
-      const leftW = contentW * .70
+      const leftW = contentW * .66
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
       const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
@@ -459,7 +481,7 @@ export default function RundeckSource({ onCollection }) {
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7.3)
-        pdf.text(`${index + 1}. ${shortHost(row.host)}  ${clipped(row.consumer_key, 28)}`, sideX, sideY)
+        pdf.text(`${index + 1}. ${shortHost(row.host)}  ${clipped(row.consumer_key, 32)}`, sideX, sideY)
         pdf.setTextColor(92, 105, 114)
         pdf.setFontSize(6.8)
         pdf.text(`CPU ${metric(row.cpu_pct, '%')}  ·  PSS ${pssText(row)}  ·  Proc ${processText(row)}`, sideX, sideY + 3.2)
@@ -467,7 +489,7 @@ export default function RundeckSource({ onCollection }) {
           pdf.setFont('helvetica', 'bold')
           pdf.setTextColor(71, 87, 97)
           pdf.setFontSize(6.4)
-          pdf.text(clipped(`${evaluationStatus}${evaluationReason ? ` · ${evaluationReason}` : ''}`, 42), sideX, sideY + 6.2)
+          pdf.text(clipped(`${evaluationStatus}${evaluationReason ? ` · ${evaluationReason}` : ''}`, 46), sideX, sideY + 6.2)
           sideY += 10.4
         } else {
           sideY += 8
@@ -538,7 +560,10 @@ export default function RundeckSource({ onCollection }) {
         </div>
       </div>
       <div className="rundeckActions">
-        <StatusPill value={overallHealth} title={statusHint} />
+        <div className="rundeckOperationalState">
+          <span>Operational State</span>
+          <StatusPill value={overallHealth} title={statusHint} />
+        </div>
         <div className="rundeckModeSwitch" role="group" aria-label="Data source">
           <button type="button" className="is-active" aria-pressed="true" title="Automatic Rundeck source"><SphereIcon name="refresh" /> Rundeck</button>
           <button type="button" onClick={() => switchParentSource('manual')} title="Manual Upload Logs"><SphereIcon name="upload" /> Manual</button>
@@ -569,67 +594,6 @@ export default function RundeckSource({ onCollection }) {
       onSummary={setIncidentSummary}
       showStatus={false}
     />
-
-    {operationalHosts.length > 0 && <section className="rundeckServerSection">
-      <div className="rundeckSectionTitle">
-        <h3><SphereIcon name="server" /> SAP App Servers</h3>
-      </div>
-      <div className="rundeckServerTableWrap">
-        <table className="rundeckServerTable">
-          <thead><tr><th>APP</th><th>OS Resource</th><th>SAP Workload</th><th>CPU</th><th>Memory</th><th>I/O Wait</th><th>Critical WP</th></tr></thead>
-          <tbody>
-            {operationalHosts.map((host) => {
-              const wpCount = Number(host.wp_critical || 0)
-              const workloadState = sapWorkloadState(host)
-              return <tr key={host.host} className={wpDrilldown?.host === host.host ? 'is-selected' : ''}>
-                <td><strong title={host.host}>{shortHost(host.host)}</strong></td>
-                <td><StatusPill value={hostResourceState(host)} /></td>
-                <td><StatusPill value={workloadState} /></td>
-                <td>{metric(host.cpu_pct, '%')}</td>
-                <td>{metric(host.ram_pct, '%')}</td>
-                <td>{metric(host.io_wait_pct, '%')}</td>
-                <td className={wpCount > 0 ? `is-${workloadState.toLowerCase()}` : ''}>
-                  {wpCount > 0
-                    ? <button type="button" className="rundeckWpButton" onClick={() => toggleCriticalWp(host)} aria-expanded={wpDrilldown?.host === host.host} title={`${wpCount} Critical WP reported on ${shortHost(host.host)}. Click to inspect workload context.`}><SphereIcon name="alert" /> {wpCount}</button>
-                    : '0'}
-                </td>
-              </tr>
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {wpDrilldown && <section className="rundeckWpDrilldown" aria-live="polite">
-        <div className="rundeckWpDrilldownHead">
-          <h4><SphereIcon name="alert" /> {shortHost(wpDrilldown.host)} · {wpDrilldown.count} Critical WP</h4>
-          <button type="button" onClick={() => setWpDrilldown(null)}>Close</button>
-        </div>
-        <p>Direct WP mapping is not available from the current collector. Workloads on {shortHost(wpDrilldown.host)} are shown for Basis review.</p>
-        {wpDrilldown.loading && <div className="rundeckWpDrilldownState">Loading workload…</div>}
-        {wpDrilldown.error && <div className="rundeckWpDrilldownState is-error">{wpDrilldown.error}</div>}
-        {!wpDrilldown.loading && !wpDrilldown.error && <div className="rundeckWpDrilldownTableWrap">
-          <table>
-            <thead><tr><th>Workload</th><th>Type</th><th>WP</th><th>PID</th><th>User</th><th title={CPU_HINT}>CPU Usage</th><th>PSS Memory</th></tr></thead>
-            <tbody>
-              {wpDrilldown.rows.map((row) => {
-                const details = row.details || {}
-                const context = { key: row.consumer_key, host: row.host, consumerType: row.consumer_type, source: 'critical-wp-drilldown' }
-                return <tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}`}>
-                  <td><button type="button" onClick={() => selectJob(context)}>{row.consumer_key}</button></td>
-                  <td>{workloadTypeLabel(row.consumer_type)}</td>
-                  <td>{wpText(row)}</td>
-                  <td>{details.pid || '—'}</td>
-                  <td>{details.user || '—'}</td>
-                  <td title={CPU_HINT}>{metric(row.cpu_pct, '%')}</td>
-                  <td>{pssText(row)}</td>
-                </tr>
-              })}
-              {!wpDrilldown.rows.length && <tr><td colSpan="7">No current workload rows stored for this APP.</td></tr>}
-            </tbody>
-          </table>
-        </div>}
-      </section>}
-    </section>}
 
     <RundeckMonitoringHistory
       refreshToken={latest?.collection_id || ''}

@@ -1,0 +1,372 @@
+/* SPHERE v1.22.2 operator density + hierarchy pass.
+   Presentation only. Normal states stay quiet, incident/review states stay explicit,
+   and frequently scanned SAP Basis data gets a readable minimum type size. */
+
+.appShell:has(.rundeckPanel) .rundeckPanel {
+  --sphere-font-micro: 9.6px;
+  --sphere-font-body: 10.6px;
+  --sphere-operator-line: rgba(126, 147, 158, .10);
+  --sphere-operator-muted: #839098;
+}
+
+/* Primary incident owns the top hierarchy. Host state is inline evidence, not a second widget. */
+.appShell:has(.rundeckPanel) .rundeckIncident.is-lean {
+  display: block !important;
+  padding: 10px 0 8px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentHeader h3 {
+  font-size: clamp(17px, 1.05vw, 19px) !important;
+  font-weight: 730 !important;
+  line-height: 1.2 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentMeta {
+  margin-top: 5px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentMeta span,
+.appShell:has(.rundeckPanel) .rundeckIncidentMeta b {
+  font-size: 10px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentWorkloadBlock.is-current {
+  max-width: 760px;
+  margin-top: 7px !important;
+  padding: 7px 0 6px 10px !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 2px solid rgba(79, 198, 200, .60) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentWorkloadLead > span {
+  display: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentJobButton {
+  margin-top: 0 !important;
+  font-size: 14px !important;
+  font-weight: 720 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentFacts {
+  margin-top: 5px !important;
+  gap: 7px 20px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentFacts dt {
+  color: var(--sphere-operator-muted) !important;
+  font-size: 9.5px !important;
+  font-weight: 560 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentFacts dd {
+  margin-top: 1px !important;
+  font-size: 11.5px !important;
+  font-weight: 680 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  max-width: 980px;
+  margin-top: 5px;
+  padding-top: 6px;
+  border-top: 1px solid var(--sphere-operator-line);
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #a6b2b8;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine b {
+  color: var(--sphere-operator-muted);
+  font-size: 9.5px;
+  font-weight: 560;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine .rundeckStatus {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: 9.6px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine .rundeckStatus.is-normal,
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine .rundeckStatus.is-ready {
+  color: #98a4aa !important;
+}
+
+/* Server table: readable at normal browser zoom without turning NORMAL into decoration. */
+.appShell:has(.rundeckPanel) .rundeckSectionTitle h3,
+.appShell:has(.rundeckPanel) .rundeckMonitoringHead h3,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadHead h3,
+.appShell:has(.rundeckPanel) .rundeckEvaluationHead h3,
+.appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle h4 {
+  font-size: 13.5px !important;
+  font-weight: 710 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTable {
+  font-size: 10.5px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTable th {
+  font-size: 9.2px !important;
+  font-weight: 640 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTable .rundeckStatus {
+  font-size: 9.5px !important;
+}
+
+/* Availability is one scan line first; technical checks remain on demand. */
+.appShell:has(.rundeckPanel) .rundeckAvailabilityHead h3 {
+  font-size: 13px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityHead > div:first-child > span,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityState small,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityMuted,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityError {
+  font-size: 9.5px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityLabel,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityMore > summary {
+  font-size: 9.2px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityApps > span,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityInfra > span,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityStatus {
+  font-size: 9.6px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityBundle {
+  font-size: 9.3px !important;
+  font-weight: 580 !important;
+}
+
+/* Trend is supporting context, not the dominant canvas. */
+.appShell:has(.rundeckPanel) .rundeckTrendToolbar button,
+.appShell:has(.rundeckPanel) .rundeckAdvancedControls button,
+.appShell:has(.rundeckPanel) .rundeckAdvancedControls summary,
+.appShell:has(.rundeckPanel) .rundeckTrendGroup button {
+  font-size: 9.5px !important;
+}
+
+@media (min-width: 1181px) {
+  .appShell:has(.rundeckPanel) .rundeckTrendChart {
+    height: 136px !important;
+    min-height: 132px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckMonitoringHead {
+    min-height: 25px !important;
+  }
+}
+
+/* Workload master list: concise identity, readable secondary text. */
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload table {
+  font-size: 10.4px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload th {
+  font-size: 9.2px !important;
+  font-weight: 640 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button {
+  font-size: 10.7px !important;
+  font-weight: 680 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName small {
+  max-width: 360px !important;
+  color: #7f8c93 !important;
+  font-size: 9.1px !important;
+  line-height: 1.25 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckWorkloadFreshness,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTools button {
+  font-size: 9.2px !important;
+}
+
+/* Selected workload: one facts grid. Remove redundant latest-snapshot ornament. */
+.appShell:has(.rundeckPanel) .rundeckJobHistoryHead h3 {
+  font-size: 15px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistoryHead small {
+  font-size: 10px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistoryHead em.is-current,
+.appShell:has(.rundeckPanel) .rundeckJobHistoryHead em.is-current::after {
+  display: none !important;
+  content: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistoryOverview {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  margin-top: 7px !important;
+  padding: 7px 0 !important;
+  border-top: 1px solid var(--sphere-operator-line) !important;
+  border-bottom: 1px solid var(--sphere-operator-line) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistoryGroup {
+  display: contents !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistoryGroup > strong {
+  display: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistorySummary {
+  display: contents !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistorySummary > span {
+  min-width: 0 !important;
+  padding: 5px 10px 5px 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistorySummary b {
+  display: block !important;
+  margin-bottom: 2px !important;
+  color: var(--sphere-operator-muted) !important;
+  font-size: 9.2px !important;
+  font-weight: 560 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistorySummary > span {
+  color: #d5dde0 !important;
+  font-size: 10.6px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobTimeline {
+  padding: 6px 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobTimeline > strong,
+.appShell:has(.rundeckPanel) .rundeckJobTimeline b,
+.appShell:has(.rundeckPanel) .rundeckJobTimeline span {
+  font-size: 9.5px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle span {
+  font-size: 9.2px !important;
+}
+
+/* Evaluation: one metadata line, compact counters, reason-first table. */
+.appShell:has(.rundeckPanel) .rundeckEvaluationQuality.is-lean {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 5px 16px !important;
+  padding: 6px 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationQualityItem {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 5px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationQualityItem b,
+.appShell:has(.rundeckPanel) .rundeckEvaluationQualityItem strong,
+.appShell:has(.rundeckPanel) .rundeckEvaluationCoverageFlag {
+  font-size: 9.4px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationSummary.is-lean {
+  gap: 18px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationSummary.is-lean span {
+  font-size: 9.4px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationSummary.is-lean strong {
+  font-size: 15px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationSortBar,
+.appShell:has(.rundeckPanel) .rundeckEvaluationSortBar button {
+  font-size: 9.3px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationTable {
+  font-size: 10.2px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationTable th {
+  font-size: 9.1px !important;
+  font-weight: 640 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationAssessmentWrap {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 7px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationReason {
+  order: -1;
+  color: #c7d0d4 !important;
+  font-size: 9.7px !important;
+  font-weight: 620 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationAssessment {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 8.8px !important;
+  font-weight: 620 !important;
+  opacity: .78;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationFoot {
+  font-size: 9.2px !important;
+}
+
+/* Supporting data remains clearly secondary but must still be legible. */
+.appShell:has(.rundeckPanel) .rundeckHistory,
+.appShell:has(.rundeckPanel) .rundeckPlatformHealth,
+.appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
+  font-size: 9.6px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckHistory th,
+.appShell:has(.rundeckPanel) .rundeckHistory td,
+.appShell:has(.rundeckPanel) .rundeckPlatformTable th,
+.appShell:has(.rundeckPanel) .rundeckPlatformTable td,
+.appShell:has(.rundeckPanel) .rundeckJobExecutionHistory th,
+.appShell:has(.rundeckPanel) .rundeckJobExecutionHistory td {
+  font-size: 9.5px !important;
+}
+
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) .rundeckJobHistoryOverview {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

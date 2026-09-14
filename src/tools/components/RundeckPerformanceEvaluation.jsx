@@ -88,8 +88,8 @@ function Status({ row, quality }) {
     wpContext ? WP_HINT : '',
   ].filter(Boolean).join('\n')
   return <span className="rundeckEvaluationAssessmentWrap" title={title} aria-label={`${status}. ${reason || 'No additional reason'}. Data confidence ${confidence}.`}>
-    <span className={`rundeckEvaluationAssessment ${statusClass(status)}`}>{status}</span>
-    {reason && <small className="rundeckEvaluationReason">{reason}</small>}
+    <span className="rundeckEvaluationReason">{reason || status}</span>
+    {status !== 'NORMAL' && <small className={`rundeckEvaluationAssessment ${statusClass(status)}`}>{status}</small>}
   </span>
 }
 
@@ -221,7 +221,7 @@ export default function RundeckPerformanceEvaluation({ refreshToken = '', select
         <table className="rundeckEvaluationTable is-v120 is-lean">
           <thead><tr>
             <th>Workload</th>
-            <th>Status</th>
+            <th>Reason</th>
             <SortHeader field="occurrences" label="Observed Checks" title={OBSERVED_HINT} sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
             <SortHeader field="avg_cpu_pct" label="Avg CPU" title={CPU_HINT} sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />
             <SortHeader field="peak_cpu_pct" label="Peak CPU" title={CPU_HINT} sortField={sortField} sortDirection={sortDirection} onSort={toggleSort} />

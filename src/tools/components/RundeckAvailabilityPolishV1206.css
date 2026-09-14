@@ -1,0 +1,237 @@
+/* v1.20.6 availability presentation polish.
+   Structural placement is owned by RundeckWorkspaceV1236.css. */
+
+.rundeckAvailabilityBody {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+  margin-top: 7px !important;
+}
+
+.rundeckAvailabilityGroup {
+  display: grid !important;
+  grid-template-columns: 92px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.rundeckAvailabilityLabel {
+  font-size: 8.4px !important;
+  letter-spacing: .055em !important;
+}
+
+.rundeckAvailabilityApps,
+.rundeckAvailabilityInfra {
+  gap: 5px 12px !important;
+}
+
+.rundeckAvailabilityApps > span,
+.rundeckAvailabilityInfra > span {
+  font-size: 9.4px !important;
+}
+
+.rundeckAvailabilityHead > div > span,
+.rundeckMonitoringHead small,
+.rundeckServerSection small,
+.rundeckLandscapeMeta,
+.rundeckAvailabilityMuted {
+  font-size: 9px !important;
+}
+
+.rundeckAvailabilityMore {
+  margin-top: 6px !important;
+}
+
+.rundeckAvailabilityMore > summary {
+  font-size: 0 !important;
+  font-weight: 650 !important;
+}
+
+.rundeckAvailabilityMore > summary::before {
+  font-size: 8.8px !important;
+}
+
+.rundeckAvailabilityMore > summary::after {
+  content: 'More technical checks';
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8.8px;
+}
+
+.rundeckAvailabilityMoreBody {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+  margin-top: 7px !important;
+  padding-top: 7px !important;
+}
+
+.rundeckAvailabilityMatrix {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  min-width: 0;
+}
+
+.rundeckAvailabilityMatrix > div {
+  display: grid !important;
+  grid-template-columns: minmax(86px, 1fr) repeat(3, minmax(72px, .72fr)) !important;
+  gap: 0 !important;
+  align-items: center !important;
+  min-height: 24px !important;
+}
+
+.rundeckAvailabilityMatrix > div > * {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.rundeckAvailabilityMatrix .is-head > span:not(:first-child),
+.rundeckAvailabilityMatrix > div > span:not(:first-child) {
+  justify-content: flex-start;
+}
+
+.rundeckAvailabilityMoreBody > .rundeckAvailabilityTechnicalRow {
+  display: grid !important;
+  grid-template-columns: 120px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: start !important;
+}
+
+.rundeckOperationalState {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.rundeckOperationalState > span:first-child {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.7px;
+  font-weight: 760;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rundeckLandscapeHeader {
+  min-height: 34px !important;
+  padding-top: 3px !important;
+  padding-bottom: 4px !important;
+}
+
+.rundeckIncident.is-lean {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.rundeckIncident.is-lean > .rundeckIncidentWorkloadBlock {
+  margin-top: 2px !important;
+}
+
+.rundeckJobExecutionHistory {
+  margin-top: 14px !important;
+}
+
+.rundeckEvaluationHead {
+  gap: 8px !important;
+}
+
+.rundeckEvaluationHead p {
+  margin-top: 2px !important;
+}
+
+.rundeckEvaluationControls {
+  gap: 2px !important;
+}
+
+.rundeckEvaluationSegmented {
+  gap: 1px !important;
+}
+
+.rundeckEvaluationSegmented button {
+  min-height: 20px !important;
+  padding: 1px 6px !important;
+}
+
+.rundeckEvaluationQuality.is-lean {
+  margin-top: 6px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.rundeckEvaluationSummary.is-lean {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  margin-top: 6px !important;
+}
+
+.rundeckEvaluationSummary.is-lean > div {
+  min-height: 38px !important;
+  padding: 4px 7px !important;
+}
+
+.rundeckEvaluationSummary.is-lean strong {
+  margin-top: 1px !important;
+  margin-bottom: 0 !important;
+  font-size: clamp(14px, .9vw, 16px) !important;
+}
+
+.rundeckEvaluationSortBar {
+  margin-top: 5px !important;
+}
+
+.rundeckEvaluationTableWrap {
+  position: relative;
+  max-height: 282px !important;
+  margin-top: 5px !important;
+  overflow: auto;
+}
+
+.rundeckEvaluationTable thead th {
+  position: sticky !important;
+  top: 0;
+  z-index: 3 !important;
+  background: #11191e !important;
+  color: var(--sphere-text-secondary, #a9b5bb) !important;
+  box-shadow: 0 1px 0 rgba(113, 128, 137, .18), 0 4px 8px rgba(0, 0, 0, .10) !important;
+}
+
+.rundeckHistoryTableWrap,
+.rundeckPlatformTableWrap {
+  max-height: 205px !important;
+}
+
+@media (min-width: 1181px) {
+  .appShell:has(.rundeckPanel) .rundeckAvailability {
+    padding-top: 9px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
+    padding-top: 9px !important;
+    padding-bottom: 10px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .rundeckAvailabilityGroup,
+  .rundeckAvailabilityMoreBody > .rundeckAvailabilityTechnicalRow {
+    grid-template-columns: 1fr !important;
+    gap: 4px !important;
+  }
+
+  .rundeckAvailabilityMatrix > div {
+    grid-template-columns: minmax(78px, 1fr) repeat(3, minmax(64px, .8fr)) !important;
+  }
+
+  .rundeckOperationalState > span:first-child {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .rundeckEvaluationSummary.is-lean {
+    grid-template-columns: 1fr !important;
+  }
+}

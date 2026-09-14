@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "qa": "npm run lint && npm run qa:rundeck-ui && npm run build",
-    "qa:rundeck-ui": "node scripts/qa-rundeck-ui-contract.mjs",
+    "qa:rundeck-ui": "node scripts/qa-rundeck-ui.mjs",
     "qa:visual": "playwright test -c playwright.config.mjs",
     "preview": "vite preview",
     "test": "vitest run"

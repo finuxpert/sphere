@@ -1,0 +1,117 @@
+/* SPHERE v1.23.0 Lean Operations & Data Trust.
+   Safe presentation-only overrides on top of the stable v1.22.2 shell.
+   No parent grid, float, rail, height or section-order changes live here. */
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityState {
+  max-width: 46%;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityState small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #c5ced2 !important;
+  font-size: 9px !important;
+  font-weight: 560 !important;
+  white-space: nowrap;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityTrust {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  color: #d8b35f;
+  font-size: 8px;
+  font-weight: 720;
+  letter-spacing: .01em;
+}
+
+.appShell:has(.rundeckPanel) .rundeckAvailabilityMore > summary {
+  color: #7f8c93 !important;
+  font-weight: 600 !important;
+}
+
+/* A historical aggregate must not look like a point-in-time process count. */
+.appShell:has(.rundeckPanel) .rundeckJobHistoryGroup[aria-label="Performance summary"] .rundeckJobHistorySummary > span:nth-child(4) b {
+  font-size: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistoryGroup[aria-label="Performance summary"] .rundeckJobHistorySummary > span:nth-child(4) b::after {
+  content: 'Avg Processes';
+  font-size: 9.2px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckWorkloadFreshness.is-stale {
+  color: #d8b35f !important;
+  font-weight: 700 !important;
+}
+
+/* Reason is the operator-facing conclusion. The deterministic status remains in
+   title/ARIA/API but is not repeated as a second visible line. */
+.appShell:has(.rundeckPanel) .rundeckEvaluationAssessment {
+  display: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationAssessmentWrap {
+  display: block !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationReason {
+  color: #d3dadd !important;
+  font-size: 9.8px !important;
+  line-height: 1.25 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvaluationFoot {
+  display: none !important;
+}
+
+/* Operational Events stays compact by default. Correlation mechanics are one
+   additional disclosure level instead of permanent explanatory copy. */
+.appShell:has(.rundeckPanel) .rundeckEvidenceTechnical {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(113, 128, 137, .08);
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceTechnical > summary {
+  width: max-content;
+  color: #78868e;
+  cursor: pointer;
+  font-size: 8.5px;
+  font-weight: 620;
+  list-style: none;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceTechnical > summary::-webkit-details-marker {
+  display: none;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceTechnical > summary::before {
+  content: '▸ ';
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceTechnical[open] > summary::before {
+  content: '▾ ';
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceTechnical .rundeckEvidenceSources {
+  margin-top: 7px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceInterpretation strong {
+  display: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckEvidenceEvent > div > p {
+  display: none !important;
+}
+
+/* Primary issue now owns only unique facts; detailed workload resources live in
+   Current/Selected Workloads and host resources live in SAP App Servers. */
+.appShell:has(.rundeckPanel) .rundeckIncidentWorkloadBlock.is-current {
+  padding-bottom: 4px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckIncidentOpsLine {
+  gap: 14px !important;
+}
