@@ -1,6 +1,4 @@
 import React from 'react'
-import RundeckAvailability from './RundeckAvailability.jsx'
-import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
 import { shortHost } from './sapUiFormat.js'
 import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
 import './RundeckPerformanceIncident.css'
@@ -94,14 +92,12 @@ export default function RundeckPerformanceIncident({ refreshToken = '', selected
     const waiting = summary.status === 'WAITING'
     return <section className="rundeckIncident" aria-label="SAP performance status">
       <div className="rundeckIncidentHeader"><div><span className="rundeckIncidentEyebrow">Primary Issue</span><h3>{waiting ? 'Waiting for performance data' : 'No active performance issue'}</h3></div>{showStatus && <StatusPill value={summary.status || 'NORMAL'} />}</div>
-      <div className="rundeckOperationalBandV1234 is-availability-only"><RundeckAvailability refreshToken={refreshToken} /></div>
     </section>
   }
 
   const signal = summary.primary_signal || {}
   const current = summary.current_workload
   const currentContext = jobContext(current, summary.affected_server, 'current')
-  const evidenceJob = selectedJob || currentContext
   const hostMetrics = summary.current_host_metrics || {}
   const signalValue = metric(signal.value, signal.unit || '')
   const resourceState = hostResourceState(hostMetrics)
@@ -121,9 +117,5 @@ export default function RundeckPerformanceIncident({ refreshToken = '', selected
     <div className="rundeckIncidentMeta"><span><b>Since</b>{formatTime(summary.signal_active_since || summary.detected_since, true)} WIB</span><span><b>Duration</b>{duration(summary.duration_seconds)}</span></div>
     <section className="rundeckIncidentWorkloadBlock is-current"><div className="rundeckIncidentWorkloadLead"><span>Top Active Workload</span>{currentContext ? <button type="button" className={`rundeckIncidentJobButton ${selectedJob?.key === currentContext.key && selectedJob?.host === currentContext.host ? 'is-selected' : ''}`} onClick={() => selectAndInspect(currentContext)} title="Open workload detail. This is an observed workload on the affected APP, not a direct root-cause mapping.">{current.consumer_key}</button> : <strong>No active workload found</strong>}</div></section>
     <div className="rundeckIncidentOpsLine" aria-label="Affected App Server state"><span><b>OS</b><StatusPill value={resourceState} /></span><span><b>SAP Workload</b><StatusPill value={workloadState} /></span></div>
-    <div className="rundeckOperationalBandV1234">
-      <div className="rundeckBandPaneV1234 is-operational-events"><RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive={summary.active} /></div>
-      <div className="rundeckBandPaneV1234 is-availability"><RundeckAvailability refreshToken={refreshToken} /></div>
-    </div>
   </section>
 }
