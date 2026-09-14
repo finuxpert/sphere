@@ -8,7 +8,7 @@ export default function RundeckMonitoringHistoryCoreV1234(props) {
   return <section className="rundeckMonitoring rundeckMonitoringV1234">
     <section className="rundeckServerTrendBandV1234">
       <div className="rundeckBandPaneV1234 is-app-servers">
-        <RundeckAppServersV1234 refreshToken={props.refreshToken} latestCollectionId={props.latestCollectionId} />
+        <RundeckAppServersV1234 refreshToken={props.refreshToken} latestCollectionId={props.latestCollectionId} onSelectJob={props.onSelectJob} />
       </div>
       <div className="rundeckBandPaneV1234 is-server-trend">
         <RundeckServerTrendV1234 refreshToken={props.refreshToken} databaseEnabled={props.databaseEnabled} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} onTrendContext={props.onTrendContext} />
