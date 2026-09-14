@@ -1,0 +1,6 @@
+@media (max-width:1180px){
+  .rundeckOperationalBandV1234,.rundeckServerTrendBandV1234,.rundeckWorkloadBandV1234{display:block}
+  .rundeckBandPaneV1234+.rundeckBandPaneV1234{margin-top:14px}
+  .rundeckServerTrendBandV1234 .rundeckServerSection,.rundeckWorkloadBandV1234 .is-current-workload{padding-right:0!important;border-right:0!important}
+  .rundeckEvidenceTimeline[open]>.rundeckEvidenceBody{max-height:300px!important}
+}
