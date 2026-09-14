@@ -17,6 +17,7 @@ const files = {
   evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
   runtimeDedupCss: read('src/tools/components/RundeckRuntimeDedupV1237.css'),
   css: read('src/tools/components/RundeckWorkspaceV1236.css'),
+  availabilityPolish: read('src/tools/components/RundeckAvailabilityPolishV1206.css'),
   availability: read('src/tools/components/RundeckAvailability.jsx'),
   issues: read('src/tools/components/RundeckSapIssuesV1231.jsx'),
   review: read('src/tools/components/RundeckPerformanceReviewV1231.jsx'),
@@ -46,7 +47,7 @@ const criticalWorkload = { ...normalHost, wp_critical: 3 }
 const criticalResource = { ...normalHost, cpu_pct: 95 }
 
 const checks = [
-  ['version is v1.23.7', files.version.includes("APP_VERSION = '1.23.7'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.6'") && files.version.includes('runtime-dedup-layout-polish-v1.23.7')],
+  ['version is v1.23.8', files.version.includes("APP_VERSION = '1.23.8'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.7'") && files.version.includes('row2-baseline-fix-v1.23.8')],
   ['single structural authority remains active', files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
   ['runtime ownership guard is active', files.wrapper.includes("import './RundeckRuntimeDedupV1237.css'")],
@@ -59,6 +60,7 @@ const checks = [
   ['operational event list is compact and scrollable', files.evidenceCss.includes('max-height: 292px') && files.evidenceCss.includes('overflow-y: auto')],
   ['row 1 keeps 45/55 band', files.incident.includes('rundeckOperationalBandV1234') && files.css.includes('45fr') && files.css.includes('55fr')],
   ['row 2 and row 3 keep 40/60 bands', files.core.includes('rundeckServerTrendBandV1235') && files.core.includes('rundeckWorkloadBandV1235') && files.css.includes('40fr') && files.css.includes('60fr')],
+  ['legacy trend lift is retired', !files.availabilityPolish.includes('translateY(-') && !files.availabilityPolish.includes('Lift only the trend band visually')],
   ['canonical CSS has no float rail ownership', !files.css.includes('float: left') && !files.css.includes('float: right') && !files.css.includes('display: contents')],
   ['canonical CSS has no negative layout lift', !/margin-top:\s*-/.test(files.css)],
   ['server trend remains closed formatting context', files.trend.includes('rundeckServerTrendPanelV1234') && files.css.includes('display: flow-root')],
@@ -66,7 +68,7 @@ const checks = [
   ['SAP Issues remains operator-readable', files.issues.includes('<th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th>')],
   ['Performance Review remains lean', files.review.includes('Performance Review') && files.review.includes('<th>Workload</th><th>Why</th><th>Avg CPU</th><th>Peak</th><th>PSS</th>')],
   ['critical workload without service impact remains ATTENTION', hostResourceState(criticalWorkload) === 'NORMAL' && sapWorkloadState(criticalWorkload) === 'CRITICAL' && systemHealthState([criticalWorkload], { availabilityState: 'NORMAL' }) === 'ATTENTION'],
-  ['critical OS remains CRITICAL', systemHealthState([criticalResource], { availabilityState: 'NORMAL' }) === 'CRITICAL'],
+  ['critical OS remains CRITICAL', systemHealthState(criticalResource ? [criticalResource] : [], { availabilityState: 'NORMAL' }) === 'CRITICAL'],
   ['evidence compatibility remains exported', files.backendEvidence.includes('def availability_transition_events')],
   ['Collect Now remains credential guarded', files.backendRunner.includes('RUNNER_CREDENTIAL_MISSING') && files.backendRunner.includes('_discover_job_id')],
   ['PDF preview remains non-destructive', files.source.includes("pdf.output('blob')") && !files.source.includes('pdf.save(')],
@@ -75,7 +77,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.23.7 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.23.8 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.23.7 contract checks passed.')
+console.log('\nRundeck v1.23.8 contract checks passed.')
