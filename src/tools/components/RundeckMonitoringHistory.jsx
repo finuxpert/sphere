@@ -1,18 +1,8 @@
 import React from 'react'
-import { createPortal } from 'react-dom'
-import RundeckAvailability from './RundeckAvailability.jsx'
-import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
+import RundeckMonitoringHistoryCoreV1234 from './RundeckMonitoringHistoryCoreV1234.jsx'
 import RundeckPerformanceReviewV1231 from './RundeckPerformanceReviewV1231.jsx'
 import RundeckSapIssuesV1231 from './RundeckSapIssuesV1231.jsx'
 import RundeckSystemHealthV1231 from './RundeckSystemHealthV1231.jsx'
-
-/* Static QA compatibility markers. The executable trend/workload implementation
-   remains in RundeckMonitoringHistoryCore.jsx.
-   '30M' '1H' '3H' '6H' '24H' '7D' '30D'
-   setMetric('load')
-   <th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th>
-   Performance Review
-*/
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'
@@ -29,71 +19,17 @@ const metricLabelForTrend = (metric, fallback = 'Metric') => {
   return fallback
 }
 
-function AvailabilityPortal({ refreshToken = '' }) {
-  const [target, setTarget] = React.useState(null)
-
-  React.useEffect(() => {
-    let cancelled = false
-    let frame = 0
-    let attempts = 0
-
-    const place = () => {
-      attempts += 1
-      const incident = document.querySelector('.rundeckPanel .rundeckIncident')
-      if (incident) {
-        document.querySelector('.rundeckPanel .rundeckAvailabilitySlotV1231')?.remove()
-        let slot = incident.querySelector(':scope > .rundeckAvailabilitySlotV1233')
-        if (!slot) {
-          slot = document.createElement('div')
-          slot.className = 'rundeckAvailabilitySlotV1233'
-          slot.setAttribute('aria-label', 'SAP Availability band')
-          incident.appendChild(slot)
-        }
-        if (!cancelled) setTarget(slot)
-        return
-      }
-      if (attempts < 40) frame = window.requestAnimationFrame(place)
-    }
-
-    frame = window.requestAnimationFrame(place)
-    return () => {
-      cancelled = true
-      if (frame) window.cancelAnimationFrame(frame)
-      const slot = document.querySelector('.rundeckPanel .rundeckAvailabilitySlotV1233')
-      slot?.remove()
-    }
-  }, [])
-
-  return target ? createPortal(<RundeckAvailability refreshToken={refreshToken} />, target) : null
-}
-
 export default function RundeckMonitoringHistory(props) {
   const { onTrendContext } = props
   const forwardTrendContext = React.useCallback((context = {}) => {
     const selectedMetric = String(context.metric || '')
-    onTrendContext?.({
-      ...context,
-      metricLabel: metricLabelForTrend(selectedMetric, context.metricLabel || 'Metric'),
-    })
+    onTrendContext?.({ ...context, metricLabel: metricLabelForTrend(selectedMetric, context.metricLabel || 'Metric') })
   }, [onTrendContext])
 
-  React.useEffect(() => {
-    const monitoring = document.querySelector('.rundeckPanel .rundeckMonitoring')
-    if (!monitoring) return undefined
-    const pinned = Boolean(props.selectedJob?.pinned)
-    monitoring.classList.toggle('is-workload-pinned-v1232', pinned)
-    return () => monitoring.classList.remove('is-workload-pinned-v1232')
-  }, [props.selectedJob?.pinned])
-
   return <>
-    <RundeckMonitoringHistoryCore {...props} onTrendContext={forwardTrendContext} />
-    <AvailabilityPortal refreshToken={props.refreshToken} />
+    <RundeckMonitoringHistoryCoreV1234 {...props} onTrendContext={forwardTrendContext} />
     <RundeckSystemHealthV1231 refreshToken={props.refreshToken} />
     <RundeckSapIssuesV1231 refreshToken={props.refreshToken} />
-    <RundeckPerformanceReviewV1231
-      refreshToken={props.refreshToken}
-      selectedJob={props.selectedJob}
-      onSelectJob={props.onSelectJob}
-    />
+    <RundeckPerformanceReviewV1231 refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} />
   </>
 }
