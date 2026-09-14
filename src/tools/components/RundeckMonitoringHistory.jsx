@@ -1,5 +1,6 @@
 import React from 'react'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
+import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
@@ -27,10 +28,21 @@ export default function RundeckMonitoringHistory(props) {
     onTrendContext?.({ ...context, metricLabel: metricLabelForTrend(selectedMetric, context.metricLabel || 'Metric') })
   }, [onTrendContext])
 
+  const operationalEvidenceContent = <RundeckOperationalEvidence
+    refreshToken={props.refreshToken}
+    selectedJob={props.selectedJob}
+  />
+
   return <>
-    <RundeckMonitoringHistoryCore {...props} onTrendContext={forwardTrendContext} />
+    <RundeckMonitoringHistoryCore
+      {...props}
+      onTrendContext={forwardTrendContext}
+      operationalEvidenceContent={operationalEvidenceContent}
+    />
     <RundeckSystemHealth refreshToken={props.refreshToken} />
-    <RundeckSapIssues refreshToken={props.refreshToken} />
-    <RundeckPerformanceReview refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} />
+    <section className="rundeckIssuesReviewBand" aria-label="SAP Issues and Performance Review">
+      <div className="rundeckIssuesReviewPane is-issues"><RundeckSapIssues refreshToken={props.refreshToken} /></div>
+      <div className="rundeckIssuesReviewPane is-review"><RundeckPerformanceReview refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} /></div>
+    </section>
   </>
 }
