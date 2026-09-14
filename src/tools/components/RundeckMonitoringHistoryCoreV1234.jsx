@@ -5,18 +5,18 @@ import RundeckObservationHistoryV1234 from './RundeckObservationHistoryV1234.jsx
 import RundeckServerTrendV1234 from './RundeckServerTrendV1234.jsx'
 
 export default function RundeckMonitoringHistoryCoreV1234(props) {
-  return <section className="rundeckMonitoring rundeckMonitoringV1234">
-    <section className="rundeckServerTrendBandV1234">
-      <div className="rundeckBandPaneV1234 is-app-servers">
+  return <section className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235">
+    <section className="rundeckServerTrendBandV1234 rundeckServerTrendBandV1235">
+      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-app-servers">
         <RundeckAppServersV1234 refreshToken={props.refreshToken} latestCollectionId={props.latestCollectionId} onSelectJob={props.onSelectJob} />
       </div>
-      <div className="rundeckBandPaneV1234 is-server-trend">
+      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-server-trend">
         <RundeckServerTrendV1234 refreshToken={props.refreshToken} databaseEnabled={props.databaseEnabled} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} onTrendContext={props.onTrendContext} />
       </div>
     </section>
-    <section className="rundeckWorkloadBandV1234">
-      <div className="rundeckBandPaneV1234 is-current-workload">{props.currentWorkloadContent}</div>
-      <div className="rundeckBandPaneV1234 is-selected-workload">
+    <section className="rundeckWorkloadBandV1234 rundeckWorkloadBandV1235">
+      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-current-workload">{props.currentWorkloadContent}</div>
+      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-selected-workload">
         <RundeckJobHistory job={props.selectedJob} refreshToken={props.refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} />
       </div>
     </section>
