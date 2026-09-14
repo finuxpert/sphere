@@ -3,6 +3,7 @@ import RundeckMonitoringHistoryCoreV1234 from './RundeckMonitoringHistoryCoreV12
 import RundeckPerformanceReviewV1231 from './RundeckPerformanceReviewV1231.jsx'
 import RundeckSapIssuesV1231 from './RundeckSapIssuesV1231.jsx'
 import RundeckSystemHealthV1231 from './RundeckSystemHealthV1231.jsx'
+import './RundeckMonitoringHistory.css'
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'

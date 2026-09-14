@@ -1,6 +1,0 @@
-@media (min-width:1181px){
-.appShell:has(.rundeckPanel) .rundeckIncident.is-lean{display:block!important}
-.appShell:has(.rundeckPanel) .rundeckMonitoringV1234{display:block!important;float:none!important;clear:both!important;width:100%!important}
-.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234{display:grid!important;grid-template-columns:minmax(0,45fr) minmax(0,55fr)!important}
-.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234,.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1234{display:grid!important;grid-template-columns:minmax(0,40fr) minmax(0,60fr)!important}
-}
