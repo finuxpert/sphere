@@ -1,5 +1,5 @@
 import React from 'react'
-import RundeckMonitoringHistoryCoreV1234 from './RundeckMonitoringHistoryCoreV1234.jsx'
+import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckPerformanceReviewV1231 from './RundeckPerformanceReviewV1231.jsx'
 import RundeckSapIssuesV1231 from './RundeckSapIssuesV1231.jsx'
 import RundeckSystemHealthV1231 from './RundeckSystemHealthV1231.jsx'
@@ -28,7 +28,7 @@ export default function RundeckMonitoringHistory(props) {
   }, [onTrendContext])
 
   return <>
-    <RundeckMonitoringHistoryCoreV1234 {...props} onTrendContext={forwardTrendContext} />
+    <RundeckMonitoringHistoryCore {...props} onTrendContext={forwardTrendContext} />
     <RundeckSystemHealthV1231 refreshToken={props.refreshToken} />
     <RundeckSapIssuesV1231 refreshToken={props.refreshToken} />
     <RundeckPerformanceReviewV1231 refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} />
