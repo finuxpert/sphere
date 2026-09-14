@@ -39,7 +39,7 @@ function InlineStatus({ value = 'UNKNOWN' }) {
   return <span className={`rundeckInlineStatus is-${String(value).toLowerCase()}`}>{value}</span>
 }
 
-export default function RundeckSapIssues({ refreshToken = '' }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
 
@@ -76,6 +76,16 @@ export default function RundeckSapIssues({ refreshToken = '' }) {
   const activeCount = Number(data?.active ?? items.length)
   const resolvedCount = Number(data?.resolved ?? 0)
 
+  const inspect = (row) => {
+    if (!row?.host || !onInspectApp) return
+    onInspectApp({
+      host: row.host,
+      source: 'sap-issues',
+      issue: issueLabel(row.signal || row.code),
+      severity: severityFor(row, row.latest_value),
+    })
+  }
+
   return <section className="rundeckSapIssuesV1231" aria-label="Active SAP issues">
     <header>
       <h3><SphereIcon name="alert" /> SAP Issues</h3>
@@ -95,8 +105,21 @@ export default function RundeckSapIssues({ refreshToken = '' }) {
               row.first_seen ? `First seen ${formatWib(row.first_seen, true)} WIB` : '',
               row.last_seen ? `Last seen ${formatWib(row.last_seen, true)} WIB` : '',
               `Peak severity ${peakSeverity}`,
+              row.host ? 'Click to inspect this APP in SAP App Servers.' : '',
             ].filter(Boolean).join('\n')
-            return <tr key={row.id} title={title}>
+            const actionable = Boolean(row.host && onInspectApp)
+            return <tr
+              key={row.id}
+              title={title}
+              className={actionable ? 'is-investigable' : ''}
+              tabIndex={actionable ? 0 : undefined}
+              onClick={actionable ? () => inspect(row) : undefined}
+              onKeyDown={actionable ? (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return
+                event.preventDefault()
+                inspect(row)
+              } : undefined}
+            >
               <td><strong>{shortHost(row.host || 'APP')}</strong></td>
               <td>{issueLabel(row.signal || row.code)}</td>
               <td><span className="rundeckIssueNowV1231"><strong>{valueText(row.latest_value, row.unit)}</strong><InlineStatus value={severity} /></span></td>
