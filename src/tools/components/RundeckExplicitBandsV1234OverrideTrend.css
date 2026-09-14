@@ -1,0 +1,3 @@
+@media (min-width:1181px){
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckServerSection,.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckMonitoringHead,.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckTrendToolbar,.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckAdvancedControls,.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckTrendChart,.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckHistoryState,.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckRcaHint,.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1234 .rundeckRcaSection{float:none!important;clear:none!important;width:auto!important;max-width:none!important;container-type:normal!important}
+}
