@@ -11,6 +11,8 @@ const files = {
   core: read('src/tools/components/RundeckMonitoringHistoryCore.jsx'),
   jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
   incident: read('src/tools/components/RundeckPerformanceIncident.jsx'),
+  operationalEvidence: read('src/tools/components/RundeckOperationalEvidence.jsx'),
+  appServers: read('src/tools/components/RundeckAppServers.jsx'),
   trend: read('src/tools/components/RundeckServerTrend.jsx'),
   observation: read('src/tools/components/RundeckObservationHistory.jsx'),
   observationCss: read('src/tools/components/RundeckObservationHistory.css'),
@@ -56,8 +58,15 @@ const normalHost = { cpu_pct: 20, ram_pct: 55, io_wait_pct: 0, wp_critical: 0 }
 const criticalWorkload = { ...normalHost, wp_critical: 3 }
 const criticalResource = { ...normalHost, cpu_pct: 95 }
 
+const hierarchy = {
+  servers: files.core.indexOf('rundeckServerTrendBandV1235'),
+  workload: files.core.indexOf('rundeckWorkloadBandV1235'),
+  evidence: files.core.indexOf('operationalEvidenceContent'),
+  observation: files.core.indexOf('<RundeckObservationHistory'),
+}
+
 const checks = [
-  ['version is v1.23.11', files.version.includes("APP_VERSION = '1.23.11'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.10'") && files.version.includes('canonical-runtime-components-v1.23.11')],
+  ['version is v1.23.12', files.version.includes("APP_VERSION = '1.23.12'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.11'") && files.version.includes('operator-hierarchy-critical-wp-drilldown-v1.23.12')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
@@ -66,13 +75,21 @@ const checks = [
   ['canonical Server Trend owner remains in monitoring core', files.core.includes("from './RundeckServerTrend.jsx'") && files.core.includes('<RundeckServerTrend') && files.core.includes('is-server-trend')],
   ['canonical observation history remains full width', files.core.includes("from './RundeckObservationHistory.jsx'") && files.core.includes('<RundeckObservationHistory') && files.css.includes('.rundeckObservationHistoryV1234')],
   ['wrapper uses canonical supporting components', files.wrapper.includes("from './RundeckSystemHealth.jsx'") && files.wrapper.includes("from './RundeckSapIssues.jsx'") && files.wrapper.includes("from './RundeckPerformanceReview.jsx'")],
+  ['primary issue no longer owns evidence or availability layout', !files.incident.includes('RundeckEvidenceTimeline') && !files.incident.includes('RundeckAvailability') && !files.incident.includes('rundeckOperationalBandV1234')],
+  ['operational evidence owns availability row', files.wrapper.includes("from './RundeckOperationalEvidence.jsx'") && files.operationalEvidence.includes('rundeckOperationalBandV1234') && files.operationalEvidence.includes('<RundeckEvidenceTimeline') && files.operationalEvidence.includes('<RundeckAvailability')],
+  ['operator hierarchy is servers then workload then evidence then observation', hierarchy.servers >= 0 && hierarchy.workload > hierarchy.servers && hierarchy.evidence > hierarchy.workload && hierarchy.observation > hierarchy.evidence],
+  ['operational evidence keeps 45/55 ratio', files.css.includes('grid-template-columns: minmax(0, 45fr) minmax(0, 55fr)')],
+  ['row 2 and row 3 keep 40/60 bands', files.core.includes('rundeckServerTrendBandV1235') && files.core.includes('rundeckWorkloadBandV1235') && files.css.includes('grid-template-columns: minmax(0, 40fr) minmax(0, 60fr)')],
+  ['SAP Issues and Performance Review share 35/65 band', files.wrapper.includes('rundeckIssuesReviewBand') && files.css.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
+  ['Supporting Data uses 65/35 split', files.css.includes('.rundeckSupportingData') && files.css.includes('grid-template-columns: minmax(0, 65fr) minmax(0, 35fr)')],
+  ['Critical WP APP drilldown is inline and collection aligned', files.appServers.includes('wpCount > 0') && files.appServers.includes('rundeckWpInlineRow') && files.appServers.includes('Workloads observed while Critical WP active') && files.appServers.includes('history/jobs/current?collection_id=')],
+  ['Critical WP drilldown wording avoids root-cause claim', files.appServers.includes('Correlation only; not a direct root-cause mapping.')],
+  ['Critical WP workload click opens Selected Workload', files.appServers.includes("source: 'critical-wp-inline-drilldown'") && files.appServers.includes("querySelector('.rundeckJobHistory')")],
   ['legacy direct APP runtime is physically removed', !files.source.includes('wpDrilldown') && !files.source.includes('toggleCriticalWp') && !files.source.includes('workloadTypeLabel') && !files.source.includes('const wpText') && !files.source.includes('operationalHosts.length > 0 && <section className="rundeckServerSection"')],
   ['embedded observation history is physically removed', !files.jobHistory.includes('rundeckJobExecutionHistory') && !files.jobHistory.includes('Observation History')],
   ['observation history owns its table styling', files.observation.includes("import './RundeckObservationHistory.css'") && files.observationCss.includes('width: 100%') && files.observationCss.includes('position: sticky')],
-  ['operational events are always visible', files.evidence.includes('return <section className="rundeckEvidenceTimeline"') && !files.evidence.includes('return <details className="rundeckEvidenceTimeline"')],
+  ['operational events are always visible when incident is active', files.evidence.includes('return <section className="rundeckEvidenceTimeline"') && !files.evidence.includes('return <details className="rundeckEvidenceTimeline"')],
   ['operational event list is compact and scrollable', files.evidenceCss.includes('max-height: 292px') && files.evidenceCss.includes('overflow-y: auto')],
-  ['row 1 keeps 45/55 band', files.incident.includes('rundeckOperationalBandV1234') && files.css.includes('45fr') && files.css.includes('55fr')],
-  ['row 2 and row 3 keep 40/60 bands', files.core.includes('rundeckServerTrendBandV1235') && files.core.includes('rundeckWorkloadBandV1235') && files.css.includes('40fr') && files.css.includes('60fr')],
   ['selected workload owns full right pane width', files.css.includes('.is-selected-workload .rundeckJobHistoryHead') && files.css.includes('.is-selected-workload .rundeckJobPerformanceWrap') && files.css.includes('.is-selected-workload .rundeckJobPerformanceChart') && files.css.includes('width: 100% !important')],
   ['legacy trend lift is retired', !files.availabilityPolish.includes('translateY(-') && !files.availabilityPolish.includes('Lift only the trend band visually')],
   ['canonical CSS has no float rail ownership', !files.css.includes('float: left') && !files.css.includes('float: right') && !files.css.includes('display: contents')],
@@ -91,7 +108,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.23.11 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.23.12 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.23.11 contract checks passed.')
+console.log('\nRundeck v1.23.12 contract checks passed.')
