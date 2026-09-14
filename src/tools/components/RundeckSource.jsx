@@ -4,7 +4,7 @@ import RundeckMonitoringHistory from './RundeckMonitoringHistory.jsx'
 import RundeckPerformanceIncident from './RundeckPerformanceIncident.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
-import { numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
+import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
 import { hostResourceState, overallOperationalState, sapWorkloadState, statusExplanation } from './rundeckStatusSemantics.js'
 import './RundeckSource.css'
@@ -13,7 +13,6 @@ import './RundeckPlatformHealth.css'
 const API = `${import.meta.env.BASE_URL}api`
 const BRAND_LOGO = `${import.meta.env.BASE_URL}branding/logo/sphere-logo-navbar-dark.png`
 const REPORT_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}#/tool/logs`
-const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
 
 const formatTime = (value, compact = false) => {
   if (!value) return '—'
@@ -55,8 +54,6 @@ const processText = (row = {}) => {
   const value = Number(row.details?.process_count || 0)
   return Number.isFinite(value) && value > 0 ? numberText(value, 0) : '1'
 }
-
-const wpText = (row = {}) => [row.details?.wp_type, row.details?.wp].filter(Boolean).join(' ') || '—'
 
 const programText = (row = {}) => {
   const program = row.details?.program
@@ -164,7 +161,6 @@ export default function RundeckSource({ onCollection }) {
   const [pdfPreview, setPdfPreview] = React.useState(null)
   const [selectedJob, setSelectedJob] = React.useState(null)
   const [incidentSummary, setIncidentSummary] = React.useState(null)
-  const [wpDrilldown, setWpDrilldown] = React.useState(null)
   const [trendContext, setTrendContext] = React.useState({ metricLabel: 'CPU', rangeLabel: '6H', mode: 'max' })
   const loaded = React.useRef('')
   const panelRef = React.useRef(null)
@@ -281,23 +277,6 @@ export default function RundeckSource({ onCollection }) {
       setError(failure.message || 'Collect Now failed.')
     } finally {
       setActionBusy(false)
-    }
-  }
-
-  async function toggleCriticalWp(host) {
-    const hostName = host?.host || ''
-    if (!hostName || !latest?.collection_id) return
-    if (wpDrilldown?.host === hostName) {
-      setWpDrilldown(null)
-      return
-    }
-    setWpDrilldown({ host: hostName, count: Number(host.wp_critical || 0), loading: true, rows: [], error: '' })
-    try {
-      const result = await json(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latest.collection_id)}&limit=50`)
-      const rows = (result.items || []).filter((row) => row.host === hostName).slice(0, 10)
-      setWpDrilldown({ host: hostName, count: Number(host.wp_critical || 0), loading: false, rows, error: '' })
-    } catch (failure) {
-      setWpDrilldown({ host: hostName, count: Number(host.wp_critical || 0), loading: false, rows: [], error: failure.message || 'Workload detail unavailable.' })
     }
   }
 
@@ -615,67 +594,6 @@ export default function RundeckSource({ onCollection }) {
       onSummary={setIncidentSummary}
       showStatus={false}
     />
-
-    {operationalHosts.length > 0 && <section className="rundeckServerSection">
-      <div className="rundeckSectionTitle">
-        <h3><SphereIcon name="server" /> SAP App Servers</h3>
-      </div>
-      <div className="rundeckServerTableWrap">
-        <table className="rundeckServerTable">
-          <thead><tr><th>APP</th><th>OS Resource</th><th>SAP Workload</th><th>CPU</th><th>Memory</th><th>I/O Wait</th><th>Critical WP</th></tr></thead>
-          <tbody>
-            {operationalHosts.map((host) => {
-              const wpCount = Number(host.wp_critical || 0)
-              const workloadState = sapWorkloadState(host)
-              return <tr key={host.host} className={wpDrilldown?.host === host.host ? 'is-selected' : ''}>
-                <td><strong title={host.host}>{shortHost(host.host)}</strong></td>
-                <td><StatusPill value={hostResourceState(host)} /></td>
-                <td><StatusPill value={workloadState} /></td>
-                <td>{metric(host.cpu_pct, '%')}</td>
-                <td>{metric(host.ram_pct, '%')}</td>
-                <td>{metric(host.io_wait_pct, '%')}</td>
-                <td className={wpCount > 0 ? `is-${workloadState.toLowerCase()}` : ''}>
-                  {wpCount > 0
-                    ? <button type="button" className="rundeckWpButton" onClick={() => toggleCriticalWp(host)} aria-expanded={wpDrilldown?.host === host.host} title={`${wpCount} Critical WP reported on ${shortHost(host.host)}. Click to inspect workload context.`}><SphereIcon name="alert" /> {wpCount}</button>
-                    : '0'}
-                </td>
-              </tr>
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {wpDrilldown && <section className="rundeckWpDrilldown" aria-live="polite">
-        <div className="rundeckWpDrilldownHead">
-          <h4><SphereIcon name="alert" /> {shortHost(wpDrilldown.host)} · {wpDrilldown.count} Critical WP</h4>
-          <button type="button" onClick={() => setWpDrilldown(null)}>Close</button>
-        </div>
-        <p>Direct WP mapping is not available from the current collector. Workloads on {shortHost(wpDrilldown.host)} are shown for Basis review.</p>
-        {wpDrilldown.loading && <div className="rundeckWpDrilldownState">Loading workload…</div>}
-        {wpDrilldown.error && <div className="rundeckWpDrilldownState is-error">{wpDrilldown.error}</div>}
-        {!wpDrilldown.loading && !wpDrilldown.error && <div className="rundeckWpDrilldownTableWrap">
-          <table>
-            <thead><tr><th>Workload</th><th>Type</th><th>WP</th><th>PID</th><th>User</th><th title={CPU_HINT}>CPU Usage</th><th>PSS Memory</th></tr></thead>
-            <tbody>
-              {wpDrilldown.rows.map((row) => {
-                const details = row.details || {}
-                const context = { key: row.consumer_key, host: row.host, consumerType: row.consumer_type, source: 'critical-wp-drilldown' }
-                return <tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}`}>
-                  <td><button type="button" onClick={() => selectJob(context)}>{row.consumer_key}</button></td>
-                  <td>{workloadTypeLabel(row.consumer_type)}</td>
-                  <td>{wpText(row)}</td>
-                  <td>{details.pid || '—'}</td>
-                  <td>{details.user || '—'}</td>
-                  <td title={CPU_HINT}>{metric(row.cpu_pct, '%')}</td>
-                  <td>{pssText(row)}</td>
-                </tr>
-              })}
-              {!wpDrilldown.rows.length && <tr><td colSpan="7">No current workload rows stored for this APP.</td></tr>}
-            </tbody>
-          </table>
-        </div>}
-      </section>}
-    </section>}
 
     <RundeckMonitoringHistory
       refreshToken={latest?.collection_id || ''}
