@@ -492,32 +492,6 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         : episodeItems.length > 1
           ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} />
           : <div className="rundeckJobHistoryState">No stored history for this workload yet.</div>}
-
-      <details className="rundeckJobExecutionHistory">
-        <summary><SphereIcon name="history" /> Observation History <span>{episodeItems.length} observations</span></summary>
-        <div className="rundeckJobHistoryTableWrap">
-          <table>
-            <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th title={CPU_HINT}>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th><th>Critical WP</th></tr></thead>
-            <tbody>
-              {episodeItems.map((row) => {
-                const details = row.details || {}
-                const wp = [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
-                const pss = rowMetric(row, 'pss')
-                return <tr key={`${row.collection_id}-${row.host}-${row.collected_at}`}>
-                  <td>{formatWib(row.collected_at, true)}</td>
-                  <td>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</td>
-                  <td title={row.host}>{shortHost(row.host)}</td>
-                  <td title={CPU_HINT}>{numberText(row.cpu_pct)}%</td>
-                  <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
-                  <td>{numberText(rowMetric(row, 'processes'), 0)}</td>
-                  <td>{wp}</td>
-                  <td>{numberText(row.host_wp_critical, 0)}</td>
-                </tr>
-              })}
-            </tbody>
-          </table>
-        </div>
-      </details>
     </div>}
   </section>
 }
