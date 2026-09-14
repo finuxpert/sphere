@@ -42,7 +42,7 @@ function latestEpisode(items = [], targetAt = '') {
   }, episodes[0])
 }
 
-export default function RundeckObservationHistory({ job = null, refreshToken = '' }) {
+export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob }) {
   const [rows, setRows] = React.useState([])
   const [error, setError] = React.useState('')
 
@@ -70,6 +70,22 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   }, [job?.at, job?.consumerType, job?.host, job?.key, refreshToken])
 
   if (!job?.key) return null
+
+  const inspectObservation = (row) => {
+    if (!row?.collected_at || !onSelectJob) return
+    onSelectJob({
+      key: job.key,
+      host: row.host || job.host || '',
+      consumerType: row.consumer_type || job.consumerType || '',
+      source: 'observation-history',
+      at: row.collected_at,
+      collectionId: row.collection_id || '',
+      executionId: row.execution_id || '',
+    })
+  }
+
+  const selectedAt = Date.parse(job.at || '')
+
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234" open>
     <summary><SphereIcon name="history" /> Observation History <span>{error ? 'unavailable' : `${rows.length} observations`}</span></summary>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
@@ -79,7 +95,21 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
         const wp = [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
-        return <tr key={`${row.collection_id}-${row.host}-${row.collected_at}`}>
+        const rowAt = Date.parse(row.collected_at || '')
+        const inspected = Number.isFinite(selectedAt) && Number.isFinite(rowAt) && Math.abs(rowAt - selectedAt) < 1000
+        const actionable = Boolean(onSelectJob && row.collected_at)
+        return <tr
+          key={`${row.collection_id}-${row.host}-${row.collected_at}`}
+          className={[actionable ? 'is-investigable' : '', inspected ? 'is-inspected' : ''].filter(Boolean).join(' ')}
+          tabIndex={actionable ? 0 : undefined}
+          title={actionable ? 'Inspect this historical observation in Selected Workload. Current dashboard state remains live.' : undefined}
+          onClick={actionable ? () => inspectObservation(row) : undefined}
+          onKeyDown={actionable ? (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            inspectObservation(row)
+          } : undefined}
+        >
           <td>{formatWib(row.collected_at, true)}</td>
           <td>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</td>
           <td title={row.host}>{shortHost(row.host)}</td>
