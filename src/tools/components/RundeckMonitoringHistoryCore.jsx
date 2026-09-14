@@ -20,6 +20,7 @@ export default function RundeckMonitoringHistoryCore(props) {
         <RundeckJobHistory job={props.selectedJob} refreshToken={props.refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} />
       </div>
     </section>
+    {props.operationalEvidenceContent}
     <RundeckObservationHistory job={props.selectedJob} refreshToken={props.refreshToken} />
   </section>
 }
