@@ -1,0 +1,263 @@
+/* SPHERE v1.23.6 — single structural authority for the automatic Rundeck workspace.
+   Component styling may live elsewhere; placement, widths and band flow live here only. */
+
+.appShell:has(.rundeckPanel) .rundeckPanel,
+.appShell:has(.rundeckPanel) .rundeckIncident.is-lean,
+.appShell:has(.rundeckPanel) .rundeckMonitoringV1235 {
+  display: block !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckMonitoringV1235 {
+  float: none !important;
+  clear: both !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234,
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
+  float: none !important;
+  clear: both !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  box-sizing: border-box;
+}
+
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 45fr) minmax(0, 55fr) !important;
+  gap: 20px !important;
+  align-items: start !important;
+  margin-top: 15px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(126, 147, 158, .09) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234.is-availability-only {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 40fr) minmax(0, 60fr) !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
+  margin-top: 16px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
+  margin-top: 18px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(126, 147, 158, .08) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckBandPaneV1234,
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .rundeckEvidenceTimeline,
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .rundeckAvailability,
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 .rundeckServerSectionV1234,
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 .rundeckServerTrendPanelV1234,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckCurrentWorkload,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckJobHistory {
+  float: none !important;
+  clear: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .rundeckEvidenceTimeline {
+  margin: 0 !important;
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .rundeckAvailability {
+  margin: 0 !important;
+  padding: 0 0 0 4px !important;
+  border: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 .is-app-servers > .rundeckServerSectionV1234 {
+  margin: 0 !important;
+  padding: 0 14px 0 0 !important;
+  border-right: 1px solid rgba(113, 128, 137, .12) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 {
+  display: flow-root !important;
+  float: none !important;
+  clear: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckMonitoringHead,
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckTrendToolbar,
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckHistoryState,
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckRcaHint,
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckRcaSection {
+  float: none !important;
+  clear: none !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckMonitoringHead {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckAdvancedControls {
+  float: none !important;
+  clear: none !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin: 1px 0 0 !important;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckTrendChart {
+  float: none !important;
+  clear: none !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 176px !important;
+  min-height: 176px !important;
+  margin: 4px 0 0 !important;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckCurrentWorkload,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckJobHistory {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  overflow: visible !important;
+}
+
+/* Selected Workload owns the full right pane. Retire nested 60% rail widths
+   still declared by the historical operational UX layer. */
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload > .rundeckJobHistory,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckJobHistoryHead,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckJobHistoryContent,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckJobHistoryOverview,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckJobTimeline,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckJobPerformanceTitle,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckJobPerformanceWrap,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckJobPerformanceChart,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload .rundeckSingleSample {
+  float: none !important;
+  clear: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload {
+  padding-right: 14px !important;
+  border-right: 1px solid rgba(113, 128, 137, .12) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234,
+.appShell:has(.rundeckPanel) .rundeckSapIssues,
+.appShell:has(.rundeckPanel) .rundeckEvaluation {
+  display: block !important;
+  float: none !important;
+  clear: both !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  container-type: normal !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234 {
+  margin: 16px 0 0 !important;
+  padding-top: 10px !important;
+  border-top: 1px solid rgba(126, 147, 158, .08) !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSapIssues,
+.appShell:has(.rundeckPanel) .rundeckEvaluation {
+  margin-top: 16px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSupportingData {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0 20px !important;
+  clear: both !important;
+  width: 100% !important;
+  margin-top: 16px !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSupportingTitle {
+  display: block !important;
+  grid-column: 1 / -1 !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckSupportingData > .rundeckHistory,
+.appShell:has(.rundeckPanel) .rundeckSupportingData > .rundeckPlatformHealth {
+  float: none !important;
+  clear: none !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin-top: 8px !important;
+  container-type: normal !important;
+}
+
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) .rundeckOperationalBandV1234,
+  .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235,
+  .appShell:has(.rundeckPanel) .rundeckSupportingData {
+    display: block !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckBandPaneV1234 + .rundeckBandPaneV1234 {
+    margin-top: 14px !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 .is-app-servers > .rundeckServerSectionV1234,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload {
+    padding-right: 0 !important;
+    border-right: 0 !important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckServerTrendPanelV1234 > .rundeckTrendChart {
+    height: 220px !important;
+    min-height: 210px !important;
+  }
+}
