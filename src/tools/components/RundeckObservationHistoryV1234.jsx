@@ -1,6 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost } from './sapUiFormat.js'
+import './RundeckObservationHistory.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const GAP_MS = 25 * 60 * 1000
@@ -71,8 +72,8 @@ export default function RundeckObservationHistoryV1234({ job = null, refreshToke
   if (!job?.key) return null
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234" open>
     <summary><SphereIcon name="history" /> Observation History <span>{error ? 'unavailable' : `${rows.length} observations`}</span></summary>
-    {error && <div className="rundeckJobHistoryState is-error">{error}</div>}
-    {!error && <div className="rundeckJobHistoryTableWrap"><table>
+    {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
+    {!error && <div className="rundeckObservationHistoryTableWrap"><table>
       <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th><th>Critical WP</th></tr></thead>
       <tbody>{rows.map((row) => {
         const details = row.details || {}

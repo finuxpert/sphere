@@ -71,12 +71,12 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         ? 'Fewer than two timestamped evidence sources are available.'
         : 'Cross-source timing status.'
 
-  return <details className="rundeckEvidenceTimeline">
-    <summary>
+  return <section className="rundeckEvidenceTimeline" aria-label="Operational Events">
+    <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Operational Events</span>
       <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state}</span>
       <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m skew` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
-    </summary>
+    </div>
 
     <div className="rundeckEvidenceBody">
       {loading && !data && <div className="rundeckEvidenceState">Loading events…</div>}
@@ -113,5 +113,5 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         </details>
       </>}
     </div>
-  </details>
+  </section>
 }

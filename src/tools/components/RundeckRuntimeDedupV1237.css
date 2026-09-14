@@ -1,0 +1,11 @@
+/* v1.23.7 runtime ownership guards.
+   Canonical APP Servers lives in RundeckMonitoringHistoryCore.
+   Canonical Observation History lives full-width after the workload band. */
+
+.appShell:has(.rundeckPanel) .rundeckPanel > .rundeckServerSection {
+  display: none !important;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistory .rundeckJobExecutionHistory {
+  display: none !important;
+}
