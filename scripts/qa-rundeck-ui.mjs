@@ -9,13 +9,13 @@ const files = {
   source: read('src/tools/components/RundeckSource.jsx'),
   wrapper: read('src/tools/components/RundeckMonitoringHistory.jsx'),
   core: read('src/tools/components/RundeckMonitoringHistoryCore.jsx'),
+  jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
   incident: read('src/tools/components/RundeckPerformanceIncident.jsx'),
   trend: read('src/tools/components/RundeckServerTrendV1234.jsx'),
   observation: read('src/tools/components/RundeckObservationHistoryV1234.jsx'),
   observationCss: read('src/tools/components/RundeckObservationHistory.css'),
   evidence: read('src/tools/components/RundeckEvidenceTimeline.jsx'),
   evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
-  runtimeDedupCss: read('src/tools/components/RundeckRuntimeDedupV1237.css'),
   css: read('src/tools/components/RundeckWorkspaceV1236.css'),
   availabilityPolish: read('src/tools/components/RundeckAvailabilityPolishV1206.css'),
   availability: read('src/tools/components/RundeckAvailability.jsx'),
@@ -25,6 +25,7 @@ const files = {
   backendRunner: read('backend/rundeck_runner.py'),
 }
 
+const runtimeGuardPath = 'src/tools/components/RundeckRuntimeDedupV1237.css'
 const forbiddenStructuralImports = [
   'RundeckWorkspaceCompact.css',
   'RundeckWorkspaceFinalPolish.css',
@@ -47,14 +48,14 @@ const criticalWorkload = { ...normalHost, wp_critical: 3 }
 const criticalResource = { ...normalHost, cpu_pct: 95 }
 
 const checks = [
-  ['version is v1.23.8', files.version.includes("APP_VERSION = '1.23.8'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.7'") && files.version.includes('row2-baseline-fix-v1.23.8')],
+  ['version is v1.23.9', files.version.includes("APP_VERSION = '1.23.9'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.8'") && files.version.includes('runtime-source-cleanup-v1.23.9')],
   ['single structural authority remains active', files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
-  ['runtime ownership guard is active', files.wrapper.includes("import './RundeckRuntimeDedupV1237.css'")],
+  ['runtime CSS dedup guard is retired', !fs.existsSync(runtimeGuardPath) && !files.wrapper.includes('RundeckRuntimeDedupV1237.css')],
   ['canonical APP server owner remains in monitoring core', files.core.includes('<RundeckAppServersV1234') && files.core.includes('is-app-servers')],
-  ['legacy direct APP panel is not rendered visibly', files.runtimeDedupCss.includes('.rundeckPanel > .rundeckServerSection') && files.runtimeDedupCss.includes('display: none !important')],
+  ['legacy direct APP runtime is physically removed', !files.source.includes('wpDrilldown') && !files.source.includes('toggleCriticalWp') && !files.source.includes('workloadTypeLabel') && !files.source.includes('const wpText') && !files.source.includes('operationalHosts.length > 0 && <section className="rundeckServerSection"')],
   ['canonical observation history remains full width', files.core.includes('<RundeckObservationHistoryV1234') && files.css.includes('.rundeckObservationHistoryV1234')],
-  ['embedded observation history is not rendered visibly', files.runtimeDedupCss.includes('.rundeckJobHistory .rundeckJobExecutionHistory')],
+  ['embedded observation history is physically removed', !files.jobHistory.includes('rundeckJobExecutionHistory') && !files.jobHistory.includes('Observation History')],
   ['observation history owns its table styling', files.observation.includes("import './RundeckObservationHistory.css'") && files.observationCss.includes('width: 100%') && files.observationCss.includes('position: sticky')],
   ['operational events are always visible', files.evidence.includes('return <section className="rundeckEvidenceTimeline"') && !files.evidence.includes('return <details className="rundeckEvidenceTimeline"')],
   ['operational event list is compact and scrollable', files.evidenceCss.includes('max-height: 292px') && files.evidenceCss.includes('overflow-y: auto')],
@@ -68,7 +69,7 @@ const checks = [
   ['SAP Issues remains operator-readable', files.issues.includes('<th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th>')],
   ['Performance Review remains lean', files.review.includes('Performance Review') && files.review.includes('<th>Workload</th><th>Why</th><th>Avg CPU</th><th>Peak</th><th>PSS</th>')],
   ['critical workload without service impact remains ATTENTION', hostResourceState(criticalWorkload) === 'NORMAL' && sapWorkloadState(criticalWorkload) === 'CRITICAL' && systemHealthState([criticalWorkload], { availabilityState: 'NORMAL' }) === 'ATTENTION'],
-  ['critical OS remains CRITICAL', systemHealthState(criticalResource ? [criticalResource] : [], { availabilityState: 'NORMAL' }) === 'CRITICAL'],
+  ['critical OS remains CRITICAL', systemHealthState([criticalResource], { availabilityState: 'NORMAL' }) === 'CRITICAL'],
   ['evidence compatibility remains exported', files.backendEvidence.includes('def availability_transition_events')],
   ['Collect Now remains credential guarded', files.backendRunner.includes('RUNNER_CREDENTIAL_MISSING') && files.backendRunner.includes('_discover_job_id')],
   ['PDF preview remains non-destructive', files.source.includes("pdf.output('blob')") && !files.source.includes('pdf.save(')],
@@ -77,7 +78,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.23.8 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.23.9 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.23.8 contract checks passed.')
+console.log('\nRundeck v1.23.9 contract checks passed.')
