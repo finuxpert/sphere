@@ -26,6 +26,7 @@ import './components/RundeckExplicitBandsV1234Responsive.css'
 import './components/RundeckExplicitBandsV1234Override.css'
 import './components/RundeckExplicitBandsV1234OverrideTrend.css'
 import './components/RundeckExplicitBandsV1234OverrideWorkload.css'
+import './components/RundeckExplicitBandsV1235Closure.css'
 
 const LogAutoSphereV5 = React.lazy(() => import('./ToolLogAutoSphereV5.jsx'))
 
