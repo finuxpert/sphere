@@ -1,8 +1,8 @@
 import React from 'react'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
-import RundeckPerformanceReviewV1231 from './RundeckPerformanceReviewV1231.jsx'
-import RundeckSapIssuesV1231 from './RundeckSapIssuesV1231.jsx'
-import RundeckSystemHealthV1231 from './RundeckSystemHealthV1231.jsx'
+import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
+import RundeckSapIssues from './RundeckSapIssues.jsx'
+import RundeckSystemHealth from './RundeckSystemHealth.jsx'
 import './RundeckMonitoringHistory.css'
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
@@ -29,8 +29,8 @@ export default function RundeckMonitoringHistory(props) {
 
   return <>
     <RundeckMonitoringHistoryCore {...props} onTrendContext={forwardTrendContext} />
-    <RundeckSystemHealthV1231 refreshToken={props.refreshToken} />
-    <RundeckSapIssuesV1231 refreshToken={props.refreshToken} />
-    <RundeckPerformanceReviewV1231 refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} />
+    <RundeckSystemHealth refreshToken={props.refreshToken} />
+    <RundeckSapIssues refreshToken={props.refreshToken} />
+    <RundeckPerformanceReview refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} />
   </>
 }
