@@ -12,6 +12,8 @@ const files = {
   jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
   incident: read('src/tools/components/RundeckPerformanceIncident.jsx'),
   operationalEvidence: read('src/tools/components/RundeckOperationalEvidence.jsx'),
+  investigation: read('src/tools/components/RundeckInvestigationContext.jsx'),
+  investigationCss: read('src/tools/components/RundeckInvestigationFlow.css'),
   appServers: read('src/tools/components/RundeckAppServers.jsx'),
   trend: read('src/tools/components/RundeckServerTrend.jsx'),
   observation: read('src/tools/components/RundeckObservationHistory.jsx'),
@@ -66,7 +68,7 @@ const hierarchy = {
 }
 
 const checks = [
-  ['version is v1.23.12', files.version.includes("APP_VERSION = '1.23.12'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.11'") && files.version.includes('operator-hierarchy-critical-wp-drilldown-v1.23.12')],
+  ['version is v1.23.13', files.version.includes("APP_VERSION = '1.23.13'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.12'") && files.version.includes('cross-panel-investigation-flow-v1.23.13')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
@@ -85,6 +87,13 @@ const checks = [
   ['Critical WP APP drilldown is inline and collection aligned', files.appServers.includes('wpCount > 0') && files.appServers.includes('rundeckWpInlineRow') && files.appServers.includes('Workloads observed while Critical WP active') && files.appServers.includes('history/jobs/current?collection_id=')],
   ['Critical WP drilldown wording avoids root-cause claim', files.appServers.includes('Correlation only; not a direct root-cause mapping.')],
   ['Critical WP workload click opens Selected Workload', files.appServers.includes("source: 'critical-wp-inline-drilldown'") && files.appServers.includes("querySelector('.rundeckJobHistory')")],
+  ['cross-panel context indicator is active', files.core.includes("from './RundeckInvestigationContext.jsx'") && files.core.includes('<RundeckInvestigationContext') && files.wrapper.includes("import './RundeckInvestigationFlow.css'")],
+  ['context distinguishes live trend history and review', files.investigation.includes("label: 'LIVE'") && files.investigation.includes("label: 'TREND'") && files.investigation.includes("label: 'HISTORY'") && files.investigation.includes("label: 'REVIEW'") && files.investigation.includes('Current dashboard state remains live.')],
+  ['SAP Issues can focus the corresponding APP', files.wrapper.includes('appFocusRequest') && files.wrapper.includes('onInspectApp={inspectApp}') && files.issues.includes("source: 'sap-issues'") && files.issues.includes('onInspectApp') && files.appServers.includes('focusRequest') && files.appServers.includes('data-app-key') && files.appServers.includes('is-cross-panel-focus')],
+  ['Observation History can inspect a historical point', files.core.includes('onSelectJob={props.onSelectJob}') && files.observation.includes("source: 'observation-history'") && files.observation.includes('at: row.collected_at') && files.observation.includes('executionId: row.execution_id') && files.observation.includes('Current dashboard state remains live.')],
+  ['Performance Review selection uses cross-panel inspector', files.wrapper.includes('<RundeckPerformanceReview') && files.wrapper.includes('onSelectJob={inspectJob}') && files.review.includes("source: 'performance-review'")],
+  ['Server Trend workload selection uses cross-panel inspector', files.core.includes('<RundeckServerTrend') && files.core.includes('onSelectJob={props.onSelectJob}') && files.trend.includes("source: 'selected-time'")],
+  ['cross-panel workload selection scrolls to Selected Workload', files.wrapper.includes("querySelector('.rundeckJobHistory')") && files.wrapper.includes('scrollToSelectedWorkload')],
   ['legacy direct APP runtime is physically removed', !files.source.includes('wpDrilldown') && !files.source.includes('toggleCriticalWp') && !files.source.includes('workloadTypeLabel') && !files.source.includes('const wpText') && !files.source.includes('operationalHosts.length > 0 && <section className="rundeckServerSection"')],
   ['embedded observation history is physically removed', !files.jobHistory.includes('rundeckJobExecutionHistory') && !files.jobHistory.includes('Observation History')],
   ['observation history owns its table styling', files.observation.includes("import './RundeckObservationHistory.css'") && files.observationCss.includes('width: 100%') && files.observationCss.includes('position: sticky')],
@@ -108,7 +117,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.23.12 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.23.13 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.23.12 contract checks passed.')
+console.log('\nRundeck v1.23.13 contract checks passed.')
