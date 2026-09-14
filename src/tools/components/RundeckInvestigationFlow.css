@@ -8,4 +8,64 @@
   border: 1px solid rgba(113, 128, 137, .12);
   border-radius: 4px;
   background: rgba(79, 198, 200, .018);
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: var(--sphere-font-micro, 8.6px);
+}
+
+.rundeckInvestigationContextLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--sphere-accent, #4fc6c8);
+  font-weight: 800;
+  letter-spacing: .035em;
+  white-space: nowrap;
+}
+
+.rundeckInvestigationContext strong {
+  color: var(--sphere-text, #e7edf0);
+  font-size: var(--sphere-font-micro, 8.8px);
+}
+
+.rundeckInvestigationContext small {
+  color: var(--sphere-text-muted, #718089);
+  font-size: var(--sphere-font-micro, 8.2px);
+}
+
+.rundeckInvestigationContext.is-history .rundeckInvestigationContextLabel,
+.rundeckInvestigationContext.is-trend .rundeckInvestigationContextLabel {
+  color: var(--sphere-attention, #6aa2d8);
+}
+
+.rundeckInvestigationContext.is-review .rundeckInvestigationContextLabel {
+  color: var(--sphere-warning, #d8b35f);
+}
+
+.rundeckSapIssuesTableV1231 tbody tr.is-investigable,
+.rundeckObservationHistoryV1234 tbody tr.is-investigable {
+  cursor: pointer;
+}
+
+.rundeckSapIssuesTableV1231 tbody tr.is-investigable:hover,
+.rundeckSapIssuesTableV1231 tbody tr.is-investigable:focus,
+.rundeckObservationHistoryV1234 tbody tr.is-investigable:hover,
+.rundeckObservationHistoryV1234 tbody tr.is-investigable:focus {
+  outline: none;
+  background: rgba(79, 198, 200, .045);
+}
+
+.rundeckObservationHistoryV1234 tbody tr.is-inspected {
+  background: rgba(79, 198, 200, .065);
+}
+
+.rundeckServerTable tr.is-cross-panel-focus {
+  background: rgba(79, 198, 200, .065) !important;
+  box-shadow: inset 2px 0 0 var(--sphere-accent, #4fc6c8);
+}
+
+@media (max-width: 1180px) {
+  .rundeckInvestigationContext {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
