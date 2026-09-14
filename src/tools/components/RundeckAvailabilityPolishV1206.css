@@ -1,4 +1,5 @@
-/* v1.20.6 final UI freeze polish: availability matrix, summary density, and evaluation scanability. */
+/* v1.20.6 availability presentation polish.
+   Structural placement is owned by RundeckWorkspaceV1236.css. */
 
 .rundeckAvailabilityBody {
   display: grid !important;
@@ -64,8 +65,6 @@
   padding-top: 7px !important;
 }
 
-/* Keep the HANA technical matrix as a real 4-column matrix. The previous
-   broad child selector flattened it into a two-column technical row. */
 .rundeckAvailabilityMatrix {
   display: grid !important;
   grid-template-columns: 1fr !important;
@@ -99,7 +98,6 @@
   align-items: start !important;
 }
 
-/* Make the overall state explicit without turning the header into another card. */
 .rundeckOperationalState {
   display: inline-flex;
   align-items: center;
@@ -116,7 +114,6 @@
   white-space: nowrap;
 }
 
-/* Final density pass: compact only the primary summary, not the analysis bands. */
 .rundeckLandscapeHeader {
   min-height: 34px !important;
   padding-top: 3px !important;
@@ -136,7 +133,6 @@
   margin-top: 14px !important;
 }
 
-/* Performance Evaluation: denser controls and cards, stronger sticky header. */
 .rundeckEvaluationHead {
   gap: 8px !important;
 }
@@ -207,32 +203,6 @@
 }
 
 @media (min-width: 1181px) {
-  /* Keep the current-state and historical headers visually paired. */
-  .appShell:has(.rundeckPanel) .rundeckServerSection,
-  .appShell:has(.rundeckPanel) .rundeckMonitoringHead {
-    padding-top: 0 !important;
-  }
-
-  .appShell:has(.rundeckPanel) .rundeckServerSection {
-    margin-top: 12px !important;
-  }
-
-  /* The monitoring component is rendered after availability in DOM order.
-     Lift only the trend band visually so its header starts with SAP App Servers;
-     later workload/detail bands keep their own flow positions. */
-  .appShell:has(.rundeckPanel) .rundeckMonitoringHead,
-  .appShell:has(.rundeckPanel) .rundeckTrendToolbar,
-  .appShell:has(.rundeckPanel) .rundeckAdvancedControls,
-  .appShell:has(.rundeckPanel) .rundeckTrendChart,
-  .appShell:has(.rundeckPanel) .rundeckHistoryState,
-  .appShell:has(.rundeckPanel) .rundeckRcaHint {
-    transform: translateY(-154px);
-  }
-
-  .appShell:has(.rundeckPanel) .rundeckMonitoringHead {
-    margin-top: 12px !important;
-  }
-
   .appShell:has(.rundeckPanel) .rundeckAvailability {
     padding-top: 9px !important;
     padding-bottom: 10px !important;
@@ -241,17 +211,6 @@
   .appShell:has(.rundeckPanel) .rundeckJobExecutionHistory {
     padding-top: 9px !important;
     padding-bottom: 10px !important;
-  }
-}
-
-@media (min-width: 1181px) and (max-width: 1440px) {
-  .appShell:has(.rundeckPanel) .rundeckMonitoringHead,
-  .appShell:has(.rundeckPanel) .rundeckTrendToolbar,
-  .appShell:has(.rundeckPanel) .rundeckAdvancedControls,
-  .appShell:has(.rundeckPanel) .rundeckTrendChart,
-  .appShell:has(.rundeckPanel) .rundeckHistoryState,
-  .appShell:has(.rundeckPanel) .rundeckRcaHint {
-    transform: translateY(-148px);
   }
 }
 
