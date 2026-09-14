@@ -1,0 +1,5 @@
+@media (min-width:1181px){
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1234 .rundeckCurrentWorkload,.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1234 .rundeckJobHistory{float:none!important;clear:none!important;width:auto!important;max-width:none!important;container-type:normal!important}
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .rundeckAvailability,.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .rundeckEvidenceTimeline{float:none!important;clear:none!important;width:auto!important;max-width:none!important;container-type:normal!important}
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234{float:none!important;clear:both!important;width:100%!important;max-width:none!important}
+}
