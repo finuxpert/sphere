@@ -32,7 +32,7 @@ function scrollToSelectedWorkload() {
   window.requestAnimationFrame(navigate)
 }
 
-export default function RundeckAppServers({ refreshToken = '', latestCollectionId = '', onSelectJob }) {
+export default function RundeckAppServers({ refreshToken = '', latestCollectionId = '', onSelectJob, focusRequest = null }) {
   const [state, setState] = React.useState({ items: [], error: '' })
   const [drilldown, setDrilldown] = React.useState(null)
 
@@ -75,6 +75,25 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
     }
   }, [drilldown?.host, latestCollectionId])
 
+  React.useEffect(() => {
+    const requested = shortHost(focusRequest?.host || '')
+    if (!requested || !state.items.length) return
+    const host = state.items.find((item) => shortHost(item.host) === requested)
+    if (!host) return
+    if (Number(host.wp_critical || 0) > 0 && drilldown?.host !== host.host) openWp(host)
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+    let frames = 0
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    const navigate = () => {
+      frames += 1
+      if (frames < 3) return window.requestAnimationFrame(navigate)
+      const row = Array.from(document.querySelectorAll('.rundeckServerTable tr[data-app-key]'))
+        .find((node) => node.dataset.appKey === requested)
+      row?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' })
+    }
+    window.requestAnimationFrame(navigate)
+  }, [drilldown?.host, focusRequest?.host, focusRequest?.token, openWp, state.items])
+
   const inspectWorkload = React.useCallback((row) => {
     if (!row?.consumer_key) return
     onSelectJob?.({
@@ -86,6 +105,8 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
     scrollToSelectedWorkload()
   }, [onSelectJob])
 
+  const focusedApp = shortHost(focusRequest?.host || '')
+
   return <section className="rundeckServerSection rundeckServerSectionV1234" aria-label="SAP App Servers">
     <div className="rundeckSectionTitle"><h3><SphereIcon name="server" /> SAP App Servers</h3></div>
     {state.error && <div className="rundeckHistoryState is-error">{state.error}</div>}
@@ -96,17 +117,20 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
         const wpCount = Number(host.wp_critical || 0)
         const expandable = wpCount > 0 && Boolean(latestCollectionId)
         const expanded = drilldown?.host === host.host
+        const appKey = shortHost(host.host)
+        const focused = Boolean(focusedApp && appKey === focusedApp)
         return <React.Fragment key={host.host}>
           <tr
-            className={[expanded ? 'is-selected' : '', expandable ? 'is-expandable' : ''].filter(Boolean).join(' ')}
+            data-app-key={appKey}
+            className={[expanded ? 'is-selected' : '', expandable ? 'is-expandable' : '', focused ? 'is-cross-panel-focus' : ''].filter(Boolean).join(' ')}
             onClick={expandable ? (event) => {
               if (event.target.closest('button, a')) return
               openWp(host)
             } : undefined}
           >
             <td>{expandable
-              ? <button type="button" className="rundeckAppExpandButton" onClick={() => openWp(host)} aria-expanded={expanded} title="Show workloads observed on this APP while Critical WP is active"><strong>{shortHost(host.host)}</strong><span>{expanded ? '−' : '+'}</span></button>
-              : <strong title={host.host}>{shortHost(host.host)}</strong>}
+              ? <button type="button" className="rundeckAppExpandButton" onClick={() => openWp(host)} aria-expanded={expanded} title="Show workloads observed on this APP while Critical WP is active"><strong>{appKey}</strong><span>{expanded ? '−' : '+'}</span></button>
+              : <strong title={host.host}>{appKey}</strong>}
             </td>
             <td><StatusPill value={hostResourceState(host)} /></td>
             <td><StatusPill value={workloadState} /></td>
