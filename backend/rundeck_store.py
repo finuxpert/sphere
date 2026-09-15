@@ -82,6 +82,7 @@ def ingest(execution, raw, expected, root=ROOT):
     from backend.rundeck_consumers import persist_top_consumers
     from backend.rundeck_host_projection import enrich_host_metrics
     from backend.rundeck_monitoring import compress_file, persist_collection
+    from backend.rundeck_workload_observations import persist_workload_observations
 
     initialize(root)
     cid = identifier(execution["id"])
@@ -160,9 +161,17 @@ def ingest(execution, raw, expected, root=ROOT):
         except Exception as error:
             row["top_consumer_status"] = "ERROR"
             row["top_consumer_error_type"] = type(error).__name__
+        try:
+            row["workload_observation_rows"] = persist_workload_observations(cid, raw)
+            row["workload_observation_status"] = "STORED"
+        except Exception as error:
+            row["workload_observation_status"] = "ERROR"
+            row["workload_observation_error_type"] = type(error).__name__
     elif row.get("database_status") == "STORED":
         row["top_consumer_rows"] = 0
         row["top_consumer_status"] = "SKIPPED"
+        row["workload_observation_rows"] = 0
+        row["workload_observation_status"] = "SKIPPED"
 
     write_json(manifest, row)
     return row
