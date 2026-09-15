@@ -1,8 +1,9 @@
 import React from 'react'
 import * as echarts from './logEcharts.js'
 import SphereIcon from './SphereIcon.jsx'
-import { formatWib, numberText, shortHost } from './sapUiFormat.js'
+import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
+import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const DEFAULT_RANGE = '6h'
@@ -87,33 +88,65 @@ function TrendChart({ trend, mode, range, onSelect }) {
 }
 
 function selectedTimelineRow(selected, timeline) {
-  if (!/^APP\d+$/i.test(String(selected?.host || ''))) return null
+  if (!selected?.host) return null
   return (timeline?.items || []).find((row) => shortHost(row.host) === shortHost(selected.host)) || null
 }
 
-function topConsumerContext(selected, timeline) {
-  const row = selectedTimelineRow(selected, timeline)
-  const consumer = row?.top_consumers?.[0] || null
-  const context = consumer?.consumer_key ? {
+function snapshotContext(selected, row, consumer) {
+  if (!consumer?.consumer_key) return null
+  return {
     key: consumer.consumer_key,
     host: row?.host || selected?.host || '',
     consumerType: consumer.consumer_type || '',
-    source: 'trend',
+    source: 'trend-snapshot',
     at: selected?.at || '',
     collectionId: row?.collection_id || selected?.collectionId || '',
     trendMode: selected?.mode || '',
     trendMetric: selected?.metricLabel || '',
-  } : null
-  return { row, consumer, context }
+  }
+}
+
+function pssValue(consumer) {
+  const details = consumer?.details || {}
+  const value = details.total_pss_gb ?? details.pss_gb
+  return value === null || value === undefined ? null : Number(value)
+}
+
+function processCount(consumer) {
+  const details = consumer?.details || {}
+  const value = details.process_count ?? details.pids?.length
+  return value === null || value === undefined ? null : Number(value)
 }
 
 function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
-  if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click the chart to inspect the top workload at that time.</div>
-  const { row: selectedRow, consumer, context } = topConsumerContext(selected, timeline)
+  if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click the chart to open a historical workload snapshot for that APP and time.</div>
+  const selectedRow = selectedTimelineRow(selected, timeline)
+  const consumers = selectedRow?.top_consumers || []
+  const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
   return <section className="rundeckRcaSection" aria-live="polite">
     <div className="rundeckRcaHeader"><div><span>Selected Time</span><h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Loading'}</small></div>{selectedRow && <span className={`rundeckInlineStatus is-${hostResourceState(selectedRow).toLowerCase()}`}>{hostResourceState(selectedRow)}</span>}</div>
-    {loading && <div className="rundeckHistoryState">Resolving top workload…</div>}{error && <div className="rundeckHistoryState is-error">{error}</div>}
-    {!loading && !error && selectedRow && <div className="rundeckRcaWorkload"><div className="rundeckRcaWorkloadTitle"><span>Top Workload · auto-opened</span>{context ? <button type="button" className="rundeckRcaJobButton" onClick={() => onSelectJob?.(context)}>{consumer.consumer_key}</button> : <strong>No workload found</strong>}<small>CPU {numberText(consumer?.cpu_pct)}%</small></div></div>}
+    {loading && <div className="rundeckHistoryState">Loading historical snapshot…</div>}
+    {error && <div className="rundeckHistoryState is-error">{error}</div>}
+    {!loading && !error && selected && <div className="rundeckHistoricalSnapshot">
+      <div className="rundeckHistoricalSnapshotHead">
+        <div><span>Historical Snapshot</span><strong>Top workloads observed on {shortHost(selected.host)} at this collection</strong></div>
+        <small>{collectionId ? `Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : 'Nearest retained collection'}</small>
+      </div>
+      <div className="rundeckSnapshotConsumers">
+        {consumers.map((consumer, index) => {
+          const context = snapshotContext(selected, selectedRow, consumer)
+          const pss = pssValue(consumer)
+          const processes = processCount(consumer)
+          return <div key={`${consumer.consumer_type}-${consumer.consumer_key}-${index}`} className="rundeckSnapshotConsumer">
+            <button type="button" className="rundeckSnapshotConsumerButton" onClick={() => context && onSelectJob?.(context)} title={`${workloadTypeLabel(consumer.consumer_type)} · click to inspect historical workload detail`}>{index + 1}. {consumer.consumer_key}</button>
+            <span className="rundeckSnapshotMetric">CPU <b>{numberText(consumer.cpu_pct, 1)}%</b></span>
+            <span className="rundeckSnapshotMetric">PSS <b>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)}G`}</b></span>
+            <span className="rundeckSnapshotMetric">Proc <b>{processes === null || Number.isNaN(processes) ? '—' : numberText(processes, 0)}</b></span>
+          </div>
+        })}
+        {!consumers.length && <div className="rundeckSnapshotEmpty">No retained workload context was stored for this APP in the resolved collection.</div>}
+      </div>
+    </div>}
   </section>
 }
 
@@ -148,24 +181,21 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     timelineRequestSequence.current += 1
     const requestSequence = timelineRequestSequence.current
     setSelected(point); setTimeline(null); setTimelineLoading(false); setTimelineError('')
-    if (!point?.at || (point.availability && !/^APP\d+$/i.test(String(point.host || '')))) return
+    if (!point?.at || (point.availability && !/^APP\d+$/i.test(String(shortHost(point.host || ''))))) return
     setTimelineLoading(true)
     const collection = point.collectionId ? `&collection_id=${encodeURIComponent(point.collectionId)}` : ''
     json(`${API}/history/timeline?at=${encodeURIComponent(point.at)}&window_minutes=5${collection}`)
       .then((result) => {
         if (timelineRequestSequence.current !== requestSequence) return
         setTimeline(result)
-        if (point.availability) return
-        const { context } = topConsumerContext(point, result)
-        if (context) onSelectJob?.(context)
       })
       .catch((failure) => {
-        if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load workload.')
+        if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load historical snapshot.')
       })
       .finally(() => {
         if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false)
       })
-  }, [onSelectJob])
+  }, [])
 
   return <section className="rundeckServerTrendPanelV1234" aria-label="Server Trend">
     <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
@@ -176,6 +206,6 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
     {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} />}
     {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
-    {!selectedJob?.pinned && <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={onSelectJob} />}
+    <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={onSelectJob} />
   </section>
 }
