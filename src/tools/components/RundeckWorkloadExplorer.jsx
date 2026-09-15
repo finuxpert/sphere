@@ -45,7 +45,7 @@ function pct(value) {
 }
 
 function gb(value) {
-  return value === null || value === undefined ? '—'' : `${numberText(value, 2)} GB`
+  return value === null || value === undefined ? '—' : `${numberText(value, 2)} GB`
 }
 
 function durationText(start, end) {
