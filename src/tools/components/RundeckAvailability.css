@@ -142,7 +142,8 @@
 .rundeckAvailabilityStatus.is-normal { color: var(--sphere-positive, #75cfa5); }
 .rundeckAvailabilityStatus.is-down,
 .rundeckAvailabilityStatus.is-critical { color: var(--sphere-danger, #db7d86); }
-.rundeckAvailabilityStatus.is-attention { color: var(--sphere-warning, #d8b35f); }
+.rundeckAvailabilityStatus.is-attention,
+.rundeckAvailabilityStatus.is-stale { color: var(--sphere-warning, #d8b35f); }
 .rundeckAvailabilityStatus.is-loading,
 .rundeckAvailabilityStatus.is-unknown { color: var(--sphere-text-muted, #718089); }
 

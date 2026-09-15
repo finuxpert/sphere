@@ -9,7 +9,7 @@
   border-radius: 4px;
   background: rgba(79, 198, 200, .018);
   color: var(--sphere-text-secondary, #a9b5bb);
-  font-size: var(--sphere-font-micro, 8.6px);
+  font-size: 9px;
 }
 
 .rundeckInvestigationContextLabel {
@@ -17,6 +17,7 @@
   align-items: center;
   gap: 4px;
   color: var(--sphere-accent, #4fc6c8);
+  font-size: 9.1px;
   font-weight: 800;
   letter-spacing: .035em;
   white-space: nowrap;
@@ -24,12 +25,13 @@
 
 .rundeckInvestigationContext strong {
   color: var(--sphere-text, #e7edf0);
-  font-size: var(--sphere-font-micro, 8.8px);
+  font-size: 9.1px;
 }
 
 .rundeckInvestigationContext small {
-  color: var(--sphere-text-muted, #718089);
-  font-size: var(--sphere-font-micro, 8.2px);
+  color: #8d9ca4;
+  font-size: 8.7px;
+  line-height: 1.35;
 }
 
 .rundeckInvestigationContext.is-history .rundeckInvestigationContextLabel,

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Re-project retained Rundeck raw evidence with the current consumer parser.
+"""Re-project retained Rundeck raw evidence with the current workload parsers.
 
-Dry-run is the default. Pass --apply explicitly to upsert the wider top-consumer
-projection and aggregate multi-process resource fields into PostgreSQL. Raw evidence
-is never changed or deleted.
+Dry-run is the default. Pass --apply explicitly to upsert both the bounded Top
+Consumer projection and the complete observed JOB/PROGRAM projection into PostgreSQL.
+Raw evidence is never changed or deleted.
 """
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ from backend.db.session import get_engine
 from backend.rundeck_consumers import TOP_CONSUMERS_PER_HOST, persist_top_consumers
 from backend.rundeck_monitoring import persist_collection
 from backend.rundeck_store import ROOT, collections
+from backend.rundeck_workload_observations import persist_workload_observations
 
 
 def _time(value: str | None) -> datetime | None:
@@ -72,12 +73,7 @@ def _collection_exists(collection_id: str) -> bool:
 
 
 def _ensure_collection_parent(row: dict, raw: bytes, repair_missing_parents: bool) -> bool:
-    """Ensure the FK parent exists without rewriting existing collection history.
-
-    Old retained manifests may pre-date database persistence. Only those missing
-    parents are re-projected. Existing parents are never passed through
-    persist_collection(), which avoids duplicating historical alert rows.
-    """
+    """Ensure the FK parent exists without rewriting existing collection history."""
     collection_id = str(row.get("collection_id") or "")
     if _collection_exists(collection_id):
         return False
@@ -92,7 +88,7 @@ def _ensure_collection_parent(row: dict, raw: bytes, repair_missing_parents: boo
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Backfill SPHERE top-consumer history from retained raw evidence")
+    parser = argparse.ArgumentParser(description="Backfill SPHERE workload history from retained raw evidence")
     parser.add_argument("--days", type=int, default=90, help="READY collection lookback (default: 90)")
     parser.add_argument("--limit", type=int, default=0, help="optional maximum number of collections; 0 = all")
     parser.add_argument(
@@ -104,7 +100,7 @@ def main() -> int:
     parser.add_argument(
         "--repair-missing-parents",
         action="store_true",
-        help="restore missing rundeck_collections parents from retained READY evidence before consumer upsert",
+        help="restore missing rundeck_collections parents from retained READY evidence before workload upsert",
     )
     parser.add_argument("--apply", action="store_true", help="perform PostgreSQL upserts; without this flag only show the plan")
     args = parser.parse_args()
@@ -146,7 +142,8 @@ def main() -> int:
     print(f"MODE={'APPLY' if args.apply else 'DRY-RUN'}")
     print(f"INGESTION_ROOT={ROOT}")
     print(f"LOOKBACK_DAYS={args.days}")
-    print(f"PERSISTED_DEPTH=Top {TOP_CONSUMERS_PER_HOST} per APP")
+    print(f"TOP_CONSUMER_DEPTH=Top {TOP_CONSUMERS_PER_HOST} per APP")
+    print("OBSERVED_WORKLOAD_SCOPE=All JOB/PROGRAM consumers present in retained WP snapshots")
     print(f"REPAIR_MISSING_PARENTS={'YES' if args.repair_missing_parents else 'NO'}")
     if requested:
         print(f"COLLECTION_FILTER={','.join(sorted(requested))}")
@@ -163,7 +160,8 @@ def main() -> int:
         return 0
 
     completed = 0
-    rows_written = 0
+    top_rows_written = 0
+    observation_rows_written = 0
     parents_repaired = 0
     failure_details: list[tuple[str, str, str]] = []
     for index, (row, path, _) in enumerate(candidates, 1):
@@ -174,11 +172,16 @@ def main() -> int:
             if repaired:
                 parents_repaired += 1
                 print(f"[{index}/{len(candidates)}] {collection_id}: parent collection restored from retained evidence")
-            written = persist_top_consumers(collection_id, raw)
-            rows_written += written
+            top_written = persist_top_consumers(collection_id, raw)
+            observed_written = persist_workload_observations(collection_id, raw)
+            top_rows_written += top_written
+            observation_rows_written += observed_written
             completed += 1
-            print(f"[{index}/{len(candidates)}] {collection_id}: {written} consumer rows projected")
-        except Exception as error:  # Keep the remaining evidence recoverable even if one file is malformed.
+            print(
+                f"[{index}/{len(candidates)}] {collection_id}: "
+                f"top={top_written} observed_workloads={observed_written}"
+            )
+        except Exception as error:  # Keep remaining evidence recoverable if one file is malformed.
             error_type = type(error).__name__
             summary = _error_summary(error)
             failure_details.append((collection_id, error_type, summary))
@@ -187,7 +190,8 @@ def main() -> int:
     print(f"COMPLETED={completed}")
     print(f"FAILED={len(failure_details)}")
     print(f"PARENTS_REPAIRED={parents_repaired}")
-    print(f"ROWS_PROJECTED={rows_written}")
+    print(f"TOP_CONSUMER_ROWS_PROJECTED={top_rows_written}")
+    print(f"OBSERVED_WORKLOAD_ROWS_PROJECTED={observation_rows_written}")
     if failure_details:
         print("FAILURE_DETAILS_BEGIN")
         for collection_id, error_type, summary in failure_details:

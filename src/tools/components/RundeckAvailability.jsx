@@ -137,10 +137,11 @@ export default function RundeckAvailability({ refreshToken = '' }) {
     ssh.SECONDARY,
     ssh.DR,
   ].filter(Boolean).filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length)
-  const serviceState = data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')
+  const serviceState = String(data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')).toUpperCase()
   const issueText = String(data?.summary?.issue_text || '').replace(/\bDr\b/g, 'DR').trim()
   const availabilityAge = ageMinutes(data?.collected_at)
   const stale = availabilityAge !== null && availabilityAge >= STALE_MINUTES
+  const displayState = stale ? 'STALE' : serviceState
   const bundlePerformance = bundleSourceStatus(bundle, 'performance')
   const bundleAvailability = bundleSourceStatus(bundle, 'availability')
   const bundleState = String(bundle?.bundle_status || '').toUpperCase()
@@ -170,14 +171,15 @@ export default function RundeckAvailability({ refreshToken = '' }) {
         </span>
       </div>
       <div className="rundeckAvailabilityState">
-        <Status value={serviceState} />
-        {issueText && <small>{issueText}</small>}
+        <Status value={displayState} />
+        {stale && <small>Last reliable state: {serviceState}</small>}
+        {!stale && issueText && <small>{issueText}</small>}
       </div>
     </div>
 
     {showDataTrust && <div className="rundeckAvailabilityDataTrust" aria-label="Availability data quality">
       {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
-      {stale && <small className="rundeckAvailabilityTrust is-warning">STALE · {availabilityAge}m old</small>}
+      {stale && <small className="rundeckAvailabilityTrust is-warning">Data age {availabilityAge}m</small>}
       {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Collection gap {Math.round(skew / 60)}m</small>}
     </div>}
 

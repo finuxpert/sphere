@@ -24,7 +24,7 @@ const palette = () => ({
   text: themeToken('--sphere-text', '#e7edf0'),
   secondary: themeToken('--sphere-text-secondary', '#a9b5bb'),
   muted: themeToken('--sphere-text-muted', '#718089'),
-  grid: themeToken('--sphere-chart-grid', 'rgba(126, 147, 158, .08)'),
+  grid: themeToken('--sphere-chart-grid', 'rgba(126,147,158,.08)'),
   panel: themeToken('--sphere-surface-1', '#141d23'),
   accent: themeToken('--sphere-accent', '#4fc6c8'),
   memory: themeToken('--sphere-memory', '#8ba7d9'),
@@ -438,7 +438,13 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const profile = chartProfile(episodeItems)
   const contentKey = `${displayHost}|${displayConsumerType}|${displayKey}|${displayAt}`
   const program = String(latestDetails.program || '').trim()
-  const contextText = [shortHost(displayHost || latest?.host || ''), workloadTypeLabel(displayConsumerType || latest?.consumer_type), program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' · ')
+  const appName = shortHost(displayHost || latest?.host || '')
+  const jobName = String(latestDetails.job_name || (String(displayConsumerType || latest?.consumer_type).toUpperCase() === 'JOB' ? displayKey : '')).trim()
+  const observedAt = latest?.collected_at || displayAt || stats.lastSeen
+  const wpType = String(latestDetails.wp_type || '').trim()
+  const wpNumber = String(latestDetails.wp || '').trim()
+  const wpContext = [wpType, wpNumber].filter(Boolean).join(' ') || '—'
+  const contextText = [appName, workloadTypeLabel(displayConsumerType || latest?.consumer_type), program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' · ')
 
   return <section className="rundeckJobHistory" aria-label="Selected workload performance" aria-busy={loading}>
     <div className="rundeckJobHistoryHead">
@@ -474,6 +480,21 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           </div>
         </section>
       </div>
+
+      <section className="rundeckSm37Verification" aria-label="SM37 verification context">
+        <div className="rundeckSm37VerificationHead">
+          <strong>SM37 Verification</strong>
+          <span>NOT VERIFIED</span>
+        </div>
+        <div className="rundeckSm37VerificationGrid">
+          <span><b>Job Name</b>{jobName || '—'}</span>
+          <span><b>Program</b>{program || '—'}</span>
+          <span><b>APP</b>{appName || '—'}</span>
+          <span><b>Observed</b>{observedAt ? `${formatWib(observedAt, true)} WIB` : '—'}</span>
+          <span><b>WP</b>{wpContext}</span>
+        </div>
+        <p>Verify in SM37 by matching Job Name, Step Program and execution time. SPHERE has not verified this execution against SM37.</p>
+      </section>
 
       {(incidentStart || timelineText) && <div className="rundeckJobTimeline">
         <strong>Issue Timeline</strong>

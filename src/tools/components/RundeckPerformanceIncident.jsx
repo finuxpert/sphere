@@ -85,6 +85,7 @@ export default function RundeckPerformanceIncident({ refreshToken = '', selected
     onDefaultJob?.(jobContext(current, summary.affected_server, 'current'))
   }, [onDefaultJob, summary?.active, summary?.affected_server, summary?.collection_id, summary?.current_workload])
 
+  if (!showStatus) return null
   if (!summary && !error) return null
   if (error) return <section className="rundeckIncident" aria-label="SAP performance issue"><div className="rundeckIncidentHeader"><h3>Performance data unavailable</h3>{showStatus && <StatusPill value="UNKNOWN" />}</div></section>
 
@@ -115,7 +116,7 @@ export default function RundeckPerformanceIncident({ refreshToken = '', selected
   return <section className="rundeckIncident is-lean" aria-label="SAP performance issue">
     <div className="rundeckIncidentHeader"><div><span className="rundeckIncidentEyebrow">Primary Issue</span><h3>{shortHost(summary.affected_server)} · {issueSignalText(signal.label, signalValue)}</h3></div>{showStatus && <StatusPill value={summary.status || 'WARNING'} />}</div>
     <div className="rundeckIncidentMeta"><span><b>Since</b>{formatTime(summary.signal_active_since || summary.detected_since, true)} WIB</span><span><b>Duration</b>{duration(summary.duration_seconds)}</span></div>
-    <section className="rundeckIncidentWorkloadBlock is-current"><div className="rundeckIncidentWorkloadLead"><span>Top Active Workload</span>{currentContext ? <button type="button" className={`rundeckIncidentJobButton ${selectedJob?.key === currentContext.key && selectedJob?.host === currentContext.host ? 'is-selected' : ''}`} onClick={() => selectAndInspect(currentContext)} title="Open workload detail. This is an observed workload on the affected APP, not a direct root-cause mapping.">{current.consumer_key}</button> : <strong>No active workload found</strong>}</div></section>
-    <div className="rundeckIncidentOpsLine" aria-label="Affected App Server state"><span><b>OS</b><StatusPill value={resourceState} /></span><span><b>SAP Workload</b><StatusPill value={workloadState} /></span></div>
+    <section className="rundeckIncidentWorkloadBlock is-current"><div className="rundeckIncidentWorkloadLead"><span>Top Workload</span>{currentContext ? <button type="button" className={`rundeckIncidentJobButton ${selectedJob?.key === currentContext.key && selectedJob?.host === currentContext.host ? 'is-selected' : ''}`} onClick={() => selectAndInspect(currentContext)} title="Open workload detail. This is an observed workload on the affected APP, not a direct root-cause mapping.">{current.consumer_key}</button> : <strong>No active workload found</strong>}</div></section>
+    <div className="rundeckIncidentOpsLine" aria-label="Affected APP server state"><span><b>OS</b><StatusPill value={resourceState} /></span><span><b>SAP Workload</b><StatusPill value={workloadState} /></span></div>
   </section>
 }

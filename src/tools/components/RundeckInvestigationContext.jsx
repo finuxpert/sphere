@@ -15,12 +15,20 @@ const sourceMeta = (job = {}) => {
       note: 'Historical selection only. Current dashboard state remains live.',
     }
   }
-  if (source === 'selected-time' || source === 'trend') {
+  if (source === 'selected-time' || source === 'trend' || source === 'trend-snapshot') {
     return {
       tone: 'trend',
-      label: 'TREND',
+      label: 'TREND SNAPSHOT',
       detail: [shortHost(job.host || ''), at].filter(Boolean).join(' · '),
-      note: 'Selected from Server Trend; this does not replace the current system state.',
+      note: 'Selected from a retained Server Trend snapshot; current system state remains live.',
+    }
+  }
+  if (source === 'workload-explorer') {
+    return {
+      tone: 'history',
+      label: 'JOB & PROGRAM HISTORY',
+      detail: [shortHost(job.host || ''), job.days ? `${job.days}D window` : ''].filter(Boolean).join(' · '),
+      note: 'Opened from historical Job and Program performance; current dashboard state remains live.',
     }
   }
   if (source === 'performance-review') {
@@ -34,9 +42,25 @@ const sourceMeta = (job = {}) => {
   if (source === 'critical-wp-inline-drilldown') {
     return {
       tone: 'live',
-      label: 'LIVE · APP DRILLDOWN',
+      label: 'LIVE · CRITICAL WP CONTEXT',
       detail: shortHost(job.host || ''),
-      note: 'Workload observed in the aligned collection while Critical WP was active.',
+      note: 'Selected from workloads observed on this APP while Critical WP was active; correlation only.',
+    }
+  }
+  if (source === 'current') {
+    return {
+      tone: 'live',
+      label: 'LIVE · ISSUE CONTEXT',
+      detail: shortHost(job.host || ''),
+      note: 'Automatically selected from the active performance issue context; not the global CPU ranking or a root-cause conclusion.',
+    }
+  }
+  if (source === 'current-workload') {
+    return {
+      tone: 'live',
+      label: 'LIVE · WORKLOAD',
+      detail: shortHost(job.host || ''),
+      note: 'Selected directly from Current Workloads.',
     }
   }
   return {
@@ -50,9 +74,8 @@ const sourceMeta = (job = {}) => {
 export default function RundeckInvestigationContext({ job = null }) {
   if (!job?.key) return null
   const meta = sourceMeta(job)
-  return <div className={`rundeckInvestigationContext is-${meta.tone}`} aria-label="Investigation context">
+  return <div className={`rundeckInvestigationContext is-${meta.tone}`} aria-label="Investigation context" title={meta.note || undefined}>
     <span className="rundeckInvestigationContextLabel"><SphereIcon name="target" /> {meta.label}</span>
     {meta.detail && <strong>{meta.detail}</strong>}
-    <small>{meta.note}</small>
   </div>
 }
