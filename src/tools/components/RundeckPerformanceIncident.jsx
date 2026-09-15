@@ -85,6 +85,7 @@ export default function RundeckPerformanceIncident({ refreshToken = '', selected
     onDefaultJob?.(jobContext(current, summary.affected_server, 'current'))
   }, [onDefaultJob, summary?.active, summary?.affected_server, summary?.collection_id, summary?.current_workload])
 
+  if (!showStatus) return null
   if (!summary && !error) return null
   if (error) return <section className="rundeckIncident" aria-label="SAP performance issue"><div className="rundeckIncidentHeader"><h3>Performance data unavailable</h3>{showStatus && <StatusPill value="UNKNOWN" />}</div></section>
 
