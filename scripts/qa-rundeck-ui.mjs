@@ -71,7 +71,7 @@ const hierarchy = {
 }
 
 const checks = [
-  ['version is v1.24.4', files.version.includes("APP_VERSION = '1.24.4'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.3'") && files.version.includes('historical-performance-explorer-v1.24.4') && files.version.includes('context-clarity-final-density-v1.24.4')],
+  ['version is v1.24.5', files.version.includes("APP_VERSION = '1.24.5'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.4'") && files.version.includes('historical-performance-explorer-v1.24.5') && files.version.includes('final-dedup-pdf-cleanup-v1.24.5')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['v1.24.1 UI polish loads after canonical workspace', files.workspace.indexOf("RundeckUiPolish.css") > files.workspace.indexOf("RundeckWorkspace.css") && files.uiPolish.includes('non-structural operator UI finishing')],
   ['v1.24.1 polish covers operator tabs trend tables explorer and PDF preview', files.uiPolish.includes('.rundeckMonitoringModeTabs') && files.uiPolish.includes('.rundeckServerTrendPanelV1234') && files.uiPolish.includes('.rundeckObservationHistoryV1234') && files.uiPolish.includes('.rundeckReviewTableV1231') && files.uiPolish.includes('.rundeckExplorerResult.is-selected') && files.uiPolish.includes('.rundeckPdfPreview')],
@@ -87,6 +87,11 @@ const checks = [
   ['v1.24.4 historical explorer context uses Basis friendly wording', files.investigation.includes("label: 'JOB & PROGRAM HISTORY'") && files.investigation.includes('Job and Program performance') && !files.investigation.includes('Job / Program')],
   ['v1.24.4 context and microtext are more readable', files.investigationCss.includes('font-size: 9px') && files.investigationCss.includes('font-size: 8.7px') && files.uiPolish.includes('.rundeckRcaHint') && files.uiPolish.includes('.rundeckAvailabilityHead > div:first-child > span')],
   ['v1.24.4 SM37 verification is compact without changing semantics', files.uiPolish.includes('.rundeckSm37VerificationGrid') && files.uiPolish.includes('flex-wrap: wrap') && files.uiPolish.includes('margin: 7px 0 6px') && files.jobHistory.includes('NOT VERIFIED')],
+  ['v1.24.5 context explanation moved to tooltip', files.investigation.includes('title={meta.note || undefined}') && !files.investigation.includes('<small>{meta.note}</small>')],
+  ['v1.24.5 selected workload removes repeated secondary labels', files.uiPolish.includes('.rundeckSm37VerificationGrid span:nth-child(3)') && files.uiPolish.includes('.rundeckSm37VerificationGrid span:nth-child(5)') && files.uiPolish.includes('.rundeckJobTimeline > span:nth-of-type(2)') && files.uiPolish.includes('.rundeckJobPerformanceTitle > span') && files.uiPolish.includes('.rundeckHiddenMetric')],
+  ['v1.24.5 PDF metadata is concise', files.source.includes("pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`") && !files.source.includes('OS Resource ${osState}') && !files.source.includes('SAP Workload ${sapState}')],
+  ['v1.24.5 PDF removes duplicate current workload summary', !files.source.includes("pdf.text('CURRENT WORKLOAD'") && files.source.includes("pdf.text('AVAILABILITY'") && files.source.includes('roundedRect(margin, 45, contentW, 17')],
+  ['v1.24.5 PDF uses lean top workloads and footer', files.source.includes("pdf.text('TOP WORKLOADS'") && !files.source.includes("pdf.text('TOP ACTIVE WORKLOADS'") && files.source.includes("pdf.text('SPHERE · Rundeck'")],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
   ['runtime CSS dedup guard is retired', !fs.existsSync(runtimeGuardPath) && !files.wrapper.includes('RundeckRuntimeDedupV1237.css')],
@@ -149,7 +154,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.24.4 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.24.5 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.24.4 contract checks passed.')
+console.log('\nRundeck v1.24.5 contract checks passed.')
