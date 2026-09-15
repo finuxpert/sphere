@@ -71,7 +71,7 @@ const hierarchy = {
 }
 
 const checks = [
-  ['version is v1.24.3', files.version.includes("APP_VERSION = '1.24.3'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.2'") && files.version.includes('historical-performance-explorer-v1.24.3') && files.version.includes('final-live-monitoring-cleanup-v1.24.3')],
+  ['version is v1.24.4', files.version.includes("APP_VERSION = '1.24.4'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.3'") && files.version.includes('historical-performance-explorer-v1.24.4') && files.version.includes('context-clarity-final-density-v1.24.4')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['v1.24.1 UI polish loads after canonical workspace', files.workspace.indexOf("RundeckUiPolish.css") > files.workspace.indexOf("RundeckWorkspace.css") && files.uiPolish.includes('non-structural operator UI finishing')],
   ['v1.24.1 polish covers operator tabs trend tables explorer and PDF preview', files.uiPolish.includes('.rundeckMonitoringModeTabs') && files.uiPolish.includes('.rundeckServerTrendPanelV1234') && files.uiPolish.includes('.rundeckObservationHistoryV1234') && files.uiPolish.includes('.rundeckReviewTableV1231') && files.uiPolish.includes('.rundeckExplorerResult.is-selected') && files.uiPolish.includes('.rundeckPdfPreview')],
@@ -82,6 +82,11 @@ const checks = [
   ['v1.24.3 APP drilldown owns active issue timing context', files.appServers.includes('/analysis/performance') && files.appServers.includes('Critical WP active since') && files.appServers.includes('Duration {durationText') && files.appServers.includes('incident.affected_server')],
   ['v1.24.3 availability stale state is explicit', files.availability.includes("const displayState = stale ? 'STALE' : serviceState") && files.availability.includes('Last reliable state:') && files.availability.includes('Data age')],
   ['v1.24.3 SM37 verification panel is visually subdued', files.uiPolish.includes('.rundeckSm37Verification') && files.uiPolish.includes('background: transparent') && files.uiPolish.includes('border-left-width: 1px')],
+  ['v1.24.4 selected workload explains automatic issue context', files.investigation.includes("source === 'current'") && files.investigation.includes("label: 'LIVE · ISSUE CONTEXT'") && files.investigation.includes('not the global CPU ranking') && files.investigation.includes('not a root-cause conclusion')],
+  ['v1.24.4 direct live selection and Critical WP context are distinct', files.investigation.includes("label: 'LIVE · WORKLOAD'") && files.investigation.includes("label: 'LIVE · CRITICAL WP CONTEXT'") && files.investigation.includes('Selected directly from Current Workloads.')],
+  ['v1.24.4 historical explorer context uses Basis friendly wording', files.investigation.includes("label: 'JOB & PROGRAM HISTORY'") && files.investigation.includes('Job and Program performance') && !files.investigation.includes('Job / Program')],
+  ['v1.24.4 context and microtext are more readable', files.investigationCss.includes('font-size: 9px') && files.investigationCss.includes('font-size: 8.7px') && files.uiPolish.includes('.rundeckRcaHint') && files.uiPolish.includes('.rundeckAvailabilityHead > div:first-child > span')],
+  ['v1.24.4 SM37 verification is compact without changing semantics', files.uiPolish.includes('.rundeckSm37VerificationGrid') && files.uiPolish.includes('flex-wrap: wrap') && files.uiPolish.includes('margin: 7px 0 6px') && files.jobHistory.includes('NOT VERIFIED')],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
   ['runtime CSS dedup guard is retired', !fs.existsSync(runtimeGuardPath) && !files.wrapper.includes('RundeckRuntimeDedupV1237.css')],
@@ -100,7 +105,7 @@ const checks = [
   ['Critical WP drilldown wording avoids root-cause claim', files.appServers.includes('Correlation only; not a direct root-cause mapping.')],
   ['Critical WP workload click opens Selected Workload', files.appServers.includes("source: 'critical-wp-inline-drilldown'") && files.appServers.includes("querySelector('.rundeckJobHistory')")],
   ['cross-panel context indicator is active', files.core.includes("from './RundeckInvestigationContext.jsx'") && files.core.includes('<RundeckInvestigationContext') && files.wrapper.includes("import './RundeckInvestigationFlow.css'")],
-  ['context distinguishes live trend history review and explorer', files.investigation.includes("label: 'LIVE'") && files.investigation.includes("label: 'TREND SNAPSHOT'") && files.investigation.includes("label: 'HISTORY'") && files.investigation.includes("label: 'REVIEW'") && files.investigation.includes("label: 'WORKLOAD EXPLORER'") && files.investigation.includes('current dashboard state remains live')],
+  ['context distinguishes live trend history review and explorer', files.investigation.includes("label: 'LIVE'") && files.investigation.includes("label: 'TREND SNAPSHOT'") && files.investigation.includes("label: 'HISTORY'") && files.investigation.includes("label: 'REVIEW'") && files.investigation.includes("label: 'JOB & PROGRAM HISTORY'") && files.investigation.includes('current dashboard state remains live')],
   ['SAP Issues can focus the corresponding APP', files.wrapper.includes('appFocusRequest') && files.wrapper.includes('onInspectApp={inspectApp}') && files.issues.includes("source: 'sap-issues'") && files.issues.includes('onInspectApp') && files.appServers.includes('focusRequest') && files.appServers.includes('data-app-key') && files.appServers.includes('is-cross-panel-focus')],
   ['Observation History can inspect a historical point', files.core.includes('onSelectJob={props.onSelectJob}') && files.observation.includes("source: 'observation-history'") && files.observation.includes('at: row.collected_at') && files.observation.includes('executionId: row.execution_id') && files.observation.includes('Current dashboard state remains live.')],
   ['Performance Review selection uses cross-panel inspector', files.wrapper.includes('<RundeckPerformanceReview') && files.wrapper.includes('onSelectJob={inspectJob}') && files.review.includes("source: 'performance-review'")],
@@ -112,7 +117,7 @@ const checks = [
   ['Server Trend ignores stale point responses', files.trend.includes('timelineRequestSequence') && files.trend.includes('timelineRequestSequence.current !== requestSequence')],
   ['Live Monitoring and Job and Program History modes are available', files.wrapper.includes("from './RundeckWorkloadExplorer.jsx'") && files.wrapper.includes("useState('live')") && files.wrapper.includes('Live Monitoring') && files.wrapper.includes('Job &amp; Program History') && files.wrapper.includes("monitoringMode === 'explorer'")],
   ['Job and Program History uses Basis friendly search wording', files.explorer.includes('/history/workload/search') && files.explorer.includes("['JOB', 'Jobs']") && files.explorer.includes("['PROGRAM', 'Programs']") && files.explorer.includes('Search Job or Program') && files.explorer.includes('Jobs and Programs')],
-  ['Job and Program History avoids slash-separated operator labels', !files.wrapper.includes('Job / Program') && !files.wrapper.includes('Job/Program') && !files.explorer.includes('Job / Program') && !files.explorer.includes('Job/Program') && files.explorer.includes('Job &amp; Program History') && files.incident.includes('Top Workload')],
+  ['Job and Program History avoids slash-separated operator labels', !files.wrapper.includes('Job / Program') && !files.wrapper.includes('Job/Program') && !files.explorer.includes('Job / Program') && !files.explorer.includes('Job/Program') && !files.investigation.includes('Job / Program') && files.explorer.includes('Job &amp; Program History') && files.incident.includes('Top Workload')],
   ['Workload history supports 24H 3D 7D and 30D', files.explorer.includes("['24h', '24H']") && files.explorer.includes("['3d', '3D']") && files.explorer.includes("['7d', '7D']") && files.explorer.includes("['30d', '30D']")],
   ['Workload history shows summary trend and performance periods', files.explorer.includes('/history/workload/summary') && files.explorer.includes('/history/workload/trend') && files.explorer.includes('Performance Periods') && files.explorer.includes('WorkloadTrendChart') && files.explorer.includes('Critical WP Samples')],
   ['Workload history can filter by APP and reopen live detail', files.explorer.includes('All APP') && files.explorer.includes('Open Workload') && files.explorer.includes('onOpenLiveJob') && files.explorer.includes("source: 'workload-explorer'") && files.wrapper.includes('openExplorerJobInLive')],
@@ -144,7 +149,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.24.3 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.24.4 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.24.3 contract checks passed.')
+console.log('\nRundeck v1.24.4 contract checks passed.')
