@@ -1,7 +1,8 @@
 """Read-only historical workload explorer queries for SPHERE.
 
-The explorer reuses retained Rundeck top-consumer observations. It provides
-historical ranking and aggregation only; it does not assign root cause.
+The explorer prefers the complete observed Job/Program projection introduced in
+v1.24.1. Legacy collections that have not been backfilled remain visible through a
+Top Consumer fallback. Historical observations are supporting evidence only.
 """
 from __future__ import annotations
 
@@ -50,6 +51,37 @@ def _engine():
     return engine
 
 
+def _observed_projection_ready(conn) -> bool:
+    return bool(conn.execute(text(
+        "SELECT to_regclass('public.rundeck_workload_observations') IS NOT NULL"
+    )).scalar())
+
+
+def _source_relation(conn) -> tuple[str, str]:
+    """Return a duplicate-safe source relation and its coverage label."""
+    if not _observed_projection_ready(conn):
+        return "rundeck_top_consumers", "TOP_CONSUMERS_ONLY"
+    return """(
+        SELECT collection_id, collected_at, host, consumer_type, consumer_key,
+               cpu_pct, ram_pct, details
+          FROM rundeck_workload_observations
+        UNION ALL
+        SELECT tc.collection_id, tc.collected_at, tc.host, tc.consumer_type, tc.consumer_key,
+               tc.cpu_pct, tc.ram_pct, tc.details
+          FROM rundeck_top_consumers tc
+         WHERE tc.consumer_type IN ('JOB', 'PROGRAM')
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM rundeck_workload_observations wo
+                WHERE wo.collection_id = tc.collection_id
+                  AND wo.host = tc.host
+                  AND wo.collected_at = tc.collected_at
+                  AND wo.consumer_type = tc.consumer_type
+                  AND wo.consumer_key = tc.consumer_key
+           )
+    )""", "ALL_OBSERVED_ACTIVE_WORKLOADS"
+
+
 def _anchor_time(conn) -> datetime:
     value = conn.execute(text(f"""
         SELECT MAX(COALESCE(c.finished_at, c.started_at))
@@ -72,9 +104,9 @@ def _number(value: Any, digits: int = 2) -> float | None:
 
 def workload_search(query: str, consumer_type: str = "ALL", limit: int = 30) -> dict:
     q = str(query or "").strip()
-    if len(q) < 2:
-        return {"query": q, "type": normalize_type(consumer_type), "items": []}
     type_key = normalize_type(consumer_type)
+    if len(q) < 2:
+        return {"query": q, "type": type_key, "coverage_scope": "UNKNOWN", "items": []}
     safe_limit = max(1, min(100, int(limit)))
     type_clause = "AND t.consumer_type = :consumer_type" if type_key != "ALL" else ""
     params: dict[str, Any] = {
@@ -88,6 +120,7 @@ def workload_search(query: str, consumer_type: str = "ALL", limit: int = 30) -> 
 
     engine = _engine()
     with engine.connect() as conn:
+        source, coverage_scope = _source_relation(conn)
         rows = conn.execute(text(f"""
             SELECT t.consumer_type,
                    t.consumer_key,
@@ -99,7 +132,7 @@ def workload_search(query: str, consumer_type: str = "ALL", limit: int = 30) -> 
                    MAX(t.cpu_pct) AS peak_cpu_pct,
                    MIN(t.collected_at) AS first_seen,
                    MAX(t.collected_at) AS last_seen
-              FROM rundeck_top_consumers t
+              FROM {source} t
               JOIN rundeck_collections c ON c.collection_id = t.collection_id
              WHERE {_complete_collection_clause('c')}
                AND t.consumer_type IN ('JOB', 'PROGRAM')
@@ -125,7 +158,12 @@ def workload_search(query: str, consumer_type: str = "ALL", limit: int = 30) -> 
         item["avg_cpu_pct"] = _number(item.get("avg_cpu_pct"), 1)
         item["peak_cpu_pct"] = _number(item.get("peak_cpu_pct"), 1)
         items.append(item)
-    return {"query": q, "type": type_key, "items": items}
+    return {
+        "query": q,
+        "type": type_key,
+        "coverage_scope": coverage_scope,
+        "items": items,
+    }
 
 
 def workload_summary(
@@ -146,6 +184,7 @@ def workload_summary(
 
     engine = _engine()
     with engine.connect() as conn:
+        source, coverage_scope = _source_relation(conn)
         end = _anchor_time(conn) + timedelta(microseconds=1)
         start = end - timedelta(hours=config["hours"])
         params: dict[str, Any] = {
@@ -171,7 +210,7 @@ def workload_summary(
                    MAX(COALESCE(h.wp_critical, 0)) AS max_critical_wp,
                    MIN(t.collected_at) AS first_seen,
                    MAX(t.collected_at) AS last_seen
-              FROM rundeck_top_consumers t
+              FROM {source} t
               JOIN rundeck_collections c ON c.collection_id = t.collection_id
               LEFT JOIN rundeck_host_metrics h
                 ON h.collection_id = t.collection_id AND h.host = t.host
@@ -197,10 +236,11 @@ def workload_summary(
         "host": host_value,
         "range": config["key"],
         "bucket": config["bucket"],
+        "coverage_scope": coverage_scope,
         "window_start": start,
         "window_end": end,
         **summary,
-        "note": "Historical observations are supporting evidence; they do not identify root cause by themselves.",
+        "note": "Observed workload history is supporting evidence; absence means not observed in retained collection snapshots, not that the SAP job does not exist.",
     }
 
 
@@ -222,6 +262,7 @@ def workload_trend(
 
     engine = _engine()
     with engine.connect() as conn:
+        source, coverage_scope = _source_relation(conn)
         end = _anchor_time(conn) + timedelta(microseconds=1)
         start = end - timedelta(hours=config["hours"])
         params: dict[str, Any] = {
@@ -247,7 +288,7 @@ def workload_trend(
                    MAX(NULLIF(t.details->>'process_count', '')::double precision) AS max_processes,
                    MAX(COALESCE(h.wp_critical, 0)) AS max_critical_wp,
                    COUNT(DISTINCT t.collection_id) FILTER (WHERE COALESCE(h.wp_critical, 0) > 0) AS critical_wp_checks
-              FROM rundeck_top_consumers t
+              FROM {source} t
               JOIN rundeck_collections c ON c.collection_id = t.collection_id
               LEFT JOIN rundeck_host_metrics h
                 ON h.collection_id = t.collection_id AND h.host = t.host
@@ -281,6 +322,7 @@ def workload_trend(
         "range": config["key"],
         "bucket": config["bucket"],
         "bucket_seconds": config["bucket_seconds"],
+        "coverage_scope": coverage_scope,
         "window_start": start,
         "window_end": end,
         "items": items,
