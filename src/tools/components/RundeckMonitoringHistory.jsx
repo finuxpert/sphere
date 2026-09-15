@@ -36,7 +36,7 @@ function scrollToSelectedWorkload() {
 }
 
 export default function RundeckMonitoringHistory(props) {
-  const { onTrendContext } = props
+  const { onTrendContext, onSelectJob, refreshToken, selectedJob } = props
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [monitoringMode, setMonitoringMode] = React.useState('live')
@@ -48,16 +48,16 @@ export default function RundeckMonitoringHistory(props) {
 
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
-    props.onSelectJob?.(job)
+    onSelectJob?.(job)
     scrollToSelectedWorkload()
-  }, [props.onSelectJob])
+  }, [onSelectJob])
 
   const openExplorerJobInLive = React.useCallback((job) => {
     if (!job?.key) return
     setMonitoringMode('live')
-    props.onSelectJob?.(job)
+    onSelectJob?.(job)
     scrollToSelectedWorkload()
-  }, [props.onSelectJob])
+  }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
     if (!context.host) return
@@ -66,8 +66,8 @@ export default function RundeckMonitoringHistory(props) {
   }, [])
 
   const operationalEvidenceContent = <RundeckOperationalEvidence
-    refreshToken={props.refreshToken}
-    selectedJob={props.selectedJob}
+    refreshToken={refreshToken}
+    selectedJob={selectedJob}
   />
 
   return <>
@@ -80,7 +80,7 @@ export default function RundeckMonitoringHistory(props) {
     </div>
 
     {monitoringMode === 'explorer'
-      ? <RundeckWorkloadExplorer refreshToken={props.refreshToken} onOpenLiveJob={openExplorerJobInLive} />
+      ? <RundeckWorkloadExplorer refreshToken={refreshToken} onOpenLiveJob={openExplorerJobInLive} />
       : <>
         <RundeckMonitoringHistoryCore
           {...props}
@@ -89,10 +89,10 @@ export default function RundeckMonitoringHistory(props) {
           operationalEvidenceContent={operationalEvidenceContent}
           appFocusRequest={appFocusRequest}
         />
-        <RundeckSystemHealth refreshToken={props.refreshToken} />
+        <RundeckSystemHealth refreshToken={refreshToken} />
         <section className="rundeckIssuesReviewBand" aria-label="SAP Issues and Performance Review">
-          <div className="rundeckIssuesReviewPane is-issues"><RundeckSapIssues refreshToken={props.refreshToken} onInspectApp={inspectApp} /></div>
-          <div className="rundeckIssuesReviewPane is-review"><RundeckPerformanceReview refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={inspectJob} /></div>
+          <div className="rundeckIssuesReviewPane is-issues"><RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} /></div>
+          <div className="rundeckIssuesReviewPane is-review"><RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} /></div>
         </section>
       </>}
   </>
