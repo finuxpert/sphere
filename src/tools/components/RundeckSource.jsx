@@ -6,7 +6,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
-import { hostResourceState, overallOperationalState, sapWorkloadState, statusExplanation } from './rundeckStatusSemantics.js'
+import { hostResourceState, overallOperationalState, statusExplanation } from './rundeckStatusSemantics.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
 
@@ -129,16 +129,6 @@ function reportDuration(seconds) {
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
   return rest ? `${hours}h ${rest}m` : `${hours}h`
-}
-
-const STATE_RANK = { UNKNOWN: -1, NORMAL: 0, ATTENTION: 1, WARNING: 2, CRITICAL: 3 }
-
-function aggregateOperationalState(values = []) {
-  if (!values.length) return 'UNKNOWN'
-  return values.reduce((selected, raw) => {
-    const value = String(raw || 'UNKNOWN').toUpperCase()
-    return (STATE_RANK[value] ?? -1) > (STATE_RANK[selected] ?? -1) ? value : selected
-  }, 'UNKNOWN')
 }
 
 function availabilityStatus(rows = [], name = '') {
@@ -335,9 +325,6 @@ export default function RundeckSource({ onCollection }) {
       else pdf.text(APP_TAGLINE, brandX, 17)
 
       const status = overallHealth || 'NORMAL'
-      const osState = aggregateOperationalState(operationalHosts.map((host) => hostResourceState(host)))
-      const sapState = aggregateOperationalState(operationalHosts.map((host) => sapWorkloadState(host)))
-      const availabilityState = String(availabilityResult?.summary?.service_state || availabilityResult?.summary?.sap_state || 'UNKNOWN').toUpperCase()
       const availabilityApps = availabilityResult?.sap_app || []
       const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
       const hanaRows = availabilityResult?.hana_system_db || []
@@ -357,7 +344,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.4)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}  ·  OS Resource ${osState}  ·  SAP Workload ${sapState}  ·  Availability ${availabilityState}`, margin, 29)
+      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
 
       const affected = shortHost(incidentSummary?.affected_server || '')
       const signal = incidentSummary?.primary_signal || {}
@@ -373,39 +360,20 @@ export default function RundeckSource({ onCollection }) {
       pdf.text(`Since ${formatTime(since)} WIB  ·  Duration ${reportDuration(incidentSummary?.duration_seconds)}`, margin, 41)
 
       const current = incidentSummary?.current_workload || {}
-      const currentProgram = distinctProgramText(current)
       pdf.setFillColor(235, 240, 242)
-      pdf.roundedRect(margin, 45, contentW, 21, 1, 1, 'F')
-      const summarySplit = margin + contentW * .62
-      pdf.setDrawColor(210, 217, 221)
-      pdf.line(summarySplit, 48, summarySplit, 63)
+      pdf.roundedRect(margin, 45, contentW, 17, 1, 1, 'F')
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.5)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('CURRENT WORKLOAD', margin + 4, 50)
-      pdf.setTextColor(22, 31, 38)
-      pdf.setFontSize(9.1)
-      pdf.text(clipped(current.consumer_key, 52), margin + 4, 55)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.9)
-      pdf.setTextColor(92, 105, 114)
-      if (currentProgram) pdf.text(`Program ${clipped(currentProgram, 48)}`, margin + 4, 59)
-      pdf.setFontSize(7.3)
-      pdf.text(`CPU ${metric(current.cpu_pct, '%')}  ·  PSS ${pssText(current)}  ·  Processes ${processText(current)}`, margin + 4, 63)
-
-      const availabilityX = summarySplit + 4
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.5)
-      pdf.setTextColor(71, 87, 97)
-      pdf.text('AVAILABILITY', availabilityX, 50)
+      pdf.text('AVAILABILITY', margin + 4, 50)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.9)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`SAP APP  ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, availabilityX, 55)
-      pdf.text(`HANA  P ${availabilityStatus(hanaRows, 'PRIMARY')}  ·  S ${availabilityStatus(hanaRows, 'SECONDARY')}  ·  DR ${availabilityStatus(hanaRows, 'DR')}`, availabilityX, 59)
-      pdf.text(`WEB  HTTP ${availabilityStatus(webRows, 'HTTP')}  ·  HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, availabilityX, 63)
+      pdf.text(`SAP APP  ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin + 4, 54)
+      pdf.text(`HANA  P ${availabilityStatus(hanaRows, 'PRIMARY')}  ·  S ${availabilityStatus(hanaRows, 'SECONDARY')}  ·  DR ${availabilityStatus(hanaRows, 'DR')}`, margin + 4, 58)
+      pdf.text(`WEB  HTTP ${availabilityStatus(webRows, 'HTTP')}  ·  HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 4, 61.5)
 
-      let y = 73
+      let y = 69
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.2)
       pdf.setTextColor(22, 31, 38)
@@ -470,7 +438,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8)
-      pdf.text('TOP ACTIVE WORKLOADS', sideX, workY - 3)
+      pdf.text('TOP WORKLOADS', sideX, workY - 3)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.3)
       let sideY = workY + 3
@@ -500,7 +468,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.line(margin, H - 12, W - margin, H - 12)
       pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`Source: Rundeck  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, H - 7)
+      pdf.text('SPHERE · Rundeck', margin, H - 7)
 
       const host = shortHost(incidentSummary?.affected_server || selectedJob?.host || 'SAP') || 'SAP'
       const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
