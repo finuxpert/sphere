@@ -146,6 +146,69 @@
   font-weight: 700;
 }
 
+.rundeckSm37Verification {
+  margin: 9px 0 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(126, 147, 158, .12);
+  border-left: 2px solid rgba(216, 179, 95, .58);
+  border-radius: 3px;
+  background: rgba(216, 179, 95, .025);
+}
+
+.rundeckSm37VerificationHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rundeckSm37VerificationHead strong {
+  color: var(--sphere-text, #e7edf0);
+  font-size: var(--sphere-font-body, 9.6px);
+  font-weight: 780;
+}
+
+.rundeckSm37VerificationHead span {
+  padding: 2px 5px;
+  border: 1px solid rgba(216, 179, 95, .28);
+  border-radius: 3px;
+  color: var(--sphere-warning, #d8b35f);
+  font-size: var(--sphere-font-micro, 8px);
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+
+.rundeckSm37VerificationGrid {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.35fr) minmax(190px, 1.5fr) minmax(70px, .55fr) minmax(150px, 1fr) minmax(70px, .55fr);
+  gap: 6px 14px;
+  margin-top: 7px;
+}
+
+.rundeckSm37VerificationGrid span {
+  min-width: 0;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: var(--sphere-font-body, 9.3px);
+  overflow-wrap: anywhere;
+}
+
+.rundeckSm37VerificationGrid b {
+  display: block;
+  margin-bottom: 1px;
+  color: var(--sphere-text-muted, #718089);
+  font-size: var(--sphere-font-micro, 8px);
+  font-weight: 760;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+
+.rundeckSm37Verification p {
+  margin: 6px 0 0;
+  color: var(--sphere-text-muted, #718089);
+  font-size: var(--sphere-font-micro, 8.6px);
+  line-height: 1.4;
+}
+
 .rundeckJobPerformanceTitle {
   display: flex;
   align-items: center;
@@ -393,6 +456,12 @@
   outline: none;
 }
 
+@container (max-width: 980px) {
+  .rundeckSm37VerificationGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @container (max-width: 760px) {
   .rundeckJobHistoryHead {
     flex-direction: column;
@@ -412,8 +481,18 @@
     flex-direction: column;
   }
 
+  .rundeckSm37VerificationGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .rundeckJobPerformanceChart {
     max-height: 290px;
+  }
+}
+
+@container (max-width: 480px) {
+  .rundeckSm37VerificationGrid {
+    grid-template-columns: 1fr;
   }
 }
 
