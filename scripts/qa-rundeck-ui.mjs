@@ -16,6 +16,8 @@ const files = {
   investigationCss: read('src/tools/components/RundeckInvestigationFlow.css'),
   appServers: read('src/tools/components/RundeckAppServers.jsx'),
   trend: read('src/tools/components/RundeckServerTrend.jsx'),
+  explorer: read('src/tools/components/RundeckWorkloadExplorer.jsx'),
+  explorerCss: read('src/tools/components/RundeckWorkloadExplorer.css'),
   observation: read('src/tools/components/RundeckObservationHistory.jsx'),
   observationCss: read('src/tools/components/RundeckObservationHistory.css'),
   evidence: read('src/tools/components/RundeckEvidenceTimeline.jsx'),
@@ -25,6 +27,8 @@ const files = {
   availability: read('src/tools/components/RundeckAvailability.jsx'),
   issues: read('src/tools/components/RundeckSapIssues.jsx'),
   review: read('src/tools/components/RundeckPerformanceReview.jsx'),
+  backendApi: read('backend/rundeck_api.py'),
+  backendExplorer: read('backend/rundeck_workload_explorer.py'),
   backendEvidence: read('backend/rundeck_evidence.py'),
   backendRunner: read('backend/rundeck_runner.py'),
 }
@@ -68,7 +72,7 @@ const hierarchy = {
 }
 
 const checks = [
-  ['version is v1.23.14', files.version.includes("APP_VERSION = '1.23.14'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.13'") && files.version.includes('trend-top-workload-auto-inspect-v1.23.14')],
+  ['version is v1.24.0', files.version.includes("APP_VERSION = '1.24.0'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.14'") && files.version.includes('historical-performance-explorer-v1.24.0')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
@@ -88,15 +92,25 @@ const checks = [
   ['Critical WP drilldown wording avoids root-cause claim', files.appServers.includes('Correlation only; not a direct root-cause mapping.')],
   ['Critical WP workload click opens Selected Workload', files.appServers.includes("source: 'critical-wp-inline-drilldown'") && files.appServers.includes("querySelector('.rundeckJobHistory')")],
   ['cross-panel context indicator is active', files.core.includes("from './RundeckInvestigationContext.jsx'") && files.core.includes('<RundeckInvestigationContext') && files.wrapper.includes("import './RundeckInvestigationFlow.css'")],
-  ['context distinguishes live trend history and review', files.investigation.includes("label: 'LIVE'") && files.investigation.includes("label: 'TREND'") && files.investigation.includes("label: 'HISTORY'") && files.investigation.includes("label: 'REVIEW'") && files.investigation.includes('Current dashboard state remains live.')],
+  ['context distinguishes live trend history review and explorer', files.investigation.includes("label: 'LIVE'") && files.investigation.includes("label: 'TREND SNAPSHOT'") && files.investigation.includes("label: 'HISTORY'") && files.investigation.includes("label: 'REVIEW'") && files.investigation.includes("label: 'WORKLOAD EXPLORER'") && files.investigation.includes('current dashboard state remains live')],
   ['SAP Issues can focus the corresponding APP', files.wrapper.includes('appFocusRequest') && files.wrapper.includes('onInspectApp={inspectApp}') && files.issues.includes("source: 'sap-issues'") && files.issues.includes('onInspectApp') && files.appServers.includes('focusRequest') && files.appServers.includes('data-app-key') && files.appServers.includes('is-cross-panel-focus')],
   ['Observation History can inspect a historical point', files.core.includes('onSelectJob={props.onSelectJob}') && files.observation.includes("source: 'observation-history'") && files.observation.includes('at: row.collected_at') && files.observation.includes('executionId: row.execution_id') && files.observation.includes('Current dashboard state remains live.')],
   ['Performance Review selection uses cross-panel inspector', files.wrapper.includes('<RundeckPerformanceReview') && files.wrapper.includes('onSelectJob={inspectJob}') && files.review.includes("source: 'performance-review'")],
-  ['Server Trend selection uses TREND investigation context', files.core.includes('<RundeckServerTrend') && files.core.includes('onSelectJob={props.onSelectJob}') && files.trend.includes("source: 'trend'")],
-  ['Server Trend click auto-opens rank 1 workload', files.trend.includes('top_consumers?.[0]') && files.trend.includes('topConsumerContext(point, result)') && files.trend.includes('if (context) onSelectJob?.(context)') && files.trend.includes('Top Workload · auto-opened')],
+  ['Server Trend click opens historical snapshot instead of auto-opening one workload', files.trend.includes('Historical Snapshot') && files.trend.includes('rundeckSnapshotConsumers') && files.trend.includes("source: 'trend-snapshot'") && !files.trend.includes('if (context) onSelectJob?.(context)')],
+  ['Server Trend snapshot matches full hostnames through short host identity', files.trend.includes('shortHost(row.host) === shortHost(selected.host)') && !files.trend.includes("if (!/^APP\\d+$/i.test(String(selected?.host || ''))) return null")],
+  ['Server Trend snapshot exposes up to retained top consumers', files.trend.includes('selectedRow?.top_consumers || []') && files.trend.includes('consumer.consumer_key') && files.trend.includes('processCount(consumer)')],
   ['Server Trend Peak uses exact peak collection and timestamp', files.trend.includes("mode === 'max' ? (item.peakAt || item.bucket) : item.bucket") && files.trend.includes("mode === 'max' ? (item.peakCollectionId || '') : ''") && files.trend.includes('collection_id=${encodeURIComponent(point.collectionId)}')],
   ['Server Trend Avg resolves nearest collection instead of peak collection', files.trend.includes("const selectedCollectionId = availability ? '' : (mode === 'max' ? (item.peakCollectionId || '') : '')") && files.trend.includes('window_minutes=5')],
   ['Server Trend ignores stale point responses', files.trend.includes('timelineRequestSequence') && files.trend.includes('timelineRequestSequence.current !== requestSequence')],
+  ['Live Monitoring and Workload Explorer modes are available', files.wrapper.includes("from './RundeckWorkloadExplorer.jsx'") && files.wrapper.includes("useState('live')") && files.wrapper.includes('Live Monitoring') && files.wrapper.includes('Workload Explorer') && files.wrapper.includes("monitoringMode === 'explorer'")],
+  ['Workload Explorer searches retained Job and Program history', files.explorer.includes('/history/workload/search') && files.explorer.includes("['JOB', 'Jobs']") && files.explorer.includes("['PROGRAM', 'Programs']") && files.explorer.includes('Search Job / Program')],
+  ['Workload Explorer supports 24H 3D 7D and 30D', files.explorer.includes("['24h', '24H']") && files.explorer.includes("['3d', '3D']") && files.explorer.includes("['7d', '7D']") && files.explorer.includes("['30d', '30D']")],
+  ['Workload Explorer shows historical summary trend and episodes', files.explorer.includes('/history/workload/summary') && files.explorer.includes('/history/workload/trend') && files.explorer.includes('Performance Episodes') && files.explorer.includes('WorkloadTrendChart') && files.explorer.includes('Critical WP checks')],
+  ['Workload Explorer can filter by APP and reopen live detail', files.explorer.includes('All APP') && files.explorer.includes('onOpenLiveJob') && files.explorer.includes("source: 'workload-explorer'") && files.wrapper.includes('openExplorerJobInLive')],
+  ['Historical explorer API exposes search summary and trend', files.backendApi.includes('@app.get("/history/workload/search")') && files.backendApi.includes('@app.get("/history/workload/summary")') && files.backendApi.includes('@app.get("/history/workload/trend")')],
+  ['Historical explorer adaptive bucket contract is 10m 30m 30m 1h', files.backendExplorer.includes('"24h": {"hours": 24, "bucket_seconds": 600, "bucket": "10m"}') && files.backendExplorer.includes('"3d": {"hours": 72, "bucket_seconds": 1800, "bucket": "30m"}') && files.backendExplorer.includes('"7d": {"hours": 168, "bucket_seconds": 1800, "bucket": "30m"}') && files.backendExplorer.includes('"30d": {"hours": 720, "bucket_seconds": 3600, "bucket": "1h"}')],
+  ['Historical explorer remains read-only and uses retained top-consumer data', files.backendExplorer.includes('rundeck_top_consumers') && files.backendExplorer.includes('rundeck_host_metrics') && !files.backendExplorer.includes('INSERT INTO') && !files.backendExplorer.includes('UPDATE rundeck_') && !files.backendExplorer.includes('DELETE FROM')],
+  ['Historical explorer CSS is responsive', files.explorer.includes("import './RundeckWorkloadExplorer.css'") && files.explorerCss.includes('@media (max-width: 1180px)') && files.explorerCss.includes('.rundeckExplorerGrid')],
   ['cross-panel workload selection scrolls to Selected Workload', files.wrapper.includes("querySelector('.rundeckJobHistory')") && files.wrapper.includes('scrollToSelectedWorkload')],
   ['legacy direct APP runtime is physically removed', !files.source.includes('wpDrilldown') && !files.source.includes('toggleCriticalWp') && !files.source.includes('workloadTypeLabel') && !files.source.includes('const wpText') && !files.source.includes('operationalHosts.length > 0 && <section className="rundeckServerSection"')],
   ['embedded observation history is physically removed', !files.jobHistory.includes('rundeckJobExecutionHistory') && !files.jobHistory.includes('Observation History')],
@@ -121,7 +135,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.23.14 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.24.0 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.23.14 contract checks passed.')
+console.log('\nRundeck v1.24.0 contract checks passed.')
