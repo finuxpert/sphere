@@ -26,9 +26,9 @@ const sourceMeta = (job = {}) => {
   if (source === 'workload-explorer') {
     return {
       tone: 'history',
-      label: 'WORKLOAD EXPLORER',
+      label: 'JOB & PROGRAM HISTORY',
       detail: [shortHost(job.host || ''), job.days ? `${job.days}D window` : ''].filter(Boolean).join(' · '),
-      note: 'Opened from historical Job / Program performance; current dashboard state remains live.',
+      note: 'Opened from historical Job and Program performance; current dashboard state remains live.',
     }
   }
   if (source === 'performance-review') {
@@ -42,9 +42,25 @@ const sourceMeta = (job = {}) => {
   if (source === 'critical-wp-inline-drilldown') {
     return {
       tone: 'live',
-      label: 'LIVE · APP DRILLDOWN',
+      label: 'LIVE · CRITICAL WP CONTEXT',
       detail: shortHost(job.host || ''),
-      note: 'Workload observed in the aligned collection while Critical WP was active.',
+      note: 'Selected from workloads observed on this APP while Critical WP was active; correlation only.',
+    }
+  }
+  if (source === 'current') {
+    return {
+      tone: 'live',
+      label: 'LIVE · ISSUE CONTEXT',
+      detail: shortHost(job.host || ''),
+      note: 'Automatically selected from the active performance issue context; not the global CPU ranking or a root-cause conclusion.',
+    }
+  }
+  if (source === 'current-workload') {
+    return {
+      tone: 'live',
+      label: 'LIVE · WORKLOAD',
+      detail: shortHost(job.host || ''),
+      note: 'Selected directly from Current Workloads.',
     }
   }
   return {
