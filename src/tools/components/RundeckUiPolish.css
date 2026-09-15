@@ -106,6 +106,13 @@
   padding: 3px 0;
 }
 
+.appShell:has(.rundeckPanel) .rundeckSm37Verification {
+  border-color: rgba(126, 147, 158, .07);
+  border-left-width: 1px;
+  border-left-color: rgba(216, 179, 95, .36);
+  background: transparent;
+}
+
 .appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle {
   margin-top: 10px;
   padding-top: 2px;
