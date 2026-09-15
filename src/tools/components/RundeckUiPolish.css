@@ -152,6 +152,11 @@
   font-size: 8.8px;
 }
 
+.appShell:has(.rundeckPanel) .rundeckSm37VerificationGrid span:nth-child(3),
+.appShell:has(.rundeckPanel) .rundeckSm37VerificationGrid span:nth-child(5) {
+  display: none;
+}
+
 .appShell:has(.rundeckPanel) .rundeckSm37VerificationGrid b {
   display: inline;
   margin: 0;
@@ -162,6 +167,12 @@
   margin: 3px 0 0;
   font-size: 8.1px;
   line-height: 1.3;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobTimeline > span:nth-of-type(2),
+.appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle > span,
+.appShell:has(.rundeckPanel) .rundeckHiddenMetric {
+  display: none;
 }
 
 .appShell:has(.rundeckPanel) .rundeckJobPerformanceTitle {
