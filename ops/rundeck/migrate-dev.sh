@@ -41,13 +41,37 @@ case "$DATABASE_URL" in
 esac
 
 # Local PostgreSQL uses peer authentication. The DB role is "sphere", so Alembic
-# must connect as the matching OS user instead of root. This also mirrors the
-# runtime identity used by the /dev API and poller systemd units.
-cd "$ROOT"
-if [[ "$(id -un)" == "sphere" ]]; then
-  exec env DB_MODE="$DB_MODE" DATABASE_URL="$DATABASE_URL" \
-    "$PYTHON" -m alembic -c backend/alembic.ini upgrade head
+# must connect as the matching OS user instead of root. A checkout under /root is
+# intentionally not traversable by sphere; in that case stage only backend code
+# under /var/tmp rather than weakening /root permissions or running DB migration
+# as root.
+MIGRATION_ROOT="$ROOT"
+STAGE=""
+cleanup() {
+  if [[ -n "$STAGE" && -d "$STAGE" ]]; then
+    rm -rf -- "$STAGE"
+  fi
+}
+trap cleanup EXIT
+
+if [[ "$(id -un)" != "sphere" ]] && ! runuser -u sphere -- test -r "$ROOT/backend/db/migrations/env.py" 2>/dev/null; then
+  STAGE="$(mktemp -d /var/tmp/sphere-rundeck-migrate.XXXXXX)"
+  chmod 0755 "$STAGE"
+  cp -a "$ROOT/backend" "$STAGE/backend"
+  chown -R sphere:sphere "$STAGE"
+  MIGRATION_ROOT="$STAGE"
+  echo "SPHERE /dev migration staged at $MIGRATION_ROOT because source is not readable by OS user sphere"
 fi
 
-exec runuser -u sphere -- env DB_MODE="$DB_MODE" DATABASE_URL="$DATABASE_URL" \
-  "$PYTHON" -m alembic -c backend/alembic.ini upgrade head
+if [[ "$(id -un)" == "sphere" ]]; then
+  cd "$MIGRATION_ROOT"
+  env DB_MODE="$DB_MODE" DATABASE_URL="$DATABASE_URL" \
+    "$PYTHON" -m alembic -c backend/alembic.ini upgrade head
+  exit $?
+fi
+
+runuser -u sphere -- bash -c '
+  set -e
+  cd "$1"
+  exec env DB_MODE="$2" DATABASE_URL="$3" "$4" -m alembic -c backend/alembic.ini upgrade head
+' _ "$MIGRATION_ROOT" "$DB_MODE" "$DATABASE_URL" "$PYTHON"
