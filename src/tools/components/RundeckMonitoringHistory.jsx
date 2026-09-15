@@ -74,9 +74,9 @@ export default function RundeckMonitoringHistory(props) {
     <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
       <div className="rundeckMonitoringModeTabs" role="tablist" aria-label="Monitoring mode">
         <button type="button" role="tab" aria-selected={monitoringMode === 'live'} className={monitoringMode === 'live' ? 'is-active' : ''} onClick={() => setMonitoringMode('live')}>Live Monitoring</button>
-        <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>Workload Explorer</button>
+        <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>Job &amp; Program History</button>
       </div>
-      <small>{monitoringMode === 'live' ? 'Current state + point-in-time investigation' : 'Historical Job / Program performance · 24H–30D'}</small>
+      <small>{monitoringMode === 'live' ? 'Live SAP performance monitoring' : 'Job and Program performance · 24H–30D'}</small>
     </div>
 
     {monitoringMode === 'explorer'
