@@ -57,7 +57,6 @@ const forbiddenStructuralImports = [
   'RundeckExplicitBandsV1234Responsive.css',
   'RundeckExplicitBandsV1234Override.css',
   'RundeckExplicitBandsV1234OverrideTrend.css',
-  'RundeckExplicitBandsV1234OverrideWorkload.css',
   'RundeckExplicitBandsV1235Closure.css',
 ]
 
@@ -73,10 +72,11 @@ const hierarchy = {
 }
 
 const checks = [
-  ['version is v1.24.1', files.version.includes("APP_VERSION = '1.24.1'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.0'") && files.version.includes('historical-performance-explorer-v1.24.1') && files.version.includes('operator-ui-polish-v1.24.1')],
+  ['version is v1.24.1', files.version.includes("APP_VERSION = '1.24.1'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.0'") && files.version.includes('historical-performance-explorer-v1.24.1') && files.version.includes('basis-infra-wording-polish-v1.24.1')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['v1.24.1 UI polish loads after canonical workspace', files.workspace.indexOf("RundeckUiPolish.css") > files.workspace.indexOf("RundeckWorkspace.css") && files.uiPolish.includes('non-structural operator UI finishing')],
   ['v1.24.1 polish covers operator tabs trend tables explorer and PDF preview', files.uiPolish.includes('.rundeckMonitoringModeTabs') && files.uiPolish.includes('.rundeckServerTrendPanelV1234') && files.uiPolish.includes('.rundeckObservationHistoryV1234') && files.uiPolish.includes('.rundeckReviewTableV1231') && files.uiPolish.includes('.rundeckExplorerResult.is-selected') && files.uiPolish.includes('.rundeckPdfPreview')],
+  ['v1.24.1 polish improves explorer labels and chart rhythm', files.uiPolish.includes('.rundeckExplorerResult strong') && files.uiPolish.includes('.rundeckExplorerStat span') && files.uiPolish.includes('height: 360px') && files.explorer.includes('nameGap: 8')],
   ['v1.24.1 polish leaves primary structural ratios to canonical workspace', !files.uiPolish.includes('minmax(0, 40fr)') && !files.uiPolish.includes('minmax(0, 45fr)') && !files.uiPolish.includes('minmax(0, 35fr)') && !files.uiPolish.includes('minmax(0, 65fr)')],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
@@ -106,11 +106,12 @@ const checks = [
   ['Server Trend Peak uses exact peak collection and timestamp', files.trend.includes("mode === 'max' ? (item.peakAt || item.bucket) : item.bucket") && files.trend.includes("mode === 'max' ? (item.peakCollectionId || '') : ''") && files.trend.includes('collection_id=${encodeURIComponent(point.collectionId)}')],
   ['Server Trend Avg resolves nearest collection instead of peak collection', files.trend.includes("const selectedCollectionId = availability ? '' : (mode === 'max' ? (item.peakCollectionId || '') : '')") && files.trend.includes('window_minutes=5')],
   ['Server Trend ignores stale point responses', files.trend.includes('timelineRequestSequence') && files.trend.includes('timelineRequestSequence.current !== requestSequence')],
-  ['Live Monitoring and Workload Explorer modes are available', files.wrapper.includes("from './RundeckWorkloadExplorer.jsx'") && files.wrapper.includes("useState('live')") && files.wrapper.includes('Live Monitoring') && files.wrapper.includes('Workload Explorer') && files.wrapper.includes("monitoringMode === 'explorer'")],
-  ['Workload Explorer searches retained Job and Program history', files.explorer.includes('/history/workload/search') && files.explorer.includes("['JOB', 'Jobs']") && files.explorer.includes("['PROGRAM', 'Programs']") && files.explorer.includes('Search Job / Program')],
-  ['Workload Explorer supports 24H 3D 7D and 30D', files.explorer.includes("['24h', '24H']") && files.explorer.includes("['3d', '3D']") && files.explorer.includes("['7d', '7D']") && files.explorer.includes("['30d', '30D']")],
-  ['Workload Explorer shows historical summary trend and episodes', files.explorer.includes('/history/workload/summary') && files.explorer.includes('/history/workload/trend') && files.explorer.includes('Performance Episodes') && files.explorer.includes('WorkloadTrendChart') && files.explorer.includes('Critical WP checks')],
-  ['Workload Explorer can filter by APP and reopen live detail', files.explorer.includes('All APP') && files.explorer.includes('onOpenLiveJob') && files.explorer.includes("source: 'workload-explorer'") && files.wrapper.includes('openExplorerJobInLive')],
+  ['Live Monitoring and Job and Program History modes are available', files.wrapper.includes("from './RundeckWorkloadExplorer.jsx'") && files.wrapper.includes("useState('live')") && files.wrapper.includes('Live Monitoring') && files.wrapper.includes('Job &amp; Program History') && files.wrapper.includes("monitoringMode === 'explorer'")],
+  ['Job and Program History uses Basis friendly search wording', files.explorer.includes('/history/workload/search') && files.explorer.includes("['JOB', 'Jobs']") && files.explorer.includes("['PROGRAM', 'Programs']") && files.explorer.includes('Search Job or Program') && files.explorer.includes('Jobs and Programs')],
+  ['Job and Program History avoids slash-separated operator labels', !files.wrapper.includes('Job / Program') && !files.wrapper.includes('Job/Program') && !files.explorer.includes('Job / Program') && !files.explorer.includes('Job/Program') && files.explorer.includes('Job &amp; Program History') && files.incident.includes('Top Workload')],
+  ['Workload history supports 24H 3D 7D and 30D', files.explorer.includes("['24h', '24H']") && files.explorer.includes("['3d', '3D']") && files.explorer.includes("['7d', '7D']") && files.explorer.includes("['30d', '30D']")],
+  ['Workload history shows summary trend and performance periods', files.explorer.includes('/history/workload/summary') && files.explorer.includes('/history/workload/trend') && files.explorer.includes('Performance Periods') && files.explorer.includes('WorkloadTrendChart') && files.explorer.includes('Critical WP Samples')],
+  ['Workload history can filter by APP and reopen live detail', files.explorer.includes('All APP') && files.explorer.includes('Open Workload') && files.explorer.includes('onOpenLiveJob') && files.explorer.includes("source: 'workload-explorer'") && files.wrapper.includes('openExplorerJobInLive')],
   ['Historical explorer API exposes search summary and trend', files.backendApi.includes('@app.get("/history/workload/search")') && files.backendApi.includes('@app.get("/history/workload/summary")') && files.backendApi.includes('@app.get("/history/workload/trend")')],
   ['Historical explorer adaptive bucket contract is 10m 30m 30m 1h', files.backendExplorer.includes('"24h": {"hours": 24, "bucket_seconds": 600, "bucket": "10m"}') && files.backendExplorer.includes('"3d": {"hours": 72, "bucket_seconds": 1800, "bucket": "30m"}') && files.backendExplorer.includes('"7d": {"hours": 168, "bucket_seconds": 1800, "bucket": "30m"}') && files.backendExplorer.includes('"30d": {"hours": 720, "bucket_seconds": 3600, "bucket": "1h"}')],
   ['Historical explorer remains read-only and uses retained performance data', files.backendExplorer.includes('rundeck_top_consumers') && files.backendExplorer.includes('rundeck_host_metrics') && files.backendExplorer.includes('rundeck_workload_observations') && !files.backendExplorer.includes('INSERT INTO') && !files.backendExplorer.includes('UPDATE rundeck_') && !files.backendExplorer.includes('DELETE FROM')],
