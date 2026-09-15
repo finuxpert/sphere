@@ -150,7 +150,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
   </section>
 }
 
-export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, onSelectJob, onTrendContext }) {
+export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, onSelectJob, onTrendContext }) {
   const [range, setRange] = React.useState(DEFAULT_RANGE)
   const [bucket, setBucket] = React.useState('auto')
   const [metric, setMetric] = React.useState('cpu')
