@@ -68,7 +68,7 @@ const hierarchy = {
 }
 
 const checks = [
-  ['version is v1.23.13', files.version.includes("APP_VERSION = '1.23.13'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.12'") && files.version.includes('cross-panel-investigation-flow-v1.23.13')],
+  ['version is v1.23.14', files.version.includes("APP_VERSION = '1.23.14'") && files.version.includes("APP_PREVIOUS_VERSION = '1.23.13'") && files.version.includes('trend-top-workload-auto-inspect-v1.23.14')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
@@ -92,7 +92,11 @@ const checks = [
   ['SAP Issues can focus the corresponding APP', files.wrapper.includes('appFocusRequest') && files.wrapper.includes('onInspectApp={inspectApp}') && files.issues.includes("source: 'sap-issues'") && files.issues.includes('onInspectApp') && files.appServers.includes('focusRequest') && files.appServers.includes('data-app-key') && files.appServers.includes('is-cross-panel-focus')],
   ['Observation History can inspect a historical point', files.core.includes('onSelectJob={props.onSelectJob}') && files.observation.includes("source: 'observation-history'") && files.observation.includes('at: row.collected_at') && files.observation.includes('executionId: row.execution_id') && files.observation.includes('Current dashboard state remains live.')],
   ['Performance Review selection uses cross-panel inspector', files.wrapper.includes('<RundeckPerformanceReview') && files.wrapper.includes('onSelectJob={inspectJob}') && files.review.includes("source: 'performance-review'")],
-  ['Server Trend workload selection uses cross-panel inspector', files.core.includes('<RundeckServerTrend') && files.core.includes('onSelectJob={props.onSelectJob}') && files.trend.includes("source: 'selected-time'")],
+  ['Server Trend selection uses TREND investigation context', files.core.includes('<RundeckServerTrend') && files.core.includes('onSelectJob={props.onSelectJob}') && files.trend.includes("source: 'trend'")],
+  ['Server Trend click auto-opens rank 1 workload', files.trend.includes('top_consumers?.[0]') && files.trend.includes('topConsumerContext(point, result)') && files.trend.includes('if (context) onSelectJob?.(context)') && files.trend.includes('Top Workload · auto-opened')],
+  ['Server Trend Peak uses exact peak collection and timestamp', files.trend.includes("mode === 'max' ? (item.peakAt || item.bucket) : item.bucket") && files.trend.includes("mode === 'max' ? (item.peakCollectionId || '') : ''") && files.trend.includes('collection_id=${encodeURIComponent(point.collectionId)}')],
+  ['Server Trend Avg resolves nearest collection instead of peak collection', files.trend.includes("const selectedCollectionId = availability ? '' : (mode === 'max' ? (item.peakCollectionId || '') : '')") && files.trend.includes('window_minutes=5')],
+  ['Server Trend ignores stale point responses', files.trend.includes('timelineRequestSequence') && files.trend.includes('timelineRequestSequence.current !== requestSequence')],
   ['cross-panel workload selection scrolls to Selected Workload', files.wrapper.includes("querySelector('.rundeckJobHistory')") && files.wrapper.includes('scrollToSelectedWorkload')],
   ['legacy direct APP runtime is physically removed', !files.source.includes('wpDrilldown') && !files.source.includes('toggleCriticalWp') && !files.source.includes('workloadTypeLabel') && !files.source.includes('const wpText') && !files.source.includes('operationalHosts.length > 0 && <section className="rundeckServerSection"')],
   ['embedded observation history is physically removed', !files.jobHistory.includes('rundeckJobExecutionHistory') && !files.jobHistory.includes('Observation History')],
@@ -117,7 +121,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.23.13 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.23.14 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.23.13 contract checks passed.')
+console.log('\nRundeck v1.23.14 contract checks passed.')
