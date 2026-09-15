@@ -1,0 +1,467 @@
+.rundeckMonitoringModeBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 10px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid var(--sphere-border, rgba(126,147,158,.12));
+}
+
+.rundeckMonitoringModeTabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--sphere-border, rgba(126,147,158,.16));
+  border-radius: 6px;
+  background: rgba(4, 12, 16, .28);
+}
+
+.rundeckMonitoringModeTabs button,
+.rundeckExplorerSegmented button,
+.rundeckExplorerSearch button,
+.rundeckExplorerOpenLive,
+.rundeckSnapshotConsumerButton {
+  appearance: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rundeckMonitoringModeTabs button {
+  padding: 5px 10px;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.rundeckMonitoringModeTabs button.is-active {
+  background: rgba(79,198,200,.13);
+  color: var(--sphere-accent, #4fc6c8);
+}
+
+.rundeckMonitoringModeBar > small {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8.5px;
+}
+
+.rundeckHistoricalSnapshot {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid var(--sphere-border, rgba(126,147,158,.12));
+}
+
+.rundeckHistoricalSnapshotHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.rundeckHistoricalSnapshotHead > div {
+  min-width: 0;
+}
+
+.rundeckHistoricalSnapshotHead span {
+  display: block;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.rundeckHistoricalSnapshotHead strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 9px;
+}
+
+.rundeckHistoricalSnapshotHead small {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.8px;
+  white-space: nowrap;
+}
+
+.rundeckSnapshotConsumers {
+  display: grid;
+  gap: 2px;
+}
+
+.rundeckSnapshotConsumer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px 58px 52px;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 3px 5px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: rgba(7, 17, 22, .34);
+}
+
+.rundeckSnapshotConsumer:hover {
+  border-color: rgba(79,198,200,.16);
+  background: rgba(79,198,200,.04);
+}
+
+.rundeckSnapshotConsumerButton {
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 8.3px;
+  font-weight: 700;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rundeckSnapshotConsumerButton:hover {
+  color: var(--sphere-accent, #4fc6c8);
+}
+
+.rundeckSnapshotMetric {
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 7.8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rundeckSnapshotMetric b {
+  color: var(--sphere-text, #e7edf0);
+  font-weight: 600;
+}
+
+.rundeckSnapshotEmpty {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+  padding: 4px 0;
+}
+
+.rundeckWorkloadExplorer {
+  width: 100%;
+  min-width: 0;
+}
+
+.rundeckExplorerHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.rundeckExplorerHeader h3 {
+  margin: 0;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 13px;
+}
+
+.rundeckExplorerHeader p {
+  margin: 3px 0 0;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8.5px;
+}
+
+.rundeckExplorerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rundeckExplorerSearch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: min(390px, 44vw);
+}
+
+.rundeckExplorerSearch input,
+.rundeckExplorerHostSelect {
+  height: 29px;
+  border: 1px solid var(--sphere-border, rgba(126,147,158,.18));
+  border-radius: 4px;
+  background: rgba(4, 12, 16, .5);
+  color: var(--sphere-text, #e7edf0);
+  font: inherit;
+  font-size: 8.5px;
+  outline: none;
+}
+
+.rundeckExplorerSearch input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 9px;
+}
+
+.rundeckExplorerSearch input:focus,
+.rundeckExplorerHostSelect:focus {
+  border-color: rgba(79,198,200,.55);
+}
+
+.rundeckExplorerSearch button,
+.rundeckExplorerOpenLive {
+  height: 29px;
+  padding: 0 10px;
+  border: 1px solid rgba(79,198,200,.32);
+  border-radius: 4px;
+  background: rgba(79,198,200,.08);
+  color: var(--sphere-accent, #4fc6c8);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.rundeckExplorerSegmented {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.rundeckExplorerSegmented button {
+  padding: 5px 7px;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.rundeckExplorerSegmented button.is-active {
+  background: rgba(79,198,200,.12);
+  color: var(--sphere-accent, #4fc6c8);
+}
+
+.rundeckExplorerGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 30fr) minmax(0, 70fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.rundeckExplorerResults,
+.rundeckExplorerDetail {
+  min-width: 0;
+}
+
+.rundeckExplorerResults {
+  border-right: 1px solid var(--sphere-border, rgba(126,147,158,.12));
+  padding-right: 12px;
+}
+
+.rundeckExplorerResultsHead,
+.rundeckExplorerDetailHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.rundeckExplorerResultsHead strong,
+.rundeckExplorerDetailHead h4 {
+  margin: 0;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 9.5px;
+}
+
+.rundeckExplorerResultsHead span,
+.rundeckExplorerDetailHead small {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.5px;
+}
+
+.rundeckExplorerResultList {
+  max-height: 530px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.rundeckExplorerResult {
+  width: 100%;
+  padding: 7px 6px;
+  border: 0;
+  border-bottom: 1px solid rgba(126,147,158,.08);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.rundeckExplorerResult:hover,
+.rundeckExplorerResult.is-selected {
+  background: rgba(79,198,200,.055);
+}
+
+.rundeckExplorerResult.is-selected {
+  box-shadow: inset 2px 0 0 var(--sphere-accent, #4fc6c8);
+}
+
+.rundeckExplorerResult strong,
+.rundeckExplorerResult small {
+  display: block;
+}
+
+.rundeckExplorerResult strong {
+  overflow: hidden;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 8.4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rundeckExplorerResult small {
+  margin-top: 2px;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.4px;
+}
+
+.rundeckExplorerDetailTools {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rundeckExplorerHostSelect {
+  min-width: 108px;
+  padding: 0 7px;
+}
+
+.rundeckExplorerSummary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+
+.rundeckExplorerStat {
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(126,147,158,.1);
+  border-radius: 4px;
+  background: rgba(7, 17, 22, .3);
+}
+
+.rundeckExplorerStat span,
+.rundeckExplorerStat strong {
+  display: block;
+}
+
+.rundeckExplorerStat span {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.rundeckExplorerStat strong {
+  margin-top: 3px;
+  color: var(--sphere-text, #e7edf0);
+  font-size: 10px;
+}
+
+.rundeckExplorerChart {
+  width: 100%;
+  height: 330px;
+  min-height: 330px;
+  margin: 2px 0 12px;
+}
+
+.rundeckExplorerSectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 8px 0 5px;
+}
+
+.rundeckExplorerSectionTitle strong {
+  color: var(--sphere-text, #e7edf0);
+  font-size: 9px;
+}
+
+.rundeckExplorerSectionTitle small {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 7.5px;
+}
+
+.rundeckExplorerEpisodes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 7.8px;
+}
+
+.rundeckExplorerEpisodes th,
+.rundeckExplorerEpisodes td {
+  padding: 5px 6px;
+  border-bottom: 1px solid rgba(126,147,158,.08);
+  text-align: left;
+}
+
+.rundeckExplorerEpisodes th {
+  color: var(--sphere-text-muted, #718089);
+  background: rgba(4, 12, 16, .45);
+  font-size: 7px;
+  text-transform: uppercase;
+}
+
+.rundeckExplorerEpisodes td {
+  color: var(--sphere-text-secondary, #a9b5bb);
+}
+
+.rundeckExplorerState {
+  padding: 18px 8px;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8.5px;
+}
+
+.rundeckExplorerState.is-error {
+  color: var(--sphere-danger, #db7d86);
+}
+
+@media (max-width: 1180px) {
+  .rundeckExplorerGrid {
+    grid-template-columns: 1fr;
+  }
+  .rundeckExplorerResults {
+    border-right: 0;
+    border-bottom: 1px solid var(--sphere-border, rgba(126,147,158,.12));
+    padding-right: 0;
+    padding-bottom: 10px;
+  }
+  .rundeckExplorerResultList {
+    max-height: 240px;
+  }
+  .rundeckExplorerSummary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .rundeckMonitoringModeBar,
+  .rundeckExplorerHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .rundeckExplorerSearch {
+    min-width: 0;
+    width: 100%;
+  }
+  .rundeckExplorerSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rundeckSnapshotConsumer {
+    grid-template-columns: minmax(0, 1fr) 54px 48px;
+  }
+  .rundeckSnapshotConsumer .rundeckSnapshotMetric:nth-last-child(1) {
+    display: none;
+  }
+}
