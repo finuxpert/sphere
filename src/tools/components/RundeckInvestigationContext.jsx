@@ -74,9 +74,8 @@ const sourceMeta = (job = {}) => {
 export default function RundeckInvestigationContext({ job = null }) {
   if (!job?.key) return null
   const meta = sourceMeta(job)
-  return <div className={`rundeckInvestigationContext is-${meta.tone}`} aria-label="Investigation context">
+  return <div className={`rundeckInvestigationContext is-${meta.tone}`} aria-label="Investigation context" title={meta.note || undefined}>
     <span className="rundeckInvestigationContextLabel"><SphereIcon name="target" /> {meta.label}</span>
     {meta.detail && <strong>{meta.detail}</strong>}
-    <small>{meta.note}</small>
   </div>
 }
