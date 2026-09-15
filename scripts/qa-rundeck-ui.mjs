@@ -56,7 +56,6 @@ const forbiddenStructuralImports = [
   'RundeckExplicitBandsV1234.css',
   'RundeckExplicitBandsV1234Responsive.css',
   'RundeckExplicitBandsV1234Override.css',
-  'RundeckExplicitBandsV1234OverrideTrend.css',
   'RundeckExplicitBandsV1235Closure.css',
 ]
 
@@ -72,13 +71,17 @@ const hierarchy = {
 }
 
 const checks = [
-  ['version is v1.24.2', files.version.includes("APP_VERSION = '1.24.2'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.1'") && files.version.includes('historical-performance-explorer-v1.24.2') && files.version.includes('sm37-verification-context-v1.24.2')],
+  ['version is v1.24.3', files.version.includes("APP_VERSION = '1.24.3'") && files.version.includes("APP_PREVIOUS_VERSION = '1.24.2'") && files.version.includes('historical-performance-explorer-v1.24.3') && files.version.includes('final-live-monitoring-cleanup-v1.24.3')],
   ['canonical workspace stylesheet is active', files.workspace.includes('RundeckWorkspace.css') && !files.workspace.includes('RundeckWorkspaceV1236.css')],
   ['v1.24.1 UI polish loads after canonical workspace', files.workspace.indexOf("RundeckUiPolish.css") > files.workspace.indexOf("RundeckWorkspace.css") && files.uiPolish.includes('non-structural operator UI finishing')],
   ['v1.24.1 polish covers operator tabs trend tables explorer and PDF preview', files.uiPolish.includes('.rundeckMonitoringModeTabs') && files.uiPolish.includes('.rundeckServerTrendPanelV1234') && files.uiPolish.includes('.rundeckObservationHistoryV1234') && files.uiPolish.includes('.rundeckReviewTableV1231') && files.uiPolish.includes('.rundeckExplorerResult.is-selected') && files.uiPolish.includes('.rundeckPdfPreview')],
   ['v1.24.1 polish improves explorer labels and chart rhythm', files.uiPolish.includes('.rundeckExplorerResult strong') && files.uiPolish.includes('.rundeckExplorerStat span') && files.uiPolish.includes('height: 360px') && files.explorer.includes('nameGap: 8')],
   ['v1.24.1 polish leaves primary structural ratios to canonical workspace', !files.uiPolish.includes('minmax(0, 40fr)') && !files.uiPolish.includes('minmax(0, 45fr)') && !files.uiPolish.includes('minmax(0, 35fr)') && !files.uiPolish.includes('minmax(0, 65fr)')],
   ['v1.24.2 selected workload exposes SM37 verification context', files.jobHistory.includes('SM37 Verification') && files.jobHistory.includes('NOT VERIFIED') && files.jobHistory.includes('latestDetails.job_name') && files.jobHistory.includes('latestDetails.program') && files.jobHistory.includes('Step Program') && files.jobHistory.includes('execution time') && !files.jobHistory.includes('>MATCHED<')],
+  ['v1.24.3 primary issue data remains headless in live UI', files.incident.includes('if (!showStatus) return null') && files.incident.includes('onSummary?.(result)') && files.incident.includes('onDefaultJob?.(jobContext')],
+  ['v1.24.3 APP drilldown owns active issue timing context', files.appServers.includes('/analysis/performance') && files.appServers.includes('Critical WP active since') && files.appServers.includes('Duration {durationText') && files.appServers.includes('incident.affected_server')],
+  ['v1.24.3 availability stale state is explicit', files.availability.includes("const displayState = stale ? 'STALE' : serviceState") && files.availability.includes('Last reliable state:') && files.availability.includes('Data age')],
+  ['v1.24.3 SM37 verification panel is visually subdued', files.uiPolish.includes('.rundeckSm37Verification') && files.uiPolish.includes('background: transparent') && files.uiPolish.includes('border-left-width: 1px')],
   ['versioned runtime files are retired', retiredVersionedRuntimeFiles.every((path) => !fs.existsSync(path))],
   ['legacy structural imports remain retired', forbiddenStructuralImports.every((name) => !files.workspace.includes(name))],
   ['runtime CSS dedup guard is retired', !fs.existsSync(runtimeGuardPath) && !files.wrapper.includes('RundeckRuntimeDedupV1237.css')],
@@ -128,9 +131,9 @@ const checks = [
   ['canonical CSS has no float rail ownership', !files.css.includes('float: left') && !files.css.includes('float: right') && !files.css.includes('display: contents')],
   ['canonical CSS has no negative layout lift', !/margin-top:\s*-/.test(files.css)],
   ['server trend remains closed formatting context', files.trend.includes('rundeckServerTrendPanelV1234') && files.css.includes('display: flow-root')],
-  ['availability remains trust-aware', files.availability.includes('rundeckAvailabilityDataTrust') && files.availability.includes('Collection gap')],
+  ['availability remains trust-aware', files.availability.includes('rundeckAvailabilityDataTrust') && files.availability.includes('Collection gap') && files.availability.includes('Last reliable state:')],
   ['SAP Issues remains operator-readable', files.issues.includes('<th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th>')],
-  ['Performance Review remains lean', files.review.includes('Performance Review') && files.review.includes('<th>Workload</th><th>Why</th><th>Avg CPU</th><th>Peak</th><th>PSS</th>')],
+  ['Performance Review remains lean', files.review.includes('Performance Review') && files.review.includes('<th>Workload</th><th>Signal</th><th>Avg CPU</th><th>Peak</th><th>PSS</th>')],
   ['critical workload without service impact remains ATTENTION', hostResourceState(criticalWorkload) === 'NORMAL' && sapWorkloadState(criticalWorkload) === 'CRITICAL' && systemHealthState([criticalWorkload], { availabilityState: 'NORMAL' }) === 'ATTENTION'],
   ['critical OS remains CRITICAL', systemHealthState([criticalResource], { availabilityState: 'NORMAL' }) === 'CRITICAL'],
   ['evidence compatibility remains exported', files.backendEvidence.includes('def availability_transition_events')],
@@ -141,7 +144,7 @@ const checks = [
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
 if (failed.length) {
-  console.error(`\n${failed.length} Rundeck v1.24.2 contract check(s) failed.`)
+  console.error(`\n${failed.length} Rundeck v1.24.3 contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nRundeck v1.24.2 contract checks passed.')
+console.log('\nRundeck v1.24.3 contract checks passed.')
