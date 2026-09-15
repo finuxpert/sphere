@@ -45,7 +45,7 @@ function pct(value) {
 }
 
 function gb(value) {
-  return value === null || value === undefined ? '—' : `${numberText(value, 2)} GB`
+  return value === null || value === undefined ? '—'' : `${numberText(value, 2)} GB`
 }
 
 function durationText(start, end) {
@@ -104,10 +104,10 @@ function WorkloadTrendChart({ trend }) {
     const colors = palette()
     const rows = trend.items
     const grids = [
-      { left: 62, right: 20, top: 26, height: 74 },
-      { left: 62, right: 20, top: 120, height: 54 },
-      { left: 62, right: 20, top: 194, height: 46 },
-      { left: 62, right: 20, top: 260, height: 34 },
+      { left: 68, right: 20, top: 28, height: 74 },
+      { left: 68, right: 20, top: 124, height: 54 },
+      { left: 68, right: 20, top: 200, height: 46 },
+      { left: 68, right: 20, top: 268, height: 36 },
     ]
     const xAxis = grids.map((_, index) => ({
       type: 'time',
@@ -121,16 +121,17 @@ function WorkloadTrendChart({ trend }) {
       axisPointer: { show: true, snap: true, lineStyle: { color: colors.muted, type: 'dashed' } },
     }))
     const yAxis = [
-      { name: 'CPU %', max: undefined },
-      { name: 'PSS GB', max: undefined },
-      { name: 'Processes', max: undefined },
-      { name: 'Critical WP', max: undefined },
+      { name: 'CPU %' },
+      { name: 'PSS GB' },
+      { name: 'Processes' },
+      { name: 'Critical WP' },
     ].map((item, index) => ({
       type: 'value',
       gridIndex: index,
       min: 0,
       name: item.name,
-      nameTextStyle: { color: colors.muted, fontSize: 8, align: 'left' },
+      nameGap: 8,
+      nameTextStyle: { color: colors.secondary, fontSize: 8.5, align: 'left', fontWeight: 600 },
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: { color: colors.muted, fontSize: 8 },
@@ -185,7 +186,7 @@ function WorkloadTrendChart({ trend }) {
       chart.dispose()
     }
   }, [trend])
-  return <div ref={ref} className="rundeckExplorerChart" role="img" aria-label="Historical workload performance trend" />
+  return <div ref={ref} className="rundeckExplorerChart" role="img" aria-label="Job and Program performance history" />
 }
 
 export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJob }) {
@@ -273,15 +274,15 @@ export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJ
     })
   }
 
-  return <section className="rundeckWorkloadExplorer" aria-label="Historical Performance Explorer">
+  return <section className="rundeckWorkloadExplorer" aria-label="Job and Program History">
     <header className="rundeckExplorerHeader">
       <div>
-        <h3><SphereIcon name="trend" /> Historical Performance Explorer</h3>
-        <p>Search retained Job or Program observations, compare 24H–30D performance, and inspect recurring episodes.</p>
+        <h3><SphereIcon name="trend" /> Job &amp; Program History</h3>
+        <p>Review historical SAP job and program performance from 24H to 30D.</p>
       </div>
       <div className="rundeckExplorerControls">
         <div className="rundeckExplorerSearch">
-          <input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') setSearchToken((value) => value + 1) }} placeholder="Search Job / Program, e.g. ZSD_H_INBOUND" aria-label="Search workload" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') setSearchToken((value) => value + 1) }} placeholder="Search Job or Program, e.g. ZSD_H_INBOUND" aria-label="Search Job or Program" />
           <button type="button" onClick={() => setSearchToken((value) => value + 1)}>Search</button>
         </div>
         <Segmented options={TYPES} value={type} onChange={(value) => { setType(value); setSelected(null); setHost('') }} label="Workload type" />
@@ -290,14 +291,14 @@ export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJ
 
     <div className="rundeckExplorerGrid">
       <aside className="rundeckExplorerResults">
-        <div className="rundeckExplorerResultsHead"><strong>Workloads</strong><span>{searchLoading ? 'Searching…' : `${results.length} result${results.length === 1 ? '' : 's'}`}</span></div>
+        <div className="rundeckExplorerResultsHead"><strong>Jobs and Programs</strong><span>{searchLoading ? 'Searching…' : `${results.length} result${results.length === 1 ? '' : 's'}`}</span></div>
         {searchError && <div className="rundeckExplorerState is-error">{searchError}</div>}
-        {!searchError && query.trim().length < 2 && <div className="rundeckExplorerState">Type at least 2 characters to search retained Job/Program history.</div>}
-        {!searchError && query.trim().length >= 2 && !searchLoading && !results.length && <div className="rundeckExplorerState">No retained workload matches this search.</div>}
+        {!searchError && query.trim().length < 2 && <div className="rundeckExplorerState">Type at least 2 characters to search Job and Program history.</div>}
+        {!searchError && query.trim().length >= 2 && !searchLoading && !results.length && <div className="rundeckExplorerState">No observed Job or Program matches this search.</div>}
         <div className="rundeckExplorerResultList">
           {results.map((row) => {
             const active = selected?.consumer_key === row.consumer_key && selected?.consumer_type === row.consumer_type
-            return <button key={`${row.consumer_type}-${row.consumer_key}`} type="button" className={`rundeckExplorerResult${active ? ' is-selected' : ''}`} onClick={() => selectResult(row)}>
+            return <button key={`${row.consumer_type}-${row.consumer_key}`} type="button" className={`rundeckExplorerResult${active ? ' is-selected' : ''}`} onClick={() => selectResult(row)} title={row.consumer_key}>
               <strong>{row.consumer_key}</strong>
               <small>{workloadTypeLabel(row.consumer_type)} · {row.app_count || 0} APP · Peak {pct(row.peak_cpu_pct)} · Last {row.last_seen ? `${formatWib(row.last_seen, true)} WIB` : '—'}</small>
             </button>
@@ -306,38 +307,38 @@ export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJ
       </aside>
 
       <section className="rundeckExplorerDetail">
-        {!selected && <div className="rundeckExplorerState">Select a Job or Program to open historical performance.</div>}
+        {!selected && <div className="rundeckExplorerState">Select a Job or Program to view performance history.</div>}
         {selected && <>
           <div className="rundeckExplorerDetailHead">
             <div>
               <h4>{selected.consumer_key}</h4>
-              <small>{workloadTypeLabel(selected.consumer_type)} · historical retained observations</small>
+              <small>{workloadTypeLabel(selected.consumer_type)} · Historical observations</small>
             </div>
             <div className="rundeckExplorerDetailTools">
-              <Segmented options={PERIODS} value={range} onChange={setRange} label="Historical period" />
+              <Segmented options={PERIODS} value={range} onChange={setRange} label="History period" />
               <select className="rundeckExplorerHostSelect" value={host} onChange={(event) => setHost(event.target.value)} aria-label="Application server filter">
                 <option value="">All APP</option>
                 {hosts.map((item) => <option key={item} value={item}>{shortHost(item)}</option>)}
               </select>
-              <button type="button" className="rundeckExplorerOpenLive" onClick={openLive}>Open detail</button>
+              <button type="button" className="rundeckExplorerOpenLive" onClick={openLive}>Open Workload</button>
             </div>
           </div>
 
-          {detailLoading && <div className="rundeckExplorerState">Loading historical performance…</div>}
+          {detailLoading && <div className="rundeckExplorerState">Loading performance history…</div>}
           {detailError && <div className="rundeckExplorerState is-error">{detailError}</div>}
           {!detailLoading && !detailError && summary && <>
             <div className="rundeckExplorerSummary">
-              <div className="rundeckExplorerStat"><span>Observed checks</span><strong>{numberText(summary.checks || 0, 0)}</strong></div>
+              <div className="rundeckExplorerStat"><span>Samples</span><strong>{numberText(summary.checks || 0, 0)}</strong></div>
               <div className="rundeckExplorerStat"><span>Avg CPU</span><strong>{pct(summary.avg_cpu_pct)}</strong></div>
               <div className="rundeckExplorerStat"><span>Peak CPU</span><strong>{pct(summary.peak_cpu_pct)}</strong></div>
               <div className="rundeckExplorerStat"><span>Avg PSS</span><strong>{gb(summary.avg_pss_gb)}</strong></div>
               <div className="rundeckExplorerStat"><span>Max Processes</span><strong>{numberText(summary.max_processes || 0, 0)}</strong></div>
-              <div className="rundeckExplorerStat"><span>Critical WP checks</span><strong>{numberText(summary.critical_wp_checks || 0, 0)}</strong></div>
+              <div className="rundeckExplorerStat"><span>Critical WP Samples</span><strong>{numberText(summary.critical_wp_checks || 0, 0)}</strong></div>
             </div>
             {trend?.items?.length ? <WorkloadTrendChart trend={trend} /> : <div className="rundeckExplorerState">No observations in this selected period.</div>}
-            <div className="rundeckExplorerSectionTitle"><strong>Performance Episodes</strong><small>{trend?.bucket ? `Aggregated ${trend.bucket} · supporting evidence` : 'Supporting evidence'}</small></div>
+            <div className="rundeckExplorerSectionTitle"><strong>Performance Periods</strong><small>{trend?.bucket ? `${trend.bucket} interval · performance history` : 'Performance history'}</small></div>
             <table className="rundeckExplorerEpisodes">
-              <thead><tr><th>Episode</th><th>Duration</th><th>Avg CPU</th><th>Peak CPU</th><th>Peak PSS</th><th>Max Proc</th><th>Critical WP</th></tr></thead>
+              <thead><tr><th>Time Range</th><th>Duration</th><th>Avg CPU</th><th>Peak CPU</th><th>Peak PSS</th><th>Max Processes</th><th>Critical WP</th></tr></thead>
               <tbody>
                 {episodes.slice(0, 12).map((episode, index) => <tr key={`${episode.start}-${index}`}>
                   <td>{formatWib(episode.start, true)} → {formatWib(episode.end, true)}</td>
@@ -348,7 +349,7 @@ export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJ
                   <td>{numberText(episode.maxProcesses || 0, 0)}</td>
                   <td>{numberText(episode.maxCriticalWp || 0, 0)}</td>
                 </tr>)}
-                {!episodes.length && <tr><td colSpan="7">No historical episodes in this period.</td></tr>}
+                {!episodes.length && <tr><td colSpan="7">No performance periods in this selected range.</td></tr>}
               </tbody>
             </table>
           </>}
