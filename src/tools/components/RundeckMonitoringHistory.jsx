@@ -4,6 +4,7 @@ import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
+import RundeckWorkloadExplorer from './RundeckWorkloadExplorer.jsx'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
 
@@ -38,6 +39,7 @@ export default function RundeckMonitoringHistory(props) {
   const { onTrendContext } = props
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
+  const [monitoringMode, setMonitoringMode] = React.useState('live')
 
   const forwardTrendContext = React.useCallback((context = {}) => {
     const selectedMetric = String(context.metric || '')
@@ -46,6 +48,13 @@ export default function RundeckMonitoringHistory(props) {
 
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
+    props.onSelectJob?.(job)
+    scrollToSelectedWorkload()
+  }, [props.onSelectJob])
+
+  const openExplorerJobInLive = React.useCallback((job) => {
+    if (!job?.key) return
+    setMonitoringMode('live')
     props.onSelectJob?.(job)
     scrollToSelectedWorkload()
   }, [props.onSelectJob])
@@ -62,17 +71,29 @@ export default function RundeckMonitoringHistory(props) {
   />
 
   return <>
-    <RundeckMonitoringHistoryCore
-      {...props}
-      onSelectJob={inspectJob}
-      onTrendContext={forwardTrendContext}
-      operationalEvidenceContent={operationalEvidenceContent}
-      appFocusRequest={appFocusRequest}
-    />
-    <RundeckSystemHealth refreshToken={props.refreshToken} />
-    <section className="rundeckIssuesReviewBand" aria-label="SAP Issues and Performance Review">
-      <div className="rundeckIssuesReviewPane is-issues"><RundeckSapIssues refreshToken={props.refreshToken} onInspectApp={inspectApp} /></div>
-      <div className="rundeckIssuesReviewPane is-review"><RundeckPerformanceReview refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={inspectJob} /></div>
-    </section>
+    <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
+      <div className="rundeckMonitoringModeTabs" role="tablist" aria-label="Monitoring mode">
+        <button type="button" role="tab" aria-selected={monitoringMode === 'live'} className={monitoringMode === 'live' ? 'is-active' : ''} onClick={() => setMonitoringMode('live')}>Live Monitoring</button>
+        <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>Workload Explorer</button>
+      </div>
+      <small>{monitoringMode === 'live' ? 'Current state + point-in-time investigation' : 'Historical Job / Program performance · 24H–30D'}</small>
+    </div>
+
+    {monitoringMode === 'explorer'
+      ? <RundeckWorkloadExplorer refreshToken={props.refreshToken} onOpenLiveJob={openExplorerJobInLive} />
+      : <>
+        <RundeckMonitoringHistoryCore
+          {...props}
+          onSelectJob={inspectJob}
+          onTrendContext={forwardTrendContext}
+          operationalEvidenceContent={operationalEvidenceContent}
+          appFocusRequest={appFocusRequest}
+        />
+        <RundeckSystemHealth refreshToken={props.refreshToken} />
+        <section className="rundeckIssuesReviewBand" aria-label="SAP Issues and Performance Review">
+          <div className="rundeckIssuesReviewPane is-issues"><RundeckSapIssues refreshToken={props.refreshToken} onInspectApp={inspectApp} /></div>
+          <div className="rundeckIssuesReviewPane is-review"><RundeckPerformanceReview refreshToken={props.refreshToken} selectedJob={props.selectedJob} onSelectJob={inspectJob} /></div>
+        </section>
+      </>}
   </>
 }
