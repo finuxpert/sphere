@@ -15,12 +15,20 @@ const sourceMeta = (job = {}) => {
       note: 'Historical selection only. Current dashboard state remains live.',
     }
   }
-  if (source === 'selected-time' || source === 'trend') {
+  if (source === 'selected-time' || source === 'trend' || source === 'trend-snapshot') {
     return {
       tone: 'trend',
-      label: 'TREND',
+      label: 'TREND SNAPSHOT',
       detail: [shortHost(job.host || ''), at].filter(Boolean).join(' · '),
-      note: 'Selected from Server Trend; this does not replace the current system state.',
+      note: 'Selected from a retained Server Trend snapshot; current system state remains live.',
+    }
+  }
+  if (source === 'workload-explorer') {
+    return {
+      tone: 'history',
+      label: 'WORKLOAD EXPLORER',
+      detail: [shortHost(job.host || ''), job.days ? `${job.days}D window` : ''].filter(Boolean).join(' · '),
+      note: 'Opened from historical Job / Program performance; current dashboard state remains live.',
     }
   }
   if (source === 'performance-review') {
