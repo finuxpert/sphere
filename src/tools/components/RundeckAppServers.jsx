@@ -16,6 +16,31 @@ const processText = (row = {}) => {
   return Number.isFinite(value) ? value.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'
 }
 
+const formatTime = (value) => {
+  if (!value) return '—'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return String(value)
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(parsed)
+}
+
+const durationText = (seconds) => {
+  const value = Number(seconds)
+  if (!Number.isFinite(value) || value < 0) return '—'
+  if (value < 60) return '<1m'
+  const minutes = Math.floor(value / 60)
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours}h ${rest}m` : `${hours}h`
+}
+
 function StatusPill({ value = 'UNKNOWN' }) {
   return <span className={`rundeckStatus rundeckStatusMotion is-${String(value).toLowerCase()}`}>{value}</span>
 }
@@ -35,6 +60,7 @@ function scrollToSelectedWorkload() {
 export default function RundeckAppServers({ refreshToken = '', latestCollectionId = '', onSelectJob, focusRequest = null }) {
   const [state, setState] = React.useState({ items: [], error: '' })
   const [drilldown, setDrilldown] = React.useState(null)
+  const [incident, setIncident] = React.useState(null)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -50,6 +76,15 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
       .catch((failure) => { if (failure.name !== 'AbortError') setState({ items: [], error: failure.message || 'APP server data unavailable.' }) })
     return () => controller.abort()
   }, [latestCollectionId, refreshToken])
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+    fetch(`${API}/analysis/performance`, { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => response.ok ? response.json() : null)
+      .then((result) => setIncident(result?.active ? result : null))
+      .catch((failure) => { if (failure.name !== 'AbortError') setIncident(null) })
+    return () => controller.abort()
+  }, [refreshToken])
 
   React.useEffect(() => {
     setDrilldown(null)
@@ -119,6 +154,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
         const expanded = drilldown?.host === host.host
         const appKey = shortHost(host.host)
         const focused = Boolean(focusedApp && appKey === focusedApp)
+        const incidentContext = incident?.active && shortHost(incident.affected_server || '') === appKey ? incident : null
         return <React.Fragment key={host.host}>
           <tr
             data-app-key={appKey}
@@ -140,7 +176,11 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
           {expanded && <tr className="rundeckWpInlineRow"><td colSpan="7">
             <section className="rundeckWpInlinePanel" aria-live="polite">
               <header className="rundeckWpInlineHead">
-                <div><h4><SphereIcon name="alert" /> {shortHost(drilldown.host)} · Workloads observed while Critical WP active</h4><small>Same collection/run supporting context. Correlation only; not a direct root-cause mapping.</small></div>
+                <div>
+                  <h4><SphereIcon name="alert" /> {shortHost(drilldown.host)} · Workloads observed while Critical WP active</h4>
+                  {incidentContext && <small>Critical WP active since {formatTime(incidentContext.signal_active_since || incidentContext.detected_since)} WIB · Duration {durationText(incidentContext.duration_seconds)}</small>}
+                  <small>Same collection/run supporting context. Correlation only; not a direct root-cause mapping.</small>
+                </div>
                 <button type="button" onClick={() => setDrilldown(null)}>Close</button>
               </header>
               {drilldown.loading && <div className="rundeckWpDrilldownState">Loading workload context…</div>}
