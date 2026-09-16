@@ -111,7 +111,7 @@ class IngestionTests(unittest.TestCase):
             self.assertEqual(ingest(execution(status='running'), b'', HOSTS, root)['status'], 'PROCESSING')
             self.assertEqual(ingest(execution(), output(HOSTS), HOSTS, root)['status'], 'READY')
 
-    def test_only_whitelisted_collect_now_is_mutating(self):
+    def test_only_explicitly_whitelisted_routes_are_mutating(self):
         from backend.rundeck_api import app
 
         mutating = {
@@ -120,7 +120,10 @@ class IngestionTests(unittest.TestCase):
             for method in route.methods
             if method in {'POST', 'PUT', 'PATCH', 'DELETE'}
         }
-        self.assertEqual(mutating, {('/collect-now', 'POST')})
+        self.assertEqual(mutating, {
+            ('/collect-now', 'POST'),
+            ('/jobs/executions/import', 'POST'),
+        })
 
     def test_history_and_evaluation_routes_are_read_only(self):
         from backend.rundeck_api import app
