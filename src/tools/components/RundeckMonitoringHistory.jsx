@@ -4,6 +4,7 @@ import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
+import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
 import RundeckWorkloadExplorer from './RundeckWorkloadExplorer.jsx'
 import './RundeckMonitoringHistory.css'
@@ -99,6 +100,7 @@ export default function RundeckMonitoringHistory(props) {
             operationalEvidenceContent={operationalEvidenceContent}
             appFocusRequest={appFocusRequest}
           />
+          <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
           <section className="rundeckIssuesReviewBand" aria-label="SAP Issues and Performance Review">
             <div className="rundeckIssuesReviewPane is-issues"><RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} /></div>
