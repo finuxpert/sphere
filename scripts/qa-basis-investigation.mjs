@@ -9,6 +9,7 @@ const files = {
   jobMonitor: read('src/tools/components/RundeckJobMonitor.jsx'),
   jobMonitorCss: read('src/tools/components/RundeckJobMonitor.css'),
   sm37: read('src/tools/components/RundeckSm37Verification.jsx'),
+  sm37Portal: read('src/tools/components/RundeckSm37LivePortal.jsx'),
   sm37Css: read('src/tools/components/RundeckSm37Verification.css'),
   explorer: read('src/tools/components/RundeckWorkloadExplorer.jsx'),
   jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
@@ -16,22 +17,28 @@ const files = {
   intelligence: read('backend/rundeck_job_intelligence.py'),
   migration: read('backend/db/migrations/versions/20260916_0004_sap_job_executions.py'),
   importer: read('ops/rundeck/import-sm37.py'),
+  smoke: read('ops/rundeck/smoke-job-intelligence-dev.sh'),
+  envExample: read('ops/rundeck/rundeck-dev.env.example'),
 }
 
 const checks = [
   ['final campaign version is v1.29.0', files.version.includes("APP_VERSION = '1.29.0'") && files.version.includes('basis-investigation-workspace-v1.29.0')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['Job and Program History remains available', files.wrapper.includes('Job &amp; Program History')],
-  ['SAP Job Monitor is wired as a third mode', files.wrapper.includes("RundeckJobMonitor") && files.wrapper.includes("monitoringMode === 'jobs'") && files.wrapper.includes('SAP Job Monitor')],
+  ['SAP Job Monitor is wired as a third mode', files.wrapper.includes('RundeckJobMonitor') && files.wrapper.includes("monitoringMode === 'jobs'") && files.wrapper.includes('SAP Job Monitor')],
   ['primary 40/60 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 40fr) minmax(0, 60fr)')],
   ['operational 45/55 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 45fr) minmax(0, 55fr)')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['SM37 execution schema is authoritative and separate from WP sampling', files.migration.includes('sap_job_executions') && files.intelligence.includes('never promoted to an authoritative')],
   ['SM37 import supports dry run before apply', files.importer.includes('MODE=DRY-RUN') && files.importer.includes('--apply')],
+  ['SM37 HTTP import is disabled by default and secret protected', files.api.includes('SPHERE_SM37_IMPORT_ENABLED') && files.api.includes('SPHERE_SM37_IMPORT_TOKEN') && files.api.includes('secrets.compare_digest') && files.api.includes('5000 records')],
+  ['SM37 settings are documented without a committed secret', files.envExample.includes('SPHERE_SM37_IMPORT_ENABLED=false') && files.envExample.includes('SPHERE_SM37_IMPORT_TOKEN=')],
   ['SM37 verification supports matched partial and not verified', files.intelligence.includes('MATCHED') && files.intelligence.includes('PARTIAL_MATCH') && files.intelligence.includes('NOT_VERIFIED')],
   ['dynamic SM37 component never infers root cause', files.sm37.includes('not root cause') && files.sm37.includes('/jobs/verify')],
+  ['live Selected Workload receives dynamic SM37 verification', files.wrapper.includes('RundeckSm37LivePortal') && files.sm37Portal.includes('createPortal') && files.sm37Portal.includes('/history/job') && files.sm37Css.includes('has-dynamic-verification')],
   ['Job Monitor exposes long running failed and performance signals', files.jobMonitor.includes('Long Running') && files.jobMonitor.includes('Failed or Canceled') && files.jobMonitor.includes('Peak CPU') && files.jobMonitor.includes('Critical WP')],
   ['Job Monitor has analytics baseline and correlation drilldown', files.jobMonitor.includes('/jobs/analytics') && files.jobMonitor.includes('/jobs/baseline') && files.jobMonitor.includes('/jobs/correlation')],
+  ['Job Monitor uses authoritative verification component', files.jobMonitor.includes('RundeckSm37Verification')],
   ['Job Monitor can export investigation evidence', files.jobMonitor.includes('/reports/investigation') && files.jobMonitor.includes('SPHERE_Job_Investigation_')],
   ['Review queue endpoint exists', files.api.includes('@app.get("/review/queue")')],
   ['Investigation report endpoint exists', files.api.includes('@app.get("/reports/investigation")')],
@@ -43,6 +50,7 @@ const checks = [
   ['Job Monitor CSS exists and keeps responsive fallback', files.jobMonitorCss.includes('@media(max-width:1180px)') && files.jobMonitorCss.includes('.rundeckJobIntelligence')],
   ['SM37 evidence styling is subdued', files.sm37Css.includes('background:transparent') && files.sm37Css.includes('border-left-width:1px')],
   ['Selected workload still hides zero-value I/O noise in multi-series profile', files.jobHistory.includes('some((value) => Math.abs(value) > 0)')],
+  ['Job Intelligence smoke covers readiness source monitor and review queue', files.smoke.includes('/platform/readiness') && files.smoke.includes('/jobs/source') && files.smoke.includes('/jobs/monitor') && files.smoke.includes('/review/queue')],
 ]
 
 const failed = checks.filter(([, ok]) => !ok)
