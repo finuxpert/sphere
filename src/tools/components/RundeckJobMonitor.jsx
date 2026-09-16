@@ -1,5 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
+import RundeckSm37Verification from './RundeckSm37Verification.jsx'
 import { formatWib, numberText, shortHost } from './sapUiFormat.js'
 import './RundeckJobMonitor.css'
 
@@ -51,7 +52,7 @@ function gb(value) {
   return value == null ? '—' : `${numberText(value, 2)} GB`
 }
 
-function JobIntelligence({ item, days }) {
+function JobIntelligence({ item, days, refreshToken }) {
   const execution = item?.execution || {}
   const [detail, setDetail] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
@@ -81,7 +82,7 @@ function JobIntelligence({ item, days }) {
       .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message || 'Job intelligence unavailable.') })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [days, execution.job_name, execution.program])
+  }, [days, execution.job_name, execution.program, refreshToken])
 
   if (!execution.job_name) return null
   const analytics = detail?.analytics || {}
@@ -95,6 +96,13 @@ function JobIntelligence({ item, days }) {
       <div><strong>{execution.job_name}</strong><span>{execution.program || 'No Step Program supplied'} · {shortHost(execution.server || '') || 'Server not supplied'}</span></div>
       <span className={`rundeckJobMonitorStatus ${statusClass(baseline.status)}`}>{baseline.status || 'LOADING'}</span>
     </header>
+    <RundeckSm37Verification
+      jobName={execution.job_name}
+      program={execution.program}
+      host={execution.server}
+      observedAt={execution.started_at}
+      refreshToken={refreshToken}
+    />
     {loading && <div className="rundeckJobMonitorMessage">Loading execution analytics and historical baseline…</div>}
     {error && <div className="rundeckJobMonitorMessage is-error">{error}</div>}
     {!loading && !error && <>
@@ -230,7 +238,7 @@ export default function RundeckJobMonitor({ refreshToken, onOpenLiveJob }) {
       </table>
     </div>
 
-    {selected && <JobIntelligence item={selected} days={days} />}
+    {selected && <JobIntelligence item={selected} days={days} refreshToken={refreshToken} />}
 
     {readiness && <footer className="rundeckJobMonitorReadiness">
       <span>Workload History <b>{readiness.features?.workload_history || 'UNKNOWN'}</b></span>
