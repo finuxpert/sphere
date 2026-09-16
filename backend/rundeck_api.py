@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 
 from fastapi import Body, HTTPException, Query, Request
 
@@ -159,8 +160,14 @@ def jobs_executions_import_endpoint(
 ):
     if os.getenv("SPHERE_SM37_IMPORT_ENABLED", "false").lower() != "true":
         raise HTTPException(503, "SM37 import is disabled")
-    if request.headers.get("X-SPHERE-Action") != "sm37-import":
-        raise HTTPException(403, "Missing SPHERE SM37 import action header")
+    expected_token = os.getenv("SPHERE_SM37_IMPORT_TOKEN", "").strip()
+    supplied_token = request.headers.get("X-SPHERE-SM37-Token", "").strip()
+    if not expected_token:
+        raise HTTPException(503, "SM37 API import token is not configured; use the local approved importer")
+    if request.headers.get("X-SPHERE-Action") != "sm37-import" or not secrets.compare_digest(supplied_token, expected_token):
+        raise HTTPException(403, "SM37 import authorization failed")
+    if len(records) > 5000:
+        raise HTTPException(413, "SM37 import batch is limited to 5000 records")
     try:
         return import_job_executions(records)
     except RuntimeError as error:
