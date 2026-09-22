@@ -28,6 +28,18 @@ function Segmented({ options, value, onChange, ariaLabel }) {
   return <div className="rundeckSegmented" role="group" aria-label={ariaLabel}>{options.map(([key, label]) => <button key={key} type="button" className={value === key ? 'is-active' : ''} aria-pressed={value === key} onClick={() => onChange(key)}>{label}</button>)}</div>
 }
 
+function gapDurationText(from, to) {
+  const minutes = Math.max(0, Math.round((to - from) / 60000))
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  const remain = minutes % 60
+  return remain ? `${hours}h ${remain}m` : `${hours}h`
+}
+
+function gapLabel(from, to) {
+  return `COLLECTION GAP · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}`
+}
+
 function TrendFreshness({ trend }) {
   const latest = Date.parse(trend?.latest_collection_at || '')
   const staleMinutes = Math.max(1, Number(trend?.stale_after_minutes || 20))
@@ -80,9 +92,9 @@ function TrendChart({ trend, mode, range, onSelect }) {
         markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined,
         markArea: index === 0 && gaps.length ? {
           silent: true,
-          label: { show: true, formatter: 'NO DATA', fontSize: 8, color: colors.muted },
-          itemStyle: { opacity: .08 },
-          data: gaps.map(([from, to]) => [{ xAxis: from }, { xAxis: to }]),
+          label: { show: true, formatter: (params) => params?.name || 'COLLECTION GAP', fontSize: 8, color: colors.warning, position: 'insideTop' },
+          itemStyle: { color: colors.warning, opacity: .06, borderColor: colors.warning, borderWidth: 1, borderType: 'dashed' },
+          data: gaps.map(([from, to]) => [{ name: gapLabel(from, to), xAxis: from }, { xAxis: to }]),
         } : undefined,
       }))
     }
