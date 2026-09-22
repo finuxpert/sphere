@@ -1,7 +1,8 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
 import { systemHealthState } from './rundeckSystemHealth.js'
-import { formatWib } from './sapUiFormat.js'
+import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
+import { formatWib, shortHost } from './sapUiFormat.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 
@@ -27,6 +28,31 @@ function ageText(seconds) {
   const hours = Math.floor(value / 3600)
   const minutes = Math.floor((value % 3600) / 60)
   return minutes ? `${hours}h ${minutes}m` : `${hours}h`
+}
+
+function primaryHealthSignal(hosts, availability, serviceCritical, stale) {
+  if (stale) return { level: 'WARNING', text: 'Performance data stale', detail: 'Collector freshness exceeded the configured threshold.' }
+  if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service impact observed', detail: `Availability state ${availability}.` }
+
+  const ranked = hosts.map((host) => {
+    const resource = hostResourceState(host)
+    const workload = sapWorkloadState(host)
+    const wp = Number(host?.wp_critical || 0)
+    let score = 0
+    if (resource === 'CRITICAL') score = 500
+    else if (resource === 'WARNING') score = 400
+    else if (workload === 'CRITICAL') score = 300
+    else if (workload === 'ATTENTION') score = 200
+    return { host, resource, workload, wp, score }
+  }).sort((left, right) => right.score - left.score || right.wp - left.wp)
+
+  const top = ranked[0]
+  if (top?.score >= 500) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'Resource pressure signal; validate CPU, memory and I/O evidence.' }
+  if (top?.score >= 400) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'Resource pressure signal; validate CPU, memory and I/O evidence.' }
+  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload CRITICAL`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Signal only; not a root-cause declaration.` }
+  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload ATTENTION`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Signal only; not a root-cause declaration.` }
+  if (availability === 'ATTENTION') return { level: 'ATTENTION', text: 'SAP availability attention', detail: 'Review service availability evidence.' }
+  return null
 }
 
 function collectorTitle(collector) {
@@ -94,6 +120,7 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
   const state = systemHealthState(hosts, { availabilityState: availability, serviceCritical, stale, aligned: true })
   const collector = platform?.collector || {}
   const recovery = collector?.last_recovery || null
+  const primarySignal = primaryHealthSignal(hosts, availability, serviceCritical, stale)
   const title = `System Health reflects service impact and OS resource pressure. SAP workload signals can raise ATTENTION without declaring an outage. Availability ${availability}${stale ? ' · performance data stale' : ''}.`
 
   return createPortal(
@@ -101,6 +128,7 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
       <div className="rundeckSystemHealthPrimary">
         <span>System Health</span>
         <StatusPill value={state} title={title} />
+        {primarySignal && <span className={`rundeckSystemHealthReasonV132 is-${String(primarySignal.level || 'attention').toLowerCase()}`} title={primarySignal.detail}>{primarySignal.text}</span>}
       </div>
       <details className="rundeckCollectorHealthV131">
         <summary title={collectorTitle(collector)}>
