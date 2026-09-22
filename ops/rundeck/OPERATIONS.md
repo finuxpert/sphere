@@ -72,7 +72,7 @@ v1.31 keeps the v1.30 collector watchdog and adds recovery audit, dashboard dril
 - `ops/rundeck/prod-readiness-check.sh` blocks promotion when the collector is stale, watchdog is unhealthy, or auto-healing is disabled.
 
 The Server Trend chart pins the x-axis to the selected time window and inserts explicit
-`COLLECTION GAP` regions with start/end time and duration when collection cadence gaps exceed two expected 10-minute cycles.
+`COLLECTION GAP` regions with start/end time and duration only when the gap exceeds two resolved sampling intervals. Raw/6H use the collector cadence, 24H uses 30-minute buckets, 7D uses 1-hour buckets, and 30D uses 6-hour buckets.
 
 ## Operator clarity
 
