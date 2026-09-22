@@ -13,8 +13,10 @@ const files = {
   sm37Css: read('src/tools/components/RundeckSm37Verification.css'),
   explorer: read('src/tools/components/RundeckWorkloadExplorer.jsx'),
   serverTrend: read('src/tools/components/RundeckServerTrend.jsx'),
+  systemHealth: read('src/tools/components/RundeckSystemHealth.jsx'),
   jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
   api: read('backend/rundeck_api.py'),
+  apiCore: read('backend/rundeck_api_core.py'),
   intelligence: read('backend/rundeck_job_intelligence.py'),
   migration: read('backend/db/migrations/versions/20260916_0004_sap_job_executions.py'),
   importer: read('ops/rundeck/import-sm37.py'),
@@ -22,10 +24,12 @@ const files = {
   envExample: read('ops/rundeck/rundeck-dev.env.example'),
   watchdog: read('backend/rundeck_watchdog.py'),
   metrics: read('backend/rundeck_metrics.py'),
+  promRules: read('ops/observability/sphere-prometheus-rules.yml'),
+  promConfig: read('ops/observability/prometheus-sphere-dev.yml'),
 }
 
 const checks = [
-  ['collector reliability version is v1.30.0', files.version.includes("APP_VERSION = '1.30.0'") && files.version.includes('collector-reliability-ui-v1.30.0')],
+  ['self-healing observability version is v1.31.0', files.version.includes("APP_VERSION = '1.31.0'") && files.version.includes('self-healing-ops-ui-v1.31.0')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['Job and Program History remains available', files.wrapper.includes('Job &amp; Program History')],
   ['SAP Job Monitor is wired as a third mode', files.wrapper.includes('RundeckJobMonitor') && files.wrapper.includes("monitoringMode === 'jobs'") && files.wrapper.includes('SAP Job Monitor')],
@@ -54,9 +58,12 @@ const checks = [
   ['SM37 evidence styling is subdued', files.sm37Css.includes('background:transparent') && files.sm37Css.includes('border-left-width:1px')],
   ['Selected workload still hides zero-value I/O noise in multi-series profile', files.jobHistory.includes('some((value) => Math.abs(value) > 0)')],
   ['Job Intelligence smoke covers readiness source monitor and review queue', files.smoke.includes('/platform/readiness') && files.smoke.includes('/jobs/source') && files.smoke.includes('/jobs/monitor') && files.smoke.includes('/review/queue')],
-  ['Server Trend pins selected range and marks collection gaps', files.serverTrend.includes('gapThresholdMs') && files.serverTrend.includes("formatter: 'NO DATA'") && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
+  ['Server Trend pins selected range and labels collection gaps', files.serverTrend.includes('gapThresholdMs') && files.serverTrend.includes('COLLECTION GAP') && files.serverTrend.includes('gapDurationText') && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
+  ['System Health exposes collector watchdog and auto-healing context', files.systemHealth.includes('/platform/health') && files.systemHealth.includes('Auto-healing') && files.systemHealth.includes('Last Recovery')],
+  ['watchdog audit route is read-only and available', files.apiCore.includes('@app.get("/watchdog/events")') && files.apiCore.includes('read_watchdog_events')],
+  ['Prometheus scrape and alert rules are versioned', files.promConfig.includes('/dev/api/metrics') && files.promRules.includes('SphereCollectorExecutionStuck') && files.promRules.includes('SphereWatchdogAutoRecovery')],
 ]
 
 const failed = checks.filter(([, ok]) => !ok)
@@ -65,4 +72,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.30.0 collector reliability contract checks passed.')
+console.log('\nSPHERE v1.31.0 self-healing observability contract checks passed.')
