@@ -176,24 +176,51 @@ def _database_stats() -> dict:
 
 
 def _collector_state(root: Path) -> dict:
+    from backend.rundeck_store import collections
+
     state = _json_file(root / "poller.json") or {}
+    watchdog = _json_file(root / "watchdog.json") or {}
+    stats = _json_file(root / "poller-stats.json") or {}
     raw_status = str(state.get("status") or "UNKNOWN").upper()
-    if raw_status == "ERROR":
+    stale_minutes = max(1, int(os.getenv("RUNDECK_STALE_MINUTES", "20")))
+    latest_ready = next((row for row in collections(root) if row.get("status") == "READY"), None)
+    latest_at = (latest_ready or {}).get("finished_at")
+    latest_dt = _parse_iso(latest_at)
+    age_seconds = None
+    if latest_dt:
+        age_seconds = max(0, int((datetime.now(timezone.utc) - latest_dt.astimezone(timezone.utc)).total_seconds()))
+    stale = age_seconds is None or age_seconds >= stale_minutes * 60
+
+    watchdog_status = str(watchdog.get("status") or "UNKNOWN").upper()
+    if raw_status == "ERROR" or watchdog_status in {"CRITICAL", "RECOVERY_FAILED", "ERROR"}:
         status = "CRITICAL"
-    elif raw_status in {"NOT_CONFIGURED", "NO_MATCH"}:
+    elif raw_status in {"NOT_CONFIGURED", "NO_MATCH"} or stale or watchdog_status in {"WARNING", "NOT_CONFIGURED"}:
         status = "WARNING"
     elif raw_status in {"OK", "WAITING", "BUSY"}:
         status = "NORMAL"
     else:
         status = "UNKNOWN"
+
     return {
         "status": status,
         "poller_status": raw_status,
         "checked_at": state.get("checked_at"),
         "credential_mode": state.get("credential_mode") or "unknown",
         "error_type": state.get("error_type"),
+        "latest_collection_id": (latest_ready or {}).get("collection_id"),
+        "last_successful_collection": latest_at,
+        "collection_age_seconds": age_seconds,
+        "stale_after_minutes": stale_minutes,
+        "collector_stale": stale,
+        "running_execution": watchdog.get("execution_id"),
+        "running_duration_seconds": watchdog.get("running_duration_seconds"),
+        "watchdog_status": watchdog_status,
+        "watchdog_checked_at": watchdog.get("checked_at"),
+        "last_auto_recovery": watchdog.get("last_auto_recovery"),
+        "auto_abort_total": int(watchdog.get("auto_abort_total") or 0),
+        "ingestion_success_total": int(stats.get("success_total") or 0),
+        "ingestion_failure_total": int(stats.get("failure_total") or 0),
     }
-
 
 def _maintenance_state(root: Path) -> dict:
     state = _json_file(root / "maintenance.json")

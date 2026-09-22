@@ -17,6 +17,7 @@ from backend.rundeck_evaluation import evaluation_report
 from backend.rundeck_incident import performance_incident_summary
 from backend.rundeck_job_history import current_sap_jobs, sap_job_history
 from backend.rundeck_latest import latest_ready_host_metrics
+from backend.rundeck_metrics import render_metrics
 from backend.rundeck_monitoring import (
     alert_history,
     collection_history,
@@ -92,6 +93,12 @@ def health():
         "storage": disk_status(ROOT) if ROOT.exists() else {"status": "UNKNOWN"},
         **timescale_status(),
     }
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics_endpoint():
+    payload, content_type = render_metrics(ROOT)
+    return Response(content=payload, media_type=content_type)
 
 
 @app.get("/platform/health")

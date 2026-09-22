@@ -1,0 +1,10 @@
+[Unit]
+Description=Check SPHERE Rundeck collector for stuck executions every two minutes
+
+[Timer]
+OnBootSec=90s
+OnUnitActiveSec=120s
+Unit=sphere-rundeck-watchdog.service
+
+[Install]
+WantedBy=timers.target
