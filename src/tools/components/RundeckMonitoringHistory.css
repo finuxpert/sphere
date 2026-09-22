@@ -464,3 +464,79 @@
   white-space: nowrap;
 }
 
+.rundeckCollectionGapBandV132 {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px 9px;
+  margin: 5px 0 2px;
+  padding: 5px 8px;
+  border: 1px dashed rgba(216, 179, 95, .42);
+  border-radius: 4px;
+  background: rgba(216, 179, 95, .055);
+}
+
+.rundeckCollectionGapBandV132 > span {
+  color: var(--sphere-warning, #d8b35f);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.rundeckCollectionGapBandV132 > strong {
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 8.6px;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.rundeckCollectionGapBandV132 > small {
+  overflow: hidden;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rundeckSystemHealthReasonV132 {
+  display: inline-flex;
+  align-items: center;
+  max-width: 250px;
+  overflow: hidden;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 8px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rundeckSystemHealthReasonV132::before {
+  content: '·';
+  margin-right: 5px;
+  color: var(--sphere-text-muted, #718089);
+}
+
+.rundeckSystemHealthReasonV132.is-critical {
+  color: var(--sphere-danger, #db7d86);
+}
+
+.rundeckSystemHealthReasonV132.is-warning {
+  color: var(--sphere-warning, #d8b35f);
+}
+
+.rundeckSystemHealthReasonV132.is-attention {
+  color: var(--sphere-attention, #6aa2d8);
+}
+
+@container (max-width: 760px) {
+  .rundeckCollectionGapBandV132 {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .rundeckSystemHealthReasonV132 {
+    max-width: 180px;
+  }
+}
+
