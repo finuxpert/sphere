@@ -31,6 +31,14 @@ BUCKETS = {
     "1d": "1 day",
 }
 
+BUCKET_SECONDS = {
+    "10m": 10 * 60,
+    "30m": 30 * 60,
+    "1h": 60 * 60,
+    "6h": 6 * 60 * 60,
+    "1d": 24 * 60 * 60,
+}
+
 METRICS = {
     "cpu": {
         "column": "cpu_pct",
@@ -91,6 +99,18 @@ def resolve_bucket(range_key: str, bucket_key: str) -> tuple[str, str]:
         return resolved, BUCKETS[resolved]
     except KeyError as error:
         raise ValueError(f"Unsupported bucket: {bucket_key}") from error
+
+
+def resolve_interval_seconds(range_key: str, bucket_key: str, cadence_seconds: int = 600) -> int:
+    """Return the expected spacing between points for gap detection.
+
+    Raw ranges follow the collector cadence. Aggregated ranges follow the resolved
+    date_bin stride so normal 30m/1h/6h buckets are never misclassified as gaps.
+    """
+    resolved, _ = resolve_bucket(range_key, bucket_key)
+    if resolved == "raw":
+        return max(60, int(cadence_seconds))
+    return BUCKET_SECONDS[resolved]
 
 
 def resolve_metric(metric_key: str) -> dict:
@@ -223,6 +243,11 @@ def trend_series(
         "range": range_key,
         "bucket": resolved_bucket,
         "requested_bucket": bucket_key,
+        "bucket_interval_seconds": (
+            max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600")))
+            if resolved_bucket == "raw"
+            else BUCKET_SECONDS[resolved_bucket]
+        ),
         "metric": metric_key,
         "metric_label": metric["label"],
         "unit": metric["unit"],
