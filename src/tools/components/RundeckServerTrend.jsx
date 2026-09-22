@@ -12,6 +12,13 @@ const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'],
 const METRICS = [['cpu', 'CPU'], ['ram', 'Memory'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
 const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
+const BUCKET_INTERVAL_MS = {
+  '10m': 10 * 60 * 1000,
+  '30m': 30 * 60 * 1000,
+  '1h': 60 * 60 * 1000,
+  '6h': 6 * 60 * 60 * 1000,
+  '1d': 24 * 60 * 60 * 1000,
+}
 
 const metricLabel = (value) => ({ cpu: 'CPU', ram: 'Memory', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
@@ -40,20 +47,31 @@ function gapLabel(from, to) {
   return `COLLECTION GAP · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}`
 }
 
+function resolvedGapIntervalMs(trend) {
+  const explicitSeconds = Number(trend?.bucket_interval_seconds)
+  if (Number.isFinite(explicitSeconds) && explicitSeconds >= 60) return explicitSeconds * 1000
+
+  const resolvedBucket = String(trend?.bucket || '').toLowerCase()
+  if (BUCKET_INTERVAL_MS[resolvedBucket]) return BUCKET_INTERVAL_MS[resolvedBucket]
+
+  const cadenceMs = Number(trend?.collection_cadence_seconds || 600) * 1000
+  return Number.isFinite(cadenceMs) && cadenceMs >= 60_000 ? cadenceMs : DEFAULT_COLLECTION_CADENCE_MS
+}
+
 function trendGaps(trend) {
   const rows = trend?.items || []
   const rangeStart = Date.parse(trend?.since || '')
   const rangeEnd = Date.now()
-  const cadenceMs = Math.max(60_000, Number(trend?.collection_cadence_seconds || 600) * 1000) || DEFAULT_COLLECTION_CADENCE_MS
-  const gapThresholdMs = cadenceMs * 2
+  const intervalMs = resolvedGapIntervalMs(trend)
+  const gapThresholdMs = intervalMs * 2
   const buckets = Array.from(new Set(rows.map((row) => Date.parse(row.bucket)).filter(Number.isFinite))).sort((a, b) => a - b)
   const gaps = []
-  if (Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > gapThresholdMs) gaps.push([rangeStart, buckets[0] - cadenceMs])
+  if (Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > gapThresholdMs) gaps.push([rangeStart, buckets[0] - intervalMs])
   for (let index = 1; index < buckets.length; index += 1) {
-    if (buckets[index] - buckets[index - 1] > gapThresholdMs) gaps.push([buckets[index - 1] + cadenceMs, buckets[index] - cadenceMs])
+    if (buckets[index] - buckets[index - 1] > gapThresholdMs) gaps.push([buckets[index - 1] + intervalMs, buckets[index] - intervalMs])
   }
-  if (buckets.length && rangeEnd - buckets[buckets.length - 1] > gapThresholdMs) gaps.push([buckets[buckets.length - 1] + cadenceMs, rangeEnd])
-  return { gaps, rangeStart, rangeEnd }
+  if (buckets.length && rangeEnd - buckets[buckets.length - 1] > gapThresholdMs) gaps.push([buckets[buckets.length - 1] + intervalMs, rangeEnd])
+  return { gaps, rangeStart, rangeEnd, intervalMs }
 }
 
 function CollectionGapBand({ trend }) {
