@@ -337,6 +337,52 @@
   background: #20282d;
 }
 
+/* SPHERE v1.24.6 — final typography and contrast pass. */
+.appShell:has(.rundeckPanel) .rundeckPanel {
+  --sphere-text-secondary: #b9c4ca;
+  --sphere-text-muted: #8d9aa3;
+}
+
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload th,
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234 th,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th,
+.appShell:has(.rundeckPanel) .rundeckExplorerEpisodes th {
+  color: #9eabb3;
+  font-size: 9.4px;
+  font-weight: 600;
+  letter-spacing: .015em;
+}
+
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload td,
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234 td,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td,
+.appShell:has(.rundeckPanel) .rundeckExplorerEpisodes td {
+  font-size: 10.2px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload td small,
+.appShell:has(.rundeckPanel) .rundeckJobHistoryMeta,
+.appShell:has(.rundeckPanel) .rundeckExplorerResult small,
+.appShell:has(.rundeckPanel) .rundeckRcaHint,
+.appShell:has(.rundeckPanel) .rundeckAvailabilityHead > div:first-child > span,
+.appShell:has(.rundeckPanel) .rundeckReviewHeadV1231 > div > span {
+  color: #91a0a8;
+  font-size: 9px;
+}
+
+.appShell:has(.rundeckPanel) .rundeckExplorerResult strong,
+.appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231 button,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload td button {
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.appShell:has(.rundeckPanel) .rundeckJobHistoryOverview span,
+.appShell:has(.rundeckPanel) .rundeckSm37VerificationGrid span,
+.appShell:has(.rundeckPanel) .rundeckSm37Verification p {
+  color: #96a4ac;
+}
+
 @media (max-width: 1180px) {
   .appShell:has(.rundeckPanel) .rundeckWorkloadExplorer .rundeckExplorerHeader {
     align-items: flex-start;

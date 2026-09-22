@@ -1,0 +1,12 @@
+route:
+  receiver: sphere-ops
+  group_by: [alertname, service, environment]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 2h
+
+receivers:
+  - name: sphere-ops
+    webhook_configs:
+      - url: http://REPLACE_WITH_APPROVED_RECEIVER/sphere-alerts
+        send_resolved: true

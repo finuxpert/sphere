@@ -655,3 +655,11 @@
     transition-duration: .001ms !important;
   }
 }
+
+.rundeckCycleIdentityV132 b {
+  color: var(--sphere-positive, #75cfa5);
+  font-size: .92em;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+

@@ -17,6 +17,7 @@ from backend.rundeck_evaluation import evaluation_report
 from backend.rundeck_incident import performance_incident_summary
 from backend.rundeck_job_history import current_sap_jobs, sap_job_history
 from backend.rundeck_latest import latest_ready_host_metrics
+from backend.rundeck_metrics import render_metrics
 from backend.rundeck_monitoring import (
     alert_history,
     collection_history,
@@ -27,6 +28,7 @@ from backend.rundeck_monitoring import (
 )
 from backend.rundeck_platform import platform_health
 from backend.rundeck_store import ROOT, collections, identifier
+from backend.rundeck_watchdog import read_events as read_watchdog_events
 from backend.rundeck_trends import (
     collection_timeline,
     collection_timeline_at,
@@ -92,6 +94,17 @@ def health():
         "storage": disk_status(ROOT) if ROOT.exists() else {"status": "UNKNOWN"},
         **timescale_status(),
     }
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics_endpoint():
+    payload, content_type = render_metrics(ROOT)
+    return Response(content=payload, media_type=content_type)
+
+
+@app.get("/watchdog/events")
+def watchdog_events(limit: int = Query(50, ge=1, le=200)):
+    return {"items": read_watchdog_events(limit)}
 
 
 @app.get("/platform/health")
@@ -197,9 +210,13 @@ def history_trend(
     try:
         range_config = resolve_range(range_key)
         since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
+        latest_row = _latest_ready()
         return {
             **trend_series(since, range_key, bucket, metric),
             "timezone": "Asia/Jakarta",
+            "latest_collection_at": (latest_row or {}).get("finished_at"),
+            "stale_after_minutes": STALE_MINUTES,
+            "collection_cadence_seconds": max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600"))),
         }
     except ValueError as error:
         raise HTTPException(400, str(error)) from None

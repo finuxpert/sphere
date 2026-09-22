@@ -167,7 +167,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
         <h3><SphereIcon name="server" /> SAP Availability</h3>
         <span title="Current snapshot from the Rundeck Service Availability job.">
           {data?.collected_at ? `Updated ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
-          {data?.execution_id ? ` · Run #${data.execution_id}` : ''}
+          {data?.execution_id ? ` · Availability READY #${data.execution_id}` : ''}
         </span>
       </div>
       <div className="rundeckAvailabilityState">

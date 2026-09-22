@@ -1,0 +1,36 @@
+groups:
+  - name: sphere-collector-reliability
+    rules:
+      - alert: SphereCollectionStale
+        expr: sphere_collector_stale == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SPHERE collection data is stale"
+      - alert: SphereCollectorExecutionLong
+        expr: sphere_rundeck_execution_running_seconds > 300
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SPHERE Rundeck collector is running longer than normal"
+      - alert: SphereCollectorExecutionStuck
+        expr: sphere_rundeck_execution_stuck == 1 and sphere_rundeck_execution_running_seconds > 600
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SPHERE Rundeck collector appears stuck"
+      - alert: SphereWatchdogAutoRecovery
+        expr: increase(sphere_watchdog_auto_abort_total[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "SPHERE watchdog auto-aborted a stuck Rundeck execution"
+      - alert: SphereIngestionFailure
+        expr: increase(sphere_ingestion_failure_total[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "SPHERE ingestion failure detected"

@@ -11,6 +11,14 @@ const RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H'], ['24h'
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
 const METRICS = [['cpu', 'CPU'], ['ram', 'Memory'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
+const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
+const BUCKET_INTERVAL_MS = {
+  '10m': 10 * 60 * 1000,
+  '30m': 30 * 60 * 1000,
+  '1h': 60 * 60 * 1000,
+  '6h': 6 * 60 * 60 * 1000,
+  '1d': 24 * 60 * 60 * 1000,
+}
 
 const metricLabel = (value) => ({ cpu: 'CPU', ram: 'Memory', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
@@ -27,6 +35,65 @@ function Segmented({ options, value, onChange, ariaLabel }) {
   return <div className="rundeckSegmented" role="group" aria-label={ariaLabel}>{options.map(([key, label]) => <button key={key} type="button" className={value === key ? 'is-active' : ''} aria-pressed={value === key} onClick={() => onChange(key)}>{label}</button>)}</div>
 }
 
+function gapDurationText(from, to) {
+  const minutes = Math.max(0, Math.round((to - from) / 60000))
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  const remain = minutes % 60
+  return remain ? `${hours}h ${remain}m` : `${hours}h`
+}
+
+function gapLabel(from, to) {
+  return `COLLECTION GAP · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}`
+}
+
+function resolvedGapIntervalMs(trend) {
+  const explicitSeconds = Number(trend?.bucket_interval_seconds)
+  if (Number.isFinite(explicitSeconds) && explicitSeconds >= 60) return explicitSeconds * 1000
+
+  const resolvedBucket = String(trend?.bucket || '').toLowerCase()
+  if (BUCKET_INTERVAL_MS[resolvedBucket]) return BUCKET_INTERVAL_MS[resolvedBucket]
+
+  const cadenceMs = Number(trend?.collection_cadence_seconds || 600) * 1000
+  return Number.isFinite(cadenceMs) && cadenceMs >= 60_000 ? cadenceMs : DEFAULT_COLLECTION_CADENCE_MS
+}
+
+function trendGaps(trend) {
+  const rows = trend?.items || []
+  const rangeStart = Date.parse(trend?.since || '')
+  const rangeEnd = Date.now()
+  const intervalMs = resolvedGapIntervalMs(trend)
+  const gapThresholdMs = intervalMs * 2
+  const buckets = Array.from(new Set(rows.map((row) => Date.parse(row.bucket)).filter(Number.isFinite))).sort((a, b) => a - b)
+  const gaps = []
+  if (Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > gapThresholdMs) gaps.push([rangeStart, buckets[0] - intervalMs])
+  for (let index = 1; index < buckets.length; index += 1) {
+    if (buckets[index] - buckets[index - 1] > gapThresholdMs) gaps.push([buckets[index - 1] + intervalMs, buckets[index] - intervalMs])
+  }
+  if (buckets.length && rangeEnd - buckets[buckets.length - 1] > gapThresholdMs) gaps.push([buckets[buckets.length - 1] + intervalMs, rangeEnd])
+  return { gaps, rangeStart, rangeEnd, intervalMs }
+}
+
+function CollectionGapBand({ trend }) {
+  const { gaps } = React.useMemo(() => trendGaps(trend), [trend])
+  if (!gaps.length) return null
+  const sorted = [...gaps].sort((left, right) => (right[1] - right[0]) - (left[1] - left[0]))
+  const [from, to] = sorted[0]
+  return <div className="rundeckCollectionGapBandV132" role="status" title="No retained collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.">
+    <span>Collection Gap</span>
+    <strong>{formatWib(from, false)}–{formatWib(to, false)} WIB</strong>
+    <small>{gapDurationText(from, to)} without retained collection{gaps.length > 1 ? ` · +${gaps.length - 1} additional gap${gaps.length > 2 ? 's' : ''}` : ''}</small>
+  </div>
+}
+
+function TrendFreshness({ trend }) {
+  const latest = Date.parse(trend?.latest_collection_at || '')
+  const staleMinutes = Math.max(1, Number(trend?.stale_after_minutes || 20))
+  if (!Number.isFinite(latest) || Date.now() - latest < staleMinutes * 60 * 1000) return null
+  const ageMinutes = Math.max(1, Math.floor((Date.now() - latest) / 60000))
+  return <div className="rundeckHistoryState">STALE · historical data only · last collection {formatWib(trend.latest_collection_at, true)} WIB · {ageMinutes}m ago</div>
+}
+
 function TrendChart({ trend, mode, range, onSelect }) {
   const ref = React.useRef(null)
   const option = React.useMemo(() => {
@@ -35,7 +102,9 @@ function TrendChart({ trend, mode, range, onSelect }) {
     const hosts = Array.from(new Set(rows.map((row) => row.host))).sort()
     const availabilityMode = trend?.metric === 'availability'
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
-    const shortRange = ['30m', '1h', '3h', '6h', '24h'].includes(range)
+    const compactPoints = ['30m', '1h', '3h', '6h'].includes(range)
+    const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
+    const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 8, position: 'insideEndTop' } })
     if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 8, position: 'insideEndTop' } })
@@ -43,12 +112,28 @@ function TrendChart({ trend, mode, range, onSelect }) {
       animationDuration: 140,
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
       legend: { top: 0, type: 'scroll', itemWidth: 14, itemHeight: 8, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 9 } },
-      grid: { left: 52, right: 58, top: 38, bottom: shortRange ? 28 : 43 },
+      grid: { left: 52, right: 58, top: 38, bottom: compactPoints ? 28 : 43 },
       tooltip: { trigger: 'axis', confine: true, backgroundColor: colors.panel, borderWidth: 0, textStyle: { color: colors.text, fontSize: 10 } },
-      xAxis: { type: 'time', axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatWib(value, false) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatWib(value, false) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: availabilityMode ? 'Availability' : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
-      series: hosts.map((host, index) => ({ name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false, showSymbol: availabilityMode || shortRange, symbolSize: availabilityMode ? 5 : 4, lineStyle: { width: availabilityMode ? 2 : 1.5 }, data: rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })), markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined }))
+      series: hosts.map((host, index) => ({
+        name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
+        showSymbol: availabilityMode || compactPoints, symbolSize: availabilityMode ? 5 : (compactPoints ? 3.5 : 2.5),
+        lineStyle: { width: availabilityMode ? 2 : 1.8 },
+        emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.3 } },
+        data: [
+          ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
+          ...gapPoints.map((at) => ({ value: [at, null], gap: true })),
+        ].sort((a, b) => new Date(a.value[0]).getTime() - new Date(b.value[0]).getTime()),
+        markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined,
+        markArea: index === 0 && gaps.length ? {
+          silent: true,
+          label: { show: true, formatter: (params) => params?.name || 'COLLECTION GAP', fontSize: 8, color: colors.warning, position: 'insideTop' },
+          itemStyle: { color: colors.warning, opacity: .06, borderColor: colors.warning, borderWidth: 1, borderType: 'dashed' },
+          data: gaps.map(([from, to]) => [{ name: gapLabel(from, to), xAxis: from }, { xAxis: to }]),
+        } : undefined,
+      }))
     }
   }, [mode, range, trend])
 
@@ -204,7 +289,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {!databaseEnabled && <div className="rundeckHistoryState">Trend data is not available yet.</div>}
     {databaseEnabled && trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
     {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
-    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} />}
+    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><CollectionGapBand trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} /></>}
     {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
     <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={onSelectJob} />
   </section>

@@ -1,11 +1,27 @@
-"""SPHERE Rundeck API entrypoint with service-availability enrichment."""
+"""SPHERE Rundeck API entrypoint with service-availability and job intelligence."""
 from __future__ import annotations
 
-from fastapi import HTTPException, Query
+import os
+import secrets
+
+from fastapi import Body, HTTPException, Query, Request
 
 from backend import rundeck_api_core as _core
 from backend.rundeck_availability import availability_history, latest_availability
 from backend.rundeck_evidence import evidence_timeline
+from backend.rundeck_job_intelligence import (
+    correlation_timeline,
+    import_job_executions,
+    investigation_report,
+    job_executions,
+    job_monitor,
+    platform_readiness,
+    review_queue,
+    sm37_source_status,
+    verify_workload,
+    workload_baseline,
+    workload_execution_analytics,
+)
 from backend.rundeck_workload_explorer import workload_search, workload_summary, workload_trend
 
 app = _core.app
@@ -112,6 +128,170 @@ def workload_trend_endpoint(
         raise HTTPException(503, str(error)) from None
     except Exception as error:
         raise HTTPException(503, f"Workload trend unavailable: {type(error).__name__}") from None
+
+
+@app.get("/jobs/source")
+def jobs_source_endpoint():
+    try:
+        return sm37_source_status()
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+
+
+@app.get("/jobs/executions")
+def jobs_executions_endpoint(
+    q: str | None = Query(None, max_length=512),
+    status: str | None = Query(None, max_length=32),
+    days: int = Query(7, ge=1, le=90),
+    limit: int = Query(200, ge=1, le=1000),
+):
+    try:
+        return job_executions(q, status=status, days=days, limit=limit)
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"SAP job execution history unavailable: {type(error).__name__}") from None
+
+
+@app.post("/jobs/executions/import")
+def jobs_executions_import_endpoint(
+    request: Request,
+    records: list[dict] = Body(...),
+):
+    if os.getenv("SPHERE_SM37_IMPORT_ENABLED", "false").lower() != "true":
+        raise HTTPException(503, "SM37 import is disabled")
+    expected_token = os.getenv("SPHERE_SM37_IMPORT_TOKEN", "").strip()
+    supplied_token = request.headers.get("X-SPHERE-SM37-Token", "").strip()
+    if not expected_token:
+        raise HTTPException(503, "SM37 API import token is not configured; use the local approved importer")
+    if request.headers.get("X-SPHERE-Action") != "sm37-import" or not secrets.compare_digest(supplied_token, expected_token):
+        raise HTTPException(403, "SM37 import authorization failed")
+    if len(records) > 5000:
+        raise HTTPException(413, "SM37 import batch is limited to 5000 records")
+    try:
+        return import_job_executions(records)
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(400, f"SM37 import failed: {type(error).__name__}") from None
+
+
+@app.get("/jobs/verify")
+def jobs_verify_endpoint(
+    job: str = Query(..., min_length=1, max_length=512),
+    program: str | None = Query(None, max_length=512),
+    host: str | None = Query(None, max_length=120),
+    observed_at: str | None = Query(None, max_length=64),
+    window_minutes: int = Query(30, ge=5, le=180),
+):
+    try:
+        return verify_workload(job, program=program, host=host, observed_at=observed_at, window_minutes=window_minutes)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"SM37 verification unavailable: {type(error).__name__}") from None
+
+
+@app.get("/jobs/monitor")
+def jobs_monitor_endpoint(
+    days: int = Query(1, ge=1, le=30),
+    limit: int = Query(200, ge=1, le=1000),
+):
+    try:
+        return job_monitor(days=days, limit=limit)
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Job Monitor unavailable: {type(error).__name__}") from None
+
+
+@app.get("/jobs/analytics")
+def jobs_analytics_endpoint(
+    job: str = Query(..., min_length=1, max_length=512),
+    program: str | None = Query(None, max_length=512),
+    days: int = Query(7, ge=1, le=90),
+):
+    try:
+        return workload_execution_analytics(job, program=program, days=days)
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Job analytics unavailable: {type(error).__name__}") from None
+
+
+@app.get("/jobs/baseline")
+def jobs_baseline_endpoint(
+    job: str = Query(..., min_length=1, max_length=512),
+    program: str | None = Query(None, max_length=512),
+    current_hours: int = Query(24, ge=1, le=168),
+    baseline_days: int = Query(7, ge=1, le=30),
+):
+    try:
+        return workload_baseline(job, program=program, current_hours=current_hours, baseline_days=baseline_days)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Workload baseline unavailable: {type(error).__name__}") from None
+
+
+@app.get("/jobs/correlation")
+def jobs_correlation_endpoint(
+    job: str = Query(..., min_length=1, max_length=512),
+    program: str | None = Query(None, max_length=512),
+    days: int = Query(1, ge=1, le=30),
+    limit: int = Query(200, ge=1, le=1000),
+):
+    try:
+        return correlation_timeline(job, program=program, days=days, limit=limit)
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Job correlation timeline unavailable: {type(error).__name__}") from None
+
+
+@app.get("/review/queue")
+def review_queue_endpoint(
+    days: int = Query(1, ge=1, le=30),
+    limit: int = Query(100, ge=1, le=500),
+):
+    try:
+        return review_queue(days=days, limit=limit)
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Review queue unavailable: {type(error).__name__}") from None
+
+
+@app.get("/reports/investigation")
+def investigation_report_endpoint(
+    job: str = Query(..., min_length=1, max_length=512),
+    program: str | None = Query(None, max_length=512),
+    host: str | None = Query(None, max_length=120),
+    observed_at: str | None = Query(None, max_length=64),
+    days: int = Query(7, ge=1, le=30),
+):
+    try:
+        return investigation_report(job, program=program, host=host, observed_at=observed_at, days=days)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Investigation report unavailable: {type(error).__name__}") from None
+
+
+@app.get("/platform/readiness")
+def platform_readiness_endpoint():
+    try:
+        return platform_readiness()
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Platform readiness unavailable: {type(error).__name__}") from None
 
 
 def __getattr__(name):

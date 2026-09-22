@@ -524,7 +524,7 @@ export default function RundeckSource({ onCollection }) {
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span>{formatTime(latestCollectionAt, true)} WIB</span>
           <span>{appCount || '—'} APP</span>
-          <span>Run #{latest?.execution_id || '—'}</span>
+          <span className="rundeckCycleIdentityV132">Performance <b>READY</b> #{latest?.execution_id || '—'}</span>
         </div>
       </div>
       <div className="rundeckActions">
@@ -543,9 +543,9 @@ export default function RundeckSource({ onCollection }) {
             className="rundeckCollectButton"
             disabled={actionBusy || !runState.allowed}
             onClick={collectNow}
-            title={runState.running ? 'Rundeck job is still running' : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
+            title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Performance READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
           >
-            <SphereIcon name="refresh" /> {actionBusy ? 'Starting…' : runState.running ? `Running #${runState.execution_id || ''}` : runState.cooldown ? 'Cooldown' : 'Collect Now'}
+            <SphereIcon name="refresh" /> {actionBusy ? 'Collector STARTING' : runState.running ? `Collector RUNNING #${runState.execution_id || '—'}` : runState.cooldown ? 'Collector COOLDOWN' : 'Collect Now'}
           </button>
         )}
       </div>

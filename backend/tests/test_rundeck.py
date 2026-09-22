@@ -14,7 +14,8 @@ from backend.rundeck_incident import continuous_incident_samples, incident_sever
 from backend.rundeck_poller import execution_matches
 from backend.rundeck_status import host_resource_state, operational_state, sap_workload_state
 from backend.rundeck_store import ingest, collections, validate, identifier
-from backend.rundeck_trends import resolve_bucket
+from backend.rundeck_trends import resolve_bucket, resolve_interval_seconds
+from backend.rundeck_watchdog import append_event, execution_age_seconds, job_matches, read_events, watchdog_decision
 
 HOSTS = ['fixture-a', 'fixture-b', 'fixture-c', 'fixture-d', 'fixture-e']
 
@@ -111,7 +112,7 @@ class IngestionTests(unittest.TestCase):
             self.assertEqual(ingest(execution(status='running'), b'', HOSTS, root)['status'], 'PROCESSING')
             self.assertEqual(ingest(execution(), output(HOSTS), HOSTS, root)['status'], 'READY')
 
-    def test_only_whitelisted_collect_now_is_mutating(self):
+    def test_only_explicitly_whitelisted_routes_are_mutating(self):
         from backend.rundeck_api import app
 
         mutating = {
@@ -120,7 +121,10 @@ class IngestionTests(unittest.TestCase):
             for method in route.methods
             if method in {'POST', 'PUT', 'PATCH', 'DELETE'}
         }
-        self.assertEqual(mutating, {('/collect-now', 'POST')})
+        self.assertEqual(mutating, {
+            ('/collect-now', 'POST'),
+            ('/jobs/executions/import', 'POST'),
+        })
 
     def test_history_and_evaluation_routes_are_read_only(self):
         from backend.rundeck_api import app
@@ -134,6 +138,38 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(methods_by_path['/history/jobs/current'], {'GET'})
         self.assertEqual(methods_by_path['/history/incidents'], {'GET'})
         self.assertEqual(methods_by_path['/evaluation/workloads'], {'GET'})
+
+    def test_trend_gap_interval_follows_resolved_bucket(self):
+        self.assertEqual(resolve_interval_seconds('30m', 'auto', 600), 600)
+        self.assertEqual(resolve_interval_seconds('6h', 'auto', 600), 600)
+        self.assertEqual(resolve_interval_seconds('24h', 'auto', 600), 1800)
+        self.assertEqual(resolve_interval_seconds('7d', 'auto', 600), 3600)
+        self.assertEqual(resolve_interval_seconds('30d', 'auto', 600), 21600)
+        self.assertEqual(resolve_interval_seconds('24h', '1d', 600), 86400)
+
+    def test_watchdog_audit_log_newest_first(self):
+        with TemporaryDirectory() as directory, patch('backend.rundeck_watchdog.ROOT', Path(directory)):
+            append_event({'event': 'FIRST', 'execution_id': '1'})
+            append_event({'event': 'SECOND', 'execution_id': '2'})
+            items = read_events(10)
+            self.assertEqual([item['event'] for item in items[:2]], ['SECOND', 'FIRST'])
+
+    def test_watchdog_requires_confirmation_before_abort(self):
+        self.assertEqual(watchdog_decision(120, 1, 300, 600, 2), 'NORMAL')
+        self.assertEqual(watchdog_decision(420, 1, 300, 600, 2), 'WARNING')
+        self.assertEqual(watchdog_decision(700, 1, 300, 600, 2), 'WARNING')
+        self.assertEqual(watchdog_decision(700, 2, 300, 600, 2), 'ABORT')
+
+    def test_watchdog_job_identity_is_exact(self):
+        row = {'job': {'id': 'job-1', 'project': 'Linux', 'group': 'SAP/AOP', 'name': '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check '}}
+        self.assertTrue(job_matches(row, 'job-1', 'Linux', 'SAP/AOP', '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check'))
+        self.assertFalse(job_matches(row, 'job-2', 'Linux', 'SAP/AOP', '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check'))
+        self.assertFalse(job_matches(row, 'job-1', 'Linux', 'SAP/AOQ', '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check'))
+
+    def test_watchdog_execution_age_uses_rundeck_started_at(self):
+        row = {'date-started': {'date': '2026-09-22T03:00:00Z'}}
+        at = datetime(2026, 9, 22, 3, 12, tzinfo=timezone.utc)
+        self.assertEqual(execution_age_seconds(row, at=at), 720)
 
     def test_job_identity_does_not_depend_on_uuid(self):
         group = 'SAP/AOP'
