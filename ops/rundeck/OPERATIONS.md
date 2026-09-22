@@ -10,6 +10,7 @@ Run QA before activation:
 cd /root/rundeck-sphere-dev
 git pull --ff-only origin rundeck-sphere-dev
 bash -n ops/rundeck/deploy-dev.sh
+/opt/sphere/tools/bin/uv pip install --python /opt/sphere-rundeck-dev/venv/bin/python -r backend/requirements.txt
 /opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
 npm run qa
 bash ops/rundeck/deploy-dev.sh

@@ -54,7 +54,7 @@ const checks = [
   ['SM37 evidence styling is subdued', files.sm37Css.includes('background:transparent') && files.sm37Css.includes('border-left-width:1px')],
   ['Selected workload still hides zero-value I/O noise in multi-series profile', files.jobHistory.includes('some((value) => Math.abs(value) > 0)')],
   ['Job Intelligence smoke covers readiness source monitor and review queue', files.smoke.includes('/platform/readiness') && files.smoke.includes('/jobs/source') && files.smoke.includes('/jobs/monitor') && files.smoke.includes('/review/queue')],
-  ['Server Trend pins selected range and marks collection gaps', files.serverTrend.includes('GAP_THRESHOLD_MS') && files.serverTrend.includes("formatter: 'NO DATA'") && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
+  ['Server Trend pins selected range and marks collection gaps', files.serverTrend.includes('gapThresholdMs') && files.serverTrend.includes("formatter: 'NO DATA'") && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
 ]
