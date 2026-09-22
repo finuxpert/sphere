@@ -36,6 +36,7 @@ cleanup() {
     /tmp/sphere-dev-evaluation.json \
     /tmp/sphere-dev-platform.json \
     /tmp/sphere-dev-metrics.txt \
+    /tmp/sphere-dev-watchdog-events.json \
     /tmp/sphere-dev-smoke.html \
     /tmp/sphere-dev-public-latest.json \
     /tmp/sphere-prod-public-latest.json \
@@ -218,6 +219,9 @@ grep -q '"collection_id"' /tmp/sphere-dev-public-latest.json
 curl --noproxy '*' -fsS --max-time 10 https://sphere.astraotoparts.co.id/dev/api/metrics -o /tmp/sphere-dev-metrics.txt
 grep -q 'sphere_collection_age_seconds' /tmp/sphere-dev-metrics.txt
 grep -q 'sphere_rundeck_execution_stuck' /tmp/sphere-dev-metrics.txt
+fetch_json 'https://sphere.astraotoparts.co.id/dev/api/watchdog/events?limit=5' /tmp/sphere-dev-watchdog-events.json
+grep -q '"items"' /tmp/sphere-dev-watchdog-events.json
+bash "$RELEASE/ops/rundeck/smoke-watchdog-dev.sh" 'https://sphere.astraotoparts.co.id/dev'
 
 # Cross-environment contract: a DEV deploy is not successful unless the existing
 # production Rundeck routes still return JSON. This specifically prevents the
