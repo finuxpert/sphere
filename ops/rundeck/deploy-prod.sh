@@ -43,6 +43,10 @@ cleanup() {
     /tmp/sphere-prod-sap-health.json \
     /tmp/sphere-prod-latest.json \
     /tmp/sphere-prod-evaluation.json \
+    /tmp/sphere-prod-metrics.txt \
+    /tmp/sphere-prod-watchdog.json \
+    /tmp/sphere-prod-jobs-source.json \
+    /tmp/sphere-prod-readiness.json \
     /tmp/sphere-prod-smoke.html \
     /tmp/sphere-dev-smoke-after-prod.html
 }
@@ -234,6 +238,19 @@ require_contains "Rundeck collections" /tmp/sphere-prod-latest.json 'collection_
 
 smoke_fetch "Rundeck evaluation" "https://sphere.astraotoparts.co.id/api/evaluation/workloads?period=1d&type=ALL&limit=1" /tmp/sphere-prod-evaluation.json
 require_contains "Rundeck evaluation" /tmp/sphere-prod-evaluation.json '"items"'
+
+smoke_fetch "Rundeck metrics" "https://sphere.astraotoparts.co.id/api/metrics" /tmp/sphere-prod-metrics.txt
+require_contains "Rundeck metrics collection age" /tmp/sphere-prod-metrics.txt 'sphere_collection_age_seconds'
+require_contains "Rundeck metrics watchdog" /tmp/sphere-prod-metrics.txt 'sphere_rundeck_execution_stuck'
+
+smoke_fetch "Rundeck watchdog events" "https://sphere.astraotoparts.co.id/api/watchdog/events?limit=5" /tmp/sphere-prod-watchdog.json
+require_contains "Rundeck watchdog events" /tmp/sphere-prod-watchdog.json '"items"'
+
+smoke_fetch "SAP job source" "https://sphere.astraotoparts.co.id/api/jobs/source" /tmp/sphere-prod-jobs-source.json
+require_contains "SAP job source" /tmp/sphere-prod-jobs-source.json '"status"'
+
+smoke_fetch "Platform readiness" "https://sphere.astraotoparts.co.id/api/platform/readiness" /tmp/sphere-prod-readiness.json
+require_contains "Platform readiness" /tmp/sphere-prod-readiness.json '"status"'
 
 smoke_fetch "PROD web" "https://sphere.astraotoparts.co.id/" /tmp/sphere-prod-smoke.html
 require_contains "PROD web" /tmp/sphere-prod-smoke.html '/assets/'
