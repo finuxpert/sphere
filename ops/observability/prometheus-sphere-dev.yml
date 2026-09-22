@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+rule_files:
+  - sphere-prometheus-rules.yml
+
+scrape_configs:
+  - job_name: sphere-dev
+    scheme: https
+    metrics_path: /dev/api/metrics
+    static_configs:
+      - targets:
+          - sphere.astraotoparts.co.id
+        labels:
+          service: sphere
+          environment: dev
