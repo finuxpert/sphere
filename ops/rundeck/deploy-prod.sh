@@ -250,7 +250,42 @@ smoke_fetch "SAP job source" "https://sphere.astraotoparts.co.id/api/jobs/source
 require_contains "SAP job source" /tmp/sphere-prod-jobs-source.json '"status"'
 
 smoke_fetch "Platform readiness" "https://sphere.astraotoparts.co.id/api/platform/readiness" /tmp/sphere-prod-readiness.json
-require_contains "Platform readiness" /tmp/sphere-prod-readiness.json '"status"'
+"$API_ROOT/venv/bin/python" - /tmp/sphere-prod-readiness.json <<'PY'
+import json
+import sys
+
+payload = json.load(open(sys.argv[1]))
+features = payload.get("features") or {}
+tables = payload.get("tables") or {}
+errors = []
+
+for name in ("rundeck_collections", "rundeck_host_metrics", "rundeck_workload_observations"):
+    table = tables.get(name) or {}
+    if not table.get("exists"):
+        errors.append(f"{name} missing")
+
+for name in ("workload_history", "baseline", "correlation"):
+    if features.get(name) != "READY":
+        errors.append(f"{name}={features.get(name)}")
+
+# SM37 is optional until an authoritative feed is imported. NOT_CONFIGURED and
+# WAITING_FOR_SM37_FEED are valid production readiness states.
+sm37 = features.get("sm37_verification")
+job_monitor = features.get("job_monitor")
+if sm37 not in {"READY", "NOT_CONFIGURED"}:
+    errors.append(f"sm37_verification={sm37}")
+if job_monitor not in {"READY", "WAITING_FOR_SM37_FEED"}:
+    errors.append(f"job_monitor={job_monitor}")
+
+if errors:
+    raise SystemExit("SMOKE FAILED Platform readiness: " + "; ".join(errors))
+
+print(
+    "SMOKE PASS Platform readiness "
+    f"workload_history={features.get('workload_history')} "
+    f"sm37={sm37} job_monitor={job_monitor}"
+)
+PY
 
 smoke_fetch "PROD web" "https://sphere.astraotoparts.co.id/" /tmp/sphere-prod-smoke.html
 require_contains "PROD web" /tmp/sphere-prod-smoke.html '/assets/'
