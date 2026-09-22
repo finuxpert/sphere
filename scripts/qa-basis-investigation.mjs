@@ -12,6 +12,7 @@ const files = {
   sm37Portal: read('src/tools/components/RundeckSm37LivePortal.jsx'),
   sm37Css: read('src/tools/components/RundeckSm37Verification.css'),
   explorer: read('src/tools/components/RundeckWorkloadExplorer.jsx'),
+  serverTrend: read('src/tools/components/RundeckServerTrend.jsx'),
   jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
   api: read('backend/rundeck_api.py'),
   intelligence: read('backend/rundeck_job_intelligence.py'),
@@ -19,10 +20,12 @@ const files = {
   importer: read('ops/rundeck/import-sm37.py'),
   smoke: read('ops/rundeck/smoke-job-intelligence-dev.sh'),
   envExample: read('ops/rundeck/rundeck-dev.env.example'),
+  watchdog: read('backend/rundeck_watchdog.py'),
+  metrics: read('backend/rundeck_metrics.py'),
 }
 
 const checks = [
-  ['final campaign version is v1.29.0', files.version.includes("APP_VERSION = '1.29.0'") && files.version.includes('basis-investigation-workspace-v1.29.0')],
+  ['collector reliability version is v1.30.0', files.version.includes("APP_VERSION = '1.30.0'") && files.version.includes('collector-reliability-ui-v1.30.0')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['Job and Program History remains available', files.wrapper.includes('Job &amp; Program History')],
   ['SAP Job Monitor is wired as a third mode', files.wrapper.includes('RundeckJobMonitor') && files.wrapper.includes("monitoringMode === 'jobs'") && files.wrapper.includes('SAP Job Monitor')],
@@ -51,6 +54,9 @@ const checks = [
   ['SM37 evidence styling is subdued', files.sm37Css.includes('background:transparent') && files.sm37Css.includes('border-left-width:1px')],
   ['Selected workload still hides zero-value I/O noise in multi-series profile', files.jobHistory.includes('some((value) => Math.abs(value) > 0)')],
   ['Job Intelligence smoke covers readiness source monitor and review queue', files.smoke.includes('/platform/readiness') && files.smoke.includes('/jobs/source') && files.smoke.includes('/jobs/monitor') && files.smoke.includes('/review/queue')],
+  ['Server Trend pins selected range and marks collection gaps', files.serverTrend.includes('GAP_THRESHOLD_MS') && files.serverTrend.includes("formatter: 'NO DATA'") && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
+  ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
+  ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
 ]
 
 const failed = checks.filter(([, ok]) => !ok)
@@ -59,4 +65,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.29.0 Basis investigation contract checks passed.')
+console.log('\nSPHERE v1.30.0 collector reliability contract checks passed.')

@@ -15,6 +15,7 @@ from backend.rundeck_poller import execution_matches
 from backend.rundeck_status import host_resource_state, operational_state, sap_workload_state
 from backend.rundeck_store import ingest, collections, validate, identifier
 from backend.rundeck_trends import resolve_bucket
+from backend.rundeck_watchdog import execution_age_seconds, job_matches, watchdog_decision
 
 HOSTS = ['fixture-a', 'fixture-b', 'fixture-c', 'fixture-d', 'fixture-e']
 
@@ -137,6 +138,23 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(methods_by_path['/history/jobs/current'], {'GET'})
         self.assertEqual(methods_by_path['/history/incidents'], {'GET'})
         self.assertEqual(methods_by_path['/evaluation/workloads'], {'GET'})
+
+    def test_watchdog_requires_confirmation_before_abort(self):
+        self.assertEqual(watchdog_decision(120, 1, 300, 600, 2), 'NORMAL')
+        self.assertEqual(watchdog_decision(420, 1, 300, 600, 2), 'WARNING')
+        self.assertEqual(watchdog_decision(700, 1, 300, 600, 2), 'WARNING')
+        self.assertEqual(watchdog_decision(700, 2, 300, 600, 2), 'ABORT')
+
+    def test_watchdog_job_identity_is_exact(self):
+        row = {'job': {'id': 'job-1', 'project': 'Linux', 'group': 'SAP/AOP', 'name': '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check '}}
+        self.assertTrue(job_matches(row, 'job-1', 'Linux', 'SAP/AOP', '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check'))
+        self.assertFalse(job_matches(row, 'job-2', 'Linux', 'SAP/AOP', '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check'))
+        self.assertFalse(job_matches(row, 'job-1', 'Linux', 'SAP/AOQ', '[Critical]-[Daily Check] SPHERE SAP Work Proccess Check'))
+
+    def test_watchdog_execution_age_uses_rundeck_started_at(self):
+        row = {'date-started': {'date': '2026-09-22T03:00:00Z'}}
+        at = datetime(2026, 9, 22, 3, 12, tzinfo=timezone.utc)
+        self.assertEqual(execution_age_seconds(row, at=at), 720)
 
     def test_job_identity_does_not_depend_on_uuid(self):
         group = 'SAP/AOP'

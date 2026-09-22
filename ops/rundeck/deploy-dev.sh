@@ -35,6 +35,7 @@ cleanup() {
     /tmp/sphere-dev-health.json \
     /tmp/sphere-dev-evaluation.json \
     /tmp/sphere-dev-platform.json \
+    /tmp/sphere-dev-metrics.txt \
     /tmp/sphere-dev-smoke.html \
     /tmp/sphere-dev-public-latest.json \
     /tmp/sphere-prod-public-latest.json \
@@ -102,7 +103,11 @@ python3 -m compileall -q "$RELEASE/backend"
 
 if ! test -x /opt/sphere-rundeck-dev/venv/bin/python; then
   /opt/sphere/tools/bin/uv venv --python /opt/sphere/current/.venv/bin/python /opt/sphere-rundeck-dev/venv
+fi
+if test -x /opt/sphere/tools/bin/uv; then
   /opt/sphere/tools/bin/uv pip install --python /opt/sphere-rundeck-dev/venv/bin/python -r "$RELEASE/backend/requirements.txt"
+else
+  /opt/sphere-rundeck-dev/venv/bin/pip install -r "$RELEASE/backend/requirements.txt"
 fi
 
 install -d -o sphere -g sphere -m 0750 /var/lib/sphere/ingestion
@@ -146,6 +151,8 @@ nginx -t
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-api.service" /etc/systemd/system/
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-poller.service" /etc/systemd/system/
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-poller.timer" /etc/systemd/system/
+install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-watchdog.service" /etc/systemd/system/
+install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-watchdog.timer" /etc/systemd/system/
 
 # Runner credential is optional while Collect Now remains disabled.
 install -d -m 0755 /etc/systemd/system/sphere-rundeck-api.service.d
@@ -160,15 +167,28 @@ else
   rm -f "$RUNNER_DROPIN"
 fi
 
+install -d -m 0755 /etc/systemd/system/sphere-rundeck-watchdog.service.d
+WATCHDOG_RUNNER_DROPIN=/etc/systemd/system/sphere-rundeck-watchdog.service.d/10-rundeck-runner-credential.conf
+if test -s /etc/sphere/rundeck-runner.token; then
+  cat > "$WATCHDOG_RUNNER_DROPIN" <<'EOF'
+[Service]
+LoadCredential=rundeck-runner:/etc/sphere/rundeck-runner.token
+EOF
+  chmod 0644 "$WATCHDOG_RUNNER_DROPIN"
+else
+  rm -f "$WATCHDOG_RUNNER_DROPIN"
+fi
+
 systemctl daemon-reload
 
 # Transactional activation. Any failing command below triggers rollback().
 ln -sfn "$RELEASE" "$API_CURRENT"
 ln -sfn "$WEB" "$WEB_CURRENT"
-systemctl enable sphere-rundeck-api.service sphere-rundeck-poller.timer >/dev/null
+systemctl enable sphere-rundeck-api.service sphere-rundeck-poller.timer sphere-rundeck-watchdog.timer >/dev/null
 systemctl restart sphere-rundeck-api.service
-systemctl enable --now sphere-rundeck-poller.timer >/dev/null
+systemctl enable --now sphere-rundeck-poller.timer sphere-rundeck-watchdog.timer >/dev/null
 systemctl start sphere-rundeck-poller.service
+systemctl start sphere-rundeck-watchdog.service
 systemctl reload nginx
 
 # Local API restart is allowed a bounded warm-up window.
@@ -195,6 +215,9 @@ curl --noproxy '*' -fsS --max-time 10 https://sphere.astraotoparts.co.id/dev/ -o
 grep -q '/dev/assets/' /tmp/sphere-dev-smoke.html
 fetch_json 'https://sphere.astraotoparts.co.id/dev/api/collections/latest' /tmp/sphere-dev-public-latest.json
 grep -q '"collection_id"' /tmp/sphere-dev-public-latest.json
+curl --noproxy '*' -fsS --max-time 10 https://sphere.astraotoparts.co.id/dev/api/metrics -o /tmp/sphere-dev-metrics.txt
+grep -q 'sphere_collection_age_seconds' /tmp/sphere-dev-metrics.txt
+grep -q 'sphere_rundeck_execution_stuck' /tmp/sphere-dev-metrics.txt
 
 # Cross-environment contract: a DEV deploy is not successful unless the existing
 # production Rundeck routes still return JSON. This specifically prevents the

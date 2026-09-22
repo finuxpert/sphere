@@ -54,6 +54,20 @@ rollout fallback.
 Keep `RUNDECK_COLLECT_NOW_ENABLED=false` until an authenticated user identity is enforced
 in front of the mutating API route.
 
+## Collector watchdog and self-healing
+
+v1.30 adds a dedicated collector watchdog:
+
+- `sphere-rundeck-watchdog.timer` checks the exact configured SPHERE Rundeck job every two minutes.
+- Warning threshold defaults to 5 minutes; abort threshold defaults to 10 minutes.
+- Auto-abort requires the same execution to breach the threshold on two consecutive checks.
+- `SPHERE_WATCHDOG_AUTO_ABORT=false` is the safe default. Enable it only after `RUNDECK_RUN_JOB_ID` is the exact approved collector UUID and the runner credential is present.
+- Runtime state is written to `/var/lib/sphere/ingestion/watchdog.json`; no token or Rundeck output body is persisted.
+- Prometheus exposition is available at `/dev/api/metrics`; example rules are in `ops/observability/sphere-prometheus-rules.yml`.
+
+The Server Trend chart pins the x-axis to the selected time window and inserts explicit
+`NO DATA` regions when collection cadence gaps exceed two expected 10-minute cycles.
+
 ## Collection-cycle consistency
 
 `GET /dev/api/history/hosts/latest` returns APP1 through APP5 from one latest READY
@@ -166,8 +180,8 @@ working-tree deploy guard.
 ## First checks during an incident
 
 ```bash
-systemctl status sphere-rundeck-api.service sphere-rundeck-poller.timer sphere-rundeck-poller.service --no-pager -l
-journalctl -u sphere-rundeck-api.service -u sphere-rundeck-poller.service -n 100 --no-pager
+systemctl status sphere-rundeck-api.service sphere-rundeck-poller.timer sphere-rundeck-poller.service sphere-rundeck-watchdog.timer sphere-rundeck-watchdog.service --no-pager -l
+journalctl -u sphere-rundeck-api.service -u sphere-rundeck-poller.service -u sphere-rundeck-watchdog.service -n 100 --no-pager
 curl -fsS https://sphere.astraotoparts.co.id/dev/api/health
 curl -fsS https://sphere.astraotoparts.co.id/dev/api/platform/health
 curl -fsS 'https://sphere.astraotoparts.co.id/dev/api/evaluation/workloads?period=1d&type=ALL&limit=5'
