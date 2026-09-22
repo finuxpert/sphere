@@ -14,7 +14,7 @@ from backend.rundeck_incident import continuous_incident_samples, incident_sever
 from backend.rundeck_poller import execution_matches
 from backend.rundeck_status import host_resource_state, operational_state, sap_workload_state
 from backend.rundeck_store import ingest, collections, validate, identifier
-from backend.rundeck_trends import resolve_bucket
+from backend.rundeck_trends import resolve_bucket, resolve_interval_seconds
 from backend.rundeck_watchdog import append_event, execution_age_seconds, job_matches, read_events, watchdog_decision
 
 HOSTS = ['fixture-a', 'fixture-b', 'fixture-c', 'fixture-d', 'fixture-e']
@@ -138,6 +138,14 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(methods_by_path['/history/jobs/current'], {'GET'})
         self.assertEqual(methods_by_path['/history/incidents'], {'GET'})
         self.assertEqual(methods_by_path['/evaluation/workloads'], {'GET'})
+
+    def test_trend_gap_interval_follows_resolved_bucket(self):
+        self.assertEqual(resolve_interval_seconds('30m', 'auto', 600), 600)
+        self.assertEqual(resolve_interval_seconds('6h', 'auto', 600), 600)
+        self.assertEqual(resolve_interval_seconds('24h', 'auto', 600), 1800)
+        self.assertEqual(resolve_interval_seconds('7d', 'auto', 600), 3600)
+        self.assertEqual(resolve_interval_seconds('30d', 'auto', 600), 21600)
+        self.assertEqual(resolve_interval_seconds('24h', '1d', 600), 86400)
 
     def test_watchdog_audit_log_newest_first(self):
         with TemporaryDirectory() as directory, patch('backend.rundeck_watchdog.ROOT', Path(directory)):
