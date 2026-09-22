@@ -1,6 +1,7 @@
 """Bounded self-healing guard for the single approved SPHERE Rundeck collector job."""
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 from datetime import datetime, timezone
@@ -12,6 +13,49 @@ from backend.rundeck_store import ROOT, initialize, now, write_json
 
 BASE = "http://10.14.55.205:4440"
 API_VERSION = 44
+EVENT_LIMIT = 200
+EVENT_MAX_BYTES = 1024 * 1024
+
+
+def append_event(event: dict):
+    """Append a bounded, credential-free watchdog audit event."""
+    path = ROOT / "watchdog-events.jsonl"
+    lock_path = ROOT / "watchdog-events.lock"
+    payload = {"at": now(), **event}
+    initialize()
+    with lock_path.open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(payload, separators=(",", ":")) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            if path.stat().st_size > EVENT_MAX_BYTES:
+                lines = path.read_text(encoding="utf-8", errors="replace").splitlines()[-EVENT_LIMIT:]
+                temporary = path.with_suffix(".tmp")
+                temporary.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+                temporary.replace(path)
+        except OSError:
+            pass
+
+
+def read_events(limit: int = 50) -> list[dict]:
+    path = ROOT / "watchdog-events.jsonl"
+    if not path.is_file():
+        return []
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()[-max(1, min(limit, EVENT_LIMIT)):]
+    except OSError:
+        return []
+    items = []
+    for line in reversed(lines):
+        try:
+            value = json.loads(line)
+            if isinstance(value, dict):
+                items.append(value)
+        except ValueError:
+            continue
+    return items
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -121,6 +165,12 @@ def run():
         age = execution_age_seconds(execution)
         confirmations = int(previous.get("confirmations") or 0) + 1 if str(previous.get("execution_id") or "") == execution_id else 1
         decision = watchdog_decision(age, confirmations, warning_seconds, abort_seconds, required_confirmations)
+        detected_stuck_at = previous.get("detected_stuck_at") if str(previous.get("execution_id") or "") == execution_id else None
+        if decision != "NORMAL" and not detected_stuck_at:
+            detected_stuck_at = now()
+            append_event({"event": "EXECUTION_LONG_RUNNING", "execution_id": execution_id,
+                          "started_at": (execution.get("date-started") or {}).get("date"),
+                          "running_duration_seconds": age, "decision": decision})
         base = {"status": "WARNING" if decision != "NORMAL" else "NORMAL", "execution_id": execution_id,
                 "execution_status": str(execution.get("status") or "running"),
                 "started_at": (execution.get("date-started") or {}).get("date"),
@@ -129,23 +179,43 @@ def run():
                 "required_confirmations": required_confirmations, "auto_abort_enabled": auto_abort,
                 "reader_credential_mode": reader_mode,
                 "runner_credential_mode": credential_mode("rundeck-runner", "RUNDECK_RUNNER_TOKEN_FILE"),
+                "detected_stuck_at": detected_stuck_at,
                 "auto_abort_total": total, "last_auto_recovery": previous.get("last_auto_recovery")}
         if decision != "ABORT":
             _write(base); return
         if not auto_abort:
+            append_event({"event": "AUTO_ABORT_BLOCKED", "execution_id": execution_id,
+                          "reason": "AUTO_ABORT_DISABLED", "running_duration_seconds": age})
             _write({**base, "status": "CRITICAL", "recovery_action": "AUTO_ABORT_DISABLED"}); return
         if base["runner_credential_mode"] == "missing":
+            append_event({"event": "RECOVERY_FAILED", "execution_id": execution_id,
+                          "reason": "RUNNER_CREDENTIAL_MISSING", "running_duration_seconds": age})
             _write({**base, "status": "RECOVERY_FAILED", "recovery_action": "RUNNER_CREDENTIAL_MISSING"}); return
 
         runner = read_credential("rundeck-runner", "RUNDECK_RUNNER_TOKEN_FILE")
         result = _request(f"/api/{API_VERSION}/execution/{execution_id}/abort", runner, method="POST")
         abort_status = str((result.get("abort") or {}).get("status") or (result.get("execution") or {}).get("status") or "").lower()
         if abort_status not in {"aborted", "pending"}:
+            append_event({"event": "RECOVERY_FAILED", "execution_id": execution_id,
+                          "reason": "ABORT_REJECTED", "running_duration_seconds": age})
             _write({**base, "status": "RECOVERY_FAILED", "recovery_action": "ABORT_REJECTED"}); return
         recovered_at = now()
+        recovery = {
+            "execution_id": execution_id,
+            "detected_stuck_at": detected_stuck_at,
+            "aborted_at": recovered_at,
+            "running_duration_seconds": age,
+            "abort_status": abort_status,
+            "status": "ABORTED",
+            "next_successful_collection": None,
+            "recovery_confirmed_at": None,
+        }
+        write_json(ROOT / "watchdog-recovery.json", recovery)
+        append_event({"event": "AUTO_ABORT", **recovery})
         _write({**base, "status": "RECOVERED", "recovery_action": "AUTO_ABORT", "abort_status": abort_status,
                 "auto_abort_total": total + 1, "last_auto_recovery": recovered_at})
     except Exception as error:
+        append_event({"event": "WATCHDOG_ERROR", "error_type": type(error).__name__})
         _write({"status": "ERROR", "error_type": type(error).__name__, "auto_abort_enabled": auto_abort,
                 "auto_abort_total": total, "last_auto_recovery": previous.get("last_auto_recovery")})
         raise

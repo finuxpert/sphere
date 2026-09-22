@@ -169,6 +169,22 @@ def poll():
                 "job_id_observed": (execution.get("job") or {}).get("id"),
             })
             _record_ingestion_stat("success")
+            recovery_path = ROOT / "watchdog-recovery.json"
+            try:
+                recovery = json.loads(recovery_path.read_text()) if recovery_path.is_file() else {}
+            except (OSError, ValueError):
+                recovery = {}
+            if recovery.get("status") == "ABORTED" and not recovery.get("next_successful_collection"):
+                confirmed_at = now()
+                recovery.update({
+                    "status": "CONFIRMED",
+                    "next_successful_collection": result["collection_id"],
+                    "next_successful_execution": eid,
+                    "recovery_confirmed_at": confirmed_at,
+                })
+                write_json(recovery_path, recovery)
+                from backend.rundeck_watchdog import append_event
+                append_event({"event": "RECOVERY_CONFIRMED", **recovery})
         except BlockingIOError:
             write_json(ROOT / "poller.json", {"status": "BUSY", "checked_at": now()})
         except Exception as error:

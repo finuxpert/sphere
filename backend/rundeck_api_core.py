@@ -28,6 +28,7 @@ from backend.rundeck_monitoring import (
 )
 from backend.rundeck_platform import platform_health
 from backend.rundeck_store import ROOT, collections, identifier
+from backend.rundeck_watchdog import read_events as read_watchdog_events
 from backend.rundeck_trends import (
     collection_timeline,
     collection_timeline_at,
@@ -99,6 +100,11 @@ def health():
 def metrics_endpoint():
     payload, content_type = render_metrics(ROOT)
     return Response(content=payload, media_type=content_type)
+
+
+@app.get("/watchdog/events")
+def watchdog_events(limit: int = Query(50, ge=1, le=200)):
+    return {"items": read_watchdog_events(limit)}
 
 
 @app.get("/platform/health")
