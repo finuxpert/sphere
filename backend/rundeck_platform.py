@@ -180,6 +180,7 @@ def _collector_state(root: Path) -> dict:
 
     state = _json_file(root / "poller.json") or {}
     watchdog = _json_file(root / "watchdog.json") or {}
+    recovery = _json_file(root / "watchdog-recovery.json") or {}
     stats = _json_file(root / "poller-stats.json") or {}
     raw_status = str(state.get("status") or "UNKNOWN").upper()
     stale_minutes = max(1, int(os.getenv("RUNDECK_STALE_MINUTES", "20")))
@@ -216,8 +217,10 @@ def _collector_state(root: Path) -> dict:
         "running_duration_seconds": watchdog.get("running_duration_seconds"),
         "watchdog_status": watchdog_status,
         "watchdog_checked_at": watchdog.get("checked_at"),
+        "auto_healing_enabled": bool(watchdog.get("auto_abort_enabled")),
         "last_auto_recovery": watchdog.get("last_auto_recovery"),
         "auto_abort_total": int(watchdog.get("auto_abort_total") or 0),
+        "last_recovery": recovery or None,
         "ingestion_success_total": int(stats.get("success_total") or 0),
         "ingestion_failure_total": int(stats.get("failure_total") or 0),
     }
