@@ -427,6 +427,7 @@ def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> d
         "metric": "availability",
         "metric_label": "Availability",
         "unit": "%",
+        "bucket_interval_seconds": max(60, int(os.getenv("SPHERE_AVAILABILITY_CADENCE_SECONDS", "600"))),
         "warning": None,
         "critical": None,
         "items": items,
