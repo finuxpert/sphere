@@ -4,6 +4,8 @@ const read = (path) => fs.readFileSync(path, 'utf8')
 const files = {
   version: read('src/app/version.js'),
   wrapper: read('src/tools/components/RundeckMonitoringHistory.jsx'),
+  source: read('src/tools/components/RundeckSource.jsx'),
+  availability: read('src/tools/components/RundeckAvailability.jsx'),
   core: read('src/tools/components/RundeckMonitoringHistoryCore.jsx'),
   workspace: read('src/tools/components/RundeckWorkspace.css'),
   jobMonitor: read('src/tools/components/RundeckJobMonitor.jsx'),
@@ -29,7 +31,7 @@ const files = {
 }
 
 const checks = [
-  ['self-healing observability version is v1.31.0', files.version.includes("APP_VERSION = '1.31.0'") && files.version.includes('self-healing-ops-ui-v1.31.0')],
+  ['operator clarity version is v1.32.0', files.version.includes("APP_VERSION = '1.32.0'") && files.version.includes('operator-clarity-ui-v1.32.0')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['Job and Program History remains available', files.wrapper.includes('Job &amp; Program History')],
   ['SAP Job Monitor is wired as a third mode', files.wrapper.includes('RundeckJobMonitor') && files.wrapper.includes("monitoringMode === 'jobs'") && files.wrapper.includes('SAP Job Monitor')],
@@ -58,10 +60,13 @@ const checks = [
   ['SM37 evidence styling is subdued', files.sm37Css.includes('background:transparent') && files.sm37Css.includes('border-left-width:1px')],
   ['Selected workload still hides zero-value I/O noise in multi-series profile', files.jobHistory.includes('some((value) => Math.abs(value) > 0)')],
   ['Job Intelligence smoke covers readiness source monitor and review queue', files.smoke.includes('/platform/readiness') && files.smoke.includes('/jobs/source') && files.smoke.includes('/jobs/monitor') && files.smoke.includes('/review/queue')],
-  ['Server Trend pins selected range and labels collection gaps', files.serverTrend.includes('gapThresholdMs') && files.serverTrend.includes('COLLECTION GAP') && files.serverTrend.includes('gapDurationText') && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
+  ['Server Trend pins selected range and exposes a dedicated collection-gap band', files.serverTrend.includes('CollectionGapBand') && files.serverTrend.includes('COLLECTION GAP') && files.serverTrend.includes('gapDurationText') && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
   ['System Health exposes collector watchdog and auto-healing context', files.systemHealth.includes('/platform/health') && files.systemHealth.includes('Auto-healing') && files.systemHealth.includes('Last Recovery')],
+  ['System Health explains ATTENTION with evidence and preserves RCA boundary', files.systemHealth.includes('primaryHealthSignal') && files.systemHealth.includes('SAP Workload CRITICAL') && files.systemHealth.includes('not a root-cause declaration')],
+  ['Run identity separates committed Performance, running Collector, and Availability cycles', files.source.includes('Performance <b>READY</b>') && files.source.includes('Collector RUNNING #') && files.availability.includes('Availability READY #')],
+  ['Long-range trend reduces point clutter while preserving hover emphasis', files.serverTrend.includes("compactPoints = ['30m', '1h', '3h', '6h']") && files.serverTrend.includes("showSymbol: availabilityMode || compactPoints") && files.serverTrend.includes("emphasis: { focus: 'series'")],
   ['watchdog audit route is read-only and available', files.apiCore.includes('@app.get("/watchdog/events")') && files.apiCore.includes('read_watchdog_events')],
   ['Prometheus scrape and alert rules are versioned', files.promConfig.includes('/dev/api/metrics') && files.promRules.includes('SphereCollectorExecutionStuck') && files.promRules.includes('SphereWatchdogAutoRecovery')],
 ]
@@ -72,4 +77,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.31.0 self-healing observability contract checks passed.')
+console.log('\nSPHERE v1.32.0 operator clarity contract checks passed.')
