@@ -15,7 +15,7 @@ from backend.rundeck_poller import execution_matches
 from backend.rundeck_status import host_resource_state, operational_state, sap_workload_state
 from backend.rundeck_store import ingest, collections, validate, identifier
 from backend.rundeck_trends import resolve_bucket
-from backend.rundeck_watchdog import execution_age_seconds, job_matches, watchdog_decision
+from backend.rundeck_watchdog import append_event, execution_age_seconds, job_matches, read_events, watchdog_decision
 
 HOSTS = ['fixture-a', 'fixture-b', 'fixture-c', 'fixture-d', 'fixture-e']
 
@@ -138,6 +138,13 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(methods_by_path['/history/jobs/current'], {'GET'})
         self.assertEqual(methods_by_path['/history/incidents'], {'GET'})
         self.assertEqual(methods_by_path['/evaluation/workloads'], {'GET'})
+
+    def test_watchdog_audit_log_newest_first(self):
+        with TemporaryDirectory() as directory, patch('backend.rundeck_watchdog.ROOT', Path(directory)):
+            append_event({'event': 'FIRST', 'execution_id': '1'})
+            append_event({'event': 'SECOND', 'execution_id': '2'})
+            items = read_events(10)
+            self.assertEqual([item['event'] for item in items[:2]], ['SECOND', 'FIRST'])
 
     def test_watchdog_requires_confirmation_before_abort(self):
         self.assertEqual(watchdog_decision(120, 1, 300, 600, 2), 'NORMAL')
