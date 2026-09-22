@@ -14,6 +14,7 @@ bash -n ops/rundeck/deploy-dev.sh
 /opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
 npm run qa
 bash ops/rundeck/deploy-dev.sh
+bash ops/rundeck/prod-readiness-check.sh
 ```
 
 `deploy-dev.sh` stages the backend and frontend release, validates Nginx, activates the
@@ -57,17 +58,21 @@ in front of the mutating API route.
 
 ## Collector watchdog and self-healing
 
-v1.30 adds a dedicated collector watchdog:
+v1.31 keeps the v1.30 collector watchdog and adds recovery audit, dashboard drill-down, and production-readiness gates:
 
 - `sphere-rundeck-watchdog.timer` checks the exact configured SPHERE Rundeck job every two minutes.
 - Warning threshold defaults to 5 minutes; abort threshold defaults to 10 minutes.
 - Auto-abort requires the same execution to breach the threshold on two consecutive checks.
 - `SPHERE_WATCHDOG_AUTO_ABORT=false` is the safe default. Enable it only after `RUNDECK_RUN_JOB_ID` is the exact approved collector UUID and the runner credential is present.
-- Runtime state is written to `/var/lib/sphere/ingestion/watchdog.json`; no token or Rundeck output body is persisted.
-- Prometheus exposition is available at `/dev/api/metrics`; example rules are in `ops/observability/sphere-prometheus-rules.yml`.
+- Runtime state is written to `/var/lib/sphere/ingestion/watchdog.json`; recovery confirmation is stored in `watchdog-recovery.json`.
+- A bounded JSONL audit trail is available through `GET /dev/api/watchdog/events`.
+- System Health exposes collector freshness, watchdog state, auto-healing state, and the latest recovery.
+- Prometheus exposition is available at `/dev/api/metrics`; versioned scrape/rule/Alertmanager templates live in `ops/observability/`.
+- `ops/rundeck/smoke-watchdog-dev.sh` validates the runtime without mutating Rundeck.
+- `ops/rundeck/prod-readiness-check.sh` blocks promotion when the collector is stale, watchdog is unhealthy, or auto-healing is disabled.
 
 The Server Trend chart pins the x-axis to the selected time window and inserts explicit
-`NO DATA` regions when collection cadence gaps exceed two expected 10-minute cycles.
+`COLLECTION GAP` regions with start/end time and duration when collection cadence gaps exceed two expected 10-minute cycles.
 
 ## Collection-cycle consistency
 
