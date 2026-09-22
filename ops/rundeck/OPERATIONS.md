@@ -74,6 +74,17 @@ v1.31 keeps the v1.30 collector watchdog and adds recovery audit, dashboard dril
 The Server Trend chart pins the x-axis to the selected time window and inserts explicit
 `COLLECTION GAP` regions with start/end time and duration when collection cadence gaps exceed two expected 10-minute cycles.
 
+## Operator clarity
+
+v1.32 makes data-cycle identity and monitoring evidence explicit:
+
+- Performance header shows the last committed `Performance READY #<execution>` snapshot.
+- A currently executing collector is labeled separately as `Collector RUNNING #<execution>`.
+- SAP Availability shows its own `Availability READY #<execution>` cycle.
+- System Health ATTENTION/CRITICAL includes the primary observed signal, while preserving the rule that a signal is not an automatic root-cause declaration.
+- Server Trend adds a dedicated COLLECTION GAP band with start/end time and duration.
+- 24H/7D/30D trends reduce point clutter and emphasize lines; detailed points remain available through hover.
+
 ## Collection-cycle consistency
 
 `GET /dev/api/history/hosts/latest` returns APP1 through APP5 from one latest READY
