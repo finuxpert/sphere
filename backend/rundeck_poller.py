@@ -14,6 +14,23 @@ API_VERSION = 44
 MAX_BYTES = 100 * 1024 * 1024
 
 
+def _record_ingestion_stat(kind: str):
+    """Persist bounded ingestion counters for Prometheus/Platform Health."""
+    path = ROOT / "poller-stats.json"
+    try:
+        state = json.loads(path.read_text()) if path.is_file() else {}
+    except (OSError, ValueError):
+        state = {}
+    key = "success_total" if kind == "success" else "failure_total"
+    state[key] = int(state.get(key) or 0) + 1
+    state["updated_at"] = now()
+    state["last_success_at" if kind == "success" else "last_failure_at"] = state["updated_at"]
+    try:
+        write_json(path, state)
+    except OSError:
+        pass
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
@@ -151,9 +168,11 @@ def poll():
                 "database_status": result.get("database_status"),
                 "job_id_observed": (execution.get("job") or {}).get("id"),
             })
+            _record_ingestion_stat("success")
         except BlockingIOError:
             write_json(ROOT / "poller.json", {"status": "BUSY", "checked_at": now()})
         except Exception as error:
+            _record_ingestion_stat("failure")
             write_json(ROOT / "poller.json", {
                 "status": "ERROR",
                 "checked_at": now(),

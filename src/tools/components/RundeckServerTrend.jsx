@@ -11,6 +11,8 @@ const RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H'], ['24h'
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
 const METRICS = [['cpu', 'CPU'], ['ram', 'Memory'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
+const COLLECTION_CADENCE_MS = 10 * 60 * 1000
+const GAP_THRESHOLD_MS = COLLECTION_CADENCE_MS * 2
 
 const metricLabel = (value) => ({ cpu: 'CPU', ram: 'Memory', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
@@ -36,6 +38,16 @@ function TrendChart({ trend, mode, range, onSelect }) {
     const availabilityMode = trend?.metric === 'availability'
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
     const shortRange = ['30m', '1h', '3h', '6h', '24h'].includes(range)
+    const rangeStart = Date.parse(trend?.since || '')
+    const rangeEnd = Date.now()
+    const buckets = Array.from(new Set(rows.map((row) => Date.parse(row.bucket)).filter(Number.isFinite))).sort((a, b) => a - b)
+    const gaps = []
+    if (Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > GAP_THRESHOLD_MS) gaps.push([rangeStart, buckets[0] - COLLECTION_CADENCE_MS])
+    for (let index = 1; index < buckets.length; index += 1) {
+      if (buckets[index] - buckets[index - 1] > GAP_THRESHOLD_MS) gaps.push([buckets[index - 1] + COLLECTION_CADENCE_MS, buckets[index] - COLLECTION_CADENCE_MS])
+    }
+    if (buckets.length && rangeEnd - buckets[buckets.length - 1] > GAP_THRESHOLD_MS) gaps.push([buckets[buckets.length - 1] + COLLECTION_CADENCE_MS, rangeEnd])
+    const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 8, position: 'insideEndTop' } })
     if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 8, position: 'insideEndTop' } })
@@ -45,10 +57,25 @@ function TrendChart({ trend, mode, range, onSelect }) {
       legend: { top: 0, type: 'scroll', itemWidth: 14, itemHeight: 8, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 9 } },
       grid: { left: 52, right: 58, top: 38, bottom: shortRange ? 28 : 43 },
       tooltip: { trigger: 'axis', confine: true, backgroundColor: colors.panel, borderWidth: 0, textStyle: { color: colors.text, fontSize: 10 } },
-      xAxis: { type: 'time', axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatWib(value, false) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatWib(value, false) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: availabilityMode ? 'Availability' : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
-      series: hosts.map((host, index) => ({ name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false, showSymbol: availabilityMode || shortRange, symbolSize: availabilityMode ? 5 : 4, lineStyle: { width: availabilityMode ? 2 : 1.5 }, data: rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })), markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined }))
+      series: hosts.map((host, index) => ({
+        name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
+        showSymbol: availabilityMode || shortRange, symbolSize: availabilityMode ? 5 : 4,
+        lineStyle: { width: availabilityMode ? 2 : 1.5 },
+        data: [
+          ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
+          ...gapPoints.map((at) => ({ value: [at, null], gap: true })),
+        ].sort((a, b) => new Date(a.value[0]).getTime() - new Date(b.value[0]).getTime()),
+        markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined,
+        markArea: index === 0 && gaps.length ? {
+          silent: true,
+          label: { show: true, formatter: 'NO DATA', fontSize: 8, color: colors.muted },
+          itemStyle: { opacity: .08 },
+          data: gaps.map(([from, to]) => [{ xAxis: from }, { xAxis: to }]),
+        } : undefined,
+      }))
     }
   }, [mode, range, trend])
 
