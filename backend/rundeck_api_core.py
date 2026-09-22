@@ -204,9 +204,13 @@ def history_trend(
     try:
         range_config = resolve_range(range_key)
         since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
+        latest_row = _latest_ready()
         return {
             **trend_series(since, range_key, bucket, metric),
             "timezone": "Asia/Jakarta",
+            "latest_collection_at": (latest_row or {}).get("finished_at"),
+            "stale_after_minutes": STALE_MINUTES,
+            "collection_cadence_seconds": max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600"))),
         }
     except ValueError as error:
         raise HTTPException(400, str(error)) from None

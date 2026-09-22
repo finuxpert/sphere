@@ -11,8 +11,7 @@ const RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H'], ['24h'
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
 const METRICS = [['cpu', 'CPU'], ['ram', 'Memory'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
-const COLLECTION_CADENCE_MS = 10 * 60 * 1000
-const GAP_THRESHOLD_MS = COLLECTION_CADENCE_MS * 2
+const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
 
 const metricLabel = (value) => ({ cpu: 'CPU', ram: 'Memory', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
@@ -29,6 +28,14 @@ function Segmented({ options, value, onChange, ariaLabel }) {
   return <div className="rundeckSegmented" role="group" aria-label={ariaLabel}>{options.map(([key, label]) => <button key={key} type="button" className={value === key ? 'is-active' : ''} aria-pressed={value === key} onClick={() => onChange(key)}>{label}</button>)}</div>
 }
 
+function TrendFreshness({ trend }) {
+  const latest = Date.parse(trend?.latest_collection_at || '')
+  const staleMinutes = Math.max(1, Number(trend?.stale_after_minutes || 20))
+  if (!Number.isFinite(latest) || Date.now() - latest < staleMinutes * 60 * 1000) return null
+  const ageMinutes = Math.max(1, Math.floor((Date.now() - latest) / 60000))
+  return <div className="rundeckHistoryState">STALE · historical data only · last collection {formatWib(trend.latest_collection_at, true)} WIB · {ageMinutes}m ago</div>
+}
+
 function TrendChart({ trend, mode, range, onSelect }) {
   const ref = React.useRef(null)
   const option = React.useMemo(() => {
@@ -40,13 +47,15 @@ function TrendChart({ trend, mode, range, onSelect }) {
     const shortRange = ['30m', '1h', '3h', '6h', '24h'].includes(range)
     const rangeStart = Date.parse(trend?.since || '')
     const rangeEnd = Date.now()
+    const cadenceMs = Math.max(60_000, Number(trend?.collection_cadence_seconds || 600) * 1000) || DEFAULT_COLLECTION_CADENCE_MS
+    const gapThresholdMs = cadenceMs * 2
     const buckets = Array.from(new Set(rows.map((row) => Date.parse(row.bucket)).filter(Number.isFinite))).sort((a, b) => a - b)
     const gaps = []
-    if (Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > GAP_THRESHOLD_MS) gaps.push([rangeStart, buckets[0] - COLLECTION_CADENCE_MS])
+    if (Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > gapThresholdMs) gaps.push([rangeStart, buckets[0] - cadenceMs])
     for (let index = 1; index < buckets.length; index += 1) {
-      if (buckets[index] - buckets[index - 1] > GAP_THRESHOLD_MS) gaps.push([buckets[index - 1] + COLLECTION_CADENCE_MS, buckets[index] - COLLECTION_CADENCE_MS])
+      if (buckets[index] - buckets[index - 1] > gapThresholdMs) gaps.push([buckets[index - 1] + cadenceMs, buckets[index] - cadenceMs])
     }
-    if (buckets.length && rangeEnd - buckets[buckets.length - 1] > GAP_THRESHOLD_MS) gaps.push([buckets[buckets.length - 1] + COLLECTION_CADENCE_MS, rangeEnd])
+    if (buckets.length && rangeEnd - buckets[buckets.length - 1] > gapThresholdMs) gaps.push([buckets[buckets.length - 1] + cadenceMs, rangeEnd])
     const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 8, position: 'insideEndTop' } })
@@ -231,7 +240,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {!databaseEnabled && <div className="rundeckHistoryState">Trend data is not available yet.</div>}
     {databaseEnabled && trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
     {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
-    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} />}
+    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} /></>}
     {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
     <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={onSelectJob} />
   </section>
