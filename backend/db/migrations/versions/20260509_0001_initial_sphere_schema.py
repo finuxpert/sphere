@@ -1,4 +1,4 @@
-"""Initial SAP RCA database schema
+"""Initial SPHERE database schema
 
 Revision ID: 20260509_0001
 Revises:
