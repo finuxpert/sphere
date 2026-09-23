@@ -51,7 +51,7 @@ const sourceMeta = (job = {}) => {
     return {
       tone: 'live',
       label: 'LIVE',
-      detail: [shortHost(job.host || ''), 'Active issue context'].filter(Boolean).join(' · '),
+      detail: [shortHost(job.host || ''), 'Active issue'].filter(Boolean).join(' · '),
       note: 'Automatically selected from the active performance issue context; not the global CPU ranking or a root-cause conclusion.',
     }
   }
