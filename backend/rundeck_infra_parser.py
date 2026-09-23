@@ -95,9 +95,9 @@ def _filesystem_rows(lines):
             used = used if used is not None else _number(pos[4])
             mount = mount or pos[5]
             if total_bytes is None and total_kb is not None:
-                total_bytes = total_kb * 1024
+                total_bytes = int(total_kb * 1024)
             if avail_bytes is None and avail_kb is not None:
-                avail_bytes = avail_kb * 1024
+                avail_bytes = int(avail_kb * 1024)
         elif used is None and len(pos) >= 2 and str(pos[1]).endswith("%"):
             used = _number(pos[1])
 
