@@ -171,7 +171,9 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const healthyWeb = webRows.length > 0 && webUp === webRows.length
   const technicalCheckCount = Object.values(replication).filter(Boolean).length + sshRows.length
 
-  return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
+  const healthySummary = healthyApps && healthyHana && healthyWeb && technicalDownCount === 0 && !showDataTrust
+
+  return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''} ${healthySummary ? 'is-healthy-compact' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
       <div>
         <h3><SphereIcon name="server" /> SAP Availability</h3>
