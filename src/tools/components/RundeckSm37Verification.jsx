@@ -51,7 +51,9 @@ export default function RundeckSm37Verification({ jobName, program, host, observ
   const source = data?.source || null
   const displayState = source?.status === 'NOT_CONFIGURED' ? 'SOURCE NOT CONFIGURED' : state.replaceAll('_', ' ')
 
-  return <section className="rundeckSm37Verification" aria-label="SM37 verification context">
+  const sourceNotConfigured = source?.status === 'NOT_CONFIGURED'
+
+  return <section className={`rundeckSm37Verification ${sourceNotConfigured ? 'is-source-unconfigured' : ''}`} aria-label="SM37 verification context">
     <div className="rundeckSm37VerificationHead">
       <strong>SM37 Verification</strong>
       <span className={stateClass(state)}>{displayState}</span>
