@@ -70,9 +70,15 @@ export default function RundeckInfrastructure(){
 
   const refresh=React.useCallback(async()=>{
     try{
-      const paths=['hosts','filesystems','network','storage']
-      const values=await Promise.all(paths.map(async p=>{const r=await fetch(`${API}/${p}`,{cache:'no-store'});if(!r.ok)throw new Error(`Infrastructure API ${p} unavailable`);return r.json()}))
-      setData({hosts:values[0].items||[],fs:values[1].items||[],network:values[2].items||[],storage:values[3].items||[]})
+      const hr=await fetch(`${API}/hosts`,{cache:'no-store'})
+      if(!hr.ok)throw new Error('Infrastructure API hosts unavailable')
+      const hosts=(await hr.json()).items||[]
+      const available=hosts.map(row=>row.host)
+      const target=selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||'')
+      if(target&&!selectedHost)setSelectedHost(target)
+      const q=target?`?host=${encodeURIComponent(target)}`:''
+      const values=await Promise.all(['filesystems','network','storage'].map(async p=>{const r=await fetch(`${API}/${p}${q}`,{cache:'no-store'});if(!r.ok)throw new Error(`Infrastructure API ${p} unavailable`);return r.json()}))
+      setData({hosts,fs:values[0].items||[],network:values[1].items||[],storage:values[2].items||[]})
       setError('')
     }catch(e){setError(e.message)}
   },[selectedHost])
