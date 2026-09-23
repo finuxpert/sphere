@@ -74,7 +74,6 @@ export default function RundeckMonitoringHistory(props) {
     selectedJob={selectedJob}
   />
 
-  const modeHint = monitoringMode === 'live' ? 'Current SAP and infrastructure state' : 'Historical workload analysis'
 
   return <>
     <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
@@ -82,7 +81,6 @@ export default function RundeckMonitoringHistory(props) {
         <button type="button" role="tab" aria-selected={monitoringMode === 'live'} className={monitoringMode === 'live' ? 'is-active' : ''} onClick={() => setMonitoringMode('live')}>Live Monitoring</button>
         <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>History</button>
       </div>
-      <small>{modeHint}</small>
     </div>
 
     {monitoringMode === 'explorer'
