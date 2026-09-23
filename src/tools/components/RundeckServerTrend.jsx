@@ -7,6 +7,7 @@ import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const DEFAULT_RANGE = '6h'
+const TREND_STORAGE_KEY = 'sphere.live.trend'
 const RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H'], ['24h', '24H'], ['7d', '7D'], ['30d', '30D']]
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
 const METRICS = [['cpu', 'CPU'], ['ram', 'Memory'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
@@ -252,7 +253,7 @@ function processCount(consumer) {
 }
 
 function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
-  if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click the chart to open a historical workload snapshot for that APP and time.</div>
+  if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click a chart point to inspect that APP's historical workload snapshot.</div>
   const selectedRow = selectedTimelineRow(selected, timeline)
   const consumers = selectedRow?.top_consumers || []
   const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
@@ -284,10 +285,13 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
 }
 
 export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, onSelectJob, onTrendContext }) {
-  const [range, setRange] = React.useState(DEFAULT_RANGE)
-  const [bucket, setBucket] = React.useState('auto')
-  const [metric, setMetric] = React.useState('cpu')
-  const [mode, setMode] = React.useState('max')
+  const saved = React.useMemo(() => {
+    try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
+  }, [])
+  const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
+  const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
+  const [metric, setMetric] = React.useState(METRICS.some(([key]) => key === saved.metric) || AVAILABILITY_CATEGORIES[saved.metric] ? saved.metric : 'cpu')
+  const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [trend, setTrend] = React.useState(null)
   const [trendLoading, setTrendLoading] = React.useState(false)
   const [trendError, setTrendError] = React.useState('')
@@ -299,6 +303,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const availabilityMetric = Boolean(AVAILABILITY_CATEGORIES[metric])
 
   React.useEffect(() => { onTrendContext?.({ metric, metricLabel: trend?.metric_label || metricLabel(metric), range, rangeLabel: rangeLabel(range), mode }) }, [metric, mode, onTrendContext, range, trend?.metric_label])
+  React.useEffect(() => {
+    try { window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({ range, bucket, metric, mode })) } catch { /* best-effort UI preference */ }
+  }, [bucket, metric, mode, range])
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
@@ -333,7 +340,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   return <section className="rundeckServerTrendPanelV1234" aria-label="Server Trend">
     <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
     <div className="rundeckTrendToolbar"><div className="rundeckTrendGroup"><Segmented options={METRICS} value={metric} onChange={setMetric} ariaLabel="Performance metric" /></div><div className="rundeckTrendGroup"><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Time period" /></div>{!availabilityMetric && <div className="rundeckTrendGroup"><Segmented options={[["avg", "Avg"], ["max", "Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>}</div>
-    <details className="rundeckAdvancedControls"><summary>More</summary><div><button type="button" className={metric === 'load' ? 'is-active' : ''} onClick={() => setMetric('load')}>Load</button><button type="button" className={metric === 'swap' ? 'is-active' : ''} onClick={() => setMetric('swap')}>Swap I/O</button><button type="button" className={metric === 'hana' ? 'is-active' : ''} onClick={() => setMetric('hana')}>HANA</button><button type="button" className={metric === 'replication' ? 'is-active' : ''} onClick={() => setMetric('replication')}>Replication</button><button type="button" className={metric === 'ssh' ? 'is-active' : ''} onClick={() => setMetric('ssh')}>SSH</button><button type="button" className={metric === 'web' ? 'is-active' : ''} onClick={() => setMetric('web')}>Web Dispatcher</button>{!availabilityMetric && <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div></details>
+    <details className="rundeckAdvancedControls"><summary>Advanced</summary><div><button type="button" className={metric === 'load' ? 'is-active' : ''} onClick={() => setMetric('load')}>Load</button><button type="button" className={metric === 'swap' ? 'is-active' : ''} onClick={() => setMetric('swap')}>Swap I/O</button><button type="button" className={metric === 'hana' ? 'is-active' : ''} onClick={() => setMetric('hana')}>HANA</button><button type="button" className={metric === 'replication' ? 'is-active' : ''} onClick={() => setMetric('replication')}>Replication</button><button type="button" className={metric === 'ssh' ? 'is-active' : ''} onClick={() => setMetric('ssh')}>SSH</button><button type="button" className={metric === 'web' ? 'is-active' : ''} onClick={() => setMetric('web')}>Web Dispatcher</button>{!availabilityMetric && <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div></details>
     {!databaseEnabled && <div className="rundeckHistoryState">Trend data is not available yet.</div>}
     {databaseEnabled && trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
     {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
