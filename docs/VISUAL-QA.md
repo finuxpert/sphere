@@ -1,6 +1,6 @@
 # SPHERE Visual QA
 
-SPHERE v1.19.0 includes an optional Playwright visual-regression harness for the Rundeck dashboard. It is intentionally separate from the default `npm run qa` release gate so ordinary server deploys do not require browser binaries or external package installation.
+SPHERE includes an optional Playwright visual-regression harness for the Rundeck dashboard. It is intentionally separate from the default `npm run qa` release gate so ordinary server deploys do not require browser binaries or external package installation.
 
 ## Coverage
 
@@ -51,3 +51,27 @@ npm run qa:visual
 ```
 
 Do not update snapshots merely to make a failing test pass. Review layout, status semantics, clipping, overflow, and density changes first.
+
+
+## Live Monitoring regression checklist
+
+For the current operator console, visual review must also cover:
+
+- 1920×1080, 1600×900 and 1366×768 desktop/laptop layouts;
+- Windows/browser scaling around 125% where available;
+- APP server manual expand/collapse with Critical WP detail;
+- selected workload cross-highlight without automatic APP drilldown expansion;
+- Server Trend retaining its position and width while an APP drilldown is open;
+- no large blank area beneath Server Trend caused by the left APP pane;
+- Workload Performance collapsed by default and expandable without page-width shift;
+- Observation History capped to a contained scroll area;
+- SAP Issues using natural height when active rows fit without scrolling;
+- Infrastructure details collapsed by default;
+- Infrastructure Trend collapsed by default and limited to top-risk series;
+- Supporting Data collapsed by default;
+- action cluster and state cluster visually separated in the SAP Performance header;
+- `Collection running`, `Collector Health`, `System Health` and `Data ALIGNED/PARTIAL` remaining semantically distinct;
+- Live versus historical snapshot context remaining unambiguous;
+- no horizontal page overflow when any secondary disclosure is open.
+
+A failure where expanding APP1–APP5 increases the entire two-column Server Trend band height is a layout regression, even if no element technically overflows.
