@@ -85,6 +85,20 @@ v1.32 makes data-cycle identity and monitoring evidence explicit:
 - Server Trend adds a dedicated COLLECTION GAP band with start/end time and duration.
 - 24H/7D/30D trends reduce point clutter and emphasize lines; detailed points remain available through hover.
 
+## Availability observation semantics
+
+v1.33 separates Service Availability observations from performance collector gaps:
+
+- Availability/HANA/Replication/SSH/Web history is treated as observed evidence from retained Rundeck Service Availability executions.
+- Missing observations are `NO OBSERVATION`/unknown and are never inferred as `DOWN`.
+- Expected availability cadence is derived from retained execution timestamps, using at least the recent 24-hour observation history when available.
+- `SPHERE_AVAILABILITY_CADENCE_SECONDS` is only a fallback when retained timestamps cannot establish cadence.
+- `SPHERE_AVAILABILITY_GAP_FACTOR` defaults to `2.2`, tolerating normal schedule/runtime drift before a missing-observation interval is surfaced.
+- Long-range history distinguishes `HISTORY COVERAGE` from an internal `NO OBSERVATION` interval.
+- Observed availability percentages are descriptive of retained checks and are not an SLA calculation.
+- Server Trend uses date-aware WIB axis labels for 24H/7D/30D views.
+- Category labels remain explicit: SAP App Availability, HANA System DB Availability, HANA Replication Availability, SSH Reachability, and Web Dispatcher Availability.
+
 ## Collection-cycle consistency
 
 `GET /dev/api/history/hosts/latest` returns APP1 through APP5 from one latest READY
