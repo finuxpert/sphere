@@ -129,15 +129,48 @@ def _dedupe_filesystems(rows):
             output.append({**row, "is_primary": row is primary})
     return output
 
+def _network_rows(lines):
+    rows = []
+    for line in lines:
+        row = _fields(line)
+        pos = list(row.get("_positional", []))
+        interface = row.get("interface") or row.get("iface")
+        if not interface:
+            candidates = pos[1:] if pos and pos[0].lower() == "network" else pos
+            interface = next((token for token in candidates if re.fullmatch(r"[A-Za-z0-9_.:-]+", str(token))), None)
+        rows.append({**row, "interface": interface})
+    return rows
+
+def _storage_rows(lines):
+    rows = []
+    for line in lines:
+        row = _fields(line)
+        pos = list(row.get("_positional", []))
+        disk = row.get("disk") or row.get("device") or row.get("name")
+        if not disk:
+            candidates = pos[1:] if pos and pos[0].lower() in {"disk", "storage"} else pos
+            disk = next((token for token in candidates if re.fullmatch(r"(?:dm-\d+|sd[a-z]\d*|nvme\d+n\d+(?:p\d+)?)", str(token))), None)
+            if disk is None and candidates:
+                disk = candidates[0]
+        rows.append({**row, "disk": str(disk).removeprefix("/dev/") if disk else None})
+    return rows
+
 def _generic_rows(lines):
     return [_fields(line) for line in lines]
 
 def _diskmap(rows):
     mapping = {}
     for row in rows:
-        pos = row.get("_positional", [])
-        disk = row.get("disk") or row.get("device") or row.get("name") or (pos[0] if pos else None)
-        mount = _mount(row) or (pos[1] if len(pos) > 1 and str(pos[1]).startswith("/") else None)
+        pos = list(row.get("_positional", []))
+        disk = row.get("disk") or row.get("device") or row.get("name")
+        if not disk:
+            disk = next(
+                (token for token in pos if re.fullmatch(r"(?:dm-\d+|sd[a-z]\d*|nvme\d+n\d+(?:p\d+)?)", str(token))),
+                None,
+            )
+        mount = _mount(row)
+        if not mount:
+            mount = next((token for token in reversed(pos) if str(token).startswith("/")), None)
         if disk and mount:
             mapping[str(disk).removeprefix("/dev/")] = mount
     return mapping
@@ -160,15 +193,13 @@ def parse(raw):
     if collected_at.tzinfo is None:
         collected_at = collected_at.replace(tzinfo=timezone.utc)
     filesystems = _dedupe_filesystems(_filesystem_rows(_section(text, "filesystem")))
-    network = _generic_rows(_section(text, "network"))
-    storage = _generic_rows(_section(text, "storage"))
+    network = _network_rows(_section(text, "network"))
+    storage = _storage_rows(_section(text, "storage"))
     diskmap_rows = _generic_rows(_section(text, "diskmap"))
     mapping = _diskmap(diskmap_rows)
     normalized_storage = []
     for row in storage:
-        pos = row.get("_positional", [])
-        disk = row.get("disk") or row.get("device") or row.get("name") or (pos[0] if pos else None)
-        key = str(disk or "").removeprefix("/dev/")
+        key = str(row.get("disk") or "").removeprefix("/dev/")
         normalized_storage.append({**row, "disk": key or None, "mount": row.get("mount") or mapping.get(key)})
     return {
         "hostname": host,
