@@ -550,3 +550,57 @@
 .rundeckJobPerformanceDisclosure[open] .rundeckJobPerformanceChart{
   margin-top:4px;
 }
+
+
+/* v1.33.2 — selected workload density */
+.rundeckJobHistoryOverview {
+  margin-top: 5px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+.rundeckJobHistoryGroup {
+  padding: 1px 0 !important;
+}
+.rundeckJobTimeline {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 10px !important;
+  min-height: 24px;
+  margin-top: 4px !important;
+  padding: 3px 0 !important;
+  border-top: 1px solid rgba(126,147,158,.07);
+  border-bottom: 0 !important;
+}
+.rundeckJobTimeline > strong {
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8.6px !important;
+  font-weight: 650 !important;
+}
+.rundeckJobTimeline > span {
+  display: inline-flex !important;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 8.8px !important;
+}
+.rundeckJobTimeline > span b {
+  display: inline !important;
+  margin: 0 !important;
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8px !important;
+}
+.rundeckJobTimeline > em {
+  font-size: 8.6px !important;
+}
+.rundeckJobPerformanceDisclosure {
+  margin-top: 3px !important;
+  padding-top: 3px !important;
+}
+.rundeckJobPerformanceDisclosure > summary {
+  min-height: 25px !important;
+}
+.rundeckJobPerformanceDisclosure > summary small {
+  color: #9aa7ae;
+  font-size: 9.2px;
+  font-weight: 560;
+}
