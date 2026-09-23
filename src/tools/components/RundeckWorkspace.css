@@ -399,3 +399,25 @@
     min-height: 210px !important;
   }
 }
+
+
+/* v1.33.2 — Supporting Data details owns full width; inner body owns columns. */
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > summary {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  display: grid !important;
+  grid-template-columns: minmax(0,65fr) minmax(0,35fr) !important;
+  gap: 0 20px !important;
+}
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns: 1fr !important;
+  }
+}
