@@ -118,6 +118,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
     const host = state.items.find((item) => shortHost(item.host) === requested)
     if (!host) return
     if (!focusRequest?.highlightOnly && Number(host.wp_critical || 0) > 0 && drilldown?.host !== host.host) openWp(host)
+    if (focusRequest?.highlightOnly) return
     if (typeof window === 'undefined' || typeof document === 'undefined') return
     let frames = 0
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
