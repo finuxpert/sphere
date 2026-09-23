@@ -19,6 +19,7 @@ disk dm-3 util_pct=0
 ## SPHERE-INFRA-DISK-V1-END
 ## SPHERE-INFRA-DISKMAP-V1-BEGIN
 diskmap dm-0 /
+diskmap dm-0 /var
 diskmap dm-3 /INTF
 ## SPHERE-INFRA-DISKMAP-V1-END
 ## SPHERE-INFRA-V1-END
@@ -72,6 +73,7 @@ class InfraParserTests(unittest.TestCase):
     def test_positional_storage_identity_and_diskmap(self):
         result=parse(POSITIONAL_SAMPLE)
         self.assertEqual([row["disk"] for row in result["storage"]],["dm-0","dm-3"])
+        self.assertEqual(next(row for row in result["storage"] if row["disk"]=="dm-0")["mount"],"/")
         self.assertEqual(next(row for row in result["storage"] if row["disk"]=="dm-3")["mount"],"/INTF")
 
     def test_diskmap_uses_mount_labels(self):

@@ -172,7 +172,10 @@ def _diskmap(rows):
         if not mount:
             mount = next((token for token in reversed(pos) if str(token).startswith("/")), None)
         if disk and mount:
-            mapping[str(disk).removeprefix("/dev/")] = mount
+            key = str(disk).removeprefix("/dev/")
+            current = mapping.get(key)
+            if current is None or mount == "/":
+                mapping[key] = mount
     return mapping
 
 def parse(raw):
