@@ -42,7 +42,9 @@ const durationText = (seconds) => {
 }
 
 function StatusPill({ value = 'UNKNOWN' }) {
-  return <span className={`rundeckStatus rundeckStatusMotion is-${String(value).toLowerCase()}`}>{value}</span>
+  const normalized = String(value || 'UNKNOWN').toUpperCase()
+  if (normalized === 'NORMAL') return <span className="rundeckStatus is-normal-muted" title="Normal">—</span>
+  return <span className={`rundeckStatus rundeckStatusMotion is-${normalized.toLowerCase()}`}>{normalized}</span>
 }
 
 function scrollToSelectedWorkload() {
