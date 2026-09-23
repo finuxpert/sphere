@@ -9,7 +9,6 @@
     "lint": "eslint .",
     "qa": "npm run lint && npm run qa:basis-investigation && npm run build",
     "qa:basis-investigation": "node scripts/qa-basis-investigation.mjs",
-    "qa:rundeck-ui:legacy": "node scripts/qa-rundeck-ui.mjs",
     "qa:visual": "playwright test -c playwright.config.mjs",
     "preview": "vite preview",
     "test": "vitest run"
