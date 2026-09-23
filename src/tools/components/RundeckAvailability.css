@@ -278,3 +278,29 @@
   color:var(--sphere-text-muted,#718089);
   font-weight:500;
 }
+
+
+/* v1.33.2 — healthy availability stays compact and exception-oriented */
+.rundeckAvailability.is-healthy-compact {
+  padding-bottom: 5px;
+}
+.rundeckAvailability.is-healthy-compact .rundeckAvailabilityBody {
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 8px 22px;
+  margin-top: 4px;
+}
+.rundeckAvailability.is-healthy-compact .rundeckAvailabilityGroup {
+  flex: 0 0 auto;
+}
+.rundeckAvailability.is-healthy-compact .rundeckAvailabilityMore {
+  margin-top: 3px;
+}
+.rundeckAvailability.is-healthy-compact .rundeckAvailabilityMore > summary {
+  opacity: .82;
+}
+@media (max-width: 900px) {
+  .rundeckAvailability.is-healthy-compact .rundeckAvailabilityBody {
+    flex-wrap: wrap;
+  }
+}
