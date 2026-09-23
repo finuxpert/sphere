@@ -1,78 +1,140 @@
 # SPHERE
 
-SPHERE is a SAP Basis operations workspace for ST03N analysis, LOG analysis, process evidence, Case History, and operational RCA workflows.
+SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP Basis operations workspace for performance monitoring, ST03N/LOG analysis, operational evidence, Case History, and initial RCA support.
 
-Current stable baseline: **v1.16.2**
+Current stable Rundeck baseline: **v1.33.0**
 
-Production: **https://sphere.astraotoparts.co.id**
+Production: **https://sphere.astraotoparts.co.id**  
+Development: **https://sphere.astraotoparts.co.id/dev/**
 
 ## Branch model
 
-SPHERE now uses four active branches:
+Only these four branches are active:
 
 | Branch | Purpose |
 |---|---|
-| `sphere-prod` | Stable production SPHERE using the existing manual Upload Logs workflow. |
-| `sphere-dev` | Development and testing for SPHERE before promotion to `sphere-prod`. |
-| `rundeck-sphere-prod` | Stable production SPHERE with automatic Rundeck log ingestion. Manual Upload Logs remains available as fallback. |
-| `rundeck-sphere-dev` | Development and testing for Rundeck integration before promotion to `rundeck-sphere-prod`. |
+| `sphere-prod` | Stable non-Rundeck/manual production line. |
+| `sphere-dev` | Development line for `sphere-prod`. |
+| `rundeck-sphere-prod` | Active production line with automatic Rundeck ingestion. |
+| `rundeck-sphere-dev` | Active development/test line for Rundeck SPHERE. |
 
-Promotion flow:
+Promotion paths:
 
 ```text
 sphere-dev
-    ↓
+    ↓ PR
 sphere-prod
 
 rundeck-sphere-dev
-    ↓
+    ↓ QA + PROD readiness
+    ↓ Pull Request
 rundeck-sphere-prod
+    ↓ production build/deploy
+https://sphere.astraotoparts.co.id
 ```
 
-New development must use the matching development branch. Only the four branches above are active.
+Do not develop directly on a production branch and do not force-reset a production branch to DEV. Temporary/hotfix branches should be removed after their commits are contained in the corresponding active branch.
 
-## Current application
+## Application architecture
 
-The active application is React and Vite on the frontend, FastAPI on the backend, and PostgreSQL for server-side history and metadata.
+- Frontend: React + Vite
+- Backend: FastAPI
+- Database: PostgreSQL
+- Collector/orchestrator: Rundeck
+- Web proxy: Nginx
+- Production API service: `sphere-rundeck-prod-api.service`
+- DEV API service: `sphere-rundeck-api.service`
 
-Primary workspaces:
+SPHERE does not connect directly to SAP application servers. Rundeck remains responsible for SAP server collection. SPHERE consumes and visualizes the retained evidence.
 
-- ST03N Analysis
-- LOG Analysis
-- Process Evidence
-- Case History
+## Rundeck release workflow
 
-Manual Upload Logs remains supported. LOG parsing currently runs in the browser using the existing tested JavaScript parser chain.
+### 1. Validate DEV
 
-The Rundeck branch family is reserved for automatic collection ingestion. SPHERE must not connect directly to SAP application servers. Rundeck remains responsible for collecting SAP server data.
+On `JAHSVR-SPHERE`:
 
-## Rundeck integration runbook
+```bash
+cd /root/rundeck-sphere-dev
+git fetch origin
+git reset --hard origin/rundeck-sphere-dev
 
-Operational notes for the read-only Rundeck API integration, ACL model, token rotation, workflow recreation, collection readiness, and security guardrails are documented in:
+/opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
+npm run qa
+bash ops/rundeck/prod-readiness-check.sh
+```
+
+Required final gate:
+
+```text
+READINESS PASS: collector fresh, watchdog healthy, auto-healing enabled
+SPHERE PROD READINESS PASS
+HEAD <validated-dev-sha>
+```
+
+The readiness script supports normal Git checkouts and Git worktrees; `.git` does not need to be a directory.
+
+### 2. Promote through GitHub
+
+Create a normal Pull Request:
+
+```text
+base:    rundeck-sphere-prod
+compare: rundeck-sphere-dev
+```
+
+Review the diff and merge normally. Do not use force push or replace the PROD ref with the DEV ref.
+
+### 3. Deploy production
+
+After the PR is merged:
+
+```bash
+cd /root/rundeck-sphere-prod
+git fetch origin
+git reset --hard origin/rundeck-sphere-prod
+npm ci
+npm run qa
+npm run build
+bash ops/rundeck/deploy-prod.sh
+```
+
+Successful deployment ends with:
+
+```text
+PRODUCTION DEPLOY SUCCESS
+REVISION <prod-sha>
+```
+
+`deploy-prod.sh` is transactional. It validates the PROD checkout, build base, API/service health, production routes, platform readiness, DEV isolation, and legacy API guardrails. If activation or smoke validation fails, it restores the previous production web/API release and Nginx configuration.
+
+Detailed operational procedures are documented in `ops/rundeck/OPERATIONS.md`.
+
+## Validation
+
+Primary release gates:
+
+```bash
+/opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
+npm run qa
+bash ops/rundeck/prod-readiness-check.sh
+```
+
+A Vite chunk-size warning is an optimization warning, not automatically a release failure. A non-zero QA/build/readiness exit code is a release blocker.
+
+## Rundeck integration
+
+Rundeck integration, ACL, credential handling, token rotation, and security guardrails are documented in:
 
 `docs/RUNDECK_INTEGRATION_RUNBOOK.md`
 
-The current SPHERE read-only API token must be rotated before its documented expiration. Never commit the token value to GitHub.
-
-## Development validation
-
-Before promotion, run:
-
-```bash
-npm ci
-npm run lint
-npm test
-npm run build
-npm audit
-```
-
-A release must pass validation before promotion to its production branch.
+Never commit Rundeck tokens, passwords, or runtime credentials to GitHub.
 
 ## Repository guardrails
 
-- Do not delete files based only on their names.
-- Preserve active parser, analytics, frontend, backend, database, and test dependencies.
+- Preserve the four active branches above.
+- Remove temporary branches only after confirming they are fully contained in an active branch.
+- Preserve active parser, frontend, backend, database, migration, test, and deployment dependencies.
 - Preserve collector protocol compatibility markers such as `RCA-SNAPSHOT-V2.2`, `RCA-WP-V2.2`, and `RCA-EXT`.
-- Preserve database migration history, including the historical initial migration filename.
-- Do not restore old CBJ monitoring, portal, mail-server, or legacy deployment assets into active SPHERE branches.
-- Do not deploy old workflows that target retired CBJ infrastructure.
+- Preserve database migration history.
+- Do not restore retired CBJ monitoring/deployment assets into active SPHERE branches.
+- Production changes must pass DEV validation and be promoted through a PR.
