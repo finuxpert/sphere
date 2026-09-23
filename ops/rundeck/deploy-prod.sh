@@ -12,7 +12,7 @@ NGINX_SITE=/etc/nginx/sites-available/sphere.astraotoparts.co.id
 SERVICE=sphere-rundeck-prod-api.service
 
 [[ $EUID -eq 0 ]] || { echo "DEPLOY BLOCKED: run as root" >&2; exit 2; }
-[[ -d "$SOURCE/.git" ]] || { echo "DEPLOY BLOCKED: $SOURCE is not a git checkout" >&2; exit 2; }
+git -C "$SOURCE" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "DEPLOY BLOCKED: $SOURCE is not a git checkout" >&2; exit 2; }
 CURRENT_BRANCH="$(git -C "$SOURCE" branch --show-current)"
 [[ "$CURRENT_BRANCH" == "rundeck-sphere-prod" ]] || { echo "DEPLOY BLOCKED: expected rundeck-sphere-prod, found ${CURRENT_BRANCH:-unknown}" >&2; exit 2; }
 [[ -z "$(git -C "$SOURCE" status --porcelain)" ]] || { echo "DEPLOY BLOCKED: production checkout is not clean" >&2; git -C "$SOURCE" status --short >&2; exit 2; }
