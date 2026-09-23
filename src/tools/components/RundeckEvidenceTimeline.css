@@ -216,3 +216,17 @@
     grid-template-columns: 88px 8px minmax(0, 1fr);
   }
 }
+
+
+/* Operator readability refinement */
+.rundeckEvidenceSummary{font-size:9.2px}
+.rundeckEvidenceAlignment{font-size:8.6px}
+.rundeckEvidenceSummary small{font-size:8.8px}
+.rundeckEvidenceEvent{grid-template-columns:96px 10px minmax(0,1fr);padding:4px 0}
+.rundeckEvidenceEvent time{font-size:8.8px}
+.rundeckEvidenceEvent strong{font-size:9.5px;line-height:1.3}
+.rundeckEvidenceEvent small,
+.rundeckEvidenceEvent p,
+.rundeckEvidenceNote,
+.rundeckEvidenceState{font-size:8.8px}
+.rundeckEvidenceTechnical>summary{font-size:8.8px}
