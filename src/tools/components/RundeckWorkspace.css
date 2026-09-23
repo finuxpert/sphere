@@ -46,9 +46,18 @@
 .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235,
 .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
   display: grid !important;
-  grid-template-columns: minmax(0, 40fr) minmax(0, 60fr) !important;
   gap: 20px !important;
   align-items: start !important;
+}
+
+/* SAP App Servers | Server Trend */
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
+  grid-template-columns: minmax(0, 35fr) minmax(0, 65fr) !important;
+}
+
+/* Current Workloads | Selected Workload */
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
+  grid-template-columns: minmax(0, 38fr) minmax(0, 62fr) !important;
 }
 
 .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
