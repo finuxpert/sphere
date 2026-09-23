@@ -144,3 +144,201 @@
     grid-column:1/-1;
   }
 }
+
+
+/* v1.23.6 — Live Monitoring final operator-density pass */
+.appShell:has(.rundeckPanel) .rundeckLiveOverviewHead{
+  min-height:32px;
+  padding:3px 0 5px;
+  margin-bottom:4px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveScope{
+  gap:8px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveScope select{
+  min-width:210px;
+  min-height:28px;
+  padding:3px 7px;
+  font-size:9.5px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveScope span,
+.appShell:has(.rundeckPanel) .rundeckLiveOverviewError{
+  font-size:9px;
+}
+
+/* Healthy values stay neutral; color is reserved for exceptions. */
+.appShell:has(.rundeckPanel) .rundeckLiveRows strong,
+.appShell:has(.rundeckPanel) .rundeckLiveRows strong.is-normal{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-weight:650;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows strong.is-attention,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair strong.is-attention{
+  color:var(--sphere-warning,#d8b35f);
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows strong.is-critical,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair strong.is-critical{
+  color:var(--sphere-danger,#db7d86);
+}
+
+/* Infrastructure is a compact scan strip, not four equally loud cards. */
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid{
+  gap:6px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{
+  min-height:58px;
+  padding:6px 8px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article>header{
+  margin-bottom:4px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid h4{
+  font-size:10px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows{
+  gap:2px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows span,
+.appShell:has(.rundeckPanel) .rundeckLiveRows strong{
+  font-size:9px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair{
+  gap:4px;
+  margin-bottom:4px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair span{
+  font-size:9px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair strong{
+  font-size:11px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveStatus{
+  font-size:9px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveFeedPending{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-height:36px;
+  justify-content:center;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveFeedPending strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9.5px;
+  font-weight:680;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveFeedPending span{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+
+/* Preserve chart dominance and make selected workload content-driven. */
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235{
+  grid-template-columns:minmax(0,35fr) minmax(0,65fr)!important;
+  gap:14px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+  grid-template-columns:minmax(0,38fr) minmax(0,62fr)!important;
+  gap:14px!important;
+  align-items:start!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload{
+  max-height:240px!important;
+  overflow:auto!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
+  height:auto!important;
+  min-height:0!important;
+  max-height:240px!important;
+  overflow:auto!important;
+  align-self:start!important;
+}
+
+/* Operational row is exception-first and gives events enough reading width. */
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234{
+  grid-template-columns:minmax(0,38fr) minmax(0,30fr) minmax(0,32fr)!important;
+  gap:12px!important;
+  margin-top:10px!important;
+  padding-top:7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234.is-availability-issues{
+  grid-template-columns:minmax(0,46fr) minmax(0,54fr)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-operational-events,
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-availability,
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-issues{
+  max-height:138px!important;
+  min-height:0!important;
+  overflow:auto!important;
+}
+
+/* Performance Review is supporting analysis, not a second primary canvas. */
+.appShell:has(.rundeckPanel) .rundeckPerformanceReviewBand{
+  margin-top:8px;
+  padding-top:6px;
+}
+.appShell:has(.rundeckPanel) .rundeckPerformanceReviewBand .rundeckPerformanceReviewV1231{
+  margin-top:0!important;
+  padding-top:4px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckPerformanceReviewBand .rundeckReviewHeadV1231{
+  min-height:26px;
+}
+.appShell:has(.rundeckPanel) .rundeckPerformanceReviewBand .rundeckReviewTableWrapV1231{
+  max-height:170px!important;
+  overflow:auto!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td{
+  padding:5px 8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231 small,
+.appShell:has(.rundeckPanel) .rundeckReviewQualityWarning,
+.appShell:has(.rundeckPanel) .rundeckReviewState{
+  font-size:9px!important;
+}
+
+/* Secondary detail affordances stay compact and readable. */
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234,
+.appShell:has(.rundeckPanel) .rundeckLiveDetail{
+  margin-top:6px;
+}
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234>summary,
+.appShell:has(.rundeckPanel) .rundeckLiveDetail>summary,
+.appShell:has(.rundeckPanel) .rundeckLiveSecondaryDetail>summary{
+  min-height:28px;
+  padding:5px 1px;
+  font-size:9.5px;
+}
+.appShell:has(.rundeckPanel) .rundeckObservationHistoryV1234:not([open]),
+.appShell:has(.rundeckPanel) .rundeckLiveDetail:not([open]){
+  min-height:28px;
+}
+
+/* Avoid sub-9px operator text in the live workspace. */
+.appShell:has(.rundeckPanel) .rundeckMonitoring,
+.appShell:has(.rundeckPanel) .rundeckMonitoring button,
+.appShell:has(.rundeckPanel) .rundeckMonitoring small,
+.appShell:has(.rundeckPanel) .rundeckMonitoring span,
+.appShell:has(.rundeckPanel) .rundeckMonitoring th,
+.appShell:has(.rundeckPanel) .rundeckMonitoring td{
+  text-rendering:optimizeLegibility;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring th{
+  font-size:9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring td{
+  font-size:9.5px;
+}
+
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckOperationalBandV1234{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-issues{
+    grid-column:1/-1;
+  }
+}
