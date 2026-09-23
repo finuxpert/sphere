@@ -388,3 +388,119 @@
   border-color:transparent!important;
   font-weight:560!important;
 }
+
+
+/* v1.23.7 — release-candidate live console refinement */
+.appShell:has(.rundeckPanel) .rundeckLiveScope span.is-stale{
+  color:var(--sphere-warning,#d8b35f);
+  font-weight:700;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:24px;
+  margin:0 0 5px;
+  padding:3px 7px;
+  border-left:2px solid var(--sphere-warning,#d8b35f);
+  background:rgba(216,179,95,.035);
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9.2px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary strong{
+  flex:0 0 auto;
+  color:var(--sphere-warning,#d8b35f);
+  font-size:9px;
+  text-transform:uppercase;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* Keep only true datasets scrollable. */
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload{
+  max-height:240px!important;
+  overflow:auto!important;
+  scrollbar-width:thin;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-operational-events{
+  max-height:138px!important;
+  overflow:auto!important;
+  scrollbar-width:thin;
+}
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-availability{
+  max-height:none!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-issues{
+  max-height:138px!important;
+  overflow:auto!important;
+  scrollbar-width:thin;
+}
+
+/* Selected workload and SM37 stay compact. */
+.appShell:has(.rundeckPanel) .rundeckJobHistory{
+  margin-top:5px!important;
+  padding-top:4px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobHistoryOverview{
+  margin-top:4px!important;
+  padding:5px 0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSm37VerificationDynamic .rundeckSm37Verification{
+  margin:4px 0 2px!important;
+  padding:4px 0!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+  border-right:0!important;
+  border-bottom:0!important;
+  border-left:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSm37VerificationDynamic .rundeckSm37VerificationHead{
+  min-height:21px;
+  margin-bottom:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSm37VerificationDynamic .rundeckSm37VerificationGrid{
+  gap:3px 14px!important;
+  margin-top:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSm37VerificationDynamic .rundeckSm37Verification p{
+  margin-top:2px!important;
+}
+
+/* Reduce visual chrome; whitespace carries section hierarchy. */
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234{
+  border-top-color:rgba(126,147,158,.055)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckPerformanceReviewBand,
+.appShell:has(.rundeckPanel) .rundeckLiveDetail,
+.appShell:has(.rundeckPanel) .rundeckJobExecutionHistory{
+  border-top-color:rgba(126,147,158,.065)!important;
+}
+.appShell:has(.rundeckPanel) *{
+  scrollbar-color:rgba(126,147,158,.28) transparent;
+}
+.appShell:has(.rundeckPanel) *::-webkit-scrollbar{width:6px;height:6px}
+.appShell:has(.rundeckPanel) *::-webkit-scrollbar-track{background:transparent}
+.appShell:has(.rundeckPanel) *::-webkit-scrollbar-thumb{
+  border-radius:999px;
+  background:rgba(126,147,158,.24);
+}
+.appShell:has(.rundeckPanel) *::-webkit-scrollbar-thumb:hover{background:rgba(126,147,158,.42)}
+
+@media(max-width:1366px){
+  .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+    gap:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckOperationalBandV1234{
+    gap:9px!important;
+  }
+}
