@@ -377,3 +377,14 @@
   margin-top:0;
   padding-top:4px;
 }
+
+
+/* Repeated healthy table states remain visible but intentionally quiet. */
+.appShell:has(.rundeckPanel) .rundeckServerTable .rundeckStatus.is-normal,
+.appShell:has(.rundeckPanel) .rundeckServerTable .rundeckStatus.is-ready,
+.appShell:has(.rundeckPanel) .rundeckInlineStatus.is-normal{
+  color:var(--sphere-text-muted,#718089)!important;
+  background:transparent!important;
+  border-color:transparent!important;
+  font-weight:560!important;
+}
