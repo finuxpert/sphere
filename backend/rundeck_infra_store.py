@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from sqlalchemy import text
@@ -24,16 +25,23 @@ def _write(path, value):
     tmp.write_text(json.dumps(value, indent=2, default=str))
     tmp.replace(path)
 
-def identifier(execution_id):
+def _safe_host(host):
+    value = re.sub(r"[^A-Za-z0-9_.-]+", "-", str(host or "").strip())
+    if not value:
+        raise ValueError("Invalid infrastructure host")
+    return value[:120]
+
+def identifier(execution_id, host=None):
     value = str(execution_id)
     if not value.isdigit() or value.startswith("0"):
         raise ValueError("Invalid execution ID")
-    return "infra-rundeck-" + value
+    base = "infra-rundeck-" + value
+    return f"{base}-{_safe_host(host)}" if host else base
 
 def collections(root=ROOT):
     initialize(root)
     rows = [json.loads(path.read_text()) for path in (root / "manifests").glob("infra-rundeck-*.json")]
-    return sorted(rows, key=lambda row: int(row["execution_id"]), reverse=True)
+    return sorted(rows, key=lambda row: (int(row["execution_id"]), str(row.get("host") or "")), reverse=True)
 
 def _persist_db(row, parsed):
     engine = get_engine()
@@ -74,19 +82,19 @@ def _persist_db(row, parsed):
                 })
     return "STORED"
 
-def ingest(execution, raw, expected_host, root=ROOT):
+def _ingest_one(execution, raw, expected_host, root, multi=False):
     initialize(root)
-    cid = identifier(execution["id"])
+    parsed = parse(raw)
+    if parsed["hostname"] != expected_host:
+        raise ValueError(f"Unexpected infra host: expected {expected_host}, got {parsed['hostname']}")
+    if str(execution.get("status") or "").lower() != "succeeded":
+        raise ValueError("Rundeck infra execution did not succeed")
+    cid = identifier(execution["id"], expected_host if multi else None)
     manifest = root / "manifests" / f"{cid}.json"
     if manifest.exists():
         previous = json.loads(manifest.read_text())
         if previous.get("database_status") != "ERROR":
             return previous
-    parsed = parse(raw)
-    if parsed["hostname"] != expected_host:
-        raise ValueError("Unexpected infra host")
-    if str(execution.get("status") or "").lower() != "succeeded":
-        raise ValueError("Rundeck infra execution did not succeed")
     archive = root / "archive" / f"{cid}.log.gz"
     with gzip.open(archive, "wb", compresslevel=6) as stream:
         stream.write(raw)
@@ -105,3 +113,22 @@ def ingest(execution, raw, expected_host, root=ROOT):
         row["database_error_type"] = type(error).__name__
     _write(manifest, row)
     return row
+
+def ingest(execution, raw, expected_host, root=ROOT):
+    return _ingest_one(execution, raw, expected_host, root, multi=False)
+
+def ingest_many(execution, raw_by_host, expected_hosts, root=ROOT):
+    expected = [str(host).strip() for host in expected_hosts if str(host).strip()]
+    if len(expected) < 2 or len(set(expected)) != len(expected):
+        raise ValueError("Multi-host infrastructure ingestion requires unique expected hosts")
+    missing = [host for host in expected if host not in raw_by_host]
+    if missing:
+        raise ValueError("Missing infrastructure output for: " + ",".join(missing))
+    rows = [_ingest_one(execution, raw_by_host[host], host, root, multi=True) for host in expected]
+    return {
+        "execution_id": str(execution["id"]),
+        "hosts": expected,
+        "collection_ids": [row["collection_id"] for row in rows],
+        "database_status": "STORED" if all(row.get("database_status") == "STORED" for row in rows) else "PARTIAL",
+        "items": rows,
+    }
