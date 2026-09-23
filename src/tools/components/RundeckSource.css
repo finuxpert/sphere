@@ -663,3 +663,86 @@
   letter-spacing: .03em;
 }
 
+
+
+/* v1.23.8 — action/state separation and supporting-data disclosure */
+.rundeckActions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:18px;
+}
+.rundeckActionCluster,
+.rundeckStateCluster{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+.rundeckStateCluster{
+  padding-left:14px;
+  border-left:1px solid rgba(126,147,158,.09);
+}
+.rundeckDataAlignment,
+.rundeckOperationalState{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.rundeckDataAlignment>span:first-child,
+.rundeckOperationalState>span:first-child{
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.5px;
+  font-weight:700;
+  letter-spacing:.035em;
+  text-transform:uppercase;
+}
+.rundeckDataAlignment .rundeckStatus.is-aligned{
+  color:var(--sphere-text-muted,#718089);
+  border-color:rgba(126,147,158,.22);
+  background:transparent;
+}
+.rundeckDataAlignment .rundeckStatus.is-partial{
+  color:var(--sphere-warning,#d8b35f);
+  border-color:rgba(216,179,95,.32);
+  background:rgba(216,179,95,.035);
+}
+.rundeckSupportingDataDisclosure{
+  margin-top:8px;
+  padding-top:6px;
+  border-top:1px solid rgba(126,147,158,.07);
+}
+.rundeckSupportingDataDisclosure>summary{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:30px;
+  cursor:pointer;
+  list-style:none;
+}
+.rundeckSupportingDataDisclosure>summary::-webkit-details-marker{display:none}
+.rundeckSupportingDataDisclosure>summary::after{
+  content:'▾';
+  margin-left:auto;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckSupportingDataDisclosure:not([open])>summary::after{transform:rotate(-90deg)}
+.rundeckSupportingDataDisclosure>summary small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+  font-weight:500;
+  text-transform:none;
+}
+.rundeckSupportingDataBody{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:16px;
+  padding-top:5px;
+}
+@media(max-width:1100px){
+  .rundeckActions{align-items:flex-end;flex-direction:column;gap:6px}
+  .rundeckStateCluster{padding-left:0;border-left:0}
+  .rundeckSupportingDataBody{grid-template-columns:1fr}
+}
