@@ -37,7 +37,7 @@ function formatTrendAxis(value, range) {
   return formatWib(value, false)
 }
 
-const palette = () => ({ text: token('--sphere-text', '#e7edf0'), secondary: token('--sphere-text-secondary', '#a9b5bb'), muted: token('--sphere-text-muted', '#718089'), grid: token('--sphere-chart-grid', 'rgba(126,147,158,.08)'), panel: token('--sphere-surface-1', '#141d23'), warning: token('--sphere-warning', '#d8b35f'), danger: token('--sphere-danger', '#db7d86'), series: [token('--sphere-chart-1', '#72a9e8'), token('--sphere-chart-2', '#8cc985'), token('--sphere-chart-3', '#aaa0df'), token('--sphere-chart-4', '#e1a16c'), token('--sphere-chart-5', '#5dcbd1')] })
+const palette = () => ({ text: token('--sphere-text', '#e7edf0'), secondary: token('--sphere-text-secondary', '#a9b5bb'), muted: token('--sphere-text-muted', '#718089'), grid: token('--sphere-chart-grid', 'rgba(126,147,158,.08)'), panel: token('--sphere-surface-1', '#141d23'), attention: token('--sphere-attention', '#6aa2d8'), warning: token('--sphere-warning', '#d8b35f'), danger: token('--sphere-danger', '#db7d86'), series: [token('--sphere-chart-1', '#72a9e8'), token('--sphere-chart-2', '#8cc985'), token('--sphere-chart-3', '#aaa0df'), token('--sphere-chart-4', '#e1a16c'), token('--sphere-chart-5', '#5dcbd1')] })
 
 async function json(url, signal) {
   const response = await fetch(url, { cache: 'no-store', signal })
@@ -163,7 +163,7 @@ function TrendChart({ trend, mode, range, onSelect }) {
       grid: { left: 52, right: 58, top: 38, bottom: compactPoints ? 28 : 43 },
       tooltip: { trigger: 'axis', confine: true, backgroundColor: colors.panel, borderWidth: 0, textStyle: { color: colors.text, fontSize: 10 } },
       xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: availabilityMode ? 'Availability' : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
+      yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => ({
         name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
@@ -177,8 +177,8 @@ function TrendChart({ trend, mode, range, onSelect }) {
         markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined,
         markArea: index === 0 && gaps.length ? {
           silent: true,
-          label: { show: true, formatter: (params) => params?.name || (availabilityMode ? 'NO OBSERVATION' : 'COLLECTION GAP'), fontSize: 8, color: colors.warning, position: 'insideTop' },
-          itemStyle: { color: colors.warning, opacity: .06, borderColor: colors.warning, borderWidth: 1, borderType: 'dashed' },
+          label: { show: true, formatter: (params) => params?.name || (availabilityMode ? 'NO OBSERVATION' : 'COLLECTION GAP'), fontSize: 8, color: availabilityMode ? colors.attention : colors.warning, position: 'insideTop' },
+          itemStyle: { color: availabilityMode ? colors.attention : colors.warning, opacity: .06, borderColor: availabilityMode ? colors.attention : colors.warning, borderWidth: 1, borderType: 'dashed' },
           data: gaps.map(([from, to]) => [{ name: availabilityMode ? `NO OBSERVATION · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}` : gapLabel(from, to), xAxis: from }, { xAxis: to }]),
         } : undefined,
       }))
