@@ -13,10 +13,10 @@ Only these four branches are active:
 
 | Branch | Purpose |
 |---|---|
-| `sphere-prod` | Stable non-Rundeck/manual production line. |
-| `sphere-dev` | Development line for `sphere-prod`. |
-| `rundeck-sphere-prod` | Active production line with automatic Rundeck ingestion. |
-| `rundeck-sphere-dev` | Active development/test line for Rundeck SPHERE. |
+| `sphere-prod` | Manual-only production line. Operators upload collected `.txt`/`.log` files through **Upload Logs**; this branch does not depend on the Rundeck REST API. |
+| `sphere-dev` | Development line for the manual Upload Logs workflow; no automatic Rundeck API ingestion. |
+| `rundeck-sphere-prod` | **Active production line.** Automatically ingests retained collection evidence through the Rundeck REST API; manual Upload Logs remains available as fallback. |
+| `rundeck-sphere-dev` | Development/test line for the Rundeck REST API integration before promotion to `rundeck-sphere-prod`. |
 
 Promotion paths:
 
@@ -34,6 +34,15 @@ https://sphere.astraotoparts.co.id
 ```
 
 Do not develop directly on a production branch and do not force-reset a production branch to DEV. Temporary/hotfix branches should be removed after their commits are contained in the corresponding active branch.
+
+## Data-ingestion modes
+
+SPHERE has two intentionally separate ingestion modes:
+
+- **Manual branch family (`sphere-dev` / `sphere-prod`)** — the operator collects/export logs externally and uploads the resulting text/log file through **Upload Logs**. No Rundeck API is required.
+- **Rundeck branch family (`rundeck-sphere-dev` / `rundeck-sphere-prod`)** — SPHERE automatically discovers completed Rundeck executions and reads execution metadata/output through the **Rundeck REST API**. SPHERE does not SSH/SCP directly to SAP application servers. Manual Upload Logs remains available as an operational fallback.
+
+The current active production runtime is `rundeck-sphere-prod`.
 
 ## Application architecture
 
