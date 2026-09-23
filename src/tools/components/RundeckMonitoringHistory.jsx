@@ -9,6 +9,7 @@ import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
 import RundeckWorkloadExplorer from './RundeckWorkloadExplorer.jsx'
+import SphereIcon from './SphereIcon.jsx'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
 
@@ -102,7 +103,7 @@ export default function RundeckMonitoringHistory(props) {
           </section>
           <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} />
           <details className="rundeckLiveDetail">
-            <summary>Infrastructure details</summary>
+            <summary><SphereIcon name="server" /> Infrastructure details</summary>
             <RundeckInfrastructure />
           </details>
         </>}
