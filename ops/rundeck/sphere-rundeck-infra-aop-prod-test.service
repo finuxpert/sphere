@@ -13,7 +13,7 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=RUNDECK_INFRA_SOURCE=aop-prod
 Environment=RUNDECK_INFRA_PROJECT=Linux
 Environment=RUNDECK_INFRA_JOB_GROUP=SAP/AOP
-Environment=RUNDECK_INFRA_JOB_NAME=SPHERE Infrastructure Collector - PROD APP1
+Environment="RUNDECK_INFRA_JOB_NAME=SPHERE Infrastructure Collector - PROD APP1"
 Environment=RUNDECK_INFRA_EXPECTED_HOSTS=AOPH1PAPPDC,AOPH2PAPPDC,AOPH3PAPPDC,AOPH4PAPPDC,AOPH5PAPPDC
 EnvironmentFile=-/etc/sphere/rundeck-dev.env
 LoadCredential=rundeck-reader:/etc/sphere/rundeck-readonly.token
