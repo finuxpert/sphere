@@ -4,13 +4,13 @@ import os
 from pathlib import Path
 
 
-APP_NAME = "SAP Intelligent RCA Evidence API"
-STORAGE_ROOT = Path(os.getenv("SAP_EVIDENCE_ROOT", "/var/www/svr01-dev/sap-data"))
+APP_NAME = "SPHERE Evidence API"
+STORAGE_ROOT = Path(os.getenv("SPHERE_EVIDENCE_ROOT", os.getenv("SAP_EVIDENCE_ROOT", "/var/www/svr01-dev/sap-data")))
 EVIDENCE_DIR = STORAGE_ROOT / "evidence"
 META_DIR = STORAGE_ROOT / "metadata"
 REPORT_DIR = STORAGE_ROOT / "reports"
 CASE_DIR = STORAGE_ROOT / "cases"
-MAX_UPLOAD_MB = int(os.getenv("SAP_EVIDENCE_MAX_UPLOAD_MB", "500"))
+MAX_UPLOAD_MB = int(os.getenv("SPHERE_EVIDENCE_MAX_UPLOAD_MB", os.getenv("SAP_EVIDENCE_MAX_UPLOAD_MB", "500")))
 
 ALLOWED_EXT = {
     ".zip",
