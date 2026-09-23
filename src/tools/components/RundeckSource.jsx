@@ -6,7 +6,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
-import { hostResourceState, overallOperationalState, statusExplanation } from './rundeckStatusSemantics.js'
+import { hostResourceState, overallOperationalState } from './rundeckStatusSemantics.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
 
@@ -507,12 +507,6 @@ export default function RundeckSource({ onCollection }) {
   const appCount = latest?.received_hosts?.length || operationalHosts.length || 0
   const incidentStart = incidentSummary?.signal_active_since || incidentSummary?.detected_since || ''
   const latestCollectionAt = latest?.collection_time_wib || latest?.finished_at || ''
-  const primarySignalHint = incidentSummary?.active
-    ? ` Primary signal: ${shortSignal(incidentSummary?.primary_signal?.label || 'performance signal')}.`
-    : ''
-  const statusHint = !collectionAligned
-    ? 'Waiting for one complete aligned Rundeck run.'
-    : `${statusExplanation(overallHealth, operationalHosts)}${primarySignalHint}`
   const performanceTs = Date.parse(latestCollectionAt || '')
   const availabilityTs = Date.parse(availabilitySnapshot?.collected_at || '')
   const sourceSkewMinutes = Number.isFinite(performanceTs) && Number.isFinite(availabilityTs)
