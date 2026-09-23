@@ -257,3 +257,24 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Healthy availability is intentionally quiet; exceptions retain color. */
+.rundeckAvailabilityStatus.is-up,
+.rundeckAvailabilityStatus.is-normal{
+  color:var(--sphere-text-muted,#718089);
+}
+.rundeckAvailabilityApps b,
+.rundeckAvailabilityInfra b{
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckAvailabilityMore>summary{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:9px;
+}
+.rundeckAvailabilityMore>summary span{
+  color:var(--sphere-text-muted,#718089);
+  font-weight:500;
+}
