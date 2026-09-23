@@ -132,7 +132,7 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
       </div>
       <details className="rundeckCollectorHealthV131">
         <summary title={collectorTitle(collector)}>
-          <span>Collector</span>
+          <span>Collector Health</span>
           <StatusPill value={collector.status || 'UNKNOWN'} />
         </summary>
         <div className="rundeckCollectorHealthPopover">
