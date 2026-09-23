@@ -2,6 +2,7 @@ import React from 'react'
 import './RundeckInfrastructure.css'
 
 const API=`${import.meta.env.BASE_URL}api/infra`
+const HOST_STORAGE_KEY='sphere.live.host'
 const metric=(value,suffix='')=>value===null||value===undefined||value===''?'—':`${Number(value).toLocaleString('en-US',{maximumFractionDigits:1})}${suffix}`
 const statusFs=(value)=>Number(value)>=90?'CRITICAL':Number(value)>=80?'ATTENTION':'NORMAL'
 const severityRank={NORMAL:0,ATTENTION:1,CRITICAL:2}
@@ -32,7 +33,9 @@ function SparkChart({items=[],metricType}){
   const groups=React.useMemo(()=>{
     const map=new Map()
     items.forEach(row=>{const key=row.series_key||'series';if(!map.has(key))map.set(key,[]);map.get(key).push(row)})
-    return [...map.entries()].slice(0,8)
+    return [...map.entries()]
+      .sort(([,left],[,right])=>Math.max(...right.map(row=>Number(row.value)||0))-Math.max(...left.map(row=>Number(row.value)||0)))
+      .slice(0,metricType==='filesystem'?4:6)
   },[items])
   const width=920,height=210,pad=28
   const values=items.flatMap(row=>[Number(row.value),Number(row.value2)]).filter(Number.isFinite)
@@ -63,7 +66,7 @@ function SparkChart({items=[],metricType}){
 export default function RundeckInfrastructure(){
   const [data,setData]=React.useState({hosts:[],fs:[],network:[],storage:[]})
   const [error,setError]=React.useState('')
-  const [selectedHost,setSelectedHost]=React.useState('')
+  const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trend,setTrend]=React.useState([])
@@ -88,6 +91,7 @@ export default function RundeckInfrastructure(){
   },[selectedHost])
 
   React.useEffect(()=>{refresh();const t=setInterval(refresh,60000);return()=>clearInterval(t)},[refresh])
+  React.useEffect(()=>{if(!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[selectedHost])
   React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active)setTrend(body.items||[])}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
   const fsState=data.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')
@@ -110,18 +114,19 @@ export default function RundeckInfrastructure(){
 
     {error&&<div className="rundeckInfraError">{error}</div>}
     <div className="rundeckInfraGrid">
-      <article><div className="cardHead"><h4>Filesystem</h4><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><h4>Filesystem</h4><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td>{statusFs(row.used_pct)==='NORMAL'?<span className="is-normal-muted">—</span>:<b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b>}</td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article><div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div><table><thead><tr><th>Interface</th><th>RX</th><th>TX</th><th>Drop Δ</th></tr></thead><tbody>{data.network.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key}><td>{row.sample_key}</td><td>{metric(m.rx_mbps,' Mbps')}</td><td>{metric(m.tx_mbps,' Mbps')}</td><td className={`is-${signalNetwork(m).toLowerCase()}`}>{metric(Number(m.rx_dropped_delta||0)+Number(m.tx_dropped_delta||0))}</td></tr>})}{!data.network.length&&<tr><td colSpan="4">No network sample.</td></tr>}</tbody></table></article>
       <article><div className="cardHead"><h4>Storage I/O</h4><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div><table><thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead><tbody>{data.storage.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key}><td>{m.mount||row.sample_key}</td><td className={`is-${signalStorage(m).toLowerCase()}`}>{metric(m.util_pct,'%')}</td><td>{metric(m.write_iops)}</td><td>{metric(m.write_mbps,' MB/s')}</td></tr>})}{!data.storage.length&&<tr><td colSpan="4">No storage sample.</td></tr>}</tbody></table></article>
     </div>
 
-    <section className="rundeckInfraTrend">
-      <header><div><h4>Infrastructure Trend</h4><p>Historical supporting evidence for the selected host.</p></div><div className="controls">
+    <details className="rundeckInfraTrend rundeckInfraTrendDisclosure">
+      <summary><span><b>Infrastructure Trend</b><small>Top-risk historical evidence for {host}</small></span><em>{trendMetric==='filesystem'?'Top 4 mounts':trendMetric==='network'?'Network':'Storage I/O'} · {range.toUpperCase()}</em></summary>
+      <header><div><p>Historical supporting evidence for the selected host.</p></div><div className="controls">
         <div>{['1h','6h','24h','7d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
         <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>setTrendMetric(v)}>{label}</button>)}</div>
       </div></header>
       <SparkChart items={trend} metricType={trendMetric}/>
-      <small>{trendMetric==='filesystem'?'Used % by primary filesystem':trendMetric==='network'?'RX Mbps by interface; TX remains available in API':'Disk util % by mapped mount'} · {range.toUpperCase()} · correlation evidence only</small>
-    </section>
+      <small>{trendMetric==='filesystem'?'Top-risk filesystem usage':trendMetric==='network'?'RX Mbps by interface; TX remains available in API':'Disk util % by mapped mount'} · {range.toUpperCase()} · correlation evidence only</small>
+    </details>
   </section>
 }
