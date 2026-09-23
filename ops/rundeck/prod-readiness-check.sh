@@ -5,7 +5,7 @@ SOURCE="${SOURCE:-/root/rundeck-sphere-dev}"
 BASE_URL="${BASE_URL:-https://sphere.astraotoparts.co.id/dev}"
 PYTHON="${SPHERE_DEV_PYTHON:-/opt/sphere-rundeck-dev/venv/bin/python}"
 
-[[ -d "$SOURCE/.git" ]] || { echo "READINESS BLOCKED: missing git checkout $SOURCE" >&2; exit 2; }
+git -C "$SOURCE" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "READINESS BLOCKED: missing git checkout $SOURCE" >&2; exit 2; }
 [[ -z "$(git -C "$SOURCE" status --porcelain)" ]] || { echo "READINESS BLOCKED: working tree is not clean" >&2; exit 2; }
 
 cd "$SOURCE"
