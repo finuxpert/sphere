@@ -59,11 +59,13 @@ function SparkChart({items=[],metricType}){
 export default function RundeckInfrastructure(){
   const [data,setData]=React.useState({hosts:[],fs:[],network:[],storage:[]})
   const [error,setError]=React.useState('')
+  const [selectedHost,setSelectedHost]=React.useState('')
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trend,setTrend]=React.useState([])
-  const host=data.hosts[0]?.host||'AOQ'
-  const collectedAt=data.hosts[0]?.snapshot_ts||data.fs[0]?.collected_at||data.network[0]?.collected_at||data.storage[0]?.collected_at
+  const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
+  const host=hostRow?.host||selectedHost||'AOQ'
+  const collectedAt=hostRow?.snapshot_ts||data.fs[0]?.collected_at||data.network[0]?.collected_at||data.storage[0]?.collected_at
   const stale=collectedAt?Date.now()-new Date(collectedAt).getTime()>15*60*1000:true
 
   const refresh=React.useCallback(async()=>{
@@ -73,7 +75,7 @@ export default function RundeckInfrastructure(){
       setData({hosts:values[0].items||[],fs:values[1].items||[],network:values[2].items||[],storage:values[3].items||[]})
       setError('')
     }catch(e){setError(e.message)}
-  },[])
+  },[selectedHost])
 
   React.useEffect(()=>{refresh();const t=setInterval(refresh,60000);return()=>clearInterval(t)},[refresh])
   React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active)setTrend(body.items||[])}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
@@ -86,13 +88,13 @@ export default function RundeckInfrastructure(){
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header>
       <div><h3>Infrastructure</h3><p>Filesystem, network and storage I/O supporting evidence. Signals are not automatic root-cause conclusions.</p></div>
-      <div className="rundeckInfraIdentity"><strong>{host}</strong><span className={`state is-${overall.toLowerCase()}`}>{overall}</span></div>
+      <div className="rundeckInfraIdentity"><select aria-label="Infrastructure host" value={host==='AOQ'?'':host} onChange={e=>setSelectedHost(e.target.value)}>{data.hosts.map(row=><option key={row.host} value={row.host}>{row.host}</option>)}</select><span className={`state is-${overall.toLowerCase()}`}>{overall}</span></div>
     </header>
 
     <div className="rundeckInfraFreshness">
       <span><b>Last collected</b> {formatTime(collectedAt)} WIB</span>
       <span><b>Freshness</b> {ageText(collectedAt)} · {stale?'STALE':'FRESH'}</span>
-      <span><b>Sampling</b> {metric(data.hosts[0]?.sample_seconds,'s')}</span>
+      <span><b>Sampling</b> {metric(hostRow?.sample_seconds,'s')}</span>
       <span><b>State</b> supporting infrastructure signal</span>
     </div>
 
