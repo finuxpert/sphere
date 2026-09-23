@@ -38,7 +38,11 @@ def poll():
         if state in ("running","scheduled"):
             _write(ROOT / "poller.json", {"status":"WAITING","checked_at":now(),"latest_execution":eid})
             return
-        known = {row["execution_id"] for row in collections()}
+        known = {
+            row["execution_id"]
+            for row in collections()
+            if row.get("database_status") != "ERROR"
+        }
         if eid in known:
             _write(ROOT / "poller.json", {"status":"OK","checked_at":now(),"processed":0,"latest_execution":eid,"job_id_observed":(execution.get("job") or {}).get("id")})
             return
