@@ -73,18 +73,44 @@ def _filesystem_rows(lines):
     rows = []
     for line in lines:
         row = _fields(line)
-        pos = row.get("_positional", [])
+        pos = list(row.get("_positional", []))
+
+        # Real collector positional contract:
+        # filesystem <device> <fstype> <size_kb> <avail_kb> <used_pct> <mount>
+        if pos and pos[0].lower() == "filesystem":
+            pos = pos[1:]
+
+        device = _device(row)
+        fstype = row.get("fstype") or row.get("type")
         mount = _mount(row)
         used = _number(row.get("used_pct") or row.get("use_pct") or row.get("capacity_pct"))
-        if used is None and len(pos) >= 2 and str(pos[1]).endswith("%"):
+        total_bytes = _number(row.get("total_bytes") or row.get("size_bytes"))
+        avail_bytes = _number(row.get("avail_bytes") or row.get("available_bytes"))
+
+        if len(pos) >= 6:
+            device = device or pos[0]
+            fstype = fstype or pos[1]
+            total_kb = _number(pos[2])
+            avail_kb = _number(pos[3])
+            used = used if used is not None else _number(pos[4])
+            mount = mount or pos[5]
+            if total_bytes is None and total_kb is not None:
+                total_bytes = total_kb * 1024
+            if avail_bytes is None and avail_kb is not None:
+                avail_bytes = avail_kb * 1024
+        elif used is None and len(pos) >= 2 and str(pos[1]).endswith("%"):
             used = _number(pos[1])
+
+        if not mount:
+            raise ValueError(f"Filesystem mount missing: {line}")
+
         rows.append({
-            "device": _device(row),
+            "device": device,
             "mount": mount,
-            "fstype": row.get("fstype") or row.get("type"),
+            "fstype": fstype,
             "used_pct": used,
-            "total_bytes": _number(row.get("total_bytes") or row.get("size_bytes")),
-            "avail_bytes": _number(row.get("avail_bytes") or row.get("available_bytes")),
+            "total_bytes": total_bytes,
+            "avail_bytes": avail_bytes,
             "details": row,
         })
     return rows
