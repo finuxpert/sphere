@@ -1,5 +1,4 @@
 import React from 'react'
-import RundeckJobMonitor from './RundeckJobMonitor.jsx'
 import RundeckInfrastructure from './RundeckInfrastructure.jsx'
 import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
@@ -103,10 +102,6 @@ export default function RundeckMonitoringHistory(props) {
           <details className="rundeckLiveDetail">
             <summary>Infrastructure details</summary>
             <RundeckInfrastructure />
-          </details>
-          <details className="rundeckLiveDetail">
-            <summary>SAP Job Monitor details</summary>
-            <RundeckJobMonitor refreshToken={refreshToken} onOpenLiveJob={openJobInLive} />
           </details>
         </>}
   </>
