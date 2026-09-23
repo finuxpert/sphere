@@ -86,7 +86,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
 
   const selectedAt = Date.parse(job.at || '')
 
-  return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234" open>
+  return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
     <summary><SphereIcon name="history" /> Observation History <span>{error ? 'unavailable' : `${rows.length} observations`}</span></summary>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
