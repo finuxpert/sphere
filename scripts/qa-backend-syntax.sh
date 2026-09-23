@@ -73,7 +73,7 @@ from backend.storage_config import (
 )
 
 snapshot = storage_snapshot()
-assert APP_NAME == 'SAP Intelligent RCA Evidence API'
+assert APP_NAME == 'SPHERE Evidence API'
 assert str(STORAGE_ROOT)
 assert str(EVIDENCE_DIR).startswith(str(STORAGE_ROOT))
 assert str(META_DIR).startswith(str(STORAGE_ROOT))
@@ -113,7 +113,7 @@ import importlib
 import os
 from pathlib import Path
 
-os.environ['SAP_EVIDENCE_ROOT'] = os.environ['TMP_STORAGE_ROOT']
+os.environ['SPHERE_EVIDENCE_ROOT'] = os.environ['TMP_STORAGE_ROOT']
 
 import backend.storage_config as storage_config
 storage_config = importlib.reload(storage_config)
@@ -358,7 +358,7 @@ log "Import FastAPI app"
 python3 - <<'PY'
 from backend.evidence_api import app
 
-assert app.title == 'SAP Intelligent RCA Evidence API'
+assert app.title == 'SPHERE Evidence API'
 paths = {route.path for route in app.routes}
 required = {'/health', '/cases', '/upload', '/parsed-results-history', '/evidence-history'}
 missing = sorted(required - paths)

@@ -1,6 +1,6 @@
 # SPHERE
 
-SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP Basis operations workspace for performance monitoring, ST03N/LOG analysis, operational evidence, Case History, and initial RCA support.
+SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP Basis operations workspace for performance monitoring, ST03N/LOG analysis, operational evidence, Case History, and initial performance investigation support.
 
 Current stable Rundeck baseline: **v1.33.0**
 
@@ -138,12 +138,19 @@ Rundeck integration, ACL, credential handling, token rotation, and security guar
 
 Never commit Rundeck tokens, passwords, or runtime credentials to GitHub.
 
+## Naming standard
+
+- New application, script, service, documentation, and file names use **SPHERE** terminology.
+- Do not introduce new `RCA`, temporary, hotfix, final, cleanup, or version-number-only filenames.
+- Historical protocol aliases may remain only where required for backward compatibility with already-deployed collectors.
+- Prefer semantic names that describe ownership and purpose rather than release numbers.
+
 ## Repository guardrails
 
 - Preserve the four active branches above.
 - Remove temporary branches only after confirming they are fully contained in an active branch.
 - Preserve active parser, frontend, backend, database, migration, test, and deployment dependencies.
-- Preserve collector protocol compatibility markers such as `RCA-SNAPSHOT-V2.2`, `RCA-WP-V2.2`, and `RCA-EXT`.
+- Preserve collector protocol compatibility during the migration from historical marker names to SPHERE naming.
 - Preserve database migration history.
 - Do not restore retired CBJ monitoring/deployment assets into active SPHERE branches.
 - Production changes must pass DEV validation and be promoted through a PR.
