@@ -23,6 +23,9 @@ export default function RundeckMonitoringHistoryCore(props) {
       </div>
     </section>
     {props.operationalEvidenceContent}
-    <RundeckObservationHistory job={props.selectedJob} refreshToken={props.refreshToken} onSelectJob={props.onSelectJob} />
+    {props.selectedJob?.key && <details className="rundeckSupportingDataV1236">
+      <summary>Supporting Data <span>Observation history</span></summary>
+      <RundeckObservationHistory job={props.selectedJob} refreshToken={props.refreshToken} onSelectJob={props.onSelectJob} embedded />
+    </details>}
   </section>
 }
