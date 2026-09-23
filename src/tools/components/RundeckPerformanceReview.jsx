@@ -65,7 +65,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     days: data?.days || 1,
   })
 
-  return <section className="rundeckPerformanceReviewV1231" aria-label="Performance review">
+  return <section className={`rundeckPerformanceReviewV1231 ${showAll ? 'is-expanded' : 'is-top4'}`} aria-label="Performance review">
     <header className="rundeckReviewHeadV1231">
       <div>
         <h3><SphereIcon name="trend" /> Performance Review</h3>
