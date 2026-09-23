@@ -3,6 +3,7 @@ import RundeckInfrastructure from './RundeckInfrastructure.jsx'
 import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
+import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -99,6 +100,7 @@ export default function RundeckMonitoringHistory(props) {
           <section className="rundeckPerformanceReviewBand" aria-label="Performance Review">
             <RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} />
           </section>
+          <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} />
           <details className="rundeckLiveDetail">
             <summary>Infrastructure details</summary>
             <RundeckInfrastructure />
