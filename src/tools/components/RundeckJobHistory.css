@@ -502,3 +502,51 @@
     transition: none;
   }
 }
+
+
+/* v1.23.8 — progressive disclosure for workload diagnostics */
+.rundeckJobPerformanceDisclosure{
+  margin-top:7px;
+  padding-top:5px;
+  border-top:1px solid rgba(126,147,158,.07);
+}
+.rundeckJobPerformanceDisclosure>summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:28px;
+  cursor:pointer;
+  list-style:none;
+}
+.rundeckJobPerformanceDisclosure>summary::-webkit-details-marker{display:none}
+.rundeckJobPerformanceDisclosure>summary::after{
+  content:'▾';
+  margin-left:auto;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckJobPerformanceDisclosure:not([open])>summary::after{transform:rotate(-90deg)}
+.rundeckJobPerformanceDisclosure>summary>span{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:var(--sphere-text,#e7edf0);
+  font-size:11px;
+  font-weight:760;
+}
+.rundeckJobPerformanceDisclosure>summary>span .sphereIcon{
+  color:var(--sphere-text-muted,#718089);
+}
+.rundeckJobPerformanceDisclosure>summary small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckJobPerformanceDisclosure>summary em{
+  color:var(--sphere-warning,#d8b35f);
+  font-size:8.8px;
+  font-style:normal;
+  font-weight:650;
+}
+.rundeckJobPerformanceDisclosure[open] .rundeckJobPerformanceChart{
+  margin-top:4px;
+}
