@@ -1,5 +1,6 @@
 import React from 'react'
 import RundeckJobMonitor from './RundeckJobMonitor.jsx'
+import RundeckInfrastructure from './RundeckInfrastructure.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
@@ -76,7 +77,9 @@ export default function RundeckMonitoringHistory(props) {
     ? 'Live SAP performance monitoring'
     : monitoringMode === 'explorer'
       ? 'Job and Program performance · 24H–30D'
-      : 'SM37 execution health · correlation · review queue'
+      : monitoringMode === 'jobs'
+        ? 'SM37 execution health · correlation · review queue'
+        : 'Filesystem · Network · Storage I/O supporting evidence'
 
   return <>
     <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
@@ -84,6 +87,7 @@ export default function RundeckMonitoringHistory(props) {
         <button type="button" role="tab" aria-selected={monitoringMode === 'live'} className={monitoringMode === 'live' ? 'is-active' : ''} onClick={() => setMonitoringMode('live')}>Live Monitoring</button>
         <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>Job &amp; Program History</button>
         <button type="button" role="tab" aria-selected={monitoringMode === 'jobs'} className={monitoringMode === 'jobs' ? 'is-active' : ''} onClick={() => setMonitoringMode('jobs')}>SAP Job Monitor</button>
+        <button type="button" role="tab" aria-selected={monitoringMode === 'infra'} className={monitoringMode === 'infra' ? 'is-active' : ''} onClick={() => setMonitoringMode('infra')}>Infrastructure</button>
       </div>
       <small>{modeHint}</small>
     </div>
@@ -92,7 +96,9 @@ export default function RundeckMonitoringHistory(props) {
       ? <RundeckWorkloadExplorer refreshToken={refreshToken} onOpenLiveJob={openJobInLive} />
       : monitoringMode === 'jobs'
         ? <RundeckJobMonitor refreshToken={refreshToken} onOpenLiveJob={openJobInLive} />
-        : <>
+        : monitoringMode === 'infra'
+          ? <RundeckInfrastructure />
+          : <>
           <RundeckMonitoringHistoryCore
             {...props}
             onSelectJob={inspectJob}

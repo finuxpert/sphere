@@ -111,9 +111,12 @@ else
   /opt/sphere-rundeck-dev/venv/bin/pip install -r "$RELEASE/backend/requirements.txt"
 fi
 
-install -d -o sphere -g sphere -m 0750 /var/lib/sphere/ingestion
+install -d -o sphere -g sphere -m 0750 /var/lib/sphere/ingestion /var/lib/sphere/infra-ingestion
 for folder in inbox processing archive rejected manifests; do
   install -d -o sphere -g sphere -m 0750 "/var/lib/sphere/ingestion/$folder"
+done
+for folder in archive manifests; do
+  install -d -o sphere -g sphere -m 0750 "/var/lib/sphere/infra-ingestion/$folder"
 done
 
 # Credentials stay server-side. systemd copies them into the private runtime
@@ -152,6 +155,8 @@ nginx -t
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-api.service" /etc/systemd/system/
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-poller.service" /etc/systemd/system/
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-poller.timer" /etc/systemd/system/
+install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-infra-poller.service" /etc/systemd/system/
+install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-infra-poller.timer" /etc/systemd/system/
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-watchdog.service" /etc/systemd/system/
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-watchdog.timer" /etc/systemd/system/
 
@@ -185,10 +190,11 @@ systemctl daemon-reload
 # Transactional activation. Any failing command below triggers rollback().
 ln -sfn "$RELEASE" "$API_CURRENT"
 ln -sfn "$WEB" "$WEB_CURRENT"
-systemctl enable sphere-rundeck-api.service sphere-rundeck-poller.timer sphere-rundeck-watchdog.timer >/dev/null
+systemctl enable sphere-rundeck-api.service sphere-rundeck-poller.timer sphere-rundeck-infra-poller.timer sphere-rundeck-watchdog.timer >/dev/null
 systemctl restart sphere-rundeck-api.service
-systemctl enable --now sphere-rundeck-poller.timer sphere-rundeck-watchdog.timer >/dev/null
+systemctl enable --now sphere-rundeck-poller.timer sphere-rundeck-infra-poller.timer sphere-rundeck-watchdog.timer >/dev/null
 systemctl start sphere-rundeck-poller.service
+systemctl start sphere-rundeck-infra-poller.service
 systemctl start sphere-rundeck-watchdog.service
 systemctl reload nginx
 
