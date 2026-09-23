@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from backend.rundeck_alert_incidents import build_incidents
+from backend.rundeck_availability import availability_observation_profile
 from backend.rundeck_credentials import credential_mode, read_credential
 from backend.rundeck_evaluation import assess_workload
 from backend.rundeck_host_projection import parse_host_projection
