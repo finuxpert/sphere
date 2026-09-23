@@ -90,7 +90,7 @@ def poll():
         complete_hosts = {
             row.get("host")
             for row in collections()
-            if row.get("execution_id") == eid and row.get("database_status") != "ERROR"
+            if row.get("execution_id") == eid and row.get("database_status") == "STORED"
         }
         if all(host in complete_hosts for host in expected_hosts):
             _write(_state_path("poller"), {
@@ -105,22 +105,28 @@ def poll():
         if len(expected_hosts) == 1:
             raw = output_text(eid, token)
             result = ingest(execution, raw, expected_hosts[0])
+            db_status = result.get("database_status")
             state_payload = {
-                "status":"OK","checked_at":now(),"processed":1,"latest_execution":eid,
+                "status":"OK" if db_status == "STORED" else "ERROR",
+                "checked_at":now(),"processed":1,"latest_execution":eid,
                 "collection_id":result["collection_id"],"hosts":expected_hosts,
-                "database_status":result.get("database_status"),
+                "database_status":db_status,
                 "job_id_observed":(execution.get("job") or {}).get("id")
             }
         else:
             raw_by_host = output_by_node(eid, token, expected_hosts)
             result = ingest_many(execution, raw_by_host, expected_hosts)
+            db_status = result.get("database_status")
             state_payload = {
-                "status":"OK","checked_at":now(),"processed":len(expected_hosts),"latest_execution":eid,
+                "status":"OK" if db_status == "STORED" else "PARTIAL",
+                "checked_at":now(),"processed":len(expected_hosts),"latest_execution":eid,
                 "collection_ids":result["collection_ids"],"hosts":expected_hosts,
-                "database_status":result.get("database_status"),
+                "database_status":db_status,
                 "job_id_observed":(execution.get("job") or {}).get("id")
             }
         _write(_state_path("poller"), state_payload)
+        if state_payload["status"] != "OK":
+            raise RuntimeError("Infrastructure ingestion did not persist all expected hosts")
 
 if __name__ == "__main__":
     try:
