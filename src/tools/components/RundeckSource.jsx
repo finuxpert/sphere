@@ -567,10 +567,6 @@ export default function RundeckSource({ onCollection }) {
           <div className="rundeckDataAlignment" title={dataAlignmentTitle}>
             <span>Data</span><StatusPill value={dataAlignment} />
           </div>
-          <div className="rundeckOperationalState">
-            <span>System Health</span>
-            <StatusPill value={overallHealth} title={statusHint} />
-          </div>
         </div>
       </div>
     </header>
