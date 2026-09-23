@@ -23,6 +23,20 @@ const BUCKET_INTERVAL_MS = {
 const metricLabel = (value) => ({ cpu: 'CPU', ram: 'Memory', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
 const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+
+function formatTrendAxis(value, range) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const base = { timeZone: 'Asia/Jakarta', hour12: false }
+  if (range === '30d' || range === '7d') {
+    return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
+  }
+  if (range === '24h') {
+    return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
+  }
+  return formatWib(value, false)
+}
+
 const palette = () => ({ text: token('--sphere-text', '#e7edf0'), secondary: token('--sphere-text-secondary', '#a9b5bb'), muted: token('--sphere-text-muted', '#718089'), grid: token('--sphere-chart-grid', 'rgba(126,147,158,.08)'), panel: token('--sphere-surface-1', '#141d23'), warning: token('--sphere-warning', '#d8b35f'), danger: token('--sphere-danger', '#db7d86'), series: [token('--sphere-chart-1', '#72a9e8'), token('--sphere-chart-2', '#8cc985'), token('--sphere-chart-3', '#aaa0df'), token('--sphere-chart-4', '#e1a16c'), token('--sphere-chart-5', '#5dcbd1')] })
 
 async function json(url, signal) {
@@ -60,9 +74,17 @@ function resolvedGapIntervalMs(trend) {
 
 function trendGaps(trend) {
   const rows = trend?.items || []
-  const rangeStart = Date.parse(trend?.since || '')
+  const rangeStart = Date.parse(trend?.since || trend?.range_started_at || '')
   const rangeEnd = Date.now()
   const intervalMs = resolvedGapIntervalMs(trend)
+
+  if (trend?.metric === 'availability' && Array.isArray(trend?.observation_gaps)) {
+    const gaps = trend.observation_gaps
+      .map((gap) => [Date.parse(gap?.from || ''), Date.parse(gap?.to || '')])
+      .filter(([from, to]) => Number.isFinite(from) && Number.isFinite(to) && to > from)
+    return { gaps, rangeStart, rangeEnd, intervalMs }
+  }
+
   const gapThresholdMs = intervalMs * 2
   const buckets = Array.from(new Set(rows.map((row) => Date.parse(row.bucket)).filter(Number.isFinite))).sort((a, b) => a - b)
   const gaps = []
@@ -79,10 +101,36 @@ function CollectionGapBand({ trend }) {
   if (!gaps.length) return null
   const sorted = [...gaps].sort((left, right) => (right[1] - right[0]) - (left[1] - left[0]))
   const [from, to] = sorted[0]
-  return <div className="rundeckCollectionGapBandV132" role="status" title="No retained collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.">
-    <span>Collection Gap</span>
-    <strong>{formatWib(from, false)}–{formatWib(to, false)} WIB</strong>
-    <small>{gapDurationText(from, to)} without retained collection{gaps.length > 1 ? ` · +${gaps.length - 1} additional gap${gaps.length > 2 ? 's' : ''}` : ''}</small>
+  const observed = trend?.metric === 'availability'
+  return <details className={`rundeckCollectionGapBandV132 ${observed ? 'is-observation-gap' : ''}`} role="status">
+    <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
+      <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
+      <strong>{formatWib(from, false)}–{formatWib(to, false)} WIB</strong>
+      <small>{gapDurationText(from, to)} {observed ? 'without retained Service Availability observation' : 'without retained collection'}{gaps.length > 1 ? ` · +${gaps.length - 1} additional gap${gaps.length > 2 ? 's' : ''}` : ''}</small>
+    </summary>
+    {gaps.length > 1 && <div className="rundeckGapDetailsV133">
+      {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
+        <b>{index + 1}</b><span>{formatWib(gapFrom, true)}–{formatWib(gapTo, true)} WIB</span><small>{gapDurationText(gapFrom, gapTo)}</small>
+      </div>)}
+      {gaps.length > 8 && <small>+{gaps.length - 8} more retained-gap interval{gaps.length - 8 === 1 ? '' : 's'}</small>}
+    </div>}
+  </details>
+}
+
+function AvailabilityCoverageBand({ trend }) {
+  if (trend?.metric !== 'availability' || !trend?.coverage_limited || !trend?.history_started_at) return null
+  return <div className="rundeckCoverageBandV133">
+    <span>History Coverage</span>
+    <strong>starts {formatWib(trend.history_started_at, true)} WIB</strong>
+    <small>Earlier history in this selected range was not retained by SPHERE; this is not an availability outage.</small>
+  </div>
+}
+
+function AvailabilityObservationSummary({ trend }) {
+  if (trend?.metric !== 'availability' || !Array.isArray(trend?.uptime) || !trend.uptime.length) return null
+  return <div className="rundeckAvailabilitySummaryV133" title="Observed availability is calculated only from retained Service Availability checks; it is not an SLA calculation.">
+    <span>Observed availability</span>
+    <div>{trend.uptime.map((row) => <small key={row.name}><b>{row.name}</b> {row.uptime_pct === null || row.uptime_pct === undefined ? '—' : `${numberText(row.uptime_pct, 2)}%`}</small>)}</div>
   </div>
 }
 
@@ -114,7 +162,7 @@ function TrendChart({ trend, mode, range, onSelect }) {
       legend: { top: 0, type: 'scroll', itemWidth: 14, itemHeight: 8, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 9 } },
       grid: { left: 52, right: 58, top: 38, bottom: compactPoints ? 28 : 43 },
       tooltip: { trigger: 'axis', confine: true, backgroundColor: colors.panel, borderWidth: 0, textStyle: { color: colors.text, fontSize: 10 } },
-      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatWib(value, false) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: availabilityMode ? 'Availability' : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => ({
@@ -257,7 +305,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     setTrendLoading(true); setTrendError('')
     const category = AVAILABILITY_CATEGORIES[metric]
     const url = category ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}` : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`
-    json(url, controller.signal).then((result) => setTrend(category ? { ...result, metric: 'availability', metric_label: metricLabel(metric) } : result)).catch((failure) => { if (failure.name !== 'AbortError') setTrendError(failure.message || 'Unable to load trend.') }).finally(() => { if (!controller.signal.aborted) setTrendLoading(false) })
+    json(url, controller.signal).then((result) => setTrend(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result)).catch((failure) => { if (failure.name !== 'AbortError') setTrendError(failure.message || 'Unable to load trend.') }).finally(() => { if (!controller.signal.aborted) setTrendLoading(false) })
     return () => controller.abort()
   }, [bucket, databaseEnabled, metric, range, refreshToken])
   React.useEffect(() => { timelineRequestSequence.current += 1; setSelected(null); setTimeline(null); setTimelineLoading(false); setTimelineError('') }, [bucket, metric, mode, range])
@@ -289,7 +337,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {!databaseEnabled && <div className="rundeckHistoryState">Trend data is not available yet.</div>}
     {databaseEnabled && trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
     {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
-    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><CollectionGapBand trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} /></>}
+    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><AvailabilityCoverageBand trend={trend} /><CollectionGapBand trend={trend} /><AvailabilityObservationSummary trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} /></>}
     {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
     <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={onSelectJob} />
   </section>
