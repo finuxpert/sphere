@@ -137,7 +137,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     return () => window.clearInterval(timer)
   }, [rows.length])
 
-  const visible = showAll ? rows : rows.slice(0, 10)
+  const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
+  const visible = showAll ? sortedRows : sortedRows.slice(0, 10)
   const latestObservedAt = rows.reduce((latest, row) => {
     const timestamp = Date.parse(row.collected_at || '')
     return Number.isFinite(timestamp) && timestamp > Date.parse(latest || '') ? row.collected_at : latest
@@ -148,7 +149,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP workloads">
     <div className="rundeckCurrentWorkloadHead">
-      <h3><SphereIcon name="workload" /> Current Workloads</h3>
+      <h3><SphereIcon name="workload" /> Current Workloads <span className="rundeckCurrentWorkloadCount">{rows.length} active</span></h3>
       <div className="rundeckCurrentWorkloadTools">
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
         {rows.length > 10 && <button type="button" onClick={() => setShowAll((value) => !value)}>
@@ -162,7 +163,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap">
       <table>
-        <thead><tr><th>APP</th><th>Workload</th><th title={CPU_HINT}>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th></tr></thead>
+        <thead><tr><th>APP</th><th>Workload</th><th title={CPU_HINT}>CPU Usage ↓</th><th>PSS Memory</th><th>Processes</th><th>WP</th></tr></thead>
         <tbody>
           {visible.map((row) => {
             const details = row.details || {}
@@ -180,7 +181,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
                 <small title={fullIdentity || identity}>{identity}</small>
               </td>
               <td title={CPU_HINT} className={Number.isFinite(cpu) && cpu >= 80 ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
-              <td className={pss !== null && pss >= 2 ? 'is-attention' : ''}>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
+              <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
               <td>{numberText(processes, 0)}</td>
               <td>{wpText(details)}</td>
             </tr>
