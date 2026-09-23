@@ -2,6 +2,7 @@ import React from 'react'
 import './RundeckLiveOverview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
+const HOST_STORAGE_KEY = 'sphere.live.host'
 
 async function loadJson(url, signal) {
   const response = await fetch(url, { cache: 'no-store', signal })
@@ -43,7 +44,9 @@ function Status({ value }) {
 
 export default function RundeckLiveOverview({ refreshToken }) {
   const [hosts, setHosts] = React.useState([])
-  const [selectedHost, setSelectedHost] = React.useState('')
+  const [selectedHost, setSelectedHost] = React.useState(() => {
+    try { return window.localStorage.getItem(HOST_STORAGE_KEY) || '' } catch { return '' }
+  })
   const [infra, setInfra] = React.useState({ fs: [], network: [], storage: [] })
   const [jobs, setJobs] = React.useState(null)
   const [error, setError] = React.useState('')
@@ -59,6 +62,11 @@ export default function RundeckLiveOverview({ refreshToken }) {
       .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message) })
     return () => controller.abort()
   }, [refreshToken])
+
+  React.useEffect(() => {
+    if (!selectedHost) return
+    try { window.localStorage.setItem(HOST_STORAGE_KEY, selectedHost) } catch { /* preference persistence is best-effort */ }
+  }, [selectedHost])
 
   React.useEffect(() => {
     if (!selectedHost) return undefined
@@ -89,6 +97,13 @@ export default function RundeckLiveOverview({ refreshToken }) {
   const tx = infra.network.reduce((sum, row) => sum + Number(row.metrics?.tx_mbps || 0), 0)
   const jobSummary = jobs?.summary || {}
   const authoritativeJobsReady = false
+  const snapshotAgeMinutes = hostRow?.snapshot_ts ? Math.max(0, Math.floor((Date.now() - Date.parse(hostRow.snapshot_ts)) / 60000)) : null
+  const stale = Number.isFinite(snapshotAgeMinutes) && snapshotAgeMinutes >= 15
+  const topFsRow = topFs[0]
+  const exceptionParts = []
+  if (fsOverall !== 'NORMAL' && topFsRow) exceptionParts.push(`${fsOverall} · ${topFsRow.mount_point} ${metric(topFsRow.used_pct, '%')}`)
+  if (storageOverall !== 'NORMAL') exceptionParts.push(`${storageOverall} · Storage I/O`)
+  if (networkOverall !== 'NORMAL') exceptionParts.push('ATTENTION · Network errors/drops')
 
   return <section className="rundeckLiveOverview" aria-label="Live monitoring overview">
     <header className="rundeckLiveOverviewHead">
@@ -96,10 +111,15 @@ export default function RundeckLiveOverview({ refreshToken }) {
         <select value={selectedHost} onChange={(event) => setSelectedHost(event.target.value)} aria-label="Monitoring host">
           {hosts.map((row) => <option key={row.host} value={row.host}>{(row.source ? row.source + ' · ' : '') + row.host}</option>)}
         </select>
-        <span>Updated {ageText(hostRow?.snapshot_ts)} ago</span>
+        <span className={stale ? 'is-stale' : ''}>{stale ? 'STALE · ' : 'Updated '}{ageText(hostRow?.snapshot_ts)} ago</span>
       </div>
       {error && <span className="rundeckLiveOverviewError">{error}</span>}
     </header>
+
+    {exceptionParts.length > 0 && <div className="rundeckLiveExceptionSummary" role="status">
+      <strong>{exceptionParts.length} exception{exceptionParts.length === 1 ? '' : 's'}</strong>
+      <span>{exceptionParts.join(' · ')}</span>
+    </div>}
 
     <div className="rundeckLiveCardGrid">
       <article>
