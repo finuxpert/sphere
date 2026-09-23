@@ -14,7 +14,7 @@ function jobContext(workload, host, source) {
   }
 }
 
-export default function RundeckOperationalEvidence({ refreshToken = '', selectedJob = null }) {
+export default function RundeckOperationalEvidence({ refreshToken = '', selectedJob = null, issuesContent = null }) {
   const [summary, setSummary] = React.useState(null)
   const [error, setError] = React.useState('')
 
@@ -41,17 +41,19 @@ export default function RundeckOperationalEvidence({ refreshToken = '', selected
 
   if (!summary && !error) return null
   if (error || !summary?.active) {
-    return <section className="rundeckOperationalBandV1234 is-availability-only" aria-label="SAP Availability">
-      <RundeckAvailability refreshToken={refreshToken} />
+    return <section className={"rundeckOperationalBandV1234 " + (issuesContent ? "is-availability-issues" : "is-availability-only")} aria-label="SAP Availability">
+      <div className="rundeckBandPaneV1234 is-availability"><RundeckAvailability refreshToken={refreshToken} /></div>
+      {issuesContent && <div className="rundeckBandPaneV1234 is-issues">{issuesContent}</div>}
     </section>
   }
 
-  return <section className="rundeckOperationalBandV1234" aria-label="Operational evidence and SAP availability">
+  return <section className="rundeckOperationalBandV1234" aria-label="Operational evidence, SAP availability and active issues">
     <div className="rundeckBandPaneV1234 is-operational-events">
       <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive={summary.active} />
     </div>
     <div className="rundeckBandPaneV1234 is-availability">
       <RundeckAvailability refreshToken={refreshToken} />
     </div>
+    {issuesContent && <div className="rundeckBandPaneV1234 is-issues">{issuesContent}</div>}
   </section>
 }

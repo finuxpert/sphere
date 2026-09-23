@@ -67,3 +67,35 @@ No new upload or mutating endpoint. Automatic mode fetches latest READY every mi
 ## Validation and deployment
 
 Run npm ci, lint, test, build and audit, Python syntax and ingestion tests, and Alembic migration validation before deployment. `ops/rundeck/deploy-dev.sh` requires a clean checkout of the correct branch and a build containing `/dev/assets/`; it preserves production symlink targets and index checksum, installs only the dedicated development services, adds `/dev` nginx locations, checks nginx syntax and smoke tests the development URL. System paths require host permissions.
+
+
+## Live Monitoring UI contract (2026-09-23)
+
+The DEV Live Monitoring console is intentionally exception-oriented and keeps the stable backend collector unchanged.
+
+- Top-level modes are `Live Monitoring` and `History`.
+- Infrastructure summary covers filesystem, network, storage I/O and SAP Jobs source readiness.
+- `SAP Jobs` remains non-authoritative until the SM37 execution feed is configured. The legacy `RundeckJobMonitor` component has been removed from the active codebase; dynamic SM37 verification remains available only as contextual evidence.
+- SAP App Servers and Server Trend use a 35/65 desktop composition. Selected workload cross-focus highlights the matching APP and trend series but must not auto-expand Critical WP drilldown.
+- APP server Critical WP drilldown is user-initiated. When expanded it is contained inside the APP pane and must not stretch the Server Trend row.
+- Current Workloads and Selected Workload use a 38/62 desktop composition.
+- Workload Performance, Observation History, Infrastructure Trend, Infrastructure details and Supporting Data are progressive-disclosure layers. They should remain collapsed by default unless a user explicitly opens them.
+- Performance Review shows the top review rows first and exposes the full set on demand.
+- Healthy states are visually subdued; ATTENTION/CRITICAL and stale/partial data states carry the visual emphasis.
+- `Collection running` is an execution state, `Collector Health` is platform health, and `Data ALIGNED/PARTIAL` describes cross-source timing/alignment. These semantics must not be merged into one status.
+- Infrastructure host selection is persisted in local storage. Trend metric/range/aggregation preferences are also persisted.
+- Historical selections must remain visibly distinct from current/live state; retained evidence is correlation context and does not establish root cause.
+
+### UI regression rule
+
+Do not reintroduce automatic APP drilldown expansion from workload selection. A selected workload may cross-highlight APP and trend context only. A Critical WP drilldown opens only from an explicit APP/SAP Issue interaction.
+
+### CSS cleanup policy
+
+Several historical Rundeck polish stylesheets remain imported by `ToolLogWorkspace.jsx`. They are treated as active until consolidated and visually regression-tested. Cleanup must remove only proven dead/unreferenced files; do not delete imported polish layers merely because their names look old.
+
+Dead code removed on 2026-09-23:
+- `RundeckJobMonitor.jsx`
+- `RundeckJobMonitor.css`
+- `RundeckEvidence.css`
+

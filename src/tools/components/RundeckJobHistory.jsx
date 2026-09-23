@@ -503,16 +503,18 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         {timelineText && <em>{timelineText}</em>}
       </div>}
 
-      <div className="rundeckJobPerformanceTitle">
-        <h4><SphereIcon name="trend" /> Workload Performance</h4>
-        {profile.hasCritical && <span title="Critical WP was recorded on the same SAP App Server during one or more workload observations."><i /> Critical WP observed</span>}
-      </div>
-
-      {episodeItems.length === 1
-        ? <SingleSamplePerformance row={episodeItems[0]} />
-        : episodeItems.length > 1
-          ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} />
-          : <div className="rundeckJobHistoryState">No stored history for this workload yet.</div>}
+      <details className="rundeckJobPerformanceDisclosure">
+        <summary>
+          <span><SphereIcon name="trend" /> Workload Performance</span>
+          <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
+          {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP observed</em>}
+        </summary>
+        {episodeItems.length === 1
+          ? <SingleSamplePerformance row={episodeItems[0]} />
+          : episodeItems.length > 1
+            ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} />
+            : <div className="rundeckJobHistoryState">No stored history for this workload yet.</div>}
+      </details>
     </div>}
   </section>
 }

@@ -15,6 +15,7 @@ from backend.rundeck_alert_incidents import incident_history
 from backend.rundeck_consumers import timeline_consumers
 from backend.rundeck_evaluation import evaluation_report
 from backend.rundeck_incident import performance_incident_summary
+from backend.rundeck_infra_api import router as infra_router
 from backend.rundeck_job_history import current_sap_jobs, sap_job_history
 from backend.rundeck_latest import latest_ready_host_metrics
 from backend.rundeck_metrics import render_metrics
@@ -37,6 +38,7 @@ from backend.rundeck_trends import (
 )
 
 app = FastAPI(title="SPHERE Rundeck Development", docs_url=None, redoc_url=None)
+app.include_router(infra_router)
 WIB = ZoneInfo("Asia/Jakarta")
 STALE_MINUTES = int(os.getenv("RUNDECK_STALE_MINUTES", "20"))
 

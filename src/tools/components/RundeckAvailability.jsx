@@ -150,18 +150,30 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const bundleAbnormal = ['RUNNING', 'PARTIAL', 'FAILED'].includes(bundleState)
   const showCollectionGap = bundleAbnormal && skewWarning
   const bundleTitle = bundle?.requested_at
-    ? `Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · collection gap ${skew}s` : ''}`
+    ? `Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · source timing gap ${skew}s between collection cycles` : ''}`
     : ''
   const collectionNotice = bundleState === 'RUNNING'
-    ? 'Refreshing…'
+    ? 'Data refresh running'
     : bundleState === 'PARTIAL'
       ? 'Refresh incomplete'
       : bundleState === 'FAILED'
         ? 'Refresh failed'
         : ''
-  const showDataTrust = Boolean(collectionNotice || stale || showCollectionGap)
+  const showDataTrust = Boolean(collectionNotice || showCollectionGap)
+  const up = (row) => String(row?.status || '').toUpperCase() === 'UP'
+  const appsUp = apps.filter(up).length
+  const hanaRows = [hana.PRIMARY, hana.SECONDARY, hana.DR].filter(Boolean)
+  const hanaUp = hanaRows.filter(up).length
+  const webRows = [web.HTTP, web.HTTPS].filter(Boolean)
+  const webUp = webRows.filter(up).length
+  const healthyApps = apps.length > 0 && appsUp === apps.length
+  const healthyHana = hanaRows.length > 0 && hanaUp === hanaRows.length
+  const healthyWeb = webRows.length > 0 && webUp === webRows.length
+  const technicalCheckCount = Object.values(replication).filter(Boolean).length + sshRows.length
 
-  return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''}`} aria-label="Current SAP service availability">
+  const healthySummary = healthyApps && healthyHana && healthyWeb && technicalDownCount === 0 && !showDataTrust
+
+  return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''} ${healthySummary ? 'is-healthy-compact' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
       <div>
         <h3><SphereIcon name="server" /> SAP Availability</h3>
@@ -171,16 +183,15 @@ export default function RundeckAvailability({ refreshToken = '' }) {
         </span>
       </div>
       <div className="rundeckAvailabilityState">
-        <Status value={displayState} />
-        {stale && <small>Last reliable state: {serviceState}</small>}
+        {displayState !== 'NORMAL' && <Status value={displayState} />}
+        {stale && <small>{availabilityAge}m old · last reliable {serviceState}</small>}
         {!stale && issueText && <small>{issueText}</small>}
       </div>
     </div>
 
     {showDataTrust && <div className="rundeckAvailabilityDataTrust" aria-label="Availability data quality">
       {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
-      {stale && <small className="rundeckAvailabilityTrust is-warning">Data age {availabilityAge}m</small>}
-      {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Collection gap {Math.round(skew / 60)}m</small>}
+      {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Source timing gap {Math.round(skew / 60)}m</small>}
     </div>}
 
     {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}
@@ -189,27 +200,28 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       <div className="rundeckAvailabilityBody">
         <div className="rundeckAvailabilityGroup" aria-label="SAP application server availability">
           <span className="rundeckAvailabilityLabel">SAP App</span>
-          <div className="rundeckAvailabilityApps"><ServiceList rows={apps} /></div>
+          <div className="rundeckAvailabilityApps">{healthyApps ? <span><b>{appsUp}/{apps.length}</b><Status value="UP" /></span> : <ServiceList rows={apps} />}</div>
         </div>
         <div className="rundeckAvailabilityGroup" aria-label="HANA availability">
           <span className="rundeckAvailabilityLabel">HANA</span>
           <div className="rundeckAvailabilityInfra">
-            <span>Primary <Status value={hana.PRIMARY?.status || 'UNKNOWN'} /></span>
-            <span>Secondary <Status value={hana.SECONDARY?.status || 'UNKNOWN'} /></span>
-            <span>DR <Status value={hana.DR?.status || 'UNKNOWN'} /></span>
+            {healthyHana
+              ? <span><b>{hanaUp}/{hanaRows.length}</b><Status value="UP" /></span>
+              : <><span>Primary <Status value={hana.PRIMARY?.status || 'UNKNOWN'} /></span><span>Secondary <Status value={hana.SECONDARY?.status || 'UNKNOWN'} /></span><span>DR <Status value={hana.DR?.status || 'UNKNOWN'} /></span></>}
           </div>
         </div>
         <div className="rundeckAvailabilityGroup" aria-label="Web Dispatcher availability">
           <span className="rundeckAvailabilityLabel">Web</span>
           <div className="rundeckAvailabilityInfra">
-            <span>HTTP <Status value={web.HTTP?.status || 'UNKNOWN'} /></span>
-            <span>HTTPS <Status value={web.HTTPS?.status || 'UNKNOWN'} /></span>
+            {healthyWeb
+              ? <span><b>{webUp}/{webRows.length}</b><Status value="UP" /></span>
+              : <><span>HTTP <Status value={web.HTTP?.status || 'UNKNOWN'} /></span><span>HTTPS <Status value={web.HTTPS?.status || 'UNKNOWN'} /></span></>}
           </div>
         </div>
       </div>
 
       <details className="rundeckAvailabilityMore" open={technicalDownCount > 0 ? true : undefined}>
-        <summary>Technical checks{technicalDownCount > 0 && <span>{technicalDownCount} down</span>}</summary>
+        <summary>Technical checks <span>{technicalDownCount > 0 ? `${technicalCheckCount - technicalDownCount}/${technicalCheckCount} passed · ${technicalDownCount} down` : `${technicalCheckCount}/${technicalCheckCount} passed`}</span></summary>
         <div className="rundeckAvailabilityMoreBody">
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
             <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>

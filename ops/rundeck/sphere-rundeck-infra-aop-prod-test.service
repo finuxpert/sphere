@@ -1,0 +1,31 @@
+[Unit]
+Description=SPHERE DEV read-only AOP PROD infrastructure ingestion test
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=sphere
+Group=sphere
+WorkingDirectory=/opt/sphere-rundeck-dev/current
+Environment=SPHERE_INFRA_INGESTION_ROOT=/var/lib/sphere/infra-ingestion
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=RUNDECK_INFRA_SOURCE=aop-prod
+Environment=RUNDECK_INFRA_PROJECT=Linux
+Environment=RUNDECK_INFRA_JOB_GROUP=SAP/AOP
+Environment="RUNDECK_INFRA_JOB_NAME=SPHERE Infrastructure Collector - PROD APP1"
+Environment=RUNDECK_INFRA_EXPECTED_HOSTS=AOPH1PAPPDC,AOPH2PAPPDC,AOPH3PAPPDC,AOPH4PAPPDC,AOPH5PAPPDC
+EnvironmentFile=-/etc/sphere/rundeck-dev.env
+LoadCredential=rundeck-reader:/etc/sphere/rundeck-readonly.token
+ExecStart=/opt/sphere-rundeck-dev/venv/bin/python -m backend.rundeck_infra_poller
+TimeoutStartSec=90
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/sphere/infra-ingestion
+IPAddressDeny=any
+IPAddressAllow=127.0.0.0/8
+IPAddressAllow=::1/128
+IPAddressAllow=10.14.55.205/32

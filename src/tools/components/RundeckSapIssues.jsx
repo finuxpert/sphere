@@ -86,10 +86,10 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
     })
   }
 
-  return <section className="rundeckSapIssuesV1231" aria-label="Active SAP issues">
+  return <section className={`rundeckSapIssuesV1231 ${items.length > 4 ? 'has-overflow' : 'is-compact'}`} aria-label="Active SAP issues">
     <header>
       <h3><SphereIcon name="alert" /> SAP Issues</h3>
-      <span>{error ? 'unavailable' : `${activeCount} active · ${resolvedCount} resolved`}</span>
+      <span title={resolvedCount > 0 ? `${resolvedCount} resolved issue${resolvedCount === 1 ? '' : 's'} available in history` : undefined}>{error ? 'unavailable' : `${activeCount} active`}</span>
     </header>
 
     {error && !data && <div className="rundeckReviewState is-error">SAP issue data unavailable.</div>}

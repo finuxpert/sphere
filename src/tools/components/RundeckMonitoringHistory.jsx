@@ -1,12 +1,15 @@
 import React from 'react'
-import RundeckJobMonitor from './RundeckJobMonitor.jsx'
+import RundeckInfrastructure from './RundeckInfrastructure.jsx'
+import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
+import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
 import RundeckWorkloadExplorer from './RundeckWorkloadExplorer.jsx'
+import SphereIcon from './SphereIcon.jsx'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
 
@@ -70,29 +73,22 @@ export default function RundeckMonitoringHistory(props) {
   const operationalEvidenceContent = <RundeckOperationalEvidence
     refreshToken={refreshToken}
     selectedJob={selectedJob}
+    issuesContent={<RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} />}
   />
 
-  const modeHint = monitoringMode === 'live'
-    ? 'Live SAP performance monitoring'
-    : monitoringMode === 'explorer'
-      ? 'Job and Program performance · 24H–30D'
-      : 'SM37 execution health · correlation · review queue'
 
   return <>
     <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
       <div className="rundeckMonitoringModeTabs" role="tablist" aria-label="Monitoring mode">
         <button type="button" role="tab" aria-selected={monitoringMode === 'live'} className={monitoringMode === 'live' ? 'is-active' : ''} onClick={() => setMonitoringMode('live')}>Live Monitoring</button>
-        <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>Job &amp; Program History</button>
-        <button type="button" role="tab" aria-selected={monitoringMode === 'jobs'} className={monitoringMode === 'jobs' ? 'is-active' : ''} onClick={() => setMonitoringMode('jobs')}>SAP Job Monitor</button>
+        <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>History</button>
       </div>
-      <small>{modeHint}</small>
     </div>
 
     {monitoringMode === 'explorer'
       ? <RundeckWorkloadExplorer refreshToken={refreshToken} onOpenLiveJob={openJobInLive} />
-      : monitoringMode === 'jobs'
-        ? <RundeckJobMonitor refreshToken={refreshToken} onOpenLiveJob={openJobInLive} />
-        : <>
+      : <>
+          <RundeckLiveOverview refreshToken={refreshToken} />
           <RundeckMonitoringHistoryCore
             {...props}
             onSelectJob={inspectJob}
@@ -102,10 +98,14 @@ export default function RundeckMonitoringHistory(props) {
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
-          <section className="rundeckIssuesReviewBand" aria-label="SAP Issues and Performance Review">
-            <div className="rundeckIssuesReviewPane is-issues"><RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} /></div>
-            <div className="rundeckIssuesReviewPane is-review"><RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} /></div>
+          <section className="rundeckPerformanceReviewBand" aria-label="Performance Review">
+            <RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} />
           </section>
+          <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} />
+          <details className="rundeckLiveDetail">
+            <summary><SphereIcon name="server" /> Infrastructure details</summary>
+            <RundeckInfrastructure />
+          </details>
         </>}
   </>
 }

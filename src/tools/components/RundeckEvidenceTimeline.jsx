@@ -74,7 +74,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   return <section className="rundeckEvidenceTimeline" aria-label="Operational Events">
     <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Operational Events</span>
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state}</span>
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'ALIGNED TO WORKLOAD' : state}</span>
       <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m skew` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
     </div>
 
