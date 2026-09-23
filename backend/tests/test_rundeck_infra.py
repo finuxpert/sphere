@@ -63,7 +63,7 @@ class InfraParserTests(unittest.TestCase):
         self.assertEqual(root["fstype"],"btrfs")
         self.assertEqual(root["used_pct"],79.0)
         self.assertEqual(root["total_bytes"],52428800*1024)
-        self.assertEqual(root["avail_bytes"],39826428*1024)
+        self.assertEqual(root["avail_bytes"],(52428800-39826428)*1024)
         self.assertTrue(root["is_primary"])
 
     def test_positional_network_identity(self):
