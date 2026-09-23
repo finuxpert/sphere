@@ -319,6 +319,7 @@ def availability_observation_profile(
     snapshots: list[dict],
     requested_since: datetime | None = None,
     fallback_seconds: int | None = None,
+    cadence_snapshots: list[dict] | None = None,
 ) -> dict:
     """Describe observation coverage without equating missing samples to DOWN.
 
@@ -332,9 +333,15 @@ def availability_observation_profile(
         for snapshot in snapshots
         if (stamp := _parse_timestamp(snapshot.get("collected_at")))
     })
+    cadence_rows = cadence_snapshots if cadence_snapshots is not None else snapshots
+    cadence_stamps = sorted({
+        stamp.astimezone(timezone.utc)
+        for snapshot in cadence_rows
+        if (stamp := _parse_timestamp(snapshot.get("collected_at")))
+    })
     deltas = [
         int((right - left).total_seconds())
-        for left, right in zip(stamps, stamps[1:])
+        for left, right in zip(cadence_stamps, cadence_stamps[1:])
         if (right - left).total_seconds() >= 60
     ]
     expected = max(60, int(round(median(deltas) / 60.0) * 60)) if deltas else fallback
@@ -471,7 +478,12 @@ def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> d
     requested_since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
     snapshots = _history_snapshots(RANGE_HOURS[range_key])
     category_snapshots = _category_snapshots(snapshots, category)
-    profile = availability_observation_profile(category_snapshots, requested_since=requested_since)
+    cadence_history = _category_snapshots(_history_snapshots(max(24, RANGE_HOURS[range_key])), category)
+    profile = availability_observation_profile(
+        category_snapshots,
+        requested_since=requested_since,
+        cadence_snapshots=cadence_history,
+    )
     items: list[dict] = []
     counters: dict[str, dict[str, int]] = {}
     for snapshot in category_snapshots:
