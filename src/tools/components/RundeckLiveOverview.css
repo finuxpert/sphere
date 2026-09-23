@@ -519,3 +519,41 @@
   padding-left:12px;
   border-left:1px solid rgba(126,147,158,.09);
 }
+
+
+/* v1.23.8 — row-count aware issues and review controls */
+.appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-issues{
+  max-height:none!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSapIssuesV1231.has-overflow .rundeckSapIssuesTableWrap{
+  max-height:138px;
+  overflow:auto;
+}
+.appShell:has(.rundeckPanel) .rundeckSapIssuesV1231.is-compact .rundeckSapIssuesTableWrap{
+  max-height:none;
+  overflow:visible;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewMoreV1237{
+  min-height:24px;
+  padding:2px 7px;
+  border:1px solid rgba(126,147,158,.13);
+  border-radius:4px;
+  background:transparent;
+  color:var(--sphere-text-muted,#718089);
+  font:inherit;
+  font-size:9px;
+  cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewMoreV1237:hover,
+.appShell:has(.rundeckPanel) .rundeckReviewMoreV1237:focus-visible{
+  border-color:rgba(79,198,200,.28);
+  color:var(--sphere-accent,#4fc6c8);
+  outline:none;
+}
+.appShell:has(.rundeckPanel) .rundeckStatus.is-normal-muted{
+  color:var(--sphere-text-muted,#718089)!important;
+  background:transparent!important;
+  border-color:transparent!important;
+  font-weight:500!important;
+}
