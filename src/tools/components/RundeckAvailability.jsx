@@ -181,7 +181,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
         </span>
       </div>
       <div className="rundeckAvailabilityState">
-        <Status value={displayState} />
+        {displayState !== 'NORMAL' && <Status value={displayState} />}
         {stale && <small>Last reliable state: {serviceState}</small>}
         {!stale && issueText && <small>{issueText}</small>}
       </div>
@@ -220,7 +220,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       </div>
 
       <details className="rundeckAvailabilityMore" open={technicalDownCount > 0 ? true : undefined}>
-        <summary>Technical checks <span>{technicalCheckCount}{technicalDownCount > 0 ? ` · ${technicalDownCount} down` : ''}</span></summary>
+        <summary>Technical checks <span>{technicalDownCount > 0 ? `${technicalCheckCount - technicalDownCount}/${technicalCheckCount} passed · ${technicalDownCount} down` : `${technicalCheckCount}/${technicalCheckCount} passed`}</span></summary>
         <div className="rundeckAvailabilityMoreBody">
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
             <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>
