@@ -159,7 +159,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       : bundleState === 'FAILED'
         ? 'Refresh failed'
         : ''
-  const showDataTrust = Boolean(collectionNotice || stale || showCollectionGap)
+  const showDataTrust = Boolean(collectionNotice || showCollectionGap)
   const up = (row) => String(row?.status || '').toUpperCase() === 'UP'
   const appsUp = apps.filter(up).length
   const hanaRows = [hana.PRIMARY, hana.SECONDARY, hana.DR].filter(Boolean)
@@ -184,14 +184,13 @@ export default function RundeckAvailability({ refreshToken = '' }) {
       </div>
       <div className="rundeckAvailabilityState">
         {displayState !== 'NORMAL' && <Status value={displayState} />}
-        {stale && <small>Last reliable state: {serviceState}</small>}
+        {stale && <small>{availabilityAge}m old · last reliable {serviceState}</small>}
         {!stale && issueText && <small>{issueText}</small>}
       </div>
     </div>
 
     {showDataTrust && <div className="rundeckAvailabilityDataTrust" aria-label="Availability data quality">
       {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
-      {stale && <small className="rundeckAvailabilityTrust is-warning">Data age {availabilityAge}m</small>}
       {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Source timing gap {Math.round(skew / 60)}m</small>}
     </div>}
 
