@@ -2,7 +2,6 @@ import React from 'react'
 import RundeckAppServers from './RundeckAppServers.jsx'
 import RundeckInvestigationContext from './RundeckInvestigationContext.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
-import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
@@ -23,9 +22,5 @@ export default function RundeckMonitoringHistoryCore(props) {
       </div>
     </section>
     {props.operationalEvidenceContent}
-    {props.selectedJob?.key && <details className="rundeckSupportingDataV1236">
-      <summary>Supporting Data <span>Observation history</span></summary>
-      <RundeckObservationHistory job={props.selectedJob} refreshToken={props.refreshToken} onSelectJob={props.onSelectJob} embedded />
-    </details>}
   </section>
 }
