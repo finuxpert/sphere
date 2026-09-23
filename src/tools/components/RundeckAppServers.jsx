@@ -130,7 +130,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
       row?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' })
     }
     window.requestAnimationFrame(navigate)
-  }, [drilldown?.host, focusRequest?.host, focusRequest?.token, openWp, state.items])
+  }, [drilldown?.host, focusRequest?.highlightOnly, focusRequest?.host, focusRequest?.token, openWp, state.items])
 
   const inspectWorkload = React.useCallback((row) => {
     if (!row?.consumer_key) return
