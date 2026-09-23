@@ -230,3 +230,13 @@
 .rundeckEvidenceNote,
 .rundeckEvidenceState{font-size:8.8px}
 .rundeckEvidenceTechnical>summary{font-size:8.8px}
+
+
+/* v1.33.3 — alignment is supporting context, not the primary event. */
+.rundeckEvidenceAlignment.is-aligned {
+  border-color: rgba(79,198,200,.22);
+  background: rgba(79,198,200,.018);
+  color: #7f9ea0;
+  opacity: .82;
+  font-weight: 700;
+}
