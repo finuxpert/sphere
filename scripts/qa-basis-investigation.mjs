@@ -6,6 +6,7 @@ const files = {
   wrapper: read('src/tools/components/RundeckMonitoringHistory.jsx'),
   source: read('src/tools/components/RundeckSource.jsx'),
   availability: read('src/tools/components/RundeckAvailability.jsx'),
+  availabilityBackend: read('backend/rundeck_availability.py'),
   core: read('src/tools/components/RundeckMonitoringHistoryCore.jsx'),
   workspace: read('src/tools/components/RundeckWorkspace.css'),
   jobMonitor: read('src/tools/components/RundeckJobMonitor.jsx'),
@@ -31,7 +32,7 @@ const files = {
 }
 
 const checks = [
-  ['operator clarity hotfix version is v1.32.1', files.version.includes("APP_VERSION = '1.32.1'") && files.version.includes('operator-clarity-ui-v1.32.1')],
+  ['availability observation version is v1.33.0', files.version.includes("APP_VERSION = '1.33.0'") && files.version.includes('availability-observation-ui-v1.33.0')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['Job and Program History remains available', files.wrapper.includes('Job &amp; Program History')],
   ['SAP Job Monitor is wired as a third mode', files.wrapper.includes('RundeckJobMonitor') && files.wrapper.includes("monitoringMode === 'jobs'") && files.wrapper.includes('SAP Job Monitor')],
@@ -62,6 +63,12 @@ const checks = [
   ['Job Intelligence smoke covers readiness source monitor and review queue', files.smoke.includes('/platform/readiness') && files.smoke.includes('/jobs/source') && files.smoke.includes('/jobs/monitor') && files.smoke.includes('/review/queue')],
   ['Server Trend pins selected range and exposes a dedicated collection-gap band', files.serverTrend.includes('CollectionGapBand') && files.serverTrend.includes('COLLECTION GAP') && files.serverTrend.includes('gapDurationText') && files.serverTrend.includes('min: Number.isFinite(rangeStart)')],
   ['Collection gap detection follows resolved bucket interval', files.serverTrend.includes('resolvedGapIntervalMs') && files.serverTrend.includes('bucket_interval_seconds') && files.serverTrend.includes("'30m': 30 * 60 * 1000") && files.serverTrend.includes("'6h': 6 * 60 * 60 * 1000")],
+  ['Availability gaps come from backend observation metadata', files.serverTrend.includes('observation_gaps') && files.serverTrend.includes('No Observation') && files.availabilityBackend.includes('availability_observation_profile') && files.availabilityBackend.includes('OBSERVED_AVAILABILITY')],
+  ['Availability missing observations are never inferred as DOWN', files.availabilityBackend.includes('Missing observations are UNKNOWN/NO OBSERVATION and are never inferred as DOWN.')],
+  ['Availability cadence uses retained execution timing with drift tolerance', files.availabilityBackend.includes('statistics import median') && files.availabilityBackend.includes('SPHERE_AVAILABILITY_GAP_FACTOR') && files.availabilityBackend.includes('cadence_snapshots')],
+  ['Availability exposes coverage start and observed uptime', files.serverTrend.includes('AvailabilityCoverageBand') && files.serverTrend.includes('AvailabilityObservationSummary') && files.availabilityBackend.includes('coverage_limited') && files.availabilityBackend.includes('"uptime": uptime')],
+  ['Long range trend axes use WIB date labels', files.serverTrend.includes('formatTrendAxis') && files.serverTrend.includes("range === '30d' || range === '7d'") && files.serverTrend.includes("range === '24h'")],
+  ['HANA and technical availability preserve category-specific labels', files.availabilityBackend.includes('HANA System DB Availability') && files.availabilityBackend.includes('HANA Replication Availability') && files.availabilityBackend.includes('Web Dispatcher Availability')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
   ['System Health exposes collector watchdog and auto-healing context', files.systemHealth.includes('/platform/health') && files.systemHealth.includes('Auto-healing') && files.systemHealth.includes('Last Recovery')],
@@ -78,4 +85,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.32.1 bucket-aware gap hotfix checks passed.')
+console.log('\nSPHERE v1.33.0 availability observation semantics checks passed.')
