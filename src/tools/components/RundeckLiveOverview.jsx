@@ -117,7 +117,7 @@ export default function RundeckLiveOverview({ refreshToken }) {
     </header>
 
     {exceptionParts.length > 0 && <div className="rundeckLiveExceptionSummary" role="status">
-      <strong>{exceptionParts.length} exception{exceptionParts.length === 1 ? '' : 's'}</strong>
+      <strong>Infrastructure · {exceptionParts.length} exception{exceptionParts.length === 1 ? '' : 's'}</strong>
       <span>{exceptionParts.join(' · ')}</span>
     </div>}
 
