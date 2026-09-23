@@ -557,3 +557,32 @@
   border-color:transparent!important;
   font-weight:500!important;
 }
+
+
+/* v1.23.9 — APP drilldown containment */
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235{
+  align-items:start!important;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 .is-app-servers{
+  min-height:0;
+}
+.appShell:has(.rundeckPanel) .rundeckServerSectionV1234.has-drilldown{
+  max-height:300px;
+  overflow:auto;
+  scrollbar-gutter:stable;
+  overscroll-behavior:contain;
+}
+.appShell:has(.rundeckPanel) .rundeckServerSectionV1234.has-drilldown .rundeckServerTable thead{
+  position:sticky;
+  top:0;
+  z-index:4;
+  background:var(--sphere-page,#0f151a);
+}
+.appShell:has(.rundeckPanel) .rundeckWpInlinePanel{
+  padding-bottom:4px;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckServerSectionV1234.has-drilldown{
+    max-height:270px;
+  }
+}
