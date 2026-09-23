@@ -529,3 +529,49 @@
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkload:hover *::-webkit-scrollbar-thumb {
   background: rgba(126, 147, 158, .34);
 }
+
+
+/* SPHERE v1.33.3 — final pre-freeze disclosure/status polish. */
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  width: 100% !important;
+  list-style: none !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary::-webkit-details-marker {
+  display: none !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary::marker {
+  content: '' !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: var(--sphere-text-muted,#718089);
+  font-size: 9px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary .sphereIcon {
+  color: var(--sphere-text-muted,#718089);
+}
+
+.appShell:has(.rundeckPanel) .rundeckSm37Verification.is-source-unconfigured {
+  gap: 2px 10px;
+  margin: 3px 0 2px;
+  padding: 3px 0;
+}
+.appShell:has(.rundeckPanel) .rundeckSm37Verification.is-source-unconfigured .rundeckSm37VerificationHead {
+  min-height: 16px;
+}
+.appShell:has(.rundeckPanel) .rundeckSm37Verification.is-source-unconfigured .rundeckSm37VerificationGrid {
+  gap: 1px 10px;
+}
+.appShell:has(.rundeckPanel) .rundeckSm37Verification.is-source-unconfigured p {
+  margin-top: 1px;
+  font-size: 7.9px;
+  line-height: 1.2;
+}
