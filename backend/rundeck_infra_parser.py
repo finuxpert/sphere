@@ -76,7 +76,7 @@ def _filesystem_rows(lines):
         pos = list(row.get("_positional", []))
 
         # Real collector positional contract:
-        # filesystem <device> <fstype> <size_kb> <avail_kb> <used_pct> <mount>
+        # filesystem <device> <fstype> <size_kb> <used_kb> <used_pct> <mount>
         if pos and pos[0].lower() == "filesystem":
             pos = pos[1:]
 
@@ -91,13 +91,13 @@ def _filesystem_rows(lines):
             device = device or pos[0]
             fstype = fstype or pos[1]
             total_kb = _number(pos[2])
-            avail_kb = _number(pos[3])
+            used_kb = _number(pos[3])
             used = used if used is not None else _number(pos[4])
             mount = mount or pos[5]
             if total_bytes is None and total_kb is not None:
                 total_bytes = int(total_kb * 1024)
-            if avail_bytes is None and avail_kb is not None:
-                avail_bytes = int(avail_kb * 1024)
+            if avail_bytes is None and total_kb is not None and used_kb is not None:
+                avail_bytes = int(max(total_kb - used_kb, 0) * 1024)
         elif used is None and len(pos) >= 2 and str(pos[1]).endswith("%"):
             used = _number(pos[1])
 
