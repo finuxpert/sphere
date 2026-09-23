@@ -117,7 +117,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
     if (!requested || !state.items.length) return
     const host = state.items.find((item) => shortHost(item.host) === requested)
     if (!host) return
-    if (Number(host.wp_critical || 0) > 0 && drilldown?.host !== host.host) openWp(host)
+    if (!focusRequest?.highlightOnly && Number(host.wp_critical || 0) > 0 && drilldown?.host !== host.host) openWp(host)
     if (typeof window === 'undefined' || typeof document === 'undefined') return
     let frames = 0
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
@@ -144,7 +144,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
 
   const focusedApp = shortHost(focusRequest?.host || '')
 
-  return <section className="rundeckServerSection rundeckServerSectionV1234" aria-label="SAP App Servers">
+  return <section className={`rundeckServerSection rundeckServerSectionV1234 ${drilldown ? 'has-drilldown' : ''}`} aria-label="SAP App Servers">
     <div className="rundeckSectionTitle"><h3><SphereIcon name="server" /> SAP App Servers</h3></div>
     {state.error && <div className="rundeckHistoryState is-error">{state.error}</div>}
     {!state.error && <div className="rundeckServerTableWrap"><table className="rundeckServerTable">
