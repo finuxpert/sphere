@@ -465,10 +465,7 @@
 }
 
 .rundeckCollectionGapBandV132 {
-  display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
-  align-items: center;
-  gap: 5px 9px;
+  display: block;
   margin: 5px 0 2px;
   padding: 5px 8px;
   border: 1px dashed rgba(216, 179, 95, .42);
@@ -508,18 +505,9 @@
 }
 
 @container (max-width: 760px) {
-  .rundeckCollectionGapBandV132 {
-    grid-template-columns: 1fr;
-    gap: 2px;
-  }
-
   .rundeckSystemHealthReasonV132 {
     max-width: 180px;
   }
-}
-
-.rundeckCollectionGapBandV132 {
-  display: block;
 }
 
 .rundeckCollectionGapBandV132 > summary {
