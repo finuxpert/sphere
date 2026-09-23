@@ -9,8 +9,24 @@ from backend.rundeck_infra_store import ROOT, collections
 
 router = APIRouter(prefix="/infra", tags=["Infrastructure"])
 
-def _latest_manifest():
+def _source_for_host(host):
+    value = str(host or "").upper()
+    if value.endswith("QAPPDC"):
+        return "AOQ"
+    if value.endswith("PAPPDC"):
+        return "AOP PROD"
+    return "OTHER"
+
+def _poller_state(source=None):
+    path = ROOT / ("poller-aop-prod.json" if source == "aop-prod" else "poller.json")
+    return json.loads(path.read_text()) if path.exists() else None
+
+def _latest_manifest(source=None):
     rows = collections()
+    if source == "aoq":
+        rows = [row for row in rows if _source_for_host(row.get("host")) == "AOQ"]
+    elif source == "aop-prod":
+        rows = [row for row in rows if _source_for_host(row.get("host")) == "AOP PROD"]
     return rows[0] if rows else None
 
 def _engine():
@@ -20,12 +36,15 @@ def _engine():
     return engine
 
 @router.get("/latest")
-def latest():
-    row = _latest_manifest()
+def latest(source: str | None = Query(None, pattern="^(aoq|aop-prod)$")):
+    row = _latest_manifest(source)
     if not row:
         raise HTTPException(404, "No infrastructure collection available")
-    state = ROOT / "poller.json"
-    return {**row, "poller": json.loads(state.read_text()) if state.exists() else None}
+    return {
+        **row,
+        "source": _source_for_host(row.get("host")),
+        "poller": _poller_state(source),
+    }
 
 @router.get("/hosts")
 def hosts():
@@ -36,7 +55,10 @@ def hosts():
           FROM rundeck_infra_collections WHERE status='READY'
           ORDER BY host, snapshot_ts DESC
         """))
-        return {"items":[dict(row._mapping) for row in rows]}
+        items=[dict(row._mapping) for row in rows]
+        for item in items:
+            item["source"]=_source_for_host(item.get("host"))
+        return {"items":items}
 
 @router.get("/history")
 def history(days:int=Query(7,ge=1,le=90), limit:int=Query(1000,ge=1,le=10000)):
