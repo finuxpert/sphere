@@ -88,3 +88,58 @@ def storage(host:str|None=None):
 @router.get("/network")
 def network(host:str|None=None):
     return _samples("network",host)
+
+
+RANGE_HOURS = {"1h": 1, "6h": 6, "24h": 24, "7d": 168}
+
+@router.get("/trend")
+def trend(
+    range_key: str = Query("6h", alias="range", pattern="^(1h|6h|24h|7d)$"),
+    metric: str = Query("filesystem", pattern="^(filesystem|network|storage)$"),
+    host: str | None = Query(None, max_length=120),
+):
+    since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
+    engine = _engine()
+    params = {"since": since}
+    host_clause = ""
+    if host:
+        host_clause = "AND host=:host"
+        params["host"] = host
+
+    with engine.connect() as conn:
+        if metric == "filesystem":
+            rows = conn.execute(text(f"""
+              SELECT host,collected_at,mount_point AS series_key,used_pct AS value,
+                     NULL::double precision AS value2
+              FROM rundeck_infra_filesystems
+              WHERE collected_at>=:since AND is_primary=true {host_clause}
+              ORDER BY collected_at,host,mount_point
+            """), params)
+        elif metric == "network":
+            rows = conn.execute(text(f"""
+              SELECT host,collected_at,sample_key AS series_key,
+                     NULLIF(metrics->>'rx_mbps','')::double precision AS value,
+                     NULLIF(metrics->>'tx_mbps','')::double precision AS value2,
+                     COALESCE(NULLIF(metrics->>'rx_dropped_delta','')::double precision,0)
+                       + COALESCE(NULLIF(metrics->>'tx_dropped_delta','')::double precision,0) AS drop_delta,
+                     COALESCE(NULLIF(metrics->>'rx_errors_delta','')::double precision,0)
+                       + COALESCE(NULLIF(metrics->>'tx_errors_delta','')::double precision,0) AS error_delta
+              FROM rundeck_infra_samples
+              WHERE collected_at>=:since AND kind='network' {host_clause}
+              ORDER BY collected_at,host,sample_key
+            """), params)
+        else:
+            rows = conn.execute(text(f"""
+              SELECT host,collected_at,
+                     COALESCE(NULLIF(metrics->>'mount',''),sample_key) AS series_key,
+                     NULLIF(metrics->>'util_pct','')::double precision AS value,
+                     NULLIF(metrics->>'write_iops','')::double precision AS value2,
+                     NULLIF(metrics->>'write_mbps','')::double precision AS write_mbps,
+                     NULLIF(metrics->>'read_iops','')::double precision AS read_iops,
+                     NULLIF(metrics->>'read_mbps','')::double precision AS read_mbps
+              FROM rundeck_infra_samples
+              WHERE collected_at>=:since AND kind='storage' {host_clause}
+              ORDER BY collected_at,host,series_key
+            """), params)
+        items = [dict(row._mapping) for row in rows]
+    return {"range": range_key, "metric": metric, "since": since, "items": items}
