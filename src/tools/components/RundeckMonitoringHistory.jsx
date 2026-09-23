@@ -72,6 +72,7 @@ export default function RundeckMonitoringHistory(props) {
   const operationalEvidenceContent = <RundeckOperationalEvidence
     refreshToken={refreshToken}
     selectedJob={selectedJob}
+    issuesContent={<RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} />}
   />
 
 
@@ -96,15 +97,8 @@ export default function RundeckMonitoringHistory(props) {
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
-          <section className="rundeckLiveSecondaryBand" aria-label="SAP Issues and Performance Review">
-            <details className="rundeckLiveSecondaryDetail">
-              <summary>SAP Issues</summary>
-              <RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} />
-            </details>
-            <details className="rundeckLiveSecondaryDetail">
-              <summary>Performance Review</summary>
-              <RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} />
-            </details>
+          <section className="rundeckPerformanceReviewBand" aria-label="Performance Review">
+            <RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} />
           </section>
           <details className="rundeckLiveDetail">
             <summary>Infrastructure details</summary>
