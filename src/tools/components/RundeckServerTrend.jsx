@@ -177,9 +177,9 @@ function TrendChart({ trend, mode, range, onSelect }) {
         markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined,
         markArea: index === 0 && gaps.length ? {
           silent: true,
-          label: { show: true, formatter: (params) => params?.name || 'COLLECTION GAP', fontSize: 8, color: colors.warning, position: 'insideTop' },
+          label: { show: true, formatter: (params) => params?.name || (availabilityMode ? 'NO OBSERVATION' : 'COLLECTION GAP'), fontSize: 8, color: colors.warning, position: 'insideTop' },
           itemStyle: { color: colors.warning, opacity: .06, borderColor: colors.warning, borderWidth: 1, borderType: 'dashed' },
-          data: gaps.map(([from, to]) => [{ name: gapLabel(from, to), xAxis: from }, { xAxis: to }]),
+          data: gaps.map(([from, to]) => [{ name: availabilityMode ? `NO OBSERVATION · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}` : gapLabel(from, to), xAxis: from }, { xAxis: to }]),
         } : undefined,
       }))
     }
