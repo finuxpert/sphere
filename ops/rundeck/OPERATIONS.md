@@ -1,14 +1,35 @@
-# SPHERE Rundeck Development Operations
+# SPHERE Rundeck Operations
 
-This runbook applies only to `rundeck-sphere-dev` and the isolated `/dev` runtime.
+This runbook covers both the isolated `rundeck-sphere-dev` runtime under `/dev` and promotion/deployment to `rundeck-sphere-prod`.
 
-## Deployment
+## Release flow
 
-Run QA before activation:
+```text
+rundeck-sphere-dev
+    ↓ unit tests + npm QA
+    ↓ DEV smoke/readiness
+    ↓ GitHub Pull Request
+rundeck-sphere-prod
+    ↓ production build
+    ↓ transactional deploy
+https://sphere.astraotoparts.co.id
+```
+
+Never force-reset the production branch to DEV. If branches have diverged, merge using a normal GitHub Pull Request.
+
+## DEV validation and deployment
+
+Update the DEV checkout:
 
 ```bash
 cd /root/rundeck-sphere-dev
-git pull --ff-only origin rundeck-sphere-dev
+git fetch origin
+git reset --hard origin/rundeck-sphere-dev
+```
+
+Validate backend/frontend and deploy DEV when needed:
+
+```bash
 bash -n ops/rundeck/deploy-dev.sh
 /opt/sphere/tools/bin/uv pip install --python /opt/sphere-rundeck-dev/venv/bin/python -r backend/requirements.txt
 /opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
@@ -17,16 +38,90 @@ bash ops/rundeck/deploy-dev.sh
 bash ops/rundeck/prod-readiness-check.sh
 ```
 
-`deploy-dev.sh` stages the backend and frontend release, validates Nginx, activates the
-new symlinks, performs API and browser smoke checks, and automatically restores the
-previous `/dev` symlinks and Nginx configuration when activation fails. Production
-symlinks and the production index hash are verified unchanged on every successful deploy.
+The readiness gate must finish with:
 
-From v1.19.0 onward the deploy smoke gate also calls the 1-day Performance Evaluation
-endpoint. A SQL/schema/runtime error in evaluation therefore fails activation and restores
-the previous DEV release automatically.
+```text
+READINESS PASS: collector fresh, watchdog healthy, auto-healing enabled
+SPHERE PROD READINESS PASS
+HEAD <validated-dev-sha>
+```
 
-The release janitor retains `SPHERE_RELEASES_KEEP` revisions, default `5`, under both:
+`prod-readiness-check.sh` validates the repository with `git rev-parse`, so both a normal checkout and a Git worktree with a file-based `.git` are supported.
+
+`deploy-dev.sh` stages backend/frontend releases, validates Nginx, activates new symlinks, performs API/browser smoke checks, and automatically restores the prior DEV release if activation fails. Production symlinks remain unchanged.
+
+## GitHub promotion
+
+After DEV readiness passes, create a PR:
+
+```text
+base:    rundeck-sphere-prod
+compare: rundeck-sphere-dev
+```
+
+Review the PR diff and merge normally. Temporary/hotfix branches must not become permanent release branches.
+
+## Production deployment
+
+After the PR is merged:
+
+```bash
+cd /root/rundeck-sphere-prod
+git fetch origin
+git reset --hard origin/rundeck-sphere-prod
+npm ci
+npm run qa
+npm run build
+bash ops/rundeck/deploy-prod.sh
+```
+
+Expected final marker:
+
+```text
+PRODUCTION DEPLOY SUCCESS
+REVISION <prod-sha>
+```
+
+The production deploy script verifies that the checkout is clean and exactly matches `origin/rundeck-sphere-prod`. It then performs transactional activation and smoke tests for the production web bundle, production Rundeck API, legacy API compatibility, platform readiness, and DEV isolation.
+
+If a production smoke/activation step fails, the script restores the previous web/API symlinks and Nginx configuration automatically.
+
+Production release paths:
+
+- API releases: `/opt/sphere-rundeck-prod/releases`
+- Web releases: `/var/www/sphere.astraotoparts.co.id/releases`
+- Current API: `/opt/sphere-rundeck-prod/current`
+- Current web: `/var/www/sphere.astraotoparts.co.id/current`
+
+The deploy script retains a bounded rollback window of recent releases.
+
+## Release troubleshooting
+
+Useful checks:
+
+```bash
+git status
+git rev-parse --show-toplevel
+git rev-parse --abbrev-ref HEAD
+git rev-parse HEAD
+```
+
+For DEV readiness:
+
+```bash
+bash ops/rundeck/smoke-watchdog-dev.sh https://sphere.astraotoparts.co.id/dev
+curl -fsS https://sphere.astraotoparts.co.id/dev/api/platform/health | python3 -m json.tool
+```
+
+For PROD route validation:
+
+```bash
+bash ops/rundeck/smoke-prod-routes.sh https://sphere.astraotoparts.co.id
+```
+
+Vite's chunk-size warning is informational unless the build exits non-zero. Treat failed unit tests, `npm run qa`, readiness checks, Nginx validation, API smoke tests, or transactional deploy checks as release blockers.
+
+The DEV release janitor retains `SPHERE_RELEASES_KEEP` revisions, default `5`, under:
 
 - `/opt/sphere-rundeck-dev/releases`
 - `/var/www/sphere-dev/releases`
