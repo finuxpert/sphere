@@ -476,28 +476,6 @@
   background: rgba(216, 179, 95, .055);
 }
 
-.rundeckCollectionGapBandV132 > span {
-  color: var(--sphere-warning, #d8b35f);
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: .045em;
-  text-transform: uppercase;
-}
-
-.rundeckCollectionGapBandV132 > strong {
-  color: var(--sphere-text-secondary, #a9b5bb);
-  font-size: 8.6px;
-  font-weight: 720;
-  white-space: nowrap;
-}
-
-.rundeckCollectionGapBandV132 > small {
-  overflow: hidden;
-  color: var(--sphere-text-muted, #718089);
-  font-size: 8px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 .rundeckSystemHealthReasonV132 {
   display: inline-flex;
@@ -537,6 +515,146 @@
 
   .rundeckSystemHealthReasonV132 {
     max-width: 180px;
+  }
+}
+
+.rundeckCollectionGapBandV132 {
+  display: block;
+}
+
+.rundeckCollectionGapBandV132 > summary {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px 9px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.rundeckCollectionGapBandV132 > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rundeckCollectionGapBandV132 > summary > span {
+  color: var(--sphere-warning, #d8b35f);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.rundeckCollectionGapBandV132 > summary > strong {
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 8.6px;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.rundeckCollectionGapBandV132 > summary > small {
+  overflow: hidden;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rundeckCollectionGapBandV132.is-observation-gap {
+  border-color: rgba(106, 162, 216, .38);
+  background: rgba(106, 162, 216, .045);
+}
+
+.rundeckCollectionGapBandV132.is-observation-gap > summary > span {
+  color: var(--sphere-attention, #6aa2d8);
+}
+
+.rundeckGapDetailsV133 {
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(126,147,158,.08);
+}
+
+.rundeckGapDetailsV133 > div {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 6px;
+  padding: 2px 0;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 8px;
+}
+
+.rundeckGapDetailsV133 b,
+.rundeckGapDetailsV133 small {
+  color: var(--sphere-text-muted, #718089);
+}
+
+.rundeckCoverageBandV133,
+.rundeckAvailabilitySummaryV133 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 2px;
+  padding: 4px 7px;
+  border: 1px solid rgba(126,147,158,.12);
+  border-radius: 4px;
+  background: rgba(126,147,158,.025);
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+}
+
+.rundeckCoverageBandV133 > span,
+.rundeckAvailabilitySummaryV133 > span {
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+  white-space: nowrap;
+}
+
+.rundeckCoverageBandV133 > strong {
+  color: var(--sphere-attention, #6aa2d8);
+  white-space: nowrap;
+}
+
+.rundeckCoverageBandV133 > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rundeckAvailabilitySummaryV133 {
+  justify-content: space-between;
+}
+
+.rundeckAvailabilitySummaryV133 > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 10px;
+}
+
+.rundeckAvailabilitySummaryV133 small {
+  color: var(--sphere-text-muted, #718089);
+  white-space: nowrap;
+}
+
+.rundeckAvailabilitySummaryV133 small b {
+  color: var(--sphere-text-secondary, #a9b5bb);
+}
+
+@container (max-width: 760px) {
+  .rundeckCollectionGapBandV132 > summary {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .rundeckCoverageBandV133,
+  .rundeckAvailabilitySummaryV133 {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rundeckAvailabilitySummaryV133 > div {
+    justify-content: flex-start;
   }
 }
 
