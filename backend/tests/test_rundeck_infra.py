@@ -1,5 +1,6 @@
 import unittest
 from backend.rundeck_infra_parser import parse
+from backend.rundeck_infra_poller import _group_output_entries
 
 POSITIONAL_SAMPLE=b"""## SPHERE-INFRA-V1-BEGIN
 snapshot_ts=2026-09-23T18:15:37+07:00
@@ -82,3 +83,20 @@ class InfraParserTests(unittest.TestCase):
     def test_network_delta_preserved(self):
         result=parse(SAMPLE)
         self.assertEqual(result["network"][0]["rx_dropped_delta"],"0")
+
+class InfraMultiHostPollerTests(unittest.TestCase):
+    def test_groups_rundeck_output_by_node(self):
+        payload={"completed":True,"execCompleted":True,"entries":[
+            {"node":"AOPH1PAPPDC","log":"## SPHERE-INFRA-V1-BEGIN"},
+            {"node":"AOPH2PAPPDC","log":"## SPHERE-INFRA-V1-BEGIN"},
+            {"node":"AOPH1PAPPDC","log":"hostname=AOPH1PAPPDC"},
+            {"node":"AOPH2PAPPDC","log":"hostname=AOPH2PAPPDC"},
+        ]}
+        grouped=_group_output_entries(payload,["AOPH1PAPPDC","AOPH2PAPPDC"])
+        self.assertIn(b"hostname=AOPH1PAPPDC",grouped["AOPH1PAPPDC"])
+        self.assertIn(b"hostname=AOPH2PAPPDC",grouped["AOPH2PAPPDC"])
+
+    def test_multi_node_group_requires_all_hosts(self):
+        payload={"completed":True,"execCompleted":True,"entries":[{"node":"AOPH1PAPPDC","log":"x"}]}
+        with self.assertRaisesRegex(ValueError,"AOPH2PAPPDC"):
+            _group_output_entries(payload,["AOPH1PAPPDC","AOPH2PAPPDC"])
