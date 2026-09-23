@@ -124,3 +124,19 @@
   color: var(--sphere-danger, #db7d86);
   font-weight: 700;
 }
+
+
+.rundeckCurrentWorkloadCount{
+  margin-left:4px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+  font-weight:560;
+}
+.rundeckCurrentWorkload th,
+.rundeckCurrentWorkload td{
+  padding-top:5px;
+  padding-bottom:5px;
+}
+.rundeckCurrentWorkloadHead button{
+  font-size:9.2px;
+}
