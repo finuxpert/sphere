@@ -9,6 +9,7 @@ import json
 import os
 import re
 from datetime import datetime, timedelta, timezone
+from statistics import median
 from pathlib import Path
 from urllib.parse import quote, urlencode
 
@@ -36,7 +37,15 @@ CATEGORY_LABEL = {
     "SSH": "SSH",
     "WEB_DISPATCHER": "Web",
 }
+CATEGORY_METRIC_LABEL = {
+    "SAP_APP": "SAP App Availability",
+    "HANA_SYSTEM_DB": "HANA System DB Availability",
+    "HANA_REPLICATION": "HANA Replication Availability",
+    "SSH": "SSH Reachability",
+    "WEB_DISPATCHER": "Web Dispatcher Availability",
+}
 HISTORY_FILE = ROOT / "availability-history.jsonl"
+AVAILABILITY_GAP_FACTOR = max(1.5, float(os.getenv("SPHERE_AVAILABILITY_GAP_FACTOR", "2.2")))
 
 
 def _settings() -> tuple[str, str, str]:
@@ -297,6 +306,86 @@ def _history_snapshots(hours: float) -> list[dict]:
     return rows
 
 
+def _category_snapshots(snapshots: list[dict], category: str) -> list[dict]:
+    """Keep snapshots that actually contain an observation for the requested category."""
+    selected = []
+    for snapshot in snapshots:
+        if any(str(row.get("category") or "").upper() == category for row in snapshot.get("services", [])):
+            selected.append(snapshot)
+    return selected
+
+
+def availability_observation_profile(
+    snapshots: list[dict],
+    requested_since: datetime | None = None,
+    fallback_seconds: int | None = None,
+    cadence_snapshots: list[dict] | None = None,
+) -> dict:
+    """Describe observation coverage without equating missing samples to DOWN.
+
+    Service Availability history is evidence observed by SPHERE. Cadence is derived
+    from retained execution timestamps when possible; the configured value is only a
+    fallback. Gaps therefore mean NO OBSERVATION, never inferred downtime.
+    """
+    fallback = max(60, int(fallback_seconds or os.getenv("SPHERE_AVAILABILITY_CADENCE_SECONDS", "600")))
+    stamps = sorted({
+        stamp.astimezone(timezone.utc)
+        for snapshot in snapshots
+        if (stamp := _parse_timestamp(snapshot.get("collected_at")))
+    })
+    cadence_rows = cadence_snapshots if cadence_snapshots is not None else snapshots
+    cadence_stamps = sorted({
+        stamp.astimezone(timezone.utc)
+        for snapshot in cadence_rows
+        if (stamp := _parse_timestamp(snapshot.get("collected_at")))
+    })
+    deltas = [
+        int((right - left).total_seconds())
+        for left, right in zip(cadence_stamps, cadence_stamps[1:])
+        if (right - left).total_seconds() >= 60
+    ]
+    expected = max(60, int(round(median(deltas) / 60.0) * 60)) if deltas else fallback
+    threshold = max(expected + 60, int(round(expected * AVAILABILITY_GAP_FACTOR)))
+
+    gaps = []
+    for left, right in zip(stamps, stamps[1:]):
+        delta = int((right - left).total_seconds())
+        if delta <= threshold:
+            continue
+        missing_from = left + timedelta(seconds=expected)
+        missing_to = right - timedelta(seconds=expected)
+        if missing_to <= missing_from:
+            missing_from = left
+            missing_to = right
+        estimated_missing = max(1, int(round(delta / expected)) - 1)
+        gaps.append({
+            "kind": "NO_OBSERVATION",
+            "from": missing_from.isoformat(),
+            "to": missing_to.isoformat(),
+            "between_observations_seconds": delta,
+            "duration_seconds": max(0, int((missing_to - missing_from).total_seconds())),
+            "estimated_missing_checks": estimated_missing,
+        })
+
+    history_started = stamps[0] if stamps else None
+    latest = stamps[-1] if stamps else None
+    requested = requested_since.astimezone(timezone.utc) if requested_since else None
+    coverage_limited = bool(
+        requested and history_started and
+        (history_started - requested).total_seconds() > threshold
+    )
+    return {
+        "expected_cadence_seconds": expected,
+        "gap_threshold_seconds": threshold,
+        "observation_gaps": gaps,
+        "history_started_at": history_started.isoformat() if history_started else None,
+        "latest_observation_at": latest.isoformat() if latest else None,
+        "coverage_limited": coverage_limited,
+        "range_started_at": requested.isoformat() if requested else None,
+        "semantics": "OBSERVED_AVAILABILITY",
+    }
+
+
 def availability_change_events(snapshots: list[dict], since=None, limit: int | None = None, category: str | None = None) -> list[dict]:
     cutoff = _parse_timestamp(since) if isinstance(since, str) else since
     category_filter = str(category or "").upper()
@@ -386,10 +475,18 @@ def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> d
         raise ValueError("Unsupported availability category")
 
     latest_availability()
+    requested_since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
     snapshots = _history_snapshots(RANGE_HOURS[range_key])
+    category_snapshots = _category_snapshots(snapshots, category)
+    cadence_history = _category_snapshots(_history_snapshots(max(24, RANGE_HOURS[range_key])), category)
+    profile = availability_observation_profile(
+        category_snapshots,
+        requested_since=requested_since,
+        cadence_snapshots=cadence_history,
+    )
     items: list[dict] = []
     counters: dict[str, dict[str, int]] = {}
-    for snapshot in snapshots:
+    for snapshot in category_snapshots:
         bucket = snapshot.get("collected_at")
         for row in snapshot.get("services", []):
             if row.get("category") != category:
@@ -425,14 +522,21 @@ def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> d
         "range": range_key,
         "category": category,
         "metric": "availability",
-        "metric_label": "Availability",
+        "metric_label": CATEGORY_METRIC_LABEL.get(category, "Availability"),
         "unit": "%",
-        "bucket_interval_seconds": max(60, int(os.getenv("SPHERE_AVAILABILITY_CADENCE_SECONDS", "600"))),
+        "bucket_interval_seconds": profile["expected_cadence_seconds"],
+        "expected_cadence_seconds": profile["expected_cadence_seconds"],
+        "gap_threshold_seconds": profile["gap_threshold_seconds"],
+        "observation_gaps": profile["observation_gaps"],
+        "coverage_limited": profile["coverage_limited"],
+        "range_started_at": profile["range_started_at"],
+        "history_started_at": profile["history_started_at"],
+        "latest_observation_at": profile["latest_observation_at"],
+        "observation_semantics": profile["semantics"],
         "warning": None,
         "critical": None,
         "items": items,
         "uptime": uptime,
-        "transitions": availability_change_events(snapshots, category=category),
-        "history_started_at": snapshots[0].get("collected_at") if snapshots else None,
-        "note": "Availability history is retained from Service Availability executions observed by SPHERE. Missing checks are not treated as DOWN.",
+        "transitions": availability_change_events(category_snapshots, category=category),
+        "note": "Observed availability from retained Service Availability executions. Missing observations are UNKNOWN/NO OBSERVATION and are never inferred as DOWN.",
     }

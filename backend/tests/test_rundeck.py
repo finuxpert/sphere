@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from backend.rundeck_alert_incidents import build_incidents
+from backend.rundeck_availability import availability_observation_profile
 from backend.rundeck_credentials import credential_mode, read_credential
 from backend.rundeck_evaluation import assess_workload
 from backend.rundeck_host_projection import parse_host_projection
@@ -138,6 +139,52 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(methods_by_path['/history/jobs/current'], {'GET'})
         self.assertEqual(methods_by_path['/history/incidents'], {'GET'})
         self.assertEqual(methods_by_path['/evaluation/workloads'], {'GET'})
+
+    def test_availability_profile_uses_observed_cadence_and_no_observation_semantics(self):
+        def snap(value):
+            return {'collected_at': value}
+
+        cadence = [
+            snap('2026-09-23T00:00:00Z'),
+            snap('2026-09-23T00:15:00Z'),
+            snap('2026-09-23T00:30:00Z'),
+            snap('2026-09-23T00:45:00Z'),
+            snap('2026-09-23T01:00:00Z'),
+        ]
+        selected = [
+            snap('2026-09-23T00:00:00Z'),
+            snap('2026-09-23T00:15:00Z'),
+            snap('2026-09-23T00:30:00Z'),
+            snap('2026-09-23T01:15:00Z'),
+        ]
+        profile = availability_observation_profile(
+            selected,
+            requested_since=datetime(2026, 9, 22, 23, 0, tzinfo=timezone.utc),
+            cadence_snapshots=cadence,
+        )
+        self.assertEqual(profile['expected_cadence_seconds'], 900)
+        self.assertEqual(len(profile['observation_gaps']), 1)
+        self.assertEqual(profile['observation_gaps'][0]['kind'], 'NO_OBSERVATION')
+        self.assertTrue(profile['coverage_limited'])
+        self.assertEqual(profile['semantics'], 'OBSERVED_AVAILABILITY')
+
+    def test_availability_profile_tolerates_small_schedule_drift(self):
+        def snap(value):
+            return {'collected_at': value}
+
+        cadence = [
+            snap('2026-09-23T00:00:00Z'),
+            snap('2026-09-23T00:13:00Z'),
+            snap('2026-09-23T00:26:00Z'),
+            snap('2026-09-23T00:39:00Z'),
+        ]
+        profile = availability_observation_profile(
+            cadence,
+            requested_since=datetime(2026, 9, 22, 23, 30, tzinfo=timezone.utc),
+            cadence_snapshots=cadence,
+        )
+        self.assertEqual(profile['expected_cadence_seconds'], 780)
+        self.assertEqual(profile['observation_gaps'], [])
 
     def test_trend_gap_interval_follows_resolved_bucket(self):
         self.assertEqual(resolve_interval_seconds('30m', 'auto', 600), 600)
