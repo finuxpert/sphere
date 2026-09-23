@@ -504,3 +504,18 @@
     gap:9px!important;
   }
 }
+
+
+/* Clarify control groups without adding visual weight. */
+.appShell:has(.rundeckPanel) .rundeckTrendToolbar .rundeckTrendGroup + .rundeckTrendGroup{
+  margin-left:10px;
+  padding-left:10px;
+  border-left:1px solid rgba(126,147,158,.08);
+}
+.appShell:has(.rundeckPanel) .rundeckReviewControlsV1231{
+  gap:14px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewControlsV1231 .rundeckReviewSegmented + .rundeckReviewSegmented{
+  padding-left:12px;
+  border-left:1px solid rgba(126,147,158,.09);
+}
