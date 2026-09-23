@@ -143,13 +143,14 @@ function TrendFreshness({ trend }) {
   return <div className="rundeckHistoryState">STALE · historical data only · last collection {formatWib(trend.latest_collection_at, true)} WIB · {ageMinutes}m ago</div>
 }
 
-function TrendChart({ trend, mode, range, onSelect }) {
+function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const ref = React.useRef(null)
   const option = React.useMemo(() => {
     const colors = palette()
     const rows = trend?.items || []
     const hosts = Array.from(new Set(rows.map((row) => row.host))).sort()
     const availabilityMode = trend?.metric === 'availability'
+    const selectedKey = shortHost(selectedHost || '')
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
     const compactPoints = ['30m', '1h', '3h', '6h'].includes(range)
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
@@ -166,11 +167,15 @@ function TrendChart({ trend, mode, range, onSelect }) {
       xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
-      series: hosts.map((host, index) => ({
+      series: hosts.map((host, index) => {
+        const focused = selectedKey && shortHost(host) === selectedKey
+        const dimmed = selectedKey && !focused
+        return {
         name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
-        showSymbol: availabilityMode || compactPoints, symbolSize: availabilityMode ? 5 : (compactPoints ? 3.5 : 2.5),
-        lineStyle: { width: availabilityMode ? 2 : 1.8 },
-        emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.3 } },
+        showSymbol: availabilityMode || compactPoints, symbolSize: focused ? 5 : availabilityMode ? 5 : (compactPoints ? 3.5 : 2.5),
+        lineStyle: { width: focused ? 2.8 : availabilityMode ? 2 : 1.8, opacity: dimmed ? .32 : 1 },
+        itemStyle: { opacity: dimmed ? .36 : 1 },
+        emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.8, opacity: 1 } },
         data: [
           ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
           ...gapPoints.map((at) => ({ value: [at, null], gap: true })),
@@ -182,9 +187,10 @@ function TrendChart({ trend, mode, range, onSelect }) {
           itemStyle: { color: availabilityMode ? colors.attention : colors.warning, opacity: .06, borderColor: availabilityMode ? colors.attention : colors.warning, borderWidth: 1, borderType: 'dashed' },
           data: gaps.map(([from, to]) => [{ name: availabilityMode ? `NO OBSERVATION · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}` : gapLabel(from, to), xAxis: from }, { xAxis: to }]),
         } : undefined,
-      }))
+      }
+      })
     }
-  }, [mode, range, trend])
+  }, [mode, range, selectedHost, trend])
 
   React.useEffect(() => {
     if (!ref.current) return undefined
@@ -284,7 +290,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
   </section>
 }
 
-export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, onSelectJob, onTrendContext }) {
+export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, onSelectJob, onTrendContext }) {
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
@@ -344,7 +350,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {!databaseEnabled && <div className="rundeckHistoryState">Trend data is not available yet.</div>}
     {databaseEnabled && trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
     {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
-    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><AvailabilityCoverageBand trend={trend} /><CollectionGapBand trend={trend} /><AvailabilityObservationSummary trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} /></>}
+    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><AvailabilityCoverageBand trend={trend} /><CollectionGapBand trend={trend} /><AvailabilityObservationSummary trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} selectedHost={selectedJob?.host || ''} /></>}
     {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
     <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={onSelectJob} />
   </section>
