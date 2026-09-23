@@ -88,7 +88,7 @@ export default function RundeckLiveOverview({ refreshToken }) {
   const rx = infra.network.reduce((sum, row) => sum + Number(row.metrics?.rx_mbps || 0), 0)
   const tx = infra.network.reduce((sum, row) => sum + Number(row.metrics?.tx_mbps || 0), 0)
   const jobSummary = jobs?.summary || {}
-  const jobOverall = Number(jobSummary.failed || 0) > 0 ? 'CRITICAL' : Number(jobSummary.long_running || 0) > 0 ? 'ATTENTION' : 'NORMAL'
+  const authoritativeJobsReady = false
 
   return <section className="rundeckLiveOverview" aria-label="Live monitoring overview">
     <header className="rundeckLiveOverviewHead">
@@ -124,14 +124,19 @@ export default function RundeckLiveOverview({ refreshToken }) {
         </div>
       </article>
 
-      <article>
-        <header><h4>SAP Jobs</h4><Status value={jobOverall} /></header>
-        <div className="rundeckLiveMetricPair is-jobs">
-          <div><span>Active</span><strong>{jobSummary.active ?? '—'}</strong></div>
-          <div><span>Failed</span><strong className={Number(jobSummary.failed || 0) > 0 ? 'is-critical' : ''}>{jobSummary.failed ?? '—'}</strong></div>
-          <div><span>Long Running</span><strong className={Number(jobSummary.long_running || 0) > 0 ? 'is-attention' : ''}>{jobSummary.long_running ?? '—'}</strong></div>
-          <div><span>Executions</span><strong>{jobSummary.executions ?? '—'}</strong></div>
-        </div>
+      <article className="rundeckLiveJobsCard">
+        <header><h4>SAP Jobs</h4></header>
+        {!authoritativeJobsReady
+          ? <div className="rundeckLiveFeedPending">
+              <strong>SM37 feed pending</strong>
+              <span>Authoritative job monitoring is not configured.</span>
+            </div>
+          : <div className="rundeckLiveMetricPair is-jobs">
+              <div><span>Active</span><strong>{jobSummary.active ?? '—'}</strong></div>
+              <div><span>Failed</span><strong className={Number(jobSummary.failed || 0) > 0 ? 'is-critical' : ''}>{jobSummary.failed ?? '—'}</strong></div>
+              <div><span>Long Running</span><strong className={Number(jobSummary.long_running || 0) > 0 ? 'is-attention' : ''}>{jobSummary.long_running ?? '—'}</strong></div>
+              <div><span>Executions</span><strong>{jobSummary.executions ?? '—'}</strong></div>
+            </div>}
       </article>
     </div>
   </section>
