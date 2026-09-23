@@ -85,7 +85,6 @@ export default function RundeckLiveOverview({ refreshToken }) {
   const dropTotal = infra.network.reduce((sum, row) => sum + Number(row.metrics?.rx_dropped_delta || 0) + Number(row.metrics?.tx_dropped_delta || 0), 0)
   const errorTotal = infra.network.reduce((sum, row) => sum + Number(row.metrics?.rx_errors_delta || 0) + Number(row.metrics?.tx_errors_delta || 0), 0)
   const networkOverall = dropTotal + errorTotal > 0 ? 'ATTENTION' : 'NORMAL'
-  const infraOverall = worst([fsOverall, storageOverall, networkOverall])
   const rx = infra.network.reduce((sum, row) => sum + Number(row.metrics?.rx_mbps || 0), 0)
   const tx = infra.network.reduce((sum, row) => sum + Number(row.metrics?.tx_mbps || 0), 0)
   const jobSummary = jobs?.summary || {}
