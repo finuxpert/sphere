@@ -2,11 +2,17 @@
 
 ## Scope
 
-This runbook documents the SPHERE automatic log-ingestion path developed on `rundeck-sphere-dev`.
+This runbook documents the SPHERE automatic ingestion path for the `rundeck-sphere-*` branch family. SPHERE reads completed Rundeck execution metadata and output through the Rundeck REST API.
 
-Production SPHERE remains on `sphere-prod` at `https://sphere.astraotoparts.co.id`.
+Current active production runs from `rundeck-sphere-prod` at `https://sphere.astraotoparts.co.id`.
 
-Rundeck development is intended for `https://sphere.astraotoparts.co.id/dev` and must not modify production until promoted explicitly.
+Rundeck development runs from `rundeck-sphere-dev` at `https://sphere.astraotoparts.co.id/dev/` and must be promoted through the documented DEV → PR → PROD flow.
+
+## Branch and ingestion contract
+
+- `sphere-dev` / `sphere-prod`: **manual Upload Logs only**. Operators provide collected `.txt`/`.log` files; these branches do not depend on the Rundeck REST API.
+- `rundeck-sphere-dev` / `rundeck-sphere-prod`: **automatic Rundeck API ingestion**. SPHERE reads Rundeck execution metadata/output through REST API endpoints and retains manual file upload as fallback.
+- Rundeck is the SAP-side collector. SPHERE must not SSH/SCP directly to SAP application servers.
 
 ## Rundeck source
 
@@ -55,7 +61,7 @@ Before expiry:
 4. Verify execution metadata and execution output can still be read.
 5. Only after validation, revoke/delete the old token.
 
-If the token expires before rotation, automatic Rundeck ingestion will fail authentication until the token is replaced. Manual Upload Logs must remain available as fallback.
+If the token expires before rotation, automatic Rundeck ingestion will fail authentication until the token is replaced. Manual Upload Logs using operator-provided `.txt`/`.log` files remains the fallback path.
 
 ## Verified API behavior
 
