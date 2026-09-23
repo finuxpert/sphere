@@ -103,8 +103,8 @@ export default function RundeckLiveOverview({ refreshToken }) {
     </header>
 
     <div className="rundeckLiveSummaryStrip">
-      <div><span>Infrastructure</span><strong>{infraOverall}</strong><Status value={infraOverall} /></div>
-      <div><span>Jobs</span><strong>{jobOverall}</strong><Status value={jobOverall} /></div>
+      <div><span>Infrastructure</span><strong className={'is-' + infraOverall.toLowerCase()}>{infraOverall}</strong></div>
+      <div><span>Jobs</span><strong className={'is-' + jobOverall.toLowerCase()}>{jobOverall}</strong></div>
       <div><span>Host</span><strong>{selectedHost || '—'}</strong></div>
     </div>
 
