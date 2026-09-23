@@ -79,7 +79,7 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
     let attempts = 0
     const findTarget = () => {
       attempts += 1
-      const node = document.querySelector('.rundeckPanel .rundeckActions')
+      const node = document.querySelector('.rundeckPanel .rundeckStateCluster')
       if (node) {
         setTarget(node)
         return
