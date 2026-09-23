@@ -140,3 +140,37 @@
 .rundeckCurrentWorkloadHead button{
   font-size:9.2px;
 }
+
+
+/* v1.33.2 — compact workload column allocation */
+.rundeckCurrentWorkloadHead .rundeckCurrentWorkloadTools {
+  padding-right: 8px;
+}
+.rundeckCurrentWorkload table {
+  table-layout: fixed;
+}
+.rundeckCurrentWorkload th:nth-child(1),
+.rundeckCurrentWorkload td:nth-child(1) { width: 7%; }
+.rundeckCurrentWorkload th:nth-child(2),
+.rundeckCurrentWorkload td:nth-child(2) { width: 45%; }
+.rundeckCurrentWorkload th:nth-child(3),
+.rundeckCurrentWorkload td:nth-child(3) { width: 13%; }
+.rundeckCurrentWorkload th:nth-child(4),
+.rundeckCurrentWorkload td:nth-child(4) { width: 13%; }
+.rundeckCurrentWorkload th:nth-child(5),
+.rundeckCurrentWorkload td:nth-child(5) { width: 10%; }
+.rundeckCurrentWorkload th:nth-child(6),
+.rundeckCurrentWorkload td:nth-child(6) { width: 12%; }
+.rundeckCurrentWorkloadName,
+.rundeckCurrentWorkloadName button,
+.rundeckCurrentWorkloadName small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rundeckCurrentWorkloadName button,
+.rundeckCurrentWorkloadName small {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+}
