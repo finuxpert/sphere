@@ -102,11 +102,6 @@ export default function RundeckLiveOverview({ refreshToken }) {
       {error && <span className="rundeckLiveOverviewError">{error}</span>}
     </header>
 
-    <div className="rundeckLiveSummaryStrip">
-      <div><span>Infrastructure</span><strong className={'is-' + infraOverall.toLowerCase()}>{infraOverall}</strong></div>
-      <div><span>Jobs</span><strong className={'is-' + jobOverall.toLowerCase()}>{jobOverall}</strong></div>
-    </div>
-
     <div className="rundeckLiveCardGrid">
       <article>
         <header><h4>Filesystem</h4><Status value={fsOverall} /></header>
