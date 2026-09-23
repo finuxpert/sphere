@@ -36,7 +36,7 @@ function SparkChart({items=[],metricType}){
     return [...map.entries()]
       .sort(([,left],[,right])=>Math.max(...right.map(row=>Number(row.value)||0))-Math.max(...left.map(row=>Number(row.value)||0)))
       .slice(0,metricType==='filesystem'?4:6)
-  },[items])
+  },[items,metricType])
   const width=920,height=210,pad=28
   const values=items.flatMap(row=>[Number(row.value),Number(row.value2)]).filter(Number.isFinite)
   const max=Math.max(1,...values)
