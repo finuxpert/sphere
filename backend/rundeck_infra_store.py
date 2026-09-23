@@ -79,7 +79,9 @@ def ingest(execution, raw, expected_host, root=ROOT):
     cid = identifier(execution["id"])
     manifest = root / "manifests" / f"{cid}.json"
     if manifest.exists():
-        return json.loads(manifest.read_text())
+        previous = json.loads(manifest.read_text())
+        if previous.get("database_status") != "ERROR":
+            return previous
     parsed = parse(raw)
     if parsed["hostname"] != expected_host:
         raise ValueError("Unexpected infra host")
