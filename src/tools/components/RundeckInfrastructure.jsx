@@ -49,6 +49,10 @@ function SparkChart({items=[],metricType}){
       <line x1={pad} y1={pad} x2={pad} y2={height-pad} className="axis"/>
       {groups.map(([key,rows],index)=>{
         const points=rows.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')
+        if(rows.length===1){
+          const row=rows[0]
+          return <circle key={key} cx={x(row.collected_at)} cy={y(row.value)} r="3.5" className={`seriesPoint s${index%8}`}/>
+        }
         return <polyline key={key} points={points} className={`series s${index%8}`} fill="none"/>
       })}
     </svg>
@@ -94,7 +98,7 @@ export default function RundeckInfrastructure(){
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header>
       <div><h3>Infrastructure</h3><p>Filesystem, network and storage I/O supporting evidence. Signals are not automatic root-cause conclusions.</p></div>
-      <div className="rundeckInfraIdentity"><select aria-label="Infrastructure host" value={host==='AOQ'?'':host} onChange={e=>setSelectedHost(e.target.value)}>{data.hosts.map(row=><option key={row.host} value={row.host}>{row.host}</option>)}</select><span className={`state is-${overall.toLowerCase()}`}>{overall}</span></div>
+      <div className="rundeckInfraIdentity"><select aria-label="Infrastructure host" value={host==='AOQ'?'':host} onChange={e=>setSelectedHost(e.target.value)}>{data.hosts.map(row=><option key={row.host} value={row.host}>{row.source?`${row.source} · `:''}{row.host}</option>)}</select><span className={`state is-${overall.toLowerCase()}`}>{overall}</span></div>
     </header>
 
     <div className="rundeckInfraFreshness">
