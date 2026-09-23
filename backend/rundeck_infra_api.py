@@ -40,10 +40,12 @@ def latest(source: str | None = Query(None, pattern="^(aoq|aop-prod)$")):
     row = _latest_manifest(source)
     if not row:
         raise HTTPException(404, "No infrastructure collection available")
+    source_label = _source_for_host(row.get("host"))
+    poller_source = source or ("aop-prod" if source_label == "AOP PROD" else "aoq")
     return {
         **row,
-        "source": _source_for_host(row.get("host")),
-        "poller": _poller_state(source),
+        "source": source_label,
+        "poller": _poller_state(poller_source),
     }
 
 @router.get("/hosts")
@@ -69,7 +71,10 @@ def history(days:int=Query(7,ge=1,le=90), limit:int=Query(1000,ge=1,le=10000)):
           SELECT collection_id,execution_id,host,status,snapshot_ts,sample_seconds
           FROM rundeck_infra_collections WHERE snapshot_ts>=:since ORDER BY snapshot_ts DESC LIMIT :limit
         """),{"since":since,"limit":limit})
-        return {"items":[dict(row._mapping) for row in rows]}
+        items=[dict(row._mapping) for row in rows]
+        for item in items:
+            item["source"]=_source_for_host(item.get("host"))
+        return {"items":items}
 
 @router.get("/filesystems")
 def filesystems(host:str|None=None, primary_only:bool=True):
