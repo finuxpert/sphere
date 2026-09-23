@@ -590,7 +590,7 @@ export default function RundeckSource({ onCollection }) {
     />
 
     <details className="rundeckSupportingData rundeckSupportingDataDisclosure">
-      <summary><span className="rundeckSupportingTitle">Supporting Data</span><small>{collectionCount} runs · {failedCount} failed · platform {platformState}</small></summary>
+      <summary><span className="rundeckSupportingTitle"><SphereIcon name="database" /> Supporting Data</span><small>{collectionCount} runs</small></summary>
       <div className="rundeckSupportingDataBody">
       <details className="rundeckHistory">
         <summary><SphereIcon name="history" /> Rundeck History <span>{collectionCount} runs · {partialCount} partial · {failedCount} failed</span></summary>
