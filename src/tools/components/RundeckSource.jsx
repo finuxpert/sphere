@@ -141,6 +141,7 @@ export default function RundeckSource({ onCollection }) {
   const [latest, setLatest] = React.useState(null)
   const [health, setHealth] = React.useState(null)
   const [platform, setPlatform] = React.useState(null)
+  const [availabilitySnapshot, setAvailabilitySnapshot] = React.useState(null)
   const [hosts, setHosts] = React.useState([])
   const [hostSnapshot, setHostSnapshot] = React.useState(null)
   const [history, setHistory] = React.useState([])
@@ -208,12 +209,13 @@ export default function RundeckSource({ onCollection }) {
   }, [])
 
   const refreshMeta = React.useCallback(async () => {
-    const [healthResult, hostsResult, historyResult, runResult, platformResult] = await Promise.allSettled([
+    const [healthResult, hostsResult, historyResult, runResult, platformResult, availabilityResult] = await Promise.allSettled([
       json(`${API}/health`),
       json(`${API}/history/hosts/latest`),
       json(`${API}/history/collections?days=90&limit=30`),
       json(`${API}/collect-now/status`),
       json(`${API}/platform/health`),
+      json(`${API}/availability/latest`),
     ])
 
     if (healthResult.status === 'fulfilled') setHealth(healthResult.value)
@@ -224,6 +226,7 @@ export default function RundeckSource({ onCollection }) {
     if (historyResult.status === 'fulfilled') setHistory(historyResult.value.items || [])
     if (runResult.status === 'fulfilled') setRunState(runResult.value)
     if (platformResult.status === 'fulfilled') setPlatform(platformResult.value)
+    if (availabilityResult.status === 'fulfilled') setAvailabilitySnapshot(availabilityResult.value)
   }, [])
 
   const refreshAll = React.useCallback(async () => {
@@ -510,6 +513,20 @@ export default function RundeckSource({ onCollection }) {
   const statusHint = !collectionAligned
     ? 'Waiting for one complete aligned Rundeck run.'
     : `${statusExplanation(overallHealth, operationalHosts)}${primarySignalHint}`
+  const performanceTs = Date.parse(latestCollectionAt || '')
+  const availabilityTs = Date.parse(availabilitySnapshot?.collected_at || '')
+  const sourceSkewMinutes = Number.isFinite(performanceTs) && Number.isFinite(availabilityTs)
+    ? Math.round(Math.abs(performanceTs - availabilityTs) / 60000)
+    : null
+  const dataAlignment = collectionAligned && sourceSkewMinutes !== null && sourceSkewMinutes <= 15 && !health?.rundeck_stale
+    ? 'ALIGNED'
+    : 'PARTIAL'
+  const dataAlignmentTitle = [
+    `Performance #${latest?.execution_id || '—'}`,
+    `Availability #${availabilitySnapshot?.execution_id || '—'}`,
+    sourceSkewMinutes === null ? 'source skew unknown' : `source skew ${sourceSkewMinutes}m`,
+    runState.running ? `collection running #${runState.execution_id || '—'} (not committed)` : 'no collection currently running',
+  ].join(' · ')
 
   const currentWorkload = <RundeckCurrentWorkload
     collectionId={latest?.collection_id || ''}
@@ -528,10 +545,7 @@ export default function RundeckSource({ onCollection }) {
         </div>
       </div>
       <div className="rundeckActions">
-        <div className="rundeckOperationalState">
-          <span>Operational State</span>
-          <StatusPill value={overallHealth} title={statusHint} />
-        </div>
+        <div className="rundeckActionCluster">
         <div className="rundeckModeSwitch" role="group" aria-label="Data source">
           <button type="button" className="is-active" aria-pressed="true" title="Automatic Rundeck source"><SphereIcon name="refresh" /> Rundeck</button>
           <button type="button" onClick={() => switchParentSource('manual')} title="Manual Upload Logs"><SphereIcon name="upload" /> Manual</button>
@@ -545,9 +559,19 @@ export default function RundeckSource({ onCollection }) {
             onClick={collectNow}
             title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Performance READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
           >
-            <SphereIcon name="refresh" /> {actionBusy ? 'Collector STARTING' : runState.running ? `Collector RUNNING #${runState.execution_id || '—'}` : runState.cooldown ? 'Collector COOLDOWN' : 'Collect Now'}
+            <SphereIcon name="refresh" /> {actionBusy ? 'Collection starting' : runState.running ? `Collection running #${runState.execution_id || '—'}` : runState.cooldown ? 'Collect cooldown' : 'Collect Now'}
           </button>
         )}
+        </div>
+        <div className="rundeckStateCluster">
+          <div className="rundeckDataAlignment" title={dataAlignmentTitle}>
+            <span>Data</span><StatusPill value={dataAlignment} />
+          </div>
+          <div className="rundeckOperationalState">
+            <span>System Health</span>
+            <StatusPill value={overallHealth} title={statusHint} />
+          </div>
+        </div>
       </div>
     </header>
 
@@ -575,8 +599,9 @@ export default function RundeckSource({ onCollection }) {
       onTrendContext={setTrendContext}
     />
 
-    <div className="rundeckSupportingData">
-      <div className="rundeckSupportingTitle">Supporting Data</div>
+    <details className="rundeckSupportingData rundeckSupportingDataDisclosure">
+      <summary><span className="rundeckSupportingTitle">Supporting Data</span><small>{collectionCount} runs · {failedCount} failed · platform {platformState}</small></summary>
+      <div className="rundeckSupportingDataBody">
       <details className="rundeckHistory">
         <summary><SphereIcon name="history" /> Rundeck History <span>{collectionCount} runs · {partialCount} partial · {failedCount} failed</span></summary>
         <div className="rundeckHistoryTableWrap">
@@ -613,7 +638,8 @@ export default function RundeckSource({ onCollection }) {
           </table>
         </div>
       </details>
-    </div>
+      </div>
+    </details>
 
     {pdfPreview && <div className="rundeckPdfPreviewBackdrop" role="dialog" aria-modal="true" aria-label="PDF preview">
       <section className="rundeckPdfPreview">
