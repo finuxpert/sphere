@@ -34,8 +34,8 @@ const files = {
 const checks = [
   ['availability observation version is v1.33.0', files.version.includes("APP_VERSION = '1.33.0'") && files.version.includes('availability-observation-ui-v1.33.0')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
-  ['Job and Program History remains available', files.wrapper.includes('Job &amp; Program History')],
-  ['SAP Job Monitor is wired as a third mode', files.wrapper.includes('RundeckJobMonitor') && files.wrapper.includes("monitoringMode === 'jobs'") && files.wrapper.includes('SAP Job Monitor')],
+  ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
+  ['SAP Job Monitor remains available inside Live Monitoring details', files.wrapper.includes('RundeckJobMonitor') && files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('rundeckLiveDetail')],
   ['primary 40/60 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 40fr) minmax(0, 60fr)')],
   ['operational 45/55 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 45fr) minmax(0, 55fr)')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
