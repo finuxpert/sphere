@@ -25,7 +25,7 @@
 
 .rundeckObservationHistoryTableWrap {
   overflow: auto;
-  max-height: 260px;
+  max-height: 220px;
   margin-top: 6px;
   border-top: 1px solid rgba(113, 128, 137, .08);
   scrollbar-gutter: stable;
@@ -79,4 +79,20 @@
   .rundeckObservationHistoryTableWrap {
     max-height: 220px;
   }
+}
+
+.rundeckObservationHistoryV1234>summary{
+  width:100%;
+  min-height:30px;
+}
+.rundeckObservationHistoryV1234>summary::after{
+  content:'▾';
+  margin-left:auto;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckObservationHistoryV1234:not([open])>summary::after{transform:rotate(-90deg)}
+.rundeckObservationHistoryV1234 tbody tr.is-inspected{
+  background:rgba(79,198,200,.075);
+  box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8);
 }
