@@ -42,7 +42,7 @@ function latestEpisode(items = [], targetAt = '') {
   }, episodes[0])
 }
 
-export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob }) {
+export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob, embedded = false }) {
   const [rows, setRows] = React.useState([])
   const [error, setError] = React.useState('')
 
@@ -86,8 +86,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
 
   const selectedAt = Date.parse(job.at || '')
 
-  return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
-    <summary><SphereIcon name="history" /> Observation History <span>{error ? 'unavailable' : `${rows.length} observations`}</span></summary>
+  const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
       <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th><th>Critical WP</th></tr></thead>
@@ -121,5 +120,12 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
         </tr>
       })}{!rows.length && <tr><td colSpan="8">No stored observations for this workload.</td></tr>}</tbody>
     </table></div>}
+  </>
+
+  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Observation History">{content}</section>
+
+  return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
+    <summary><SphereIcon name="history" /> Observation History <span>{error ? 'unavailable' : `${rows.length} observations`}</span></summary>
+    {content}
   </details>
 }
