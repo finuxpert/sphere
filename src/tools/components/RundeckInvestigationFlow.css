@@ -71,3 +71,22 @@
     flex-direction: column;
   }
 }
+
+
+/* v1.33.2 — compact live investigation context */
+.rundeckInvestigationContext.is-live {
+  margin-bottom: 4px;
+  padding: 2px 0 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(113,128,137,.08);
+  border-radius: 0;
+  background: transparent;
+}
+.rundeckInvestigationContext.is-live .rundeckInvestigationContextLabel {
+  font-size: 8.7px;
+}
+.rundeckInvestigationContext.is-live strong {
+  color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 8.9px;
+  font-weight: 650;
+}
