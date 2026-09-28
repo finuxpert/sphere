@@ -9,20 +9,20 @@ export function evaluationReasonParts(row = {}, maxParts = 2) {
     if (signals.sustained_high_cpu) parts.push('High CPU')
     else if (signals.high_memory) parts.push('High Memory')
 
-    if (signals.baseline_anomaly || row.anomaly_status === 'ABOVE BASELINE') parts.push('Above Baseline')
-    else if (signals.performance_shift || signals.increasing) parts.push('CPU Increase')
-    else if (signals.wp_excess_association || signals.critical_wp_correlated) parts.push('Critical WP Evidence')
-    else if (signals.recurring) parts.push('Recurring')
+    if (signals.baseline_anomaly || row.anomaly_status === 'ABOVE BASELINE') parts.push('Higher than usual')
+    else if (signals.performance_shift || signals.increasing) parts.push('CPU rising')
+    else if (signals.wp_excess_association || signals.critical_wp_correlated) parts.push('Critical WP at same time')
+    else if (signals.recurring) parts.push('Repeated')
   } else if (status === 'HIGH CPU') {
-    parts.push('Sustained CPU')
+    parts.push('High CPU over time')
   } else if (status === 'HIGH MEMORY') {
-    parts.push('High PSS Memory')
+    parts.push('High memory')
   } else if (status === 'CPU SPIKE') {
     parts.push('Peak only')
   } else if (status === 'INCREASING CPU') {
-    parts.push('Recent CPU increase')
+    parts.push('CPU recently increased')
   } else if (status === 'RECURRING') {
-    parts.push('Repeated observations')
+    parts.push('Repeated')
   } else if (status === 'INSUFFICIENT DATA') {
     parts.push('More history needed')
   } else if (status === 'NORMAL') {
@@ -32,7 +32,7 @@ export function evaluationReasonParts(row = {}, maxParts = 2) {
   if (!parts.length) {
     if (signals.sustained_high_cpu) parts.push('High CPU')
     if (signals.high_memory) parts.push('High Memory')
-    if (signals.cpu_spike) parts.push('CPU Spike')
+    if (signals.cpu_spike) parts.push('CPU peak')
     if (signals.performance_shift || signals.increasing) parts.push('CPU Increase')
     if (signals.baseline_anomaly || row.anomaly_status === 'ABOVE BASELINE') parts.push('Above Baseline')
     if (signals.wp_excess_association || signals.critical_wp_correlated) parts.push('Critical WP Evidence')
