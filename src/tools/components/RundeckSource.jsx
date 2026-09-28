@@ -521,6 +521,19 @@ export default function RundeckSource({ onCollection }) {
   const failedCount = history.filter((row) => row.status === 'FAILED').length
   const platformState = platform?.status || 'UNKNOWN'
   const releaseState = platform?.releases?.backend?.status === 'WARNING' || platform?.releases?.web?.status === 'WARNING' ? 'WARNING' : 'NORMAL'
+  const serviceStates = [
+    platform?.collector?.status,
+    platform?.filesystem?.status,
+    platform?.inode?.status,
+    platform?.filesystem?.status,
+    platform?.database?.status === 'ok' ? 'NORMAL' : platform?.database?.status,
+    platform?.maintenance?.status,
+    platform?.backup?.status || 'NOT_CONFIGURED',
+    releaseState,
+  ].map((value) => String(value || 'UNKNOWN').toUpperCase())
+  const serviceNormalCount = serviceStates.filter((value) => value === 'NORMAL' || value === 'OK').length
+  const serviceProblemCount = serviceStates.filter((value) => !['NORMAL', 'OK', 'NOT_CONFIGURED'].includes(value)).length
+  const serviceSummary = `${serviceNormalCount}/${serviceStates.length} normal${serviceProblemCount ? ` · ${serviceProblemCount} needs attention` : ''}`
   const appCount = latest?.received_hosts?.length || operationalHosts.length || 0
   const incidentStart = incidentSummary?.signal_active_since || incidentSummary?.detected_since || ''
   const latestCollectionAt = latest?.collection_time_wib || latest?.finished_at || ''
@@ -662,7 +675,7 @@ export default function RundeckSource({ onCollection }) {
       </details>
 
       <details className="rundeckPlatformHealth">
-        <summary title="Health of SPHERE platform services and storage; separate from SAP performance status."><SphereIcon name="database" /> SPHERE Services <StatusPill value={platformState} /></summary>
+        <summary title="SPHERE collector, storage, database and maintenance services."><SphereIcon name="database" /> SPHERE Services <span>{serviceSummary}</span><StatusPill value={platformState} /></summary>
         <div className="rundeckPlatformTableWrap">
           <table className="rundeckPlatformTable">
             <thead><tr><th>Component</th><th>State</th><th>Detail</th></tr></thead>
