@@ -4,7 +4,7 @@ import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiForm
 import './RundeckCurrentWorkload.css'
 
 const API = `${import.meta.env.BASE_URL}api`
-const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
+const CPU_HINT = 'CPU Total is the grouped multi-core workload CPU observation. It can exceed 100 percent when the workload uses more than one CPU core or process.'
 const STALE_MINUTES = 15
 
 function jobContext(row) {
@@ -146,11 +146,13 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const freshness = latestObservedAt ? relativeAge(latestObservedAt, nowMs) : ''
   const freshnessMinutes = latestObservedAt ? ageMinutes(latestObservedAt, nowMs) : null
   const showFreshness = freshnessMinutes !== null && freshnessMinutes >= STALE_MINUTES
+  const selectedContext = selectedJob?.key && selectedJob?.host ? `${shortHost(selectedJob.host)} · ${selectedJob.key}` : ''
 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP workloads">
     <div className="rundeckCurrentWorkloadHead">
       <h3><SphereIcon name="workload" /> Current Workloads <span className="rundeckCurrentWorkloadCount">{rows.length} active</span></h3>
       <div className="rundeckCurrentWorkloadTools">
+        {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected workload: ${selectedContext}`}>Selected · {selectedContext}</span>}
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
         {rows.length > 10 && <button type="button" onClick={() => setShowAll((value) => !value)}>
           {showAll ? 'Top 10' : `View all ${rows.length}`}
@@ -163,7 +165,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap">
       <table>
-        <thead><tr><th>APP</th><th>Workload</th><th title={CPU_HINT}>CPU Usage ↓</th><th>PSS Memory</th><th>Processes</th><th>WP</th></tr></thead>
+        <thead><tr><th>APP</th><th>Workload</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th>WP</th></tr></thead>
         <tbody>
           {visible.map((row) => {
             const details = row.details || {}
