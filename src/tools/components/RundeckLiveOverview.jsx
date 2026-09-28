@@ -148,8 +148,8 @@ export default function RundeckLiveOverview({ refreshToken }) {
         <header><h4>SAP Jobs</h4></header>
         {!authoritativeJobsReady
           ? <div className="rundeckLiveFeedPending">
-              <strong>SM37 feed pending</strong>
-              <span>Authoritative job monitoring is not configured.</span>
+              <strong>SM37 job data not connected</strong>
+              <span>Job monitoring from SM37 is not available yet.</span>
             </div>
           : <div className="rundeckLiveMetricPair is-jobs">
               <div><span>Active</span><strong>{jobSummary.active ?? '—'}</strong></div>
