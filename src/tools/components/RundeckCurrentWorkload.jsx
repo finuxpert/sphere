@@ -176,10 +176,22 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             const processes = processCount(details)
             const identity = identitySummary(row)
             const fullIdentity = identityTitle(row)
-            return <tr key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`} className={active ? 'is-selected' : ''}>
+            return <tr
+              key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`}
+              className={active ? 'is-selected' : ''}
+              tabIndex={context ? 0 : undefined}
+              role={context ? 'button' : undefined}
+              title={context ? 'Open this job or program in the analysis panel' : undefined}
+              onClick={context ? () => onSelectJob?.(context) : undefined}
+              onKeyDown={context ? (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return
+                event.preventDefault()
+                onSelectJob?.(context)
+              } : undefined}
+            >
               <td title={row.host}>{shortHost(row.host)}</td>
               <td className="rundeckCurrentWorkloadName">
-                <button type="button" onClick={() => context && onSelectJob?.(context)}>{row.consumer_key}</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }}>{row.consumer_key}</button>
                 <small title={fullIdentity || identity}>{identity}</small>
               </td>
               <td title={CPU_HINT} className={Number.isFinite(cpu) && cpu >= 80 ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
