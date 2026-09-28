@@ -174,3 +174,29 @@
   max-width: 100%;
   white-space: nowrap;
 }
+
+/* SPHERE v1.33.4 — selected workload identity and operator readability. */
+.rundeckCurrentWorkloadSelection {
+  display: inline-block;
+  max-width: 280px;
+  overflow: hidden;
+  color: var(--sphere-accent, #4fc6c8);
+  font-size: 8.8px;
+  font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rundeckCurrentWorkload th {
+  font-size: 8.6px;
+}
+.rundeckCurrentWorkload td,
+.rundeckCurrentWorkload td button {
+  line-height: 1.35;
+}
+.rundeckCurrentWorkload tbody tr.is-selected td:first-child::before {
+  content: '›';
+  margin-right: 3px;
+  color: var(--sphere-accent, #4fc6c8);
+  font-weight: 800;
+}
