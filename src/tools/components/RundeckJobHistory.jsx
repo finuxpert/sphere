@@ -446,28 +446,28 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const wpContext = [wpType, wpNumber].filter(Boolean).join(' ') || '—'
   const contextText = [appName, workloadTypeLabel(displayConsumerType || latest?.consumer_type), program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' · ')
 
-  return <section className="rundeckJobHistory" aria-label="Selected workload performance" aria-busy={loading}>
+  return <section className="rundeckJobHistory" aria-label="Selected job or program performance" aria-busy={loading}>
     <div className="rundeckJobHistoryHead">
       <div>
-        <span>Selected Workload</span>
+        <span>Selected Job / Program</span>
         <h3><SphereIcon name="target" /> {displayKey} {history && <em className={isCurrent ? 'is-current' : 'is-ended'}>{isCurrent ? 'CURRENT' : 'NO LONGER SEEN'}</em>}</h3>
         <small>{contextText}</small>
       </div>
     </div>
 
-    {loading && !history && <div className="rundeckJobHistoryState">Loading workload history…</div>}
-    {loading && history && <div className="rundeckJobHistoryState is-updating">{changingSelection ? 'Updating selected workload…' : 'Refreshing workload…'}</div>}
+    {loading && !history && <div className="rundeckJobHistoryState">Loading performance history…</div>}
+    {loading && history && <div className="rundeckJobHistoryState is-updating">{changingSelection ? 'Updating selected item…' : 'Refreshing performance…'}</div>}
     {error && <div className="rundeckJobHistoryState is-error">{error}</div>}
 
     {history && <div key={contentKey} className="rundeckJobHistoryContent">
       <div className="rundeckJobHistoryOverview">
         <section className="rundeckJobHistoryGroup" aria-label="Observation summary">
-          <strong>Observation</strong>
+          <strong>History</strong>
           <div className="rundeckJobHistorySummary">
             <span><b>First Seen</b>{formatWib(stats.firstSeen, true)} WIB</span>
             <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
             <span><b>Duration</b>{observed}</span>
-            <span><b>Observed Checks</b>{episodeItems.length}</span>
+            <span><b>Records</b>{episodeItems.length}</span>
           </div>
         </section>
         <section className="rundeckJobHistoryGroup" aria-label="Performance summary">
@@ -483,8 +483,8 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
 
       <section className="rundeckSm37Verification" aria-label="SM37 verification context">
         <div className="rundeckSm37VerificationHead">
-          <strong>SM37 Verification</strong>
-          <span>NOT VERIFIED</span>
+          <strong>SAP Job Check</strong>
+          <span>JOB DATA NOT CONNECTED</span>
         </div>
         <div className="rundeckSm37VerificationGrid">
           <span><b>Job Name</b>{jobName || '—'}</span>
@@ -493,11 +493,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <span><b>Observed</b>{observedAt ? `${formatWib(observedAt, true)} WIB` : '—'}</span>
           <span><b>WP</b>{wpContext}</span>
         </div>
-        <p>Verify in SM37 by matching Job Name, Step Program and execution time. SPHERE has not verified this execution against SM37.</p>
+        <p>SM37 job data is not connected. Check Job Name, Program and execution time manually if needed.</p>
       </section>
 
       {(incidentStart || timelineText) && <div className="rundeckJobTimeline">
-        <strong>Issue Timeline</strong>
+        <strong>Timing</strong>
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
@@ -505,15 +505,15 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
 
       <details className="rundeckJobPerformanceDisclosure">
         <summary>
-          <span><SphereIcon name="trend" /> Workload Performance</span>
+          <span><SphereIcon name="trend" /> Performance</span>
           <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
-          {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP observed</em>}
+          {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP at same time</em>}
         </summary>
         {episodeItems.length === 1
           ? <SingleSamplePerformance row={episodeItems[0]} />
           : episodeItems.length > 1
             ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} />
-            : <div className="rundeckJobHistoryState">No stored history for this workload yet.</div>}
+            : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
       </details>
     </div>}
   </section>
