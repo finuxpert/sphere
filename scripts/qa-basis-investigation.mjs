@@ -39,7 +39,7 @@ const files = {
 }
 
 const checks = [
-  ['operator trust version is v1.33.4', files.version.includes("APP_VERSION = '1.33.4'") && files.version.includes('operator-trust-ui-v1.33.4')],
+  ['context clarity version is v1.33.5', files.version.includes("APP_VERSION = '1.33.5'") && files.version.includes('context-clarity-ui-v1.33.5')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -55,6 +55,9 @@ const checks = [
   ['Supporting Data disclosure owns full row and right-aligned chevron', files.workspace.includes('details.rundeckSupportingDataDisclosure') && files.sourceCss.includes('.rundeckSupportingDataDisclosure > summary::after') && files.sourceCss.includes('margin-left: auto !important')],
   ['Current Workloads keeps explicit compact column allocation', files.currentWorkloadCss.includes('table-layout: fixed') && files.currentWorkloadCss.includes('nth-child(2)') && files.currentWorkloadCss.includes('width: 45%')],
   ['Current Workloads exposes multi-core CPU semantics and selected identity', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('CPU Total ↓') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Selected · {selectedContext}')],
+  ['Trend inspection is explicitly independent and historical snapshot is collapsed by default', files.serverTrend.includes('Trend Inspection') && files.serverTrend.includes('independent historical inspection') && files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
+  ['APP drilldown and selected workload contexts are explicitly named', files.appServers.includes('APP DRILLDOWN') && files.investigationContext.includes('SELECTED WORKLOAD · LIVE')],
+  ['Observation History defaults to eight rows with explicit expansion', read('src/tools/components/RundeckObservationHistory.jsx').includes('rows.slice(0, 8)') && read('src/tools/components/RundeckObservationHistory.jsx').includes('View all ${rows.length}')],
   ['Healthy SAP Availability uses compact summary mode', files.availability.includes('is-healthy-compact') && files.availabilityCss.includes('.rundeckAvailability.is-healthy-compact .rundeckAvailabilityBody')],
   ['Live investigation context stays compact and neutral', files.investigationContext.includes("'Active issue'") && files.investigationFlow.includes('.rundeckInvestigationContext.is-live') && files.investigationFlow.includes('background: transparent')],
   ['Infrastructure details disclosure keeps left-aligned label and right chevron', files.uiPolish.includes('.rundeckLiveDetail > summary::after') && files.uiPolish.includes('justify-content: flex-start !important') && files.uiPolish.includes('margin-left: auto')],
@@ -92,6 +95,7 @@ const checks = [
   ['System Health qualifies stale availability evidence', files.systemHealth.includes('Availability evidence stale') && files.systemHealth.includes('do not treat it as contemporaneous')],
   ['Global data trust exposes performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('PERF ${ageLabel(performanceAgeMinutes)} · AVAIL ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('sources are not contemporaneous')],
   ['NORMAL APP resource state is distinct from missing data', files.appServers.includes('Normal observation') && files.appServers.includes('>NORMAL</span>')],
+  ['Infrastructure filesystem NORMAL state is explicit', read('src/tools/components/RundeckInfrastructure.jsx').includes("is-${statusFs(row.used_pct).toLowerCase()}") && !read('src/tools/components/RundeckInfrastructure.jsx').includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>"))],
   ['Run identity separates committed Performance, running Collection, and Availability cycles', files.source.includes('Performance <b>READY</b>') && files.source.includes('Collection running #') && files.availability.includes('Availability READY #')],
   ['Long-range trend reduces point clutter while preserving hover emphasis', files.serverTrend.includes("compactPoints = ['30m', '1h', '3h', '6h']") && files.serverTrend.includes("showSymbol: availabilityMode || compactPoints") && files.serverTrend.includes("emphasis: { focus: 'series'")],
   ['watchdog audit route is read-only and available', files.apiCore.includes('@app.get("/watchdog/events")') && files.apiCore.includes('read_watchdog_events')],
@@ -104,4 +108,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.33.4 operator trust and availability semantics checks passed.')
+console.log('\nSPHERE v1.33.5 context clarity and operator trust checks passed.')
