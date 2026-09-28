@@ -465,3 +465,37 @@
     display: none;
   }
 }
+
+/* SPHERE v1.33.5 — trend inspection summary stays compact until explicitly expanded. */
+.rundeckHistoricalSnapshot {
+  margin-top: 5px;
+  padding-top: 5px;
+}
+.rundeckHistoricalSnapshot > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.rundeckHistoricalSnapshot > summary::-webkit-details-marker {
+  display: none;
+}
+.rundeckHistoricalSnapshot > summary::after {
+  content: '▾';
+  margin-left: 8px;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+}
+.rundeckHistoricalSnapshot:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+.rundeckHistoricalSnapshot:not([open]) .rundeckHistoricalSnapshotHead {
+  margin-bottom: 0;
+}
+.rundeckHistoricalSnapshot[open] .rundeckSnapshotConsumers {
+  margin-top: 6px;
+}
+.rundeckHistoricalSnapshotHead {
+  align-items: center;
+}
+.rundeckHistoricalSnapshotHead strong {
+  font-size: 9.4px;
+}
