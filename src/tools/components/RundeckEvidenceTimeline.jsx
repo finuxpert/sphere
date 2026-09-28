@@ -71,11 +71,11 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         ? 'Fewer than two timestamped evidence sources are available.'
         : 'Cross-source timing status.'
 
-  return <section className="rundeckEvidenceTimeline" aria-label="Operational Events">
+  return <section className="rundeckEvidenceTimeline" aria-label="Related events">
     <div className="rundeckEvidenceSummary">
-      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Operational Events</span>
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'ALIGNED TO WORKLOAD' : state}</span>
-      <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m skew` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
+      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Related Events</span>
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}</span>
+      <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m time difference` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
     </div>
 
     <div className="rundeckEvidenceBody">
@@ -92,19 +92,19 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
               <small>{event.source}{event.state ? ` · ${event.state}` : ''}</small>
             </div>
           </div>)}
-          {!events.length && <div className="rundeckEvidenceState">No retained event in this window.</div>}
+          {!events.length && <div className="rundeckEvidenceState">No event found in this time window.</div>}
         </div>
 
         <details className="rundeckEvidenceTechnical">
-          <summary>Correlation details</summary>
+          <summary>Timing details</summary>
           <div className="rundeckEvidenceSources" aria-label="Source alignment">
             {alignment.sources?.map((source) => <span key={source.name}>
               <b>{source.name}</b>
               <strong>{formatWib(source.observed_at, true)} WIB</strong>
               <em className={source.within_window ? 'is-aligned' : 'is-limited'}>{source.delta_minutes}m</em>
             </span>)}
-            <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} snapshots</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no retained history'}</em></span>
-            <span><b>Alignment Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>timing only</em></span>
+            <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} records</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no saved history'}</em></span>
+            <span><b>Time Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>used to compare timestamps</em></span>
           </div>
           {interpretation.length > 0 && <div className="rundeckEvidenceInterpretation">
             <ul>{interpretation.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
