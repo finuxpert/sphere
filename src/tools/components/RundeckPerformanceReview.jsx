@@ -68,8 +68,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   return <section className={`rundeckPerformanceReviewV1231 ${showAll ? 'is-expanded' : 'is-top4'}`} aria-label="Performance review">
     <header className="rundeckReviewHeadV1231">
       <div>
-        <h3><SphereIcon name="trend" /> Performance Review</h3>
-        {!loading && !error && data && <span>{reviewCount} workload{reviewCount === 1 ? '' : 's'} need review</span>}
+        <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>
+        {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} need attention</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
         <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" />
@@ -78,7 +78,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
       </div>
     </header>
 
-    {loading && <div className="rundeckReviewState">Loading workload review…</div>}
+    {loading && <div className="rundeckReviewState">Loading performance review…</div>}
     {error && <div className="rundeckReviewState is-error">{error}</div>}
 
     {!loading && !error && data && <>
@@ -89,7 +89,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
 
       <div className="rundeckReviewTableWrapV1231">
         <table className="rundeckReviewTableV1231">
-          <thead><tr><th>Workload</th><th>Signal</th><th>Avg CPU</th><th>Peak</th><th>PSS</th></tr></thead>
+          <thead><tr><th>Job / Program</th><th>Reason</th><th>Avg CPU</th><th>Peak CPU</th><th>Memory</th></tr></thead>
           <tbody>
             {visibleRows.map((row) => {
               const selected = selectedJob?.key === row.consumer_key && selectedJob?.consumerType === row.consumer_type
@@ -110,7 +110,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 <td>{gb(row.avg_pss_gb)}</td>
               </tr>
             })}
-            {!reviewRows.length && <tr><td colSpan="5">No workloads currently require review for this period.</td></tr>}
+            {!reviewRows.length && <tr><td colSpan="5">No job or program needs review for this period.</td></tr>}
           </tbody>
         </table>
       </div>
