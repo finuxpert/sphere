@@ -46,3 +46,21 @@
   padding-top:8px;
   padding-bottom:8px;
 }
+
+/* SPHERE v1.33.5 — compact embedded infrastructure evidence. */
+.rundeckInfraCompactHead {
+  align-items: center !important;
+  margin-bottom: 7px !important;
+}
+.rundeckInfraCompactHead > div:first-child {
+  min-width: 0;
+}
+.rundeckInfraCompactHead p {
+  margin: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.35;
+}
+.rundeckInfra td .is-normal {
+  color: var(--sphere-positive, #75cfa5);
+  font-weight: 700;
+}
