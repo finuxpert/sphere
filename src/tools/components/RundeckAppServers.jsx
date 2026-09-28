@@ -180,13 +180,13 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
             <section className="rundeckWpInlinePanel" aria-live="polite">
               <header className="rundeckWpInlineHead">
                 <div>
-                  <h4><SphereIcon name="alert" /> APP DRILLDOWN · {shortHost(drilldown.host)} · Critical WP context</h4>
+                  <h4><SphereIcon name="alert" /> APP DETAILS · {shortHost(drilldown.host)} · Critical WP context</h4>
                   {incidentContext && <small>Critical WP active since {formatTime(incidentContext.signal_active_since || incidentContext.detected_since)} WIB · Duration {durationText(incidentContext.duration_seconds)}</small>}
-                  <small>Same collection/run supporting context. Correlation only; not a direct root-cause mapping.</small>
+                  <small>Jobs and programs captured in the same run while Critical WP was active.</small>
                 </div>
                 <button type="button" onClick={() => setDrilldown(null)}>Close</button>
               </header>
-              {drilldown.loading && <div className="rundeckWpDrilldownState">Loading workload context…</div>}
+              {drilldown.loading && <div className="rundeckWpDrilldownState">Loading jobs and programs…</div>}
               {drilldown.error && <div className="rundeckWpDrilldownState is-error">{drilldown.error}</div>}
               {!drilldown.loading && !drilldown.error && <div className="rundeckWpInlineTableWrap"><table>
                 <thead><tr><th>Workload</th><th>Type</th><th>CPU</th><th>PSS</th><th>Processes</th></tr></thead>
@@ -196,7 +196,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
                   <td>{metric(row.cpu_pct, '%')}</td>
                   <td>{pssText(row)}</td>
                   <td>{processText(row)}</td>
-                </tr>)}{!drilldown.rows.length && <tr><td colSpan="5">No workload rows stored for this APP in the aligned collection.</td></tr>}</tbody>
+                </tr>)}{!drilldown.rows.length && <tr><td colSpan="5">No job or program rows found for this APP in this run.</td></tr>}</tbody>
               </table></div>}
             </section>
           </td></tr>}
