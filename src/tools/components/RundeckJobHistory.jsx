@@ -481,7 +481,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         </section>
       </div>
 
-      <section className="rundeckSm37Verification" aria-label="SM37 verification context">
+      {String(displayConsumerType || latest?.consumer_type || '').toUpperCase() === 'JOB' && <section className="rundeckSm37Verification" aria-label="SAP job check">
         <div className="rundeckSm37VerificationHead">
           <strong>SAP Job Check</strong>
           <span>JOB DATA NOT CONNECTED</span>
@@ -494,7 +494,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <span><b>WP</b>{wpContext}</span>
         </div>
         <p>SM37 job data is not connected. Check Job Name, Program and execution time manually if needed.</p>
-      </section>
+      </section>}
 
       {(incidentStart || timelineText) && <div className="rundeckJobTimeline">
         <strong>Timing</strong>
@@ -503,7 +503,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         {timelineText && <em>{timelineText}</em>}
       </div>}
 
-      <details className="rundeckJobPerformanceDisclosure">
+      <details key={`performance-${contentKey}`} className="rundeckJobPerformanceDisclosure" open>
         <summary>
           <span><SphereIcon name="trend" /> Performance</span>
           <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
