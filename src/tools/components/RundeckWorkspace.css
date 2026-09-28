@@ -453,3 +453,13 @@
     max-width: none;
   }
 }
+
+/* SPHERE v1.33.7 — final System Data ratio override. */
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  grid-template-columns: minmax(0,58fr) minmax(0,42fr) !important;
+}
+@media (max-width:1180px) {
+  .appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns:1fr !important;
+  }
+}
