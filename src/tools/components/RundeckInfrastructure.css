@@ -64,3 +64,62 @@
   color: var(--sphere-positive, #75cfa5);
   font-weight: 700;
 }
+
+/* SPHERE v1.33.7 — infrastructure analysis interactions. */
+.rundeckInfraGrid tbody tr.is-clickable {
+  cursor: pointer;
+}
+.rundeckInfraGrid tbody tr.is-clickable:hover,
+.rundeckInfraGrid tbody tr.is-clickable:focus-visible {
+  background: rgba(79,198,200,.045);
+  outline: none;
+}
+.rundeckInfraTrendSummary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin: 4px 0 7px;
+  padding: 6px 8px;
+  border: 1px solid rgba(126,147,158,.09);
+  border-radius: 4px;
+  background: rgba(8,16,21,.22);
+}
+.rundeckInfraTrendSummary strong {
+  color: var(--sphere-text,#e7edf0);
+  font-size: 9.6px;
+}
+.rundeckInfraTrendSummary span {
+  color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 9px;
+}
+.rundeckInfraTrendSummary button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--sphere-accent,#4fc6c8);
+  font-size: 8.8px;
+  cursor: pointer;
+}
+.rundeckInfraChartWrap .series.is-dimmed,
+.rundeckInfraChartWrap .seriesPoint.is-dimmed {
+  opacity: .16;
+}
+.rundeckInfraChartWrap .series.is-selected,
+.rundeckInfraChartWrap .seriesPoint.is-selected {
+  opacity: 1;
+  stroke-width: 2.6px;
+}
+.rundeckInfraChartWrap .issueMarker line {
+  stroke: var(--sphere-warning,#d8b35f);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.rundeckInfraChartWrap .issueMarker text {
+  fill: var(--sphere-warning,#d8b35f);
+  font-size: 8px;
+}
+.rundeckInfraLegend span.is-selected {
+  color: var(--sphere-text,#e7edf0);
+  font-weight: 700;
+}
