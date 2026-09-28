@@ -39,7 +39,7 @@ const files = {
 }
 
 const checks = [
-  ['context clarity version is v1.33.5', files.version.includes("APP_VERSION = '1.33.5'") && files.version.includes('context-clarity-ui-v1.33.5')],
+  ['operator language version is v1.33.6', files.version.includes("APP_VERSION = '1.33.6'") && files.version.includes('operator-language-ui-v1.33.6')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -58,6 +58,9 @@ const checks = [
   ['Trend inspection is explicitly independent and historical snapshot is collapsed by default', files.serverTrend.includes('Trend Inspection') && files.serverTrend.includes('independent historical inspection') && files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
   ['APP drilldown and selected workload contexts are explicitly named', files.appServers.includes('APP DRILLDOWN') && files.investigationContext.includes('SELECTED WORKLOAD · LIVE')],
   ['Observation History defaults to eight rows with explicit expansion', read('src/tools/components/RundeckObservationHistory.jsx').includes('rows.slice(0, 8)') && read('src/tools/components/RundeckObservationHistory.jsx').includes('View all ${rows.length}')],
+  ['operator copy uses jobs and programs instead of generic workload labels', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Current Jobs & Programs') && files.performanceReview.includes('Jobs & Programs to Review') && read('src/tools/components/RundeckJobHistory.jsx').includes('Selected Job / Program')],
+  ['performance history uses plain record wording', read('src/tools/components/RundeckObservationHistory.jsx').includes('Performance History') && read('src/tools/components/RundeckObservationHistory.jsx').includes('records')],
+  ['top navigation names the actual performance analysis use case', read('src/tools/index.js').includes("title: 'Performance Analysis'")],
   ['Healthy SAP Availability uses compact summary mode', files.availability.includes('is-healthy-compact') && files.availabilityCss.includes('.rundeckAvailability.is-healthy-compact .rundeckAvailabilityBody')],
   ['Live investigation context stays compact and neutral', files.investigationContext.includes("'Active issue'") && files.investigationFlow.includes('.rundeckInvestigationContext.is-live') && files.investigationFlow.includes('background: transparent')],
   ['Infrastructure details disclosure keeps left-aligned label and right chevron', files.uiPolish.includes('.rundeckLiveDetail > summary::after') && files.uiPolish.includes('justify-content: flex-start !important') && files.uiPolish.includes('margin-left: auto')],
@@ -68,7 +71,7 @@ const checks = [
   ['SM37 HTTP import is disabled by default and secret protected', files.api.includes('SPHERE_SM37_IMPORT_ENABLED') && files.api.includes('SPHERE_SM37_IMPORT_TOKEN') && files.api.includes('secrets.compare_digest') && files.api.includes('5000 records')],
   ['SM37 settings are documented without a committed secret', files.envExample.includes('SPHERE_SM37_IMPORT_ENABLED=false') && files.envExample.includes('SPHERE_SM37_IMPORT_TOKEN=')],
   ['SM37 verification supports matched partial and not verified', files.intelligence.includes('MATCHED') && files.intelligence.includes('PARTIAL_MATCH') && files.intelligence.includes('NOT_VERIFIED')],
-  ['dynamic SM37 component never infers root cause', files.sm37.includes('not root cause') && files.sm37.includes('/jobs/verify')],
+  ['SAP Job Check stays read-only and uses the verification endpoint', files.sm37.includes('SAP Job Check') && files.sm37.includes('/jobs/verify') && files.sm37.includes('JOB DATA NOT CONNECTED')],
   ['live Selected Workload receives dynamic SM37 verification', files.wrapper.includes('RundeckSm37LivePortal') && files.sm37Portal.includes('createPortal') && files.sm37Portal.includes('/history/job') && files.sm37Css.includes('has-dynamic-verification')],
   ['Review queue endpoint exists', files.api.includes('@app.get("/review/queue")')],
   ['Investigation report endpoint exists', files.api.includes('@app.get("/reports/investigation")')],
@@ -93,7 +96,7 @@ const checks = [
   ['System Health exposes collector watchdog and auto-healing context', files.systemHealth.includes('/platform/health') && files.systemHealth.includes('Auto-healing') && files.systemHealth.includes('Last Recovery')],
   ['System Health explains ATTENTION with evidence and preserves RCA boundary', files.systemHealth.includes('primaryHealthSignal') && files.systemHealth.includes('SAP Workload CRITICAL') && files.systemHealth.includes('not a root-cause declaration')],
   ['System Health qualifies stale availability evidence', files.systemHealth.includes('Availability evidence stale') && files.systemHealth.includes('do not treat it as contemporaneous')],
-  ['Global data trust exposes performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('PERF ${ageLabel(performanceAgeMinutes)} · AVAIL ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('sources are not contemporaneous')],
+  ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
   ['NORMAL APP resource state is distinct from missing data', files.appServers.includes('Normal observation') && files.appServers.includes('>NORMAL</span>')],
   ['Infrastructure filesystem NORMAL state is explicit', read('src/tools/components/RundeckInfrastructure.jsx').includes("is-${statusFs(row.used_pct).toLowerCase()}") && !read('src/tools/components/RundeckInfrastructure.jsx').includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],
   ['Run identity separates committed Performance, running Collection, and Availability cycles', files.source.includes('Performance <b>READY</b>') && files.source.includes('Collection running #') && files.availability.includes('Availability READY #')],
@@ -108,4 +111,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.33.5 context clarity and operator trust checks passed.')
+console.log('\nSPHERE v1.33.6 operator language and interaction checks passed.')
