@@ -440,3 +440,16 @@
 .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
   align-items: start !important;
 }
+
+/* SPHERE v1.33.5 — final supporting-data ratio override. */
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  grid-template-columns: minmax(0, 40fr) minmax(0, 60fr) !important;
+  gap: 0 24px !important;
+  max-width: 1400px;
+}
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns: 1fr !important;
+    max-width: none;
+  }
+}
