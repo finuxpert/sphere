@@ -603,3 +603,21 @@
   margin: 0;
   line-height: 1.25;
 }
+
+/* SPHERE v1.33.5 — unconfigured SM37 is secondary context, not an equal monitoring tile. */
+.appShell:has(.rundeckPanel) .rundeckLiveJobsCard.is-pending-compact {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 12px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  background: transparent;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobsCard.is-pending-compact > header {
+  margin: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobsCard.is-pending-compact .rundeckLiveFeedPending {
+  padding: 0;
+}
