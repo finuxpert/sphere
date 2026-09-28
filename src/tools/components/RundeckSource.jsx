@@ -534,13 +534,13 @@ export default function RundeckSource({ onCollection }) {
   const dataAlignment = collectionAligned && sourceSkewMinutes !== null && sourceSkewMinutes <= 15 && !performanceStale && !availabilityStale
     ? 'ALIGNED'
     : 'PARTIAL'
-  const freshnessSummary = `PERF ${ageLabel(performanceAgeMinutes)} · AVAIL ${ageLabel(availabilityAgeMinutes)}`
+  const freshnessSummary = `Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}`
   const freshnessWarning = performanceStale || availabilityStale || (sourceSkewMinutes !== null && sourceSkewMinutes > 15)
   const dataAlignmentTitle = [
     `Performance #${latest?.execution_id || '—'} · age ${ageLabel(performanceAgeMinutes)}`,
     `Availability #${availabilitySnapshot?.execution_id || '—'} · age ${ageLabel(availabilityAgeMinutes)}`,
-    sourceSkewMinutes === null ? 'source skew unknown' : `source skew ${sourceSkewMinutes}m`,
-    freshnessWarning ? 'sources are not contemporaneous; correlate with caution' : 'sources are time-aligned',
+    sourceSkewMinutes === null ? 'time difference unknown' : `time difference ${sourceSkewMinutes}m`,
+    freshnessWarning ? 'data was collected at different times' : 'data times are aligned',
     runState.running ? `collection running #${runState.execution_id || '—'} (not committed)` : 'no collection currently running',
   ].join(' · ')
 
@@ -580,10 +580,18 @@ export default function RundeckSource({ onCollection }) {
         )}
         </div>
         <div className="rundeckStateCluster">
-          <div className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`} title={dataAlignmentTitle}>
-            <span>Data</span><StatusPill value={dataAlignment} />
-            <small className="rundeckSourceFreshness">{freshnessSummary}{sourceSkewMinutes !== null ? ` · GAP ${sourceSkewMinutes}m` : ''}</small>
-          </div>
+          <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
+            <summary title={dataAlignmentTitle}>
+              <span>Data</span><StatusPill value={dataAlignment} />
+              <small className="rundeckSourceFreshness">{freshnessSummary}</small>
+            </summary>
+            <div className="rundeckDataAlignmentPopover">
+              <div><span>Performance data</span><strong>{ageLabel(performanceAgeMinutes)} old</strong></div>
+              <div><span>Availability data</span><strong>{ageLabel(availabilityAgeMinutes)} old</strong></div>
+              <div><span>Time difference</span><strong>{sourceSkewMinutes === null ? 'Unknown' : `${sourceSkewMinutes}m`}</strong></div>
+              <p>{freshnessWarning ? 'Some data is older than the current performance snapshot. Check the timestamps before comparing them.' : 'Performance and availability data are close enough in time to compare.'}</p>
+            </div>
+          </details>
         </div>
       </div>
     </header>
@@ -613,10 +621,10 @@ export default function RundeckSource({ onCollection }) {
     />
 
     <details className="rundeckSupportingData rundeckSupportingDataDisclosure">
-      <summary><span className="rundeckSupportingTitle"><SphereIcon name="database" /> Supporting Data</span><small>{collectionCount} runs</small></summary>
+      <summary><span className="rundeckSupportingTitle"><SphereIcon name="database" /> System Data</span><small>{collectionCount} runs</small></summary>
       <div className="rundeckSupportingDataBody">
       <details className="rundeckHistory">
-        <summary><SphereIcon name="history" /> Rundeck History <span>{collectionCount} runs · {partialCount} partial · {failedCount} failed</span></summary>
+        <summary><SphereIcon name="history" /> Collection History <span>{collectionCount} runs · {partialCount} partial · {failedCount} failed</span></summary>
         <div className="rundeckHistoryTableWrap">
           <table>
             <thead><tr><th>Run</th><th>Time WIB</th><th>APP</th><th>Status</th></tr></thead>
@@ -634,7 +642,7 @@ export default function RundeckSource({ onCollection }) {
       </details>
 
       <details className="rundeckPlatformHealth">
-        <summary title="Health of SPHERE platform services and storage; separate from SAP performance status."><SphereIcon name="database" /> SPHERE Platform Health <StatusPill value={platformState} /></summary>
+        <summary title="Health of SPHERE platform services and storage; separate from SAP performance status."><SphereIcon name="database" /> SPHERE Services <StatusPill value={platformState} /></summary>
         <div className="rundeckPlatformTableWrap">
           <table className="rundeckPlatformTable">
             <thead><tr><th>Component</th><th>State</th><th>Detail</th></tr></thead>
