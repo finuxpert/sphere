@@ -105,7 +105,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           key={`${row.collection_id}-${row.host}-${row.collected_at}`}
           className={[actionable ? 'is-investigable' : '', inspected ? 'is-inspected' : ''].filter(Boolean).join(' ')}
           tabIndex={actionable ? 0 : undefined}
-          title={actionable ? 'Inspect this historical observation in Selected Workload. Current dashboard state remains live.' : undefined}
+          title={actionable ? 'Open this record in Selected Job / Program.' : undefined}
           onClick={actionable ? () => inspectObservation(row) : undefined}
           onKeyDown={actionable ? (event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return
@@ -126,10 +126,10 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
     </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
-  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Observation History">{content}</section>
+  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Performance History">{content}</section>
 
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
-    <summary><SphereIcon name="history" /> Observation History <span>{error ? 'unavailable' : `${rows.length} observations`}</span></summary>
+    <summary><SphereIcon name="history" /> Performance History <span>{error ? 'unavailable' : `${rows.length} records`}</span></summary>
     {content}
   </details>
 }
