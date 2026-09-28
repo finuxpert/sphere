@@ -42,7 +42,7 @@ const sourceMeta = (job = {}) => {
   if (source === 'critical-wp-inline-drilldown') {
     return {
       tone: 'live',
-      label: 'LIVE',
+      label: 'SELECTED WORKLOAD · LIVE',
       detail: [shortHost(job.host || ''), 'Critical WP context'].filter(Boolean).join(' · '),
       note: 'Selected from workloads observed on this APP while Critical WP was active; correlation only.',
     }
@@ -50,7 +50,7 @@ const sourceMeta = (job = {}) => {
   if (source === 'current') {
     return {
       tone: 'live',
-      label: 'LIVE',
+      label: 'SELECTED WORKLOAD · LIVE',
       detail: [shortHost(job.host || ''), 'Active issue'].filter(Boolean).join(' · '),
       note: 'Automatically selected from the active performance issue context; not the global CPU ranking or a root-cause conclusion.',
     }
@@ -58,7 +58,7 @@ const sourceMeta = (job = {}) => {
   if (source === 'current-workload') {
     return {
       tone: 'live',
-      label: 'LIVE',
+      label: 'SELECTED WORKLOAD · LIVE',
       detail: [shortHost(job.host || ''), 'Current workloads'].filter(Boolean).join(' · '),
       note: 'Selected directly from Current Workloads.',
     }
