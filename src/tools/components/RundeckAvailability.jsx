@@ -147,10 +147,10 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const bundleState = String(bundle?.bundle_status || '').toUpperCase()
   const skew = Number(bundle?.source_skew_seconds)
   const skewWarning = Number.isFinite(skew) && skew >= 300
-  const bundleAbnormal = ['RUNNING', 'PARTIAL', 'FAILED'].includes(bundleState)
+  const bundleAbnormal = ['PARTIAL', 'FAILED'].includes(bundleState)
   const showCollectionGap = bundleAbnormal && skewWarning
   const bundleTitle = bundle?.requested_at
-    ? `Performance ${bundlePerformance} · Availability ${bundleAvailability}${Number.isFinite(skew) ? ` · source timing gap ${skew}s between collection cycles` : ''}`
+    ? `Performance ${bundlePerformance} · Availability ${bundleAvailability}${showCollectionGap ? ` · time difference ${skew}s` : ''}`
     : ''
   const collectionNotice = bundleState === 'RUNNING'
     ? 'Data refresh running'
@@ -191,7 +191,7 @@ export default function RundeckAvailability({ refreshToken = '' }) {
 
     {showDataTrust && <div className="rundeckAvailabilityDataTrust" aria-label="Availability data quality">
       {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
-      {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Source timing gap {Math.round(skew / 60)}m</small>}
+      {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Time difference {Math.round(skew / 60)}m</small>}
     </div>}
 
     {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}
