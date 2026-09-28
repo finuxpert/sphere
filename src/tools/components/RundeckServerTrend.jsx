@@ -264,14 +264,14 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
   const consumers = selectedRow?.top_consumers || []
   const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
   return <section className="rundeckRcaSection" aria-live="polite">
-    <div className="rundeckRcaHeader"><div><span>Selected Time</span><h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Loading'}</small></div>{selectedRow && <span className={`rundeckInlineStatus is-${hostResourceState(selectedRow).toLowerCase()}`}>{hostResourceState(selectedRow)}</span>}</div>
+    <div className="rundeckRcaHeader"><div><span>Trend Inspection</span><h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.at ? `${formatWib(selected.at, true)} WIB · independent historical inspection` : 'Loading'}</small></div>{selectedRow && <span className={`rundeckInlineStatus is-${hostResourceState(selectedRow).toLowerCase()}`}>{hostResourceState(selectedRow)}</span>}</div>
     {loading && <div className="rundeckHistoryState">Loading historical snapshot…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
-    {!loading && !error && selected && <div className="rundeckHistoricalSnapshot">
-      <div className="rundeckHistoricalSnapshotHead">
-        <div><span>Historical Snapshot</span><strong>Top workloads observed on {shortHost(selected.host)} at this collection</strong></div>
-        <small>{collectionId ? `Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : 'Nearest retained collection'}</small>
-      </div>
+    {!loading && !error && selected && <details className="rundeckHistoricalSnapshot">
+      <summary className="rundeckHistoricalSnapshotHead">
+        <div><span>Historical Snapshot</span><strong>{consumers[0]?.consumer_key ? `Top: ${consumers[0].consumer_key} · CPU ${numberText(consumers[0].cpu_pct, 1)}%` : `Top workloads observed on ${shortHost(selected.host)}`}</strong></div>
+        <small>{consumers.length} workload{consumers.length === 1 ? '' : 's'} · {collectionId ? `Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : 'Nearest retained collection'}</small>
+      </summary>
       <div className="rundeckSnapshotConsumers">
         {consumers.map((consumer, index) => {
           const context = snapshotContext(selected, selectedRow, consumer)
@@ -286,7 +286,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
         })}
         {!consumers.length && <div className="rundeckSnapshotEmpty">No retained workload context was stored for this APP in the resolved collection.</div>}
       </div>
-    </div>}
+    </details>}
   </section>
 }
 
