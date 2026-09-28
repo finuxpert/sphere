@@ -180,7 +180,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
             <section className="rundeckWpInlinePanel" aria-live="polite">
               <header className="rundeckWpInlineHead">
                 <div>
-                  <h4><SphereIcon name="alert" /> {shortHost(drilldown.host)} · Workloads observed while Critical WP active</h4>
+                  <h4><SphereIcon name="alert" /> APP DRILLDOWN · {shortHost(drilldown.host)} · Critical WP context</h4>
                   {incidentContext && <small>Critical WP active since {formatTime(incidentContext.signal_active_since || incidentContext.detected_since)} WIB · Duration {durationText(incidentContext.duration_seconds)}</small>}
                   <small>Same collection/run supporting context. Correlation only; not a direct root-cause mapping.</small>
                 </div>
