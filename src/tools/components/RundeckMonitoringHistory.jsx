@@ -104,7 +104,7 @@ export default function RundeckMonitoringHistory(props) {
           <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} />
           <details className="rundeckLiveDetail">
             <summary><SphereIcon name="server" /> Infrastructure</summary>
-            <RundeckInfrastructure />
+            <RundeckInfrastructure incidentStart={props.incidentStart || ''} />
           </details>
         </>}
   </>
