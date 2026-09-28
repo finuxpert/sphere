@@ -575,3 +575,34 @@
   font-size: 7.9px;
   line-height: 1.2;
 }
+
+/* SPHERE v1.33.7 — actionable review rows and non-blocking refresh. */
+.appShell:has(.rundeckPanel) .rundeckReviewUpdating {
+  margin: 2px 0 5px;
+  color: var(--sphere-accent,#4fc6c8);
+  font-size: 8.8px;
+  font-weight: 650;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"],
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"] {
+  cursor: pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"]:focus-visible,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"]:focus-visible {
+  outline: 1px solid rgba(79,198,200,.55);
+  outline-offset: -1px;
+}
+.appShell:has(.rundeckPanel) .rundeckJobPerformanceDisclosure {
+  border: 0 !important;
+  border-top: 1px solid rgba(126,147,158,.08) !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobPerformanceDisclosure > summary {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobPerformanceDisclosure > summary:focus-visible {
+  outline: 1px solid rgba(79,198,200,.55) !important;
+  outline-offset: 2px !important;
+}
