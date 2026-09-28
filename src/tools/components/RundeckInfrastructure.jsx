@@ -29,7 +29,7 @@ const signalStorage=(m={})=>{
   return 'NORMAL'
 }
 
-function SparkChart({items=[],metricType}){
+function SparkChart({items=[],metricType,selectedSeries='',incidentStart=''}){
   const groups=React.useMemo(()=>{
     const map=new Map()
     items.forEach(row=>{const key=row.series_key||'series';if(!map.has(key))map.set(key,[]);map.get(key).push(row)})
@@ -46,30 +46,36 @@ function SparkChart({items=[],metricType}){
   const x=t=>pad+((new Date(t).getTime()-t0)/Math.max(1,t1-t0))*(width-pad*2)
   const y=v=>height-pad-((Number(v)-min)/Math.max(1,max-min))*(height-pad*2)
   if(!items.length)return <div className="rundeckInfraEmpty">No history for selected range.</div>
+  const issueTs=Date.parse(incidentStart||'')
+  const issueInRange=Number.isFinite(issueTs)&&issueTs>=t0&&issueTs<=t1
   return <div className="rundeckInfraChartWrap">
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Infrastructure trend">
       <line x1={pad} y1={height-pad} x2={width-pad} y2={height-pad} className="axis"/>
       <line x1={pad} y1={pad} x2={pad} y2={height-pad} className="axis"/>
+      {issueInRange&&<g className="issueMarker"><line x1={x(incidentStart)} y1={pad} x2={x(incidentStart)} y2={height-pad}/><text x={x(incidentStart)+4} y={pad+10}>Critical WP start</text></g>}
       {groups.map(([key,rows],index)=>{
         const points=rows.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')
+        const selected=!selectedSeries||key===selectedSeries
         if(rows.length===1){
           const row=rows[0]
-          return <circle key={key} cx={x(row.collected_at)} cy={y(row.value)} r="3.5" className={`seriesPoint s${index%8}`}/>
+          return <circle key={key} cx={x(row.collected_at)} cy={y(row.value)} r="3.5" className={`seriesPoint s${index%8} ${selected?'is-selected':'is-dimmed'}`}/>
         }
-        return <polyline key={key} points={points} className={`series s${index%8}`} fill="none"/>
+        return <polyline key={key} points={points} className={`series s${index%8} ${selected?'is-selected':'is-dimmed'}`} fill="none"/>
       })}
     </svg>
-    <div className="rundeckInfraLegend">{groups.map(([key],index)=><span key={key} className={`s${index%8}`}><i/> {key}</span>)}</div>
+    <div className="rundeckInfraLegend">{groups.map(([key],index)=><span key={key} className={`s${index%8} ${selectedSeries===key?'is-selected':''}`}><i/> {key}</span>)}</div>
   </div>
 }
 
-export default function RundeckInfrastructure(){
+export default function RundeckInfrastructure({incidentStart=''}){
   const [data,setData]=React.useState({hosts:[],fs:[],network:[],storage:[]})
   const [error,setError]=React.useState('')
   const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trend,setTrend]=React.useState([])
+  const [selectedSeries,setSelectedSeries]=React.useState('')
+  const trendRef=React.useRef(null)
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
   const collectedAt=hostRow?.snapshot_ts||data.fs[0]?.collected_at||data.network[0]?.collected_at||data.storage[0]?.collected_at
@@ -98,6 +104,13 @@ export default function RundeckInfrastructure(){
   const netState=data.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')
   const storageState=data.storage.reduce((state,row)=>worst(state,signalStorage(row.metrics)),'NORMAL')
   const overall=stale?'ATTENTION':worst(fsState,netState,storageState)
+  const selectedTrendRows=selectedSeries?trend.filter(row=>(row.series_key||'series')===selectedSeries):trend
+  const selectedValues=selectedTrendRows.map(row=>Number(row.value)).filter(Number.isFinite)
+  const trendCurrent=selectedValues.length?selectedValues.at(-1):null
+  const trendMin=selectedValues.length?Math.min(...selectedValues):null
+  const trendMax=selectedValues.length?Math.max(...selectedValues):null
+  const trendChange=selectedValues.length>1?selectedValues.at(-1)-selectedValues[0]:null
+  const openTrend=(metricType,series='')=>{setTrendMetric(metricType);setSelectedSeries(series);queueMicrotask(()=>{if(trendRef.current)trendRef.current.open=true})}
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
@@ -114,18 +127,26 @@ export default function RundeckInfrastructure(){
 
     {error&&<div className="rundeckInfraError">{error}</div>}
     <div className="rundeckInfraGrid">
-      <article><div className="cardHead"><h4>Filesystem</h4><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
-      <article><div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div><table><thead><tr><th>Interface</th><th>RX</th><th>TX</th><th>Drop Δ</th></tr></thead><tbody>{data.network.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key}><td>{row.sample_key}</td><td>{metric(m.rx_mbps,' Mbps')}</td><td>{metric(m.tx_mbps,' Mbps')}</td><td className={`is-${signalNetwork(m).toLowerCase()}`}>{metric(Number(m.rx_dropped_delta||0)+Number(m.tx_dropped_delta||0))}</td></tr>})}{!data.network.length&&<tr><td colSpan="4">No network sample.</td></tr>}</tbody></table></article>
-      <article><div className="cardHead"><h4>Storage I/O</h4><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div><table><thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead><tbody>{data.storage.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key}><td>{m.mount||row.sample_key}</td><td className={`is-${signalStorage(m).toLowerCase()}`}>{metric(m.util_pct,'%')}</td><td>{metric(m.write_iops)}</td><td>{metric(m.write_mbps,' MB/s')}</td></tr>})}{!data.storage.length&&<tr><td colSpan="4">No storage sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><h4>Filesystem</h4><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point} className="is-clickable" tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div><table><thead><tr><th>Interface</th><th>RX</th><th>TX</th><th>Drop Δ</th></tr></thead><tbody>{data.network.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key} className="is-clickable" tabIndex={0} onClick={()=>openTrend('network',row.sample_key)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('network',row.sample_key)}}><td>{row.sample_key}</td><td>{metric(m.rx_mbps,' Mbps')}</td><td>{metric(m.tx_mbps,' Mbps')}</td><td className={`is-${signalNetwork(m).toLowerCase()}`}>{metric(Number(m.rx_dropped_delta||0)+Number(m.tx_dropped_delta||0))}</td></tr>})}{!data.network.length&&<tr><td colSpan="4">No network sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><h4>Storage I/O</h4><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div><table><thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead><tbody>{data.storage.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key} className="is-clickable" tabIndex={0} onClick={()=>openTrend('storage',m.mount||row.sample_key)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('storage',m.mount||row.sample_key)}}><td>{m.mount||row.sample_key}</td><td className={`is-${signalStorage(m).toLowerCase()}`}>{metric(m.util_pct,'%')}</td><td>{metric(m.write_iops)}</td><td>{metric(m.write_mbps,' MB/s')}</td></tr>})}{!data.storage.length&&<tr><td colSpan="4">No storage sample.</td></tr>}</tbody></table></article>
     </div>
 
-    <details className="rundeckInfraTrend rundeckInfraTrendDisclosure">
+    <details ref={trendRef} className="rundeckInfraTrend rundeckInfraTrendDisclosure">
       <summary><span><b>Infrastructure History</b><small>Usage history for {host}</small></span><em>{trendMetric==='filesystem'?'Top 4 mounts':trendMetric==='network'?'Network':'Storage I/O'} · {range.toUpperCase()}</em></summary>
       <header><div><p>History for the selected server.</p></div><div className="controls">
-        <div>{['1h','6h','24h','7d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
-        <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>setTrendMetric(v)}>{label}</button>)}</div>
+        <div>{['1h','6h','24h','7d','30d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
+        <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>{setTrendMetric(v);setSelectedSeries('')}}>{label}</button>)}</div>
       </div></header>
-      <SparkChart items={trend} metricType={trendMetric}/>
+      {selectedValues.length>0&&<div className="rundeckInfraTrendSummary">
+        <strong>{selectedSeries||'All series'}</strong>
+        <span>Current {metric(trendCurrent,trendMetric==='network'?' Mbps':'%')}</span>
+        <span>Min {metric(trendMin,trendMetric==='network'?' Mbps':'%')}</span>
+        <span>Max {metric(trendMax,trendMetric==='network'?' Mbps':'%')}</span>
+        {trendChange!==null&&<span>Change {trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
+        {selectedSeries&&<button type="button" onClick={()=>setSelectedSeries('')}>Show all</button>}
+      </div>}
+      <SparkChart items={trend} metricType={trendMetric} selectedSeries={selectedSeries} incidentStart={incidentStart}/>
       <small>{trendMetric==='filesystem'?'Filesystem usage':trendMetric==='network'?'RX Mbps by interface; TX remains available in API':'Disk usage by mount'} · {range.toUpperCase()}</small>
     </details>
   </section>
