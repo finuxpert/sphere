@@ -586,3 +586,20 @@
     max-height:270px;
   }
 }
+
+/* SPHERE v1.33.4 — pending SM37 source stays informative without competing with live infra. */
+.rundeckLiveJobsCard.is-pending-compact {
+  min-height: 0;
+}
+.rundeckLiveJobsCard.is-pending-compact .rundeckLiveFeedPending {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-height: 0;
+  padding: 4px 0;
+}
+.rundeckLiveJobsCard.is-pending-compact .rundeckLiveFeedPending strong,
+.rundeckLiveJobsCard.is-pending-compact .rundeckLiveFeedPending span {
+  margin: 0;
+  line-height: 1.25;
+}
