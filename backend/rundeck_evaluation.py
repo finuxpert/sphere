@@ -293,8 +293,6 @@ def assess_workload(
             "wp_excess_association": wp_excess_signal,
         },
     }
-    _EVALUATION_CACHE[cache_key] = (time.monotonic(), result)
-    return result
 
 
 def _complete_collection_clause(alias: str = "c") -> str:
@@ -721,3 +719,5 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         "items": items,
         "method": "Deterministic complete-collection evaluation with workload-specific median and P95 baseline, recent CPU shift detection and App Server normalized Critical WP overlap. Investigation signal only; not root-cause proof.",
     }
+    _EVALUATION_CACHE[cache_key] = (time.monotonic(), result)
+    return result
