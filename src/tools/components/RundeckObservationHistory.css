@@ -117,3 +117,24 @@
   text-decoration: underline;
   outline: none;
 }
+
+/* SPHERE v1.33.7 — compact history summary and run actions. */
+.rundeckObservationHistorySummary {
+  margin-left: 8px;
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8.8px;
+  font-weight: 500;
+}
+.rundeckHistoryRunButton {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--sphere-accent,#4fc6c8);
+  font: inherit;
+  cursor: pointer;
+}
+.rundeckHistoryRunButton:hover,
+.rundeckHistoryRunButton:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
