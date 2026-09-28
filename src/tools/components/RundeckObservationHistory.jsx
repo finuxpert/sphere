@@ -89,6 +89,18 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
 
   const selectedAt = Date.parse(job.at || '')
   const visibleRows = showAll ? rows : rows.slice(0, 8)
+  const cpuValues = rows.map((row) => numeric(row.cpu_pct)).filter((value) => value !== null)
+  const pssValues = rows.map((row) => rowMetric(row, 'pss')).filter((value) => value !== null)
+  const criticalValues = rows.map((row) => numeric(row.host_wp_critical)).filter((value) => value !== null)
+  const firstPss = pssValues.length ? pssValues.at(-1) : null
+  const lastPss = pssValues.length ? pssValues[0] : null
+  const historySummary = rows.length
+    ? [
+        cpuValues.length ? `CPU ${numberText(cpuValues.reduce((sum, value) => sum + value, 0) / cpuValues.length, 1)}% avg · ${numberText(Math.max(...cpuValues), 1)}% peak` : '',
+        firstPss !== null && lastPss !== null ? `Memory ${numberText(firstPss, 2)} → ${numberText(lastPss, 2)} GB` : '',
+        criticalValues.length ? `Critical WP ${Math.min(...criticalValues)}–${Math.max(...criticalValues)}` : '',
+      ].filter(Boolean).join(' · ')
+    : ''
 
   const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
@@ -114,7 +126,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           } : undefined}
         >
           <td>{formatWib(row.collected_at, true)}</td>
-          <td>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</td>
+          <td><button type="button" className="rundeckHistoryRunButton" title="Open this run timestamp in the selected job chart" onClick={(event) => { event.stopPropagation(); inspectObservation(row) }}>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</button></td>
           <td title={row.host}>{shortHost(row.host)}</td>
           <td>{numberText(row.cpu_pct)}%</td>
           <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
@@ -122,14 +134,18 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           <td>{wp}</td>
           <td>{numberText(row.host_wp_critical, 0)}</td>
         </tr>
-      })}{!rows.length && <tr><td colSpan="8">No stored observations for this workload.</td></tr>}</tbody>
+      })}{!rows.length && <tr><td colSpan="8">No saved performance records for this job or program.</td></tr>}</tbody>
     </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
   if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Performance History">{content}</section>
 
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
-    <summary><SphereIcon name="history" /> Performance History <span>{error ? 'unavailable' : `${rows.length} records`}</span></summary>
+    <summary>
+      <SphereIcon name="history" /> Performance History
+      <span>{error ? 'unavailable' : `90 days · ${rows.length} records`}</span>
+      {historySummary && <small className="rundeckObservationHistorySummary">{historySummary}</small>}
+    </summary>
     {content}
   </details>
 }
