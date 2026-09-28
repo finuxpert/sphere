@@ -106,6 +106,9 @@ export default function RundeckInfrastructure({incidentStart=''}){
   const overall=stale?'ATTENTION':worst(fsState,netState,storageState)
   const selectedTrendRows=selectedSeries?trend.filter(row=>(row.series_key||'series')===selectedSeries):trend
   const selectedValues=selectedTrendRows.map(row=>Number(row.value)).filter(Number.isFinite)
+  const selectedValues2=selectedTrendRows.map(row=>Number(row.value2)).filter(Number.isFinite)
+  const selectedWriteMbps=selectedTrendRows.map(row=>Number(row.write_mbps)).filter(Number.isFinite)
+  const selectedDrops=selectedTrendRows.map(row=>Number(row.drop_delta)).filter(Number.isFinite)
   const trendCurrent=selectedValues.length?selectedValues.at(-1):null
   const trendMin=selectedValues.length?Math.min(...selectedValues):null
   const trendMax=selectedValues.length?Math.max(...selectedValues):null
@@ -144,10 +147,14 @@ export default function RundeckInfrastructure({incidentStart=''}){
         <span>Min {metric(trendMin,trendMetric==='network'?' Mbps':'%')}</span>
         <span>Max {metric(trendMax,trendMetric==='network'?' Mbps':'%')}</span>
         {trendChange!==null&&<span>Change {trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
+        {trendMetric==='network'&&selectedValues2.length>0&&<span>Peak TX {metric(Math.max(...selectedValues2),' Mbps')}</span>}
+        {trendMetric==='network'&&selectedDrops.length>0&&<span>Drops {metric(Math.max(...selectedDrops))}</span>}
+        {trendMetric==='storage'&&selectedValues2.length>0&&<span>Peak write {metric(Math.max(...selectedValues2),' IOPS')}</span>}
+        {trendMetric==='storage'&&selectedWriteMbps.length>0&&<span>Peak write {metric(Math.max(...selectedWriteMbps),' MB/s')}</span>}
         {selectedSeries&&<button type="button" onClick={()=>setSelectedSeries('')}>Show all</button>}
       </div>}
       <SparkChart items={trend} metricType={trendMetric} selectedSeries={selectedSeries} incidentStart={incidentStart}/>
-      <small>{trendMetric==='filesystem'?'Filesystem usage':trendMetric==='network'?'RX Mbps by interface; TX remains available in API':'Disk usage by mount'} · {range.toUpperCase()}</small>
+      <small>{trendMetric==='filesystem'?'Filesystem usage':trendMetric==='network'?'Network RX history with TX peak and drops':'Storage utilization with write peaks'} · {range.toUpperCase()}</small>
     </details>
   </section>
 }
