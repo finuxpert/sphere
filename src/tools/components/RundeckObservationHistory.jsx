@@ -45,6 +45,7 @@ function latestEpisode(items = [], targetAt = '') {
 export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob, embedded = false }) {
   const [rows, setRows] = React.useState([])
   const [error, setError] = React.useState('')
+  const [showAll, setShowAll] = React.useState(false)
 
   React.useEffect(() => {
     if (!job?.key) {
@@ -69,6 +70,8 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
     return () => controller.abort()
   }, [job?.at, job?.consumerType, job?.host, job?.key, refreshToken])
 
+  React.useEffect(() => setShowAll(false), [job?.at, job?.host, job?.key])
+
   if (!job?.key) return null
 
   const inspectObservation = (row) => {
@@ -85,12 +88,13 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   }
 
   const selectedAt = Date.parse(job.at || '')
+  const visibleRows = showAll ? rows : rows.slice(0, 8)
 
   const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
       <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th><th>Critical WP</th></tr></thead>
-      <tbody>{rows.map((row) => {
+      <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
         const wp = [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
@@ -119,7 +123,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           <td>{numberText(row.host_wp_critical, 0)}</td>
         </tr>
       })}{!rows.length && <tr><td colSpan="8">No stored observations for this workload.</td></tr>}</tbody>
-    </table></div>}
+    </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
   if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Observation History">{content}</section>
