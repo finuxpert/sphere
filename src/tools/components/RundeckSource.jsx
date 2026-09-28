@@ -160,6 +160,8 @@ export default function RundeckSource({ onCollection }) {
   const [hosts, setHosts] = React.useState([])
   const [hostSnapshot, setHostSnapshot] = React.useState(null)
   const [history, setHistory] = React.useState([])
+  const [showAllCollections, setShowAllCollections] = React.useState(false)
+  const [selectedCollection, setSelectedCollection] = React.useState(null)
   const [runState, setRunState] = React.useState({ enabled: false, allowed: false })
   const [error, setError] = React.useState('')
   const [actionBusy, setActionBusy] = React.useState(false)
@@ -621,24 +623,42 @@ export default function RundeckSource({ onCollection }) {
     />
 
     <details className="rundeckSupportingData rundeckSupportingDataDisclosure">
-      <summary><span className="rundeckSupportingTitle"><SphereIcon name="database" /> System Data</span><small>{collectionCount} runs</small></summary>
+      <summary><span className="rundeckSupportingTitle"><SphereIcon name="database" /> System Data</span><small>{collectionCount} runs · {partialCount} partial · {failedCount} failed{history[0] ? ` · latest ${formatTime(history[0].collection_time_wib || history[0].finished_at)}` : ''}</small></summary>
       <div className="rundeckSupportingDataBody">
       <details className="rundeckHistory">
-        <summary><SphereIcon name="history" /> Collection History <span>{collectionCount} runs · {partialCount} partial · {failedCount} failed</span></summary>
+<summary><SphereIcon name="history" /> Collection History <span>{collectionCount} runs</span></summary>
         <div className="rundeckHistoryTableWrap">
           <table>
             <thead><tr><th>Run</th><th>Time WIB</th><th>APP</th><th>Status</th></tr></thead>
             <tbody>
-              {history.slice(0, 10).map((row) => <tr key={row.collection_id || row.execution_id}>
+              {(showAllCollections ? history : history.slice(0, 8)).map((row) => <tr
+                key={row.collection_id || row.execution_id}
+                className={selectedCollection?.collection_id === row.collection_id ? 'is-selected' : 'is-clickable'}
+                tabIndex={0}
+                onClick={() => setSelectedCollection((current) => current?.collection_id === row.collection_id ? null : row)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault()
+                  setSelectedCollection((current) => current?.collection_id === row.collection_id ? null : row)
+                }}
+              >
                 <td>#{row.execution_id}</td>
                 <td>{formatTime(row.collection_time_wib || row.finished_at)}</td>
                 <td>{row.received_host_count ?? row.received_hosts?.length ?? '—'}</td>
                 <td><StatusPill value={row.status || 'UNKNOWN'} /></td>
               </tr>)}
-              {!history.length && <tr><td colSpan="4">No Rundeck history yet.</td></tr>}
+              {!history.length && <tr><td colSpan="4">No collection history yet.</td></tr>}
             </tbody>
           </table>
+          {history.length > 8 && <div className="rundeckCollectionMore"><button type="button" onClick={() => setShowAllCollections((value) => !value)}>{showAllCollections ? 'Show latest 8' : `View all ${history.length} runs`}</button></div>}
         </div>
+        {selectedCollection && <div className="rundeckCollectionDetail">
+          <strong>Run #{selectedCollection.execution_id || '—'}</strong>
+          <span>Time {formatTime(selectedCollection.collection_time_wib || selectedCollection.finished_at)} WIB</span>
+          <span>APP {selectedCollection.received_host_count ?? selectedCollection.received_hosts?.length ?? '—'}{selectedCollection.expected_host_count ? `/${selectedCollection.expected_host_count}` : ''}</span>
+          <span>Status {selectedCollection.status || 'UNKNOWN'}</span>
+          {selectedCollection.started_at && selectedCollection.finished_at && <span>Duration {durationText((Date.parse(selectedCollection.finished_at) - Date.parse(selectedCollection.started_at)) / 1000)}</span>}
+        </div>}
       </details>
 
       <details className="rundeckPlatformHealth">
