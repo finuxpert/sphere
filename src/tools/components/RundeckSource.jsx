@@ -30,6 +30,21 @@ const metric = (value, suffix = '') => (
     : `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}${suffix}`
 )
 
+const ageMinutes = (value) => {
+  const timestamp = Date.parse(value || '')
+  if (!Number.isFinite(timestamp)) return null
+  return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
+}
+
+const ageLabel = (minutes) => {
+  if (!Number.isFinite(minutes)) return 'age unknown'
+  if (minutes < 1) return '<1m'
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours}h ${rest}m` : `${hours}h`
+}
+
 const formatBytes = (value) => {
   const bytes = Number(value)
   if (!Number.isFinite(bytes) || bytes < 0) return '—'
@@ -512,13 +527,20 @@ export default function RundeckSource({ onCollection }) {
   const sourceSkewMinutes = Number.isFinite(performanceTs) && Number.isFinite(availabilityTs)
     ? Math.round(Math.abs(performanceTs - availabilityTs) / 60000)
     : null
-  const dataAlignment = collectionAligned && sourceSkewMinutes !== null && sourceSkewMinutes <= 15 && !health?.rundeck_stale
+  const performanceAgeMinutes = ageMinutes(latestCollectionAt)
+  const availabilityAgeMinutes = ageMinutes(availabilitySnapshot?.collected_at)
+  const availabilityStale = availabilityAgeMinutes !== null && availabilityAgeMinutes >= 20
+  const performanceStale = Boolean(health?.rundeck_stale) || (performanceAgeMinutes !== null && performanceAgeMinutes >= 15)
+  const dataAlignment = collectionAligned && sourceSkewMinutes !== null && sourceSkewMinutes <= 15 && !performanceStale && !availabilityStale
     ? 'ALIGNED'
     : 'PARTIAL'
+  const freshnessSummary = `PERF ${ageLabel(performanceAgeMinutes)} · AVAIL ${ageLabel(availabilityAgeMinutes)}`
+  const freshnessWarning = performanceStale || availabilityStale || (sourceSkewMinutes !== null && sourceSkewMinutes > 15)
   const dataAlignmentTitle = [
-    `Performance #${latest?.execution_id || '—'}`,
-    `Availability #${availabilitySnapshot?.execution_id || '—'}`,
+    `Performance #${latest?.execution_id || '—'} · age ${ageLabel(performanceAgeMinutes)}`,
+    `Availability #${availabilitySnapshot?.execution_id || '—'} · age ${ageLabel(availabilityAgeMinutes)}`,
     sourceSkewMinutes === null ? 'source skew unknown' : `source skew ${sourceSkewMinutes}m`,
+    freshnessWarning ? 'sources are not contemporaneous; correlate with caution' : 'sources are time-aligned',
     runState.running ? `collection running #${runState.execution_id || '—'} (not committed)` : 'no collection currently running',
   ].join(' · ')
 
@@ -558,8 +580,9 @@ export default function RundeckSource({ onCollection }) {
         )}
         </div>
         <div className="rundeckStateCluster">
-          <div className="rundeckDataAlignment" title={dataAlignmentTitle}>
+          <div className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`} title={dataAlignmentTitle}>
             <span>Data</span><StatusPill value={dataAlignment} />
+            <small className="rundeckSourceFreshness">{freshnessSummary}{sourceSkewMinutes !== null ? ` · GAP ${sourceSkewMinutes}m` : ''}</small>
           </div>
         </div>
       </div>
