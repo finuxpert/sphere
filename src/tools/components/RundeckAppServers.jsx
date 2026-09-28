@@ -43,7 +43,7 @@ const durationText = (seconds) => {
 
 function StatusPill({ value = 'UNKNOWN' }) {
   const normalized = String(value || 'UNKNOWN').toUpperCase()
-  if (normalized === 'NORMAL') return <span className="rundeckStatus is-normal-muted" title="Normal">—</span>
+  if (normalized === 'NORMAL') return <span className="rundeckStatus is-normal-muted" title="Normal observation">NORMAL</span>
   return <span className={`rundeckStatus rundeckStatusMotion is-${normalized.toLowerCase()}`}>{normalized}</span>
 }
 
