@@ -86,8 +86,8 @@ export default function RundeckLiveOverview({ refreshToken }) {
   }, [selectedHost, refreshToken])
 
   const hostRow = hosts.find((row) => row.host === selectedHost)
-  const topFs = [...infra.fs].sort((a, b) => Number(b.used_pct || 0) - Number(a.used_pct || 0)).slice(0, 4)
-  const topStorage = [...infra.storage].sort((a, b) => Number(b.metrics?.util_pct || 0) - Number(a.metrics?.util_pct || 0)).slice(0, 3)
+  const topFs = [...infra.fs].sort((a, b) => severity[fsState(b.used_pct)] - severity[fsState(a.used_pct)] || Number(b.used_pct || 0) - Number(a.used_pct || 0)).slice(0, 4)
+  const topStorage = [...infra.storage].sort((a, b) => severity[storageState(b.metrics?.util_pct)] - severity[storageState(a.metrics?.util_pct)] || Number(b.metrics?.util_pct || 0) - Number(a.metrics?.util_pct || 0)).slice(0, 3)
   const fsOverall = worst(infra.fs.map((row) => fsState(row.used_pct)))
   const storageOverall = worst(infra.storage.map((row) => storageState(row.metrics?.util_pct)))
   const dropTotal = infra.network.reduce((sum, row) => sum + Number(row.metrics?.rx_dropped_delta || 0) + Number(row.metrics?.tx_dropped_delta || 0), 0)
@@ -144,7 +144,7 @@ export default function RundeckLiveOverview({ refreshToken }) {
         </div>
       </article>
 
-      <article className="rundeckLiveJobsCard">
+      <article className={`rundeckLiveJobsCard ${!authoritativeJobsReady ? 'is-pending-compact' : ''}`}>
         <header><h4>SAP Jobs</h4></header>
         {!authoritativeJobsReady
           ? <div className="rundeckLiveFeedPending">
