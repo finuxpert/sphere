@@ -117,11 +117,11 @@ def network(host:str|None=None):
     return _samples("network",host)
 
 
-RANGE_HOURS = {"1h": 1, "6h": 6, "24h": 24, "7d": 168}
+RANGE_HOURS = {"1h": 1, "6h": 6, "24h": 24, "7d": 168, "30d": 720}
 
 @router.get("/trend")
 def trend(
-    range_key: str = Query("6h", alias="range", pattern="^(1h|6h|24h|7d)$"),
+    range_key: str = Query("6h", alias="range", pattern="^(1h|6h|24h|7d|30d)$"),
     metric: str = Query("filesystem", pattern="^(filesystem|network|storage)$"),
     host: str | None = Query(None, max_length=120),
 ):
