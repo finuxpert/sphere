@@ -31,8 +31,8 @@ function ageText(seconds) {
 }
 
 function primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale = false, availabilityAge = null) {
-  if (stale) return { level: 'WARNING', text: 'Performance data stale', detail: 'Collector freshness exceeded the configured threshold.' }
-  if (availabilityStale) return { level: 'WARNING', text: `Availability evidence stale · ${availabilityAge ?? '—'}m`, detail: `Last availability state ${availability}; do not treat it as contemporaneous with current workload evidence.` }
+  if (stale) return { level: 'WARNING', text: 'Performance data is old', detail: 'The latest performance collection is older than expected.' }
+  if (availabilityStale) return { level: 'WARNING', text: `Availability data old · ${availabilityAge ?? '—'}m`, detail: `Latest availability status is ${availability}. Its timestamp is older than the current performance data.` }
   if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service impact observed', detail: `Availability state ${availability}.` }
 
   const ranked = hosts.map((host) => {
@@ -48,10 +48,10 @@ function primaryHealthSignal(hosts, availability, serviceCritical, stale, availa
   }).sort((left, right) => right.score - left.score || right.wp - left.wp)
 
   const top = ranked[0]
-  if (top?.score >= 500) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'Resource pressure signal; validate CPU, memory and I/O evidence.' }
+  if (top?.score >= 500) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'CPU, memory or I/O needs review on this server.' }
   if (top?.score >= 400) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'Resource pressure signal; validate CPU, memory and I/O evidence.' }
-  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload CRITICAL`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Signal only; not a root-cause declaration.` }
-  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload ATTENTION`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Signal only; not a root-cause declaration.` }
+  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload CRITICAL`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
+  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload ATTENTION`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
   if (availability === 'ATTENTION') return { level: 'ATTENTION', text: 'SAP availability attention', detail: 'Review service availability evidence.' }
   return null
 }
