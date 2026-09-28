@@ -101,7 +101,7 @@ export default function RundeckInfrastructure(){
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
-      <div><p>Filesystem, network and storage I/O supporting evidence. Signals are not automatic root-cause conclusions.</p></div>
+      <div><p>Filesystem, network and storage for this server.</p></div>
       <div className="rundeckInfraIdentity"><select aria-label="Infrastructure host" value={host==='AOQ'?'':host} onChange={e=>setSelectedHost(e.target.value)}>{data.hosts.map(row=><option key={row.host} value={row.host}>{row.source?`${row.source} · `:''}{row.host}</option>)}</select><span className={`state is-${overall.toLowerCase()}`}>{overall}</span></div>
     </header>
 
@@ -109,7 +109,7 @@ export default function RundeckInfrastructure(){
       <span><b>Last collected</b> {formatTime(collectedAt)} WIB</span>
       <span><b>Freshness</b> {ageText(collectedAt)} · {stale?'STALE':'FRESH'}</span>
       <span><b>Sampling</b> {metric(hostRow?.sample_seconds,'s')}</span>
-      <span><b>State</b> supporting infrastructure signal</span>
+      <span><b>State</b> infrastructure</span>
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
@@ -120,13 +120,13 @@ export default function RundeckInfrastructure(){
     </div>
 
     <details className="rundeckInfraTrend rundeckInfraTrendDisclosure">
-      <summary><span><b>Infrastructure Trend</b><small>Top-risk historical evidence for {host}</small></span><em>{trendMetric==='filesystem'?'Top 4 mounts':trendMetric==='network'?'Network':'Storage I/O'} · {range.toUpperCase()}</em></summary>
-      <header><div><p>Historical supporting evidence for the selected host.</p></div><div className="controls">
+      <summary><span><b>Infrastructure History</b><small>Usage history for {host}</small></span><em>{trendMetric==='filesystem'?'Top 4 mounts':trendMetric==='network'?'Network':'Storage I/O'} · {range.toUpperCase()}</em></summary>
+      <header><div><p>History for the selected server.</p></div><div className="controls">
         <div>{['1h','6h','24h','7d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
         <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>setTrendMetric(v)}>{label}</button>)}</div>
       </div></header>
       <SparkChart items={trend} metricType={trendMetric}/>
-      <small>{trendMetric==='filesystem'?'Top-risk filesystem usage':trendMetric==='network'?'RX Mbps by interface; TX remains available in API':'Disk util % by mapped mount'} · {range.toUpperCase()} · correlation evidence only</small>
+      <small>{trendMetric==='filesystem'?'Filesystem usage':trendMetric==='network'?'RX Mbps by interface; TX remains available in API':'Disk usage by mount'} · {range.toUpperCase()}</small>
     </details>
   </section>
 }
