@@ -30,8 +30,9 @@ function ageText(seconds) {
   return minutes ? `${hours}h ${minutes}m` : `${hours}h`
 }
 
-function primaryHealthSignal(hosts, availability, serviceCritical, stale) {
+function primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale = false, availabilityAge = null) {
   if (stale) return { level: 'WARNING', text: 'Performance data stale', detail: 'Collector freshness exceeded the configured threshold.' }
+  if (availabilityStale) return { level: 'WARNING', text: `Availability evidence stale · ${availabilityAge ?? '—'}m`, detail: `Last availability state ${availability}; do not treat it as contemporaneous with current workload evidence.` }
   if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service impact observed', detail: `Availability state ${availability}.` }
 
   const ranked = hosts.map((host) => {
@@ -71,6 +72,7 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
   const [hosts, setHosts] = React.useState([])
   const [availability, setAvailability] = React.useState('UNKNOWN')
   const [serviceCritical, setServiceCritical] = React.useState(false)
+  const [availabilityCollectedAt, setAvailabilityCollectedAt] = React.useState('')
   const [stale, setStale] = React.useState(false)
   const [platform, setPlatform] = React.useState(null)
 
@@ -106,6 +108,7 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
       if (availabilityResult.status === 'fulfilled' && availabilityResult.value) {
         const payload = availabilityResult.value
         setAvailability(String(payload.summary?.service_state || payload.summary?.sap_state || 'UNKNOWN').toUpperCase())
+        setAvailabilityCollectedAt(payload.collected_at || '')
         setServiceCritical(observedServiceImpact(payload))
       }
       if (healthResult.status === 'fulfilled' && healthResult.value) setStale(Boolean(healthResult.value.rundeck_stale))
@@ -120,8 +123,10 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
   const state = systemHealthState(hosts, { availabilityState: availability, serviceCritical, stale, aligned: true })
   const collector = platform?.collector || {}
   const recovery = collector?.last_recovery || null
-  const primarySignal = primaryHealthSignal(hosts, availability, serviceCritical, stale)
-  const title = `System Health reflects service impact and OS resource pressure. SAP workload signals can raise ATTENTION without declaring an outage. Availability ${availability}${stale ? ' · performance data stale' : ''}.`
+  const availabilityAge = availabilityCollectedAt ? Math.max(0, Math.floor((Date.now() - Date.parse(availabilityCollectedAt)) / 60000)) : null
+  const availabilityStale = Number.isFinite(availabilityAge) && availabilityAge >= 20
+  const primarySignal = primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale, availabilityAge)
+  const title = `System Health reflects service impact and OS resource pressure. SAP workload signals can raise ATTENTION without declaring an outage. Availability ${availability}${availabilityStale ? ` · evidence ${availabilityAge}m old` : ''}${stale ? ' · performance data stale' : ''}.`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
