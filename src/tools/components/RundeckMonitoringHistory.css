@@ -646,3 +646,26 @@
   }
 }
 
+/* SPHERE v1.33.5 — explicit context hierarchy and readable header state groups. */
+.rundeckSystemHealthV1231 {
+  gap: 11px;
+}
+.rundeckSystemHealthPrimary,
+.rundeckCollectorHealthV131 summary {
+  padding-right: 8px;
+  border-right: 1px solid rgba(126,147,158,.08);
+}
+.rundeckSystemHealthPrimary > span:first-child,
+.rundeckCollectorHealthV131 summary > span:first-child {
+  font-size: 9px;
+}
+.rundeckSystemHealthReasonV132 {
+  max-width: 230px;
+  font-size: 8.6px;
+}
+.rundeckRcaHeader > div > span {
+  color: var(--sphere-accent, #4fc6c8);
+}
+.rundeckRcaHeader small {
+  font-size: 9.2px;
+}
