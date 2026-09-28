@@ -148,11 +148,11 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const showFreshness = freshnessMinutes !== null && freshnessMinutes >= STALE_MINUTES
   const selectedContext = selectedJob?.key && selectedJob?.host ? `${shortHost(selectedJob.host)} · ${selectedJob.key}` : ''
 
-  return <section className="rundeckCurrentWorkload" aria-label="Current SAP workloads">
+  return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className="rundeckCurrentWorkloadHead">
-      <h3><SphereIcon name="workload" /> Current Workloads <span className="rundeckCurrentWorkloadCount">{rows.length} active</span></h3>
+      <h3><SphereIcon name="workload" /> Current Jobs & Programs <span className="rundeckCurrentWorkloadCount">{rows.length} active</span></h3>
       <div className="rundeckCurrentWorkloadTools">
-        {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected workload: ${selectedContext}`}>Selected · {selectedContext}</span>}
+        {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected job or program: ${selectedContext}`}>Selected · {selectedContext}</span>}
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
         {rows.length > 10 && <button type="button" onClick={() => setShowAll((value) => !value)}>
           {showAll ? 'Top 10' : `View all ${rows.length}`}
@@ -160,12 +160,12 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       </div>
     </div>
 
-    {loading && <div className="rundeckCurrentWorkloadState">Loading workloads…</div>}
+    {loading && <div className="rundeckCurrentWorkloadState">Loading jobs and programs…</div>}
     {error && <div className="rundeckCurrentWorkloadState is-error">{error}</div>}
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap">
       <table>
-        <thead><tr><th>APP</th><th>Workload</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th>WP</th></tr></thead>
+        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>Memory</th><th>Processes</th><th>WP</th></tr></thead>
         <tbody>
           {visible.map((row) => {
             const details = row.details || {}
@@ -188,7 +188,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
               <td>{wpText(details)}</td>
             </tr>
           })}
-          {!rows.length && <tr><td colSpan="6">No current workload stored for this run.</td></tr>}
+          {!rows.length && <tr><td colSpan="6">No active job or program found for this run.</td></tr>}
         </tbody>
       </table>
     </div>}
