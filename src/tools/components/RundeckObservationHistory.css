@@ -96,3 +96,24 @@
   background:rgba(79,198,200,.075);
   box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8);
 }
+
+/* SPHERE v1.33.5 — keep secondary evidence compact by default. */
+.rundeckObservationHistoryMore {
+  display: flex;
+  justify-content: flex-end;
+  padding: 5px 2px 1px;
+}
+.rundeckObservationHistoryMore button {
+  border: 0;
+  background: transparent;
+  color: var(--sphere-accent, #4fc6c8);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.rundeckObservationHistoryMore button:hover,
+.rundeckObservationHistoryMore button:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
