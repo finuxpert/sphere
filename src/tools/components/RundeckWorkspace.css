@@ -421,3 +421,22 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* SPHERE v1.33.5 — compact secondary disclosures and remove permanent focus-like borders. */
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary,
+.appShell:has(.rundeckPanel) .rundeckSupportingDataDisclosure > summary {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary:focus-visible,
+.appShell:has(.rundeckPanel) .rundeckSupportingDataDisclosure > summary:focus-visible {
+  outline: 1px solid rgba(79,198,200,.58) !important;
+  outline-offset: 2px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail {
+  border-top-color: rgba(126,147,158,.055) !important;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
+  align-items: start !important;
+}
