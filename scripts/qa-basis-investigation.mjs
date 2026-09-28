@@ -12,6 +12,9 @@ const files = {
   appServers: read('src/tools/components/RundeckAppServers.jsx'),
   sm37: read('src/tools/components/RundeckSm37Verification.jsx'),
   performanceReview: read('src/tools/components/RundeckPerformanceReview.jsx'),
+  evaluationBackend: read('backend/rundeck_evaluation.py'),
+  infrastructure: read('src/tools/components/RundeckInfrastructure.jsx'),
+  observationHistory: read('src/tools/components/RundeckObservationHistory.jsx'),
   uiPolish: read('src/tools/components/RundeckUiPolish.css'),
   sourceCss: read('src/tools/components/RundeckSource.css'),
   currentWorkloadCss: read('src/tools/components/RundeckCurrentWorkload.css'),
@@ -39,7 +42,7 @@ const files = {
 }
 
 const checks = [
-  ['operator language version is v1.33.6', files.version.includes("APP_VERSION = '1.33.6'") && files.version.includes('operator-language-ui-v1.33.6')],
+  ['interactive analysis version is v1.33.7', files.version.includes("APP_VERSION = '1.33.7'") && files.version.includes('interactive-analysis-ui-v1.33.7')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -50,6 +53,9 @@ const checks = [
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
   ['Critical WP inline drilldown remains contained in the APP pane', files.workspace.includes('.rundeckWpInlinePanel') && files.workspace.includes('.rundeckWpInlineTableWrap')],
   ['Performance Review top 4 mode does not use an internal scrollbar', files.performanceReview.includes("is-top4") && files.uiPolish.includes('.rundeckPerformanceReviewV1231.is-top4 .rundeckReviewTableWrapV1231') && files.uiPolish.includes('overflow: visible !important')],
+  ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Updating…')],
+  ['Performance Review rows open selected analysis', files.performanceReview.includes('role="button"') && files.performanceReview.includes('onClick={() => select(row)}')],
+  ['Performance evaluation uses short request cache', files.evaluationBackend.includes('EVALUATION_CACHE_TTL_SECONDS') && files.evaluationBackend.includes('_EVALUATION_CACHE[cache_key]')],
   ['SM37 unconfigured source remains neutral compact context', files.sm37.includes('is-source-unconfigured') && files.uiPolish.includes('.rundeckSm37Verification.is-source-unconfigured') && files.uiPolish.includes('background: transparent !important')],
   ['Operational Events can collapse to natural content height', files.uiPolish.includes('.is-operational-events .rundeckEvidenceTimeline') && files.uiPolish.includes('height: auto !important')],
   ['Supporting Data disclosure owns full row and right-aligned chevron', files.workspace.includes('details.rundeckSupportingDataDisclosure') && files.sourceCss.includes('.rundeckSupportingDataDisclosure > summary::after') && files.sourceCss.includes('margin-left: auto !important')],
@@ -57,13 +63,20 @@ const checks = [
   ['Current Workloads exposes multi-core CPU semantics and selected identity', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('CPU Total ↓') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Selected · {selectedContext}')],
   ['Trend details keeps saved history collapsed by default', files.serverTrend.includes('Trend Details') && files.serverTrend.includes('History at Selected Time') && files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
   ['APP details and selected job/program contexts are explicitly named', files.appServers.includes('APP DETAILS') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
-  ['Observation History defaults to eight rows with explicit expansion', read('src/tools/components/RundeckObservationHistory.jsx').includes('rows.slice(0, 8)') && read('src/tools/components/RundeckObservationHistory.jsx').includes('View all ${rows.length}')],
+  ['Observation History defaults to eight rows with explicit expansion', files.observationHistory.includes('rows.slice(0, 8)') && files.observationHistory.includes('View all ${rows.length}')],
+  ['Performance History summary exposes CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
+  ['Selected job performance opens by default for each selected context', files.jobHistory.includes('key={`performance-${contentKey}`}') && files.jobHistory.includes('className="rundeckJobPerformanceDisclosure" open')],
+  ['SAP Job Check is limited to JOB context', files.jobHistory.includes("toUpperCase() === 'JOB' && <section")],
   ['operator copy uses jobs and programs instead of generic workload labels', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Current Jobs & Programs') && files.performanceReview.includes('Jobs & Programs to Review') && read('src/tools/components/RundeckJobHistory.jsx').includes('Selected Job / Program')],
   ['performance history uses plain record wording', read('src/tools/components/RundeckObservationHistory.jsx').includes('Performance History') && read('src/tools/components/RundeckObservationHistory.jsx').includes('records')],
   ['top navigation names the actual performance analysis use case', read('src/tools/index.js').includes("title: 'Performance Analysis'")],
   ['Healthy SAP Availability uses compact summary mode', files.availability.includes('is-healthy-compact') && files.availabilityCss.includes('.rundeckAvailability.is-healthy-compact .rundeckAvailabilityBody')],
+  ['Availability does not show cross-cycle timing gap while refresh is running', files.availability.includes("const bundleAbnormal = ['PARTIAL', 'FAILED'].includes(bundleState)")],
   ['Live investigation context stays compact and neutral', files.investigationContext.includes("'Active issue'") && files.investigationFlow.includes('.rundeckInvestigationContext.is-live') && files.investigationFlow.includes('background: transparent')],
   ['Infrastructure details disclosure keeps left-aligned label and right chevron', files.uiPolish.includes('.rundeckLiveDetail > summary::after') && files.uiPolish.includes('justify-content: flex-start !important') && files.uiPolish.includes('margin-left: auto')],
+  ['Infrastructure rows can focus history series', files.infrastructure.includes('openTrend') && files.infrastructure.includes('selectedSeries')],
+  ['Infrastructure history supports 30D and Critical WP marker', files.infrastructure.includes("'30d'") && files.infrastructure.includes('Critical WP start')],
+  ['System Data collection history defaults to eight and exposes run detail', files.source.includes('history.slice(0, 8)') && files.source.includes('rundeckCollectionDetail')],
   ['Aligned workload evidence stays visually subdued', files.evidenceCss.includes('.rundeckEvidenceAlignment.is-aligned') && files.evidenceCss.includes('opacity: .82')],
   ['Stale availability freshness is consolidated without duplicate data-age row', files.availability.includes('m old · last reliable') && files.availability.includes('const showDataTrust = Boolean(collectionNotice || showCollectionGap)') && !files.availability.includes('Data age {availabilityAge}m')],
   ['SM37 execution schema is authoritative and separate from WP sampling', files.migration.includes('sap_job_executions') && files.intelligence.includes('never promoted to an authoritative')],
@@ -111,4 +124,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.33.6 operator language and interaction checks passed.')
+console.log('\nSPHERE v1.33.7 interactive analysis checks passed.')
