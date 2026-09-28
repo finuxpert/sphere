@@ -24,6 +24,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [showAll, setShowAll] = React.useState(false)
+  const [hasLoaded, setHasLoaded] = React.useState(false)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -37,7 +38,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         }
         return response.json()
       })
-      .then(setData)
+      .then((result) => { setData(result); setHasLoaded(true) })
       .catch((failure) => {
         if (failure.name !== 'AbortError') setError(failure.message || 'Performance review unavailable')
       })
@@ -78,10 +79,11 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
       </div>
     </header>
 
-    {loading && <div className="rundeckReviewState">Loading performance review…</div>}
+    {loading && !hasLoaded && <div className="rundeckReviewState">Loading performance review…</div>}
+    {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">Updating…</div>}
     {error && <div className="rundeckReviewState is-error">{error}</div>}
 
-    {!loading && !error && data && <>
+    {!error && data && <>
       {showQualityWarning && <div className="rundeckReviewQualityWarning">
         {lowCoverage && <span>LIMITED DATA · {pct(quality.coverage_pct)} coverage</span>}
         {incomplete > 0 && <span>{numberText(incomplete, 0)} incomplete check{incomplete === 1 ? '' : 's'} excluded</span>}
@@ -99,9 +101,21 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 row.assessment_reason || '',
                 row.baseline_status ? `Baseline: ${row.baseline_status}` : '',
               ].filter(Boolean).join('\n')
-              return <tr key={`${row.consumer_type}-${row.consumer_key}`} className={selected ? 'is-selected' : ''}>
+              return <tr
+                key={`${row.consumer_type}-${row.consumer_key}`}
+                className={selected ? 'is-selected' : ''}
+                tabIndex={0}
+                role="button"
+                title="Open this job or program in the analysis panel"
+                onClick={() => select(row)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault()
+                  select(row)
+                }}
+              >
                 <td className="rundeckReviewWorkloadV1231" title={title}>
-                  <button type="button" onClick={() => select(row)}>{row.consumer_key}</button>
+                  <button type="button" onClick={(event) => { event.stopPropagation(); select(row) }}>{row.consumer_key}</button>
                   <small>{workloadTypeLabel(row.consumer_type)}</small>
                 </td>
                 <td>{reason || row.status || 'Review'}</td>
