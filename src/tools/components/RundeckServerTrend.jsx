@@ -259,18 +259,18 @@ function processCount(consumer) {
 }
 
 function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
-  if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click a chart point to inspect that APP's historical workload snapshot.</div>
+  if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click a chart point to see saved job and program data for that APP.</div>
   const selectedRow = selectedTimelineRow(selected, timeline)
   const consumers = selectedRow?.top_consumers || []
   const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
   return <section className="rundeckRcaSection" aria-live="polite">
-    <div className="rundeckRcaHeader"><div><span>Trend Inspection</span><h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.at ? `${formatWib(selected.at, true)} WIB · independent historical inspection` : 'Loading'}</small></div>{selectedRow && <span className={`rundeckInlineStatus is-${hostResourceState(selectedRow).toLowerCase()}`}>{hostResourceState(selectedRow)}</span>}</div>
-    {loading && <div className="rundeckHistoryState">Loading historical snapshot…</div>}
+    <div className="rundeckRcaHeader"><div><span>Trend Details</span><h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.at ? `${formatWib(selected.at, true)} WIB · saved history` : 'Loading'}</small></div>{selectedRow && <span className={`rundeckInlineStatus is-${hostResourceState(selectedRow).toLowerCase()}`}>{hostResourceState(selectedRow)}</span>}</div>
+    {loading && <div className="rundeckHistoryState">Loading saved history…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
     {!loading && !error && selected && <details className="rundeckHistoricalSnapshot">
       <summary className="rundeckHistoricalSnapshotHead">
-        <div><span>Historical Snapshot</span><strong>{consumers[0]?.consumer_key ? `Top: ${consumers[0].consumer_key} · CPU ${numberText(consumers[0].cpu_pct, 1)}%` : `Top workloads observed on ${shortHost(selected.host)}`}</strong></div>
-        <small>{consumers.length} workload{consumers.length === 1 ? '' : 's'} · {collectionId ? `Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : 'Nearest retained collection'}</small>
+        <div><span>History at Selected Time</span><strong>{consumers[0]?.consumer_key ? `Top: ${consumers[0].consumer_key} · CPU ${numberText(consumers[0].cpu_pct, 1)}%` : `Top workloads observed on ${shortHost(selected.host)}`}</strong></div>
+        <small>{consumers.length} item{consumers.length === 1 ? '' : 's'} · {collectionId ? `Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : 'Nearest saved run'}</small>
       </summary>
       <div className="rundeckSnapshotConsumers">
         {consumers.map((consumer, index) => {
@@ -278,13 +278,13 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
           const pss = pssValue(consumer)
           const processes = processCount(consumer)
           return <div key={`${consumer.consumer_type}-${consumer.consumer_key}-${index}`} className="rundeckSnapshotConsumer">
-            <button type="button" className="rundeckSnapshotConsumerButton" onClick={() => context && onSelectJob?.(context)} title={`${workloadTypeLabel(consumer.consumer_type)} · click to inspect historical workload detail`}>{index + 1}. {consumer.consumer_key}</button>
+            <button type="button" className="rundeckSnapshotConsumerButton" onClick={() => context && onSelectJob?.(context)} title={`${workloadTypeLabel(consumer.consumer_type)} · click to open this saved job or program`}>{index + 1}. {consumer.consumer_key}</button>
             <span className="rundeckSnapshotMetric">CPU <b>{numberText(consumer.cpu_pct, 1)}%</b></span>
-            <span className="rundeckSnapshotMetric">PSS <b>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)}G`}</b></span>
+            <span className="rundeckSnapshotMetric">Memory <b>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)}G`}</b></span>
             <span className="rundeckSnapshotMetric">Proc <b>{processes === null || Number.isNaN(processes) ? '—' : numberText(processes, 0)}</b></span>
           </div>
         })}
-        {!consumers.length && <div className="rundeckSnapshotEmpty">No retained workload context was stored for this APP in the resolved collection.</div>}
+        {!consumers.length && <div className="rundeckSnapshotEmpty">No saved job or program data was found for this APP at this time.</div>}
       </div>
     </details>}
   </section>
@@ -336,7 +336,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         setTimeline(result)
       })
       .catch((failure) => {
-        if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load historical snapshot.')
+        if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load saved history.')
       })
       .finally(() => {
         if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false)
