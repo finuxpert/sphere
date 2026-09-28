@@ -98,12 +98,12 @@ export default function RundeckMonitoringHistory(props) {
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
-          <section className="rundeckPerformanceReviewBand" aria-label="Performance Review">
+          <section className="rundeckPerformanceReviewBand" aria-label="Jobs and programs to review">
             <RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} />
           </section>
           <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} />
           <details className="rundeckLiveDetail">
-            <summary><SphereIcon name="server" /> Infrastructure details</summary>
+            <summary><SphereIcon name="server" /> Infrastructure</summary>
             <RundeckInfrastructure />
           </details>
         </>}
