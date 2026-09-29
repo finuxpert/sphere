@@ -166,7 +166,9 @@ export default function RundeckMonitoringHistory(props) {
                 ? 'Back to Review'
                 : activeOverlay.returnTo?.type === 'history'
                   ? 'Back to Performance History'
-                  : 'Back'}
+                  : activeOverlay.returnTo?.type === 'menu'
+                    ? 'Back to Analysis Menu'
+                    : 'Back'}
           >
             <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
           </RundeckWorkspaceDrawer>}
@@ -184,7 +186,7 @@ export default function RundeckMonitoringHistory(props) {
               onSelectJob={(job) => {
                 if (!job?.key) return
                 onSelectJob?.(job)
-                setActiveOverlay({ type: 'job', returnTo: { type: 'history' } })
+                setActiveOverlay({ type: 'job', returnTo: activeOverlay })
               }}
               embedded
             />
