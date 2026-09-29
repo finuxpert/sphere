@@ -10,6 +10,8 @@ const files = {
   core: read('src/tools/components/RundeckMonitoringHistoryCore.jsx'),
   workspace: read('src/tools/components/RundeckWorkspace.css'),
   appServers: read('src/tools/components/RundeckAppServers.jsx'),
+  appServerAnalysis: read('src/tools/components/RundeckAppServerAnalysis.jsx'),
+  appServerAnalysisCss: read('src/tools/components/RundeckAppServerAnalysis.css'),
   sm37: read('src/tools/components/RundeckSm37Verification.jsx'),
   performanceReview: read('src/tools/components/RundeckPerformanceReview.jsx'),
   quickAnalysis: read('src/tools/components/RundeckReviewQuickAnalysis.jsx'),
@@ -53,7 +55,7 @@ const files = {
 }
 
 const checks = [
-  ['selected context version is v1.34.5', files.version.includes("APP_VERSION = '1.34.5'") && files.version.includes('selected-context-ui-v1.34.5')],
+  ['APP analysis drawer version is v1.34.6', files.version.includes("APP_VERSION = '1.34.6'") && files.version.includes('app-analysis-drawer-ui-v1.34.6')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -62,7 +64,7 @@ const checks = [
   ['operational 45/55 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 45fr) minmax(0, 55fr)')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
-  ['Critical WP inline drilldown remains contained in the APP pane', files.workspace.includes('.rundeckWpInlinePanel') && files.workspace.includes('.rundeckWpInlineTableWrap')],
+  ['APP server detail moved from inline expansion to workspace drawer', !files.appServers.includes('rundeckWpInlinePanel') && files.core.includes('onInspectApp={props.onInspectApp}') && files.wrapper.includes("activeOverlay?.type === 'app'")],
   ['Performance Review top 4 mode does not use an internal scrollbar', files.performanceReview.includes("is-top4") && files.uiPolish.includes('.rundeckPerformanceReviewV1231.is-top4 .rundeckReviewTableWrapV1231') && files.uiPolish.includes('overflow: visible !important')],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Updating…')],
   ['Performance Review rows open quick analysis', files.performanceReview.includes('RundeckReviewQuickAnalysis') && files.performanceReview.includes('onClick={() => openQuick(row)}')],
@@ -92,6 +94,9 @@ const checks = [
   ['Only one analysis overlay is controlled by the workspace', files.wrapper.includes('const [activeOverlay, setActiveOverlay]') && files.wrapper.includes("activeOverlay?.type === 'review'") && files.wrapper.includes("activeOverlay?.type === 'history'") && files.wrapper.includes("activeOverlay?.type === 'infrastructure'")],
   ['Performance Review delegates its drawer to the central overlay manager', files.performanceReview.includes('onOpenQuickAnalysis') && files.performanceReview.includes('externalQuickKey') && files.performanceReview.includes('!onOpenQuickAnalysis && quickRow')],
   ['Opening a new analysis replaces the previous overlay instead of stacking', !files.wrapper.includes('detailDrawer') && files.wrapper.includes("setActiveOverlay({ type: 'job' })") && files.wrapper.includes("setActiveOverlay({ type: 'review', row, reviewContext })")],
+  ['APP Server Analysis uses the same single-overlay manager', files.wrapper.includes("setActiveOverlay({ type: 'app', app: context })") && files.wrapper.includes('<RundeckAppServerAnalysis') && files.wrapper.includes("setActiveOverlay({ type: 'job' })")],
+  ['APP Server drawer resolves latest host metrics and lists current jobs/programs', files.appServerAnalysis.includes('/history/hosts/latest') && files.appServerAnalysis.includes('/history/jobs/current') && files.appServerAnalysis.includes('Jobs & Programs on') && files.appServerAnalysis.includes('Critical WP')],
+  ['APP Server job/program rows transition into Job Performance Analysis', files.appServerAnalysis.includes("source:'app-server-analysis'") && files.wrapper.includes('onSelectJob?.(job)')],
   ['Selected job opens detail-on-demand drawer instead of page scroll', files.wrapper.includes("setActiveOverlay({ type: 'job' })") && !files.wrapper.includes('scrollToSelectedWorkload')],
   ['SM37 source is compact integration status instead of a fourth infrastructure card', files.liveOverview.includes('rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED') && !files.liveOverview.includes('rundeckLiveJobsCard')],
   ['Current selection carries live CPU memory process and Critical WP metrics', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('cpuPct: row.cpu_pct') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('criticalWp: row.host_wp_critical')],
@@ -171,4 +176,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.5 selected context checks passed.')
+console.log('\nSPHERE v1.34.6 APP analysis drawer checks passed.')
