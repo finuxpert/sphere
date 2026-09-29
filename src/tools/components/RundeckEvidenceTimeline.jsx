@@ -16,7 +16,7 @@ function alignmentClass(value = '') {
   return `is-${key || 'unknown'}`
 }
 
-export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false }) {
+export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false, compact = false, onOpen = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
@@ -76,6 +76,16 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
       : state === 'INSUFFICIENT DATA'
         ? 'Fewer than two timestamped evidence sources are available.'
         : 'Cross-source timing status.'
+
+  if (compact) {
+    const latest = events.slice(0, 2).map((event) => event.title).join(' · ')
+    return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
+      <strong>{state === 'ALIGNED' ? 'TIME ALIGNED' : state}{events.length ? ` · ${events.length} events` : ''}</strong>
+      <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m time difference` : 'Timing unavailable'}{latest ? ` · ${latest}` : ''}</small>
+      <em>View events ›</em>
+    </button>
+  }
 
   return <section className="rundeckEvidenceTimeline" aria-label="Correlated events">
     <div className="rundeckEvidenceSummary">
