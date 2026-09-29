@@ -43,7 +43,7 @@ const files = {
 }
 
 const checks = [
-  ['interactive analysis version is v1.33.7', files.version.includes("APP_VERSION = '1.33.7'") && files.version.includes('interactive-analysis-ui-v1.33.7')],
+  ['interaction polish version is v1.33.8', files.version.includes("APP_VERSION = '1.33.8'") && files.version.includes('interaction-polish-ui-v1.33.8')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -63,11 +63,13 @@ const checks = [
   ['Current Workloads keeps explicit compact column allocation', files.currentWorkloadCss.includes('table-layout: fixed') && files.currentWorkloadCss.includes('nth-child(2)') && files.currentWorkloadCss.includes('width: 45%')],
   ['Current Workloads exposes multi-core CPU semantics and selected identity', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('CPU Total ↓') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Selected · {selectedContext}')],
   ['Trend details keeps saved history collapsed by default', files.serverTrend.includes('Trend Details') && files.serverTrend.includes('History at Selected Time') && files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
-  ['APP details and selected job/program contexts are explicitly named', files.appServers.includes('APP DETAILS') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
+  ['APP details and selected job/program contexts are explicitly named', files.appServers.includes('APP DETAILS') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE') && files.appServers.includes('Jobs / Programs')],
   ['Observation History defaults to eight rows with explicit expansion', files.observationHistory.includes('rows.slice(0, 8)') && files.observationHistory.includes('View all ${rows.length}')],
-  ['Performance History summary exposes CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
+  ['Performance History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
   ['Selected job performance opens by default for each selected context', files.jobHistory.includes('key={`performance-${contentKey}`}') && files.jobHistory.includes('className="rundeckJobPerformanceDisclosure" open')],
-  ['SAP Job Check is limited to JOB context', files.jobHistory.includes("toUpperCase() === 'JOB' && <section")],
+  ['Selected job header exposes JOB or PROGRAM badge', files.jobHistory.includes('rundeckJobTypeBadge') && files.jobHistory.includes('displayType')],
+  ['Review selection still scrolls to selected analysis panel', files.wrapper.includes('scrollToSelectedWorkload') && files.wrapper.includes('onSelectJob?.(job)')],
+  ['SAP Job Check is limited to JOB context and compact while disconnected', files.jobHistory.includes("toUpperCase() === 'JOB' && <details") && files.jobHistory.includes('rundeckSm37Verification is-compact')],
   ['operator copy uses jobs and programs instead of generic workload labels', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Current Jobs & Programs') && files.performanceReview.includes('Jobs & Programs to Review') && read('src/tools/components/RundeckJobHistory.jsx').includes('Selected Job / Program')],
   ['performance history uses plain record wording', read('src/tools/components/RundeckObservationHistory.jsx').includes('Performance History') && read('src/tools/components/RundeckObservationHistory.jsx').includes('records')],
   ['top navigation names the actual performance analysis use case', read('src/tools/index.js').includes("title: 'Performance Analysis'")],
@@ -110,7 +112,7 @@ const checks = [
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
   ['System Health exposes collector watchdog and auto-healing context', files.systemHealth.includes('/platform/health') && files.systemHealth.includes('Auto-healing') && files.systemHealth.includes('Last Recovery')],
-  ['System Health explains ATTENTION with a direct next step', files.systemHealth.includes('primaryHealthSignal') && files.systemHealth.includes('SAP Workload CRITICAL') && files.systemHealth.includes('Open the server and selected job for details.')],
+  ['System Health explains ATTENTION with a direct next step', files.systemHealth.includes('primaryHealthSignal') && files.systemHealth.includes('Jobs / Programs CRITICAL') && files.systemHealth.includes('Open the server and selected job for details.')],
   ['System Health explains old availability data in plain language', files.systemHealth.includes('Availability data old') && files.systemHealth.includes('older than the current performance data')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
   ['NORMAL APP resource state is distinct from missing data', files.appServers.includes('Normal observation') && files.appServers.includes('>NORMAL</span>')],
@@ -127,4 +129,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.33.7 interactive analysis checks passed.')
+console.log('\nSPHERE v1.33.8 interaction polish checks passed.')
