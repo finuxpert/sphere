@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { numberText, workloadTypeLabel } from './sapUiFormat.js'
-import { evaluationReasonText } from './rundeckEvaluationExplain.js'
+import { evaluationReasonParts, evaluationReasonText } from './rundeckEvaluationExplain.js'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -105,7 +105,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
               const internalQuickSelected = quickRow?.consumer_key === row.consumer_key && quickRow?.consumer_type === row.consumer_type
               const externalQuickSelected = externalQuickKey === `${row.consumer_type}:${row.consumer_key}`
               const quickSelected = internalQuickSelected || externalQuickSelected
-              const reason = evaluationReasonText(row)
+              const reasonParts = evaluationReasonParts(row)
+              const reason = reasonParts.join(' · ')
               const title = [
                 `Type: ${workloadTypeLabel(row.consumer_type)}`,
                 row.assessment_reason || '',
@@ -128,7 +129,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                   <button type="button" onClick={(event) => { event.stopPropagation(); openQuick(row) }}>{row.consumer_key}</button>
                   <small>{workloadTypeLabel(row.consumer_type)}</small>
                 </td>
-                <td>{reason || row.status || 'Review'}</td>
+                <td><div className="rundeckReviewReasonChips">{reasonParts.length ? reasonParts.map((part) => <span key={part}>{part}</span>) : <span>{row.status || 'Review'}</span>}</div></td>
                 <td title={CPU_HINT}>{pct(row.avg_cpu_pct)}</td>
                 <td title={CPU_HINT}>{pct(row.peak_cpu_pct)}</td>
                 <td>{gb(row.avg_pss_gb)}</td>
