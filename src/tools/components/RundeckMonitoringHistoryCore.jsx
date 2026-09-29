@@ -19,11 +19,17 @@ export default function RundeckMonitoringHistoryCore(props) {
         <RundeckInvestigationContext job={props.selectedJob} />
         {props.selectedJob?.key
           ? <div className="rundeckSelectedCompact">
-              <div>
+              <div className="rundeckSelectedCompactIdentity">
                 <strong>{props.selectedJob.key}</strong>
-                <small>Detailed CPU, memory, WP, I/O and history are available on demand.</small>
+                <small>{props.selectedJob.host || 'APP'} · {String(props.selectedJob.consumerType || 'Job / Program').toUpperCase()}</small>
               </div>
-              <button type="button" onClick={props.onOpenSelectedAnalysis}>Open Performance Analysis</button>
+              <div className="rundeckSelectedCompactMetrics">
+                <span><b>CPU</b>{props.selectedJob.cpuPct === null || props.selectedJob.cpuPct === undefined ? '—' : `${Number(props.selectedJob.cpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
+                <span><b>Memory</b>{props.selectedJob.memoryGb === null || props.selectedJob.memoryGb === undefined ? '—' : `${Number(props.selectedJob.memoryGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
+                <span><b>Processes</b>{props.selectedJob.processes ?? '—'}</span>
+                <span><b>Critical WP</b>{props.selectedJob.criticalWp ?? '—'}</span>
+              </div>
+              <button type="button" onClick={props.onOpenSelectedAnalysis}>Analyze Performance</button>
             </div>
           : <div className="rundeckSelectedCompact is-empty">Select a job or program to analyze.</div>}
       </div>
