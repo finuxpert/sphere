@@ -1,6 +1,5 @@
 import React from 'react'
 import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
-import RundeckJobHistory from './RundeckJobHistory.jsx'
 import { numberText, workloadTypeLabel } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
 import './RundeckReviewQuickAnalysis.css'
@@ -200,7 +199,7 @@ export default function RundeckReviewQuickAnalysis({
   return <aside className="rundeckQuickAnalysisDrawer" aria-label="Quick performance analysis" ref={drawerRef} tabIndex={-1}>
     <header className="rundeckQuickAnalysisHead">
       <div>
-        <span>{workloadTypeLabel(row.consumer_type)} · Performance Analysis</span>
+        <span>{workloadTypeLabel(row.consumer_type)} · Performance Review</span>
         <h3>{row.consumer_key}</h3>
         <small>{reason}</small>
       </div>
@@ -211,14 +210,19 @@ export default function RundeckReviewQuickAnalysis({
       <span><b>CPU Avg</b>{pct(row.avg_cpu_pct)}</span>
       <span><b>CPU Peak</b>{pct(row.peak_cpu_pct)}</span>
       <span><b>Memory Avg (PSS)</b>{gb(row.avg_pss_gb)}</span>
-      <span><b>Samples</b>{row.occurrences ?? '—'}</span>
-      <span><b>Critical WP Samples</b>{row.critical_wp_checks ?? '—'}</span>
-      <span><b>Historical Baseline</b>{row.anomaly_status || row.baseline_status || '—'}</span>
+      <span><b>Data Points</b>{row.occurrences ?? '—'}</span>
+      <span><b>Critical WP During Period</b>{row.critical_wp_checks ?? '—'}</span>
+      <span><b>Baseline</b>{row.anomaly_status || row.baseline_status || '—'}</span>
     </div>
 
     <div className="rundeckQuickScroll">
-      <section className="rundeckQuickSection">
-        <RundeckJobHistory job={job} refreshToken={refreshToken} incidentStart={incidentStart} presentation="drawer" />
+      <section className="rundeckQuickSection is-review-context">
+        <div className="rundeckQuickReviewContext">
+          <span><b>Review Period</b>{reviewContext?.period?.toUpperCase() || '1D'}</span>
+          <span><b>Start</b>{reviewContext?.start || '—'}</span>
+          <span><b>End</b>{reviewContext?.end || '—'}</span>
+        </div>
+        <button type="button" className="rundeckQuickOpenPerformance" onClick={() => onOpenFull?.(job)}>Open Performance Analysis</button>
       </section>
 
       <section className="rundeckQuickSection is-events">
@@ -267,7 +271,7 @@ export default function RundeckReviewQuickAnalysis({
           <div className="rundeckClosingPreview">
             <strong>Closing Summary</strong>
             <p><b>{row.consumer_key}</b> · {workloadTypeLabel(row.consumer_type)} · {reviewContext?.period?.toUpperCase() || '1D'}</p>
-            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · Critical WP samples {row.critical_wp_checks ?? '—'}.</p>
+            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · Critical WP during period {row.critical_wp_checks ?? '—'}.</p>
             <p>{form.finding}</p>
             <p><b>{form.closing_status.replaceAll('_', ' ')}</b> · Action Owner: {form.owner || '—'} · {form.recommendation}</p>
           </div>

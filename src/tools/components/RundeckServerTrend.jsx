@@ -310,16 +310,19 @@ function MiniTrendContext({ trend, selected, range }) {
       minValue,
       maxValue,
       selectedValue:selectedRow?.value,
+      firstAt:minAt,
+      lastAt:maxAt,
+      selectedAt:selectedRow?.at,
     }
   },[selected,trend])
 
   if(!model) return null
-  return <section className="rundeckTrendMiniContext" aria-label="Trend context around selected sample">
+  return <section className="rundeckTrendMiniContext" aria-label="History around selected point">
     <header>
-      <div><span>Trend Context</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
+      <div><span>History</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} History · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
       <small>{numberText(model.minValue,1)}–{numberText(model.maxValue,1)}{selected?.unit || trend?.unit || ''}</small>
     </header>
-    <svg viewBox="0 0 520 84" role="img" aria-label="Mini trend with selected sample marker">
+    <svg viewBox="0 0 520 104" role="img" aria-label="History with selected point and time labels">
       <line x1="12" y1="18" x2="508" y2="18" className="rundeckTrendMiniGrid" />
       <line x1="12" y1="43" x2="508" y2="43" className="rundeckTrendMiniGrid" />
       <line x1="12" y1="68" x2="508" y2="68" className="rundeckTrendMiniGrid" />
@@ -328,8 +331,11 @@ function MiniTrendContext({ trend, selected, range }) {
         <line x1={model.marker.x} y1="10" x2={model.marker.x} y2="72" className="rundeckTrendMiniMarkerLine" />
         <circle cx={model.marker.x} cy={model.marker.y} r="4" className="rundeckTrendMiniMarker" />
       </>}
+      <text x="12" y="94" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
+      {model.selectedAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedAt, range)}</text>}
+      <text x="508" y="94" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
     </svg>
-    <footer><span>Selected sample</span><strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong></footer>
+    <footer><span>Selected point · {model.selectedAt ? `${formatWib(model.selectedAt, true)} WIB` : '—'}</span><strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong></footer>
   </section>
 }
 

@@ -90,7 +90,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   return <section className="rundeckEvidenceTimeline" aria-label="Correlated events">
     <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Correlated Events</span>
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'TIME ALIGNED' : state}</span>
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}</span>
       <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m time difference` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
     </div>
 

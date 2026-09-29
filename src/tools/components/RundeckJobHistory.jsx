@@ -257,7 +257,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     let top = 16
     const gap = expanded ? 16 : 14
     const grids = lanes.map((lane) => {
-      const grid = { left: 96, right: 18, top, height: lane.height }
+      const grid = { left: 96, right: 30, top, height: lane.height }
       top += lane.height + gap
       return grid
     })
@@ -314,7 +314,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
       silent: true,
       symbol: ['none', 'none'],
       lineStyle: { color: colors.warning, type: 'dashed', width: 1, opacity: .62 },
-      label: { formatter: `Issue Started · ${formatWib(incidentStart, true)} WIB`, color: colors.warning, fontSize: 8, padding: [0,0,3,0] },
+      label: { formatter: `Issue Started · ${formatWib(incidentStart, true)} WIB`, color: colors.warning, fontSize: 8, padding: [0,0,3,0], position: 'insideEndTop' },
       data: [{ xAxis: incidentStart }],
     } : undefined
 
@@ -674,7 +674,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Same time period only — root cause is not confirmed</small>
+        <small className="rundeckJobCorrelationDisclaimer">Same time window — root cause not confirmed</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
@@ -690,7 +690,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
               </div>}
             </div>
-            <small className="rundeckJobCurrentSemantics" title="Current shows the selected observation period">Current = selected period</small>
+            <small className="rundeckJobCurrentSemantics" title="Current shows the selected data period">Current = selected data period</small>
           </section>
 
           {range === 'current'

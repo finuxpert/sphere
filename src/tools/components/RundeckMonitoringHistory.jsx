@@ -134,7 +134,17 @@ export default function RundeckMonitoringHistory(props) {
               selectedJob={selectedJob}
               onSelectJob={inspectJob}
               incidentStart={props.incidentStart || ''}
-              onOpenQuickAnalysis={(row, reviewContext) => setActiveOverlay({ type: 'review', row, reviewContext })}
+              onOpenQuickAnalysis={(row, reviewContext) => {
+                const reviewJob = {
+                  key: row.consumer_key,
+                  host: row?.hosts?.length === 1 ? row.hosts[0] : '',
+                  consumerType: row.consumer_type,
+                  source: 'performance-review',
+                  days: reviewContext?.days || 1,
+                }
+                onSelectJob?.(reviewJob)
+                setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
+              }}
               externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
             />
           </section>
@@ -188,6 +198,12 @@ export default function RundeckMonitoringHistory(props) {
             title={selectedJob.key}
             subtitle="Job / Program Performance Analysis"
             size="performance"
+            actions={activeOverlay.reviewRow ? <button type="button" onClick={() => setActiveOverlay({
+              type: 'review',
+              row: activeOverlay.reviewRow,
+              reviewContext: activeOverlay.reviewContext,
+              returnToJob: true,
+            })}>Review Result</button> : null}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'app'
@@ -333,13 +349,24 @@ export default function RundeckMonitoringHistory(props) {
             reviewContext={activeOverlay.reviewContext}
             refreshToken={refreshToken}
             incidentStart={props.incidentStart || ''}
-            onClose={() => setActiveOverlay(null)}
+            onClose={() => {
+              if (activeOverlay.returnToJob) {
+                const reviewJob = {
+                  key: activeOverlay.row.consumer_key,
+                  host: activeOverlay.row?.hosts?.length === 1 ? activeOverlay.row.hosts[0] : '',
+                  consumerType: activeOverlay.row.consumer_type,
+                  source: 'performance-review',
+                  days: activeOverlay.reviewContext?.days || 1,
+                }
+                onSelectJob?.(reviewJob)
+                setActiveOverlay({ type: 'job', reviewRow: activeOverlay.row, reviewContext: activeOverlay.reviewContext })
+                return
+              }
+              setActiveOverlay(null)
+            }}
             onOpenFull={(job) => {
               onSelectJob?.(job)
-              setActiveOverlay({
-                type: 'job',
-                returnTo: { type: 'review', row: activeOverlay.row, reviewContext: activeOverlay.reviewContext },
-              })
+              setActiveOverlay({ type: 'job', reviewRow: activeOverlay.row, reviewContext: activeOverlay.reviewContext })
             }}
           />}
         </>}
