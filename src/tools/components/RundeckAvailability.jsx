@@ -40,7 +40,7 @@ function ageMinutes(value) {
   return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
 }
 
-export default function RundeckAvailability({ refreshToken = '' }) {
+export default function RundeckAvailability({ refreshToken = '', compact = false, onOpen = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [bundle, setBundle] = React.useState(null)
@@ -172,6 +172,15 @@ export default function RundeckAvailability({ refreshToken = '' }) {
   const technicalCheckCount = Object.values(replication).filter(Boolean).length + sshRows.length
 
   const healthySummary = healthyApps && healthyHana && healthyWeb && technicalDownCount === 0 && !showDataTrust
+
+  if (compact) {
+    return <button type="button" className="rundeckEvidenceCard rundeckAvailabilityCard" onClick={onOpen} aria-label="Open SAP Availability details">
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> SAP Availability</span>
+      <strong>{apps.length ? `${appsUp}/${apps.length} APP UP` : 'APP —'} · {hanaRows.length ? `${hanaUp}/${hanaRows.length} HANA UP` : 'HANA —'} · {webRows.length ? `${webUp}/${webRows.length} WEB UP` : 'WEB —'}</strong>
+      <small>{stale ? `STALE ${availabilityAge}m · last reliable ${serviceState}` : issueText || 'Current service availability'}</small>
+      <em>View details ›</em>
+    </button>
+  }
 
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''} ${healthySummary ? 'is-healthy-compact' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
