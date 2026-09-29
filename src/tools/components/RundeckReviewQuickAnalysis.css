@@ -71,8 +71,11 @@
   text-transform:uppercase;
 }
 .rundeckQuickScroll{
+  min-height:0;
+  flex:1 1 auto;
   overflow:auto;
-  padding:0 16px 24px;
+  padding:0 16px 28px;
+  scrollbar-gutter:stable;
 }
 .rundeckQuickSection{
   border-bottom:1px solid rgba(126,147,158,.08);
@@ -248,4 +251,114 @@
 @media(max-width:760px){
   .rundeckQuickReviewContext{grid-template-columns:1fr}
   .rundeckQuickSection.is-review-context{align-items:stretch;flex-direction:column}
+}
+
+
+/* SPHERE RC final — Review Result light-theme parity and viewport-safe closing workflow. */
+html[data-theme="light"] .rundeckQuickAnalysisDrawer{
+  background:#f7f9fa!important;
+  color:#1d3038!important;
+  border-left-color:rgba(45,63,72,.18)!important;
+  box-shadow:-10px 0 28px rgba(23,38,45,.16)!important;
+}
+html[data-theme="light"] .rundeckQuickAnalysisHead{
+  background:#f7f9fa!important;
+  border-bottom-color:rgba(45,63,72,.14)!important;
+}
+html[data-theme="light"] .rundeckQuickAnalysisHead h3{color:#1d3038!important}
+html[data-theme="light"] .rundeckQuickAnalysisHead small{color:#566b75!important}
+html[data-theme="light"] .rundeckQuickClose{
+  background:#fff!important;
+  color:#344b55!important;
+  border-color:rgba(45,63,72,.22)!important;
+}
+html[data-theme="light"] .rundeckQuickMetrics{
+  gap:0!important;
+  background:transparent!important;
+  border-top:1px solid rgba(45,63,72,.12)!important;
+  border-bottom:1px solid rgba(45,63,72,.12)!important;
+}
+html[data-theme="light"] .rundeckQuickMetrics span{
+  background:transparent!important;
+  color:#263b44!important;
+  border-left:1px solid rgba(45,63,72,.10)!important;
+}
+html[data-theme="light"] .rundeckQuickMetrics span:first-child{border-left:0!important}
+html[data-theme="light"] .rundeckQuickMetrics b{
+  color:#556a74!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .rundeckQuickReviewContext span{color:#324953!important}
+html[data-theme="light"] .rundeckQuickReviewContext b{color:#5b6e77!important}
+html[data-theme="light"] .rundeckQuickOpenPerformance{
+  background:#eef8f8!important;
+  color:#0f6970!important;
+  border-color:rgba(20,116,123,.28)!important;
+}
+html[data-theme="light"] .rundeckClosingForm{
+  border-top-color:rgba(45,63,72,.14)!important;
+}
+html[data-theme="light"] .rundeckClosingHead strong{color:#1f333c!important}
+html[data-theme="light"] .rundeckClosingHead small,
+html[data-theme="light"] .rundeckClosingForm label>span{
+  color:#566b75!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .rundeckClosingForm input,
+html[data-theme="light"] .rundeckClosingForm select,
+html[data-theme="light"] .rundeckClosingForm textarea{
+  background:#fff!important;
+  color:#1d3038!important;
+  border-color:rgba(45,63,72,.20)!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] .rundeckClosingForm input::placeholder,
+html[data-theme="light"] .rundeckClosingForm textarea::placeholder{
+  color:#7a8b93!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .rundeckClosingForm input:focus,
+html[data-theme="light"] .rundeckClosingForm select:focus,
+html[data-theme="light"] .rundeckClosingForm textarea:focus{
+  outline:2px solid rgba(20,116,123,.25)!important;
+  border-color:rgba(20,116,123,.42)!important;
+}
+html[data-theme="light"] .rundeckClosingPreview{
+  background:#eef3f5!important;
+  color:#253a43!important;
+  border-color:rgba(45,63,72,.14)!important;
+}
+html[data-theme="light"] .rundeckClosingPreview strong{color:#1f333c!important}
+html[data-theme="light"] .rundeckClosingPreview p{
+  color:#4d626c!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .rundeckClosingActions{
+  position:sticky;
+  bottom:-28px;
+  z-index:3;
+  margin-left:-16px;
+  margin-right:-16px;
+  padding:10px 16px 12px;
+  background:linear-gradient(to bottom,rgba(247,249,250,.78),#f7f9fa 34%)!important;
+  border-top:1px solid rgba(45,63,72,.10);
+}
+html[data-theme="light"] .rundeckClosingActions button{
+  background:#fff!important;
+  color:#344b55!important;
+  border-color:rgba(45,63,72,.20)!important;
+}
+html[data-theme="light"] .rundeckClosingActions button.is-primary{
+  background:#e1f3f3!important;
+  color:#0f6269!important;
+  border-color:rgba(20,116,123,.30)!important;
+}
+html[data-theme="light"] .rundeckClosingMessage{color:#7d5a12!important}
+html[data-theme="light"] .rundeckClosingMessage.is-success{color:#287a55!important}
+
+@media(max-height:800px) and (min-width:1181px){
+  .rundeckQuickAnalysisDrawer{top:64px}
+  .rundeckQuickAnalysisHead{padding-top:10px;padding-bottom:9px}
+  .rundeckQuickMetrics span{padding-top:6px;padding-bottom:6px}
+  .rundeckQuickScroll{padding-bottom:20px}
 }
