@@ -975,3 +975,19 @@
 @media(max-width:1180px){
   .rundeckSelectedCompact{grid-template-columns:1fr}
 }
+
+/* SPHERE v1.34.21 — compact selected workload card without an artificial empty panel. */
+.appShell:has(.rundeckPanel) .rundeckSelectedCompact{
+  margin-top:6px!important;
+  padding:7px 9px!important;
+  min-height:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics span{font-size:9.3px!important}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics b{font-size:8.3px!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompact{
+  background:#fff!important;border-color:rgba(45,63,72,.14)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactIdentity strong{color:#203038!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactIdentity small{color:#596b74!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics span{color:#334850!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics b{color:#60717a!important}

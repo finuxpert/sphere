@@ -389,7 +389,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
               profile.hasIo ? `I/O Read <b>${numberText(rowMetric(row, 'read'), 2)} MiB/s</b>` : 'I/O <b>0 MiB/s</b>',
               profile.hasIo ? `I/O Write <b>${numberText(rowMetric(row, 'write'), 2)} MiB/s</b>` : '',
               profile.hasWp ? `WP <b>${numberText(rowMetric(row, 'wp'), 0)}</b>` : '',
-              critical > 0 ? `Critical WP <b>${critical}</b>` : '',
+              critical > 0 ? `APP Critical WP <b>${critical}</b>` : '',
               `Run <b>#${row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</b>`,
             ].filter(Boolean).join('<br/>')
           },
@@ -496,7 +496,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
             `CPU ${mode === 'peak' ? 'peak' : 'avg'} <b>${cpu == null ? '—' : `${numberText(cpu,1)}%`}</b>`,
             `PSS ${mode === 'peak' ? 'peak' : 'avg'} <b>${pss == null ? '—' : `${numberText(pss,2)} GB`}</b>`,
             `Processes <b>${processes == null ? '—' : numberText(processes,mode === 'peak' ? 0 : 1)}</b>`,
-            `Critical WP <b>${critical}</b> · overlap <b>${criticalChecks} / ${checks} samples</b>`,
+            `APP Critical WP <b>${critical}</b> · overlap <b>${criticalChecks} / ${checks} samples</b>`,
             `Samples / checks <b>${Number(row.observations||0)} / ${checks}</b>`,
           ].join('<br/>')
         },
@@ -639,26 +639,20 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     {error && <div className="rundeckJobHistoryState is-error">{error}</div>}
 
     {history && <div key={contentKey} className="rundeckJobHistoryContent">
-      <div className="rundeckJobHistoryOverview">
-        <section className="rundeckJobHistoryGroup" aria-label="Observation summary">
-          <strong>Selected Episode</strong>
-          <div className="rundeckJobHistorySummary">
-            <span><b>First Seen</b>{formatWib(stats.firstSeen, true)} WIB</span>
-            <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
-            <span><b>Duration</b>{observed}</span>
-            <span><b>Records</b>{episodeItems.length}</span>
-          </div>
-        </section>
-        <section className="rundeckJobHistoryGroup" aria-label="Performance summary">
-          <strong>Episode Performance</strong>
-          <div className="rundeckJobHistorySummary">
-            <span title={CPU_HINT}><b>Avg CPU</b>{numberText(stats.avgCpu)}%</span>
-            <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%</span>
-            <span><b>Avg PSS</b>{stats.avgPss === null ? '—' : `${numberText(stats.avgPss, 2)} GB`}</span>
-            <span><b>Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
-          </div>
-        </section>
-      </div>
+      <section className="rundeckJobEpisodeMatrix" aria-label="Selected episode and performance summary">
+        <div className="rundeckJobEpisodeGroupLabel is-episode">Selected Episode</div>
+        <div className="rundeckJobEpisodeGroupLabel is-performance">Episode Performance</div>
+        <div className="rundeckJobEpisodeMetrics">
+          <span><b>First Seen</b>{formatWib(stats.firstSeen, true)} WIB</span>
+          <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
+          <span><b>Duration</b>{observed}</span>
+          <span><b>Records</b>{episodeItems.length}</span>
+          <span title={CPU_HINT}><b>Avg CPU</b>{numberText(stats.avgCpu)}%</span>
+          <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%</span>
+          <span><b>Avg PSS</b>{stats.avgPss === null ? '—' : `${numberText(stats.avgPss, 2)} GB`}</span>
+          <span><b>Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
+        </div>
+      </section>
 
       {String(displayConsumerType || latest?.consumer_type || '').toUpperCase() === 'JOB' && <details className="rundeckSm37Verification is-compact" aria-label="SAP job check">
         <summary className="rundeckSm37VerificationHead">

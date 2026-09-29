@@ -476,3 +476,19 @@
 .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
   min-height:0!important;height:auto!important;
 }
+
+/* SPHERE v1.34.21 — selected workload is content-height; only Current Jobs owns the tall scan area. */
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+  align-items:start!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-selected-workload{
+  align-self:start!important;
+  min-height:0!important;
+  height:fit-content!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-current-workload{
+  align-self:start!important;
+  overflow:visible!important;
+}

@@ -70,14 +70,16 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.20', files.version.includes("APP_VERSION = '1.34.20'") && files.version.includes('monitoring-flow-ui-v1.34.20')],
+  ['monitoring flow version is v1.34.21', files.version.includes("APP_VERSION = '1.34.21'") && files.version.includes('monitoring-flow-ui-v1.34.21')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
   ['Evidence Issues and System Data use content-aware drawer modes', files.wrapper.includes('size="evidence"') && files.wrapper.includes('size="issues"') && files.wrapper.includes('size="system-data"') && files.accessibilityThemeFinal.includes('.is-evidence,.is-issues,.is-system-data')],
   ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
   ['Job Performance drawer reserves extra vertical chart space', files.jobHistoryCss.includes('min-height:440px') && files.jobHistoryCss.includes('height:390px')],
-  ['Job Performance summary uses side-by-side episode and performance groups', files.jobHistoryCss.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr)') && files.jobHistory.includes('Episode Performance')],
+  ['Job Performance summary uses a full-width eight-cell episode matrix', files.jobHistory.includes('rundeckJobEpisodeMatrix') && files.jobHistory.includes('Episode Performance') && files.jobHistoryCss.includes('grid-template-columns:repeat(8,minmax(0,1fr))')],
+  ['Selected workload pane stays content-height beside the tall Current Jobs scan area', files.workspace.includes('height:fit-content!important') && files.workspace.includes('is-selected-workload') && files.monitoringCss.includes('compact selected workload card')],
+
   ['Job Performance timing is a horizontal full-width RCA strip', files.jobHistoryCss.includes('grid-template-columns:auto repeat(2,minmax(120px,auto)) minmax(0,1fr)')],
   ['Observation History uses a content-aware drawer', files.wrapper.includes('size="observation-history"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-observation-history')],
   ['APP analysis uses explicit workload type badges', files.appServerAnalysis.includes('rundeckAppTypeBadge') && files.appServerAnalysisCss.includes('.rundeckAppTypeBadge.is-job')],
@@ -178,7 +180,7 @@ const checks = [
   ['Historical Job Performance supports Avg and Peak aggregation', files.jobHistory.includes("rangeMode==='avg'") && files.jobHistory.includes("rangeMode==='peak'")],
   ['Job Performance separates selected episode from retained-range analysis', files.jobHistory.includes('Selected Episode') && files.jobHistory.includes('Performance Analysis') && files.jobHistory.includes('Current = selected episode')],
   ['Historical Job Performance exposes Critical WP overlap lane and denominator', files.jobHistory.includes("name:'Critical WP'") && files.jobHistory.includes('Critical WP Overlap') && files.jobHistory.includes('critical_wp_checks') && files.jobHistory.includes('samples')],
-  ['Historical tooltip includes CPU PSS processes Critical WP and check counts', files.jobHistory.includes('Processes <b>') && files.jobHistory.includes('Samples / checks') && files.jobHistory.includes('max_critical_wp')],
+  ['Historical tooltip includes CPU PSS processes APP Critical WP and check counts', files.jobHistory.includes('Processes <b>') && files.jobHistory.includes('APP Critical WP <b>') && files.jobHistory.includes('Samples / checks') && files.jobHistory.includes('max_critical_wp')],
   ['Timing correlation explicitly preserves RCA boundary', files.jobHistory.includes('Timing correlation only — not proof of root cause')],
   ['SAP Availability drawer shows technical checks directly without nested details', files.availability.includes('rundeckAvailabilitySummaryStrip') && files.availability.includes('Landscape Checks') && !files.availability.includes('<details className="rundeckAvailabilityMore"')],
   ['Drawer widths are content-aware for performance and operational detail', files.workspaceDrawer.includes("size = 'default'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-wide') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-medium')],
@@ -261,4 +263,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.20 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.21 monitoring flow and deep-analysis checks passed.')

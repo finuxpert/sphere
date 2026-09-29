@@ -658,3 +658,17 @@
 @media(max-width:900px){
   .appShell:has(.rundeckPanel) .rundeckLiveCardGrid{grid-template-columns:1fr}
 }
+
+/* SPHERE v1.34.21 — healthy infrastructure is readable in Light; disabled actions stay visibly disabled. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{
+  background:#fff!important;border-color:rgba(45,63,72,.14)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveCardGrid h4{
+  color:#29404a!important;opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows span{
+  color:#4d626c!important;opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows strong{
+  color:#263a43!important;opacity:1!important;
+}
