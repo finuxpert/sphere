@@ -444,13 +444,14 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const wpType = String(latestDetails.wp_type || '').trim()
   const wpNumber = String(latestDetails.wp || '').trim()
   const wpContext = [wpType, wpNumber].filter(Boolean).join(' ') || '—'
-  const contextText = [appName, workloadTypeLabel(displayConsumerType || latest?.consumer_type), program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' · ')
+  const displayType = workloadTypeLabel(displayConsumerType || latest?.consumer_type)
+  const contextText = [appName, program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' · ')
 
   return <section className="rundeckJobHistory" aria-label="Selected job or program performance" aria-busy={loading}>
     <div className="rundeckJobHistoryHead">
       <div>
         <span>Selected Job / Program</span>
-        <h3><SphereIcon name="target" /> {displayKey} {history && <em className={isCurrent ? 'is-current' : 'is-ended'}>{isCurrent ? 'CURRENT' : 'NO LONGER SEEN'}</em>}</h3>
+        <h3><SphereIcon name="target" /> {displayKey} <span className="rundeckJobTypeBadge">{displayType}</span> {history && <em className={isCurrent ? 'is-current' : 'is-ended'}>{isCurrent ? 'CURRENT' : 'NO LONGER SEEN'}</em>}</h3>
         <small>{contextText}</small>
       </div>
     </div>
@@ -481,11 +482,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         </section>
       </div>
 
-      {String(displayConsumerType || latest?.consumer_type || '').toUpperCase() === 'JOB' && <section className="rundeckSm37Verification" aria-label="SAP job check">
-        <div className="rundeckSm37VerificationHead">
+      {String(displayConsumerType || latest?.consumer_type || '').toUpperCase() === 'JOB' && <details className="rundeckSm37Verification is-compact" aria-label="SAP job check">
+        <summary className="rundeckSm37VerificationHead">
           <strong>SAP Job Check</strong>
           <span>JOB DATA NOT CONNECTED</span>
-        </div>
+        </summary>
         <div className="rundeckSm37VerificationGrid">
           <span><b>Job Name</b>{jobName || '—'}</span>
           <span><b>Program</b>{program || '—'}</span>
@@ -494,7 +495,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <span><b>WP</b>{wpContext}</span>
         </div>
         <p>SM37 job data is not connected. Check Job Name, Program and execution time manually if needed.</p>
-      </section>}
+      </details>}
 
       {(incidentStart || timelineText) && <div className="rundeckJobTimeline">
         <strong>Timing</strong>
