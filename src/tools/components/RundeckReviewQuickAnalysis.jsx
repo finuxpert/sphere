@@ -55,7 +55,6 @@ export default function RundeckReviewQuickAnalysis({
   row,
   reviewContext,
   refreshToken = '',
-  incidentStart = '',
   onClose,
   onOpenFull,
 }) {
