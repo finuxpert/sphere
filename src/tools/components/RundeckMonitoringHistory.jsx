@@ -49,14 +49,13 @@ export default function RundeckMonitoringHistory(props) {
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
     onSelectJob?.(job)
-    setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })
+    setActiveOverlay({ type: 'job' })
   }, [onSelectJob])
 
-  const openJobInLive = React.useCallback((job) => {
+  const openJobFromHistory = React.useCallback((job) => {
     if (!job?.key) return
-    setMonitoringMode('live')
     onSelectJob?.(job)
-    setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })
+    setActiveOverlay({ type: 'history-job', job })
   }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
@@ -84,7 +83,19 @@ export default function RundeckMonitoringHistory(props) {
     </div>
 
     {monitoringMode === 'explorer'
-      ? <RundeckWorkloadExplorer refreshToken={refreshToken} onOpenLiveJob={openJobInLive} />
+      ? <>
+          <RundeckWorkloadExplorer refreshToken={refreshToken} onOpenLiveJob={openJobFromHistory} />
+          {activeOverlay?.type === 'history-job' && activeOverlay.job?.key && <RundeckWorkspaceDrawer
+            title={activeOverlay.job.key}
+            subtitle="Historical Job / Program Performance"
+            onClose={() => setActiveOverlay(null)}
+            onBack={() => setActiveOverlay(null)}
+            backLabel="Back to History"
+            size="wide"
+          >
+            <RundeckJobHistory job={activeOverlay.job} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
+          </RundeckWorkspaceDrawer>}
+        </>
       : <>
           <RundeckLiveOverview refreshToken={refreshToken} />
           <RundeckMonitoringHistoryCore
@@ -93,7 +104,7 @@ export default function RundeckMonitoringHistory(props) {
             onTrendContext={forwardTrendContext}
             operationalEvidenceContent={operationalEvidenceContent}
             appFocusRequest={appFocusRequest}
-            onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })}
+            onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
             onInspectApp={inspectApp}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
@@ -173,6 +184,7 @@ export default function RundeckMonitoringHistory(props) {
           {activeOverlay?.type === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
             title={selectedJob.key}
             subtitle="Job / Program Performance Analysis"
+            size="wide"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'app'
@@ -209,6 +221,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'system-data' && systemDataContent && <RundeckWorkspaceDrawer
             title="System Data"
+            size="medium"
             subtitle={systemDataSummary || 'Collection History · SPHERE Services'}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
@@ -233,6 +246,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'availability' && <RundeckWorkspaceDrawer
             title="SAP Availability"
+            size="medium"
             subtitle="SAP App · HANA · Web · Technical Checks"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
@@ -243,6 +257,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'issues' && <RundeckWorkspaceDrawer
             title="SAP Issues"
+            size="medium"
             subtitle="Active SAP issues"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
@@ -279,6 +294,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'infrastructure' && <RundeckWorkspaceDrawer
             title="Infrastructure Analysis"
+            size="wide"
             subtitle="Filesystem · Network · Storage I/O"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
