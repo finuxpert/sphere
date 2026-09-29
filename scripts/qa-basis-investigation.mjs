@@ -12,6 +12,8 @@ const files = {
   appServers: read('src/tools/components/RundeckAppServers.jsx'),
   appServerAnalysis: read('src/tools/components/RundeckAppServerAnalysis.jsx'),
   appServerAnalysisCss: read('src/tools/components/RundeckAppServerAnalysis.css'),
+  appServerAnalysis: read('src/tools/components/RundeckAppServerAnalysis.jsx'),
+  appServerAnalysisCss: read('src/tools/components/RundeckAppServerAnalysis.css'),
   sm37: read('src/tools/components/RundeckSm37Verification.jsx'),
   performanceReview: read('src/tools/components/RundeckPerformanceReview.jsx'),
   quickAnalysis: read('src/tools/components/RundeckReviewQuickAnalysis.jsx'),
@@ -70,13 +72,18 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.19', files.version.includes("APP_VERSION = '1.34.19'") && files.version.includes('monitoring-flow-ui-v1.34.19')],
+  ['monitoring flow version is v1.34.20', files.version.includes("APP_VERSION = '1.34.20'") && files.version.includes('monitoring-flow-ui-v1.34.20')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
   ['Evidence Issues and System Data use content-aware drawer modes', files.wrapper.includes('size="evidence"') && files.wrapper.includes('size="issues"') && files.wrapper.includes('size="system-data"') && files.accessibilityThemeFinal.includes('.is-evidence,.is-issues,.is-system-data')],
   ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
   ['Job Performance drawer reserves extra vertical chart space', files.jobHistoryCss.includes('min-height:440px') && files.jobHistoryCss.includes('height:390px')],
+  ['Job Performance summary uses side-by-side episode and performance groups', files.jobHistoryCss.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr)') && files.jobHistory.includes('Episode Performance')],
+  ['Job Performance timing is a horizontal full-width RCA strip', files.jobHistoryCss.includes('grid-template-columns:auto repeat(2,minmax(120px,auto)) minmax(0,1fr)')],
+  ['Observation History uses a content-aware drawer', files.wrapper.includes('size="observation-history"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-observation-history')],
+  ['APP analysis uses explicit workload type badges', files.appServerAnalysis.includes('rundeckAppTypeBadge') && files.appServerAnalysisCss.includes('.rundeckAppTypeBadge.is-job')],
+
   ['SAP Job Source renders as a visible neutral integrity strip', files.accessibilityThemeFinal.includes('.rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
   ['SAP App Servers and Server Trend preserve 35/65 layout', files.workspace.includes('.rundeckServerTrendBandV1235 {') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
@@ -256,4 +263,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.19 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.20 monitoring flow and deep-analysis checks passed.')

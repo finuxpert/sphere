@@ -310,3 +310,24 @@
     top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0;
   }
 }
+
+/* SPHERE v1.34.20 — final content-aware operational drawer geometry. */
+.rundeckWorkspaceDrawer.is-observation-history{
+  top:92px;right:14px;bottom:auto;
+  width:min(780px,51vw);
+  max-height:min(610px,calc(100vh - 116px));
+  overflow:hidden;
+  border:1px solid rgba(126,147,158,.20);
+  border-radius:10px;
+  box-shadow:-4px 8px 20px rgba(23,38,45,.18);
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckWorkspaceDrawerBody{
+  min-height:0;overflow:auto;padding-bottom:14px;
+}
+.rundeckWorkspaceDrawer.is-evidence{width:min(660px,44vw)!important}
+.rundeckWorkspaceDrawer.is-availability{width:min(640px,43vw)!important;max-height:min(560px,calc(100vh - 116px))!important}
+.rundeckWorkspaceDrawer.is-issues{width:min(680px,45vw)!important}
+@media(max-width:1180px){
+ .rundeckWorkspaceDrawer.is-observation-history{top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0}
+ .rundeckWorkspaceDrawer.is-evidence,.rundeckWorkspaceDrawer.is-availability,.rundeckWorkspaceDrawer.is-issues{width:100%!important;max-height:none!important}
+}

@@ -232,3 +232,11 @@
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkload th{font-size:8.5px!important}
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkload td{padding-top:6px!important;padding-bottom:6px!important}
 }
+
+/* SPHERE v1.34.20 — final live workload scan depth. */
+@media(min-width:1181px) and (min-height:720px){
+ .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{height:390px!important;max-height:390px!important}
+}
+@media(min-width:1181px) and (min-height:900px){
+ .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{height:430px!important;max-height:430px!important}
+}

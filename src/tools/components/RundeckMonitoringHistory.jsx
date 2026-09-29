@@ -203,6 +203,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
             title="Observation History"
+            size="observation-history"
             subtitle={selectedJob.key}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}

@@ -28,3 +28,20 @@ html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{color:#
 html[data-theme="light"] .rundeckAppServerTableWrap table{background:#fff!important;color:#27363e!important}
 html[data-theme="light"] .rundeckAppServerTableWrap th{background:#e8eef0!important;color:#52636d!important}
 html[data-theme="light"] .rundeckAppServerTableWrap td{background:#fff!important;color:#27363e!important;border-color:rgba(45,63,72,.09)!important}
+
+/* SPHERE v1.34.20 — APP analysis scanability. */
+.rundeckAppServerWorkloads>header small{font-size:9.5px!important;font-weight:700!important}
+.rundeckAppServerTableWrap td:first-child small{font-size:8.8px!important}
+.rundeckAppTypeBadge{
+ display:inline-flex;align-items:center;min-height:19px;padding:1px 6px;border-radius:999px;
+ border:1px solid rgba(126,147,158,.18);font-size:8px;font-weight:780;letter-spacing:.025em;
+ color:var(--sphere-text-secondary,#a9b5bb);background:rgba(126,147,158,.025);
+}
+.rundeckAppTypeBadge.is-job{color:var(--sphere-accent,#4fc6c8);border-color:rgba(79,198,200,.26)}
+.rundeckAppTypeBadge.is-program{color:#7ea7dc;border-color:rgba(126,167,220,.28)}
+.rundeckAppTypeBadge.is-process{color:var(--sphere-text-muted,#718089)}
+html[data-theme="light"] .rundeckAppTypeBadge{background:#f4f7f8!important;color:#425760!important;border-color:rgba(45,63,72,.18)!important}
+html[data-theme="light"] .rundeckAppTypeBadge.is-job{color:#0f6870!important;border-color:rgba(20,116,123,.30)!important}
+html[data-theme="light"] .rundeckAppTypeBadge.is-program{color:#315f9c!important;border-color:rgba(55,111,189,.28)!important}
+html[data-theme="light"] .rundeckAppServerWorkloads>header small,
+html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{color:#50636d!important}

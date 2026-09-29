@@ -779,3 +779,21 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-system-data .rundeckSystemDa
 
 /* Stronger chart labels / thresholds under RDP compression. */
 html[data-theme="light"] .rundeckTrendChart{filter:saturate(1.18) contrast(1.06)!important}
+
+/* SPHERE v1.34.20 — final light-mode operational contrast. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(.rundeckLiveCard h4,.rundeckLiveRows span,.rundeckLiveRows b,.rundeckLiveJobSource strong,.rundeckLiveJobSource span,.rundeckLiveJobSource small){
+ opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveCard h4{color:#2c414a!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows span{color:#4d626c!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows b{color:#263a43!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveJobSource strong{color:#31464f!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveJobSource span{color:#52666f!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveJobSource small{color:#60717a!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip strong{color:#244c3c!important;font-weight:800!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix :is(b,span),
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityApps :is(b,span),
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityInfra :is(b,span){opacity:1!important;color:#435861!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip strong{color:#1f333c!important;font-weight:820!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip b{color:#52666f!important;font-weight:720!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckIssueNowV1231 strong{color:#73580e!important;font-weight:800!important}

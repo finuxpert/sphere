@@ -156,3 +156,24 @@
     border-left: 0;
   }
 }
+
+/* SPHERE v1.34.20 — compact readable Observation History drawer. */
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryTableWrap{
+  max-height:340px!important;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))!important;
+  border-radius:6px!important;
+  margin-top:8px!important;
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 table{
+  min-width:680px!important;font-size:9.8px!important;
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 th{
+  font-size:8.6px!important;color:var(--sphere-text-secondary,#a9b5bb)!important;
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 td{padding:7px 8px!important}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckHistoryRunButton{font-weight:740!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 th{
+  background:#e8eef0!important;color:#465b65!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 td{color:#2d414a!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckHistoryRunButton{color:#0f6970!important}

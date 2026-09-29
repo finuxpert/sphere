@@ -80,7 +80,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
             onClick={()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}
             onKeyDown={(event)=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}}>
             <td><strong>{row.consumer_key}</strong><small>{row.details?.program || row.details?.job_name || ''}</small></td>
-            <td>{String(row.consumer_type||'—').toUpperCase()}</td>
+            <td><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{String(row.consumer_type||'—').toUpperCase()}</span></td>
             <td>{metric(row.cpu_pct,'%')}</td>
             <td>{pssText(row)}</td>
             <td>{processText(row)}</td>
