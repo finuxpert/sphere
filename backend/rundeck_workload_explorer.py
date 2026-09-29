@@ -14,6 +14,8 @@ from sqlalchemy import text
 from backend.db.session import get_engine
 
 RANGES = {
+    "3h": {"hours": 3, "bucket_seconds": 300, "bucket": "5m"},
+    "6h": {"hours": 6, "bucket_seconds": 300, "bucket": "5m"},
     "24h": {"hours": 24, "bucket_seconds": 600, "bucket": "10m"},
     "3d": {"hours": 72, "bucket_seconds": 1800, "bucket": "30m"},
     "7d": {"hours": 168, "bucket_seconds": 1800, "bucket": "30m"},
@@ -25,7 +27,7 @@ VALID_TYPES = {"ALL", "JOB", "PROGRAM"}
 def range_config(range_key: str) -> dict:
     key = str(range_key or "24h").lower()
     if key not in RANGES:
-        raise ValueError("range must be one of 24h, 3d, 7d, 30d")
+        raise ValueError("range must be one of 3h, 6h, 24h, 3d, 7d, 30d")
     return {"key": key, **RANGES[key]}
 
 
