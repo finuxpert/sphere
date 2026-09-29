@@ -101,7 +101,7 @@ export default function RundeckLiveOverview({ refreshToken }) {
   const stale = Number.isFinite(snapshotAgeMinutes) && snapshotAgeMinutes >= 15
   const topFsRow = topFs[0]
   const exceptionParts = []
-  if (fsOverall !== 'NORMAL' && topFsRow) exceptionParts.push(`${fsOverall} · ${topFsRow.mount_point} ${metric(topFsRow.used_pct, '%')}`)
+  if (fsOverall !== 'NORMAL' && topFsRow) exceptionParts.push(`${topFsRow.mount_point} ${metric(topFsRow.used_pct, '%')}`)
   if (storageOverall !== 'NORMAL') exceptionParts.push(`${storageOverall} · Storage I/O`)
   if (networkOverall !== 'NORMAL') exceptionParts.push('ATTENTION · Network errors/drops')
 
@@ -117,7 +117,7 @@ export default function RundeckLiveOverview({ refreshToken }) {
     </header>
 
     {exceptionParts.length > 0 && <div className="rundeckLiveExceptionSummary" role="status">
-      <strong>Infrastructure · {exceptionParts.length} exception{exceptionParts.length === 1 ? '' : 's'}</strong>
+      <strong>Infrastructure · {exceptionParts.length} issue{exceptionParts.length === 1 ? '' : 's'}</strong>
       <span>{exceptionParts.join(' · ')}</span>
     </div>}
 
@@ -144,20 +144,12 @@ export default function RundeckLiveOverview({ refreshToken }) {
         </div>
       </article>
 
-      <article className={`rundeckLiveJobsCard ${!authoritativeJobsReady ? 'is-pending-compact' : ''}`}>
-        <header><h4>SAP Jobs</h4></header>
-        {!authoritativeJobsReady
-          ? <div className="rundeckLiveFeedPending">
-              <strong>SM37 job data not connected</strong>
-              <span>Job monitoring from SM37 is not available yet.</span>
-            </div>
-          : <div className="rundeckLiveMetricPair is-jobs">
-              <div><span>Active</span><strong>{jobSummary.active ?? '—'}</strong></div>
-              <div><span>Failed</span><strong className={Number(jobSummary.failed || 0) > 0 ? 'is-critical' : ''}>{jobSummary.failed ?? '—'}</strong></div>
-              <div><span>Long Running</span><strong className={Number(jobSummary.long_running || 0) > 0 ? 'is-attention' : ''}>{jobSummary.long_running ?? '—'}</strong></div>
-              <div><span>Executions</span><strong>{jobSummary.executions ?? '—'}</strong></div>
-            </div>}
-      </article>
+    </div>
+    <div className="rundeckLiveJobSource">
+      <strong>SAP Job Source</strong>
+      {!authoritativeJobsReady
+        ? <><span>SM37 NOT CONNECTED</span><small>SM37 job execution data is not connected.</small></>
+        : <small>Active {jobSummary.active ?? '—'} · Failed {jobSummary.failed ?? '—'} · Long running {jobSummary.long_running ?? '—'}</small>}
     </div>
   </section>
 }
