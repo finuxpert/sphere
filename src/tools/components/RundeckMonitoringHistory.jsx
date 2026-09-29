@@ -4,6 +4,8 @@ import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckObservationHistory from './RundeckObservationHistory.jsx'
+import RundeckJobHistory from './RundeckJobHistory.jsx'
+import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -45,6 +47,7 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [monitoringMode, setMonitoringMode] = React.useState('live')
+  const [detailDrawer, setDetailDrawer] = React.useState(null)
 
   const forwardTrendContext = React.useCallback((context = {}) => {
     const selectedMetric = String(context.metric || '')
@@ -54,14 +57,14 @@ export default function RundeckMonitoringHistory(props) {
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
     onSelectJob?.(job)
-    scrollToSelectedWorkload()
+    setDetailDrawer('job')
   }, [onSelectJob])
 
   const openJobInLive = React.useCallback((job) => {
     if (!job?.key) return
     setMonitoringMode('live')
     onSelectJob?.(job)
-    scrollToSelectedWorkload()
+    setDetailDrawer('job')
   }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
@@ -95,17 +98,49 @@ export default function RundeckMonitoringHistory(props) {
             onTrendContext={forwardTrendContext}
             operationalEvidenceContent={operationalEvidenceContent}
             appFocusRequest={appFocusRequest}
+            onOpenSelectedAnalysis={() => selectedJob?.key && setDetailDrawer('job')}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
           <section className="rundeckPerformanceReviewBand" aria-label="Jobs and programs to review">
             <RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} incidentStart={props.incidentStart || ''} />
           </section>
-          <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} />
-          <details className="rundeckLiveDetail">
-            <summary><SphereIcon name="server" /> Infrastructure</summary>
+          <section className="rundeckCompactDetailRow" aria-label="Additional analysis">
+            <button type="button" onClick={() => selectedJob?.key && setDetailDrawer('history')} disabled={!selectedJob?.key}>
+              <SphereIcon name="history" />
+              <span><b>Performance History</b><small>Open saved job/program observations</small></span>
+              <em>Open</em>
+            </button>
+            <button type="button" onClick={() => setDetailDrawer('infrastructure')}>
+              <SphereIcon name="server" />
+              <span><b>Infrastructure Analysis</b><small>Filesystem, network and storage history</small></span>
+              <em>Open</em>
+            </button>
+          </section>
+
+          {detailDrawer === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
+            title={selectedJob.key}
+            subtitle="Job / Program Performance Analysis"
+            onClose={() => setDetailDrawer(null)}
+          >
+            <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} />
+          </RundeckWorkspaceDrawer>}
+
+          {detailDrawer === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
+            title="Performance History"
+            subtitle={selectedJob.key}
+            onClose={() => setDetailDrawer(null)}
+          >
+            <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} embedded />
+          </RundeckWorkspaceDrawer>}
+
+          {detailDrawer === 'infrastructure' && <RundeckWorkspaceDrawer
+            title="Infrastructure Analysis"
+            subtitle="Filesystem · Network · Storage I/O"
+            onClose={() => setDetailDrawer(null)}
+          >
             <RundeckInfrastructure incidentStart={props.incidentStart || ''} />
-          </details>
+          </RundeckWorkspaceDrawer>}
         </>}
   </>
 }
