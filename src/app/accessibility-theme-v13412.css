@@ -1,0 +1,145 @@
+/* SPHERE v1.34.12 — final readability, complete light surfaces, and simplified monitoring chrome. */
+
+/* Navigation: remove every remaining underline treatment and raise readability. */
+.sphereToolTabs a,
+.appShell.isTool .sphereToolTabs a{
+  border-bottom:0!important;
+  box-shadow:none!important;
+  font-size:12.5px!important;
+}
+.sphereToolTabs a[data-active="true"],
+.appShell.isTool .sphereToolTabs a[data-active="true"]{
+  border-bottom:0!important;
+  box-shadow:none!important;
+}
+.sphereToolTabs a[data-active="true"]::after,
+.appShell.isTool .sphereToolTabs a[data-active="true"]::after{
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  opacity:0!important;
+  content:none!important;
+}
+
+/* Monitoring typography: important operator information should never be micro-text. */
+.appShell:has(.rundeckPanel) .rundeckPanel,
+.rundeckWorkspaceDrawer,
+.rundeckQuickAnalysisDrawer{
+  font-size:11.5px!important;
+  line-height:1.45!important;
+}
+.appShell:has(.rundeckPanel) .rundeckPanel h2{font-size:15.5px!important}
+.appShell:has(.rundeckPanel) .rundeckPanel h3{font-size:13.5px!important}
+.appShell:has(.rundeckPanel) .rundeckPanel h4{font-size:12.5px!important}
+.appShell:has(.rundeckPanel) th,
+.rundeckWorkspaceDrawer th,
+.rundeckQuickAnalysisDrawer th{font-size:10.2px!important;line-height:1.35!important}
+.appShell:has(.rundeckPanel) td,
+.rundeckWorkspaceDrawer td,
+.rundeckQuickAnalysisDrawer td{font-size:11.2px!important;line-height:1.45!important}
+.appShell:has(.rundeckPanel) small,
+.rundeckWorkspaceDrawer small,
+.rundeckQuickAnalysisDrawer small{font-size:10px!important;line-height:1.4!important}
+.rundeckSelectedCompactMetrics span{font-size:11px!important}
+.rundeckSelectedCompactMetrics b{font-size:9.8px!important}
+.rundeckSelectedCompact button{font-size:10.5px!important;min-height:32px!important}
+.rundeckEvidenceCardTitle{font-size:11.5px!important}
+.rundeckEvidenceCard>strong{font-size:10.6px!important}
+.rundeckEvidenceCard>small{font-size:10px!important}
+.rundeckEvidenceCard>em{font-size:9.8px!important}
+.rundeckDrawerAnalysisMenu b{font-size:11.5px!important}
+.rundeckDrawerAnalysisMenu small{font-size:10px!important}
+.rundeckWorkspaceDrawer>header h3{font-size:16px!important}
+.rundeckWorkspaceDrawer>header small{font-size:10.5px!important}
+.rundeckWorkspaceBack em{font-size:10px!important}
+
+/* Five-column APP summary uses space for metrics instead of duplicated generic status. */
+.rundeckServerTable{table-layout:fixed}
+.rundeckServerTable th:nth-child(1){width:20%}
+.rundeckServerTable th:nth-child(2),
+.rundeckServerTable th:nth-child(3),
+.rundeckServerTable th:nth-child(4){width:19%}
+.rundeckServerTable th:nth-child(5){width:23%}
+.rundeckServerTable td{padding-top:7px!important;padding-bottom:7px!important}
+
+/* Complete light workspace rather than a light shell around a dark dashboard. */
+html[data-theme="light"] .appShell:has(.rundeckPanel),
+html[data-theme="light"] .appShell:has(.rundeckPanel) main,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .toolWorkspace,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .toolWorkspaceBody,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckPanel{
+  background:#f4f7f8!important;
+  color:#172229!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckLandscapeHeader,.rundeckLiveOverview,.rundeckLiveCard,.rundeckMonitoringModeBar,
+  .rundeckServerTrendBandV1234,.rundeckServerTrendBandV1235,.rundeckWorkloadBandV1234,.rundeckWorkloadBandV1235,
+  .rundeckBandPaneV1234,.rundeckBandPaneV1235,.rundeckSelectedCompact,.rundeckPerformanceReviewBand,
+  .rundeckOperationalSummaryCards,.rundeckCompactDetailRow,.rundeckCurrentWorkload,.rundeckServerSection,
+  .rundeckTrendSection,.rundeckAvailability,.rundeckSapIssuesV1231,.rundeckSystemHealth,
+  .rundeckReviewTableV1231,.rundeckCurrentWorkload table,.rundeckServerTable,.rundeckExplorerGrid,
+  .rundeckExplorerResults,.rundeckExplorerDetail
+){
+  background:#f4f7f8!important;
+  color:#172229!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckLiveCard,.rundeckSelectedCompact,.rundeckEvidenceCard,.rundeckCompactDetailRow button,
+  .rundeckServerTableWrap,.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231,
+  .rundeckExplorerResults,.rundeckExplorerDetail,.rundeckAvailabilitySummaryStrip,
+  .rundeckSapIssuesSummaryStrip
+){
+  background:#fff!important;
+  border-color:rgba(45,63,72,.13)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckServerTable th,.rundeckCurrentWorkload th,.rundeckReviewTableV1231 th,
+  .rundeckExplorerEpisodes th
+){
+  background:#e8eef0!important;
+  color:#52636d!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckServerTable td,.rundeckCurrentWorkload td,.rundeckReviewTableV1231 td,
+  .rundeckExplorerEpisodes td
+){
+  color:#27363e!important;
+  border-color:rgba(45,63,72,.09)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckServerTable tbody tr:hover,.rundeckCurrentWorkload tbody tr:hover,
+  .rundeckReviewTableV1231 tbody tr:hover
+){background:rgba(22,125,134,.055)!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .is-selected,.is-cross-panel-focus,.is-quick-selected
+){background:rgba(22,125,134,.08)!important}
+html[data-theme="light"] .rundeckWorkspaceDrawerBody,
+html[data-theme="light"] .rundeckQuickAnalysisBody,
+html[data-theme="light"] .rundeckJobHistory,
+html[data-theme="light"] .rundeckJobHistoryContent,
+html[data-theme="light"] .rundeckInfra,
+html[data-theme="light"] .rundeckAvailability,
+html[data-theme="light"] .rundeckSapIssuesV1231,
+html[data-theme="light"] .rundeckSystemData{
+  background:#f4f7f8!important;
+  color:#172229!important;
+}
+html[data-theme="light"] :is(
+  .rundeckJobHistoryOverview,.rundeckJobHistoricalSummary,.rundeckJobPerformanceTitle,
+  .rundeckInfraCurrent,.rundeckInfraTrendWorkspace,.rundeckAvailabilityDetailSections section,
+  .rundeckSystemDataPane,.rundeckSystemDataTabs,.rundeckSapIssuesSummaryStrip
+){
+  border-color:rgba(45,63,72,.12)!important;
+}
+html[data-theme="light"] .rundeckJobHistoricalSummary span,
+html[data-theme="light"] .rundeckAvailabilitySummaryStrip span,
+html[data-theme="light"] .rundeckSapIssuesSummaryStrip span{
+  background:#fff!important;
+}
+html[data-theme="light"] .rundeckJobHistoricalRangeChart,
+html[data-theme="light"] .rundeckJobPerformanceChart{background:#fff!important}
+html[data-theme="light"] .sphereThemeControl select{
+  background:#fff!important;
+  color:#26363e!important;
+  border-color:rgba(45,63,72,.18)!important;
+}
