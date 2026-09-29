@@ -14,6 +14,7 @@ const files = {
   performanceReview: read('src/tools/components/RundeckPerformanceReview.jsx'),
   evaluationBackend: read('backend/rundeck_evaluation.py'),
   infrastructure: read('src/tools/components/RundeckInfrastructure.jsx'),
+  infrastructureCss: read('src/tools/components/RundeckInfrastructure.css'),
   infrastructureBackend: read('backend/rundeck_infra_api.py'),
   observationHistory: read('src/tools/components/RundeckObservationHistory.jsx'),
   uiPolish: read('src/tools/components/RundeckUiPolish.css'),
@@ -43,7 +44,7 @@ const files = {
 }
 
 const checks = [
-  ['interaction polish version is v1.33.8', files.version.includes("APP_VERSION = '1.33.8'") && files.version.includes('interaction-polish-ui-v1.33.8')],
+  ['infrastructure focus version is v1.33.9', files.version.includes("APP_VERSION = '1.33.9'") && files.version.includes('infra-focus-ui-v1.33.9')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -80,8 +81,14 @@ const checks = [
   ['Infrastructure rows can focus history series', files.infrastructure.includes('openTrend') && files.infrastructure.includes('selectedSeries')],
   ['Infrastructure history supports 30D and Critical WP marker', files.infrastructure.includes("'30d'") && files.infrastructure.includes('Critical WP start') && files.infrastructureBackend.includes('"30d": 720') && files.infrastructureBackend.includes('24h|7d|30d')],
   ['Infrastructure selected series exposes current min max change and secondary peaks', files.infrastructure.includes('trendCurrent') && files.infrastructure.includes('trendMin') && files.infrastructure.includes('trendMax') && files.infrastructure.includes('Peak TX') && files.infrastructure.includes('Peak write')],
+  ['Infrastructure summary never aggregates unrelated series', files.infrastructure.includes("selectedSeries?trend.filter") && files.infrastructure.includes(":[]") && files.infrastructure.includes('Selected: {selectedSeries}') && !files.infrastructure.includes("'All series'")],
+  ['Infrastructure auto-selects highest-risk available series', files.infrastructure.includes('grouped.set(key,Math.max') && files.infrastructure.includes('if(top)setSelectedSeries(top)')],
+  ['Infrastructure filesystem chart has fixed percentage scale and thresholds', files.infrastructure.includes("[0,50,75,90,100]") && files.infrastructure.includes('Warn 75%') && files.infrastructure.includes('Crit 90%')],
+  ['Infrastructure open disclosure has no permanent focus outline', files.infrastructureCss.includes('.rundeckInfraTrendDisclosure[open]') && files.infrastructureCss.includes('summary:focus-visible')],
   ['System Data collection history defaults to eight and exposes run detail', files.source.includes('history.slice(0, 8)') && files.source.includes('rundeckCollectionDetail')],
   ['System Data summarizes SPHERE services before expansion', files.source.includes('serviceSummary') && files.source.includes('serviceNormalCount')],
+  ['System Data distinguishes normal from not configured services', files.source.includes('serviceNotConfiguredCount') && files.source.includes('not configured')],
+  ['System Data panels fill their grid columns', files.sourceCss.includes('.rundeckSupportingDataBody > details') && files.sourceCss.includes('width: 100%')],
   ['Aligned workload evidence stays visually subdued', files.evidenceCss.includes('.rundeckEvidenceAlignment.is-aligned') && files.evidenceCss.includes('opacity: .82')],
   ['Stale availability freshness is consolidated without duplicate data-age row', files.availability.includes('m old · last reliable') && files.availability.includes('const showDataTrust = Boolean(collectionNotice || showCollectionGap)') && !files.availability.includes('Data age {availabilityAge}m')],
   ['SM37 execution schema is authoritative and separate from WP sampling', files.migration.includes('sap_job_executions') && files.intelligence.includes('never promoted to an authoritative')],
@@ -129,4 +136,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.33.8 interaction polish checks passed.')
+console.log('\nSPHERE v1.33.9 infrastructure focus checks passed.')
