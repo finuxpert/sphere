@@ -136,7 +136,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
     </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
-  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Performance History">{content}</section>
+  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Observation History">{content}</section>
 
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
     <summary>
