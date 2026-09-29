@@ -87,7 +87,6 @@ export default function RundeckInfrastructure({incidentStart=''}){
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trend,setTrend]=React.useState([])
   const [selectedSeries,setSelectedSeries]=React.useState('')
-  const trendRef=React.useRef(null)
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
   const collectedAt=hostRow?.snapshot_ts||data.fs[0]?.collected_at||data.network[0]?.collected_at||data.storage[0]?.collected_at
@@ -139,7 +138,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
     if(top)setSelectedSeries(top)
   },[selectedSeries,trend,trendMetric])
 
-  const openTrend=(metricType,series='')=>{setTrendMetric(metricType);setSelectedSeries(series);queueMicrotask(()=>{if(trendRef.current)trendRef.current.open=true})}
+  const openTrend=(metricType,series='')=>{setTrendMetric(metricType);setSelectedSeries(series)}
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
@@ -155,7 +154,10 @@ export default function RundeckInfrastructure({incidentStart=''}){
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
-    <div className="rundeckInfraGrid">
+    <div className="rundeckInfraWorkspace">
+      <div className="rundeckInfraCurrent">
+        <div className="rundeckInfraCurrentLabel">Current Snapshot</div>
+        <div className="rundeckInfraGrid">
       <article><div className="cardHead"><h4>Filesystem</h4><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article>
         <div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div>
@@ -216,11 +218,15 @@ export default function RundeckInfrastructure({incidentStart=''}){
           </tbody>
         </table>
       </article>
-    </div>
+        </div>
+      </div>
 
-    <details ref={trendRef} className="rundeckInfraTrend rundeckInfraTrendDisclosure">
-      <summary><span><b>Infrastructure History</b><small>Usage history for {host}</small></span><em>{selectedSeries||'Selecting…'} · {range.toUpperCase()}</em></summary>
-      <header><div><p>History for the selected server.</p></div><div className="controls">
+      <section className="rundeckInfraTrend rundeckInfraTrendWorkspace">
+        <div className="rundeckInfraTrendWorkspaceHead">
+          <div><b>Infrastructure History</b><small>Usage history for {host}</small></div>
+          <em>{selectedSeries||'Selecting…'} · {range.toUpperCase()}</em>
+        </div>
+        <header><div><p>History for the selected server.</p></div><div className="controls">
         <div>{['1h','6h','24h','7d','30d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
         <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>{setTrend([]);setTrendMetric(v);setSelectedSeries('')}}>{label}</button>)}</div>
       </div></header>
@@ -236,7 +242,8 @@ export default function RundeckInfrastructure({incidentStart=''}){
         {trendMetric==='storage'&&selectedWriteMbps.length>0&&<span>Peak write {metric(Math.max(...selectedWriteMbps),' MB/s')}</span>}
       </div>}
       <SparkChart items={trend} metricType={trendMetric} selectedSeries={selectedSeries} incidentStart={incidentStart}/>
-      <small>{trendMetric==='filesystem'?'Filesystem usage':trendMetric==='network'?'Network RX history with TX peak and drops':'Storage utilization with write peaks'} · {range.toUpperCase()}</small>
-    </details>
+        <small>{trendMetric==='filesystem'?'Filesystem usage':trendMetric==='network'?'Network RX history with TX peak and drops':'Storage utilization with write peaks'} · {range.toUpperCase()}</small>
+      </section>
+    </div>
   </section>
 }
