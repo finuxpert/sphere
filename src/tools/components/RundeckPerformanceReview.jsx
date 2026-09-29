@@ -18,7 +18,7 @@ function Segmented({ options, value, onChange, label }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '' }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '' }) {
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
   const [data, setData] = React.useState(null)
@@ -60,7 +60,14 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
 
-  const openQuick = (row) => setQuickRow(row)
+  const openQuick = (row) => {
+    if (onOpenQuickAnalysis) {
+      setQuickRow(null)
+      onOpenQuickAnalysis(row, { period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' })
+      return
+    }
+    setQuickRow(row)
+  }
   const openFull = (job) => {
     setQuickRow(null)
     onSelectJob?.(job)
@@ -95,7 +102,9 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
           <tbody>
             {visibleRows.map((row) => {
               const selected = selectedJob?.key === row.consumer_key && selectedJob?.consumerType === row.consumer_type
-              const quickSelected = quickRow?.consumer_key === row.consumer_key && quickRow?.consumer_type === row.consumer_type
+              const internalQuickSelected = quickRow?.consumer_key === row.consumer_key && quickRow?.consumer_type === row.consumer_type
+              const externalQuickSelected = externalQuickKey === `${row.consumer_type}:${row.consumer_key}`
+              const quickSelected = internalQuickSelected || externalQuickSelected
               const reason = evaluationReasonText(row)
               const title = [
                 `Type: ${workloadTypeLabel(row.consumer_type)}`,
@@ -130,7 +139,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         </table>
       </div>
     </>}
-    {quickRow && <RundeckReviewQuickAnalysis
+    {!onOpenQuickAnalysis && quickRow && <RundeckReviewQuickAnalysis
       row={quickRow}
       reviewContext={{ period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' }}
       refreshToken={refreshToken}
