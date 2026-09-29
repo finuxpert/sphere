@@ -71,7 +71,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.23', files.version.includes("APP_VERSION = '1.34.23'") && files.version.includes('monitoring-flow-ui-v1.34.23')],
+  ['monitoring flow version is v1.34.24', files.version.includes("APP_VERSION = '1.34.24'") && files.version.includes('monitoring-flow-ui-v1.34.24')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -121,8 +121,10 @@ const checks = [
   ['Trend modal traps focus locks page scroll and restores focus', files.serverTrend.includes("document.body.style.overflow = 'hidden'") && files.serverTrend.includes("event.key !== 'Tab'") && files.serverTrend.includes('restoreFocusRef.current?.focus')],
   ['Trend point selection ignores distant clicks', files.serverTrend.includes('distance > 900')],
   ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('CPU can exceed 100%') && files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes(' GB')],
-  ['Performance drawer uses a full-width controls and chart workspace', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistory.includes('rundeckJobAnalysisWorkspace') && files.jobHistoryCss.includes('grid-template-columns:minmax(270px,32fr) minmax(0,68fr)') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
+  ['Performance drawer uses a full-width controls and chart workspace', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistory.includes('rundeckJobAnalysisWorkspace') && files.jobHistoryCss.includes('grid-template-columns:minmax(250px,28fr) minmax(0,72fr)') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
   ['Current Jobs reserves desktop space for five or more scan rows', files.currentWorkloadCss.includes('height:390px!important') && files.currentWorkloadCss.includes('height:430px!important')],
+  ['Current Jobs band reserves its full scan height before Performance Review', files.workspace.includes('min-height:438px!important') && files.workspace.includes('min-height:478px!important') && files.workspace.includes('contain:layout paint')],
+
   ['History empty states use stronger intentional visual hierarchy', files.workloadExplorerCss.includes('min-height:235px') && files.workloadExplorerCss.includes('.rundeckExplorerEmptyState strong')],
   ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
   ['APP analysis and selected job/program contexts are explicitly named', files.wrapper.includes('SAP App Server Analysis') && files.appServerAnalysis.includes('Jobs & Programs on') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
@@ -193,7 +195,7 @@ const checks = [
   ['Performance and APP detail drawers use viewport-capped content-aware geometry', files.wrapper.includes('size="performance"') && files.wrapper.includes('size="app-detail"') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 94px)') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-app-detail')],
   ['Availability and Analysis Menu use content-aware drawer modes', files.wrapper.includes('size="availability"') && files.wrapper.includes('size="menu"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-availability') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-menu')],
   ['Floating analysis drawers use four-side radius and restrained shadow', files.workspaceDrawerCss.includes('border-radius:10px') && files.workspaceDrawerCss.includes('box-shadow:-8px 10px 28px')],
-  ['Job charts use adaptive WIB labels and graphic lane labels', files.jobHistory.includes('chartAxisText') && files.jobHistory.includes("type:'text'") && files.jobHistory.includes("text:'Critical WP'")],
+  ['Job charts use adaptive WIB labels and explicit APP Critical WP lane labels', files.jobHistory.includes('chartAxisText') && files.jobHistory.includes("type:'text'") && files.jobHistory.includes("'APP Critical WP'") && files.jobHistory.includes("'WP Count'")],
   ['Selected episode shows Critical WP overlap denominator', files.jobHistory.includes('profile.criticalSamples') && files.jobHistory.includes('profile.totalSamples')],
   ['Light theme defines RDP-safe monitoring tokens', files.accessibilityThemeFinal.includes('--sphere-accent:#14747b') && files.accessibilityThemeFinal.includes('--sphere-positive:#287a55') && files.accessibilityThemeFinal.includes('--sphere-text-secondary:#3f515a')],
   ['ST03N honors the global light theme with shared readable surfaces', files.st03nTheme.includes('html[data-theme="light"] .rca26Shell') && files.st03nTheme.includes('--bg:#f4f7f8') && files.st03nTheme.includes('.rca26Table th')],
@@ -269,4 +271,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.23 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.24 monitoring flow and deep-analysis checks passed.')

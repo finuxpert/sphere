@@ -856,7 +856,7 @@
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
   display:grid;
-  grid-template-columns:minmax(270px,32fr) minmax(0,68fr);
+  grid-template-columns:minmax(250px,28fr) minmax(0,72fr);
   gap:14px;
   width:100%;
   min-width:0;
@@ -984,7 +984,7 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpiso
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics b{color:#586b75!important}
 @media(max-width:1360px){
   .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
-    grid-template-columns:minmax(240px,36fr) minmax(0,64fr);
+    grid-template-columns:minmax(235px,30fr) minmax(0,70fr);
   }
 }
 @media(max-width:1180px){
@@ -997,4 +997,16 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpiso
   .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{flex-direction:row;justify-content:space-between}
   .rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs{display:flex;width:auto}
   .rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode{display:flex;width:auto}
+}
+
+/* SPHERE v1.34.24 — final performance workspace proportion and label legibility. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{
+  height:fit-content!important;
+  max-height:none!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
+  align-self:start!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart canvas{
+  image-rendering:auto;
 }

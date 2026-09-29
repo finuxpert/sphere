@@ -487,3 +487,20 @@
     grid-template-columns:1fr!important;
   }
 }
+
+/* SPHERE v1.34.24 — reserve the full Current Jobs scan lane so Review never overlaps it. */
+@media(min-width:1181px){
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+    min-height:438px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-current-workload{
+    min-height:438px!important;
+    contain:layout paint;
+  }
+}
+@media(min-width:1181px) and (min-height:900px){
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-current-workload{
+    min-height:478px!important;
+  }
+}

@@ -251,13 +251,13 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
       profile.hasPss ? { id: 'pss', name: 'PSS Memory GB', height: expanded ? 82 : 50 } : null,
       profile.hasIo ? { id: 'io', name: 'I/O MiB/s', height: expanded ? 70 : 44 } : null,
       profile.hasWp ? { id: 'wp', name: 'WP', height: expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28) } : null,
-      profile.hasCritical ? { id: 'event', name: '', height: expanded ? 28 : 20 } : null,
+      profile.hasCritical ? { id: 'event', name: 'APP Critical WP', height: expanded ? 38 : 28 } : null,
     ].filter(Boolean)
 
     let top = 16
     const gap = expanded ? 16 : 14
     const grids = lanes.map((lane) => {
-      const grid = { left: 68, right: 18, top, height: lane.height }
+      const grid = { left: 96, right: 18, top, height: lane.height }
       top += lane.height + gap
       return grid
     })
@@ -330,7 +330,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
         xAxisIndex: laneIndex.event,
         yAxisIndex: laneIndex.event,
         symbol: 'triangle',
-        symbolSize: (value, params) => Math.min(11, 6 + Number(params?.data?.critical || 0)),
+        symbolSize: (value, params) => Math.min(13, 8 + Number(params?.data?.critical || 0)),
         itemStyle: { color: colors.danger },
         data: rows.filter((row) => Number(row.host_wp_critical || 0) > 0).map((row) => ({ value: [row.collected_at, .5], critical: Number(row.host_wp_critical || 0) })),
       } : null,
@@ -348,8 +348,8 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
         textStyle: { color: colors.text },
         grid: grids,
         graphic: lanes.map((lane,index)=>({
-          type:'text',left:68,top:Math.max(0,grids[index].top-13),silent:true,
-          style:{text:lane.id==='event'?'Critical WP':lane.name,fill:colors.secondary,font:'600 9px sans-serif'},
+          type:'text',left:8,top:Math.max(0,grids[index].top+3),silent:true,
+          style:{text:lane.id==='event'?'APP Critical WP':lane.id==='wp'?'WP Count':lane.name,fill:colors.secondary,font:'700 9px sans-serif'},
         })),
         xAxis: lanes.map((lane, index) => ({
           ...axisBase,
