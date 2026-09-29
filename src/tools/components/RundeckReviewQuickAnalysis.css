@@ -206,3 +206,39 @@
     grid-template-columns:1fr;
   }
 }
+
+/* SPHERE v1.34.7 — review analysis uses the same full-width performance canvas. */
+.rundeckQuickAnalysisDrawer{
+  width:min(860px,58vw);
+}
+.rundeckQuickAnalysisDrawer .rundeckJobHistory.is-drawer-presentation,
+.rundeckQuickAnalysisDrawer .rundeckJobHistoryContent,
+.rundeckQuickAnalysisDrawer .rundeckJobPerformanceDisclosure,
+.rundeckQuickAnalysisDrawer .rundeckJobPerformanceWrap{
+  width:100%;
+  max-width:none;
+}
+.rundeckQuickAnalysisDrawer .rundeckJobHistoryOverview{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  max-width:none;
+}
+.rundeckQuickAnalysisDrawer .rundeckJobHistorySummary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px 8px;
+}
+.rundeckQuickAnalysisDrawer .rundeckJobPerformanceChart{
+  width:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+}
+.rundeckQuickAnalysisDrawer .rundeckQuickSection{
+  min-width:0;
+}
+@media(max-width:1180px){
+  .rundeckQuickAnalysisDrawer{width:100%}
+}
+@media(max-width:760px){
+  .rundeckQuickAnalysisDrawer .rundeckJobHistoryOverview{grid-template-columns:1fr}
+  .rundeckQuickAnalysisDrawer .rundeckJobHistorySummary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
