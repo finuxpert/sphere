@@ -122,7 +122,7 @@ export default function RundeckMonitoringHistory(props) {
           <section className="rundeckCompactDetailRow" aria-label="Additional analysis">
             <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
               <SphereIcon name="history" />
-              <span><b>Performance History</b><small>90-day saved performance history</small></span>
+              <span><b>Observation History</b><small>Saved runs and observation records</small></span>
               <em>›</em>
             </button>
             <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'menu' } })}>
@@ -150,7 +150,7 @@ export default function RundeckMonitoringHistory(props) {
               </button>
               <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
                 <SphereIcon name="history" />
-                <span><b>Performance History</b><small>90-day saved performance history</small></span>
+                <span><b>Observation History</b><small>Saved runs and observation records</small></span>
                 <em>›</em>
               </button>
               <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'menu' } })}>
@@ -192,7 +192,7 @@ export default function RundeckMonitoringHistory(props) {
               : activeOverlay.returnTo?.type === 'review'
                 ? 'Back to Review'
                 : activeOverlay.returnTo?.type === 'history'
-                  ? 'Back to Performance History'
+                  ? 'Back to Observation History'
                   : activeOverlay.returnTo?.type === 'menu'
                     ? 'Back to Analysis Menu'
                     : 'Back'}
@@ -201,7 +201,7 @@ export default function RundeckMonitoringHistory(props) {
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
-            title="Performance History"
+            title="Observation History"
             subtitle={selectedJob.key}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
