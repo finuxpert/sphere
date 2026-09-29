@@ -1,7 +1,6 @@
 import React from 'react'
 import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
-import SphereIcon from './SphereIcon.jsx'
 import { numberText, workloadTypeLabel } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
 import './RundeckReviewQuickAnalysis.css'
