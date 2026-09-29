@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { numberText, workloadTypeLabel } from './sapUiFormat.js'
-import { evaluationReasonParts, evaluationReasonText } from './rundeckEvaluationExplain.js'
+import { evaluationReasonParts } from './rundeckEvaluationExplain.js'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -106,7 +106,6 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
               const externalQuickSelected = externalQuickKey === `${row.consumer_type}:${row.consumer_key}`
               const quickSelected = internalQuickSelected || externalQuickSelected
               const reasonParts = evaluationReasonParts(row)
-              const reason = reasonParts.join(' · ')
               const title = [
                 `Type: ${workloadTypeLabel(row.consumer_type)}`,
                 row.assessment_reason || '',
