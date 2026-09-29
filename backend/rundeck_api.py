@@ -106,7 +106,7 @@ def workload_search_endpoint(
 def workload_summary_endpoint(
     job: str = Query(..., min_length=1, max_length=512),
     consumer_type: str = Query(..., alias="type", pattern="^(JOB|PROGRAM)$"),
-    range_key: str = Query("24h", alias="range", pattern="^(24h|3d|7d|30d)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(3h|6h|24h|3d|7d|30d)$"),
     host: str | None = Query(None, max_length=120),
 ):
     try:
@@ -123,7 +123,7 @@ def workload_summary_endpoint(
 def workload_trend_endpoint(
     job: str = Query(..., min_length=1, max_length=512),
     consumer_type: str = Query(..., alias="type", pattern="^(JOB|PROGRAM)$"),
-    range_key: str = Query("24h", alias="range", pattern="^(24h|3d|7d|30d)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(3h|6h|24h|3d|7d|30d)$"),
     host: str | None = Query(None, max_length=120),
 ):
     try:
