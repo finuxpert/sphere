@@ -149,7 +149,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
     <div className="rundeckSectionTitle"><h3><SphereIcon name="server" /> SAP App Servers</h3></div>
     {state.error && <div className="rundeckHistoryState is-error">{state.error}</div>}
     {!state.error && <div className="rundeckServerTableWrap"><table className="rundeckServerTable">
-      <thead><tr><th>APP</th><th>OS Resource</th><th>SAP Workload</th><th>CPU</th><th>Memory</th><th>I/O Wait</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>APP</th><th>OS Resource</th><th>Jobs / Programs</th><th>CPU</th><th>Memory</th><th>I/O Wait</th><th>Critical WP</th></tr></thead>
       <tbody>{state.items.map((host) => {
         const workloadState = sapWorkloadState(host)
         const wpCount = Number(host.wp_critical || 0)
@@ -168,7 +168,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
             } : undefined}
           >
             <td>{expandable
-              ? <button type="button" className="rundeckAppExpandButton" onClick={() => openWp(host)} aria-expanded={expanded} title="Show workloads observed on this APP while Critical WP is active"><strong>{appKey}</strong><span>{expanded ? '−' : '+'}</span></button>
+              ? <button type="button" className="rundeckAppExpandButton" onClick={() => openWp(host)} aria-expanded={expanded} title="Show jobs and programs observed on this APP while Critical WP is active"><strong>{appKey}</strong><span>{expanded ? '−' : '+'}</span></button>
               : <strong title={host.host}>{appKey}</strong>}
             </td>
             <td><StatusPill value={hostResourceState(host)} /></td>
@@ -189,7 +189,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
               {drilldown.loading && <div className="rundeckWpDrilldownState">Loading jobs and programs…</div>}
               {drilldown.error && <div className="rundeckWpDrilldownState is-error">{drilldown.error}</div>}
               {!drilldown.loading && !drilldown.error && <div className="rundeckWpInlineTableWrap"><table>
-                <thead><tr><th>Workload</th><th>Type</th><th>CPU</th><th>PSS</th><th>Processes</th></tr></thead>
+                <thead><tr><th>Job / Program</th><th>Type</th><th>CPU</th><th>Memory</th><th>Processes</th></tr></thead>
                 <tbody>{drilldown.rows.map((row, index) => <tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}-${index}`}>
                   <td><button type="button" onClick={() => inspectWorkload(row)}>{row.consumer_key}</button></td>
                   <td>{String(row.consumer_type || '—').toUpperCase()}</td>
