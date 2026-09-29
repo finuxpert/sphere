@@ -216,6 +216,14 @@ export default function RundeckSource({ onCollection }) {
     setSelectedJob((current) => current?.pinned ? current : { ...job, pinned: false })
   }, [])
 
+  const enrichSelectedJob = React.useCallback((context) => {
+    if (!context?.key) return
+    setSelectedJob((current) => {
+      if (!current || current.key !== context.key || current.host !== context.host) return current
+      return { ...current, ...context, pinned: current.pinned }
+    })
+  }, [])
+
   const loadLatest = React.useCallback(async () => {
     const response = await fetch(`${API}/collections/latest`, { cache: 'no-store' })
     if (response.status === 404) return
@@ -579,6 +587,7 @@ export default function RundeckSource({ onCollection }) {
     collectionId={latest?.collection_id || ''}
     selectedJob={selectedJob}
     onSelectJob={selectJob}
+    onSelectedContext={enrichSelectedJob}
   />
 
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
