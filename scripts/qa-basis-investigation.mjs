@@ -71,7 +71,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.25', files.version.includes("APP_VERSION = '1.34.25'") && files.version.includes('monitoring-flow-ui-v1.34.25')],
+  ['monitoring flow version is v1.34.26', files.version.includes("APP_VERSION = '1.34.26'") && files.version.includes('monitoring-flow-ui-v1.34.26')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -124,6 +124,7 @@ const checks = [
   ['Performance drawer uses a full-width controls and chart workspace', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistory.includes('rundeckJobAnalysisWorkspace') && files.jobHistoryCss.includes('grid-template-columns:minmax(250px,28fr) minmax(0,72fr)') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
   ['Performance drawer keeps Correlated Events Availability and SAP Issues in its bottom context rail', files.wrapper.includes('rundeckPerformanceDrawerEvidence') && files.wrapper.includes("returnTo: { type: 'job'") && files.workspaceDrawerCss.includes('.rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards')],
   ['Performance operational drilldowns return directly to Job Performance', files.wrapper.includes("activeOverlay.returnTo?.type === 'job' ? 'Back to Performance'")],
+  ['Live cockpit lower half is content-driven and compact', files.currentWorkloadCss.includes('max-height:300px!important') && files.monitoringCss.includes('ramping pass: content-driven live cockpit') && files.monitoringCss.includes('min-height:60px!important')],
 
   ['Current Jobs reserves desktop space for five or more scan rows', files.currentWorkloadCss.includes('height:390px!important') && files.currentWorkloadCss.includes('height:430px!important')],
   ['Current Jobs band reserves its full scan height before Performance Review', files.workspace.includes('min-height:438px!important') && files.workspace.includes('min-height:478px!important') && files.workspace.includes('contain:layout paint')],
@@ -205,7 +206,7 @@ const checks = [
   ['Current Jobs and Selected Job use one balanced content-driven desktop layout', files.workspace.includes('grid-template-columns:minmax(0,45fr) minmax(0,55fr)') && files.workspace.includes('height:fit-content!important') && !files.liveOverviewCss.includes('minmax(0,38fr) minmax(0,62fr)')],
   ['Review queue tells operators that rows are sorted by review priority', files.performanceReview.includes('sorted by review priority')],
   ['Final light hierarchy strengthens healthy states and source integrity text', files.accessibilityThemeFinal.includes('.rundeckSm37VerificationHead strong') && files.accessibilityThemeFinal.includes('.rundeckStatus.is-normal') && files.accessibilityThemeFinal.includes('.rundeckReviewWorkloadV1231 button')],
-  ['Current Jobs uses more vertical workspace for operator scanning', files.currentWorkloadCss.includes('max-height:390px') && !files.currentWorkloadCss.includes('height:310px!important')],
+  ['Current Jobs uses compact content-driven scan depth without artificial fixed height', files.currentWorkloadCss.includes('max-height:300px!important') && files.currentWorkloadCss.includes('height:auto!important') && files.currentWorkloadCss.includes('max-height:245px!important')],
   ['Light mode closes host selector dark island and preserves active range contrast', files.accessibilityThemeFinal.includes('.rundeckLiveOverviewHead') && files.accessibilityThemeFinal.includes('#dff2f2') && files.accessibilityThemeFinal.includes('#0f5960')],
   ['Light mode keeps workload review and operational cards readable', files.accessibilityThemeFinal.includes('.rundeckCurrentWorkloadName button') && files.accessibilityThemeFinal.includes('.rundeckReviewReasonChips span') && files.accessibilityThemeFinal.includes('.rundeckCompactDetailRow>button')],
   ['Light theme swaps SPHERE logo and defines accessible surface tokens', files.sphereLogo.includes("theme === 'light'") && files.accessibilityTheme.includes('html[data-theme="light"]') && files.accessibilityTheme.includes('--sphere-page:#f4f7f8')],
@@ -274,4 +275,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.25 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.26 monitoring flow and deep-analysis checks passed.')

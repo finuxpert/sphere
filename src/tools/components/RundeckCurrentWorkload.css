@@ -223,3 +223,27 @@
     max-height:430px!important;
   }
 }
+
+/* SPHERE v1.34.26 — compact live workload scan depth; avoid artificial empty height. */
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+  height:auto!important;
+  max-height:300px!important;
+  min-height:0!important;
+  scrollbar-gutter:stable;
+}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload th,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload td{
+  padding-top:4px!important;
+  padding-bottom:4px!important;
+}
+@media(max-height:760px){
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+    max-height:245px!important;
+  }
+}
+@media(min-width:1181px) and (min-height:900px){
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+    height:auto!important;
+    max-height:330px!important;
+  }
+}
