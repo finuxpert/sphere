@@ -113,7 +113,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
       </div>
       <div className="rundeckSapIssuesTableWrap">
       <table className="rundeckSapIssuesTableV1231">
-        <thead><tr><th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th></tr></thead>
+        <thead><tr><th>APP</th><th>Signal</th><th>Now</th><th>Peak</th><th>Duration</th></tr></thead>
         <tbody>
           {items.map((row) => {
             const severity = severityFor(row, row.latest_value)
