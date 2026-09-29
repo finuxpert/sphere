@@ -320,7 +320,7 @@ export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJ
                 <option value="">All APP</option>
                 {hosts.map((item) => <option key={item} value={item}>{shortHost(item)}</option>)}
               </select>
-              <button type="button" className="rundeckExplorerOpenLive" onClick={openLive}>Open Workload</button>
+              <button type="button" className="rundeckExplorerOpenLive" onClick={openLive}>Open Analysis</button>
             </div>
           </div>
 
