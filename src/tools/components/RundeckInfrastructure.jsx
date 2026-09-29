@@ -33,10 +33,15 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart=''}){
   const groups=React.useMemo(()=>{
     const map=new Map()
     items.forEach(row=>{const key=row.series_key||'series';if(!map.has(key))map.set(key,[]);map.get(key).push(row)})
-    return [...map.entries()]
+    const ranked=[...map.entries()]
       .sort(([,left],[,right])=>Math.max(...right.map(row=>Number(row.value)||0))-Math.max(...left.map(row=>Number(row.value)||0)))
-      .slice(0,metricType==='filesystem'?4:6)
-  },[items,metricType])
+    const limit=metricType==='filesystem'?4:6
+    const visible=ranked.slice(0,limit)
+    if(selectedSeries&&map.has(selectedSeries)&&!visible.some(([key])=>key===selectedSeries)){
+      visible[visible.length-1]=[selectedSeries,map.get(selectedSeries)]
+    }
+    return visible
+  },[items,metricType,selectedSeries])
   const width=920,height=210,pad=34
   const values=items.map(row=>Number(row.value)).filter(Number.isFinite)
   const rawMax=Math.max(1,...values)
