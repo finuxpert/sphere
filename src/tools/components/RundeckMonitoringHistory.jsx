@@ -121,6 +121,14 @@ export default function RundeckMonitoringHistory(props) {
             title={selectedJob.key}
             subtitle="Job / Program Performance Analysis"
             onClose={() => setActiveOverlay(null)}
+            onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
+            backLabel={activeOverlay.returnTo?.type === 'app'
+              ? `Back to ${activeOverlay.returnTo.app?.host ? activeOverlay.returnTo.app.host.split('.').shift() : 'APP Server'}`
+              : activeOverlay.returnTo?.type === 'review'
+                ? 'Back to Review'
+                : activeOverlay.returnTo?.type === 'history'
+                  ? 'Back to Performance History'
+                  : 'Back'}
           >
             <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
           </RundeckWorkspaceDrawer>}
@@ -130,7 +138,16 @@ export default function RundeckMonitoringHistory(props) {
             subtitle={selectedJob.key}
             onClose={() => setActiveOverlay(null)}
           >
-            <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} embedded />
+            <RundeckObservationHistory
+              job={selectedJob}
+              refreshToken={refreshToken}
+              onSelectJob={(job) => {
+                if (!job?.key) return
+                onSelectJob?.(job)
+                setActiveOverlay({ type: 'job', returnTo: { type: 'history' } })
+              }}
+              embedded
+            />
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
@@ -144,7 +161,7 @@ export default function RundeckMonitoringHistory(props) {
               refreshToken={refreshToken}
               onSelectJob={(job) => {
                 onSelectJob?.(job)
-                setActiveOverlay({ type: 'job' })
+                setActiveOverlay({ type: 'job', returnTo: { type: 'app', app: activeOverlay.app } })
               }}
             />
           </RundeckWorkspaceDrawer>}
@@ -165,7 +182,10 @@ export default function RundeckMonitoringHistory(props) {
             onClose={() => setActiveOverlay(null)}
             onOpenFull={(job) => {
               onSelectJob?.(job)
-              setActiveOverlay({ type: 'job' })
+              setActiveOverlay({
+                type: 'job',
+                returnTo: { type: 'review', row: activeOverlay.row, reviewContext: activeOverlay.reviewContext },
+              })
             }}
           />}
         </>}
