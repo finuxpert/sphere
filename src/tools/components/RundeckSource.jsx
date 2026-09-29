@@ -2,11 +2,12 @@ import React from 'react'
 import RundeckCurrentWorkload from './RundeckCurrentWorkload.jsx'
 import RundeckMonitoringHistory from './RundeckMonitoringHistory.jsx'
 import RundeckPerformanceIncident from './RundeckPerformanceIncident.jsx'
+import RundeckSystemData from './RundeckSystemData.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
-import { hostResourceState, overallOperationalState, statusExplanation } from './rundeckStatusSemantics.js'
+import { overallOperationalState } from './rundeckStatusSemantics.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
 
@@ -30,18 +31,19 @@ const metric = (value, suffix = '') => (
     : `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}${suffix}`
 )
 
-const formatBytes = (value) => {
-  const bytes = Number(value)
-  if (!Number.isFinite(bytes) || bytes < 0) return '—'
-  if (bytes < 1024) return `${bytes} B`
-  const units = ['KB', 'MB', 'GB', 'TB']
-  let size = bytes / 1024
-  let index = 0
-  while (size >= 1024 && index < units.length - 1) {
-    size /= 1024
-    index += 1
-  }
-  return `${size.toLocaleString('en-US', { maximumFractionDigits: size >= 10 ? 1 : 2 })} ${units[index]}`
+const ageMinutes = (value) => {
+  const timestamp = Date.parse(value || '')
+  if (!Number.isFinite(timestamp)) return null
+  return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
+}
+
+const ageLabel = (minutes) => {
+  if (!Number.isFinite(minutes)) return 'age unknown'
+  if (minutes < 1) return '<1m'
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
 const pssText = (row = {}) => {
@@ -141,6 +143,7 @@ export default function RundeckSource({ onCollection }) {
   const [latest, setLatest] = React.useState(null)
   const [health, setHealth] = React.useState(null)
   const [platform, setPlatform] = React.useState(null)
+  const [availabilitySnapshot, setAvailabilitySnapshot] = React.useState(null)
   const [hosts, setHosts] = React.useState([])
   const [hostSnapshot, setHostSnapshot] = React.useState(null)
   const [history, setHistory] = React.useState([])
@@ -187,6 +190,14 @@ export default function RundeckSource({ onCollection }) {
     setSelectedJob((current) => current?.pinned ? current : { ...job, pinned: false })
   }, [])
 
+  const enrichSelectedJob = React.useCallback((context) => {
+    if (!context?.key) return
+    setSelectedJob((current) => {
+      if (!current || current.key !== context.key || current.host !== context.host) return current
+      return { ...current, ...context, pinned: current.pinned }
+    })
+  }, [])
+
   const loadLatest = React.useCallback(async () => {
     const response = await fetch(`${API}/collections/latest`, { cache: 'no-store' })
     if (response.status === 404) return
@@ -208,12 +219,13 @@ export default function RundeckSource({ onCollection }) {
   }, [])
 
   const refreshMeta = React.useCallback(async () => {
-    const [healthResult, hostsResult, historyResult, runResult, platformResult] = await Promise.allSettled([
+    const [healthResult, hostsResult, historyResult, runResult, platformResult, availabilityResult] = await Promise.allSettled([
       json(`${API}/health`),
       json(`${API}/history/hosts/latest`),
       json(`${API}/history/collections?days=90&limit=30`),
       json(`${API}/collect-now/status`),
       json(`${API}/platform/health`),
+      json(`${API}/availability/latest`),
     ])
 
     if (healthResult.status === 'fulfilled') setHealth(healthResult.value)
@@ -224,6 +236,7 @@ export default function RundeckSource({ onCollection }) {
     if (historyResult.status === 'fulfilled') setHistory(historyResult.value.items || [])
     if (runResult.status === 'fulfilled') setRunState(runResult.value)
     if (platformResult.status === 'fulfilled') setPlatform(platformResult.value)
+    if (availabilityResult.status === 'fulfilled') setAvailabilitySnapshot(availabilityResult.value)
   }, [])
 
   const refreshAll = React.useCallback(async () => {
@@ -381,16 +394,15 @@ export default function RundeckSource({ onCollection }) {
       y += 4
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.8)
-      const columns = [0, 34, 82, 112, 145, 180]
-      ;['APP', 'OS RESOURCE', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
+      const columns = [0, 52, 92, 136, 180]
+      ;['APP', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
       y += 4
       operationalHosts.slice(0, 5).forEach((host) => {
         pdf.text(shortHost(host.host), margin + columns[0], y)
-        pdf.text(hostResourceState(host), margin + columns[1], y)
-        pdf.text(metric(host.cpu_pct, '%'), margin + columns[2], y)
-        pdf.text(metric(host.ram_pct, '%'), margin + columns[3], y)
-        pdf.text(metric(host.io_wait_pct, '%'), margin + columns[4], y)
-        pdf.text(metric(host.wp_critical), margin + columns[5], y)
+        pdf.text(metric(host.cpu_pct, '%'), margin + columns[1], y)
+        pdf.text(metric(host.ram_pct, '%'), margin + columns[2], y)
+        pdf.text(metric(host.io_wait_pct, '%'), margin + columns[3], y)
+        pdf.text(metric(host.wp_critical), margin + columns[4], y)
         y += 4
       })
 
@@ -501,20 +513,54 @@ export default function RundeckSource({ onCollection }) {
   const failedCount = history.filter((row) => row.status === 'FAILED').length
   const platformState = platform?.status || 'UNKNOWN'
   const releaseState = platform?.releases?.backend?.status === 'WARNING' || platform?.releases?.web?.status === 'WARNING' ? 'WARNING' : 'NORMAL'
+  const serviceStates = [
+    platform?.collector?.status,
+    platform?.filesystem?.status,
+    platform?.inode?.status,
+    platform?.filesystem?.status,
+    platform?.database?.status === 'ok' ? 'NORMAL' : platform?.database?.status,
+    platform?.maintenance?.status,
+    platform?.backup?.status || 'NOT_CONFIGURED',
+    releaseState,
+  ].map((value) => String(value || 'UNKNOWN').toUpperCase())
+  const serviceNormalCount = serviceStates.filter((value) => value === 'NORMAL' || value === 'OK').length
+  const serviceNotConfiguredCount = serviceStates.filter((value) => value === 'NOT_CONFIGURED').length
+  const serviceProblemCount = serviceStates.filter((value) => !['NORMAL', 'OK', 'NOT_CONFIGURED'].includes(value)).length
+  const serviceSummary = [
+    `${serviceNormalCount} normal`,
+    serviceNotConfiguredCount ? `${serviceNotConfiguredCount} not configured` : '',
+    serviceProblemCount ? `${serviceProblemCount} needs attention` : '',
+  ].filter(Boolean).join(' · ')
   const appCount = latest?.received_hosts?.length || operationalHosts.length || 0
   const incidentStart = incidentSummary?.signal_active_since || incidentSummary?.detected_since || ''
   const latestCollectionAt = latest?.collection_time_wib || latest?.finished_at || ''
-  const primarySignalHint = incidentSummary?.active
-    ? ` Primary signal: ${shortSignal(incidentSummary?.primary_signal?.label || 'performance signal')}.`
-    : ''
-  const statusHint = !collectionAligned
-    ? 'Waiting for one complete aligned Rundeck run.'
-    : `${statusExplanation(overallHealth, operationalHosts)}${primarySignalHint}`
+  const performanceTs = Date.parse(latestCollectionAt || '')
+  const availabilityTs = Date.parse(availabilitySnapshot?.collected_at || '')
+  const sourceSkewMinutes = Number.isFinite(performanceTs) && Number.isFinite(availabilityTs)
+    ? Math.round(Math.abs(performanceTs - availabilityTs) / 60000)
+    : null
+  const performanceAgeMinutes = ageMinutes(latestCollectionAt)
+  const availabilityAgeMinutes = ageMinutes(availabilitySnapshot?.collected_at)
+  const availabilityStale = availabilityAgeMinutes !== null && availabilityAgeMinutes >= 20
+  const performanceStale = Boolean(health?.rundeck_stale) || (performanceAgeMinutes !== null && performanceAgeMinutes >= 15)
+  const dataAlignment = collectionAligned && sourceSkewMinutes !== null && sourceSkewMinutes <= 15 && !performanceStale && !availabilityStale
+    ? 'ALIGNED'
+    : 'PARTIAL'
+  const freshnessSummary = `Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}`
+  const freshnessWarning = performanceStale || availabilityStale || (sourceSkewMinutes !== null && sourceSkewMinutes > 15)
+  const dataAlignmentTitle = [
+    `Performance #${latest?.execution_id || '—'} · age ${ageLabel(performanceAgeMinutes)}`,
+    `Availability #${availabilitySnapshot?.execution_id || '—'} · age ${ageLabel(availabilityAgeMinutes)}`,
+    sourceSkewMinutes === null ? 'time difference unknown' : `time difference ${sourceSkewMinutes}m`,
+    freshnessWarning ? 'data was collected at different times' : 'data times are aligned',
+    runState.running ? `collection running #${runState.execution_id || '—'} (not committed)` : 'no collection currently running',
+  ].join(' · ')
 
   const currentWorkload = <RundeckCurrentWorkload
     collectionId={latest?.collection_id || ''}
     selectedJob={selectedJob}
     onSelectJob={selectJob}
+    onSelectedContext={enrichSelectedJob}
   />
 
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
@@ -528,10 +574,7 @@ export default function RundeckSource({ onCollection }) {
         </div>
       </div>
       <div className="rundeckActions">
-        <div className="rundeckOperationalState">
-          <span>Operational State</span>
-          <StatusPill value={overallHealth} title={statusHint} />
-        </div>
+        <div className="rundeckActionCluster">
         <div className="rundeckModeSwitch" role="group" aria-label="Data source">
           <button type="button" className="is-active" aria-pressed="true" title="Automatic Rundeck source"><SphereIcon name="refresh" /> Rundeck</button>
           <button type="button" onClick={() => switchParentSource('manual')} title="Manual Upload Logs"><SphereIcon name="upload" /> Manual</button>
@@ -545,9 +588,24 @@ export default function RundeckSource({ onCollection }) {
             onClick={collectNow}
             title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Performance READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
           >
-            <SphereIcon name="refresh" /> {actionBusy ? 'Collector STARTING' : runState.running ? `Collector RUNNING #${runState.execution_id || '—'}` : runState.cooldown ? 'Collector COOLDOWN' : 'Collect Now'}
+            <SphereIcon name="refresh" /> {actionBusy ? 'Collection starting' : runState.running ? `Collection running #${runState.execution_id || '—'}` : runState.cooldown ? 'Collect cooldown' : 'Collect Now'}
           </button>
         )}
+        </div>
+        <div className="rundeckStateCluster">
+          <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
+            <summary title={dataAlignmentTitle}>
+              <span>Data</span><StatusPill value={dataAlignment} />
+              <small className="rundeckSourceFreshness">{freshnessSummary}</small>
+            </summary>
+            <div className="rundeckDataAlignmentPopover">
+              <div><span>Performance data</span><strong>{ageLabel(performanceAgeMinutes)} old</strong></div>
+              <div><span>Availability data</span><strong>{ageLabel(availabilityAgeMinutes)} old</strong></div>
+              <div><span>Time difference</span><strong>{sourceSkewMinutes === null ? 'Unknown' : `${sourceSkewMinutes}m`}</strong></div>
+              <p>{freshnessWarning ? 'Some data is older than the current performance snapshot. Check the timestamps before comparing them.' : 'Performance and availability data are close enough in time to compare.'}</p>
+            </div>
+          </details>
+        </div>
       </div>
     </header>
 
@@ -573,47 +631,9 @@ export default function RundeckSource({ onCollection }) {
       latestCollectionId={latest?.collection_id || ''}
       latestCollectionAt={latestCollectionAt}
       onTrendContext={setTrendContext}
+      systemDataSummary={`${collectionCount} runs · ${partialCount} partial · ${failedCount} failed · ${serviceSummary}`}
+      systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} />}
     />
-
-    <div className="rundeckSupportingData">
-      <div className="rundeckSupportingTitle">Supporting Data</div>
-      <details className="rundeckHistory">
-        <summary><SphereIcon name="history" /> Rundeck History <span>{collectionCount} runs · {partialCount} partial · {failedCount} failed</span></summary>
-        <div className="rundeckHistoryTableWrap">
-          <table>
-            <thead><tr><th>Run</th><th>Time WIB</th><th>APP</th><th>Status</th></tr></thead>
-            <tbody>
-              {history.slice(0, 10).map((row) => <tr key={row.collection_id || row.execution_id}>
-                <td>#{row.execution_id}</td>
-                <td>{formatTime(row.collection_time_wib || row.finished_at)}</td>
-                <td>{row.received_host_count ?? row.received_hosts?.length ?? '—'}</td>
-                <td><StatusPill value={row.status || 'UNKNOWN'} /></td>
-              </tr>)}
-              {!history.length && <tr><td colSpan="4">No Rundeck history yet.</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </details>
-
-      <details className="rundeckPlatformHealth">
-        <summary title="Health of SPHERE platform services and storage; separate from SAP performance status."><SphereIcon name="database" /> SPHERE Platform Health <StatusPill value={platformState} /></summary>
-        <div className="rundeckPlatformTableWrap">
-          <table className="rundeckPlatformTable">
-            <thead><tr><th>Component</th><th>State</th><th>Detail</th></tr></thead>
-            <tbody>
-              <tr><td>Rundeck</td><td>{platform?.collector?.status || 'UNKNOWN'}</td><td>{platform?.collector ? `${platform.collector.poller_status} · ${platform.collector.credential_mode} · ${formatTime(platform.collector.checked_at)}` : '—'}</td></tr>
-              <tr><td>Filesystem</td><td>{platform?.filesystem?.status || 'UNKNOWN'}</td><td>{metric(platform?.filesystem?.used_pct, '% used')}</td></tr>
-              <tr><td>Inode</td><td>{platform?.inode?.status || 'UNKNOWN'}</td><td>{metric(platform?.inode?.used_pct, '% used')}</td></tr>
-              <tr><td>Raw Logs</td><td>{platform?.filesystem?.status || 'UNKNOWN'}</td><td>{platform?.archive ? `${platform.archive.files} files · ${formatBytes(platform.archive.bytes)}` : '—'}</td></tr>
-              <tr><td>PostgreSQL</td><td>{platform?.database?.status === 'ok' ? 'NORMAL' : String(platform?.database?.status || 'UNKNOWN').toUpperCase()}</td><td>{platform?.database ? `${formatBytes(platform.database.database_bytes)} · ${platform.database.connections ?? '—'} connections` : '—'}</td></tr>
-              <tr><td>Retention</td><td>{platform?.maintenance?.status || 'UNKNOWN'}</td><td>{platform?.maintenance?.last_run ? `${formatTime(platform.maintenance.last_run)} · ${platform.maintenance.retention_days} days` : 'No maintenance result yet'}</td></tr>
-              <tr><td>Backup</td><td>{platform?.backup?.status || 'NOT_CONFIGURED'}</td><td>{platform?.backup?.last_success ? `Last success ${formatTime(platform.backup.last_success)}` : 'Backup not configured'}</td></tr>
-              <tr><td>Releases</td><td>{releaseState}</td><td>{platform?.releases ? `${platform.releases.backend.count} backend · ${platform.releases.web.count} web` : '—'}</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </details>
-    </div>
 
     {pdfPreview && <div className="rundeckPdfPreviewBackdrop" role="dialog" aria-modal="true" aria-label="PDF preview">
       <section className="rundeckPdfPreview">

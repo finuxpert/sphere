@@ -1,8 +1,13 @@
 import React from 'react'
 import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
+import RundeckSapIssues from './RundeckSapIssues.jsx'
 
 const API = `${import.meta.env.BASE_URL}api`
+
+function RundeckSapIssuesProxy({ refreshToken, onOpen }) {
+  return <RundeckSapIssues refreshToken={refreshToken} compact onOpen={onOpen} />
+}
 
 function jobContext(workload, host, source) {
   if (!workload?.consumer_key) return null
@@ -14,7 +19,7 @@ function jobContext(workload, host, source) {
   }
 }
 
-export default function RundeckOperationalEvidence({ refreshToken = '', selectedJob = null }) {
+export default function RundeckOperationalEvidence({ refreshToken = '', selectedJob = null, onOpenEvidence = null, onOpenAvailability = null, onOpenIssues = null }) {
   const [summary, setSummary] = React.useState(null)
   const [error, setError] = React.useState('')
 
@@ -41,17 +46,15 @@ export default function RundeckOperationalEvidence({ refreshToken = '', selected
 
   if (!summary && !error) return null
   if (error || !summary?.active) {
-    return <section className="rundeckOperationalBandV1234 is-availability-only" aria-label="SAP Availability">
-      <RundeckAvailability refreshToken={refreshToken} />
+    return <section className="rundeckOperationalSummaryCards is-two" aria-label="SAP Availability and active issues">
+      <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
+      <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
     </section>
   }
 
-  return <section className="rundeckOperationalBandV1234" aria-label="Operational evidence and SAP availability">
-    <div className="rundeckBandPaneV1234 is-operational-events">
-      <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive={summary.active} />
-    </div>
-    <div className="rundeckBandPaneV1234 is-availability">
-      <RundeckAvailability refreshToken={refreshToken} />
-    </div>
+  return <section className="rundeckOperationalSummaryCards" aria-label="Operational evidence, SAP availability and active issues">
+    <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive={summary.active} compact onOpen={() => onOpenEvidence?.(evidenceJob)} />
+    <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
+    <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
   </section>
 }

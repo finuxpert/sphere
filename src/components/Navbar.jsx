@@ -33,12 +33,31 @@ function navigateWorkspace(event, href, slug) {
 
 export default function Navbar() {
   const [route, setRoute] = React.useState(getCurrentHashRoute)
+  const [themeMode, setThemeMode] = React.useState(() => {
+    try { return window.localStorage.getItem('sphere.theme') || 'dark' } catch { return 'dark' }
+  })
+  const [resolvedTheme, setResolvedTheme] = React.useState('dark')
 
   React.useEffect(() => {
     const onHash = () => setRoute(getCurrentHashRoute())
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
+
+  React.useEffect(() => {
+    const media = window.matchMedia?.('(prefers-color-scheme: light)')
+    const apply = () => {
+      const resolved = themeMode === 'system' ? (media?.matches ? 'light' : 'dark') : themeMode
+      setResolvedTheme(resolved)
+      document.documentElement.dataset.theme = resolved
+      document.documentElement.dataset.themeMode = themeMode
+      document.documentElement.style.colorScheme = resolved
+    }
+    apply()
+    media?.addEventListener?.('change', apply)
+    try { window.localStorage.setItem('sphere.theme', themeMode) } catch {/* preference storage is best effort */}
+    return () => media?.removeEventListener?.('change', apply)
+  }, [themeMode])
 
   const isActive = React.useCallback(
     (href) => route === href || route.startsWith(`${href}/`),
@@ -50,7 +69,7 @@ export default function Navbar() {
       <header className="navbar sphereNav">
         <div className="navInner sphereNavInner">
           <a className="brand sphereBrand" href="#/tool/logs" aria-label={`${APP_NAME} ${APP_DISPLAY_VERSION} LOG analysis`}>
-            <SphereLogo />
+            <SphereLogo theme={resolvedTheme} />
             <span className="brandText">
               <span className="brandTitle">{APP_TAGLINE}</span>
               <span className="brandSub" title={`Previous release: v${APP_PREVIOUS_VERSION}`}>{APP_BUILD_LABEL}</span>
@@ -77,6 +96,19 @@ export default function Navbar() {
             })}
           </nav>
 
+          <label className="sphereThemeControl" title="Display theme">
+            <span>Theme</span>
+            <select aria-label="Display theme" value={themeMode} onChange={(event) => {
+              const next = event.target.value
+              try { window.localStorage.setItem('sphere.theme', next) } catch {/* preference storage is best effort */}
+              setThemeMode(next)
+              window.setTimeout(() => window.location.reload(), 0)
+            }}>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">System</option>
+            </select>
+          </label>
           <span className="mobileVersionBadge" aria-label={`Version ${APP_VERSION}`} title={APP_BUILD_LABEL}>v{APP_VERSION}</span>
         </div>
       </header>

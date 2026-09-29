@@ -1,0 +1,15 @@
+.rundeckSystemData{padding:10px 0 18px}
+.rundeckSystemDataTabs{display:flex;gap:5px;margin-bottom:10px;padding:0!important;border:0!important;border-bottom:1px solid rgba(126,147,158,.08)!important;border-radius:0!important;background:transparent!important}
+.rundeckSystemDataTabs button{min-height:34px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:0;border-bottom:2px solid transparent!important;border-radius:0!important;background:transparent;color:var(--sphere-text-secondary,#a9b5bb);font:inherit;font-size:10.5px;font-weight:700;cursor:pointer}
+.rundeckSystemDataTabs button.is-active{background:transparent!important;border-bottom-color:var(--sphere-accent,#4fc6c8)!important;color:var(--sphere-text,#e7edf0)}
+.rundeckSystemDataTabs button small{color:var(--sphere-text-muted,#718089);font-size:9px}
+.rundeckSystemDataPane>header{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:7px}
+.rundeckSystemDataPane>header strong,.rundeckSystemDataPane>header small{display:block}.rundeckSystemDataPane>header strong{font-size:12px}.rundeckSystemDataPane>header small{margin-top:2px;color:var(--sphere-text-muted,#718089);font-size:9.5px}
+.rundeckSystemDataTableWrap{max-height:560px;overflow:auto;border:0!important;border-top:1px solid rgba(126,147,158,.075)!important;border-bottom:1px solid rgba(126,147,158,.075)!important;border-radius:0!important}
+.rundeckSystemData table{width:100%;border-collapse:collapse;font-size:10.5px}.rundeckSystemData th,.rundeckSystemData td{padding:7px 8px;border-bottom:1px solid rgba(126,147,158,.08);text-align:left;vertical-align:middle}
+.rundeckSystemData th{position:sticky;top:0;background:var(--sphere-page,#0f151a);color:var(--sphere-text-muted,#718089);font-size:9px;text-transform:uppercase}
+.rundeckSystemData tbody tr[role="button"]{cursor:pointer}.rundeckSystemData tbody tr[role="button"]:hover,.rundeckSystemData tbody tr.is-selected{background:rgba(79,198,200,.045)}
+.rundeckSystemDataState{font-size:9px;font-weight:750}.rundeckSystemDataState.is-normal,.rundeckSystemDataState.is-ready,.rundeckSystemDataState.is-ok{color:var(--sphere-positive,#75cfa5)}.rundeckSystemDataState.is-warning,.rundeckSystemDataState.is-partial{color:var(--sphere-warning,#d8b35f)}.rundeckSystemDataState.is-critical,.rundeckSystemDataState.is-failed{color:var(--sphere-danger,#db7d86)}.rundeckSystemDataState.is-not_configured{color:var(--sphere-text-muted,#718089)}
+.rundeckSystemDataMore{margin-top:7px;border:0;background:transparent;color:var(--sphere-accent,#4fc6c8);font-size:9.5px;cursor:pointer}
+.rundeckSystemDataDetail{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:8px;padding:6px 0!important;border:0!important;border-top:1px solid rgba(126,147,158,.065)!important;border-radius:0!important;background:transparent!important;color:var(--sphere-text-secondary,#a9b5bb);font-size:9.5px}
+@media(max-width:640px){.rundeckSystemDataTabs{flex-direction:column}.rundeckSystemDataTabs button{justify-content:flex-start}.rundeckSystemDataTableWrap{overflow-x:auto}.rundeckSystemData table{min-width:580px}}

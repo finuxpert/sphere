@@ -1,0 +1,47 @@
+.rundeckAppServerAnalysis{padding:10px 0 20px}
+.rundeckAppServerSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid rgba(126,147,158,.10);border-radius:5px;overflow:hidden;background:rgba(126,147,158,.07)}
+.rundeckAppServerSummary span{padding:8px 9px;background:var(--sphere-page,#0f151a);color:var(--sphere-text-secondary,#a9b5bb);font-size:10px}
+.rundeckAppServerSummary b{display:block;margin-bottom:2px;color:var(--sphere-text-muted,#718089);font-size:8px;text-transform:uppercase}
+.rundeckAppServerIssue{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 9px;border-left:2px solid var(--sphere-warning,#d8b35f);background:rgba(216,179,95,.035)}
+.rundeckAppServerIssue strong,.rundeckAppServerIssue small{display:block}.rundeckAppServerIssue strong{font-size:10px}.rundeckAppServerIssue small{margin-top:2px;color:var(--sphere-text-muted,#718089);font-size:9px}
+.rundeckAppServerWorkloads{margin-top:14px}.rundeckAppServerWorkloads>header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:6px}
+.rundeckAppServerWorkloads>header span{color:var(--sphere-accent,#4fc6c8);font-size:8px;font-weight:800;text-transform:uppercase}.rundeckAppServerWorkloads h4{margin:2px 0 0;font-size:11px}.rundeckAppServerWorkloads>header small{color:var(--sphere-text-muted,#718089);font-size:9px}
+.rundeckAppServerTableWrap{max-height:520px;overflow:auto}.rundeckAppServerTableWrap table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9.5px}
+.rundeckAppServerTableWrap th,.rundeckAppServerTableWrap td{padding:6px 7px;border-bottom:1px solid rgba(126,147,158,.08);text-align:left;vertical-align:middle}
+.rundeckAppServerTableWrap th{position:sticky;top:0;background:var(--sphere-page,#0f151a);color:var(--sphere-text-muted,#718089);font-size:8px;text-transform:uppercase}
+.rundeckAppServerTableWrap th:nth-child(1){width:44%}.rundeckAppServerTableWrap th:nth-child(2){width:12%}.rundeckAppServerTableWrap th:nth-child(3){width:14%}.rundeckAppServerTableWrap th:nth-child(4){width:16%}.rundeckAppServerTableWrap th:nth-child(5){width:14%}
+.rundeckAppServerTableWrap tbody tr[role="button"]{cursor:pointer}.rundeckAppServerTableWrap tbody tr[role="button"]:hover,.rundeckAppServerTableWrap tbody tr[role="button"]:focus-visible{background:rgba(79,198,200,.045);outline:none}
+.rundeckAppServerTableWrap td:first-child strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sphere-text,#e7edf0)}
+.rundeckAppServerTableWrap td:first-child small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sphere-text-muted,#718089);font-size:8.4px}
+.rundeckAppServerState{padding:10px 0;color:var(--sphere-text-secondary,#a9b5bb);font-size:9.5px}.rundeckAppServerState.is-error{color:var(--sphere-danger,#db7d86)}
+@media(max-width:760px){.rundeckAppServerSummary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Full light-surface APP analysis drawer. */
+html[data-theme="light"] .rundeckAppServerAnalysis,
+html[data-theme="light"] .rundeckAppServerWorkloads,
+html[data-theme="light"] .rundeckAppServerTableWrap{background:#f4f7f8!important;color:#172229!important}
+html[data-theme="light"] .rundeckAppServerSummary{background:rgba(45,63,72,.08)!important;border-color:rgba(45,63,72,.13)!important}
+html[data-theme="light"] .rundeckAppServerSummary span{background:#fff!important;color:#27363e!important}
+html[data-theme="light"] .rundeckAppServerSummary b,
+html[data-theme="light"] .rundeckAppServerWorkloads>header small,
+html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{color:#5d6e77!important}
+html[data-theme="light"] .rundeckAppServerTableWrap table{background:#fff!important;color:#27363e!important}
+html[data-theme="light"] .rundeckAppServerTableWrap th{background:#e8eef0!important;color:#52636d!important}
+html[data-theme="light"] .rundeckAppServerTableWrap td{background:#fff!important;color:#27363e!important;border-color:rgba(45,63,72,.09)!important}
+
+/* SPHERE v1.34.20 — APP analysis scanability. */
+.rundeckAppServerWorkloads>header small{font-size:9.5px!important;font-weight:700!important}
+.rundeckAppServerTableWrap td:first-child small{font-size:8.8px!important}
+.rundeckAppTypeBadge{
+ display:inline-flex;align-items:center;min-height:19px;padding:1px 6px;border-radius:999px;
+ border:1px solid rgba(126,147,158,.18);font-size:8px;font-weight:780;letter-spacing:.025em;
+ color:var(--sphere-text-secondary,#a9b5bb);background:rgba(126,147,158,.025);
+}
+.rundeckAppTypeBadge.is-job{color:var(--sphere-accent,#4fc6c8);border-color:rgba(79,198,200,.26)}
+.rundeckAppTypeBadge.is-program{color:#7ea7dc;border-color:rgba(126,167,220,.28)}
+.rundeckAppTypeBadge.is-process{color:var(--sphere-text-muted,#718089)}
+html[data-theme="light"] .rundeckAppTypeBadge{background:#f4f7f8!important;color:#425760!important;border-color:rgba(45,63,72,.18)!important}
+html[data-theme="light"] .rundeckAppTypeBadge.is-job{color:#0f6870!important;border-color:rgba(20,116,123,.30)!important}
+html[data-theme="light"] .rundeckAppTypeBadge.is-program{color:#315f9c!important;border-color:rgba(55,111,189,.28)!important}
+html[data-theme="light"] .rundeckAppServerWorkloads>header small,
+html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{color:#50636d!important}

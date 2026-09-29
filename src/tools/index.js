@@ -14,8 +14,8 @@ const meta = [
   },
   {
     slug: 'logs',
-    title: 'LOG Analysis',
-    short: 'Host resources and SAP workload analysis',
+    title: 'Performance Analysis',
+    short: 'SAP performance, jobs and system analysis',
     icon: '',
   },
 ]

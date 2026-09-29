@@ -4,3 +4,115 @@
 .rcaPdfExportMode{background:#fff!important}.rcaPdfExportMode .navbar,.rcaPdfExportMode .mobileAnalysisNav,.rcaPdfExportMode .rca26TopActions,.rcaPdfExportMode .rca26ControlBar,.rcaPdfExportMode .rca26ActiveFilters,.rcaPdfExportMode .rca26TableToolbar,.rcaPdfExportMode .rca26Pager,.rcaPdfExportMode [data-pdf-ignore='true']{display:none!important}.rcaPdfExportMode .rca26Shell{--bg:#fff;--surface:#fff;--surface2:#f8fafb;--surface3:#f5f7f8;--line:#cbd5dc;--line2:#e2e8ec;--muted:#52616b;--text:#111827;--cyan:#0f9ca4;--blue:#2563c7;--green:#168a4b;--amber:#b96c06;--red:#c92d3b;--purple:#7450b7;background:#fff!important;color:#111827!important;padding:0!important;min-height:0!important}.rcaPdfExportMode .rca26Inner{width:100%!important;max-width:none!important;margin:0!important}.rcaPdfExportMode .rca26Deferred{content-visibility:visible!important;contain:none!important}.rcaPdfExportMode .rca26Head{padding:4px 2px 8px;border-bottom:1px solid #d8e0e5}.rcaPdfExportMode .rca26Head h1,.rcaPdfExportMode .rca26Panel h2,.rcaPdfExportMode .rca26DetailTitle strong,.rcaPdfExportMode .rca26MiniHead b{color:#111827!important}.rcaPdfExportMode .rca26Head p,.rcaPdfExportMode .rca26Panel p,.rcaPdfExportMode .rca26Metric span,.rcaPdfExportMode .rca26Metric small,.rcaPdfExportMode .rca26Detail dt,.rcaPdfExportMode .rca26MiniHead span,.rcaPdfExportMode .rca26Snapshot span,.rcaPdfExportMode .rca26KeyValue span,.rcaPdfExportMode .rca26KeyValue small,.rcaPdfExportMode .rca26ResultCount{color:#52616b!important;opacity:1!important}.rcaPdfExportMode .rca26Metric strong,.rcaPdfExportMode .rca26Snapshot b,.rcaPdfExportMode .rca26Detail dd,.rcaPdfExportMode .rca26Table td,.rcaPdfExportMode .rca26BarRow strong,.rcaPdfExportMode .rca26BarRow label{color:#17212a!important;opacity:1!important}.rcaPdfExportMode .rca26Metric.critical strong{color:#c92d3b!important}.rcaPdfExportMode .rca26Metric.warn strong{color:#a85e00!important}.rcaPdfExportMode .rca26Metric.good strong{color:#168a4b!important}.rcaPdfExportMode .rca26Panel,.rcaPdfExportMode .rca26MetricStrip,.rcaPdfExportMode .rca26JobCharts>section,.rcaPdfExportMode .rca26StateTimeline{border-color:#cbd5dc!important;background:#fff!important;box-shadow:none!important}.rcaPdfExportMode .rca26MetricStrip{grid-template-columns:repeat(4,minmax(0,1fr))!important}.rcaPdfExportMode .rca26MetricStrip.st03nStrip{grid-template-columns:repeat(3,minmax(0,1fr))!important}.rcaPdfExportMode .rca26Metric{border-color:#dde4e8!important}.rcaPdfExportMode .rca26TableWrap{max-height:none!important;overflow:visible!important;border-color:#d9e0e4!important;background:#fff!important}.rcaPdfExportMode .rca26Table{font-size:9px!important}.rcaPdfExportMode .rca26Table th{position:static!important;background:#eef2f5!important;color:#46545e!important;box-shadow:0 1px 0 #cfd8de!important}.rcaPdfExportMode .rca26Table td{border-color:#e2e8ec!important}.rcaPdfExportMode .rca26Table tbody tr[data-selected='true'] td{background:#eef8f8!important;color:#111827!important}.rcaPdfExportMode .rca26Status.crit{background:#fdebed!important;color:#b82030!important}.rcaPdfExportMode .rca26Status.warn{background:#fff3dc!important;color:#966000!important}.rcaPdfExportMode .rca26Status.normal,.rcaPdfExportMode .rca26Status.ok{background:#e8f7ee!important;color:#13713e!important}.rcaPdfExportMode .rca26HostRole.primary{border-color:#d5a546!important;color:#8b5b00!important}.rcaPdfExportMode .rca26HostRole.secondary{border-color:#aab7c0!important;color:#46545e!important}.rcaPdfExportMode .rca26Trigger{border-color:#b8c5cc!important;color:#34434d!important}.rcaPdfExportMode .rca26Trigger.crit{border-color:#d56b74!important;color:#ad2532!important}.rcaPdfExportMode .rca26Trigger.warn{border-color:#d1a14a!important;color:#8d5b00!important}.rcaPdfExportMode .rca26Scope{border-color:#b9c7cf!important;color:#42515a!important}.rcaPdfExportMode .rca26Scope.job,.rcaPdfExportMode .rca26Scope.workload{border-color:#6bbdc0!important;color:#096f75!important}.rcaPdfExportMode .rca26Scope.program{border-color:#7ea8de!important;color:#245c9d!important}.rcaPdfExportMode .rca26Chart .recharts-cartesian-axis-tick-value,.rcaPdfExportMode .rca26Chart .recharts-legend-item-text,.rcaPdfExportMode .rca26MiniChart .recharts-cartesian-axis-tick-value{fill:#52616b!important;color:#52616b!important}.rcaPdfExportMode .rca26Chart .recharts-cartesian-grid line,.rcaPdfExportMode .rca26MiniChart .recharts-cartesian-grid line{stroke:#d6dee3!important}.rcaPdfExportMode .rca26Chart .recharts-brush rect{fill:#f1f4f6!important;stroke:#c7d1d7!important}.rcaPdfExportMode .rca26Chart .recharts-brush-slide{fill:#cfd9df!important;fill-opacity:.7!important}.rcaPdfExportMode .rca26StatusLine button{background:#fff!important;color:#46545e!important;border-color:#d8e0e5!important}.rcaPdfExportMode .rca26StatusLine button b{color:#17212a!important}.rcaPdfExportMode .rca26StatusLine .crit{color:#b82030!important;border-color:#e2a4aa!important}.rcaPdfExportMode .rca26StatusLine .warn{color:#966000!important;border-color:#e2c58d!important}.rcaPdfExportMode .rca26StatusLine .normal,.rcaPdfExportMode .rca26StatusLine .ok{color:#13713e!important}.rcaPdfExportMode .rca26KeyValue.clickable{border-color:#dfe5e9!important;background:#fff!important}.rcaPdfExportMode .rca26KeyValue.clickable b{color:#111827!important}.rcaPdfExportMode .rca26StatePoint{background:#fff!important;border-color:#cdd7dc!important}.rcaPdfExportMode .rca26StatePoint b{color:#34434d!important}.rcaPdfExportMode .rca26StatePoint.state-r b{color:#0d7f86!important}.rcaPdfExportMode .rca26StatePoint.state-d{background:#fff7e8!important;border-color:#dda84c!important}.rcaPdfExportMode .rca26StatePoint.state-d b{color:#925c00!important}.rcaPdfExportMode .rca26SapLookup{background:#f4f8f9!important;border-left-color:#64828d!important}.rcaPdfExportMode .rca26SapLookup span{color:#53636d!important}.rcaPdfExportMode .rca26Coverage>div{border-color:#d9e1e5!important;background:#fff!important}.rcaPdfExportMode .rca26Coverage span{color:#17212a!important}.rcaPdfExportMode .rca26Coverage small{color:#52616b!important}.rcaPdfExportMode .rca26Grid,.rcaPdfExportMode .rca26Panel,.rcaPdfExportMode .rca26MetricStrip,.rcaPdfExportMode .rca26JobCharts{break-inside:avoid}.rcaPdfExportMode .rca26Tooltip{display:none!important}
 
 @media print{.rca26Shell{background:#fff!important;color:#111827!important}.rca26Panel p,.rca26Metric span,.rca26Metric small,.rca26Table th{color:#52616b!important;opacity:1!important}.rca26Table td,.rca26Panel h2,.rca26Metric strong{color:#17212a!important}.rca26Table th{background:#eef2f5!important}.rca26TableWrap{max-height:none!important;overflow:visible!important}}
+
+/* SPHERE v1.34.15 — ST03N theme parity with the global Light/Dark/System selector. */
+html[data-theme="light"] .rca26Shell{
+  --bg:#f4f7f8;
+  --surface:#ffffff;
+  --surface2:#eef3f4;
+  --surface3:#f7f9fa;
+  --line:rgba(45,63,72,.18);
+  --line2:rgba(45,63,72,.10);
+  --muted:#5f7079;
+  --text:#172229;
+  --cyan:#14747b;
+  --blue:#376fbd;
+  --green:#287a55;
+  --amber:#a96b0d;
+  --red:#b8424d;
+  --purple:#7655a7;
+  background:var(--bg)!important;
+  color:var(--text)!important;
+}
+html[data-theme="light"] .rca26Head h1,
+html[data-theme="light"] .rca26Panel h2,
+html[data-theme="light"] .rca26Metric strong,
+html[data-theme="light"] .rca26DetailTitle strong,
+html[data-theme="light"] .rca26MiniHead b{color:#172229!important}
+html[data-theme="light"] .rca26Head p,
+html[data-theme="light"] .rca26Panel p,
+html[data-theme="light"] .rca26Metric span,
+html[data-theme="light"] .rca26Metric small,
+html[data-theme="light"] .rca26ResultCount,
+html[data-theme="light"] .rca26Empty{color:#5f7079!important;opacity:1!important}
+html[data-theme="light"] .rca26Panel,
+html[data-theme="light"] .rca26MetricStrip,
+html[data-theme="light"] .rca26ControlBar,
+html[data-theme="light"] .rca26ActiveFilters,
+html[data-theme="light"] .rca26JobCharts>section,
+html[data-theme="light"] .rca26StateTimeline{
+  background:#fff!important;
+  border-color:rgba(45,63,72,.18)!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] .rca26Metric{border-color:rgba(45,63,72,.10)!important}
+html[data-theme="light"] .rca26TableWrap{
+  background:#fff!important;
+  border-color:rgba(45,63,72,.16)!important;
+}
+html[data-theme="light"] .rca26Table th{
+  background:#e8eef0!important;
+  color:#4e616a!important;
+  box-shadow:0 1px 0 rgba(45,63,72,.14)!important;
+}
+html[data-theme="light"] .rca26Table td{
+  color:#273840!important;
+  border-color:rgba(45,63,72,.09)!important;
+}
+html[data-theme="light"] .rca26Table tbody tr:hover td{background:#f1f7f7!important}
+html[data-theme="light"] .rca26Table.selectable tbody tr[data-selected='true'] td{
+  background:#e0f1f0!important;color:#172229!important
+}
+html[data-theme="light"] .rca26Control select,
+html[data-theme="light"] .rca26Filter select,
+html[data-theme="light"] .rca26Search,
+html[data-theme="light"] .rca26Btn,
+html[data-theme="light"] .rca26TextBtn,
+html[data-theme="light"] .rca26ToggleGroup button,
+html[data-theme="light"] .rca26ShowMore{
+  background:#fff!important;
+  color:#31464f!important;
+  border-color:rgba(45,63,72,.20)!important;
+}
+html[data-theme="light"] .rca26Btn:hover,
+html[data-theme="light"] .rca26TextBtn:hover,
+html[data-theme="light"] .rca26ToggleGroup button:hover,
+html[data-theme="light"] .rca26ShowMore:hover{background:#f2f8f8!important;border-color:rgba(20,116,123,.35)!important}
+html[data-theme="light"] .rca26Btn:disabled{opacity:.48!important}
+html[data-theme="light"] .rca26Upload{
+  background:#14747b!important;border-color:#14747b!important;color:#fff!important
+}
+html[data-theme="light"] .rca26Upload:hover{background:#105f65!important}
+html[data-theme="light"] .rca26ToggleGroup button[data-active='true']{
+  background:#dff0ef!important;color:#0f5960!important;border-color:rgba(20,116,123,.35)!important
+}
+html[data-theme="light"] .rca26Chart .recharts-cartesian-axis-tick-value,
+html[data-theme="light"] .rca26Chart .recharts-legend-item-text{
+  fill:#566973!important;color:#566973!important
+}
+html[data-theme="light"] .rca26Chart .recharts-cartesian-grid line{stroke:rgba(62,82,92,.16)!important}
+html[data-theme="light"] .rca26Chart .recharts-brush rect{fill:#edf2f4!important;stroke:#c7d2d7!important}
+html[data-theme="light"] .rca26Chart .recharts-brush-slide{fill:#bdcdd2!important;fill-opacity:.7!important}
+html[data-theme="light"] .rca26Tooltip{
+  background:#fff!important;color:#172229!important;border-color:rgba(45,63,72,.20)!important;
+  box-shadow:0 10px 24px rgba(28,43,50,.16)!important
+}
+html[data-theme="light"] .rca26Tooltip strong{color:#172229!important}
+html[data-theme="light"] .rca26Tooltip span{color:#435761!important}
+html[data-theme="light"] .rca26BarTrack{background:#dbe4e7!important}
+html[data-theme="light"] .rca26BarRow.clickable:hover,
+html[data-theme="light"] .rca26BarRow.clickable[data-active='true']{background:#edf6f6!important}
+html[data-theme="light"] .rca26Scope{color:#4d6069!important;border-color:rgba(45,63,72,.20)!important}
+html[data-theme="light"] .rca26Scope.job,
+html[data-theme="light"] .rca26Scope.workload{color:#0f6870!important;border-color:rgba(20,116,123,.35)!important}
+html[data-theme="light"] .rca26Scope.program{color:#315f9c!important;border-color:rgba(55,111,189,.32)!important}
+html[data-theme="light"] .rca26Status.normal,
+html[data-theme="light"] .rca26Status.ok{background:#e8f5ed!important;color:#287a55!important}
+html[data-theme="light"] .rca26Status.warn{background:#fff3dc!important;color:#90600b!important}
+html[data-theme="light"] .rca26Status.crit{background:#fdebed!important;color:#a9333f!important}
+html[data-theme="light"] .rca26Coverage>div{
+  background:#fff!important;border-color:rgba(45,63,72,.15)!important
+}
+html[data-theme="light"] .rca26Coverage span{color:#273840!important}
+html[data-theme="light"] .rca26Coverage small{color:#60717a!important}
+html[data-theme="light"] .rca26Coverage>div[data-ok='true'] b{color:#287a55!important}

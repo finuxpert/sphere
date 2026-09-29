@@ -25,7 +25,7 @@
 
 .rundeckObservationHistoryTableWrap {
   overflow: auto;
-  max-height: 260px;
+  max-height: 220px;
   margin-top: 6px;
   border-top: 1px solid rgba(113, 128, 137, .08);
   scrollbar-gutter: stable;
@@ -80,3 +80,100 @@
     max-height: 220px;
   }
 }
+
+.rundeckObservationHistoryV1234>summary{
+  width:100%;
+  min-height:30px;
+}
+.rundeckObservationHistoryV1234>summary::after{
+  content:'▾';
+  margin-left:auto;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckObservationHistoryV1234:not([open])>summary::after{transform:rotate(-90deg)}
+.rundeckObservationHistoryV1234 tbody tr.is-inspected{
+  background:rgba(79,198,200,.075);
+  box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8);
+}
+
+/* SPHERE v1.33.5 — keep secondary evidence compact by default. */
+.rundeckObservationHistoryMore {
+  display: flex;
+  justify-content: flex-end;
+  padding: 5px 2px 1px;
+}
+.rundeckObservationHistoryMore button {
+  border: 0;
+  background: transparent;
+  color: var(--sphere-accent, #4fc6c8);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.rundeckObservationHistoryMore button:hover,
+.rundeckObservationHistoryMore button:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+/* SPHERE v1.33.7 — compact history summary and run actions. */
+.rundeckObservationHistorySummary {
+  margin-left: 8px;
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8.8px;
+  font-weight: 500;
+}
+.rundeckHistoryRunButton {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--sphere-accent,#4fc6c8);
+  font: inherit;
+  cursor: pointer;
+}
+.rundeckHistoryRunButton:hover,
+.rundeckHistoryRunButton:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+/* SPHERE v1.33.8 — keep history summary readable on one scan line. */
+.rundeckObservationHistoryV1234 > summary {
+  flex-wrap: wrap;
+}
+.rundeckObservationHistorySummary {
+  padding-left: 8px;
+  border-left: 1px solid rgba(126,147,158,.10);
+  line-height: 1.25;
+}
+@media (max-width: 1180px) {
+  .rundeckObservationHistorySummary {
+    flex-basis: 100%;
+    margin-left: 22px;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+/* SPHERE v1.34.20 — compact readable Observation History drawer. */
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryTableWrap{
+  max-height:340px!important;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))!important;
+  border-radius:6px!important;
+  margin-top:8px!important;
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 table{
+  min-width:680px!important;font-size:9.8px!important;
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 th{
+  font-size:8.6px!important;color:var(--sphere-text-secondary,#a9b5bb)!important;
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 td{padding:7px 8px!important}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckHistoryRunButton{font-weight:740!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 th{
+  background:#e8eef0!important;color:#465b65!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 td{color:#2d414a!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckHistoryRunButton{color:#0f6970!important}

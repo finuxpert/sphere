@@ -1,7 +1,8 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { numberText, workloadTypeLabel } from './sapUiFormat.js'
-import { evaluationReasonText } from './rundeckEvaluationExplain.js'
+import { evaluationReasonParts } from './rundeckEvaluationExplain.js'
+import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 
 const API = `${import.meta.env.BASE_URL}api`
 const PERIODS = [['1d', '1 Day'], ['7d', '7 Days'], ['30d', '30 Days']]
@@ -17,12 +18,15 @@ function Segmented({ options, value, onChange, label }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '' }) {
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
+  const [showAll, setShowAll] = React.useState(false)
+  const [hasLoaded, setHasLoaded] = React.useState(false)
+  const [quickRow, setQuickRow] = React.useState(null)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -36,7 +40,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         }
         return response.json()
       })
-      .then(setData)
+      .then((result) => { setData(result); setHasLoaded(true) })
       .catch((failure) => {
         if (failure.name !== 'AbortError') setError(failure.message || 'Performance review unavailable')
       })
@@ -51,34 +55,42 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     .filter((row) => String(row.status || '').toUpperCase() === 'REVIEW REQUIRED')
     .sort((left, right) => Number(right.avg_cpu_pct || 0) - Number(left.avg_cpu_pct || 0))
   const reviewCount = Number(data?.summary?.review_required ?? data?.summary?.needs_review ?? reviewRows.length)
+  const visibleRows = showAll ? reviewRows : reviewRows.slice(0, 4)
   const lowCoverage = String(quality.confidence || '').toUpperCase() === 'LOW'
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
 
-  const select = (row) => onSelectJob?.({
-    key: row.consumer_key,
-    host: '',
-    consumerType: row.consumer_type,
-    source: 'performance-review',
-    days: data?.days || 1,
-  })
+  const openQuick = (row) => {
+    if (onOpenQuickAnalysis) {
+      setQuickRow(null)
+      onOpenQuickAnalysis(row, { period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' })
+      return
+    }
+    setQuickRow(row)
+  }
+  const openFull = (job) => {
+    setQuickRow(null)
+    onSelectJob?.(job)
+  }
 
-  return <section className="rundeckPerformanceReviewV1231" aria-label="Performance review">
+  return <section className={`rundeckPerformanceReviewV1231 ${showAll ? 'is-expanded' : 'is-top4'}`} aria-label="Performance review">
     <header className="rundeckReviewHeadV1231">
       <div>
-        <h3><SphereIcon name="trend" /> Performance Review</h3>
-        {!loading && !error && data && <span>{reviewCount} workload{reviewCount === 1 ? '' : 's'} need review</span>}
+        <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>
+        {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} need attention · sorted by review priority</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
-        <Segmented options={PERIODS} value={period} onChange={setPeriod} label="Review period" />
-        <Segmented options={TYPES} value={type} onChange={setType} label="Workload type" />
+        <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" />
+        <Segmented options={TYPES} value={type} onChange={(value) => { setType(value); setShowAll(false) }} label="Workload type" />
+        {reviewRows.length > 4 && <button type="button" className="rundeckReviewMoreV1237" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Top 4' : `View all ${reviewRows.length}`}</button>}
       </div>
     </header>
 
-    {loading && <div className="rundeckReviewState">Loading workload review…</div>}
+    {loading && !hasLoaded && <div className="rundeckReviewState">Loading performance review…</div>}
+    {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">Updating…</div>}
     {error && <div className="rundeckReviewState is-error">{error}</div>}
 
-    {!loading && !error && data && <>
+    {!error && data && <>
       {showQualityWarning && <div className="rundeckReviewQualityWarning">
         {lowCoverage && <span>LIMITED DATA · {pct(quality.coverage_pct)} coverage</span>}
         {incomplete > 0 && <span>{numberText(incomplete, 0)} incomplete check{incomplete === 1 ? '' : 's'} excluded</span>}
@@ -86,31 +98,54 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
 
       <div className="rundeckReviewTableWrapV1231">
         <table className="rundeckReviewTableV1231">
-          <thead><tr><th>Workload</th><th>Signal</th><th>Avg CPU</th><th>Peak</th><th>PSS</th></tr></thead>
+          <thead><tr><th>Job / Program</th><th>Reason</th><th>Avg CPU</th><th>Peak CPU</th><th>Memory</th></tr></thead>
           <tbody>
-            {reviewRows.map((row) => {
+            {visibleRows.map((row) => {
               const selected = selectedJob?.key === row.consumer_key && selectedJob?.consumerType === row.consumer_type
-              const reason = evaluationReasonText(row)
+              const internalQuickSelected = quickRow?.consumer_key === row.consumer_key && quickRow?.consumer_type === row.consumer_type
+              const externalQuickSelected = externalQuickKey === `${row.consumer_type}:${row.consumer_key}`
+              const quickSelected = internalQuickSelected || externalQuickSelected
+              const reasonParts = evaluationReasonParts(row)
               const title = [
                 `Type: ${workloadTypeLabel(row.consumer_type)}`,
                 row.assessment_reason || '',
                 row.baseline_status ? `Baseline: ${row.baseline_status}` : '',
               ].filter(Boolean).join('\n')
-              return <tr key={`${row.consumer_type}-${row.consumer_key}`} className={selected ? 'is-selected' : ''}>
+              return <tr
+                key={`${row.consumer_type}-${row.consumer_key}`}
+                className={`${selected ? 'is-selected ' : ''}${quickSelected ? 'is-quick-selected' : ''}`.trim()}
+                tabIndex={0}
+                role="button"
+                title="Open quick performance analysis"
+                onClick={() => openQuick(row)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault()
+                  openQuick(row)
+                }}
+              >
                 <td className="rundeckReviewWorkloadV1231" title={title}>
-                  <button type="button" onClick={() => select(row)}>{row.consumer_key}</button>
+                  <button type="button" onClick={(event) => { event.stopPropagation(); openQuick(row) }}>{row.consumer_key}</button>
                   <small>{workloadTypeLabel(row.consumer_type)}</small>
                 </td>
-                <td>{reason || row.status || 'Review'}</td>
+                <td><div className="rundeckReviewReasonChips">{reasonParts.length ? reasonParts.map((part) => <span key={part}>{part}</span>) : <span>{row.status || 'Review'}</span>}</div></td>
                 <td title={CPU_HINT}>{pct(row.avg_cpu_pct)}</td>
                 <td title={CPU_HINT}>{pct(row.peak_cpu_pct)}</td>
                 <td>{gb(row.avg_pss_gb)}</td>
               </tr>
             })}
-            {!reviewRows.length && <tr><td colSpan="5">No workloads currently require review for this period.</td></tr>}
+            {!reviewRows.length && <tr><td colSpan="5">No job or program needs review for this period.</td></tr>}
           </tbody>
         </table>
       </div>
     </>}
+    {!onOpenQuickAnalysis && quickRow && <RundeckReviewQuickAnalysis
+      row={quickRow}
+      reviewContext={{ period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' }}
+      refreshToken={refreshToken}
+      incidentStart={incidentStart}
+      onClose={() => setQuickRow(null)}
+      onOpenFull={openFull}
+    />}
   </section>
 }

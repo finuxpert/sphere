@@ -502,3 +502,549 @@
     transition: none;
   }
 }
+
+
+/* v1.23.8 — progressive disclosure for workload diagnostics */
+.rundeckJobPerformanceDisclosure{
+  margin-top:7px;
+  padding-top:5px;
+  border-top:1px solid rgba(126,147,158,.07);
+}
+.rundeckJobPerformanceDisclosure>summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:28px;
+  cursor:pointer;
+  list-style:none;
+}
+.rundeckJobPerformanceDisclosure>summary::-webkit-details-marker{display:none}
+.rundeckJobPerformanceDisclosure>summary::after{
+  content:'▾';
+  margin-left:auto;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckJobPerformanceDisclosure:not([open])>summary::after{transform:rotate(-90deg)}
+.rundeckJobPerformanceDisclosure>summary>span{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:var(--sphere-text,#e7edf0);
+  font-size:11px;
+  font-weight:760;
+}
+.rundeckJobPerformanceDisclosure>summary>span .sphereIcon{
+  color:var(--sphere-text-muted,#718089);
+}
+.rundeckJobPerformanceDisclosure>summary small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckJobPerformanceDisclosure>summary em{
+  color:var(--sphere-warning,#d8b35f);
+  font-size:8.8px;
+  font-style:normal;
+  font-weight:650;
+}
+.rundeckJobPerformanceDisclosure[open] .rundeckJobPerformanceChart{
+  margin-top:4px;
+}
+
+
+/* v1.33.2 — selected workload density */
+.rundeckJobHistoryOverview {
+  margin-top: 5px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+.rundeckJobHistoryGroup {
+  padding: 1px 0 !important;
+}
+.rundeckJobTimeline {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 10px !important;
+  min-height: 24px;
+  margin-top: 4px !important;
+  padding: 3px 0 !important;
+  border-top: 1px solid rgba(126,147,158,.07);
+  border-bottom: 0 !important;
+}
+.rundeckJobTimeline > strong {
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8.6px !important;
+  font-weight: 650 !important;
+}
+.rundeckJobTimeline > span {
+  display: inline-flex !important;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 8.8px !important;
+}
+.rundeckJobTimeline > span b {
+  display: inline !important;
+  margin: 0 !important;
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8px !important;
+}
+.rundeckJobTimeline > em {
+  font-size: 8.6px !important;
+}
+.rundeckJobPerformanceDisclosure {
+  margin-top: 3px !important;
+  padding-top: 3px !important;
+}
+.rundeckJobPerformanceDisclosure > summary {
+  min-height: 25px !important;
+}
+.rundeckJobPerformanceDisclosure > summary small {
+  color: #9aa7ae;
+  font-size: 9.2px;
+  font-weight: 560;
+}
+
+/* SPHERE v1.33.8 — explicit item type and compact disconnected SAP Job Check. */
+.rundeckJobTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 17px;
+  padding: 1px 5px;
+  border: 1px solid rgba(79,198,200,.18);
+  border-radius: 999px;
+  color: var(--sphere-accent,#4fc6c8);
+  font-size: 7.8px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.rundeckSm37Verification.is-compact {
+  padding: 0;
+}
+.rundeckSm37Verification.is-compact > summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 27px;
+  padding: 5px 8px;
+  list-style: none;
+  cursor: pointer;
+}
+.rundeckSm37Verification.is-compact > summary::-webkit-details-marker {
+  display: none;
+}
+.rundeckSm37Verification.is-compact > summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8px;
+}
+.rundeckSm37Verification.is-compact:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+.rundeckSm37Verification.is-compact > .rundeckSm37VerificationGrid,
+.rundeckSm37Verification.is-compact > p {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+.rundeckSm37Verification.is-compact > p {
+  margin-bottom: 6px;
+}
+
+/* SPHERE v1.34.7 — drawer-aware performance analysis density. */
+.rundeckJobHistory.is-drawer-presentation{
+  container-type:normal;
+  width:100%;
+  min-width:0;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryContent{
+  width:100%;
+  min-width:0;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryOverview{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:8px 18px;
+  width:100%;
+  max-width:none;
+  margin-top:4px!important;
+  padding:3px 0 5px!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryGroup{
+  min-width:0;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px 8px;
+  width:100%;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary>span{
+  min-width:0;
+  display:block;
+  padding:4px 0;
+  white-space:normal;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary b{
+  display:block;
+  margin-bottom:1px;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobTimeline{
+  gap:4px 14px!important;
+  margin:3px 0 2px!important;
+  padding:5px 0!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceDisclosure{
+  width:100%;
+  margin-top:2px!important;
+  padding-top:4px!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceWrap,
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceChart{
+  width:100%!important;
+  max-width:none!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceChart{
+  max-height:none!important;
+  min-height:280px;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckSingleSample{
+  width:100%;
+}
+@media(max-width:760px){
+  .rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryOverview{
+    grid-template-columns:1fr;
+  }
+  .rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+/* SPHERE v1.34.12 — historical ranges live in Job Performance itself. */
+.rundeckJobPerformanceRange{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 7px}
+.rundeckJobRangeTabs,.rundeckJobRangeMode{display:flex;align-items:center;gap:3px;padding:2px;border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));border-radius:6px;background:rgba(126,147,158,.025)}
+.rundeckJobRangeTabs button,.rundeckJobRangeMode button{min-height:30px;padding:4px 8px;border:0;border-radius:4px;background:transparent;color:var(--sphere-text-muted,#718089);font-size:10px;font-weight:700;cursor:pointer}
+.rundeckJobRangeTabs button.is-active,.rundeckJobRangeMode button.is-active{background:rgba(79,198,200,.10);color:var(--sphere-text,#e7edf0)}
+.rundeckJobPerformanceDisclosure.is-direct{border:0}
+.rundeckJobPerformanceTitle{display:flex;align-items:center;gap:9px;padding:5px 0 7px;border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));color:var(--sphere-text-secondary,#a9b5bb)}
+.rundeckJobPerformanceTitle>span{font-weight:750;color:var(--sphere-text,#e7edf0)}
+.rundeckJobPerformanceTitle small{font-size:10px}
+.rundeckJobPerformanceTitle em{margin-left:auto;color:var(--sphere-warning,#d8b35f);font-size:9.5px;font-style:normal;font-weight:700}
+.rundeckJobHistoricalSummary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;margin:6px 0 9px;border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));border-radius:6px;overflow:hidden;background:rgba(126,147,158,.05)}
+.rundeckJobHistoricalSummary span{padding:7px 8px;background:var(--sphere-page,#0f151a);color:var(--sphere-text-secondary,#a9b5bb);font-size:10.5px}
+.rundeckJobHistoricalSummary b{display:block;margin-bottom:2px;color:var(--sphere-text-muted,#718089);font-size:9.5px;text-transform:uppercase}
+.rundeckJobHistoricalTitle{display:flex;align-items:center;justify-content:space-between;margin:7px 0 4px}
+.rundeckJobHistoricalTitle strong{font-size:11.5px}.rundeckJobHistoricalTitle small{color:var(--sphere-text-muted,#718089);font-size:9.5px}
+.rundeckJobHistoricalRangeChart{width:100%;height:310px}
+@media(max-width:780px){
+  .rundeckJobPerformanceRange{align-items:flex-start;flex-direction:column}
+  .rundeckJobRangeTabs{flex-wrap:wrap}
+  .rundeckJobHistoricalSummary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* Final pre-PROD hierarchy and historical correlation semantics. */
+.rundeckJobHistoricalAnalysis{margin-top:8px;padding-top:8px;border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))}
+.rundeckJobSectionLabel{margin-bottom:5px;color:var(--sphere-text-muted,#718089);font-size:9.5px;font-weight:800;letter-spacing:.045em;text-transform:uppercase}
+.rundeckJobHistoricalAnalysis .rundeckJobPerformanceRange{margin-top:0}
+.rundeckJobCurrentSemantics{display:block;margin-top:-2px;color:var(--sphere-text-muted,#718089);font-size:9.5px}
+.rundeckJobCorrelationDisclaimer{margin-left:auto;color:var(--sphere-text-muted,#718089);font-size:9px;font-style:normal}
+.rundeckJobHistoricalRangeChart{height:330px}
+@media(max-width:780px){.rundeckJobCorrelationDisclaimer{width:100%;margin-left:0}}
+
+/* SPHERE v1.34.23 — consolidated release-candidate performance drawer. */
+.rundeckJobHistory.is-drawer-presentation{
+  container-type:normal;
+  width:100%;
+  min-width:0;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  min-width:0;
+  padding:0 16px 16px!important;
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistory,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryContent{
+  flex:1 1 auto;
+  align-self:stretch;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix{
+  display:grid;
+  grid-template-columns:repeat(8,minmax(0,1fr));
+  grid-template-rows:auto auto;
+  width:100%;
+  overflow:hidden;
+  border:1px solid rgba(126,147,158,.075)!important;
+  border-radius:4px!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel{
+  grid-row:1;
+  padding:7px 9px 6px;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:8.8px;
+  font-weight:800;
+  letter-spacing:.035em;
+  text-transform:uppercase;
+  background:transparent!important;
+  padding-bottom:5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-episode{grid-column:1/5}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-performance{
+  grid-column:5/9;
+  border-left:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics{
+  grid-row:2;
+  grid-column:1/9;
+  display:grid;
+  grid-template-columns:repeat(8,minmax(0,1fr));
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-width:0;
+  min-height:48px;
+  padding:7px 9px;
+  border-top:1px solid rgba(126,147,158,.07)!important;
+  border-left:1px solid rgba(126,147,158,.065)!important;
+  background:transparent!important;
+  color:var(--sphere-text,#e7edf0);
+  font-size:10px;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span:first-child{border-left:0}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics b{
+  display:block;
+  margin-bottom:3px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;
+  font-weight:760;
+  text-transform:uppercase;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline{
+  display:grid!important;
+  grid-template-columns:auto auto auto minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px 14px!important;
+  width:100%!important;
+  min-height:38px!important;
+  margin:8px 0 0!important;
+  padding:7px 9px!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+  border-right:0!important;
+  border-bottom:1px solid rgba(126,147,158,.06)!important;
+  border-left:2px solid rgba(216,179,95,.45)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline>strong{margin:0!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline>span{display:flex!important;gap:5px!important;white-space:nowrap!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline>em{display:none!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobCorrelationDisclaimer{
+  justify-self:end;
+  text-align:right;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9.5px;
+  font-weight:700;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+  display:grid;
+  grid-template-columns:minmax(250px,28fr) minmax(0,72fr);
+  gap:14px;
+  width:100%;
+  min-width:0;
+  margin-top:10px;
+  align-items:start;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
+  min-width:0;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{
+  position:sticky;
+  top:0;
+  align-self:start;
+  padding:8px 14px 8px 4px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.055)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalAnalysis{
+  width:100%;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{
+  display:flex;
+  align-items:flex-start;
+  flex-direction:column;
+  gap:7px;
+  margin:7px 0 6px;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  width:100%;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  width:100%;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{
+  min-height:32px;
+  padding:4px 7px;
+  font-size:10px;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceTitle{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:6px;
+  width:100%;
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceTitle>span{font-weight:760;color:var(--sphere-text,#e7edf0)}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceTitle>small{color:var(--sphere-text-secondary,#a9b5bb);font-size:10px}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceTitle>em{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  margin:0;
+  padding:2px 7px;
+  border:1px solid rgba(216,179,95,.28);
+  border-radius:999px;
+  background:rgba(216,179,95,.06);
+  color:var(--sphere-warning,#d8b35f);
+  font-size:9.5px;
+  font-style:normal;
+  font-weight:700;
+  white-space:normal;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:1px;
+  margin:10px 0 0;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary span{min-height:46px;padding:7px 8px}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
+  width:100%;
+  min-height:470px;
+  padding:4px 0 4px 8px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceDisclosure,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRange,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceWrap,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{
+  min-height:455px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
+  height:430px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalTitle{
+  margin:0 0 5px;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
+  border-color:rgba(45,63,72,.16)!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel{color:#40545e!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span{
+  color:#203038!important;
+  border-color:rgba(45,63,72,.10)!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics b{color:#586b75!important}
+@media(max-width:1360px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+    grid-template-columns:minmax(235px,30fr) minmax(0,70fr);
+  }
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-episode{grid-column:1/5}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-performance{grid-column:1/5;grid-row:3;border-left:0;border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics{grid-template-columns:repeat(4,minmax(0,1fr));grid-column:1/5}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{grid-template-columns:1fr}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{position:static}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{flex-direction:row;justify-content:space-between}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs{display:flex;width:auto}
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode{display:flex;width:auto}
+}
+
+/* SPHERE v1.34.24 — final performance workspace proportion and label legibility. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{
+  height:fit-content!important;
+  max-height:none!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
+  align-self:start!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart canvas{
+  image-rendering:auto;
+}
+
+
+/* SPHERE RC freeze — intentional historical empty state without changing drawer geometry. */
+.rundeckJobHistoricalRange .rundeckJobHistoricalEmpty{
+  min-height:260px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin:4px 0 0;
+  padding:18px;
+  box-sizing:border-box;
+  color:var(--sphere-text-muted,#718089);
+  text-align:center;
+}
+.rundeckJobHistoricalEmpty .sphereIcon{
+  font-size:18px;
+  color:var(--sphere-text-muted,#718089);
+  opacity:.72;
+}
+.rundeckJobHistoricalEmpty strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:11px;
+  font-weight:740;
+}
+.rundeckJobHistoricalEmpty small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9.5px;
+  line-height:1.35;
+}
+html[data-theme="light"] .rundeckJobHistoricalEmpty strong{color:#314851!important}
+html[data-theme="light"] .rundeckJobHistoricalEmpty small,
+html[data-theme="light"] .rundeckJobHistoricalEmpty .sphereIcon{color:#687a83!important}
+@media(max-height:800px){
+  .rundeckJobHistoricalRange .rundeckJobHistoricalEmpty{min-height:220px}
+}

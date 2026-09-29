@@ -49,11 +49,14 @@ export default function RundeckSm37Verification({ jobName, program, host, observ
   const state = data?.verification || (loading ? 'CHECKING' : 'NOT_VERIFIED')
   const match = data?.match || null
   const source = data?.source || null
+  const displayState = source?.status === 'NOT_CONFIGURED' ? 'JOB DATA NOT CONNECTED' : state.replaceAll('_', ' ')
 
-  return <section className="rundeckSm37Verification" aria-label="SM37 verification context">
+  const sourceNotConfigured = source?.status === 'NOT_CONFIGURED'
+
+  return <section className={`rundeckSm37Verification ${sourceNotConfigured ? 'is-source-unconfigured' : ''}`} aria-label="SAP job check">
     <div className="rundeckSm37VerificationHead">
-      <strong>SM37 Verification</strong>
-      <span className={stateClass(state)}>{state.replaceAll('_', ' ')}</span>
+      <strong>SAP Job Check</strong>
+      <span className={stateClass(state)}>{displayState}</span>
     </div>
     <div className="rundeckSm37VerificationGrid">
       <span><b>Job Name</b>{jobName || '—'}</span>
@@ -68,11 +71,11 @@ export default function RundeckSm37Verification({ jobName, program, host, observ
     {error
       ? <p className="is-error">{error}</p>
       : state === 'MATCHED'
-        ? <p>Matched against an imported authoritative SM37 execution using {data?.evidence?.join(', ') || 'execution identity and time'}. This confirms execution context, not root cause.</p>
+        ? <p>Matched with imported SM37 job data using {data?.evidence?.join(', ') || 'job identity and time'}.</p>
         : state === 'PARTIAL_MATCH'
-          ? <p>Partial SM37 identity match. Review Job Name, Step Program, server and execution time before using it as evidence.</p>
+          ? <p>Possible SM37 match. Check Job Name, Program, server and execution time.</p>
           : state === 'NOT_FOUND'
-            ? <p>No authoritative SM37 execution matched this workload context in the verification window.</p>
-            : <p>{source?.status === 'NOT_CONFIGURED' ? 'SM37 execution feed is not configured. SPHERE keeps this context unverified.' : 'Verification requires an imported authoritative SM37 execution record.'}</p>}
+            ? <p>No matching SM37 job execution was found in this time window.</p>
+            : <p>{source?.status === 'NOT_CONFIGURED' ? 'SM37 job data is not connected yet.' : 'Connect or import SM37 job data to check this job.'}</p>}
   </section>
 }

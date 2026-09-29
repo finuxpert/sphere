@@ -4,7 +4,7 @@ import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiForm
 import './RundeckCurrentWorkload.css'
 
 const API = `${import.meta.env.BASE_URL}api`
-const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
+const CPU_HINT = 'CPU Total is the grouped multi-core workload CPU observation. It can exceed 100 percent when the workload uses more than one CPU core or process.'
 const STALE_MINUTES = 15
 
 function jobContext(row) {
@@ -14,6 +14,11 @@ function jobContext(row) {
     host: row.host || '',
     consumerType: row.consumer_type || '',
     source: 'current-workload',
+    cpuPct: row.cpu_pct ?? null,
+    memoryGb: pssGb(row),
+    processes: processCount(row.details || {}),
+    wp: wpText(row.details || {}),
+    criticalWp: row.host_wp_critical ?? null,
   }
 }
 
@@ -72,6 +77,18 @@ function identitySummary(row = {}) {
   return parts.join(' · ') || workloadTypeLabel(row.consumer_type)
 }
 
+function hasReviewSignal(row = {}) {
+  const details = row.details || {}
+  const status = String(row.review_status || row.status || '').toUpperCase()
+  const anomaly = String(row.anomaly_status || details.anomaly_status || '').toUpperCase()
+  return Boolean(
+    row.review_required ||
+    details.review_required ||
+    ['REVIEW REQUIRED', 'ATTENTION', 'CRITICAL'].includes(status) ||
+    ['ABOVE BASELINE', 'ANOMALY'].includes(anomaly)
+  )
+}
+
 function identityTitle(row = {}) {
   const details = row.details || {}
   const values = []
@@ -91,7 +108,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext }) {
   const [rows, setRows] = React.useState([])
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
@@ -137,7 +154,22 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     return () => window.clearInterval(timer)
   }, [rows.length])
 
-  const visible = showAll ? rows : rows.slice(0, 10)
+  React.useEffect(() => {
+    if (!selectedJob?.key || !selectedJob?.host || !onSelectedContext || !rows.length) return
+    const match = rows.find((row) => (
+      row.consumer_key === selectedJob.key &&
+      row.host === selectedJob.host &&
+      (!selectedJob.consumerType || row.consumer_type === selectedJob.consumerType)
+    ))
+    if (!match) return
+    const context = jobContext(match)
+    if (!context) return
+    const changed = ['cpuPct', 'memoryGb', 'processes', 'wp', 'criticalWp'].some((key) => context[key] !== selectedJob[key])
+    if (changed) onSelectedContext(context)
+  }, [rows, selectedJob, onSelectedContext])
+
+  const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
+  const visible = showAll ? sortedRows : sortedRows.slice(0, 10)
   const latestObservedAt = rows.reduce((latest, row) => {
     const timestamp = Date.parse(row.collected_at || '')
     return Number.isFinite(timestamp) && timestamp > Date.parse(latest || '') ? row.collected_at : latest
@@ -145,11 +177,13 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const freshness = latestObservedAt ? relativeAge(latestObservedAt, nowMs) : ''
   const freshnessMinutes = latestObservedAt ? ageMinutes(latestObservedAt, nowMs) : null
   const showFreshness = freshnessMinutes !== null && freshnessMinutes >= STALE_MINUTES
+  const selectedContext = selectedJob?.key && selectedJob?.host ? `${shortHost(selectedJob.host)} · ${selectedJob.key}` : ''
 
-  return <section className="rundeckCurrentWorkload" aria-label="Current SAP workloads">
+  return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className="rundeckCurrentWorkloadHead">
-      <h3><SphereIcon name="workload" /> Current Workloads</h3>
+      <h3><SphereIcon name="workload" /> Current Jobs & Programs <span className="rundeckCurrentWorkloadCount">{rows.length} active</span></h3>
       <div className="rundeckCurrentWorkloadTools">
+        {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected job or program: ${selectedContext}`}>Selected · {selectedContext}</span>}
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
         {rows.length > 10 && <button type="button" onClick={() => setShowAll((value) => !value)}>
           {showAll ? 'Top 10' : `View all ${rows.length}`}
@@ -157,12 +191,12 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       </div>
     </div>
 
-    {loading && <div className="rundeckCurrentWorkloadState">Loading workloads…</div>}
+    {loading && <div className="rundeckCurrentWorkloadState">Loading jobs and programs…</div>}
     {error && <div className="rundeckCurrentWorkloadState is-error">{error}</div>}
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap">
       <table>
-        <thead><tr><th>APP</th><th>Workload</th><th title={CPU_HINT}>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th></tr></thead>
+        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>Memory</th><th>Processes</th><th>WP</th></tr></thead>
         <tbody>
           {visible.map((row) => {
             const details = row.details || {}
@@ -170,22 +204,35 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             const active = context && selectedJob?.key === context.key && selectedJob?.host === context.host
             const pss = pssGb(row)
             const cpu = Number(row.cpu_pct)
+            const cpuNeedsAttention = hasReviewSignal(row)
             const processes = processCount(details)
             const identity = identitySummary(row)
             const fullIdentity = identityTitle(row)
-            return <tr key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`} className={active ? 'is-selected' : ''}>
+            return <tr
+              key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`}
+              className={active ? 'is-selected' : ''}
+              tabIndex={context ? 0 : undefined}
+              role={context ? 'button' : undefined}
+              title={context ? 'Open this job or program in the analysis panel' : undefined}
+              onClick={context ? () => onSelectJob?.(context) : undefined}
+              onKeyDown={context ? (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return
+                event.preventDefault()
+                onSelectJob?.(context)
+              } : undefined}
+            >
               <td title={row.host}>{shortHost(row.host)}</td>
               <td className="rundeckCurrentWorkloadName">
-                <button type="button" onClick={() => context && onSelectJob?.(context)}>{row.consumer_key}</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }}>{row.consumer_key}</button>
                 <small title={fullIdentity || identity}>{identity}</small>
               </td>
-              <td title={CPU_HINT} className={Number.isFinite(cpu) && cpu >= 80 ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
-              <td className={pss !== null && pss >= 2 ? 'is-attention' : ''}>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
+              <td title={CPU_HINT} className={Number.isFinite(cpu) && cpuNeedsAttention ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
+              <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
               <td>{numberText(processes, 0)}</td>
               <td>{wpText(details)}</td>
             </tr>
           })}
-          {!rows.length && <tr><td colSpan="6">No current workload stored for this run.</td></tr>}
+          {!rows.length && <tr><td colSpan="6">No active job or program found for this run.</td></tr>}
         </tbody>
       </table>
     </div>}

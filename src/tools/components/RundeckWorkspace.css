@@ -46,9 +46,18 @@
 .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235,
 .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
   display: grid !important;
-  grid-template-columns: minmax(0, 40fr) minmax(0, 60fr) !important;
   gap: 20px !important;
   align-items: start !important;
+}
+
+/* SAP App Servers | Server Trend */
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
+  grid-template-columns: minmax(0, 35fr) minmax(0, 65fr) !important;
+}
+
+/* Current Workloads | Selected Workload */
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
+  grid-template-columns: minmax(0, 38fr) minmax(0, 62fr) !important;
 }
 
 .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
@@ -390,3 +399,94 @@
     min-height: 210px !important;
   }
 }
+
+
+/* v1.33.2 — Supporting Data details owns full width; inner body owns columns. */
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > summary {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  display: grid !important;
+  grid-template-columns: minmax(0,65fr) minmax(0,35fr) !important;
+  gap: 0 20px !important;
+}
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* SPHERE v1.33.5 — compact secondary disclosures and remove permanent focus-like borders. */
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary,
+.appShell:has(.rundeckPanel) .rundeckSupportingDataDisclosure > summary {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail > summary:focus-visible,
+.appShell:has(.rundeckPanel) .rundeckSupportingDataDisclosure > summary:focus-visible {
+  outline: 1px solid rgba(79,198,200,.58) !important;
+  outline-offset: 2px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDetail {
+  border-top-color: rgba(126,147,158,.055) !important;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
+  align-items: start !important;
+}
+
+/* SPHERE v1.33.5 — final supporting-data ratio override. */
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  grid-template-columns: minmax(0, 40fr) minmax(0, 60fr) !important;
+  gap: 0 24px !important;
+  max-width: 1400px;
+}
+@media (max-width: 1180px) {
+  .appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns: 1fr !important;
+    max-width: none;
+  }
+}
+
+/* SPHERE v1.33.7 — final System Data ratio override. */
+.appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  grid-template-columns: minmax(0,58fr) minmax(0,42fr) !important;
+}
+@media (max-width:1180px) {
+  .appShell:has(.rundeckPanel) details.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* SPHERE v1.34.22 — single owner for Current Jobs / Selected Job composition. */
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+  grid-template-columns:minmax(0,45fr) minmax(0,55fr)!important;
+  gap:16px!important;
+  align-items:start!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-current-workload{
+  align-self:start!important;
+  min-height:0!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-selected-workload{
+  align-self:start!important;
+  min-height:0!important;
+  height:fit-content!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+    grid-template-columns:1fr!important;
+  }
+}
+
+/* Release candidate: workload band is content-driven.
+   Current Jobs owns its internal scroll depth; the parent row must not reserve empty vertical space. */

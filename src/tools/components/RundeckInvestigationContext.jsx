@@ -18,9 +18,9 @@ const sourceMeta = (job = {}) => {
   if (source === 'selected-time' || source === 'trend' || source === 'trend-snapshot') {
     return {
       tone: 'trend',
-      label: 'TREND SNAPSHOT',
+      label: 'TREND HISTORY',
       detail: [shortHost(job.host || ''), at].filter(Boolean).join(' · '),
-      note: 'Selected from a retained Server Trend snapshot; current system state remains live.',
+      note: 'Opened from a saved point in Server Trend. The rest of the dashboard still shows current data.',
     }
   }
   if (source === 'workload-explorer') {
@@ -36,38 +36,38 @@ const sourceMeta = (job = {}) => {
       tone: 'review',
       label: 'REVIEW',
       detail: job.days ? `${job.days}D evaluation window` : 'Performance Review',
-      note: 'Review context is supporting evidence, not a root-cause conclusion.',
+      note: 'Opened from the performance review list.',
     }
   }
   if (source === 'critical-wp-inline-drilldown') {
     return {
       tone: 'live',
-      label: 'LIVE · CRITICAL WP CONTEXT',
-      detail: shortHost(job.host || ''),
-      note: 'Selected from workloads observed on this APP while Critical WP was active; correlation only.',
+      label: 'SELECTED JOB / PROGRAM · LIVE',
+      detail: [shortHost(job.host || ''), 'Critical WP context'].filter(Boolean).join(' · '),
+      note: 'Opened from jobs and programs seen on this APP while Critical WP was active.',
     }
   }
   if (source === 'current') {
     return {
       tone: 'live',
-      label: 'LIVE · ISSUE CONTEXT',
-      detail: shortHost(job.host || ''),
-      note: 'Automatically selected from the active performance issue context; not the global CPU ranking or a root-cause conclusion.',
+      label: 'SELECTED JOB / PROGRAM · LIVE',
+      detail: [shortHost(job.host || ''), 'Active issue'].filter(Boolean).join(' · '),
+      note: 'Automatically selected from the current performance issue.',
     }
   }
   if (source === 'current-workload') {
     return {
       tone: 'live',
-      label: 'LIVE · WORKLOAD',
-      detail: shortHost(job.host || ''),
-      note: 'Selected directly from Current Workloads.',
+      label: 'SELECTED JOB / PROGRAM · LIVE',
+      detail: [shortHost(job.host || ''), 'Current jobs & programs'].filter(Boolean).join(' · '),
+      note: 'Selected directly from Current Jobs & Programs.',
     }
   }
   return {
     tone: 'live',
     label: 'LIVE',
     detail: shortHost(job.host || ''),
-    note: 'Latest aligned workload context.',
+    note: 'Latest selected job or program.',
   }
 }
 

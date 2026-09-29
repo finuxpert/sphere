@@ -42,9 +42,10 @@ function latestEpisode(items = [], targetAt = '') {
   }, episodes[0])
 }
 
-export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob }) {
+export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob, embedded = false }) {
   const [rows, setRows] = React.useState([])
   const [error, setError] = React.useState('')
+  const [showAll, setShowAll] = React.useState(false)
 
   React.useEffect(() => {
     if (!job?.key) {
@@ -69,6 +70,8 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
     return () => controller.abort()
   }, [job?.at, job?.consumerType, job?.host, job?.key, refreshToken])
 
+  React.useEffect(() => setShowAll(false), [job?.at, job?.host, job?.key])
+
   if (!job?.key) return null
 
   const inspectObservation = (row) => {
@@ -85,13 +88,25 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   }
 
   const selectedAt = Date.parse(job.at || '')
+  const visibleRows = showAll ? rows : rows.slice(0, 8)
+  const cpuValues = rows.map((row) => numeric(row.cpu_pct)).filter((value) => value !== null)
+  const pssValues = rows.map((row) => rowMetric(row, 'pss')).filter((value) => value !== null)
+  const criticalValues = rows.map((row) => numeric(row.host_wp_critical)).filter((value) => value !== null)
+  const firstPss = pssValues.length ? pssValues.at(-1) : null
+  const lastPss = pssValues.length ? pssValues[0] : null
+  const historySummary = rows.length
+    ? [
+        cpuValues.length ? `CPU ${numberText(cpuValues.reduce((sum, value) => sum + value, 0) / cpuValues.length, 1)}–${numberText(Math.max(...cpuValues), 1)}%` : '',
+        firstPss !== null && lastPss !== null ? `Memory ${numberText(firstPss, 2)}→${numberText(lastPss, 2)} GB` : '',
+        criticalValues.length ? `Critical WP ${Math.min(...criticalValues)}–${Math.max(...criticalValues)}` : '',
+      ].filter(Boolean).join(' · ')
+    : ''
 
-  return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234" open>
-    <summary><SphereIcon name="history" /> Observation History <span>{error ? 'unavailable' : `${rows.length} observations`}</span></summary>
+  const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
-      <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th><th>Critical WP</th></tr></thead>
-      <tbody>{rows.map((row) => {
+      <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU</th><th>Memory</th><th>Critical WP</th></tr></thead>
+      <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
         const wp = [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
@@ -102,7 +117,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           key={`${row.collection_id}-${row.host}-${row.collected_at}`}
           className={[actionable ? 'is-investigable' : '', inspected ? 'is-inspected' : ''].filter(Boolean).join(' ')}
           tabIndex={actionable ? 0 : undefined}
-          title={actionable ? 'Inspect this historical observation in Selected Workload. Current dashboard state remains live.' : undefined}
+          title={actionable ? 'Open this record in Selected Job / Program.' : undefined}
           onClick={actionable ? () => inspectObservation(row) : undefined}
           onKeyDown={actionable ? (event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return
@@ -111,15 +126,24 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           } : undefined}
         >
           <td>{formatWib(row.collected_at, true)}</td>
-          <td>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</td>
+          <td><button type="button" className="rundeckHistoryRunButton" title="Open this run timestamp in the selected job chart" onClick={(event) => { event.stopPropagation(); inspectObservation(row) }}>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</button></td>
           <td title={row.host}>{shortHost(row.host)}</td>
           <td>{numberText(row.cpu_pct)}%</td>
           <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
-          <td>{numberText(rowMetric(row, 'processes'), 0)}</td>
-          <td>{wp}</td>
-          <td>{numberText(row.host_wp_critical, 0)}</td>
+          <td title={`Processes ${numberText(rowMetric(row, 'processes'), 0)} · WP ${wp}`}>{numberText(row.host_wp_critical, 0)}</td>
         </tr>
-      })}{!rows.length && <tr><td colSpan="8">No stored observations for this workload.</td></tr>}</tbody>
-    </table></div>}
+      })}{!rows.length && <tr><td colSpan="6">No saved performance records for this job or program.</td></tr>}</tbody>
+    </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
+  </>
+
+  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Observation History">{content}</section>
+
+  return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
+    <summary>
+      <SphereIcon name="history" /> Performance History
+      <span>{error ? 'unavailable' : `90D · ${rows.length} records`}</span>
+      {historySummary && <small className="rundeckObservationHistorySummary">{historySummary}</small>}
+    </summary>
+    {content}
   </details>
 }

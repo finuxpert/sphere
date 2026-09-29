@@ -8,6 +8,12 @@ from fastapi import Body, HTTPException, Query, Request
 
 from backend import rundeck_api_core as _core
 from backend.rundeck_availability import availability_history, latest_availability
+from backend.models import AnalysisClosureInput
+from backend.rundeck_closing import (
+    get_analysis_closure,
+    list_analysis_closures,
+    save_analysis_closure,
+)
 from backend.rundeck_evidence import evidence_timeline
 from backend.rundeck_job_intelligence import (
     correlation_timeline,
@@ -100,7 +106,7 @@ def workload_search_endpoint(
 def workload_summary_endpoint(
     job: str = Query(..., min_length=1, max_length=512),
     consumer_type: str = Query(..., alias="type", pattern="^(JOB|PROGRAM)$"),
-    range_key: str = Query("24h", alias="range", pattern="^(24h|3d|7d|30d)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(3h|6h|24h|3d|7d|30d)$"),
     host: str | None = Query(None, max_length=120),
 ):
     try:
@@ -117,7 +123,7 @@ def workload_summary_endpoint(
 def workload_trend_endpoint(
     job: str = Query(..., min_length=1, max_length=512),
     consumer_type: str = Query(..., alias="type", pattern="^(JOB|PROGRAM)$"),
-    range_key: str = Query("24h", alias="range", pattern="^(24h|3d|7d|30d)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(3h|6h|24h|3d|7d|30d)$"),
     host: str | None = Query(None, max_length=120),
 ):
     try:
@@ -128,6 +134,51 @@ def workload_trend_endpoint(
         raise HTTPException(503, str(error)) from None
     except Exception as error:
         raise HTTPException(503, f"Workload trend unavailable: {type(error).__name__}") from None
+
+
+@app.get("/analysis/closing")
+def analysis_closing_endpoint(
+    consumer_type: str = Query(..., alias="type", pattern="^(JOB|PROGRAM)$"),
+    consumer_key: str = Query(..., alias="job", min_length=1, max_length=512),
+    period_key: str = Query("1d", alias="period", pattern="^(1d|7d|30d)$"),
+    window_end: str = Query(..., max_length=64),
+    host: str = Query("", max_length=120),
+):
+    try:
+        return {"item": get_analysis_closure(consumer_type, consumer_key, period_key, window_end, host=host)}
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Analysis closing unavailable: {type(error).__name__}") from None
+
+
+@app.post("/analysis/closing")
+def analysis_closing_save_endpoint(payload: AnalysisClosureInput):
+    try:
+        return {"item": save_analysis_closure(payload.model_dump())}
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Analysis closing save failed: {type(error).__name__}") from None
+
+
+@app.get("/analysis/closings")
+def analysis_closings_endpoint(
+    consumer_type: str | None = Query(None, alias="type", pattern="^(JOB|PROGRAM)$"),
+    consumer_key: str | None = Query(None, alias="job", max_length=512),
+    days: int = Query(90, ge=1, le=365),
+    limit: int = Query(100, ge=1, le=500),
+):
+    try:
+        return list_analysis_closures(consumer_type=consumer_type, consumer_key=consumer_key, days=days, limit=limit)
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Analysis closing history unavailable: {type(error).__name__}") from None
 
 
 @app.get("/jobs/source")

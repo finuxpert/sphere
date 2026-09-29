@@ -1,0 +1,383 @@
+.rundeckWorkspaceDrawer{
+  position:fixed;
+  z-index:1180;
+  top:72px;
+  right:0;
+  bottom:0;
+  width:min(760px,52vw);
+  display:flex;
+  flex-direction:column;
+  border-left:1px solid rgba(126,147,158,.18);
+  background:var(--sphere-page,#0f151a);
+  box-shadow:-18px 0 46px rgba(0,0,0,.34);
+  color:var(--sphere-text,#e7edf0);
+}
+.rundeckWorkspaceDrawer>header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 16px 12px;
+  border-bottom:1px solid rgba(126,147,158,.12);
+  background:#11191f;
+}
+.rundeckWorkspaceDrawer>header span{
+  color:var(--sphere-accent,#4fc6c8);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.rundeckWorkspaceDrawer>header h3{margin:3px 0 2px;font-size:14px}
+.rundeckWorkspaceDrawer>header small{color:var(--sphere-text-muted,#8d9aa3);font-size:9px}
+.rundeckWorkspaceDrawer>header button{
+  width:30px;height:30px;border:1px solid rgba(126,147,158,.14);border-radius:5px;background:transparent;
+  color:var(--sphere-text-secondary,#b9c4ca);font-size:18px;cursor:pointer
+}
+.rundeckWorkspaceDrawerBody{overflow:auto;padding:0 16px 24px}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory,
+.rundeckWorkspaceDrawerBody>.rundeckInfrastructure{margin-top:10px}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234.is-embedded{margin-top:10px}
+.rundeckWorkspaceDrawer>footer{
+  display:flex;justify-content:flex-end;gap:8px;padding:9px 16px;border-top:1px solid rgba(126,147,158,.10);background:#11191f
+}
+@media(max-width:1180px){.rundeckWorkspaceDrawer{top:0;width:100%}}
+
+/* SPHERE v1.34.4 — drawer density and duplicate-header cleanup. */
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobHistoryHead{
+  display:none;
+}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory{
+  margin-top:4px;
+}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryTableWrap{
+  overflow-x:hidden;
+}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 table{
+  min-width:0;
+  table-layout:fixed;
+}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 th:nth-child(1),
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 td:nth-child(1){width:17%}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 th:nth-child(2),
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 td:nth-child(2){width:17%}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 th:nth-child(3),
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 td:nth-child(3){width:13%}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 th:nth-child(4),
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 td:nth-child(4){width:16%}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 th:nth-child(5),
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 td:nth-child(5){width:20%}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 th:nth-child(6),
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 td:nth-child(6){width:17%}
+.rundeckWorkspaceDrawerBody .rundeckInfraGrid{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+.rundeckWorkspaceDrawerBody .rundeckInfraGrid article:first-child{
+  grid-column:1/-1;
+}
+.rundeckWorkspaceDrawerBody .rundeckInfraGrid article{
+  overflow:hidden;
+}
+.rundeckWorkspaceDrawerBody .rundeckInfra table{
+  font-size:10px;
+}
+.rundeckWorkspaceDrawerBody .rundeckInfra th,
+.rundeckWorkspaceDrawerBody .rundeckInfra td{
+  padding:6px 4px;
+}
+
+/* SPHERE v1.34.7 — use drawer space for analysis instead of preserving inline constraints. */
+.rundeckWorkspaceDrawer{
+  width:min(860px,58vw);
+}
+.rundeckWorkspaceDrawerBody{
+  min-width:0;
+}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory{
+  width:100%!important;
+  max-width:none!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobHistoryOverview,
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobHistoryContent,
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobPerformanceDisclosure,
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobPerformanceWrap{
+  width:100%!important;
+  max-width:none!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobPerformanceDisclosure>summary{
+  padding-right:2px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra{
+  padding-top:8px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra>header{
+  margin-bottom:7px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraFreshness{
+  margin-bottom:8px;
+  padding:6px 8px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  gap:8px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  padding:9px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendDisclosure{
+  margin-top:8px;
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer{width:100%}
+}
+
+/* SPHERE v1.34.8 — persistent drawer navigation with Back + Close. */
+.rundeckWorkspaceDrawerIdentity{
+  min-width:0;
+}
+.rundeckWorkspaceDrawerHeaderActions{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:0 0 auto;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack{
+  width:auto;
+  min-width:30px;
+  height:30px;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:0 8px;
+  font-size:11px;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack em{
+  color:var(--sphere-text-secondary,#b9c4ca);
+  font-size:8.8px;
+  font-style:normal;
+  font-weight:650;
+  white-space:nowrap;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack:hover,
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack:focus-visible{
+  border-color:rgba(79,198,200,.35);
+  color:var(--sphere-accent,#4fc6c8);
+  outline:none;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceClose{
+  flex:0 0 30px;
+}
+@media(max-width:640px){
+  .rundeckWorkspaceDrawer>header .rundeckWorkspaceBack em{display:none}
+}
+
+/* SPHERE v1.34.9 — in-drawer analysis menu for switching tools without closing. */
+.rundeckDrawerAnalysisMenu{
+  display:grid;
+  gap:8px;
+  padding:12px 0 4px;
+}
+.rundeckDrawerAnalysisMenu>button{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:48px;
+  width:100%;
+  padding:9px 10px;
+  border:1px solid rgba(126,147,158,.12);
+  border-radius:6px;
+  background:rgba(126,147,158,.02);
+  color:var(--sphere-text-secondary,#b9c4ca);
+  text-align:left;
+  cursor:pointer;
+}
+.rundeckDrawerAnalysisMenu>button:hover,
+.rundeckDrawerAnalysisMenu>button:focus-visible{
+  border-color:rgba(79,198,200,.30);
+  background:rgba(79,198,200,.045);
+  outline:none;
+}
+.rundeckDrawerAnalysisMenu>button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.rundeckDrawerAnalysisMenu .sphereIcon{
+  color:var(--sphere-text-muted,#718089);
+}
+.rundeckDrawerAnalysisMenu span{
+  min-width:0;
+}
+.rundeckDrawerAnalysisMenu b,
+.rundeckDrawerAnalysisMenu small{
+  display:block;
+}
+.rundeckDrawerAnalysisMenu b{
+  color:var(--sphere-text,#e7edf0);
+  font-size:10px;
+}
+.rundeckDrawerAnalysisMenu small{
+  margin-top:2px;
+  overflow:hidden;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.8px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckDrawerAnalysisMenu em{
+  color:var(--sphere-text-muted,#718089);
+  font-size:14px;
+  font-style:normal;
+}
+
+/* SPHERE v1.34.12 — content-aware drawer widths. */
+.rundeckWorkspaceDrawer.is-wide{width:min(980px,64vw)}
+.rundeckWorkspaceDrawer.is-medium{width:min(820px,54vw)}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-wide,
+  .rundeckWorkspaceDrawer.is-medium{width:100%}
+}
+
+/* SPHERE v1.34.13 — APP detail geometry and shared analysis drawer body polish. */
+.rundeckWorkspaceDrawer.is-app-detail{
+  top:92px;
+  right:14px;
+  bottom:auto;
+  width:min(900px,59vw);
+  max-height:calc(100vh - 116px);
+  border:1px solid rgba(126,147,158,.18);
+  border-radius:10px 0 0 10px;
+  overflow:hidden;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody,
+.rundeckWorkspaceDrawer.is-app-detail .rundeckWorkspaceDrawerBody{
+  min-height:0;
+  overflow:auto;
+  padding-bottom:16px;
+}
+.rundeckWorkspaceDrawer.is-performance>header,
+.rundeckWorkspaceDrawer.is-app-detail>header{
+  padding-top:11px;
+  padding-bottom:10px;
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-performance,
+  .rundeckWorkspaceDrawer.is-app-detail{
+    top:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    max-height:none;
+    border-radius:0;
+  }
+}
+
+/* SPHERE v1.34.14 — final content-aware drawers and restrained floating chrome. */
+.rundeckWorkspaceDrawer.is-menu,
+.rundeckWorkspaceDrawer.is-availability{
+  top:92px;right:14px;bottom:auto;
+  max-height:calc(100vh - 116px);
+  overflow:hidden;
+  border:1px solid rgba(126,147,158,.20);
+}
+.rundeckWorkspaceDrawer.is-menu{width:min(690px,46vw)}
+.rundeckWorkspaceDrawer.is-availability{width:min(720px,48vw)}
+.rundeckWorkspaceDrawer:is(.is-performance,.is-app-detail,.is-menu,.is-availability){
+  border-radius:10px;
+  box-shadow:-8px 10px 28px rgba(0,0,0,.22);
+}
+.rundeckWorkspaceDrawer:is(.is-menu,.is-availability) .rundeckWorkspaceDrawerBody{
+  min-height:0;overflow:auto;padding-bottom:16px;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack{
+  border-color:rgba(126,147,158,.24);
+  font-weight:720;
+}
+.rundeckDrawerAnalysisMenu{gap:6px;padding:10px 0 8px}
+.rundeckDrawerAnalysisMenu>button{min-height:44px;padding:7px 10px}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-menu,.rundeckWorkspaceDrawer.is-availability{
+    top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0;
+  }
+}
+
+/* SPHERE v1.34.20 — final content-aware operational drawer geometry. */
+.rundeckWorkspaceDrawer.is-observation-history{
+  top:92px;right:14px;bottom:auto;
+  width:min(780px,51vw);
+  max-height:min(610px,calc(100vh - 116px));
+  overflow:hidden;
+  border:1px solid rgba(126,147,158,.20);
+  border-radius:10px;
+  box-shadow:-4px 8px 20px rgba(23,38,45,.18);
+}
+.rundeckWorkspaceDrawer.is-observation-history .rundeckWorkspaceDrawerBody{
+  min-height:0;overflow:auto;padding-bottom:14px;
+}
+.rundeckWorkspaceDrawer.is-evidence{width:min(660px,44vw)!important}
+.rundeckWorkspaceDrawer.is-availability{width:min(790px,52vw)!important;max-height:min(620px,calc(100vh - 116px))!important}
+.rundeckWorkspaceDrawer.is-issues{width:min(680px,45vw)!important}
+@media(max-width:1180px){
+ .rundeckWorkspaceDrawer.is-observation-history{top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0}
+ .rundeckWorkspaceDrawer.is-evidence,.rundeckWorkspaceDrawer.is-availability,.rundeckWorkspaceDrawer.is-issues{width:100%!important;max-height:none!important}
+}
+
+/* SPHERE v1.34.23 — single performance drawer geometry authority. */
+.rundeckWorkspaceDrawer.is-performance{
+  top:76px;
+  right:14px;
+  bottom:auto;
+  width:min(1160px,76vw);
+  max-height:calc(100vh - 94px);
+  overflow:hidden;
+  border:1px solid rgba(126,147,158,.20);
+  border-radius:10px;
+  box-shadow:-8px 10px 30px rgba(0,0,0,.24);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody{
+  min-height:0;
+  overflow:auto;
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-performance{
+    top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0;
+  }
+}
+
+/* SPHERE v1.34.25 — keep the three operational drilldowns inside Performance Analysis. */
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence{
+  width:100%;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid rgba(126,147,158,.10);
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin:0!important;
+  padding:0!important;
+  border-top:0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards.is-two{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{
+  min-height:68px!important;
+  padding:8px 10px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard:last-child{border-right:0!important}
+@media(max-width:900px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards,
+  .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards.is-two{
+    grid-template-columns:1fr!important;
+  }
+}
+
+
+/* SPHERE RC — analysis drawer body uses the drawer as its single surface boundary. */
+.rundeckWorkspaceDrawer:is(.is-evidence,.is-availability,.is-issues,.is-system-data,.is-wide) .rundeckWorkspaceDrawerBody{background:transparent}

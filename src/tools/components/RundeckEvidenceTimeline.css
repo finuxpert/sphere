@@ -216,3 +216,50 @@
     grid-template-columns: 88px 8px minmax(0, 1fr);
   }
 }
+
+
+/* Operator readability refinement */
+.rundeckEvidenceSummary{font-size:9.2px}
+.rundeckEvidenceAlignment{font-size:8.6px}
+.rundeckEvidenceSummary small{font-size:8.8px}
+.rundeckEvidenceEvent{grid-template-columns:96px 10px minmax(0,1fr);padding:4px 0}
+.rundeckEvidenceEvent time{font-size:8.8px}
+.rundeckEvidenceEvent strong{font-size:9.5px;line-height:1.3}
+.rundeckEvidenceEvent small,
+.rundeckEvidenceEvent p,
+.rundeckEvidenceNote,
+.rundeckEvidenceState{font-size:8.8px}
+.rundeckEvidenceTechnical>summary{font-size:8.8px}
+
+
+/* v1.33.3 — alignment is supporting context, not the primary event. */
+.rundeckEvidenceAlignment.is-aligned {
+  border-color: rgba(79,198,200,.22);
+  background: rgba(79,198,200,.018);
+  color: #7f9ea0;
+  opacity: .82;
+  font-weight: 700;
+}
+
+/* SPHERE v1.34.19 — operational timeline readability. */
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary{min-height:32px!important;font-size:10px!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary small{font-size:9.5px!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceAlignment{font-size:9px!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent{grid-template-columns:118px 12px minmax(0,1fr)!important;padding:7px 0!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent time{font-size:9.5px!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceDot{width:8px!important;height:8px!important;margin-top:4px!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent strong{font-size:10.5px!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent :is(small,p){font-size:9px!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvents{
+  background-image:linear-gradient(var(--sphere-border-subtle,rgba(126,147,158,.10)),var(--sphere-border-subtle,rgba(126,147,158,.10)));
+  background-size:1px calc(100% - 22px);background-position:123px 11px;background-repeat:no-repeat;
+}
+
+/* SPHERE v1.34.20 — stronger event chronology in light mode. */
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent time{font-weight:650!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent strong{font-weight:740!important}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceStateChip{min-height:19px!important;padding:1px 6px!important;font-size:8.3px!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent time{color:#50636d!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent strong{color:#24363e!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent small{color:#586b75!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary{color:#40545e!important}

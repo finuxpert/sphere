@@ -35,11 +35,8 @@ const durationText = (seconds) => {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
-function InlineStatus({ value = 'UNKNOWN' }) {
-  return <span className={`rundeckInlineStatus is-${String(value).toLowerCase()}`}>{value}</span>
-}
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
 
@@ -75,6 +72,20 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
 
   const activeCount = Number(data?.active ?? items.length)
   const resolvedCount = Number(data?.resolved ?? 0)
+  const peakCriticalWp = items
+    .filter((row) => row.code === 'WP_CRITICAL')
+    .reduce((peak, row) => Math.max(peak, Number(row.peak_value || 0)), 0)
+  const longestActive = items.reduce((longest, row) => Math.max(longest, Number(row.duration_seconds || 0)), 0)
+
+  if (compact) {
+    const top = items.slice(0, 3)
+    return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
+      <strong>{error ? 'Unavailable' : `${activeCount} active`}</strong>
+      <small>{top.length ? top.map((row) => `${shortHost(row.host || 'APP')} ${issueLabel(row.signal || row.code)} ${valueText(row.latest_value, row.unit)}`).join(' · ') : 'No active SAP issues'}</small>
+      <em>View issues ›</em>
+    </button>
+  }
 
   const inspect = (row) => {
     if (!row?.host || !onInspectApp) return
@@ -86,17 +97,23 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
     })
   }
 
-  return <section className="rundeckSapIssuesV1231" aria-label="Active SAP issues">
+  return <section className={`rundeckSapIssuesV1231 ${items.length > 4 ? 'has-overflow' : 'is-compact'}`} aria-label="Active SAP issues">
     <header>
       <h3><SphereIcon name="alert" /> SAP Issues</h3>
-      <span>{error ? 'unavailable' : `${activeCount} active · ${resolvedCount} resolved`}</span>
+      <span title={resolvedCount > 0 ? `${resolvedCount} resolved issue${resolvedCount === 1 ? '' : 's'} available in history` : undefined}>{error ? 'unavailable' : `${activeCount} active`}</span>
     </header>
 
     {error && !data && <div className="rundeckReviewState is-error">SAP issue data unavailable.</div>}
 
-    {!error && data && <div className="rundeckSapIssuesTableWrap">
+    {!error && data && <>
+      <div className="rundeckSapIssuesSummaryStrip" aria-label="SAP issue summary">
+        <span><b>Active Issues</b><strong>{activeCount}</strong></span>
+        <span><b>Peak Critical WP</b><strong>{peakCriticalWp || '—'}</strong></span>
+        <span><b>Longest Duration</b><strong>{longestActive ? durationText(longestActive) : '—'}</strong></span>
+      </div>
+      <div className="rundeckSapIssuesTableWrap">
       <table className="rundeckSapIssuesTableV1231">
-        <thead><tr><th>APP</th><th>Issue</th><th>Now</th><th>Peak</th><th>Duration</th></tr></thead>
+        <thead><tr><th>APP</th><th>Signal</th><th>Now</th><th>Peak</th><th>Duration</th></tr></thead>
         <tbody>
           {items.map((row) => {
             const severity = severityFor(row, row.latest_value)
@@ -122,7 +139,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
             >
               <td><strong>{shortHost(row.host || 'APP')}</strong></td>
               <td>{issueLabel(row.signal || row.code)}</td>
-              <td><span className="rundeckIssueNowV1231"><strong>{valueText(row.latest_value, row.unit)}</strong><InlineStatus value={severity} /></span></td>
+              <td><span className={`rundeckIssueNowV1231 is-${String(severity).toLowerCase()}`}><i aria-hidden="true" /><strong>{valueText(row.latest_value, row.unit)}</strong></span></td>
               <td>{valueText(row.peak_value, row.unit)}</td>
               <td>{durationText(row.duration_seconds)}</td>
             </tr>
@@ -130,6 +147,6 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
           {!items.length && <tr><td colSpan="5">No active SAP issues.</td></tr>}
         </tbody>
       </table>
-    </div>}
+    </div></>}
   </section>
 }

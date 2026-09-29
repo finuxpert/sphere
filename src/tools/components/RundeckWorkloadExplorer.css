@@ -465,3 +465,51 @@
     display: none;
   }
 }
+
+/* SPHERE v1.33.5 — trend inspection summary stays compact until explicitly expanded. */
+.rundeckHistoricalSnapshot {
+  margin-top: 5px;
+  padding-top: 5px;
+}
+.rundeckHistoricalSnapshot > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.rundeckHistoricalSnapshot > summary::-webkit-details-marker {
+  display: none;
+}
+.rundeckHistoricalSnapshot > summary::after {
+  content: '▾';
+  margin-left: 8px;
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8px;
+}
+.rundeckHistoricalSnapshot:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+.rundeckHistoricalSnapshot:not([open]) .rundeckHistoricalSnapshotHead {
+  margin-bottom: 0;
+}
+.rundeckHistoricalSnapshot[open] .rundeckSnapshotConsumers {
+  margin-top: 6px;
+}
+.rundeckHistoricalSnapshotHead {
+  align-items: center;
+}
+.rundeckHistoricalSnapshotHead strong {
+  font-size: 9.4px;
+}
+
+/* SPHERE v1.34.19 — History should look intentional before and after search. */
+.rundeckExplorerHeader{padding-bottom:12px!important}
+.rundeckExplorerHeader h3{font-size:14px!important;color:var(--sphere-text,#e7edf0)!important}
+.rundeckExplorerHeader p{font-size:10px!important;color:var(--sphere-text-secondary,#a9b5bb)!important}
+.rundeckExplorerSearch{min-width:min(560px,54vw)!important}
+.rundeckExplorerSearch input{font-size:10.5px!important}
+.rundeckExplorerResults,.rundeckExplorerDetail{min-height:235px!important}
+.rundeckExplorerEmptyState{min-height:180px!important}
+.rundeckExplorerEmptyState .sphereIcon{width:22px!important;height:22px!important}
+.rundeckExplorerEmptyState strong{font-size:12px!important}
+.rundeckExplorerEmptyState span{font-size:10px!important}
+html[data-theme="light"] .rundeckExplorerHeader h3{color:#203038!important}
+html[data-theme="light"] .rundeckExplorerHeader p{color:#52666f!important}

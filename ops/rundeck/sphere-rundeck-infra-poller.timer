@@ -1,0 +1,8 @@
+[Unit]
+Description=Poll SPHERE Infrastructure Rundeck job every 5 minutes
+[Timer]
+OnBootSec=95s
+OnUnitActiveSec=5min
+Unit=sphere-rundeck-infra-poller.service
+[Install]
+WantedBy=timers.target

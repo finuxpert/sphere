@@ -8,6 +8,7 @@ backward-compatible assessment fields used by existing clients.
 from __future__ import annotations
 
 import os
+import time
 from datetime import datetime, timedelta, timezone
 from statistics import median
 from typing import Any
@@ -38,6 +39,8 @@ SHIFT_MIN_OBSERVATIONS = max(2, int(os.getenv("SPHERE_EVAL_SHIFT_MIN_OBSERVATION
 SHIFT_INCREASE_PCT = max(0.0, float(os.getenv("SPHERE_EVAL_SHIFT_INCREASE_PCT", "50")))
 SHIFT_CPU_MIN_DELTA_PP = max(0.0, float(os.getenv("SPHERE_EVAL_SHIFT_CPU_MIN_DELTA_PP", "20")))
 _CONFIDENCE_RANK = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
+EVALUATION_CACHE_TTL_SECONDS = max(5, int(os.getenv("SPHERE_EVAL_CACHE_TTL_SECONDS", "60")))
+_EVALUATION_CACHE: dict[tuple[str, str, int], tuple[float, dict]] = {}
 
 
 def _number(value: Any) -> float | None:
@@ -539,6 +542,12 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
     if type_key not in {"ALL", "JOB", "PROGRAM"}:
         raise ValueError("type must be ALL, JOB or PROGRAM")
 
+    cache_key = (period_key, type_key, max(1, min(int(limit), 100)))
+    cached = _EVALUATION_CACHE.get(cache_key)
+    now = time.monotonic()
+    if cached and now - cached[0] < EVALUATION_CACHE_TTL_SECONDS:
+        return cached[1]
+
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Database history is not enabled")
@@ -667,7 +676,7 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         "wp_excess_association": sum(1 for item in evaluated if item.get("signals", {}).get("wp_excess_association")),
     }
 
-    return {
+    result = {
         "period": period_key,
         "days": days,
         "type": type_key,
@@ -710,3 +719,5 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         "items": items,
         "method": "Deterministic complete-collection evaluation with workload-specific median and P95 baseline, recent CPU shift detection and App Server normalized Critical WP overlap. Investigation signal only; not root-cause proof.",
     }
+    _EVALUATION_CACHE[cache_key] = (time.monotonic(), result)
+    return result

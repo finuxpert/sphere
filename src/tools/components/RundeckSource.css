@@ -663,3 +663,354 @@
   letter-spacing: .03em;
 }
 
+
+
+/* v1.23.8 — action/state separation and supporting-data disclosure */
+.rundeckActions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:18px;
+}
+.rundeckActionCluster,
+.rundeckStateCluster{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+.rundeckStateCluster{
+  padding-left:14px;
+  border-left:1px solid rgba(126,147,158,.09);
+}
+.rundeckDataAlignment,
+.rundeckOperationalState{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.rundeckDataAlignment>span:first-child,
+.rundeckOperationalState>span:first-child{
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.5px;
+  font-weight:700;
+  letter-spacing:.035em;
+  text-transform:uppercase;
+}
+.rundeckDataAlignment .rundeckStatus.is-aligned{
+  color:var(--sphere-text-muted,#718089);
+  border-color:rgba(126,147,158,.22);
+  background:transparent;
+}
+.rundeckDataAlignment .rundeckStatus.is-partial{
+  color:var(--sphere-warning,#d8b35f);
+  border-color:rgba(216,179,95,.32);
+  background:rgba(216,179,95,.035);
+}
+.rundeckSupportingDataDisclosure{
+  margin-top:8px;
+  padding-top:6px;
+  border-top:1px solid rgba(126,147,158,.07);
+}
+.rundeckSupportingDataDisclosure>summary{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:30px;
+  cursor:pointer;
+  list-style:none;
+}
+.rundeckSupportingDataDisclosure>summary::-webkit-details-marker{display:none}
+.rundeckSupportingDataDisclosure>summary::after{
+  content:'▾';
+  margin-left:auto;
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckSupportingDataDisclosure:not([open])>summary::after{transform:rotate(-90deg)}
+.rundeckSupportingDataDisclosure>summary small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+  font-weight:500;
+  text-transform:none;
+}
+.rundeckSupportingDataBody{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:16px;
+  padding-top:5px;
+}
+@media(max-width:1100px){
+  .rundeckActions{align-items:flex-end;flex-direction:column;gap:6px}
+  .rundeckStateCluster{padding-left:0;border-left:0}
+  .rundeckSupportingDataBody{grid-template-columns:1fr}
+}
+
+
+/* v1.33.2 — unified supporting-data disclosure header */
+.rundeckSupportingDataDisclosure {
+  margin-top: 10px;
+  padding-top: 5px;
+}
+.rundeckSupportingDataDisclosure > summary {
+  width: 100%;
+  min-height: 28px;
+  padding: 5px 0;
+  box-sizing: border-box;
+}
+.rundeckSupportingDataDisclosure > summary .rundeckSupportingTitle {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  margin: 0 !important;
+}
+.rundeckSupportingDataDisclosure > summary .rundeckSupportingTitle .sphereIcon {
+  color: var(--sphere-text-muted,#718089);
+}
+.rundeckSupportingDataDisclosure > summary small {
+  opacity: .82;
+}
+.rundeckSupportingDataDisclosure > summary::after {
+  margin-left: auto !important;
+}
+.rundeckSupportingDataBody {
+  padding-top: 4px;
+}
+
+/* SPHERE v1.33.4 — source trust and freshness are first-class operator context. */
+.rundeckDataAlignment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.rundeckSourceFreshness {
+  color: var(--sphere-text-muted, #718089);
+  font-size: 8.6px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+.rundeckDataAlignment.is-freshness-warning .rundeckSourceFreshness {
+  color: var(--sphere-warning, #d8b35f);
+}
+.rundeckDataAlignment.is-freshness-warning {
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(216, 179, 95, .045);
+  box-shadow: inset 0 0 0 1px rgba(216, 179, 95, .09);
+}
+
+/* SPHERE v1.33.5 — quieter supporting-data disclosure and denser trust header. */
+.rundeckSupportingDataDisclosure {
+  border-top-color: rgba(126,147,158,.055);
+}
+.rundeckSupportingDataDisclosure > summary {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  padding-left: 1px;
+  padding-right: 1px;
+}
+.rundeckSupportingDataDisclosure > summary:focus-visible {
+  outline: 1px solid rgba(79,198,200,.55) !important;
+  outline-offset: 2px !important;
+}
+.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  grid-template-columns: minmax(0,40fr) minmax(0,60fr) !important;
+  gap: 0 24px !important;
+  max-width: 1400px;
+}
+.rundeckDataAlignment {
+  padding-left: 7px;
+  border-left: 1px solid rgba(126,147,158,.09);
+}
+.rundeckSourceFreshness {
+  font-size: 9.2px;
+  line-height: 1.3;
+}
+@media(max-width:1180px){
+  .rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns: 1fr !important;
+    max-width: none;
+  }
+  .rundeckDataAlignment {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+/* SPHERE v1.33.6 — clickable data freshness details. */
+.rundeckDataAlignment {
+  position: relative;
+  display: inline-block;
+  padding-left: 7px;
+  border-left: 1px solid rgba(126,147,158,.09);
+  white-space: normal;
+}
+.rundeckDataAlignment > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rundeckDataAlignment > summary::-webkit-details-marker {
+  display: none;
+}
+.rundeckDataAlignment > summary::after {
+  content: '▾';
+  margin-left: 1px;
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8px;
+}
+.rundeckDataAlignment:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+.rundeckDataAlignment > summary > span:first-child {
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8.8px;
+  font-weight: 700;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+.rundeckDataAlignmentPopover {
+  position: absolute;
+  z-index: 90;
+  top: calc(100% + 7px);
+  right: 0;
+  width: 310px;
+  padding: 9px 10px;
+  border: 1px solid var(--sphere-border,rgba(126,147,158,.18));
+  border-radius: 6px;
+  background: var(--sphere-surface-1,#141d23);
+  box-shadow: 0 12px 30px rgba(0,0,0,.28);
+}
+.rundeckDataAlignmentPopover > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 22px;
+  border-bottom: 1px solid rgba(126,147,158,.07);
+}
+.rundeckDataAlignmentPopover span {
+  color: var(--sphere-text-muted,#718089);
+  font-size: 8.8px;
+}
+.rundeckDataAlignmentPopover strong {
+  color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 9px;
+}
+.rundeckDataAlignmentPopover p {
+  margin: 7px 0 0;
+  color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 8.8px;
+  line-height: 1.4;
+}
+@media(max-width:1180px){
+  .rundeckDataAlignment {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .rundeckDataAlignmentPopover {
+    right: auto;
+    left: 0;
+    width: min(310px,82vw);
+  }
+}
+
+/* SPHERE v1.33.7 — System Data favors collection analysis over service detail. */
+.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  grid-template-columns: minmax(0,58fr) minmax(0,42fr) !important;
+}
+.rundeckHistoryTableWrap {
+  overflow-x: hidden !important;
+}
+.rundeckHistory table {
+  width: 100%;
+  table-layout: fixed;
+}
+.rundeckHistory th:nth-child(1), .rundeckHistory td:nth-child(1) { width: 20%; }
+.rundeckHistory th:nth-child(2), .rundeckHistory td:nth-child(2) { width: 38%; }
+.rundeckHistory th:nth-child(3), .rundeckHistory td:nth-child(3) { width: 14%; }
+.rundeckHistory th:nth-child(4), .rundeckHistory td:nth-child(4) { width: 28%; }
+.rundeckHistory tbody tr.is-clickable {
+  cursor: pointer;
+}
+.rundeckHistory tbody tr.is-clickable:hover,
+.rundeckHistory tbody tr.is-selected {
+  background: rgba(79,198,200,.05);
+}
+.rundeckCollectionMore {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 5px;
+}
+.rundeckCollectionMore button {
+  border: 0;
+  background: transparent;
+  color: var(--sphere-accent,#4fc6c8);
+  font-size: 8.8px;
+  cursor: pointer;
+}
+.rundeckCollectionDetail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-top: 1px solid rgba(126,147,158,.08);
+  color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 8.8px;
+}
+.rundeckCollectionDetail strong {
+  color: var(--sphere-text,#e7edf0);
+}
+@media(max-width:1180px){
+  .rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* SPHERE v1.33.9 — let System Data use the full available grid width. */
+.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  width: 100%;
+  max-width: none !important;
+}
+.rundeckSupportingDataBody > details {
+  width: 100%;
+  min-width: 0;
+}
+.rundeckHistory,
+.rundeckPlatformHealth {
+  width: 100%;
+  min-width: 0;
+}
+.rundeckPlatformTableWrap,
+.rundeckHistoryTableWrap {
+  width: 100%;
+  min-width: 0;
+}
+
+/* SPHERE v1.34.4 — supporting data should read as secondary navigation, not an alert. */
+.rundeckSupportingDataDisclosure > summary{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.rundeckSupportingDataDisclosure > summary:focus-visible{
+  outline:1px solid rgba(126,147,158,.30)!important;
+  outline-offset:2px!important;
+}
+.rundeckDataAlignment .rundeckStatus.is-aligned{
+  color:var(--sphere-text-muted,#718089)!important;
+  border-color:transparent!important;
+  background:transparent!important;
+  padding-left:0!important;
+  padding-right:0!important;
+}
