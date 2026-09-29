@@ -131,8 +131,65 @@ export default function RundeckInfrastructure({incidentStart=''}){
     {error&&<div className="rundeckInfraError">{error}</div>}
     <div className="rundeckInfraGrid">
       <article><div className="cardHead"><h4>Filesystem</h4><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point} className="is-clickable" tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
-      <article><div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div><table><thead><tr><th>Interface</th><th>RX</th><th>TX</th><th>Drop Δ</th></tr></thead><tbody>{data.network.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key} className="is-clickable" tabIndex={0} onClick={()=>openTrend('network',row.sample_key)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('network',row.sample_key)}}><td>{row.sample_key}</td><td>{metric(m.rx_mbps,' Mbps')}</td><td>{metric(m.tx_mbps,' Mbps')}</td><td className={`is-${signalNetwork(m).toLowerCase()}`}>{metric(Number(m.rx_dropped_delta||0)+Number(m.tx_dropped_delta||0))}</td></tr>})}{!data.network.length&&<tr><td colSpan="4">No network sample.</td></tr>}</tbody></table></article>
-      <article><div className="cardHead"><h4>Storage I/O</h4><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div><table><thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead><tbody>{data.storage.map(row=>{const m=row.metrics||{};return <tr key={row.sample_key} className="is-clickable" tabIndex={0} onClick={()=>openTrend('storage',m.mount||row.sample_key)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('storage',m.mount||row.sample_key)}}><td>{m.mount||row.sample_key}</td><td className={`is-${signalStorage(m).toLowerCase()}`}>{metric(m.util_pct,'%')}</td><td>{metric(m.write_iops)}</td><td>{metric(m.write_mbps,' MB/s')}</td></tr>})}{!data.storage.length&&<tr><td colSpan="4">No storage sample.</td></tr>}</tbody></table></article>
+      <article>
+        <div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div>
+        <table>
+          <thead><tr><th>Interface</th><th>RX</th><th>TX</th><th>Drop Δ</th></tr></thead>
+          <tbody>
+            {data.network.map((row) => {
+              const m = row.metrics || {}
+              const open = () => openTrend('network', row.sample_key)
+              return <tr
+                key={row.sample_key}
+                className="is-clickable"
+                tabIndex={0}
+                onClick={open}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault()
+                  open()
+                }}
+              >
+                <td>{row.sample_key}</td>
+                <td>{metric(m.rx_mbps, ' Mbps')}</td>
+                <td>{metric(m.tx_mbps, ' Mbps')}</td>
+                <td className={`is-${signalNetwork(m).toLowerCase()}`}>{metric(Number(m.rx_dropped_delta || 0) + Number(m.tx_dropped_delta || 0))}</td>
+              </tr>
+            })}
+            {!data.network.length && <tr><td colSpan="4">No network sample.</td></tr>}
+          </tbody>
+        </table>
+      </article>
+      <article>
+        <div className="cardHead"><h4>Storage I/O</h4><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div>
+        <table>
+          <thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead>
+          <tbody>
+            {data.storage.map((row) => {
+              const m = row.metrics || {}
+              const series = m.mount || row.sample_key
+              const open = () => openTrend('storage', series)
+              return <tr
+                key={row.sample_key}
+                className="is-clickable"
+                tabIndex={0}
+                onClick={open}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault()
+                  open()
+                }}
+              >
+                <td>{series}</td>
+                <td className={`is-${signalStorage(m).toLowerCase()}`}>{metric(m.util_pct, '%')}</td>
+                <td>{metric(m.write_iops)}</td>
+                <td>{metric(m.write_mbps, ' MB/s')}</td>
+              </tr>
+            })}
+            {!data.storage.length && <tr><td colSpan="4">No storage sample.</td></tr>}
+          </tbody>
+        </table>
+      </article>
     </div>
 
     <details ref={trendRef} className="rundeckInfraTrend rundeckInfraTrendDisclosure">
