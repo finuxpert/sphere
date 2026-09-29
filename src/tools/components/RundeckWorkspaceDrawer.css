@@ -129,3 +129,43 @@
 @media(max-width:1180px){
   .rundeckWorkspaceDrawer{width:100%}
 }
+
+/* SPHERE v1.34.8 — persistent drawer navigation with Back + Close. */
+.rundeckWorkspaceDrawerIdentity{
+  min-width:0;
+}
+.rundeckWorkspaceDrawerHeaderActions{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:0 0 auto;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack{
+  width:auto;
+  min-width:30px;
+  height:30px;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:0 8px;
+  font-size:11px;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack em{
+  color:var(--sphere-text-secondary,#b9c4ca);
+  font-size:8.8px;
+  font-style:normal;
+  font-weight:650;
+  white-space:nowrap;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack:hover,
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack:focus-visible{
+  border-color:rgba(79,198,200,.35);
+  color:var(--sphere-accent,#4fc6c8);
+  outline:none;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceClose{
+  flex:0 0 30px;
+}
+@media(max-width:640px){
+  .rundeckWorkspaceDrawer>header .rundeckWorkspaceBack em{display:none}
+}
