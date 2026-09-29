@@ -6,7 +6,7 @@ import './RundeckJobHistory.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const GAP_MS = 25 * 60 * 1000
-const CPU_HINT = 'CPU Usage is the grouped workload CPU observation and can exceed 100 percent when more than one CPU core is used.'
+const CPU_HINT = 'CPU Usage is the grouped job/program CPU observation and can exceed 100 percent when more than one CPU core is used.'
 
 const numeric = (value) => {
   if (value === null || value === undefined || value === '') return null
@@ -42,7 +42,7 @@ async function loadHistory(job, signal) {
   const response = await fetch(`${API}/history/job?${params.toString()}`, { cache: 'no-store', signal })
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    throw new Error(body.detail || `Workload history unavailable (${response.status})`)
+    throw new Error(body.detail || `Job / Program history unavailable (${response.status})`)
   }
   return response.json()
 }
@@ -138,9 +138,9 @@ function temporalText(issueStart, firstSeen) {
   const hours = Math.floor(absMinutes / 60)
   const minutes = absMinutes % 60
   const duration = [hours ? `${hours}h` : '', minutes ? `${minutes}m` : ''].filter(Boolean).join(' ') || '<1m'
-  if (delta > 0) return `Workload first observed ${duration} after incident start`
-  if (delta < 0) return `Workload was already observed ${duration} before incident start`
-  return 'Workload first observed at incident start'
+  if (delta > 0) return `Job / Program first observed ${duration} after issue start`
+  if (delta < 0) return `Job / Program was already observed ${duration} before issue start`
+  return 'Job / Program first observed at issue start'
 }
 
 function nearestRow(rows, value) {
@@ -180,7 +180,7 @@ function SingleSamplePerformance({ row }) {
   const processes = rowMetric(row, 'processes')
   const wp = rowMetric(row, 'wp')
   const critical = Number(row.host_wp_critical || 0)
-  return <div className="rundeckSingleSample" aria-label="Single workload observation">
+  return <div className="rundeckSingleSample" aria-label="Single job or program observation">
     <div className="rundeckSingleSampleTime">{formatWib(row.collected_at, true)} WIB</div>
     <div className="rundeckSingleSampleMetrics">
       <span><b title={CPU_HINT}>CPU Usage</b>{numberText(rowMetric(row, 'cpu'), 1)}%</span>
@@ -375,7 +375,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart }) {
 
   return <div className="rundeckJobPerformanceWrap">
     {!chartConfig.profile.hasIo && <div className="rundeckHiddenMetric">I/O 0 MiB/s</div>}
-    <div ref={ref} className="rundeckJobPerformanceChart" style={{ height: `${chartConfig.height}px` }} role="img" aria-label="Workload CPU usage, memory, IO, work process and Critical WP timeline with WIB time axis" />
+    <div ref={ref} className="rundeckJobPerformanceChart" style={{ height: `${chartConfig.height}px` }} role="img" aria-label="Job or program CPU usage, memory, I/O, work process and Critical WP timeline with WIB time axis" />
   </div>
 }
 
@@ -407,7 +407,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         setResolvedJob(requestedJob)
       })
       .catch((failure) => {
-        if (failure.name !== 'AbortError') setError(failure.message || 'Workload history unavailable')
+        if (failure.name !== 'AbortError') setError(failure.message || 'Job / Program history unavailable')
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
@@ -508,7 +508,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <summary>
           <span><SphereIcon name="trend" /> Performance</span>
           <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
-          {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP at same time</em>}
+          {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP overlap</em>}
         </summary>
         {episodeItems.length === 1
           ? <SingleSamplePerformance row={episodeItems[0]} />
