@@ -7,6 +7,7 @@ import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
+import RundeckAppServerAnalysis from './RundeckAppServerAnalysis.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -59,7 +60,8 @@ export default function RundeckMonitoringHistory(props) {
   const inspectApp = React.useCallback((context = {}) => {
     if (!context.host) return
     focusSequence.current += 1
-    setAppFocusRequest({ ...context, token: focusSequence.current })
+    setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
+    setActiveOverlay({ type: 'app', app: context })
   }, [])
 
   const operationalEvidenceContent = <RundeckOperationalEvidence
@@ -88,6 +90,7 @@ export default function RundeckMonitoringHistory(props) {
             operationalEvidenceContent={operationalEvidenceContent}
             appFocusRequest={appFocusRequest}
             onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
+            onInspectApp={inspectApp}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
@@ -128,6 +131,22 @@ export default function RundeckMonitoringHistory(props) {
             onClose={() => setActiveOverlay(null)}
           >
             <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} embedded />
+          </RundeckWorkspaceDrawer>}
+
+          {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
+            title={activeOverlay.app.host ? activeOverlay.app.host.split('.').shift() : 'APP Server'}
+            subtitle="SAP App Server Analysis"
+            onClose={() => setActiveOverlay(null)}
+          >
+            <RundeckAppServerAnalysis
+              app={activeOverlay.app}
+              latestCollectionId={props.latestCollectionId}
+              refreshToken={refreshToken}
+              onSelectJob={(job) => {
+                onSelectJob?.(job)
+                setActiveOverlay({ type: 'job' })
+              }}
+            />
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'infrastructure' && <RundeckWorkspaceDrawer
