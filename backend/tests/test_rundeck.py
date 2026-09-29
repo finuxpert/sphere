@@ -125,20 +125,23 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(mutating, {
             ('/collect-now', 'POST'),
             ('/jobs/executions/import', 'POST'),
+            ('/analysis/closing', 'POST'),
         })
 
     def test_history_and_evaluation_routes_are_read_only(self):
         from backend.rundeck_api import app
 
-        methods_by_path = {
-            route.path: set(route.methods)
-            for route in app.routes
-            if getattr(route, 'methods', None)
-        }
+        methods_by_path = {}
+        for route in app.routes:
+            if not getattr(route, 'methods', None):
+                continue
+            methods_by_path.setdefault(route.path, set()).update(route.methods)
         self.assertEqual(methods_by_path['/history/job'], {'GET'})
         self.assertEqual(methods_by_path['/history/jobs/current'], {'GET'})
         self.assertEqual(methods_by_path['/history/incidents'], {'GET'})
         self.assertEqual(methods_by_path['/evaluation/workloads'], {'GET'})
+        self.assertEqual(methods_by_path['/analysis/closings'], {'GET'})
+        self.assertEqual(methods_by_path['/analysis/closing'], {'GET', 'POST'})
 
     def test_availability_profile_uses_observed_cadence_and_no_observation_semantics(self):
         def snap(value):
