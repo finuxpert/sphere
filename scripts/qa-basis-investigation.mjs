@@ -71,7 +71,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.26', files.version.includes("APP_VERSION = '1.34.26'") && files.version.includes('monitoring-flow-ui-v1.34.26')],
+  ['monitoring flow version is v1.34.27', files.version.includes("APP_VERSION = '1.34.27'") && files.version.includes('monitoring-flow-ui-v1.34.27')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -125,6 +125,7 @@ const checks = [
   ['Performance drawer keeps Correlated Events Availability and SAP Issues in its bottom context rail', files.wrapper.includes('rundeckPerformanceDrawerEvidence') && files.wrapper.includes("returnTo: { type: 'job'") && files.workspaceDrawerCss.includes('.rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards')],
   ['Performance operational drilldowns return directly to Job Performance', files.wrapper.includes("activeOverlay.returnTo?.type === 'job' ? 'Back to Performance'")],
   ['Live cockpit lower half is content-driven and compact', files.currentWorkloadCss.includes('max-height:300px!important') && files.monitoringCss.includes('ramping pass: content-driven live cockpit') && files.monitoringCss.includes('min-height:60px!important')],
+  ['Selected workload context contains all six investigation launchers', files.wrapper.includes('rundeckSelectedSecondaryAnalysis') && !files.wrapper.includes('<section className="rundeckCompactDetailRow" aria-label="Additional analysis">') && files.monitoringCss.includes('.rundeckSelectedSecondaryAnalysis')],
 
   ['Current Jobs reserves desktop space for five or more scan rows', files.currentWorkloadCss.includes('height:390px!important') && files.currentWorkloadCss.includes('height:430px!important')],
   ['Current Jobs band reserves its full scan height before Performance Review', files.workspace.includes('min-height:438px!important') && files.workspace.includes('min-height:478px!important') && files.workspace.includes('contain:layout paint')],
@@ -275,4 +276,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.26 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.27 monitoring flow and deep-analysis checks passed.')

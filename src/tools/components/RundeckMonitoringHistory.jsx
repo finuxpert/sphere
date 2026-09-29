@@ -65,13 +65,32 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'app', app: context })
   }, [])
 
-  const operationalEvidenceContent = <RundeckOperationalEvidence
-    refreshToken={refreshToken}
-    selectedJob={selectedJob}
-    onOpenEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'menu' } })}
-    onOpenAvailability={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'menu' } })}
-    onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'menu' } })}
-  />
+  const operationalEvidenceContent = <>
+    <RundeckOperationalEvidence
+      refreshToken={refreshToken}
+      selectedJob={selectedJob}
+      onOpenEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'menu' } })}
+      onOpenAvailability={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'menu' } })}
+      onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'menu' } })}
+    />
+    <section className="rundeckSelectedSecondaryAnalysis" aria-label="Additional analysis">
+      <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
+        <SphereIcon name="history" />
+        <span><b>Observation History</b><small>Saved runs and observation records</small></span>
+        <em>›</em>
+      </button>
+      <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'menu' } })}>
+        <SphereIcon name="server" />
+        <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
+        <em>›</em>
+      </button>
+      {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'menu' } })}>
+        <SphereIcon name="database" />
+        <span><b>System Data</b><small>{systemDataSummary || 'Collections · SPHERE Services'}</small></span>
+        <em>›</em>
+      </button>}
+    </section>
+  </>
 
 
   return <>
@@ -118,23 +137,6 @@ export default function RundeckMonitoringHistory(props) {
               onOpenQuickAnalysis={(row, reviewContext) => setActiveOverlay({ type: 'review', row, reviewContext })}
               externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
             />
-          </section>
-          <section className="rundeckCompactDetailRow" aria-label="Additional analysis">
-            <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
-              <SphereIcon name="history" />
-              <span><b>Observation History</b><small>Saved runs and observation records</small></span>
-              <em>›</em>
-            </button>
-            <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'menu' } })}>
-              <SphereIcon name="server" />
-              <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
-              <em>›</em>
-            </button>
-            {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'menu' } })}>
-              <SphereIcon name="database" />
-              <span><b>System Data</b><small>{systemDataSummary || 'Collections · SPHERE Services'}</small></span>
-              <em>›</em>
-            </button>}
           </section>
 
           {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
