@@ -218,7 +218,7 @@ export default function RundeckReviewQuickAnalysis({
 
     <div className="rundeckQuickScroll">
       <section className="rundeckQuickSection">
-        <RundeckJobHistory job={job} refreshToken={refreshToken} incidentStart={incidentStart} />
+        <RundeckJobHistory job={job} refreshToken={refreshToken} incidentStart={incidentStart} presentation="drawer" />
       </section>
 
       <section className="rundeckQuickSection is-events">
