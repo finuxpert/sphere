@@ -228,3 +228,11 @@
   font-size:14px;
   font-style:normal;
 }
+
+/* SPHERE v1.34.12 — content-aware drawer widths. */
+.rundeckWorkspaceDrawer.is-wide{width:min(980px,64vw)}
+.rundeckWorkspaceDrawer.is-medium{width:min(820px,54vw)}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-wide,
+  .rundeckWorkspaceDrawer.is-medium{width:100%}
+}
