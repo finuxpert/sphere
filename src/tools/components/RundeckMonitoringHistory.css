@@ -1204,3 +1204,67 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckInvestigationConte
 .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button>em{
   justify-self:end;
 }
+
+
+/* SPHERE RC final — one aligned 3-column investigation workspace. */
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence{
+  --selected-investigation-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.95fr);
+  margin-top:6px!important;
+  padding-bottom:6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
+  grid-template-columns:var(--selected-investigation-columns)!important;
+  width:100%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+  min-height:70px!important;
+  margin:0!important;
+  border-top:1px solid rgba(126,147,158,.075)!important;
+  border-bottom:1px solid rgba(126,147,158,.075)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
+  min-height:58px!important;
+  margin-top:0!important;
+  border-top:0!important;
+  border-bottom:1px solid rgba(126,147,158,.075)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard,
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  border-right:1px solid rgba(126,147,158,.085)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard:nth-child(3n),
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button:nth-child(3n){
+  border-right:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard>small{
+  min-width:0!important;
+  line-height:1.25!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard>em{
+  min-height:12px!important;
+  display:flex!important;
+  align-items:flex-end!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  padding-top:7px!important;
+  padding-bottom:7px!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
+  border-color:rgba(45,63,72,.13)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  border-right-color:rgba(45,63,72,.13)!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,
+  .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
+    grid-template-columns:1fr!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard,
+  .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+    border-right:0!important;
+  }
+}
