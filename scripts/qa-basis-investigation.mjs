@@ -55,7 +55,7 @@ const files = {
 }
 
 const checks = [
-  ['APP analysis drawer version is v1.34.6', files.version.includes("APP_VERSION = '1.34.6'") && files.version.includes('app-analysis-drawer-ui-v1.34.6')],
+  ['drawer performance layout version is v1.34.7', files.version.includes("APP_VERSION = '1.34.7'") && files.version.includes('drawer-performance-layout-ui-v1.34.7')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -108,6 +108,11 @@ const checks = [
   ['SAP Issues avoid repeated text severity badges', read('src/tools/components/RundeckSapIssues.jsx').includes('rundeckIssueNowV1231 is-') && !read('src/tools/components/RundeckSapIssues.jsx').includes('<InlineStatus value={severity} />')],
   ['Performance History drawer uses six primary columns without horizontal minimum width', files.observationHistory.includes('<th>Critical WP</th>') && files.workspaceDrawerCss.includes('.rundeckObservationHistoryV1234 table') && files.workspaceDrawerCss.includes('min-width:0')],
   ['Job drawer hides duplicate inner selected-job header', files.workspaceDrawerCss.includes('.rundeckJobHistoryHead') && files.workspaceDrawerCss.includes('display:none')],
+  ['Job performance drawer requests drawer presentation', files.wrapper.includes('presentation="drawer"') && files.jobHistory.includes("presentation = 'inline'") && files.jobHistory.includes("presentation === 'drawer'")],
+  ['Drawer performance chart expands lane heights for analysis', files.jobHistory.includes("expanded ? 104 : 62") && files.jobHistory.includes('expanded={drawerPresentation}')],
+  ['Workspace drawer widens and removes inline width caps', files.workspaceDrawerCss.includes('width:min(860px,58vw)') && files.workspaceDrawerCss.includes('.rundeckJobPerformanceWrap') && files.workspaceDrawerCss.includes('max-width:none!important')],
+  ['Review analysis uses full-width drawer performance layout', files.quickAnalysis.includes('presentation="drawer"') && files.quickAnalysisCss.includes('width:min(860px,58vw)') && files.quickAnalysisCss.includes('.rundeckJobPerformanceChart')],
+  ['Infrastructure drawer spacing is compact enough to expose history earlier', files.workspaceDrawerCss.includes('.rundeckInfraFreshness') && files.workspaceDrawerCss.includes('margin-bottom:8px') && files.workspaceDrawerCss.includes('.rundeckInfraTrendDisclosure')],
   ['Infrastructure drawer gives Filesystem a full-width row', files.workspaceDrawerCss.includes('.rundeckInfraGrid article:first-child') && files.workspaceDrawerCss.includes('grid-column:1/-1')],
   ['Healthy aligned data and System Data focus chrome are visually subdued', files.sourceCss.includes('.rundeckStatus.is-aligned') && files.sourceCss.includes('border-color:transparent!important') && files.sourceCss.includes('outline:1px solid rgba(126,147,158,.30)')],
   ['SAP Job Check is limited to JOB context and compact while disconnected', files.jobHistory.includes("toUpperCase() === 'JOB' && <details") && files.jobHistory.includes('rundeckSm37Verification is-compact')],
@@ -176,4 +181,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.6 APP analysis drawer checks passed.')
+console.log('\nSPHERE v1.34.7 drawer performance layout checks passed.')
