@@ -12,8 +12,6 @@ const files = {
   appServers: read('src/tools/components/RundeckAppServers.jsx'),
   appServerAnalysis: read('src/tools/components/RundeckAppServerAnalysis.jsx'),
   appServerAnalysisCss: read('src/tools/components/RundeckAppServerAnalysis.css'),
-  appServerAnalysis: read('src/tools/components/RundeckAppServerAnalysis.jsx'),
-  appServerAnalysisCss: read('src/tools/components/RundeckAppServerAnalysis.css'),
   sm37: read('src/tools/components/RundeckSm37Verification.jsx'),
   performanceReview: read('src/tools/components/RundeckPerformanceReview.jsx'),
   quickAnalysis: read('src/tools/components/RundeckReviewQuickAnalysis.jsx'),
