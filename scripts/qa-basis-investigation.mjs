@@ -71,16 +71,20 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.22', files.version.includes("APP_VERSION = '1.34.22'") && files.version.includes('monitoring-flow-ui-v1.34.22')],
+  ['monitoring flow version is v1.34.23', files.version.includes("APP_VERSION = '1.34.23'") && files.version.includes('monitoring-flow-ui-v1.34.23')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
   ['Evidence Issues and System Data use content-aware drawer modes', files.wrapper.includes('size="evidence"') && files.wrapper.includes('size="issues"') && files.wrapper.includes('size="system-data"') && files.accessibilityThemeFinal.includes('.is-evidence,.is-issues,.is-system-data')],
   ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
-  ['Job Performance drawer reserves extra vertical chart space', files.jobHistoryCss.includes('min-height:440px') && files.jobHistoryCss.includes('height:390px')],
+  ['Job Performance drawer reserves full release-candidate chart space', files.jobHistoryCss.includes('min-height:455px') && files.jobHistoryCss.includes('height:430px')],
   ['Job Performance summary uses a full-width eight-cell episode matrix', files.jobHistory.includes('rundeckJobEpisodeMatrix') && files.jobHistory.includes('Episode Performance') && files.jobHistoryCss.includes('grid-template-columns:repeat(8,minmax(0,1fr))')],
   ['Selected workload pane stays content-height beside the tall Current Jobs scan area', files.workspace.includes('height:fit-content!important') && files.workspace.includes('is-selected-workload') && files.monitoringCss.includes('compact selected workload card')],
   ['Operational evidence uses the selected-workload whitespace instead of overlapping the next section', files.monitoringCore.includes('rundeckSelectedOperationalEvidence') && files.monitoringCss.includes('.rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards')],
+  ['Operational context cards use final 40 28 32 selected-pane proportions', files.monitoringCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,28fr) minmax(0,32fr)')],
+  ['Current workload parent is no longer clamped by LiveOverview CSS', !files.liveOverviewCss.includes('.rundeckWorkloadBandV1235 .is-current-workload{\\n  max-height:240px')],
+  ['Performance drawer has one release-candidate geometry authority', files.workspaceDrawerCss.includes('single performance drawer geometry authority') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
+
 
   ['Job Performance timing is a horizontal full-width RCA strip', files.jobHistoryCss.includes('grid-template-columns:auto repeat(2,minmax(120px,auto)) minmax(0,1fr)')],
   ['Observation History uses a content-aware drawer', files.wrapper.includes('size="observation-history"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-observation-history')],
@@ -117,7 +121,7 @@ const checks = [
   ['Trend modal traps focus locks page scroll and restores focus', files.serverTrend.includes("document.body.style.overflow = 'hidden'") && files.serverTrend.includes("event.key !== 'Tab'") && files.serverTrend.includes('restoreFocusRef.current?.focus')],
   ['Trend point selection ignores distant clicks', files.serverTrend.includes('distance > 900')],
   ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('CPU can exceed 100%') && files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes(' GB')],
-  ['Performance drawer uses wider balanced multi-lane charts', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistoryCss.includes('width:min(980px,64vw)') && files.jobHistoryCss.includes('min-height:440px')],
+  ['Performance drawer uses a full-width controls and chart workspace', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistory.includes('rundeckJobAnalysisWorkspace') && files.jobHistoryCss.includes('grid-template-columns:minmax(270px,32fr) minmax(0,68fr)') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
   ['Current Jobs reserves desktop space for five or more scan rows', files.currentWorkloadCss.includes('height:390px!important') && files.currentWorkloadCss.includes('height:430px!important')],
   ['History empty states use stronger intentional visual hierarchy', files.workloadExplorerCss.includes('min-height:235px') && files.workloadExplorerCss.includes('.rundeckExplorerEmptyState strong')],
   ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
@@ -265,4 +269,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.22 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.23 monitoring flow and deep-analysis checks passed.')

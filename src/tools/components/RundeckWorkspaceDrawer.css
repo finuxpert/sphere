@@ -242,7 +242,6 @@
   top:92px;
   right:14px;
   bottom:auto;
-  width:min(790px,52vw);
   max-height:calc(100vh - 116px);
   border:1px solid rgba(126,147,158,.18);
   border-radius:10px 0 0 10px;
@@ -298,7 +297,6 @@
 .rundeckWorkspaceDrawer:is(.is-menu,.is-availability) .rundeckWorkspaceDrawerBody{
   min-height:0;overflow:auto;padding-bottom:16px;
 }
-.rundeckWorkspaceDrawer.is-performance{width:min(860px,56vw)}
 .rundeckWorkspaceDrawer>header .rundeckWorkspaceBack{
   border-color:rgba(126,147,158,.24);
   font-weight:720;
@@ -330,4 +328,26 @@
 @media(max-width:1180px){
  .rundeckWorkspaceDrawer.is-observation-history{top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0}
  .rundeckWorkspaceDrawer.is-evidence,.rundeckWorkspaceDrawer.is-availability,.rundeckWorkspaceDrawer.is-issues{width:100%!important;max-height:none!important}
+}
+
+/* SPHERE v1.34.23 — single performance drawer geometry authority. */
+.rundeckWorkspaceDrawer.is-performance{
+  top:76px;
+  right:14px;
+  bottom:auto;
+  width:min(1160px,76vw);
+  max-height:calc(100vh - 94px);
+  overflow:hidden;
+  border:1px solid rgba(126,147,158,.20);
+  border-radius:10px;
+  box-shadow:-8px 10px 30px rgba(0,0,0,.24);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody{
+  min-height:0;
+  overflow:auto;
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-performance{
+    top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0;
+  }
 }

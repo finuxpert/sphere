@@ -1017,3 +1017,20 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMet
     grid-template-columns:1fr!important;
   }
 }
+
+/* SPHERE v1.34.23 — final selected-context card proportions. */
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+  grid-template-columns:minmax(0,40fr) minmax(0,28fr) minmax(0,32fr)!important;
+  align-items:stretch!important;
+  gap:8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
+  height:100%!important;
+  min-height:74px!important;
+  box-sizing:border-box!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+    grid-template-columns:1fr!important;
+  }
+}

@@ -677,48 +677,56 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <small className="rundeckJobCorrelationDisclaimer">Timing correlation only — not proof of root cause</small>
       </div>}
 
-      <section className="rundeckJobHistoricalAnalysis" aria-label="Historical analysis">
-        <div className="rundeckJobSectionLabel">Performance Analysis</div>
-        <div className="rundeckJobPerformanceRange" aria-label="Performance time range">
-        <div className="rundeckJobRangeTabs" role="group" aria-label="Performance time range">
-          {PERFORMANCE_RANGES.map(([key,label]) => <button key={key} type="button" disabled={key !== 'current' && !historicalEligible} className={range===key?'is-active':''} aria-pressed={range===key} onClick={()=>setRange(key)}>{label}</button>)}
-        </div>
-        {range !== 'current' && <div className="rundeckJobRangeMode" role="group" aria-label="Historical aggregation">
-          <button type="button" className={rangeMode==='avg'?'is-active':''} aria-pressed={rangeMode==='avg'} onClick={()=>setRangeMode('avg')}>Avg</button>
-          <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
-        </div>}
-        </div>
-        <small className="rundeckJobCurrentSemantics" title="Current = selected observation episode">Current = selected episode</small>
-      </section>
-
-      {range === 'current'
-        ? <section key={`performance-${contentKey}`} className="rundeckJobPerformanceDisclosure is-direct">
-            <div className="rundeckJobPerformanceTitle">
-              <span title="Current = selected observation episode"><SphereIcon name="trend" /> Selected Episode Performance</span>
-              <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
-              {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP overlap · {profile.criticalSamples}/{profile.totalSamples} samples</em>}
+      <div className="rundeckJobAnalysisWorkspace">
+        <aside className="rundeckJobAnalysisSidebar" aria-label="Performance analysis controls and summary">
+          <section className="rundeckJobHistoricalAnalysis" aria-label="Historical analysis">
+            <div className="rundeckJobSectionLabel">Performance Analysis</div>
+            <div className="rundeckJobPerformanceRange" aria-label="Performance time range">
+              <div className="rundeckJobRangeTabs" role="group" aria-label="Performance time range">
+                {PERFORMANCE_RANGES.map(([key,label]) => <button key={key} type="button" disabled={key !== 'current' && !historicalEligible} className={range===key?'is-active':''} aria-pressed={range===key} onClick={()=>setRange(key)}>{label}</button>)}
+              </div>
+              {range !== 'current' && <div className="rundeckJobRangeMode" role="group" aria-label="Historical aggregation">
+                <button type="button" className={rangeMode==='avg'?'is-active':''} aria-pressed={rangeMode==='avg'} onClick={()=>setRangeMode('avg')}>Avg</button>
+                <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
+              </div>}
             </div>
-            {episodeItems.length === 1
-              ? <SingleSamplePerformance row={episodeItems[0]} />
-              : episodeItems.length > 1
-                ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} expanded={drawerPresentation} />
-                : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
+            <small className="rundeckJobCurrentSemantics" title="Current = selected observation episode">Current = selected episode</small>
           </section>
-        : <section className="rundeckJobHistoricalRange">
-            <div className="rundeckJobHistoricalSummary">
-              <span><b>Range</b>{range.toUpperCase()}</span>
-              <span><b>Samples</b>{historicalSummary?.checks ?? '—'}</span>
-              <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
-              <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
-              <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
-              <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP Overlap</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} / ${historicalSummary.checks ?? 0} samples` : '—'}</span>
-            </div>
-            <div className="rundeckJobHistoricalTitle"><strong>{historicalModeLabel} historical performance</strong><small>{historicalTrend?.bucket ? `${historicalTrend.bucket} buckets` : 'Retained observations'}</small></div>
-            {rangeLoading && <div className="rundeckJobHistoryState">Loading {range.toUpperCase()} performance…</div>}
-            {rangeError && <div className="rundeckJobHistoryState is-error">{rangeError}</div>}
-            {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={incidentStart} /> : null}
-            {!rangeLoading && !rangeError && historicalTrend && !historicalTrend.items?.length && <div className="rundeckJobHistoryState">No retained observations in this range.</div>}
-          </section>}
+
+          {range === 'current'
+            ? <div className="rundeckJobPerformanceTitle">
+                <span title="Current = selected observation episode"><SphereIcon name="trend" /> Selected Episode Performance</span>
+                <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
+                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP overlap · {profile.criticalSamples}/{profile.totalSamples} samples</em>}
+              </div>
+            : <div className="rundeckJobHistoricalSummary">
+                <span><b>Range</b>{range.toUpperCase()}</span>
+                <span><b>Samples</b>{historicalSummary?.checks ?? '—'}</span>
+                <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
+                <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
+                <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
+                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP Overlap</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} / ${historicalSummary.checks ?? 0} samples` : '—'}</span>
+              </div>}
+        </aside>
+
+        <section className="rundeckJobAnalysisCanvas" aria-label="Performance chart">
+          {range === 'current'
+            ? <div key={`performance-${contentKey}`} className="rundeckJobPerformanceDisclosure is-direct">
+                {episodeItems.length === 1
+                  ? <SingleSamplePerformance row={episodeItems[0]} />
+                  : episodeItems.length > 1
+                    ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} expanded={drawerPresentation} />
+                    : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
+              </div>
+            : <div className="rundeckJobHistoricalRange">
+                <div className="rundeckJobHistoricalTitle"><strong>{historicalModeLabel} historical performance</strong><small>{historicalTrend?.bucket ? `${historicalTrend.bucket} buckets` : 'Retained observations'}</small></div>
+                {rangeLoading && <div className="rundeckJobHistoryState">Loading {range.toUpperCase()} performance…</div>}
+                {rangeError && <div className="rundeckJobHistoryState is-error">{rangeError}</div>}
+                {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={incidentStart} /> : null}
+                {!rangeLoading && !rangeError && historicalTrend && !historicalTrend.items?.length && <div className="rundeckJobHistoryState">No retained observations in this range.</div>}
+              </div>}
+        </section>
+      </div>
     </div>}
   </section>
 }

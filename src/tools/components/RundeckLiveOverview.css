@@ -378,18 +378,7 @@
   white-space:nowrap;
 }
 
-/* Keep only true datasets scrollable. */
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload{
-  max-height:240px!important;
-  overflow:auto!important;
-  scrollbar-width:thin;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
-  height:auto!important;
-  min-height:0!important;
-  max-height:none!important;
-  overflow:visible!important;
-}
+/* Workload pane geometry is owned by RundeckWorkspace.css; only table datasets scroll. */
 .appShell:has(.rundeckPanel) .rundeckOperationalBandV1234 .is-operational-events{
   max-height:138px!important;
   overflow:auto!important;
