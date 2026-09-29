@@ -669,3 +669,83 @@
 .rundeckRcaHeader small {
   font-size: 9.2px;
 }
+
+/* SPHERE v1.34.2 — compact cockpit with detail-on-demand drawers. */
+.rundeckSelectedCompact {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:8px;
+  padding:9px 10px;
+  border:1px solid rgba(126,147,158,.10);
+  border-radius:5px;
+  background:rgba(126,147,158,.02);
+}
+.rundeckSelectedCompact>div{min-width:0}
+.rundeckSelectedCompact strong{
+  display:block;
+  overflow:hidden;
+  color:var(--sphere-text,#e7edf0);
+  font-size:11px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckSelectedCompact small{
+  display:block;
+  margin-top:2px;
+  color:var(--sphere-text-muted,#8d9aa3);
+  font-size:8.7px;
+}
+.rundeckSelectedCompact button,
+.rundeckCompactDetailRow button{
+  border:1px solid rgba(79,198,200,.18);
+  border-radius:5px;
+  background:rgba(79,198,200,.06);
+  color:var(--sphere-accent,#4fc6c8);
+  cursor:pointer;
+}
+.rundeckSelectedCompact button{padding:6px 9px;font-size:8.8px;white-space:nowrap}
+.rundeckSelectedCompact.is-empty{color:var(--sphere-text-muted,#8d9aa3);font-size:9px}
+.rundeckCompactDetailRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+  padding-top:10px;
+  border-top:1px solid rgba(126,147,158,.08);
+}
+.rundeckCompactDetailRow button{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  min-height:48px;
+  padding:7px 9px;
+  text-align:left;
+}
+.rundeckCompactDetailRow button:disabled{opacity:.45;cursor:not-allowed}
+.rundeckCompactDetailRow button span{min-width:0}
+.rundeckCompactDetailRow button b{
+  display:block;
+  color:var(--sphere-text,#e7edf0);
+  font-size:9.4px;
+}
+.rundeckCompactDetailRow button small{
+  display:block;
+  margin-top:2px;
+  overflow:hidden;
+  color:var(--sphere-text-muted,#8d9aa3);
+  font-size:8.2px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckCompactDetailRow button em{
+  color:var(--sphere-accent,#4fc6c8);
+  font-size:8.4px;
+  font-style:normal;
+}
+@media(max-width:900px){
+  .rundeckCompactDetailRow{grid-template-columns:1fr}
+  .rundeckSelectedCompact{align-items:flex-start;flex-direction:column}
+}
