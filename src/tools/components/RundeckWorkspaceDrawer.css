@@ -85,3 +85,47 @@
 .rundeckWorkspaceDrawerBody .rundeckInfra td{
   padding:6px 4px;
 }
+
+/* SPHERE v1.34.7 — use drawer space for analysis instead of preserving inline constraints. */
+.rundeckWorkspaceDrawer{
+  width:min(860px,58vw);
+}
+.rundeckWorkspaceDrawerBody{
+  min-width:0;
+}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory{
+  width:100%!important;
+  max-width:none!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobHistoryOverview,
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobHistoryContent,
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobPerformanceDisclosure,
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobPerformanceWrap{
+  width:100%!important;
+  max-width:none!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobPerformanceDisclosure>summary{
+  padding-right:2px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra{
+  padding-top:8px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra>header{
+  margin-bottom:7px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraFreshness{
+  margin-bottom:8px;
+  padding:6px 8px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  gap:8px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  padding:9px;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendDisclosure{
+  margin-top:8px;
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer{width:100%}
+}
