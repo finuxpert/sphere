@@ -55,7 +55,7 @@ const files = {
 }
 
 const checks = [
-  ['drawer performance layout version is v1.34.7', files.version.includes("APP_VERSION = '1.34.7'") && files.version.includes('drawer-performance-layout-ui-v1.34.7')],
+  ['drawer navigation version is v1.34.8', files.version.includes("APP_VERSION = '1.34.8'") && files.version.includes('drawer-navigation-ui-v1.34.8')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -111,6 +111,11 @@ const checks = [
   ['Job performance drawer requests drawer presentation', files.wrapper.includes('presentation="drawer"') && files.jobHistory.includes("presentation = 'inline'") && files.jobHistory.includes("presentation === 'drawer'")],
   ['Drawer performance chart expands lane heights for analysis', files.jobHistory.includes("expanded ? 104 : 62") && files.jobHistory.includes('expanded={drawerPresentation}')],
   ['Workspace drawer widens and removes inline width caps', files.workspaceDrawerCss.includes('width:min(860px,58vw)') && files.workspaceDrawerCss.includes('.rundeckJobPerformanceWrap') && files.workspaceDrawerCss.includes('max-width:none!important')],
+  ['Workspace drawer exposes Back without replacing Close', files.workspaceDrawer.includes('onBack = null') && files.workspaceDrawer.includes('rundeckWorkspaceBack') && files.workspaceDrawer.includes('rundeckWorkspaceClose')],
+  ['APP to Job navigation keeps a return target inside the drawer', files.wrapper.includes("returnTo: { type: 'app', app: activeOverlay.app }") && files.wrapper.includes("activeOverlay.returnTo?.type === 'app'")],
+  ['Review to Job navigation can return to review analysis', files.wrapper.includes("returnTo: { type: 'review', row: activeOverlay.row, reviewContext: activeOverlay.reviewContext }") && files.wrapper.includes("'Back to Review'" )],
+  ['Performance History drilldown can return without closing analysis', files.wrapper.includes("returnTo: { type: 'history' }") && files.wrapper.includes("'Back to Performance History'")],
+  ['Drawer Back control has compact header styling', files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawerHeaderActions') && files.workspaceDrawerCss.includes('.rundeckWorkspaceBack')],
   ['Review analysis uses full-width drawer performance layout', files.quickAnalysis.includes('presentation="drawer"') && files.quickAnalysisCss.includes('width:min(860px,58vw)') && files.quickAnalysisCss.includes('.rundeckJobPerformanceChart')],
   ['Infrastructure drawer spacing is compact enough to expose history earlier', files.workspaceDrawerCss.includes('.rundeckInfraFreshness') && files.workspaceDrawerCss.includes('margin-bottom:8px') && files.workspaceDrawerCss.includes('.rundeckInfraTrendDisclosure')],
   ['Infrastructure drawer gives Filesystem a full-width row', files.workspaceDrawerCss.includes('.rundeckInfraGrid article:first-child') && files.workspaceDrawerCss.includes('grid-column:1/-1')],
@@ -181,4 +186,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.7 drawer performance layout checks passed.')
+console.log('\nSPHERE v1.34.8 drawer navigation checks passed.')
