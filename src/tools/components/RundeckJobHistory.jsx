@@ -50,9 +50,11 @@ async function loadHistory(job, signal) {
 }
 
 async function loadRangeHistory(job, range, signal) {
+  const type = String(job.consumerType || '').toUpperCase()
+  if (!['JOB','PROGRAM'].includes(type)) throw new Error('Historical range is available for Job and Program context.')
   const params = new URLSearchParams({
     job: job.key,
-    type: String(job.consumerType || 'JOB').toUpperCase() === 'PROGRAM' ? 'PROGRAM' : 'JOB',
+    type,
     range,
   })
   if (job.host) params.set('host', job.host)
@@ -546,6 +548,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const historicalSummary = rangeData?.summary || null
   const historicalTrend = rangeData?.trend || null
   const historicalModeLabel = rangeMode === 'peak' ? 'Peak' : 'Average'
+  const historicalEligible = ['JOB','PROGRAM'].includes(String(displayConsumerType || latest?.consumer_type || '').toUpperCase())
 
   return <section className={`rundeckJobHistory ${drawerPresentation ? 'is-drawer-presentation' : ''}`} aria-label="Selected job or program performance" aria-busy={loading}>
     <div className="rundeckJobHistoryHead">
@@ -606,7 +609,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
 
       <section className="rundeckJobPerformanceRange" aria-label="Performance time range">
         <div className="rundeckJobRangeTabs" role="group" aria-label="Performance time range">
-          {PERFORMANCE_RANGES.map(([key,label]) => <button key={key} type="button" className={range===key?'is-active':''} aria-pressed={range===key} onClick={()=>setRange(key)}>{label}</button>)}
+          {PERFORMANCE_RANGES.map(([key,label]) => <button key={key} type="button" disabled={key !== 'current' && !historicalEligible} className={range===key?'is-active':''} aria-pressed={range===key} onClick={()=>setRange(key)}>{label}</button>)}
         </div>
         {range !== 'current' && <div className="rundeckJobRangeMode" role="group" aria-label="Historical aggregation">
           <button type="button" className={rangeMode==='avg'?'is-active':''} aria-pressed={rangeMode==='avg'} onClick={()=>setRangeMode('avg')}>Avg</button>
