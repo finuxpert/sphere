@@ -463,3 +463,16 @@
     grid-template-columns:1fr !important;
   }
 }
+
+/* SPHERE v1.34.15 — final Current Jobs / Selected Job balance. */
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+  grid-template-columns:minmax(0,45fr) minmax(0,55fr)!important;
+  align-items:start!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
+  align-self:start!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
+  min-height:0!important;height:auto!important;
+}

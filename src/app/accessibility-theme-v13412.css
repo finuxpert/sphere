@@ -308,3 +308,87 @@ html[data-theme="light"] .rundeckInfraTrendSummary{background:#eef3f4!important;
 html[data-theme="light"] .rundeckInfraTrendSummary :is(strong,span){color:#435760!important;opacity:1!important}
 html[data-theme="light"] .rundeckInfraLegend span{color:#4f626c!important;opacity:1!important}
 html[data-theme="light"] .rundeckInfraChartWrap .yTick text{fill:#596b74!important}
+
+/* SPHERE v1.34.15 — final Performance Analysis light hierarchy for RDP. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckLandscapeHeader h2,.rundeckSectionTitle h3,.rundeckMonitoringHead h3,
+  .rundeckCurrentWorkloadHead h3,.rundeckReviewHeadV1231 h3,
+  .rundeckEvidenceCardTitle,.rundeckCompactDetailRow b
+){color:#203038!important;opacity:1!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckLandscapeMeta,.rundeckSectionTitle span,.rundeckRcaHint,
+  .rundeckCurrentWorkloadName small,.rundeckReviewHeadV1231 span,
+  .rundeckEvidenceCard>small,.rundeckCompactDetailRow small
+){color:#556872!important;opacity:1!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckStatus.is-normal,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckStatus.is-ready,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckStatus.is-cleared{
+  color:#287a55!important;border-color:rgba(40,122,85,.45)!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckStatus.is-attention{
+  color:#276b9c!important;border-color:rgba(39,107,156,.42)!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckDataAlignment .rundeckStatus.is-aligned{
+  color:#50636d!important;border-color:rgba(45,63,72,.20)!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSourceFreshness{
+  color:#5b6d76!important;font-weight:620!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(.rundeckCollectButton,.rundeckPdfButton,.rundeckModeSwitch button){
+  opacity:1!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(.rundeckCollectButton,.rundeckPdfButton):disabled{
+  color:#7a8a92!important;border-color:rgba(45,63,72,.14)!important;background:#f5f7f8!important;opacity:.68!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button{
+  color:#1d2d35!important;font-weight:780!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr:not(.is-selected) td:first-child{
+  color:#435760!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231 button{
+  color:#203038!important;font-weight:760!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231 small{
+  color:#5e7079!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckReviewReasonChips span{
+  font-size:9px!important;font-weight:680!important;color:#3e535d!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckReviewMoreV1237{
+  color:#35515c!important;border-color:rgba(45,63,72,.22)!important;background:#fff!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckOperationalSummaryCards>button{
+  min-height:62px!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCardTitle{
+  font-weight:780!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>strong{
+  color:#40545e!important;font-weight:700!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>em{
+  color:#0f6a71!important;font-weight:700!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSm37Verification{
+  border-color:rgba(45,63,72,.17)!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSm37VerificationHead strong{
+  color:#263840!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSm37VerificationHead .is-unknown,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSm37Verification p{
+  color:#566a74!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSegmented button{
+  color:#536770!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSegmented button.is-active{
+  color:#0f6269!important;background:#dff1f0!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckTrendChart{
+  filter:saturate(1.12) contrast(1.04)
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer:is(.is-performance,.is-app-detail,.is-menu,.is-availability){
+  box-shadow:-4px 8px 20px rgba(23,38,45,.18)!important
+}

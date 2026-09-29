@@ -50,6 +50,7 @@ const files = {
   sphereLogo: read('src/components/SphereLogo.jsx'),
   accessibilityTheme: read('src/app/accessibility-theme-v13411.css'),
   accessibilityThemeFinal: read('src/app/accessibility-theme-v13412.css'),
+  st03nTheme: read('src/tools/SphereWorkspaceV133.css'),
   workloadExplorerBackend: read('backend/rundeck_workload_explorer.py'),
   main: read('src/main.jsx'),
   api: read('backend/rundeck_api.py'),
@@ -66,7 +67,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.14', files.version.includes("APP_VERSION = '1.34.14'") && files.version.includes('monitoring-flow-ui-v1.34.14')],
+  ['monitoring flow version is v1.34.15', files.version.includes("APP_VERSION = '1.34.15'") && files.version.includes('monitoring-flow-ui-v1.34.15')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -165,6 +166,10 @@ const checks = [
   ['Job charts use adaptive WIB labels and graphic lane labels', files.jobHistory.includes('chartAxisText') && files.jobHistory.includes("type:'text'") && files.jobHistory.includes("text:'Critical WP'")],
   ['Selected episode shows Critical WP overlap denominator', files.jobHistory.includes('profile.criticalSamples') && files.jobHistory.includes('profile.totalSamples')],
   ['Light theme defines RDP-safe monitoring tokens', files.accessibilityThemeFinal.includes('--sphere-accent:#14747b') && files.accessibilityThemeFinal.includes('--sphere-positive:#287a55') && files.accessibilityThemeFinal.includes('--sphere-text-secondary:#3f515a')],
+  ['ST03N honors the global light theme with shared readable surfaces', files.st03nTheme.includes('html[data-theme="light"] .rca26Shell') && files.st03nTheme.includes('--bg:#f4f7f8') && files.st03nTheme.includes('.rca26Table th')],
+  ['Current Jobs and Selected Job use a balanced content-driven desktop layout', files.workspace.includes('grid-template-columns:minmax(0,45fr) minmax(0,55fr)') && files.currentWorkloadCss.includes('height:310px!important')],
+  ['Review queue tells operators that rows are sorted by review priority', files.performanceReview.includes('sorted by review priority')],
+  ['Final light hierarchy strengthens healthy states and source integrity text', files.accessibilityThemeFinal.includes('.rundeckSm37VerificationHead strong') && files.accessibilityThemeFinal.includes('.rundeckStatus.is-normal') && files.accessibilityThemeFinal.includes('.rundeckReviewWorkloadV1231 button')],
   ['Current Jobs uses more vertical workspace for operator scanning', files.currentWorkloadCss.includes('max-height:370px')],
   ['Light mode closes host selector dark island and preserves active range contrast', files.accessibilityThemeFinal.includes('.rundeckLiveOverviewHead') && files.accessibilityThemeFinal.includes('#dff2f2') && files.accessibilityThemeFinal.includes('#0f5960')],
   ['Light mode keeps workload review and operational cards readable', files.accessibilityThemeFinal.includes('.rundeckCurrentWorkloadName button') && files.accessibilityThemeFinal.includes('.rundeckReviewReasonChips span') && files.accessibilityThemeFinal.includes('.rundeckCompactDetailRow>button')],
@@ -234,4 +239,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.14 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.15 monitoring flow and deep-analysis checks passed.')

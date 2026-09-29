@@ -208,3 +208,17 @@
 @media(max-height:760px){
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{max-height:315px}
 }
+
+/* SPHERE v1.34.15 — desktop workload scan depth. */
+@media(min-width:1181px) and (min-height:720px){
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+    height:310px!important;
+    max-height:310px!important;
+  }
+}
+@media(min-width:1181px) and (min-height:900px){
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+    height:350px!important;
+    max-height:350px!important;
+  }
+}
