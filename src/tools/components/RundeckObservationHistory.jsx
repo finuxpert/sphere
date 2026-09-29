@@ -105,7 +105,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
-      <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU Usage</th><th>PSS Memory</th><th>Processes</th><th>WP</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU</th><th>Memory</th><th>Critical WP</th></tr></thead>
       <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
@@ -130,11 +130,9 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           <td title={row.host}>{shortHost(row.host)}</td>
           <td>{numberText(row.cpu_pct)}%</td>
           <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
-          <td>{numberText(rowMetric(row, 'processes'), 0)}</td>
-          <td>{wp}</td>
-          <td>{numberText(row.host_wp_critical, 0)}</td>
+          <td title={`Processes ${numberText(rowMetric(row, 'processes'), 0)} · WP ${wp}`}>{numberText(row.host_wp_critical, 0)}</td>
         </tr>
-      })}{!rows.length && <tr><td colSpan="8">No saved performance records for this job or program.</td></tr>}</tbody>
+      })}{!rows.length && <tr><td colSpan="6">No saved performance records for this job or program.</td></tr>}</tbody>
     </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
