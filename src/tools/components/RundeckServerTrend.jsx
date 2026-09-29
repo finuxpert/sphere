@@ -259,34 +259,62 @@ function processCount(consumer) {
 }
 
 function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
-  if (!selected && !loading && !error) return <div className="rundeckRcaHint">Click a chart point to see saved job and program data for that APP.</div>
+  if (!selected && !loading && !error) return null
   const selectedRow = selectedTimelineRow(selected, timeline)
   const consumers = selectedRow?.top_consumers || []
   const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
-  return <section className="rundeckRcaSection" aria-live="polite">
-    <div className="rundeckRcaHeader"><div><span>Trend Details</span><h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.at ? `${formatWib(selected.at, true)} WIB · saved history` : 'Loading'}</small></div>{selectedRow && <span className={`rundeckInlineStatus is-${hostResourceState(selectedRow).toLowerCase()}`}>{hostResourceState(selectedRow)}</span>}</div>
+  const resourceState = selectedRow ? hostResourceState(selectedRow) : ''
+
+  return <section className="rundeckTrendModalContent" aria-live="polite">
+    <div className="rundeckTrendModalContext">
+      <div>
+        <span>{selected?.mode === 'max' ? 'Peak sample' : 'Selected sample'} · saved history</span>
+        <strong>{selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</strong>
+      </div>
+      <div className="rundeckTrendModalContextMeta">
+        {collectionId && <span>Collection {collectionId.replace(/^rundeck-/, '').slice(0, 18)}</span>}
+        {resourceState && <span className={`rundeckInlineStatus is-${resourceState.toLowerCase()}`}>{resourceState}</span>}
+      </div>
+    </div>
+
     {loading && <div className="rundeckHistoryState">Loading saved history…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
-    {!loading && !error && selected && <div className="rundeckHistoricalSnapshot">
-      <div className="rundeckHistoricalSnapshotHead">
-        <div><span>History at Selected Time</span><strong>{consumers[0]?.consumer_key ? `Top: ${consumers[0].consumer_key} · CPU ${numberText(consumers[0].cpu_pct, 1)}%` : `Top workloads observed on ${shortHost(selected.host)}`}</strong></div>
-        <small>{consumers.length} item{consumers.length === 1 ? '' : 's'} · {collectionId ? `Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : 'Nearest saved run'}</small>
+
+    {!loading && !error && selected && <section className="rundeckTrendWorkloadPanel">
+      <header>
+        <div>
+          <span>History at Selected Time</span>
+          <strong>{consumers.length} workload{consumers.length === 1 ? '' : 's'} observed</strong>
+        </div>
+        {consumers[0]?.consumer_key && <small>Top CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
+      </header>
+
+      <div className="rundeckTrendWorkloadHead" aria-hidden="true">
+        <span>Job / Program</span><span>CPU</span><span>Memory</span><span>Proc</span><span />
       </div>
-      <div className="rundeckSnapshotConsumers">
+
+      <div className="rundeckTrendWorkloadRows">
         {consumers.map((consumer, index) => {
           const context = snapshotContext(selected, selectedRow, consumer)
           const pss = pssValue(consumer)
           const processes = processCount(consumer)
-          return <div key={`${consumer.consumer_type}-${consumer.consumer_key}-${index}`} className="rundeckSnapshotConsumer">
-            <button type="button" className="rundeckSnapshotConsumerButton" onClick={() => context && onSelectJob?.(context)} title={`${workloadTypeLabel(consumer.consumer_type)} · click to open this saved job or program`}>{index + 1}. {consumer.consumer_key}</button>
-            <span className="rundeckSnapshotMetric">CPU <b>{numberText(consumer.cpu_pct, 1)}%</b></span>
-            <span className="rundeckSnapshotMetric">Memory <b>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)}G`}</b></span>
-            <span className="rundeckSnapshotMetric">Proc <b>{processes === null || Number.isNaN(processes) ? '—' : numberText(processes, 0)}</b></span>
-          </div>
+          return <button
+            key={`${consumer.consumer_type}-${consumer.consumer_key}-${index}`}
+            type="button"
+            className="rundeckTrendWorkloadRow"
+            onClick={() => context && onSelectJob?.(context)}
+            title={`${workloadTypeLabel(consumer.consumer_type)} · open Performance Analysis`}
+          >
+            <span className="rundeckTrendWorkloadIdentity"><b>{index + 1}. {consumer.consumer_key}</b><small>{workloadTypeLabel(consumer.consumer_type)}</small></span>
+            <span>{numberText(consumer.cpu_pct, 1)}%</span>
+            <span>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)}G`}</span>
+            <span>{processes === null || Number.isNaN(processes) ? '—' : numberText(processes, 0)}</span>
+            <span className="rundeckTrendWorkloadChevron">›</span>
+          </button>
         })}
         {!consumers.length && <div className="rundeckSnapshotEmpty">No saved job or program data was found for this APP at this time.</div>}
       </div>
-    </div>}
+    </section>}
   </section>
 }
 
@@ -378,7 +406,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {selected && <div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
       <section className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
-          <div><span>SPHERE ANALYSIS</span><h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.metricLabel || metricLabel(metric)} · {selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</small></div>
+          <div><span>SPHERE ANALYSIS</span><h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</small></div>
           <button type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">

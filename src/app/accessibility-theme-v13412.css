@@ -597,3 +597,115 @@ html[data-theme="light"] .rundeckTrendPointModalHeader button{color:#40535c!impo
   .rundeckTrendPointModal{width:100%;max-height:none;border-radius:0}
   .rundeckTrendPointModalBody{max-height:calc(100vh - 70px)}
 }
+
+/* SPHERE v1.34.18 — compact Trend Details modal with full-width actionable workload list. */
+.rundeckTrendPointModal{
+  width:min(610px,68vw)!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.24)!important;
+}
+.rundeckTrendPointModalBody{padding:12px 14px 14px!important}
+.rundeckTrendModalContent{display:grid;gap:10px}
+.rundeckTrendModalContext{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:38px;padding:7px 9px;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));
+  border-radius:6px;background:rgba(126,147,158,.018);
+}
+.rundeckTrendModalContext>div:first-child{display:grid;gap:2px;min-width:0}
+.rundeckTrendModalContext>div:first-child>span{
+  color:var(--sphere-text-muted,#718089);font-size:8.5px;font-weight:700;
+}
+.rundeckTrendModalContext>div:first-child>strong{
+  color:var(--sphere-text,#e7edf0);font-size:10.5px;
+}
+.rundeckTrendModalContextMeta{
+  display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;
+  color:var(--sphere-text-muted,#718089);font-size:8.5px;
+}
+.rundeckTrendWorkloadPanel{
+  overflow:hidden;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));
+  border-radius:7px;background:var(--sphere-surface-1,rgba(126,147,158,.02));
+}
+.rundeckTrendWorkloadPanel>header{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 10px 8px;border-bottom:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));
+}
+.rundeckTrendWorkloadPanel>header>div{display:grid;gap:2px}
+.rundeckTrendWorkloadPanel>header span{
+  color:var(--sphere-accent,#4fc6c8);font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+}
+.rundeckTrendWorkloadPanel>header strong{
+  color:var(--sphere-text,#e7edf0);font-size:10.5px;
+}
+.rundeckTrendWorkloadPanel>header small{
+  color:var(--sphere-text-muted,#718089);font-size:8.5px;font-weight:650;
+}
+.rundeckTrendWorkloadHead,
+.rundeckTrendWorkloadRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 72px 78px 48px 18px;
+  align-items:center;column-gap:8px;
+}
+.rundeckTrendWorkloadHead{
+  min-height:26px;padding:4px 9px;
+  background:rgba(126,147,158,.045);
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;font-weight:780;text-transform:uppercase;letter-spacing:.025em;
+}
+.rundeckTrendWorkloadHead span:not(:first-child){text-align:right}
+.rundeckTrendWorkloadRows{display:grid}
+.rundeckTrendWorkloadRow{
+  width:100%;min-height:43px;padding:6px 9px;
+  border:0;border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.08));
+  background:transparent;color:var(--sphere-text-secondary,#a9b5bb);
+  font:inherit;font-size:9.5px;text-align:left;cursor:pointer;
+}
+.rundeckTrendWorkloadRow:first-child{border-top:0}
+.rundeckTrendWorkloadRow>span:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.rundeckTrendWorkloadRow:hover,
+.rundeckTrendWorkloadRow:focus-visible{
+  background:rgba(79,198,200,.055);
+  outline:none;
+}
+.rundeckTrendWorkloadIdentity{display:grid;gap:2px;min-width:0}
+.rundeckTrendWorkloadIdentity b{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--sphere-text,#e7edf0);font-size:9.5px;font-weight:760;
+}
+.rundeckTrendWorkloadIdentity small{
+  color:var(--sphere-text-muted,#718089);font-size:8px;
+}
+.rundeckTrendWorkloadChevron{
+  color:var(--sphere-accent,#4fc6c8)!important;
+  font-size:15px!important;font-weight:700!important;
+}
+html[data-theme="light"] .rundeckTrendModalContext{
+  background:#f8fafb!important;border-color:rgba(45,63,72,.14)!important
+}
+html[data-theme="light"] .rundeckTrendModalContext>div:first-child>strong{color:#203038!important}
+html[data-theme="light"] .rundeckTrendModalContext :is(span,.rundeckTrendModalContextMeta){color:#5a6c75!important}
+html[data-theme="light"] .rundeckTrendWorkloadPanel{
+  background:#fff!important;border-color:rgba(45,63,72,.16)!important
+}
+html[data-theme="light"] .rundeckTrendWorkloadPanel>header strong{color:#203038!important}
+html[data-theme="light"] .rundeckTrendWorkloadPanel>header small{color:#596b74!important}
+html[data-theme="light"] .rundeckTrendWorkloadHead{
+  background:#eaf0f2!important;color:#4c6069!important
+}
+html[data-theme="light"] .rundeckTrendWorkloadRow{
+  color:#334850!important;border-color:rgba(45,63,72,.09)!important
+}
+html[data-theme="light"] .rundeckTrendWorkloadIdentity b{color:#1d2d35!important}
+html[data-theme="light"] .rundeckTrendWorkloadIdentity small{color:#60717a!important}
+html[data-theme="light"] .rundeckTrendWorkloadRow:hover,
+html[data-theme="light"] .rundeckTrendWorkloadRow:focus-visible{
+  background:#edf7f6!important
+}
+@media(max-width:760px){
+  .rundeckTrendPointModal{width:100%!important}
+  .rundeckTrendWorkloadHead,.rundeckTrendWorkloadRow{
+    grid-template-columns:minmax(0,1fr) 62px 68px 42px 14px;
+    column-gap:5px;
+  }
+}
