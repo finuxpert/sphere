@@ -237,16 +237,7 @@
   .rundeckWorkspaceDrawer.is-medium{width:100%}
 }
 
-/* SPHERE v1.34.13 — content-aware performance and APP detail drawers. */
-.rundeckWorkspaceDrawer.is-performance{
-  top:92px;
-  right:14px;
-  bottom:auto;
-  max-height:calc(100vh - 116px);
-  border:1px solid rgba(126,147,158,.18);
-  border-radius:10px 0 0 10px;
-  overflow:hidden;
-}
+/* SPHERE v1.34.13 — APP detail geometry and shared analysis drawer body polish. */
 .rundeckWorkspaceDrawer.is-app-detail{
   top:92px;
   right:14px;

@@ -83,10 +83,10 @@ const checks = [
   ['Operational evidence uses the selected-workload whitespace instead of overlapping the next section', files.monitoringCore.includes('rundeckSelectedOperationalEvidence') && files.monitoringCss.includes('.rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards')],
   ['Operational context cards use final 40 28 32 selected-pane proportions', files.monitoringCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,28fr) minmax(0,32fr)')],
   ['Current workload parent is no longer clamped by LiveOverview CSS', !files.liveOverviewCss.includes('.rundeckWorkloadBandV1235 .is-current-workload{\\n  max-height:240px')],
-  ['Performance drawer has one release-candidate geometry authority', files.workspaceDrawerCss.includes('single performance drawer geometry authority') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
+  ['Performance drawer has one release-candidate geometry authority', files.workspaceDrawerCss.includes('single performance drawer geometry authority') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)') && !files.workspaceDrawerCss.includes('max-height:calc(100vh - 116px);\n  border:1px solid rgba(126,147,158,.18);\n  border-radius:10px 0 0 10px')],
 
 
-  ['Job Performance timing is a horizontal full-width RCA strip', files.jobHistoryCss.includes('grid-template-columns:auto repeat(2,minmax(120px,auto)) minmax(0,1fr)')],
+  ['Job Performance timing is a horizontal full-width RCA strip', files.jobHistoryCss.includes('grid-template-columns:auto auto auto minmax(0,1fr)')],
   ['Observation History uses a content-aware drawer', files.wrapper.includes('size="observation-history"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-observation-history')],
   ['APP analysis uses explicit workload type badges', files.appServerAnalysis.includes('rundeckAppTypeBadge') && files.appServerAnalysisCss.includes('.rundeckAppTypeBadge.is-job')],
 
@@ -190,7 +190,7 @@ const checks = [
   ['Timing correlation explicitly preserves RCA boundary', files.jobHistory.includes('Timing correlation only — not proof of root cause')],
   ['SAP Availability drawer shows technical checks directly without nested details', files.availability.includes('rundeckAvailabilitySummaryStrip') && files.availability.includes('Landscape Checks') && !files.availability.includes('<details className="rundeckAvailabilityMore"')],
   ['Drawer widths are content-aware for performance and operational detail', files.workspaceDrawer.includes("size = 'default'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-wide') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-medium')],
-  ['Performance and APP detail drawers shrink to content with viewport caps', files.wrapper.includes('size="performance"') && files.wrapper.includes('size="app-detail"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-performance') && files.workspaceDrawerCss.includes('bottom:auto') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 116px)')],
+  ['Performance and APP detail drawers use viewport-capped content-aware geometry', files.wrapper.includes('size="performance"') && files.wrapper.includes('size="app-detail"') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 94px)') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-app-detail')],
   ['Availability and Analysis Menu use content-aware drawer modes', files.wrapper.includes('size="availability"') && files.wrapper.includes('size="menu"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-availability') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-menu')],
   ['Floating analysis drawers use four-side radius and restrained shadow', files.workspaceDrawerCss.includes('border-radius:10px') && files.workspaceDrawerCss.includes('box-shadow:-8px 10px 28px')],
   ['Job charts use adaptive WIB labels and graphic lane labels', files.jobHistory.includes('chartAxisText') && files.jobHistory.includes("type:'text'") && files.jobHistory.includes("text:'Critical WP'")],
