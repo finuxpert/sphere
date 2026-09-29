@@ -210,26 +210,10 @@
   font-size:9px;
 }
 
-/* Preserve chart dominance and make selected workload content-driven. */
+/* Server Trend ratio stays local; workload composition is owned by RundeckWorkspace.css. */
 .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235{
   grid-template-columns:minmax(0,35fr) minmax(0,65fr)!important;
   gap:14px!important;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
-  grid-template-columns:minmax(0,38fr) minmax(0,62fr)!important;
-  gap:14px!important;
-  align-items:start!important;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload{
-  max-height:240px!important;
-  overflow:auto!important;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
-  height:auto!important;
-  min-height:0!important;
-  max-height:240px!important;
-  overflow:auto!important;
-  align-self:start!important;
 }
 
 /* Operational row is exception-first and gives events enough reading width. */
