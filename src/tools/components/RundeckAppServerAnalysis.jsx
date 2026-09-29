@@ -30,6 +30,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
   const [loading,setLoading]=React.useState(false)
   const [error,setError]=React.useState('')
   const [incident,setIncident]=React.useState(null)
+  const [hostSnapshot,setHostSnapshot]=React.useState(app)
 
   React.useEffect(()=>{
     if(!app?.host || !latestCollectionId) return undefined
@@ -38,8 +39,11 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
     Promise.all([
       fetch(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latestCollectionId)}&limit=100`,{cache:'no-store',signal:controller.signal}).then(async r=>{if(!r.ok)throw new Error(`Job / Program detail unavailable (${r.status})`);return r.json()}),
       fetch(`${API}/analysis/performance`,{cache:'no-store',signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null),
-    ]).then(([result,analysis])=>{
+      fetch(`${API}/history/hosts/latest`,{cache:'no-store',signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null),
+    ]).then(([result,analysis,hosts])=>{
       setRows((result.items||[]).filter(row=>row.host===app.host).sort((a,b)=>Number(b.cpu_pct||0)-Number(a.cpu_pct||0)))
+      const latestHost=(hosts?.items||[]).find(row=>row.host===app.host || shortHost(row.host)===shortHost(app.host))
+      setHostSnapshot(latestHost ? {...app,...latestHost} : app)
       setIncident(analysis?.active && shortHost(analysis.affected_server||'')===shortHost(app.host) ? analysis : null)
     }).catch(failure=>{if(failure.name!=='AbortError')setError(failure.message||'APP analysis unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
@@ -47,18 +51,19 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
   },[app?.host,latestCollectionId,refreshToken])
 
   if(!app) return null
-  const hostLabel=shortHost(app.host)
+  const resolvedApp=hostSnapshot || app
+  const hostLabel=shortHost(resolvedApp.host)
   return <section className="rundeckAppServerAnalysis" aria-label={`${hostLabel} APP server analysis`}>
     <div className="rundeckAppServerSummary">
-      <span><b>CPU</b>{metric(app.cpu_pct,'%')}</span>
-      <span><b>Memory</b>{metric(app.ram_pct,'%')}</span>
-      <span><b>I/O Wait</b>{metric(app.io_wait_pct,'%')}</span>
-      <span><b>Critical WP</b>{metric(app.wp_critical)}</span>
+      <span><b>CPU</b>{metric(resolvedApp.cpu_pct,'%')}</span>
+      <span><b>Memory</b>{metric(resolvedApp.ram_pct,'%')}</span>
+      <span><b>I/O Wait</b>{metric(resolvedApp.io_wait_pct,'%')}</span>
+      <span><b>Critical WP</b>{metric(resolvedApp.wp_critical)}</span>
     </div>
 
     {incident && <div className="rundeckAppServerIssue">
       <SphereIcon name="alert" />
-      <div><strong>Critical WP active</strong><small>Duration {durationText(incident.duration_seconds)} · Peak {metric(incident.primary_signal?.peak ?? incident.peak_value ?? app.wp_critical)}</small></div>
+      <div><strong>Critical WP active</strong><small>Duration {durationText(incident.duration_seconds)} · Peak {metric(incident.primary_signal?.peak ?? incident.peak_value ?? resolvedApp.wp_critical)}</small></div>
     </div>}
 
     <section className="rundeckAppServerWorkloads">
