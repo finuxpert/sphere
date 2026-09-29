@@ -35,8 +35,10 @@ const palette = () => ({
   danger: themeToken('--sphere-danger', '#db7d86'),
 })
 
+const PERFORMANCE_RANGES = [['current','Current'],['3h','3H'],['6h','6H'],['24h','24H'],['7d','7D'],['30d','30D']]
+
 async function loadHistory(job, signal) {
-  const params = new URLSearchParams({ job: job.key, days: '90', limit: '500' })
+  const params = new URLSearchParams({ job: job.key, days: '90', limit: '1000' })
   if (job.host) params.set('host', job.host)
   if (job.consumerType) params.set('type', job.consumerType)
   const response = await fetch(`${API}/history/job?${params.toString()}`, { cache: 'no-store', signal })
@@ -45,6 +47,25 @@ async function loadHistory(job, signal) {
     throw new Error(body.detail || `Job / Program history unavailable (${response.status})`)
   }
   return response.json()
+}
+
+async function loadRangeHistory(job, range, signal) {
+  const params = new URLSearchParams({
+    job: job.key,
+    type: String(job.consumerType || 'JOB').toUpperCase() === 'PROGRAM' ? 'PROGRAM' : 'JOB',
+    range,
+  })
+  if (job.host) params.set('host', job.host)
+  const [summaryResponse, trendResponse] = await Promise.all([
+    fetch(`${API}/history/workload/summary?${params.toString()}`, { cache: 'no-store', signal }),
+    fetch(`${API}/history/workload/trend?${params.toString()}`, { cache: 'no-store', signal }),
+  ])
+  if (!summaryResponse.ok || !trendResponse.ok) {
+    const failed = !summaryResponse.ok ? summaryResponse : trendResponse
+    const body = await failed.json().catch(() => ({}))
+    throw new Error(body.detail || `Historical performance unavailable (${failed.status})`)
+  }
+  return { summary: await summaryResponse.json(), trend: await trendResponse.json() }
 }
 
 function rowMetric(row, key) {
