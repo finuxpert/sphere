@@ -98,7 +98,12 @@ export default function Navbar() {
 
           <label className="sphereThemeControl" title="Display theme">
             <span>Theme</span>
-            <select aria-label="Display theme" value={themeMode} onChange={(event) => setThemeMode(event.target.value)}>
+            <select aria-label="Display theme" value={themeMode} onChange={(event) => {
+              const next = event.target.value
+              try { window.localStorage.setItem('sphere.theme', next) } catch {/* preference storage is best effort */}
+              setThemeMode(next)
+              window.setTimeout(() => window.location.reload(), 0)
+            }}>
               <option value="dark">Dark</option>
               <option value="light">Light</option>
               <option value="system">System</option>
