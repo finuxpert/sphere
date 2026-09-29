@@ -6,40 +6,6 @@ import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js
 const API = `${import.meta.env.BASE_URL}api`
 const metric = (value, suffix = '') => value === null || value === undefined || value === '' ? '—' : `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}${suffix}`
 
-const pssText = (row = {}) => {
-  const value = Number(row.details?.total_pss_gb ?? row.details?.pss_gb)
-  return Number.isFinite(value) ? `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })} GB` : '—'
-}
-
-const processText = (row = {}) => {
-  const value = Number(row.details?.process_count ?? row.details?.pids?.length ?? 1)
-  return Number.isFinite(value) ? value.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'
-}
-
-const formatTime = (value) => {
-  if (!value) return '—'
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return String(value)
-  return new Intl.DateTimeFormat('id-ID', {
-    timeZone: 'Asia/Jakarta',
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(parsed)
-}
-
-const durationText = (seconds) => {
-  const value = Number(seconds)
-  if (!Number.isFinite(value) || value < 0) return '—'
-  if (value < 60) return '<1m'
-  const minutes = Math.floor(value / 60)
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-  return rest ? `${hours}h ${rest}m` : `${hours}h`
-}
 
 function StatusPill({ value = 'UNKNOWN' }) {
   const normalized = String(value || 'UNKNOWN').toUpperCase()
@@ -47,22 +13,8 @@ function StatusPill({ value = 'UNKNOWN' }) {
   return <span className={`rundeckStatus rundeckStatusMotion is-${normalized.toLowerCase()}`}>{normalized}</span>
 }
 
-function scrollToSelectedWorkload() {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return
-  let frames = 0
-  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-  const navigate = () => {
-    frames += 1
-    if (frames < 3) return window.requestAnimationFrame(navigate)
-    document.querySelector('.rundeckJobHistory')?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
-  }
-  window.requestAnimationFrame(navigate)
-}
-
-export default function RundeckAppServers({ refreshToken = '', latestCollectionId = '', onSelectJob, focusRequest = null }) {
+export default function RundeckAppServers({ refreshToken = '', latestCollectionId = '', onInspectApp, focusRequest = null }) {
   const [state, setState] = React.useState({ items: [], error: '' })
-  const [drilldown, setDrilldown] = React.useState(null)
-  const [incident, setIncident] = React.useState(null)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -79,45 +31,13 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
     return () => controller.abort()
   }, [latestCollectionId, refreshToken])
 
-  React.useEffect(() => {
-    const controller = new AbortController()
-    fetch(`${API}/analysis/performance`, { cache: 'no-store', signal: controller.signal })
-      .then(async (response) => response.ok ? response.json() : null)
-      .then((result) => setIncident(result?.active ? result : null))
-      .catch((failure) => { if (failure.name !== 'AbortError') setIncident(null) })
-    return () => controller.abort()
-  }, [refreshToken])
-
-  React.useEffect(() => {
-    setDrilldown(null)
-  }, [latestCollectionId])
-
-  const openWp = React.useCallback(async (host) => {
-    const hostName = host?.host || ''
-    const wpCount = Number(host?.wp_critical || 0)
-    if (!hostName || !latestCollectionId || wpCount <= 0) return
-    if (drilldown?.host === hostName) return setDrilldown(null)
-    setDrilldown({ host: hostName, rows: [], loading: true, error: '' })
-    try {
-      const response = await fetch(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latestCollectionId)}&limit=100`, { cache: 'no-store' })
-      if (!response.ok) throw new Error(`Workload detail unavailable (${response.status})`)
-      const result = await response.json()
-      const rows = (result.items || [])
-        .filter((row) => row.host === hostName)
-        .sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
-        .slice(0, 8)
-      setDrilldown({ host: hostName, rows, loading: false, error: '' })
-    } catch (failure) {
-      setDrilldown({ host: hostName, rows: [], loading: false, error: failure.message || 'Workload detail unavailable.' })
-    }
-  }, [drilldown?.host, latestCollectionId])
 
   React.useEffect(() => {
     const requested = shortHost(focusRequest?.host || '')
     if (!requested || !state.items.length) return
     const host = state.items.find((item) => shortHost(item.host) === requested)
     if (!host) return
-    if (!focusRequest?.highlightOnly && Number(host.wp_critical || 0) > 0 && drilldown?.host !== host.host) openWp(host)
+    if (!focusRequest?.highlightOnly) onInspectApp?.(host)
     if (focusRequest?.highlightOnly) return
     if (typeof window === 'undefined' || typeof document === 'undefined') return
     let frames = 0
@@ -130,22 +50,11 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
       row?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' })
     }
     window.requestAnimationFrame(navigate)
-  }, [drilldown?.host, focusRequest?.highlightOnly, focusRequest?.host, focusRequest?.token, openWp, state.items])
-
-  const inspectWorkload = React.useCallback((row) => {
-    if (!row?.consumer_key) return
-    onSelectJob?.({
-      key: row.consumer_key,
-      host: row.host,
-      consumerType: row.consumer_type,
-      source: 'critical-wp-inline-drilldown',
-    })
-    scrollToSelectedWorkload()
-  }, [onSelectJob])
+  }, [focusRequest?.highlightOnly, focusRequest?.host, focusRequest?.token, onInspectApp, state.items])
 
   const focusedApp = shortHost(focusRequest?.host || '')
 
-  return <section className={`rundeckServerSection rundeckServerSectionV1234 ${drilldown ? 'has-drilldown' : ''}`} aria-label="SAP App Servers">
+  return <section className="rundeckServerSection rundeckServerSectionV1234" aria-label="SAP App Servers">
     <div className="rundeckSectionTitle"><h3><SphereIcon name="server" /> SAP App Servers</h3></div>
     {state.error && <div className="rundeckHistoryState is-error">{state.error}</div>}
     {!state.error && <div className="rundeckServerTableWrap"><table className="rundeckServerTable">
@@ -153,54 +62,27 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
       <tbody>{state.items.map((host) => {
         const workloadState = sapWorkloadState(host)
         const wpCount = Number(host.wp_critical || 0)
-        const expandable = wpCount > 0 && Boolean(latestCollectionId)
-        const expanded = drilldown?.host === host.host
+        const actionable = Boolean(onInspectApp)
         const appKey = shortHost(host.host)
         const focused = Boolean(focusedApp && appKey === focusedApp)
-        const incidentContext = incident?.active && shortHost(incident.affected_server || '') === appKey ? incident : null
-        return <React.Fragment key={host.host}>
-          <tr
+        return <tr
+            key={host.host}
             data-app-key={appKey}
-            className={[expanded ? 'is-selected' : '', expandable ? 'is-expandable' : '', focused ? 'is-cross-panel-focus' : ''].filter(Boolean).join(' ')}
-            onClick={expandable ? (event) => {
-              if (event.target.closest('button, a')) return
-              openWp(host)
+            className={[actionable ? 'is-expandable' : '', focused ? 'is-cross-panel-focus' : ''].filter(Boolean).join(' ')}
+            tabIndex={actionable ? 0 : undefined}
+            onClick={actionable ? () => onInspectApp?.(host) : undefined}
+            onKeyDown={actionable ? (event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') return
+              event.preventDefault()
+              onInspectApp?.(host)
             } : undefined}
           >
-            <td>{expandable
-              ? <button type="button" className="rundeckAppExpandButton" onClick={() => openWp(host)} aria-expanded={expanded} title="Show jobs and programs observed on this APP while Critical WP is active"><strong>{appKey}</strong><span>{expanded ? '−' : '+'}</span></button>
-              : <strong title={host.host}>{appKey}</strong>}
-            </td>
+            <td><strong title={host.host}>{appKey}</strong></td>
             <td><StatusPill value={hostResourceState(host)} /></td>
             <td><StatusPill value={workloadState} /></td>
             <td>{metric(host.cpu_pct, '%')}</td><td>{metric(host.ram_pct, '%')}</td><td>{metric(host.io_wait_pct, '%')}</td>
-            <td className={wpCount > 0 ? `is-${workloadState.toLowerCase()}` : ''}>{wpCount > 0 ? <button type="button" className="rundeckWpButton" onClick={() => openWp(host)} aria-expanded={expanded}><SphereIcon name="alert" /> {wpCount}</button> : '0'}</td>
+            <td className={wpCount > 0 ? `is-${workloadState.toLowerCase()}` : ''}>{wpCount > 0 ? <><SphereIcon name="alert" /> {wpCount}</> : '0'}</td>
           </tr>
-          {expanded && <tr className="rundeckWpInlineRow"><td colSpan="7">
-            <section className="rundeckWpInlinePanel" aria-live="polite">
-              <header className="rundeckWpInlineHead">
-                <div>
-                  <h4><SphereIcon name="alert" /> APP DETAILS · {shortHost(drilldown.host)} · Critical WP context</h4>
-                  {incidentContext && <small>Critical WP active since {formatTime(incidentContext.signal_active_since || incidentContext.detected_since)} WIB · Duration {durationText(incidentContext.duration_seconds)}</small>}
-                  <small>Jobs and programs captured in the same run while Critical WP was active.</small>
-                </div>
-                <button type="button" onClick={() => setDrilldown(null)}>Close</button>
-              </header>
-              {drilldown.loading && <div className="rundeckWpDrilldownState">Loading jobs and programs…</div>}
-              {drilldown.error && <div className="rundeckWpDrilldownState is-error">{drilldown.error}</div>}
-              {!drilldown.loading && !drilldown.error && <div className="rundeckWpInlineTableWrap"><table>
-                <thead><tr><th>Job / Program</th><th>Type</th><th>CPU</th><th>Memory</th><th>Processes</th></tr></thead>
-                <tbody>{drilldown.rows.map((row, index) => <tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}-${index}`}>
-                  <td><button type="button" onClick={() => inspectWorkload(row)}>{row.consumer_key}</button></td>
-                  <td>{String(row.consumer_type || '—').toUpperCase()}</td>
-                  <td>{metric(row.cpu_pct, '%')}</td>
-                  <td>{pssText(row)}</td>
-                  <td>{processText(row)}</td>
-                </tr>)}{!drilldown.rows.length && <tr><td colSpan="5">No job or program rows found for this APP in this run.</td></tr>}</tbody>
-              </table></div>}
-            </section>
-          </td></tr>}
-        </React.Fragment>
       })}{!state.items.length && <tr><td colSpan="7">No aligned APP server rows available.</td></tr>}</tbody>
     </table></div>}
   </section>
