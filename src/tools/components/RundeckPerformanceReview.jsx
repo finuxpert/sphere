@@ -60,14 +60,6 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
 
-  const jobFromRow = (row) => ({
-    key: row.consumer_key,
-    host: row.hosts?.length === 1 ? row.hosts[0] : '',
-    consumerType: row.consumer_type,
-    source: 'performance-review',
-    days: data?.days || 1,
-  })
-
   const openQuick = (row) => setQuickRow(row)
   const openFull = (job) => {
     setQuickRow(null)
