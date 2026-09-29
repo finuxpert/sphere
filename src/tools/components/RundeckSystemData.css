@@ -13,3 +13,10 @@
 .rundeckSystemDataMore{margin-top:7px;border:0;background:transparent;color:var(--sphere-accent,#4fc6c8);font-size:9.5px;cursor:pointer}
 .rundeckSystemDataDetail{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:8px;padding:7px 8px;border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));border-radius:5px;color:var(--sphere-text-secondary,#a9b5bb);font-size:9.5px}
 @media(max-width:640px){.rundeckSystemDataTabs{flex-direction:column}.rundeckSystemDataTabs button{justify-content:flex-start}.rundeckSystemDataTableWrap{overflow-x:auto}.rundeckSystemData table{min-width:580px}}
+
+
+/* SPHERE RC — table-first System Data with lighter chrome. */
+.rundeckSystemDataTabs{padding:0!important;border:0!important;border-bottom:1px solid rgba(126,147,158,.08)!important;border-radius:0!important;background:transparent!important}
+.rundeckSystemDataTabs button{border-radius:0!important;border-bottom:2px solid transparent!important}.rundeckSystemDataTabs button.is-active{background:transparent!important;border-bottom-color:var(--sphere-accent,#4fc6c8)!important}
+.rundeckSystemDataTableWrap{border:0!important;border-top:1px solid rgba(126,147,158,.075)!important;border-bottom:1px solid rgba(126,147,158,.075)!important;border-radius:0!important}
+.rundeckSystemDataDetail{padding:6px 0!important;border:0!important;border-top:1px solid rgba(126,147,158,.065)!important;border-radius:0!important;background:transparent!important}

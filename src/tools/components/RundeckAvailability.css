@@ -324,3 +324,13 @@
 .rundeckAvailabilityDetailSections section{padding:10px;border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));border-radius:6px;background:rgba(126,147,158,.018)}
 .rundeckAvailabilityDetailSections h4{margin:0 0 8px;color:var(--sphere-text,#e7edf0);font-size:12px}
 @media(max-width:720px){.rundeckAvailabilitySummaryStrip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* SPHERE RC — availability as one operational report instead of nested cards. */
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailability{width:100%!important;max-width:none!important;margin-top:4px!important;padding:6px 0 8px!important;border-top:0!important}
+.rundeckAvailabilitySummaryStrip{gap:0!important;border:0!important;border-top:1px solid rgba(126,147,158,.075)!important;border-bottom:1px solid rgba(126,147,158,.075)!important;border-radius:0!important;background:transparent!important}
+.rundeckAvailabilitySummaryStrip span{padding:9px 11px!important;background:transparent!important;border-left:1px solid rgba(126,147,158,.065)}
+.rundeckAvailabilitySummaryStrip span:first-child{border-left:0}
+.rundeckAvailabilityDetailSections{gap:0!important}.rundeckAvailabilityDetailSections section{padding:11px 0!important;border:0!important;border-top:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;background:transparent!important}.rundeckAvailabilityDetailSections section:first-child{border-top:0!important}
+.rundeckAvailabilityMatrix{border:0!important;border-radius:0!important}.rundeckAvailabilityMatrix>div{border-top-color:rgba(126,147,158,.065)!important}.rundeckAvailabilityMatrix .is-head{background:rgba(126,147,158,.025)!important}
+.rundeckAvailabilityHead span,.rundeckAvailabilityMuted{color:var(--sphere-text-muted,#8d9aa3)!important;font-size:9.2px!important}

@@ -234,3 +234,12 @@
     grid-template-columns:1fr;
   }
 }
+
+
+/* SPHERE RC — infrastructure uses section dividers instead of nested cards. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraFreshness{padding:6px 0!important;border:0!important;border-top:1px solid rgba(126,147,158,.07)!important;border-bottom:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;background:transparent!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{gap:0!important;border-top:1px solid rgba(126,147,158,.07);border-bottom:1px solid rgba(126,147,158,.055)}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{padding:10px 12px!important;border:0!important;border-right:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;background:transparent!important}.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:last-child{border-right:0!important}
+.rundeckInfraTrendWorkspace{border:0!important;border-left:1px solid rgba(126,147,158,.08)!important;border-radius:0!important;background:transparent!important}.rundeckInfraTrendSummary{padding:5px 0!important;border:0!important;border-top:1px solid rgba(126,147,158,.06)!important;border-bottom:1px solid rgba(126,147,158,.06)!important;border-radius:0!important;background:transparent!important}.rundeckInfraChartWrap svg{background:transparent!important}
+.rundeckInfra header p,.rundeckInfraTrendWorkspaceHead small,.rundeckInfraTrendWorkspaceHead em,.rundeckInfraLegend,.rundeckInfraTrend>small{color:var(--sphere-text-muted,#8d9aa3)!important}
+@media(max-width:980px){.rundeckInfraTrendWorkspace{border-left:0!important;border-top:1px solid rgba(126,147,158,.08)!important}}

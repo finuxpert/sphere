@@ -314,7 +314,7 @@
   min-height:0;overflow:auto;padding-bottom:14px;
 }
 .rundeckWorkspaceDrawer.is-evidence{width:min(660px,44vw)!important}
-.rundeckWorkspaceDrawer.is-availability{width:min(640px,43vw)!important;max-height:min(560px,calc(100vh - 116px))!important}
+.rundeckWorkspaceDrawer.is-availability{width:min(790px,52vw)!important;max-height:min(620px,calc(100vh - 116px))!important}
 .rundeckWorkspaceDrawer.is-issues{width:min(680px,45vw)!important}
 @media(max-width:1180px){
  .rundeckWorkspaceDrawer.is-observation-history{top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0}
@@ -377,3 +377,9 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckPerforma
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* SPHERE RC — lighter drilldown surfaces; the drawer remains the single boundary. */
+.rundeckWorkspaceDrawer:is(.is-evidence,.is-availability,.is-issues,.is-system-data,.is-wide) .rundeckWorkspaceDrawerBody{background:transparent}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{border:0!important;border-right:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;background:transparent!important}.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard:last-child{border-right:0!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{background:transparent!important}
