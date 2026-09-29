@@ -48,7 +48,7 @@ const files = {
 }
 
 const checks = [
-  ['quick analysis closing version is v1.34.0', files.version.includes("APP_VERSION = '1.34.0'") && files.version.includes('quick-analysis-closing-ui-v1.34.0')],
+  ['Basis terminology version is v1.34.1', files.version.includes("APP_VERSION = '1.34.1'") && files.version.includes('basis-terminology-ui-v1.34.1')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -61,9 +61,12 @@ const checks = [
   ['Performance Review top 4 mode does not use an internal scrollbar', files.performanceReview.includes("is-top4") && files.uiPolish.includes('.rundeckPerformanceReviewV1231.is-top4 .rundeckReviewTableWrapV1231') && files.uiPolish.includes('overflow: visible !important')],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Updating…')],
   ['Performance Review rows open quick analysis', files.performanceReview.includes('RundeckReviewQuickAnalysis') && files.performanceReview.includes('onClick={() => openQuick(row)}')],
-  ['Quick Analysis includes performance chart, related events and closing workflow', files.quickAnalysis.includes('RundeckJobHistory') && files.quickAnalysis.includes('RundeckEvidenceTimeline') && files.quickAnalysis.includes('Closing Analysis') && files.quickAnalysis.includes('Open Full Analysis')],
+  ['Quick Analysis includes performance chart, related events and closing workflow', files.quickAnalysis.includes('RundeckJobHistory') && files.quickAnalysis.includes('RundeckEvidenceTimeline') && files.quickAnalysis.includes('Analysis Result') && files.quickAnalysis.includes('Open Detailed Analysis')],
   ['Quick Analysis supports keyboard close and responsive drawer', files.quickAnalysis.includes("event.key === 'Escape'") && files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer') && files.quickAnalysisCss.includes('@media(max-width:1180px)')],
-  ['Closing workflow stores finding recommendation owner and follow-up', files.quickAnalysis.includes('closing_status') && files.quickAnalysis.includes('finding') && files.quickAnalysis.includes('recommendation') && files.quickAnalysis.includes('follow_up')],
+  ['Quick Analysis uses Basis-friendly operator labels', files.quickAnalysis.includes('Performance Analysis') && files.quickAnalysis.includes('CPU Avg') && files.quickAnalysis.includes('Memory Avg (PSS)') && files.quickAnalysis.includes('Critical WP Samples') && files.quickAnalysis.includes('Historical Baseline')],
+  ['Performance review reasons use fixed Basis terminology', read('src/tools/components/rundeckEvaluationExplain.js').includes('Sustained high CPU') && read('src/tools/components/rundeckEvaluationExplain.js').includes('Critical WP overlap') && read('src/tools/components/rundeckEvaluationExplain.js').includes('Above historical baseline')],
+  ['Correlated events use APP Server and Job Program terms', read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'Job / Program'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'APP Server'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes('TIME ALIGNED')],
+  ['Closing workflow stores finding recommendation owner and follow-up', files.quickAnalysis.includes('closing_status') && files.quickAnalysis.includes('Analysis Summary') && files.quickAnalysis.includes('Recommended Action') && files.quickAnalysis.includes('Validation / Follow-up')],
   ['Closing API supports get save and history', files.api.includes('@app.get("/analysis/closing")') && files.api.includes('@app.post("/analysis/closing")') && files.api.includes('@app.get("/analysis/closings")')],
   ['Closing persistence uses a dedicated migration and safe upsert identity', files.closingMigration.includes('rundeck_analysis_closures') && files.closingMigration.includes('uq_rundeck_analysis_closure_window') && files.closingBackend.includes('ON CONFLICT (consumer_type, consumer_key, host, period_key, window_end)')],
   ['Performance evaluation uses short request cache', files.evaluationBackend.includes('EVALUATION_CACHE_TTL_SECONDS') && files.evaluationBackend.includes('_EVALUATION_CACHE[cache_key]')],
@@ -145,4 +148,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.0 quick analysis and closing checks passed.')
+console.log('\nSPHERE v1.34.1 Basis terminology checks passed.')
