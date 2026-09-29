@@ -4,6 +4,7 @@ const read = (path) => fs.readFileSync(path, 'utf8')
 const files = {
   version: read('src/app/version.js'),
   wrapper: read('src/tools/components/RundeckMonitoringHistory.jsx'),
+  monitoringCore: read('src/tools/components/RundeckMonitoringHistoryCore.jsx'),
   source: read('src/tools/components/RundeckSource.jsx'),
   availability: read('src/tools/components/RundeckAvailability.jsx'),
   availabilityBackend: read('backend/rundeck_availability.py'),
@@ -70,7 +71,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.21', files.version.includes("APP_VERSION = '1.34.21'") && files.version.includes('monitoring-flow-ui-v1.34.21')],
+  ['monitoring flow version is v1.34.22', files.version.includes("APP_VERSION = '1.34.22'") && files.version.includes('monitoring-flow-ui-v1.34.22')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -79,6 +80,7 @@ const checks = [
   ['Job Performance drawer reserves extra vertical chart space', files.jobHistoryCss.includes('min-height:440px') && files.jobHistoryCss.includes('height:390px')],
   ['Job Performance summary uses a full-width eight-cell episode matrix', files.jobHistory.includes('rundeckJobEpisodeMatrix') && files.jobHistory.includes('Episode Performance') && files.jobHistoryCss.includes('grid-template-columns:repeat(8,minmax(0,1fr))')],
   ['Selected workload pane stays content-height beside the tall Current Jobs scan area', files.workspace.includes('height:fit-content!important') && files.workspace.includes('is-selected-workload') && files.monitoringCss.includes('compact selected workload card')],
+  ['Operational evidence uses the selected-workload whitespace instead of overlapping the next section', files.monitoringCore.includes('rundeckSelectedOperationalEvidence') && files.monitoringCss.includes('.rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards')],
 
   ['Job Performance timing is a horizontal full-width RCA strip', files.jobHistoryCss.includes('grid-template-columns:auto repeat(2,minmax(120px,auto)) minmax(0,1fr)')],
   ['Observation History uses a content-aware drawer', files.wrapper.includes('size="observation-history"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-observation-history')],
@@ -116,7 +118,7 @@ const checks = [
   ['Trend point selection ignores distant clicks', files.serverTrend.includes('distance > 900')],
   ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('CPU can exceed 100%') && files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes(' GB')],
   ['Performance drawer uses wider balanced multi-lane charts', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistoryCss.includes('width:min(980px,64vw)') && files.jobHistoryCss.includes('min-height:440px')],
-  ['Current Jobs reserves desktop space for five or more scan rows', files.currentWorkloadCss.includes('height:360px!important')],
+  ['Current Jobs reserves desktop space for five or more scan rows', files.currentWorkloadCss.includes('height:390px!important') && files.currentWorkloadCss.includes('height:430px!important')],
   ['History empty states use stronger intentional visual hierarchy', files.workloadExplorerCss.includes('min-height:235px') && files.workloadExplorerCss.includes('.rundeckExplorerEmptyState strong')],
   ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
   ['APP analysis and selected job/program contexts are explicitly named', files.wrapper.includes('SAP App Server Analysis') && files.appServerAnalysis.includes('Jobs & Programs on') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
@@ -191,10 +193,10 @@ const checks = [
   ['Selected episode shows Critical WP overlap denominator', files.jobHistory.includes('profile.criticalSamples') && files.jobHistory.includes('profile.totalSamples')],
   ['Light theme defines RDP-safe monitoring tokens', files.accessibilityThemeFinal.includes('--sphere-accent:#14747b') && files.accessibilityThemeFinal.includes('--sphere-positive:#287a55') && files.accessibilityThemeFinal.includes('--sphere-text-secondary:#3f515a')],
   ['ST03N honors the global light theme with shared readable surfaces', files.st03nTheme.includes('html[data-theme="light"] .rca26Shell') && files.st03nTheme.includes('--bg:#f4f7f8') && files.st03nTheme.includes('.rca26Table th')],
-  ['Current Jobs and Selected Job use a balanced content-driven desktop layout', files.workspace.includes('grid-template-columns:minmax(0,45fr) minmax(0,55fr)') && files.currentWorkloadCss.includes('height:310px!important')],
+  ['Current Jobs and Selected Job use one balanced content-driven desktop layout', files.workspace.includes('grid-template-columns:minmax(0,45fr) minmax(0,55fr)') && files.workspace.includes('height:fit-content!important') && !files.liveOverviewCss.includes('minmax(0,38fr) minmax(0,62fr)')],
   ['Review queue tells operators that rows are sorted by review priority', files.performanceReview.includes('sorted by review priority')],
   ['Final light hierarchy strengthens healthy states and source integrity text', files.accessibilityThemeFinal.includes('.rundeckSm37VerificationHead strong') && files.accessibilityThemeFinal.includes('.rundeckStatus.is-normal') && files.accessibilityThemeFinal.includes('.rundeckReviewWorkloadV1231 button')],
-  ['Current Jobs uses more vertical workspace for operator scanning', files.currentWorkloadCss.includes('max-height:370px')],
+  ['Current Jobs uses more vertical workspace for operator scanning', files.currentWorkloadCss.includes('max-height:390px') && !files.currentWorkloadCss.includes('height:310px!important')],
   ['Light mode closes host selector dark island and preserves active range contrast', files.accessibilityThemeFinal.includes('.rundeckLiveOverviewHead') && files.accessibilityThemeFinal.includes('#dff2f2') && files.accessibilityThemeFinal.includes('#0f5960')],
   ['Light mode keeps workload review and operational cards readable', files.accessibilityThemeFinal.includes('.rundeckCurrentWorkloadName button') && files.accessibilityThemeFinal.includes('.rundeckReviewReasonChips span') && files.accessibilityThemeFinal.includes('.rundeckCompactDetailRow>button')],
   ['Light theme swaps SPHERE logo and defines accessible surface tokens', files.sphereLogo.includes("theme === 'light'") && files.accessibilityTheme.includes('html[data-theme="light"]') && files.accessibilityTheme.includes('--sphere-page:#f4f7f8')],
@@ -263,4 +265,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.21 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.22 monitoring flow and deep-analysis checks passed.')

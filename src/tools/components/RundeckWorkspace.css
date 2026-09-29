@@ -464,22 +464,16 @@
   }
 }
 
-/* SPHERE v1.34.15 — final Current Jobs / Selected Job balance. */
+/* SPHERE v1.34.22 — single owner for Current Jobs / Selected Job composition. */
 .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
   grid-template-columns:minmax(0,45fr) minmax(0,55fr)!important;
+  gap:16px!important;
   align-items:start!important;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload,
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-current-workload{
   align-self:start!important;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
-  min-height:0!important;height:auto!important;
-}
-
-/* SPHERE v1.34.21 — selected workload is content-height; only Current Jobs owns the tall scan area. */
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
-  align-items:start!important;
+  min-height:0!important;
+  overflow:visible!important;
 }
 .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-selected-workload{
   align-self:start!important;
@@ -488,7 +482,8 @@
   max-height:none!important;
   overflow:visible!important;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckBandPaneV1235.is-current-workload{
-  align-self:start!important;
-  overflow:visible!important;
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+    grid-template-columns:1fr!important;
+  }
 }

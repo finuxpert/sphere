@@ -8,17 +8,6 @@
   background:var(--sphere-page,#0f151a);
 }
 .rundeckLiveSummaryStrip{grid-template-columns:repeat(2,minmax(0,1fr))}
-.rundeckWorkloadBandV1234,
-.rundeckWorkloadBandV1235{
-  align-items:stretch;
-}
-.rundeckWorkloadBandV1234 .is-current-workload,
-.rundeckWorkloadBandV1235 .is-current-workload,
-.rundeckWorkloadBandV1234 .is-selected-workload,
-.rundeckWorkloadBandV1235 .is-selected-workload{
-  max-height:320px;
-  overflow:auto;
-}
 .rundeckOperationalBandV1234{
   align-items:stretch;
 }
@@ -70,20 +59,6 @@
 .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235{
   grid-template-columns:minmax(0,35fr) minmax(0,65fr) !important;
   gap:16px !important;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
-  grid-template-columns:minmax(0,38fr) minmax(0,62fr) !important;
-  gap:16px !important;
-  align-items:start !important;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload{
-  max-height:250px !important;
-  overflow:auto !important;
-}
-.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{
-  max-height:250px !important;
-  overflow:auto !important;
-  align-self:start !important;
 }
 .appShell:has(.rundeckPanel) .rundeckOperationalBandV1234{
   grid-template-columns:minmax(0,32fr) minmax(0,38fr) minmax(0,30fr) !important;

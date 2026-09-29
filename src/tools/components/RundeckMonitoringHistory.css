@@ -991,3 +991,29 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactIde
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactIdentity small{color:#596b74!important}
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics span{color:#334850!important}
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics b{color:#60717a!important}
+
+/* SPHERE v1.34.22 — use the selected-workload whitespace for operational context. */
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence{
+  width:100%;
+  margin-top:10px;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin-top:0!important;
+  padding-top:10px!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards.is-two{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
+  min-height:72px!important;
+  padding:8px 9px!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,
+  .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards.is-two{
+    grid-template-columns:1fr!important;
+  }
+}

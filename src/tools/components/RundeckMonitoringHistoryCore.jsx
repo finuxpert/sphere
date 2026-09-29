@@ -32,8 +32,10 @@ export default function RundeckMonitoringHistoryCore(props) {
               <button type="button" onClick={props.onOpenSelectedAnalysis}>Analyze Performance</button>
             </div>
           : <div className="rundeckSelectedCompact is-empty">Select a job or program to analyze.</div>}
+        <div className="rundeckSelectedOperationalEvidence">
+          {props.operationalEvidenceContent}
+        </div>
       </div>
     </section>
-    {props.operationalEvidenceContent}
   </section>
 }

@@ -201,42 +201,25 @@
   font-weight: 800;
 }
 
-/* SPHERE v1.34.13 — use available live-workspace height for operator scanning. */
+/* SPHERE v1.34.22 — single source of truth for live workload scan depth. */
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
-  max-height:370px;
+  max-height:390px;
+  scrollbar-gutter:stable;
 }
 @media(max-height:760px){
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{max-height:315px}
 }
-
-/* SPHERE v1.34.15 — desktop workload scan depth. */
 @media(min-width:1181px) and (min-height:720px){
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
-    height:310px!important;
-    max-height:310px!important;
-  }
-}
-@media(min-width:1181px) and (min-height:900px){
-  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
-    height:350px!important;
-    max-height:350px!important;
-  }
-}
-
-/* SPHERE v1.34.19 — show a useful live workload scan depth on desktop. */
-@media(min-width:1181px) and (min-height:720px){
-  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
-    height:360px!important;max-height:360px!important;
-    scrollbar-gutter:stable!important;
+    height:390px!important;
+    max-height:390px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkload th{font-size:8.5px!important}
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkload td{padding-top:6px!important;padding-bottom:6px!important}
 }
-
-/* SPHERE v1.34.20 — final live workload scan depth. */
-@media(min-width:1181px) and (min-height:720px){
- .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{height:390px!important;max-height:390px!important}
-}
 @media(min-width:1181px) and (min-height:900px){
- .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{height:430px!important;max-height:430px!important}
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+    height:430px!important;
+    max-height:430px!important;
+  }
 }
