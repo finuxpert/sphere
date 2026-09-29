@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 BASE_URL="${1:-https://sphere.astraotoparts.co.id/dev}"
 PYTHON="${SPHERE_DEV_PYTHON:-/opt/sphere-rundeck-dev/venv/bin/python}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+RELEASE_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 
 tmp_health="$(mktemp)"
 tmp_metrics="$(mktemp)"
@@ -40,7 +42,7 @@ grep -q '^sphere_collector_stale ' "$tmp_metrics"
 grep -q '^sphere_rundeck_execution_stuck ' "$tmp_metrics"
 grep -q '^sphere_watchdog_auto_abort_total ' "$tmp_metrics"
 
-"$PYTHON" - <<'PY'
+PYTHONPATH="$RELEASE_ROOT${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON" - <<'PY'
 from backend.rundeck_watchdog import watchdog_decision
 
 assert watchdog_decision(120, 1, 300, 600, 2) == "NORMAL"
