@@ -506,3 +506,94 @@ html[data-theme="light"] .rundeckExplorerState{color:#596c75!important;opacity:1
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues :is(td,th),
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-system-data :is(td,th){opacity:1!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckIssueNowV1231{color:#76570f!important}
+
+/* SPHERE v1.34.17 — chart-point details use a modal instead of expanding Server Trend. */
+.rundeckTrendPointModalBackdrop{
+  position:fixed;inset:0;z-index:1200;
+  display:flex;align-items:center;justify-content:center;
+  padding:28px;
+  background:rgba(11,20,25,.18);
+  backdrop-filter:blur(1.5px);
+}
+.rundeckTrendPointModal{
+  width:min(760px,72vw);
+  max-height:min(680px,calc(100vh - 56px));
+  overflow:hidden;
+  border:1px solid rgba(126,147,158,.24);
+  border-radius:10px;
+  background:var(--sphere-page,#0f151a);
+  box-shadow:0 18px 48px rgba(0,0,0,.30);
+}
+.rundeckTrendPointModalHeader{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  padding:13px 15px 11px;
+  border-bottom:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));
+}
+.rundeckTrendPointModalHeader>div{min-width:0}
+.rundeckTrendPointModalHeader span{
+  display:block;color:var(--sphere-accent,#4fc6c8);
+  font-size:8px;font-weight:800;letter-spacing:.05em;
+}
+.rundeckTrendPointModalHeader h4{
+  margin:3px 0 0;color:var(--sphere-text,#e7edf0);
+  font-size:13px;line-height:1.2;
+}
+.rundeckTrendPointModalHeader small{
+  display:block;margin-top:3px;color:var(--sphere-text-muted,#718089);font-size:9px;
+}
+.rundeckTrendPointModalHeader button{
+  width:28px;height:28px;display:inline-grid;place-items:center;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.16));
+  border-radius:6px;background:transparent;color:var(--sphere-text-secondary,#a9b5bb);
+  font:inherit;font-size:16px;cursor:pointer;
+}
+.rundeckTrendPointModalHeader button:hover,
+.rundeckTrendPointModalHeader button:focus-visible{
+  border-color:rgba(79,198,200,.38);
+  color:var(--sphere-text,#e7edf0);
+  outline:none;
+}
+.rundeckTrendPointModalBody{
+  max-height:calc(min(680px,100vh - 56px) - 70px);
+  overflow:auto;
+  padding:12px 14px 14px;
+}
+.rundeckTrendPointModal .rundeckRcaSection{margin:0!important;padding:0!important;border:0!important}
+.rundeckTrendPointModal .rundeckRcaHeader{margin-bottom:9px}
+.rundeckTrendPointModal .rundeckHistoricalSnapshot{
+  display:block!important;
+  margin:0!important;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12))!important;
+  border-radius:7px!important;
+  overflow:hidden!important;
+}
+.rundeckTrendPointModal .rundeckHistoricalSnapshotHead{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;
+  padding:9px 10px!important;cursor:default!important;
+}
+.rundeckTrendPointModal .rundeckHistoricalSnapshotHead::after{display:none!important}
+.rundeckTrendPointModal .rundeckSnapshotConsumers{
+  display:grid!important;gap:6px!important;
+  padding:8px 10px 10px!important;
+}
+.rundeckTrendPointModal .rundeckSnapshotConsumer{
+  min-height:38px!important;
+  padding:7px 9px!important;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))!important;
+  border-radius:5px!important;
+  background:rgba(126,147,158,.018)!important;
+}
+html[data-theme="light"] .rundeckTrendPointModalBackdrop{background:rgba(27,45,54,.12)}
+html[data-theme="light"] .rundeckTrendPointModal{
+  background:#fff!important;
+  border-color:rgba(45,63,72,.20)!important;
+  box-shadow:0 18px 42px rgba(33,49,57,.22)!important;
+}
+html[data-theme="light"] .rundeckTrendPointModalHeader h4{color:#172229!important}
+html[data-theme="light"] .rundeckTrendPointModalHeader small{color:#60717a!important}
+html[data-theme="light"] .rundeckTrendPointModalHeader button{color:#40535c!important;border-color:rgba(45,63,72,.18)!important}
+@media(max-width:760px){
+  .rundeckTrendPointModalBackdrop{padding:0;align-items:stretch}
+  .rundeckTrendPointModal{width:100%;max-height:none;border-radius:0}
+  .rundeckTrendPointModalBody{max-height:calc(100vh - 70px)}
+}

@@ -267,11 +267,11 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
     <div className="rundeckRcaHeader"><div><span>Trend Details</span><h4><SphereIcon name="target" /> {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.at ? `${formatWib(selected.at, true)} WIB · saved history` : 'Loading'}</small></div>{selectedRow && <span className={`rundeckInlineStatus is-${hostResourceState(selectedRow).toLowerCase()}`}>{hostResourceState(selectedRow)}</span>}</div>
     {loading && <div className="rundeckHistoryState">Loading saved history…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
-    {!loading && !error && selected && <details className="rundeckHistoricalSnapshot">
-      <summary className="rundeckHistoricalSnapshotHead">
+    {!loading && !error && selected && <div className="rundeckHistoricalSnapshot">
+      <div className="rundeckHistoricalSnapshotHead">
         <div><span>History at Selected Time</span><strong>{consumers[0]?.consumer_key ? `Top: ${consumers[0].consumer_key} · CPU ${numberText(consumers[0].cpu_pct, 1)}%` : `Top workloads observed on ${shortHost(selected.host)}`}</strong></div>
         <small>{consumers.length} item{consumers.length === 1 ? '' : 's'} · {collectionId ? `Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : 'Nearest saved run'}</small>
-      </summary>
+      </div>
       <div className="rundeckSnapshotConsumers">
         {consumers.map((consumer, index) => {
           const context = snapshotContext(selected, selectedRow, consumer)
@@ -286,7 +286,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
         })}
         {!consumers.length && <div className="rundeckSnapshotEmpty">No saved job or program data was found for this APP at this time.</div>}
       </div>
-    </details>}
+    </div>}
   </section>
 }
 
@@ -343,6 +343,28 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       })
   }, [])
 
+  const closeTrendDetails = React.useCallback(() => {
+    timelineRequestSequence.current += 1
+    setSelected(null)
+    setTimeline(null)
+    setTimelineLoading(false)
+    setTimelineError('')
+  }, [])
+
+  React.useEffect(() => {
+    if (!selected) return undefined
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') closeTrendDetails()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [closeTrendDetails, selected])
+
+  const openSelectedJob = React.useCallback((context) => {
+    closeTrendDetails()
+    onSelectJob?.(context)
+  }, [closeTrendDetails, onSelectJob])
+
   return <section className="rundeckServerTrendPanelV1234" aria-label="Server Trend">
     <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
     <div className="rundeckTrendToolbar"><div className="rundeckTrendGroup"><Segmented options={METRICS} value={metric} onChange={setMetric} ariaLabel="Performance metric" /></div><div className="rundeckTrendGroup"><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Time period" /></div>{!availabilityMetric && <div className="rundeckTrendGroup"><Segmented options={[["avg", "Avg"], ["max", "Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>}</div>
@@ -352,6 +374,17 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
     {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><AvailabilityCoverageBand trend={trend} /><CollectionGapBand trend={trend} /><AvailabilityObservationSummary trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} selectedHost={selectedJob?.host || ''} /></>}
     {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
-    <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={onSelectJob} />
+    {!selected && <div className="rundeckRcaHint">Click a chart point to inspect saved job and program data without expanding the page.</div>}
+    {selected && <div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
+      <section className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
+        <header className="rundeckTrendPointModalHeader">
+          <div><span>SPHERE ANALYSIS</span><h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.metricLabel || metricLabel(metric)} · {selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</small></div>
+          <button type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
+        </header>
+        <div className="rundeckTrendPointModalBody">
+          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} />
+        </div>
+      </section>
+    </div>}
   </section>
 }

@@ -67,7 +67,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.16', files.version.includes("APP_VERSION = '1.34.16'") && files.version.includes('monitoring-flow-ui-v1.34.16')],
+  ['monitoring flow version is v1.34.17', files.version.includes("APP_VERSION = '1.34.17'") && files.version.includes('monitoring-flow-ui-v1.34.17')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -99,7 +99,7 @@ const checks = [
   ['System Data moved out of inline disclosure into shared analysis drawer', !files.source.includes('rundeckSupportingDataDisclosure') && files.wrapper.includes("activeOverlay?.type === 'system-data'") && files.wrapper.includes('systemDataContent')],
   ['Current Workloads keeps explicit compact column allocation', files.currentWorkloadCss.includes('table-layout: fixed') && files.currentWorkloadCss.includes('nth-child(2)') && files.currentWorkloadCss.includes('width: 45%')],
   ['Current Workloads exposes multi-core CPU semantics and selected identity', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('CPU Total ↓') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Selected · {selectedContext}')],
-  ['Trend details keeps saved history collapsed by default', files.serverTrend.includes('Trend Details') && files.serverTrend.includes('History at Selected Time') && files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
+  ['Trend chart point opens a modal instead of expanding the live page', files.serverTrend.includes('rundeckTrendPointModalBackdrop') && files.serverTrend.includes('aria-modal="true"') && files.serverTrend.includes('closeTrendDetails') && !files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
   ['APP analysis and selected job/program contexts are explicitly named', files.wrapper.includes('SAP App Server Analysis') && files.appServerAnalysis.includes('Jobs & Programs on') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
   ['Observation History defaults to eight rows with explicit expansion', files.observationHistory.includes('rows.slice(0, 8)') && files.observationHistory.includes('View all ${rows.length}')],
   ['Observation History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
@@ -244,4 +244,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.16 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.17 monitoring flow and deep-analysis checks passed.')
