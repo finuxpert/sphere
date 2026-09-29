@@ -126,7 +126,8 @@ export default function RundeckInfrastructure({incidentStart=''}){
   const trendMax=selectedValues.length?Math.max(...selectedValues):null
   const trendChange=selectedValues.length>1?selectedValues.at(-1)-selectedValues[0]:null
   React.useEffect(()=>{
-    if(selectedSeries||!trend.length)return
+    if(!trend.length)return
+    if(selectedSeries&&trend.some((row)=>(row.series_key||'series')===selectedSeries))return
     const grouped=new Map()
     for(const row of trend){
       const key=row.series_key||'series'
@@ -221,7 +222,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
       <summary><span><b>Infrastructure History</b><small>Usage history for {host}</small></span><em>{selectedSeries||'Selecting…'} · {range.toUpperCase()}</em></summary>
       <header><div><p>History for the selected server.</p></div><div className="controls">
         <div>{['1h','6h','24h','7d','30d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
-        <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>{setTrendMetric(v);setSelectedSeries('')}}>{label}</button>)}</div>
+        <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>{setTrend([]);setTrendMetric(v);setSelectedSeries('')}}>{label}</button>)}</div>
       </div></header>
       {selectedSeries&&selectedValues.length>0&&<div className="rundeckInfraTrendSummary">
         <strong>Selected: {selectedSeries}</strong>
