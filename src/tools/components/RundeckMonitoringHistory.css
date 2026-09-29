@@ -749,3 +749,89 @@
   .rundeckCompactDetailRow{grid-template-columns:1fr}
   .rundeckSelectedCompact{align-items:flex-start;flex-direction:column}
 }
+
+/* SPHERE v1.34.4 — compact selected workload and neutral secondary actions. */
+.rundeckSelectedCompact{
+  display:grid;
+  grid-template-columns:minmax(180px,.9fr) minmax(300px,1.35fr) auto;
+  align-items:center;
+  gap:12px;
+}
+.rundeckSelectedCompactIdentity{min-width:0}
+.rundeckSelectedCompactIdentity strong{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckSelectedCompactIdentity small{
+  display:block;
+  margin-top:2px;
+  color:var(--sphere-text-muted,#718089);
+}
+.rundeckSelectedCompactMetrics{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  min-width:0;
+}
+.rundeckSelectedCompactMetrics span{
+  min-width:0;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;
+}
+.rundeckSelectedCompactMetrics b{
+  display:block;
+  margin-bottom:2px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.rundeckCompactDetailRow button{
+  border-color:rgba(126,147,158,.10);
+  background:rgba(126,147,158,.015);
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckCompactDetailRow button:hover,
+.rundeckCompactDetailRow button:focus-visible{
+  border-color:rgba(79,198,200,.22);
+  background:rgba(79,198,200,.035);
+  color:var(--sphere-accent,#4fc6c8);
+}
+.rundeckCompactDetailRow button em{
+  color:var(--sphere-text-muted,#718089);
+  font-size:12px;
+}
+.rundeckReviewReasonChips{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
+}
+.rundeckReviewReasonChips span{
+  padding:1px 5px;
+  border:1px solid rgba(126,147,158,.10);
+  border-radius:999px;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  background:transparent;
+  font-size:8px;
+  white-space:nowrap;
+}
+.rundeckIssueNowV1231{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.rundeckIssueNowV1231 i{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--sphere-text-muted,#718089);
+}
+.rundeckIssueNowV1231.is-attention i{background:var(--sphere-warning,#d8b35f)}
+.rundeckIssueNowV1231.is-critical i{background:var(--sphere-danger,#db7d86)}
+@media(max-width:1180px){
+  .rundeckSelectedCompact{grid-template-columns:1fr}
+  .rundeckSelectedCompactMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
