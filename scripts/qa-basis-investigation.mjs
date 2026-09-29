@@ -53,7 +53,7 @@ const files = {
 }
 
 const checks = [
-  ['visual hierarchy version is v1.34.4', files.version.includes("APP_VERSION = '1.34.4'") && files.version.includes('visual-hierarchy-ui-v1.34.4')],
+  ['selected context version is v1.34.5', files.version.includes("APP_VERSION = '1.34.5'") && files.version.includes('selected-context-ui-v1.34.5')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -95,6 +95,10 @@ const checks = [
   ['Selected job opens detail-on-demand drawer instead of page scroll', files.wrapper.includes("setActiveOverlay({ type: 'job' })") && !files.wrapper.includes('scrollToSelectedWorkload')],
   ['SM37 source is compact integration status instead of a fourth infrastructure card', files.liveOverview.includes('rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED') && !files.liveOverview.includes('rundeckLiveJobsCard')],
   ['Current selection carries live CPU memory process and Critical WP metrics', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('cpuPct: row.cpu_pct') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('criticalWp: row.host_wp_critical')],
+  ['Selected job context is enriched from the matching current workload row', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('onSelectedContext(context)') && files.source.includes('onSelectedContext={enrichSelectedJob}') && files.source.includes('return { ...current, ...context, pinned: current.pinned }')],
+  ['Current workload CPU warning color requires an explicit review or anomaly signal', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('hasReviewSignal(row)') && !read('src/tools/components/RundeckCurrentWorkload.jsx').includes("cpu >= 80 ? 'is-attention'")),
+  ['Review CPU chip uses compact Basis wording', read('src/tools/components/rundeckEvaluationExplain.js').includes("parts.push('High CPU')") && !read('src/tools/components/rundeckEvaluationExplain.js').includes("parts.push('High CPU usage')")),
+  ['Review chips remain readable at nine pixels', files.monitoringCss.includes('.rundeckReviewReasonChips span') && files.monitoringCss.includes('font-size:9px')],
   ['Review reasons render as compact signal chips', files.performanceReview.includes('evaluationReasonParts') && files.performanceReview.includes('rundeckReviewReasonChips') && files.monitoringCss.includes('.rundeckReviewReasonChips')],
   ['SAP Issues avoid repeated text severity badges', read('src/tools/components/RundeckSapIssues.jsx').includes('rundeckIssueNowV1231 is-') && !read('src/tools/components/RundeckSapIssues.jsx').includes('<InlineStatus value={severity} />')],
   ['Performance History drawer uses six primary columns without horizontal minimum width', files.observationHistory.includes('<th>Critical WP</th>') && files.workspaceDrawerCss.includes('.rundeckObservationHistoryV1234 table') && files.workspaceDrawerCss.includes('min-width:0')],
@@ -167,4 +171,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.4 visual hierarchy checks passed.')
+console.log('\nSPHERE v1.34.5 selected context checks passed.')
