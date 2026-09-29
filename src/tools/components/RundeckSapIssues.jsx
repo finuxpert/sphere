@@ -35,9 +35,6 @@ const durationText = (seconds) => {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
-function InlineStatus({ value = 'UNKNOWN' }) {
-  return <span className={`rundeckInlineStatus is-${String(value).toLowerCase()}`}>{value}</span>
-}
 
 export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
   const [data, setData] = React.useState(null)
@@ -122,7 +119,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
             >
               <td><strong>{shortHost(row.host || 'APP')}</strong></td>
               <td>{issueLabel(row.signal || row.code)}</td>
-              <td><span className="rundeckIssueNowV1231"><strong>{valueText(row.latest_value, row.unit)}</strong><InlineStatus value={severity} /></span></td>
+              <td><span className={`rundeckIssueNowV1231 is-${String(severity).toLowerCase()}`}><i aria-hidden="true" /><strong>{valueText(row.latest_value, row.unit)}</strong></span></td>
               <td>{valueText(row.peak_value, row.unit)}</td>
               <td>{durationText(row.duration_seconds)}</td>
             </tr>
