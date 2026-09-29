@@ -30,18 +30,6 @@ const metricLabelForTrend = (metric, fallback = 'Metric') => {
   return fallback
 }
 
-function scrollToSelectedWorkload() {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return
-  let frames = 0
-  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-  const navigate = () => {
-    frames += 1
-    if (frames < 4) return window.requestAnimationFrame(navigate)
-    document.querySelector('.rundeckJobHistory')?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
-  }
-  window.requestAnimationFrame(navigate)
-}
-
 export default function RundeckMonitoringHistory(props) {
   const { onTrendContext, onSelectJob, refreshToken, selectedJob } = props
   const focusSequence = React.useRef(0)
