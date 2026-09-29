@@ -5,6 +5,12 @@ import './RundeckEvidenceTimeline.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 
+function sourceLabel(value = '') {
+  if (value === 'Workload') return 'Job / Program'
+  if (value === 'Host') return 'APP Server'
+  return value || 'Unknown'
+}
+
 function alignmentClass(value = '') {
   const key = String(value || '').toLowerCase().replaceAll(' ', '-')
   return `is-${key || 'unknown'}`
@@ -71,10 +77,10 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         ? 'Fewer than two timestamped evidence sources are available.'
         : 'Cross-source timing status.'
 
-  return <section className="rundeckEvidenceTimeline" aria-label="Related events">
+  return <section className="rundeckEvidenceTimeline" aria-label="Correlated events">
     <div className="rundeckEvidenceSummary">
-      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Related Events</span>
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}</span>
+      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Correlated Events</span>
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'TIME ALIGNED' : state}</span>
       <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m time difference` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
     </div>
 
@@ -89,22 +95,22 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
             <span className={`rundeckEvidenceDot is-${String(event.source || '').toLowerCase().replaceAll(' ', '-')}`} />
             <div>
               <strong>{event.title}</strong>
-              <small>{event.source}{event.state ? ` · ${event.state}` : ''}</small>
+              <small>{sourceLabel(event.source)}{event.state ? ` · ${event.state}` : ''}</small>
             </div>
           </div>)}
           {!events.length && <div className="rundeckEvidenceState">No event found in this time window.</div>}
         </div>
 
         <details className="rundeckEvidenceTechnical">
-          <summary>Timing details</summary>
+          <summary>Correlation Timing</summary>
           <div className="rundeckEvidenceSources" aria-label="Source alignment">
             {alignment.sources?.map((source) => <span key={source.name}>
-              <b>{source.name}</b>
+              <b>{sourceLabel(source.name)}</b>
               <strong>{formatWib(source.observed_at, true)} WIB</strong>
               <em className={source.within_window ? 'is-aligned' : 'is-limited'}>{source.delta_minutes}m</em>
             </span>)}
             <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} records</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no saved history'}</em></span>
-            <span><b>Time Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>used to compare timestamps</em></span>
+            <span><b>Correlation Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>maximum timestamp difference used for correlation</em></span>
           </div>
           {interpretation.length > 0 && <div className="rundeckEvidenceInterpretation">
             <ul>{interpretation.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
