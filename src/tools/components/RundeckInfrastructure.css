@@ -175,3 +175,62 @@
 .rundeckInfraTrendSummary strong {
   min-width: 130px;
 }
+
+/* SPHERE v1.34.10 — infrastructure current/history split view for drawer analysis. */
+.rundeckInfraWorkspace{
+  display:grid;
+  grid-template-columns:minmax(330px,42fr) minmax(420px,58fr);
+  gap:10px;
+  align-items:start;
+}
+.rundeckInfraCurrent,
+.rundeckInfraTrendWorkspace{
+  min-width:0;
+}
+.rundeckInfraCurrentLabel{
+  margin:0 0 5px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.rundeckInfraTrendWorkspace{
+  margin-top:0;
+  padding:9px;
+}
+.rundeckInfraTrendWorkspaceHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:5px;
+}
+.rundeckInfraTrendWorkspaceHead>div{
+  min-width:0;
+}
+.rundeckInfraTrendWorkspaceHead b,
+.rundeckInfraTrendWorkspaceHead small{
+  display:block;
+}
+.rundeckInfraTrendWorkspaceHead b{
+  color:var(--sphere-text,#e7edf0);
+  font-size:11px;
+}
+.rundeckInfraTrendWorkspaceHead small,
+.rundeckInfraTrendWorkspaceHead em{
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.6px;
+  font-style:normal;
+}
+.rundeckInfraTrendWorkspace>header{
+  margin-top:0;
+}
+.rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:250px;
+}
+@media(max-width:980px){
+  .rundeckInfraWorkspace{
+    grid-template-columns:1fr;
+  }
+}
