@@ -6,7 +6,7 @@ export function evaluationReasonParts(row = {}, maxParts = 2) {
   const parts = []
 
   if (status === 'REVIEW REQUIRED') {
-    if (signals.sustained_high_cpu) parts.push('High CPU usage')
+    if (signals.sustained_high_cpu) parts.push('High CPU')
     else if (signals.high_memory) parts.push('High memory usage')
 
     if (signals.baseline_anomaly || row.anomaly_status === 'ABOVE BASELINE') parts.push('Above historical baseline')
