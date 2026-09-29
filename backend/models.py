@@ -38,6 +38,23 @@ class CaseUpdate(BaseModel):
     top_suspect: Optional[str] = None
 
 
+class AnalysisClosureInput(BaseModel):
+    consumer_type: str
+    consumer_key: str
+    host: Optional[str] = ""
+    period_key: Optional[str] = "1d"
+    window_start: Optional[str] = None
+    window_end: str
+    closing_status: str
+    finding: Optional[str] = ""
+    recommendation: Optional[str] = ""
+    owner: Optional[str] = ""
+    follow_up: Optional[str] = ""
+    metrics: Optional[dict] = None
+    evidence: Optional[dict] = None
+    created_by: Optional[str] = ""
+
+
 class ParsedResultCreate(BaseModel):
     tool: str
     verdict: Optional[str] = ""
