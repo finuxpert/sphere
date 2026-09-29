@@ -7,7 +7,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
-import { hostResourceState, overallOperationalState } from './rundeckStatusSemantics.js'
+import { overallOperationalState } from './rundeckStatusSemantics.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
 
@@ -394,16 +394,15 @@ export default function RundeckSource({ onCollection }) {
       y += 4
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.8)
-      const columns = [0, 34, 82, 112, 145, 180]
-      ;['APP', 'OS RESOURCE', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
+      const columns = [0, 52, 92, 136, 180]
+      ;['APP', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
       y += 4
       operationalHosts.slice(0, 5).forEach((host) => {
         pdf.text(shortHost(host.host), margin + columns[0], y)
-        pdf.text(hostResourceState(host), margin + columns[1], y)
-        pdf.text(metric(host.cpu_pct, '%'), margin + columns[2], y)
-        pdf.text(metric(host.ram_pct, '%'), margin + columns[3], y)
-        pdf.text(metric(host.io_wait_pct, '%'), margin + columns[4], y)
-        pdf.text(metric(host.wp_critical), margin + columns[5], y)
+        pdf.text(metric(host.cpu_pct, '%'), margin + columns[1], y)
+        pdf.text(metric(host.ram_pct, '%'), margin + columns[2], y)
+        pdf.text(metric(host.io_wait_pct, '%'), margin + columns[3], y)
+        pdf.text(metric(host.wp_critical), margin + columns[4], y)
         y += 4
       })
 
