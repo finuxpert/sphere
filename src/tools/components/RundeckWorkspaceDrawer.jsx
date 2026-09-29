@@ -1,7 +1,7 @@
 import React from 'react'
 import './RundeckWorkspaceDrawer.css'
 
-export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, actions = null }) {
+export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, actions = null, size = 'default' }) {
   React.useEffect(() => {
     const onKey = (event) => {
       if (event.key === 'Escape') onClose?.()
@@ -10,7 +10,7 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  return <aside className="rundeckWorkspaceDrawer" role="dialog" aria-modal="false" aria-label={title}>
+  return <aside className={`rundeckWorkspaceDrawer is-${size}`} role="dialog" aria-modal="false" aria-label={title}>
     <header>
       <div className="rundeckWorkspaceDrawerIdentity">
         <span>SPHERE Analysis</span>
