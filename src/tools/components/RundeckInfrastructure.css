@@ -123,3 +123,55 @@
   color: var(--sphere-text,#e7edf0);
   font-weight: 700;
 }
+
+/* SPHERE v1.33.9 — single-series infrastructure analysis and readable scale. */
+.rundeckInfraGrid tbody tr.is-history-selected {
+  background: rgba(79,198,200,.08);
+  box-shadow: inset 2px 0 0 var(--sphere-accent,#4fc6c8);
+}
+.rundeckInfraTrendDisclosure,
+.rundeckInfraTrendDisclosure[open] {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.rundeckInfraTrendDisclosure > summary {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.rundeckInfraTrendDisclosure > summary:focus-visible {
+  outline: 1px solid rgba(79,198,200,.55) !important;
+  outline-offset: 2px !important;
+}
+.rundeckInfraChartWrap .yTick line {
+  stroke: rgba(126,147,158,.08);
+  stroke-width: 1;
+}
+.rundeckInfraChartWrap .yTick text {
+  fill: var(--sphere-text-muted,#718089);
+  font-size: 8px;
+  text-anchor: end;
+}
+.rundeckInfraChartWrap .threshold line {
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.rundeckInfraChartWrap .threshold text {
+  font-size: 8px;
+  text-anchor: end;
+}
+.rundeckInfraChartWrap .threshold.is-warning line {
+  stroke: rgba(216,179,95,.55);
+}
+.rundeckInfraChartWrap .threshold.is-warning text {
+  fill: var(--sphere-warning,#d8b35f);
+}
+.rundeckInfraChartWrap .threshold.is-critical line {
+  stroke: rgba(219,125,134,.58);
+}
+.rundeckInfraChartWrap .threshold.is-critical text {
+  fill: var(--sphere-danger,#db7d86);
+}
+.rundeckInfraTrendSummary strong {
+  min-width: 130px;
+}
