@@ -995,3 +995,22 @@
   width: 100%;
   min-width: 0;
 }
+
+/* SPHERE v1.34.4 — supporting data should read as secondary navigation, not an alert. */
+.rundeckSupportingDataDisclosure > summary{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.rundeckSupportingDataDisclosure > summary:focus-visible{
+  outline:1px solid rgba(126,147,158,.30)!important;
+  outline-offset:2px!important;
+}
+.rundeckDataAlignment .rundeckStatus.is-aligned{
+  color:var(--sphere-text-muted,#718089)!important;
+  border-color:transparent!important;
+  background:transparent!important;
+  padding-left:0!important;
+  padding-right:0!important;
+}
