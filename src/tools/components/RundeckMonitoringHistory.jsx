@@ -6,6 +6,7 @@ import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
+import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -35,7 +36,7 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [monitoringMode, setMonitoringMode] = React.useState('live')
-  const [detailDrawer, setDetailDrawer] = React.useState(null)
+  const [activeOverlay, setActiveOverlay] = React.useState(null)
 
   const forwardTrendContext = React.useCallback((context = {}) => {
     const selectedMetric = String(context.metric || '')
@@ -45,14 +46,14 @@ export default function RundeckMonitoringHistory(props) {
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
     onSelectJob?.(job)
-    setDetailDrawer('job')
+    setActiveOverlay({ type: 'job' })
   }, [onSelectJob])
 
   const openJobInLive = React.useCallback((job) => {
     if (!job?.key) return
     setMonitoringMode('live')
     onSelectJob?.(job)
-    setDetailDrawer('job')
+    setActiveOverlay({ type: 'job' })
   }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
@@ -86,49 +87,68 @@ export default function RundeckMonitoringHistory(props) {
             onTrendContext={forwardTrendContext}
             operationalEvidenceContent={operationalEvidenceContent}
             appFocusRequest={appFocusRequest}
-            onOpenSelectedAnalysis={() => selectedJob?.key && setDetailDrawer('job')}
+            onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
           <section className="rundeckPerformanceReviewBand" aria-label="Jobs and programs to review">
-            <RundeckPerformanceReview refreshToken={refreshToken} selectedJob={selectedJob} onSelectJob={inspectJob} incidentStart={props.incidentStart || ''} />
+            <RundeckPerformanceReview
+              refreshToken={refreshToken}
+              selectedJob={selectedJob}
+              onSelectJob={inspectJob}
+              incidentStart={props.incidentStart || ''}
+              onOpenQuickAnalysis={(row, reviewContext) => setActiveOverlay({ type: 'review', row, reviewContext })}
+              externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
+            />
           </section>
           <section className="rundeckCompactDetailRow" aria-label="Additional analysis">
-            <button type="button" onClick={() => selectedJob?.key && setDetailDrawer('history')} disabled={!selectedJob?.key}>
+            <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history' })} disabled={!selectedJob?.key}>
               <SphereIcon name="history" />
               <span><b>Performance History</b><small>Open saved job/program observations</small></span>
               <em>Open</em>
             </button>
-            <button type="button" onClick={() => setDetailDrawer('infrastructure')}>
+            <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure' })}>
               <SphereIcon name="server" />
               <span><b>Infrastructure Analysis</b><small>Filesystem, network and storage history</small></span>
               <em>Open</em>
             </button>
           </section>
 
-          {detailDrawer === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
             title={selectedJob.key}
             subtitle="Job / Program Performance Analysis"
-            onClose={() => setDetailDrawer(null)}
+            onClose={() => setActiveOverlay(null)}
           >
             <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} />
           </RundeckWorkspaceDrawer>}
 
-          {detailDrawer === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
             title="Performance History"
             subtitle={selectedJob.key}
-            onClose={() => setDetailDrawer(null)}
+            onClose={() => setActiveOverlay(null)}
           >
             <RundeckObservationHistory job={selectedJob} refreshToken={refreshToken} onSelectJob={inspectJob} embedded />
           </RundeckWorkspaceDrawer>}
 
-          {detailDrawer === 'infrastructure' && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'infrastructure' && <RundeckWorkspaceDrawer
             title="Infrastructure Analysis"
             subtitle="Filesystem · Network · Storage I/O"
-            onClose={() => setDetailDrawer(null)}
+            onClose={() => setActiveOverlay(null)}
           >
             <RundeckInfrastructure incidentStart={props.incidentStart || ''} />
           </RundeckWorkspaceDrawer>}
+
+          {activeOverlay?.type === 'review' && activeOverlay.row && <RundeckReviewQuickAnalysis
+            row={activeOverlay.row}
+            reviewContext={activeOverlay.reviewContext}
+            refreshToken={refreshToken}
+            incidentStart={props.incidentStart || ''}
+            onClose={() => setActiveOverlay(null)}
+            onOpenFull={(job) => {
+              onSelectJob?.(job)
+              setActiveOverlay({ type: 'job' })
+            }}
+          />}
         </>}
   </>
 }
