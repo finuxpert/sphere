@@ -543,8 +543,13 @@ export default function RundeckSource({ onCollection }) {
     releaseState,
   ].map((value) => String(value || 'UNKNOWN').toUpperCase())
   const serviceNormalCount = serviceStates.filter((value) => value === 'NORMAL' || value === 'OK').length
+  const serviceNotConfiguredCount = serviceStates.filter((value) => value === 'NOT_CONFIGURED').length
   const serviceProblemCount = serviceStates.filter((value) => !['NORMAL', 'OK', 'NOT_CONFIGURED'].includes(value)).length
-  const serviceSummary = `${serviceNormalCount}/${serviceStates.length} normal${serviceProblemCount ? ` · ${serviceProblemCount} needs attention` : ''}`
+  const serviceSummary = [
+    `${serviceNormalCount} normal`,
+    serviceNotConfiguredCount ? `${serviceNotConfiguredCount} not configured` : '',
+    serviceProblemCount ? `${serviceProblemCount} needs attention` : '',
+  ].filter(Boolean).join(' · ')
   const appCount = latest?.received_hosts?.length || operationalHosts.length || 0
   const incidentStart = incidentSummary?.signal_active_since || incidentSummary?.detected_since || ''
   const latestCollectionAt = latest?.collection_time_wib || latest?.finished_at || ''
