@@ -14,6 +14,11 @@ function jobContext(row) {
     host: row.host || '',
     consumerType: row.consumer_type || '',
     source: 'current-workload',
+    cpuPct: row.cpu_pct ?? null,
+    memoryGb: pssGb(row),
+    processes: processCount(row.details || {}),
+    wp: wpText(row.details || {}),
+    criticalWp: row.host_wp_critical ?? null,
   }
 }
 
