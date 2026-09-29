@@ -196,7 +196,7 @@ function SingleSamplePerformance({ row }) {
   </div>
 }
 
-function UnifiedJobPerformanceChart({ items, incidentStart }) {
+function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) {
   const ref = React.useRef(null)
   const chartConfig = React.useMemo(() => {
     const colors = palette()
@@ -208,11 +208,11 @@ function UnifiedJobPerformanceChart({ items, incidentStart }) {
     const issueInRange = Number.isFinite(issueTs) && Number.isFinite(firstTs) && Number.isFinite(lastTs) && issueTs >= firstTs && issueTs <= lastTs
 
     const lanes = [
-      { id: 'cpu', name: 'CPU Usage %', height: 62 },
-      profile.hasPss ? { id: 'pss', name: 'PSS Memory GB', height: 42 } : null,
-      profile.hasIo ? { id: 'io', name: 'I/O MiB/s', height: 38 } : null,
-      profile.hasWp ? { id: 'wp', name: 'WP', height: profile.wpVariable ? 34 : 22 } : null,
-      profile.hasCritical ? { id: 'event', name: '', height: 16 } : null,
+      { id: 'cpu', name: 'CPU Usage %', height: expanded ? 104 : 62 },
+      profile.hasPss ? { id: 'pss', name: 'PSS Memory GB', height: expanded ? 64 : 42 } : null,
+      profile.hasIo ? { id: 'io', name: 'I/O MiB/s', height: expanded ? 58 : 38 } : null,
+      profile.hasWp ? { id: 'wp', name: 'WP', height: expanded ? (profile.wpVariable ? 48 : 34) : (profile.wpVariable ? 34 : 22) } : null,
+      profile.hasCritical ? { id: 'event', name: '', height: expanded ? 20 : 16 } : null,
     ].filter(Boolean)
 
     let top = 16
@@ -355,7 +355,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart }) {
         series,
       },
     }
-  }, [incidentStart, items])
+  }, [expanded, incidentStart, items])
 
   React.useEffect(() => {
     if (!ref.current) return undefined
@@ -379,7 +379,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart }) {
   </div>
 }
 
-export default function RundeckJobHistory({ job = null, refreshToken = '', incidentStart = '', latestCollectionId = '' }) {
+export default function RundeckJobHistory({ job = null, refreshToken = '', incidentStart = '', latestCollectionId = '', presentation = 'inline' }) {
   const [history, setHistory] = React.useState(null)
   const [resolvedJob, setResolvedJob] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
@@ -447,7 +447,9 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const displayType = workloadTypeLabel(displayConsumerType || latest?.consumer_type)
   const contextText = [appName, program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' · ')
 
-  return <section className="rundeckJobHistory" aria-label="Selected job or program performance" aria-busy={loading}>
+  const drawerPresentation = presentation === 'drawer'
+
+  return <section className={`rundeckJobHistory ${drawerPresentation ? 'is-drawer-presentation' : ''}`} aria-label="Selected job or program performance" aria-busy={loading}>
     <div className="rundeckJobHistoryHead">
       <div>
         <span>Selected Job / Program</span>
@@ -513,7 +515,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         {episodeItems.length === 1
           ? <SingleSamplePerformance row={episodeItems[0]} />
           : episodeItems.length > 1
-            ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} />
+            ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} expanded={drawerPresentation} />
             : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
       </details>
     </div>}
