@@ -400,6 +400,51 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
   </div>
 }
 
+function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
+  const ref = React.useRef(null)
+  const option = React.useMemo(() => {
+    const colors = palette()
+    const items = trend?.items || []
+    const cpuKey = mode === 'peak' ? 'peak_cpu_pct' : 'avg_cpu_pct'
+    const pssKey = mode === 'peak' ? 'peak_pss_gb' : 'avg_pss_gb'
+    const first = Date.parse(items[0]?.bucket || '')
+    const last = Date.parse(items.at(-1)?.bucket || '')
+    const issue = Date.parse(incidentStart || '')
+    const issueInRange = Number.isFinite(issue) && Number.isFinite(first) && Number.isFinite(last) && issue >= first && issue <= last
+    return {
+      backgroundColor:'transparent',
+      animationDuration:180,
+      textStyle:{color:colors.text},
+      grid:[{left:62,right:18,top:26,height:138},{left:62,right:18,top:196,height:78}],
+      xAxis:[
+        {type:'time',gridIndex:0,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:1,axisLabel:{color:colors.muted,fontSize:10},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+      ],
+      yAxis:[
+        {type:'value',gridIndex:0,name:'CPU %',nameTextStyle:{color:colors.secondary,fontSize:10},axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
+        {type:'value',gridIndex:1,name:'PSS GB',nameTextStyle:{color:colors.secondary,fontSize:10},axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
+      ],
+      tooltip:{trigger:'axis',confine:true,backgroundColor:colors.panel,borderWidth:0,textStyle:{color:colors.text,fontSize:10}},
+      series:[
+        {name:`${mode === 'peak' ? 'Peak' : 'Avg'} CPU`,type:'line',showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[cpuKey]]),lineStyle:{width:2},markLine:issueInRange?{symbol:'none',label:{formatter:'Issue start',color:colors.warning,fontSize:9},lineStyle:{color:colors.warning,type:'dashed'},data:[{xAxis:incidentStart}]}:undefined},
+        {name:`${mode === 'peak' ? 'Peak' : 'Avg'} PSS`,type:'line',xAxisIndex:1,yAxisIndex:1,showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[pssKey]]),lineStyle:{width:2}},
+      ],
+    }
+  },[incidentStart,mode,trend])
+  React.useEffect(()=>{
+    if(!ref.current)return undefined
+    echarts.getInstanceByDom?.(ref.current)?.dispose()
+    const chart=echarts.init(ref.current,null,{renderer:'canvas'})
+    chart.setOption(option,true)
+    const resize=()=>chart.resize()
+    window.addEventListener('resize',resize)
+    const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null
+    observer?.observe(ref.current)
+    return()=>{observer?.disconnect();window.removeEventListener('resize',resize);chart.dispose()}
+  },[option])
+  return <div ref={ref} className="rundeckJobHistoricalRangeChart" role="img" aria-label="Historical CPU and PSS performance trend" />
+}
+
 export default function RundeckJobHistory({ job = null, refreshToken = '', incidentStart = '', latestCollectionId = '', presentation = 'inline' }) {
   const [history, setHistory] = React.useState(null)
   const [resolvedJob, setResolvedJob] = React.useState(null)
