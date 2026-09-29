@@ -314,7 +314,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
       silent: true,
       symbol: ['none', 'none'],
       lineStyle: { color: colors.warning, type: 'dashed', width: 1, opacity: .62 },
-      label: { formatter: 'Issue start', color: colors.warning, fontSize: 8, padding: [0,0,3,0] },
+      label: { formatter: `Issue Started · ${formatWib(incidentStart, true)} WIB`, color: colors.warning, fontSize: 8, padding: [0,0,3,0] },
       data: [{ xAxis: incidentStart }],
     } : undefined
 
@@ -446,7 +446,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
     }
     const issueMark = issueInRange ? {
       symbol:'none',
-      label:{formatter:'Issue start',color:colors.warning,fontSize:9,padding:[0,0,3,0]},
+      label:{formatter:`Issue Started · ${formatWib(incidentStart,true)} WIB`,color:colors.warning,fontSize:9,padding:[0,0,3,0]},
       lineStyle:{color:colors.warning,type:'dashed',opacity:.62},
       data:[{xAxis:incidentStart}],
     } : undefined
@@ -462,7 +462,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
       xAxis:[
         {type:'time',gridIndex:0,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
         {type:'time',gridIndex:1,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
-        {type:'time',gridIndex:2,axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:2,min:first,max:last,axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,showMinLabel:true,showMaxLabel:true,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
       ],
       graphic:[
         {type:'text',left:64,top:8,silent:true,style:{text:'CPU %',fill:colors.secondary,font:'600 10px sans-serif'}},
@@ -496,8 +496,8 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
             `CPU ${mode === 'peak' ? 'peak' : 'avg'} <b>${cpu == null ? '—' : `${numberText(cpu,1)}%`}</b>`,
             `PSS ${mode === 'peak' ? 'peak' : 'avg'} <b>${pss == null ? '—' : `${numberText(pss,2)} GB`}</b>`,
             `Processes <b>${processes == null ? '—' : numberText(processes,mode === 'peak' ? 0 : 1)}</b>`,
-            `APP Critical WP <b>${critical}</b> · overlap <b>${criticalChecks} / ${checks} samples</b>`,
-            `Samples / checks <b>${Number(row.observations||0)} / ${checks}</b>`,
+            `Critical WP <b>${critical}</b> · during period <b>${criticalChecks} / ${checks} checks</b>`,
+            `Data points / checks <b>${Number(row.observations||0)} / ${checks}</b>`,
           ].join('<br/>')
         },
       },
@@ -639,9 +639,9 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     {error && <div className="rundeckJobHistoryState is-error">{error}</div>}
 
     {history && <div key={contentKey} className="rundeckJobHistoryContent">
-      <section className="rundeckJobEpisodeMatrix" aria-label="Selected episode and performance summary">
-        <div className="rundeckJobEpisodeGroupLabel is-episode">Selected Episode</div>
-        <div className="rundeckJobEpisodeGroupLabel is-performance">Episode Performance</div>
+      <section className="rundeckJobEpisodeMatrix" aria-label="Selected period and performance summary">
+        <div className="rundeckJobEpisodeGroupLabel is-episode">Selected Period</div>
+        <div className="rundeckJobEpisodeGroupLabel is-performance">Performance Summary</div>
         <div className="rundeckJobEpisodeMetrics">
           <span><b>First Seen</b>{formatWib(stats.firstSeen, true)} WIB</span>
           <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
@@ -674,7 +674,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Timing correlation only — not proof of root cause</small>
+        <small className="rundeckJobCorrelationDisclaimer">Same time period only — root cause is not confirmed</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
@@ -690,22 +690,22 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
               </div>}
             </div>
-            <small className="rundeckJobCurrentSemantics" title="Current = selected observation episode">Current = selected episode</small>
+            <small className="rundeckJobCurrentSemantics" title="Current shows the selected observation period">Current = selected period</small>
           </section>
 
           {range === 'current'
             ? <div className="rundeckJobPerformanceTitle">
-                <span title="Current = selected observation episode"><SphereIcon name="trend" /> Selected Episode Performance</span>
+                <span title="Current shows the selected observation period"><SphereIcon name="trend" /> Selected Period Performance</span>
                 <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
-                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP overlap · {profile.criticalSamples}/{profile.totalSamples} samples</em>}
+                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP during period · {profile.criticalSamples}/{profile.totalSamples} data points</em>}
               </div>
             : <div className="rundeckJobHistoricalSummary">
                 <span><b>Range</b>{range.toUpperCase()}</span>
-                <span><b>Samples</b>{historicalSummary?.checks ?? '—'}</span>
+                <span><b>Data Points</b>{historicalSummary?.checks ?? '—'}</span>
                 <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
                 <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
                 <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
-                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP Overlap</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} / ${historicalSummary.checks ?? 0} samples` : '—'}</span>
+                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP During Period</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} / ${historicalSummary.checks ?? 0} data points` : '—'}</span>
               </div>}
         </aside>
 
@@ -719,7 +719,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                     : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
               </div>
             : <div className="rundeckJobHistoricalRange">
-                <div className="rundeckJobHistoricalTitle"><strong>{historicalModeLabel} historical performance</strong><small>{historicalTrend?.bucket ? `${historicalTrend.bucket} buckets` : 'Retained observations'}</small></div>
+                <div className="rundeckJobHistoricalTitle"><strong>Performance History · {historicalModeLabel}</strong><small>{historicalTrend?.bucket ? `${historicalTrend.bucket} buckets` : 'Retained observations'}</small></div>
                 {rangeLoading && <div className="rundeckJobHistoryState">Loading {range.toUpperCase()} performance…</div>}
                 {rangeError && <div className="rundeckJobHistoryState is-error">{rangeError}</div>}
                 {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={incidentStart} /> : null}

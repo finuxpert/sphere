@@ -108,8 +108,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     {!error && data && <>
       <div className="rundeckSapIssuesSummaryStrip" aria-label="SAP issue summary">
         <span><b>Active Issues</b><strong>{activeCount}</strong></span>
-        <span><b>Highest WP Count</b><strong>{peakCriticalWp || '—'}</strong></span>
-        <span><b>Longest Active</b><strong>{longestActive ? durationText(longestActive) : '—'}</strong></span>
+        <span><b>Peak Critical WP</b><strong>{peakCriticalWp || '—'}</strong></span>
+        <span><b>Longest Duration</b><strong>{longestActive ? durationText(longestActive) : '—'}</strong></span>
       </div>
       <div className="rundeckSapIssuesTableWrap">
       <table className="rundeckSapIssuesTableV1231">

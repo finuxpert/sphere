@@ -57,6 +57,8 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart=''}){
   if(!items.length)return <div className="rundeckInfraEmpty">No history for selected range.</div>
   const issueTs=Date.parse(incidentStart||'')
   const issueInRange=Number.isFinite(issueTs)&&issueTs>=t0&&issueTs<=t1
+  const midTs=t0+((t1-t0)/2)
+  const xTicks=[t0,midTs,t1]
   return <div className="rundeckInfraChartWrap">
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Infrastructure trend">
       <line x1={pad} y1={height-pad} x2={width-pad} y2={height-pad} className="axis"/>
@@ -69,7 +71,11 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart=''}){
         <g className="threshold is-warning"><line x1={pad} y1={y(75)} x2={width-pad} y2={y(75)}/><text x={width-pad-4} y={y(75)-4}>Warn 75%</text></g>
         <g className="threshold is-critical"><line x1={pad} y1={y(90)} x2={width-pad} y2={y(90)}/><text x={width-pad-4} y={y(90)-4}>Crit 90%</text></g>
       </>}
-      {issueInRange&&<g className="issueMarker"><line x1={x(incidentStart)} y1={pad} x2={x(incidentStart)} y2={height-pad}/><text x={x(incidentStart)+4} y={pad+10}>Critical WP start</text></g>}
+      {issueInRange&&<g className="issueMarker"><line x1={x(incidentStart)} y1={pad} x2={x(incidentStart)} y2={height-pad}/><text x={x(incidentStart)+4} y={pad+10}>Critical WP Started · {formatTime(incidentStart)} WIB</text></g>}
+      {xTicks.map((tick,index)=><g key={tick} className="xTick">
+        <line x1={x(tick)} y1={height-pad} x2={x(tick)} y2={height-pad+4} className="axis"/>
+        <text x={x(tick)} y={height-7} textAnchor={index===0?'start':index===xTicks.length-1?'end':'middle'}>{formatTime(tick)} WIB</text>
+      </g>)}
       {groups.map(([key,rows],index)=>{
         const points=rows.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')
         const selected=!selectedSeries||key===selectedSeries

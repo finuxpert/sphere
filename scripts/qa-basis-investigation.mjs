@@ -71,7 +71,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.27', files.version.includes("APP_VERSION = '1.34.27'") && files.version.includes('monitoring-flow-ui-v1.34.27')],
+  ['monitoring flow version is v1.34.28', files.version.includes("APP_VERSION = '1.34.28'") && files.version.includes('monitoring-flow-ui-v1.34.28')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -191,16 +191,18 @@ const checks = [
   ['History drilldown preserves History mode instead of switching to Live Monitoring', files.wrapper.includes('const openJobFromHistory = React.useCallback') && files.wrapper.includes("setActiveOverlay({ type: 'history-job', job })") && files.wrapper.includes("activeOverlay?.type === 'history-job'") && files.wrapper.includes('Back to History')],
   ['Job Performance owns Current 3H 6H 24H 7D 30D ranges', files.jobHistory.includes("['current','Current']") && files.jobHistory.includes("['30d','30D']") && files.jobHistory.includes('HistoricalRangeChart')],
   ['Historical Job Performance supports Avg and Peak aggregation', files.jobHistory.includes("rangeMode==='avg'") && files.jobHistory.includes("rangeMode==='peak'")],
-  ['Job Performance separates selected episode from retained-range analysis', files.jobHistory.includes('Selected Episode') && files.jobHistory.includes('Performance Analysis') && files.jobHistory.includes('Current = selected episode')],
-  ['Historical Job Performance exposes Critical WP overlap lane and denominator', files.jobHistory.includes("name:'Critical WP'") && files.jobHistory.includes('Critical WP Overlap') && files.jobHistory.includes('critical_wp_checks') && files.jobHistory.includes('samples')],
-  ['Historical tooltip includes CPU PSS processes APP Critical WP and check counts', files.jobHistory.includes('Processes <b>') && files.jobHistory.includes('APP Critical WP <b>') && files.jobHistory.includes('Samples / checks') && files.jobHistory.includes('max_critical_wp')],
-  ['Timing correlation explicitly preserves RCA boundary', files.jobHistory.includes('Timing correlation only — not proof of root cause')],
+  ['Job Performance separates selected episode from retained-range analysis', files.jobHistory.includes('Selected Period') && files.jobHistory.includes('Performance Analysis') && files.jobHistory.includes('Current = selected period')],
+  ['Historical Job Performance exposes Critical WP overlap lane and denominator', files.jobHistory.includes("name:'Critical WP'") && files.jobHistory.includes('Critical WP During Period') && files.jobHistory.includes('critical_wp_checks') && files.jobHistory.includes('data points')],
+  ['Historical tooltip includes CPU PSS processes APP Critical WP and check counts', files.jobHistory.includes('Processes <b>') && files.jobHistory.includes('APP Critical WP <b>') && files.jobHistory.includes('Data points / checks') && files.jobHistory.includes('max_critical_wp')],
+  ['Timing correlation explicitly preserves RCA boundary', files.jobHistory.includes('Same time period only — root cause is not confirmed')],
   ['SAP Availability drawer shows technical checks directly without nested details', files.availability.includes('rundeckAvailabilitySummaryStrip') && files.availability.includes('Landscape Checks') && !files.availability.includes('<details className="rundeckAvailabilityMore"')],
   ['Drawer widths are content-aware for performance and operational detail', files.workspaceDrawer.includes("size = 'default'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-wide') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-medium')],
   ['Performance and APP detail drawers use viewport-capped content-aware geometry', files.wrapper.includes('size="performance"') && files.wrapper.includes('size="app-detail"') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 94px)') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-app-detail')],
   ['Availability and Analysis Menu use content-aware drawer modes', files.wrapper.includes('size="availability"') && files.wrapper.includes('size="menu"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-availability') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-menu')],
   ['Floating analysis drawers use four-side radius and restrained shadow', files.workspaceDrawerCss.includes('border-radius:10px') && files.workspaceDrawerCss.includes('box-shadow:-8px 10px 28px')],
   ['Job charts use adaptive WIB labels and explicit APP Critical WP lane labels', files.jobHistory.includes('chartAxisText') && files.jobHistory.includes("type:'text'") && files.jobHistory.includes("'APP Critical WP'") && files.jobHistory.includes("'WP Count'")],
+  ['History charts expose visible start/end time labels', files.jobHistory.includes('showMinLabel:true') && files.jobHistory.includes('showMaxLabel:true') && files.serverTrend.includes('showMinLabel: true') && files.serverTrend.includes('showMaxLabel: true') && files.infrastructure.includes('xTicks=[t0,midTs,t1]')],
+  ['Operator wording avoids analytics-heavy labels in core performance flow', files.jobHistory.includes('Selected Period') && files.jobHistory.includes('Performance Summary') && files.jobHistory.includes('Data Points') && files.evidenceTimeline.includes('SAME TIME WINDOW')],
   ['Selected episode shows Critical WP overlap denominator', files.jobHistory.includes('profile.criticalSamples') && files.jobHistory.includes('profile.totalSamples')],
   ['Light theme defines RDP-safe monitoring tokens', files.accessibilityThemeFinal.includes('--sphere-accent:#14747b') && files.accessibilityThemeFinal.includes('--sphere-positive:#287a55') && files.accessibilityThemeFinal.includes('--sphere-text-secondary:#3f515a')],
   ['ST03N honors the global light theme with shared readable surfaces', files.st03nTheme.includes('html[data-theme="light"] .rca26Shell') && files.st03nTheme.includes('--bg:#f4f7f8') && files.st03nTheme.includes('.rca26Table th')],
@@ -213,7 +215,7 @@ const checks = [
   ['Light theme swaps SPHERE logo and defines accessible surface tokens', files.sphereLogo.includes("theme === 'light'") && files.accessibilityTheme.includes('html[data-theme="light"]') && files.accessibilityTheme.includes('--sphere-page:#f4f7f8')],
   ['Accessibility theme loads after workspace CSS', files.main.indexOf("SphereWorkspacePerf2026.css") < files.main.indexOf("accessibility-theme-v13411.css")],
   ['Operator typography raises table and navigation font floors', files.accessibilityTheme.includes('font-size:10.6px!important') && files.accessibilityTheme.includes('font-size:12px!important')],
-  ['SAP Issues drawer exposes unambiguous operational summary', files.sapIssues.includes('Active Issues') && files.sapIssues.includes('Highest WP Count') && files.sapIssues.includes('Longest Active') && files.monitoringCss.includes('.rundeckSapIssuesSummaryStrip')],
+  ['SAP Issues drawer exposes unambiguous operational summary', files.sapIssues.includes('Active Issues') && files.sapIssues.includes('Peak Critical WP') && files.sapIssues.includes('Longest Duration') && files.monitoringCss.includes('.rundeckSapIssuesSummaryStrip')],
   ['Healthy SAP Availability uses compact summary mode', files.availability.includes('is-healthy-compact') && files.availabilityCss.includes('.rundeckAvailability.is-healthy-compact .rundeckAvailabilityBody')],
   ['Availability does not show cross-cycle timing gap while refresh is running', files.availability.includes("const bundleAbnormal = ['PARTIAL', 'FAILED'].includes(bundleState)")],
   ['Live investigation context stays compact and neutral', files.investigationContext.includes("'Active issue'") && files.investigationFlow.includes('.rundeckInvestigationContext.is-live') && files.investigationFlow.includes('background: transparent')],
@@ -230,7 +232,7 @@ const checks = [
   ['System Data distinguishes normal from not configured services', files.source.includes('serviceNotConfiguredCount') && files.source.includes('not configured')],
   ['System Data drawer uses tabbed full-width panels', files.systemDataCss.includes('.rundeckSystemDataTabs') && files.systemDataCss.includes('.rundeckSystemDataTableWrap') && files.systemDataCss.includes('width:100%')],
   ['Aligned workload evidence stays visually subdued', files.evidenceCss.includes('.rundeckEvidenceAlignment.is-aligned') && files.evidenceCss.includes('opacity: .82')],
-  ['Stale availability freshness is consolidated without duplicate data-age row', files.availability.includes('m old · last reliable') && files.availability.includes('const showDataTrust = Boolean(collectionNotice || showCollectionGap)') && !files.availability.includes('Data age {availabilityAge}m')],
+  ['Stale availability freshness is consolidated without duplicate data-age row', files.availability.includes('Last check ${availabilityAge}m ago') && files.availability.includes('const showDataTrust = Boolean(collectionNotice || showCollectionGap)') && !files.availability.includes('Data age {availabilityAge}m')],
   ['SM37 execution schema is authoritative and separate from WP sampling', files.migration.includes('sap_job_executions') && files.intelligence.includes('never promoted to an authoritative')],
   ['SM37 import supports dry run before apply', files.importer.includes('MODE=DRY-RUN') && files.importer.includes('--apply')],
   ['SM37 HTTP import is disabled by default and secret protected', files.api.includes('SPHERE_SM37_IMPORT_ENABLED') && files.api.includes('SPHERE_SM37_IMPORT_TOKEN') && files.api.includes('secrets.compare_digest') && files.api.includes('5000 records')],
@@ -254,7 +256,7 @@ const checks = [
   ['Availability missing observations are never inferred as DOWN', files.availabilityBackend.includes('Missing observations are UNKNOWN/NO OBSERVATION and are never inferred as DOWN.')],
   ['Availability cadence uses retained execution timing with drift tolerance', files.availabilityBackend.includes('from statistics import median') && files.availabilityBackend.includes('SPHERE_AVAILABILITY_GAP_FACTOR') && files.availabilityBackend.includes('cadence_snapshots')],
   ['Availability exposes coverage start and observed uptime', files.serverTrend.includes('AvailabilityCoverageBand') && files.serverTrend.includes('AvailabilityObservationSummary') && files.availabilityBackend.includes('coverage_limited') && files.availabilityBackend.includes('"uptime": uptime')],
-  ['Long range trend axes use WIB date labels', files.serverTrend.includes('formatTrendAxis') && files.serverTrend.includes("range === '30d' || range === '7d'") && files.serverTrend.includes("range === '24h'")],
+  ['Long range trend axes use WIB date labels', files.serverTrend.includes('formatTrendAxis') && files.serverTrend.includes("range === '30d' || range === '7d'") && files.serverTrend.includes("range === '24h'") && files.serverTrend.includes('showMinLabel: true') && files.serverTrend.includes('showMaxLabel: true')],
   ['HANA and technical availability preserve category-specific labels', files.availabilityBackend.includes('HANA System DB Availability') && files.availabilityBackend.includes('HANA Replication Availability') && files.availabilityBackend.includes('Web Dispatcher Availability')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
@@ -276,4 +278,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.27 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.28 monitoring flow and deep-analysis checks passed.')

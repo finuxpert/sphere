@@ -140,7 +140,7 @@ function TrendFreshness({ trend }) {
   const staleMinutes = Math.max(1, Number(trend?.stale_after_minutes || 20))
   if (!Number.isFinite(latest) || Date.now() - latest < staleMinutes * 60 * 1000) return null
   const ageMinutes = Math.max(1, Math.floor((Date.now() - latest) / 60000))
-  return <div className="rundeckHistoryState">STALE · historical data only · last collection {formatWib(trend.latest_collection_at, true)} WIB · {ageMinutes}m ago</div>
+  return <div className="rundeckHistoryState">Last collection {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
 }
 
 function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
@@ -163,8 +163,24 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
       legend: { top: 0, type: 'scroll', itemWidth: 14, itemHeight: 8, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 9 } },
       grid: { left: 52, right: 58, top: 38, bottom: compactPoints ? 28 : 43 },
-      tooltip: { trigger: 'axis', confine: true, backgroundColor: colors.panel, borderWidth: 0, textStyle: { color: colors.text, fontSize: 10 } },
-      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      tooltip: {
+        trigger: 'axis',
+        confine: true,
+        backgroundColor: colors.panel,
+        borderWidth: 0,
+        textStyle: { color: colors.text, fontSize: 10 },
+        formatter: (points = []) => {
+          if (!points.length) return ''
+          const at = points[0]?.axisValue
+          const lines = [`<b>${formatWib(at, true)} WIB</b>`]
+          points.filter((point) => point?.data?.value?.[1] !== null && point?.data?.value?.[1] !== undefined).forEach((point) => {
+            const value = point.data.value[1]
+            lines.push(`${point.marker || ''}${point.seriesName} <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b>`)
+          })
+          return lines.join('<br/>')
+        },
+      },
+      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, showMinLabel: true, showMaxLabel: true, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
