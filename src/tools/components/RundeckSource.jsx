@@ -45,6 +45,17 @@ const ageLabel = (minutes) => {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
+const durationText = (seconds) => {
+  const value = Number(seconds)
+  if (!Number.isFinite(value) || value < 0) return '—'
+  if (value < 60) return `${Math.round(value)}s`
+  const minutes = Math.floor(value / 60)
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours}h ${rest}m` : `${hours}h`
+}
+
 const formatBytes = (value) => {
   const bytes = Number(value)
   if (!Number.isFinite(bytes) || bytes < 0) return '—'
