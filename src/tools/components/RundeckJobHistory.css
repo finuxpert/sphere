@@ -723,3 +723,25 @@
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+/* SPHERE v1.34.12 — historical ranges live in Job Performance itself. */
+.rundeckJobPerformanceRange{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 7px}
+.rundeckJobRangeTabs,.rundeckJobRangeMode{display:flex;align-items:center;gap:3px;padding:2px;border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));border-radius:6px;background:rgba(126,147,158,.025)}
+.rundeckJobRangeTabs button,.rundeckJobRangeMode button{min-height:30px;padding:4px 8px;border:0;border-radius:4px;background:transparent;color:var(--sphere-text-muted,#718089);font-size:10px;font-weight:700;cursor:pointer}
+.rundeckJobRangeTabs button.is-active,.rundeckJobRangeMode button.is-active{background:rgba(79,198,200,.10);color:var(--sphere-text,#e7edf0)}
+.rundeckJobPerformanceDisclosure.is-direct{border:0}
+.rundeckJobPerformanceTitle{display:flex;align-items:center;gap:9px;padding:5px 0 7px;border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));color:var(--sphere-text-secondary,#a9b5bb)}
+.rundeckJobPerformanceTitle>span{font-weight:750;color:var(--sphere-text,#e7edf0)}
+.rundeckJobPerformanceTitle small{font-size:10px}
+.rundeckJobPerformanceTitle em{margin-left:auto;color:var(--sphere-warning,#d8b35f);font-size:9.5px;font-style:normal;font-weight:700}
+.rundeckJobHistoricalSummary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;margin:6px 0 9px;border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));border-radius:6px;overflow:hidden;background:rgba(126,147,158,.05)}
+.rundeckJobHistoricalSummary span{padding:7px 8px;background:var(--sphere-page,#0f151a);color:var(--sphere-text-secondary,#a9b5bb);font-size:10.5px}
+.rundeckJobHistoricalSummary b{display:block;margin-bottom:2px;color:var(--sphere-text-muted,#718089);font-size:9.5px;text-transform:uppercase}
+.rundeckJobHistoricalTitle{display:flex;align-items:center;justify-content:space-between;margin:7px 0 4px}
+.rundeckJobHistoricalTitle strong{font-size:11.5px}.rundeckJobHistoricalTitle small{color:var(--sphere-text-muted,#718089);font-size:9.5px}
+.rundeckJobHistoricalRangeChart{width:100%;height:310px}
+@media(max-width:780px){
+  .rundeckJobPerformanceRange{align-items:flex-start;flex-direction:column}
+  .rundeckJobRangeTabs{flex-wrap:wrap}
+  .rundeckJobHistoricalSummary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
