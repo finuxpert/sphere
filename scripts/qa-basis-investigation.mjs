@@ -117,7 +117,7 @@ const checks = [
   ['Workspace drawer exposes Back without replacing Close', files.workspaceDrawer.includes('onBack = null') && files.workspaceDrawer.includes('rundeckWorkspaceBack') && files.workspaceDrawer.includes('rundeckWorkspaceClose')],
   ['APP to Job navigation keeps a return target inside the drawer', files.wrapper.includes("returnTo: { type: 'app', app: activeOverlay.app }") && files.wrapper.includes("activeOverlay.returnTo?.type === 'app'")],
   ['Review to Job navigation can return to review analysis', files.wrapper.includes("returnTo: { type: 'review', row: activeOverlay.row, reviewContext: activeOverlay.reviewContext }") && files.wrapper.includes("'Back to Review'" )],
-  ['Performance History drilldown can return without closing analysis', files.wrapper.includes("returnTo: { type: 'history' }") && files.wrapper.includes("'Back to Performance History'")],
+  ['Performance History drilldown preserves its own return stack', files.wrapper.includes('setActiveOverlay({ type: \'job\', returnTo: activeOverlay })') && files.wrapper.includes("'Back to Performance History'")],
   ['Drawer Back control has compact header styling', files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawerHeaderActions') && files.workspaceDrawerCss.includes('.rundeckWorkspaceBack')],
   ['Analysis Menu exists inside the same drawer', files.wrapper.includes("activeOverlay?.type === 'menu'") && files.wrapper.includes('rundeckDrawerAnalysisMenu') && files.wrapper.includes('Analysis Menu')],
   ['Performance History can return to Analysis Menu without closing', files.wrapper.includes("type: 'history', returnTo: { type: 'menu' }") && files.wrapper.includes("'Back to Analysis Menu'")],
