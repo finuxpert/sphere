@@ -14,6 +14,9 @@ const files = {
   performanceReview: read('src/tools/components/RundeckPerformanceReview.jsx'),
   quickAnalysis: read('src/tools/components/RundeckReviewQuickAnalysis.jsx'),
   quickAnalysisCss: read('src/tools/components/RundeckReviewQuickAnalysis.css'),
+  monitoringCss: read('src/tools/components/RundeckMonitoringHistory.css'),
+  liveOverview: read('src/tools/components/RundeckLiveOverview.jsx'),
+  liveOverviewCss: read('src/tools/components/RundeckLiveOverview.css'),
   closingBackend: read('backend/rundeck_closing.py'),
   closingMigration: read('backend/db/migrations/versions/20260929_0007_rundeck_analysis_closures.py'),
   evaluationBackend: read('backend/rundeck_evaluation.py'),
@@ -50,7 +53,7 @@ const files = {
 }
 
 const checks = [
-  ['single-overlay version is v1.34.3', files.version.includes("APP_VERSION = '1.34.3'") && files.version.includes('single-overlay-ui-v1.34.3')],
+  ['visual hierarchy version is v1.34.4', files.version.includes("APP_VERSION = '1.34.4'") && files.version.includes('visual-hierarchy-ui-v1.34.4')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -83,13 +86,21 @@ const checks = [
   ['Performance History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
   ['Selected job performance opens by default for each selected context', files.jobHistory.includes('key={`performance-${contentKey}`}') && files.jobHistory.includes('className="rundeckJobPerformanceDisclosure" open')],
   ['Selected job header exposes JOB or PROGRAM badge', files.jobHistory.includes('rundeckJobTypeBadge') && files.jobHistory.includes('displayType')],
-  ['Selected job inline panel is compact and launches Performance Analysis', files.core.includes('rundeckSelectedCompact') && files.core.includes('Open Performance Analysis') && !files.core.includes('<RundeckJobHistory')],
+  ['Selected job inline panel is compact and launches Performance Analysis', files.core.includes('rundeckSelectedCompact') && files.core.includes('Analyze Performance') && files.core.includes('rundeckSelectedCompactMetrics') && !files.core.includes('<RundeckJobHistory')],
   ['Performance History and Infrastructure launch from compact detail row', files.wrapper.includes('rundeckCompactDetailRow') && files.wrapper.includes("setActiveOverlay({ type: 'history' })") && files.wrapper.includes("setActiveOverlay({ type: 'infrastructure' })")],
   ['Generic analysis drawer supports escape close and responsive full width', files.workspaceDrawer.includes("event.key === 'Escape'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer') && files.workspaceDrawerCss.includes('@media(max-width:1180px)')],
   ['Only one analysis overlay is controlled by the workspace', files.wrapper.includes('const [activeOverlay, setActiveOverlay]') && files.wrapper.includes("activeOverlay?.type === 'review'") && files.wrapper.includes("activeOverlay?.type === 'history'") && files.wrapper.includes("activeOverlay?.type === 'infrastructure'")],
   ['Performance Review delegates its drawer to the central overlay manager', files.performanceReview.includes('onOpenQuickAnalysis') && files.performanceReview.includes('externalQuickKey') && files.performanceReview.includes('!onOpenQuickAnalysis && quickRow')],
   ['Opening a new analysis replaces the previous overlay instead of stacking', !files.wrapper.includes('detailDrawer') && files.wrapper.includes("setActiveOverlay({ type: 'job' })") && files.wrapper.includes("setActiveOverlay({ type: 'review', row, reviewContext })")],
   ['Selected job opens detail-on-demand drawer instead of page scroll', files.wrapper.includes("setActiveOverlay({ type: 'job' })") && !files.wrapper.includes('scrollToSelectedWorkload')],
+  ['SM37 source is compact integration status instead of a fourth infrastructure card', files.liveOverview.includes('rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED') && !files.liveOverview.includes('rundeckLiveJobsCard')],
+  ['Current selection carries live CPU memory process and Critical WP metrics', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('cpuPct: row.cpu_pct') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('criticalWp: row.host_wp_critical')],
+  ['Review reasons render as compact signal chips', files.performanceReview.includes('evaluationReasonParts') && files.performanceReview.includes('rundeckReviewReasonChips') && files.monitoringCss.includes('.rundeckReviewReasonChips')],
+  ['SAP Issues avoid repeated text severity badges', read('src/tools/components/RundeckSapIssues.jsx').includes('rundeckIssueNowV1231 is-') && !read('src/tools/components/RundeckSapIssues.jsx').includes('<InlineStatus value={severity} />')],
+  ['Performance History drawer uses six primary columns without horizontal minimum width', files.observationHistory.includes('<th>Critical WP</th>') && files.workspaceDrawerCss.includes('.rundeckObservationHistoryV1234 table') && files.workspaceDrawerCss.includes('min-width:0')],
+  ['Job drawer hides duplicate inner selected-job header', files.workspaceDrawerCss.includes('.rundeckJobHistoryHead') && files.workspaceDrawerCss.includes('display:none')],
+  ['Infrastructure drawer gives Filesystem a full-width row', files.workspaceDrawerCss.includes('.rundeckInfraGrid article:first-child') && files.workspaceDrawerCss.includes('grid-column:1/-1')],
+  ['Healthy aligned data and System Data focus chrome are visually subdued', files.sourceCss.includes('.rundeckStatus.is-aligned') && files.sourceCss.includes('border-color:transparent!important') && files.sourceCss.includes('outline:1px solid rgba(126,147,158,.30)')],
   ['SAP Job Check is limited to JOB context and compact while disconnected', files.jobHistory.includes("toUpperCase() === 'JOB' && <details") && files.jobHistory.includes('rundeckSm37Verification is-compact')],
   ['operator copy uses jobs and programs instead of generic workload labels', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Current Jobs & Programs') && files.performanceReview.includes('Jobs & Programs to Review') && read('src/tools/components/RundeckJobHistory.jsx').includes('Selected Job / Program')],
   ['performance history uses plain record wording', read('src/tools/components/RundeckObservationHistory.jsx').includes('Performance History') && read('src/tools/components/RundeckObservationHistory.jsx').includes('records')],
@@ -156,4 +167,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.3 single-overlay checks passed.')
+console.log('\nSPHERE v1.34.4 visual hierarchy checks passed.')
