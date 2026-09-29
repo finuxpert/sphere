@@ -105,7 +105,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
             <span className={`rundeckEvidenceDot is-${String(event.source || '').toLowerCase().replaceAll(' ', '-')}`} />
             <div>
               <strong>{event.title}</strong>
-              <small>{sourceLabel(event.source)}{event.state ? ` · ${event.state}` : ''}</small>
+              <small>{sourceLabel(event.source)}{event.state && <span className={`rundeckEvidenceStateChip is-${String(event.state).toLowerCase().replaceAll(' ','-')}`}>{event.state}</span>}</small>
             </div>
           </div>)}
           {!events.length && <div className="rundeckEvidenceState">No event found in this time window.</div>}

@@ -222,7 +222,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'system-data' && systemDataContent && <RundeckWorkspaceDrawer
             title="System Data"
-            size="medium"
+            size="system-data"
             subtitle={systemDataSummary || 'Collection History · SPHERE Services'}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
@@ -233,6 +233,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'evidence' && <RundeckWorkspaceDrawer
             title="Correlated Events"
+            size="evidence"
             subtitle="Operational evidence and timing correlation"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
@@ -258,7 +259,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'issues' && <RundeckWorkspaceDrawer
             title="SAP Issues"
-            size="medium"
+            size="issues"
             subtitle="Active SAP issues"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}

@@ -293,7 +293,7 @@ export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJ
       <aside className="rundeckExplorerResults">
         <div className="rundeckExplorerResultsHead"><strong>Jobs and Programs</strong><span>{searchLoading ? 'Searching…' : `${results.length} result${results.length === 1 ? '' : 's'}`}</span></div>
         {searchError && <div className="rundeckExplorerState is-error">{searchError}</div>}
-        {!searchError && query.trim().length < 2 && <div className="rundeckExplorerState">Type at least 2 characters to search Job and Program history.</div>}
+        {!searchError && query.trim().length < 2 && <div className="rundeckExplorerState rundeckExplorerEmptyState"><SphereIcon name="search" /><strong>Search historical jobs and programs</strong><span>Type at least 2 characters to find retained performance observations.</span></div>}
         {!searchError && query.trim().length >= 2 && !searchLoading && !results.length && <div className="rundeckExplorerState">No observed Job or Program matches this search.</div>}
         <div className="rundeckExplorerResultList">
           {results.map((row) => {
@@ -307,7 +307,7 @@ export default function RundeckWorkloadExplorer({ refreshToken = '', onOpenLiveJ
       </aside>
 
       <section className="rundeckExplorerDetail">
-        {!selected && <div className="rundeckExplorerState">Select a Job or Program to view performance history.</div>}
+        {!selected && <div className="rundeckExplorerState rundeckExplorerEmptyState is-detail"><SphereIcon name="history" /><strong>Select a Job or Program</strong><span>Choose a search result to review CPU, memory, process and Critical WP history.</span></div>}
         {selected && <>
           <div className="rundeckExplorerDetailHead">
             <div>

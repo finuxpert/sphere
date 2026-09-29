@@ -67,9 +67,14 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.15', files.version.includes("APP_VERSION = '1.34.15'") && files.version.includes('monitoring-flow-ui-v1.34.15')],
+  ['monitoring flow version is v1.34.16', files.version.includes("APP_VERSION = '1.34.16'") && files.version.includes('monitoring-flow-ui-v1.34.16')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
+  ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
+  ['Evidence Issues and System Data use content-aware drawer modes', files.wrapper.includes('size="evidence"') && files.wrapper.includes('size="issues"') && files.wrapper.includes('size="system-data"') && files.accessibilityThemeFinal.includes('.is-evidence,.is-issues,.is-system-data')],
+  ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
+  ['Job Performance drawer reserves extra vertical chart space', files.accessibilityThemeFinal.includes('.rundeckJobPerformanceChart{min-height:390px') && files.accessibilityThemeFinal.includes('.rundeckJobHistoricalRangeChart{height:370px')],
+  ['SAP Job Source renders as a visible neutral integrity strip', files.accessibilityThemeFinal.includes('.rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
   ['SAP App Servers and Server Trend preserve 35/65 layout', files.workspace.includes('.rundeckServerTrendBandV1235 {') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['Current Workloads and Selected Workload preserve 38/62 layout', files.workspace.includes('.rundeckWorkloadBandV1235 {') && files.workspace.includes('grid-template-columns: minmax(0, 38fr) minmax(0, 62fr)')],
@@ -239,4 +244,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.15 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.16 monitoring flow and deep-analysis checks passed.')
