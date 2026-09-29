@@ -7,13 +7,13 @@ import './RundeckReviewQuickAnalysis.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const STATUSES = [
-  ['NORMAL_EXPECTED', 'Normal / Expected'],
-  ['OBSERVE', 'Observe'],
-  ['OPTIMIZATION_NEEDED', 'Optimization Needed'],
-  ['SCHEDULE_REVIEW', 'Schedule Review'],
-  ['INFRA_CORRELATED', 'Infra Correlated'],
+  ['NORMAL_EXPECTED', 'Expected / No Action'],
+  ['OBSERVE', 'Monitor'],
+  ['OPTIMIZATION_NEEDED', 'Program Optimization Required'],
+  ['SCHEDULE_REVIEW', 'Job Schedule Review'],
+  ['INFRA_CORRELATED', 'Infrastructure Correlation'],
   ['SAP_CAPACITY_REVIEW', 'SAP Capacity Review'],
-  ['NEEDS_FURTHER_RCA', 'Needs Further RCA'],
+  ['NEEDS_FURTHER_RCA', 'Further RCA Required'],
   ['RESOLVED', 'Resolved'],
 ]
 
@@ -23,26 +23,26 @@ const gb = (value) => value === null || value === undefined ? '—' : `${numberT
 function suggestedFinding(row = {}) {
   const parts = []
   const signals = row.signals || {}
-  if (signals.sustained_high_cpu) parts.push('High CPU was repeatedly observed during the selected review window.')
-  else if (signals.cpu_spike) parts.push('A CPU peak was observed during the selected review window.')
-  if (signals.high_memory) parts.push('Memory usage was also above the review range.')
-  if (signals.performance_shift || signals.increasing) parts.push('Recent CPU usage increased compared with the preceding window.')
-  if (signals.critical_wp_correlated || signals.wp_excess_association) parts.push('Critical WP was observed in the same time window.')
-  if (signals.baseline_anomaly) parts.push('The workload was above its retained historical baseline.')
-  if (!parts.length) parts.push('The job or program met the performance review criteria for this period.')
-  parts.push('These observations identify a review target and do not by themselves prove root cause.')
+  if (signals.sustained_high_cpu) parts.push('Sustained high CPU was observed during the selected review period.')
+  else if (signals.cpu_spike) parts.push('A CPU spike was observed during the selected review period.')
+  if (signals.high_memory) parts.push('Memory usage was above the normal range for this job or program.')
+  if (signals.performance_shift || signals.increasing) parts.push('CPU usage increased compared with the previous review period.')
+  if (signals.critical_wp_correlated || signals.wp_excess_association) parts.push('Critical Work Process activity overlapped with this job or program.')
+  if (signals.baseline_anomaly) parts.push('Performance was above the retained historical baseline.')
+  if (!parts.length) parts.push('This job or program met the configured performance review criteria.')
+  parts.push('This is a performance correlation, not a confirmed root cause.')
   return parts.join(' ')
 }
 
 function suggestedRecommendation(row = {}) {
   const signals = row.signals || {}
   if (signals.sustained_high_cpu || signals.high_memory || signals.baseline_anomaly) {
-    return 'Review program processing logic and execution characteristics with the application or ABAP owner. Recheck CPU, memory, duration and Critical WP after the next execution.'
+    return 'Review the program logic, execution duration and data volume with the ABAP or application owner. Validate CPU, memory and Critical WP again on the next execution.'
   }
   if (signals.performance_shift || signals.increasing) {
-    return 'Review the recent workload change and compare it with prior executions. Validate again after the next scheduled run.'
+    return 'Compare this execution with previous runs and review any recent program, variant, data-volume or scheduling changes. Validate again on the next run.'
   }
-  return 'Continue observation and validate the next execution before closing the performance review.'
+  return 'Monitor the next execution and compare CPU, memory, duration and Critical WP before closing the review.'
 }
 
 function defaultStatus(row = {}) {
@@ -127,7 +127,7 @@ export default function RundeckReviewQuickAnalysis({
           owner: 'ABAP / Application',
           follow_up: 'Validate the next execution and compare CPU, memory, duration and Critical WP.',
         })
-        setSaveMessage(error.message || 'Closing storage unavailable')
+        setSaveMessage(error.message || 'Analysis result storage unavailable')
       })
       .finally(() => {
         if (!controller.signal.aborted) setClosingLoading(false)
@@ -189,9 +189,9 @@ export default function RundeckReviewQuickAnalysis({
       const body = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(body.detail || `Save failed (${response.status})`)
       setClosing(body.item || null)
-      setSaveMessage('Closing saved')
+      setSaveMessage('Analysis saved')
     } catch (error) {
-      setSaveMessage(error.message || 'Closing save failed')
+      setSaveMessage(error.message || 'Analysis save failed')
     } finally {
       setSaving(false)
     }
@@ -200,20 +200,20 @@ export default function RundeckReviewQuickAnalysis({
   return <aside className="rundeckQuickAnalysisDrawer" aria-label="Quick performance analysis" ref={drawerRef} tabIndex={-1}>
     <header className="rundeckQuickAnalysisHead">
       <div>
-        <span>{workloadTypeLabel(row.consumer_type)} · Quick Analysis</span>
+        <span>{workloadTypeLabel(row.consumer_type)} · Performance Analysis</span>
         <h3>{row.consumer_key}</h3>
         <small>{reason}</small>
       </div>
-      <button type="button" className="rundeckQuickClose" onClick={onClose} aria-label="Close quick analysis">×</button>
+      <button type="button" className="rundeckQuickClose" onClick={onClose} aria-label="Close performance analysis">×</button>
     </header>
 
     <div className="rundeckQuickMetrics">
-      <span><b>Avg CPU</b>{pct(row.avg_cpu_pct)}</span>
-      <span><b>Peak CPU</b>{pct(row.peak_cpu_pct)}</span>
-      <span><b>Memory</b>{gb(row.avg_pss_gb)}</span>
-      <span><b>Checks</b>{row.occurrences ?? '—'}</span>
-      <span><b>Critical WP</b>{row.critical_wp_checks ?? '—'}</span>
-      <span><b>Baseline</b>{row.anomaly_status || row.baseline_status || '—'}</span>
+      <span><b>CPU Avg</b>{pct(row.avg_cpu_pct)}</span>
+      <span><b>CPU Peak</b>{pct(row.peak_cpu_pct)}</span>
+      <span><b>Memory Avg (PSS)</b>{gb(row.avg_pss_gb)}</span>
+      <span><b>Samples</b>{row.occurrences ?? '—'}</span>
+      <span><b>Critical WP Samples</b>{row.critical_wp_checks ?? '—'}</span>
+      <span><b>Historical Baseline</b>{row.anomaly_status || row.baseline_status || '—'}</span>
     </div>
 
     <div className="rundeckQuickScroll">
@@ -228,8 +228,8 @@ export default function RundeckReviewQuickAnalysis({
       <form className="rundeckClosingForm" onSubmit={saveClosing}>
         <div className="rundeckClosingHead">
           <div>
-            <span>Closing Analysis</span>
-            <strong>{closing ? 'Saved closing record' : 'Create closing record'}</strong>
+            <span>Analysis Result</span>
+            <strong>{closing ? 'Saved analysis result' : 'New analysis result'}</strong>
           </div>
           {closingLoading && <small>Loading…</small>}
           {!closingLoading && closing?.closed_at && <small>Last saved</small>}
@@ -237,46 +237,46 @@ export default function RundeckReviewQuickAnalysis({
 
         {form && <>
           <label>
-            <span>Closing Status</span>
+            <span>Result</span>
             <select value={form.closing_status} onChange={(event) => setForm({ ...form, closing_status: event.target.value })}>
               {STATUSES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
           </label>
 
           <label>
-            <span>Finding</span>
+            <span>Analysis Summary</span>
             <textarea rows="4" value={form.finding} onChange={(event) => setForm({ ...form, finding: event.target.value })} />
           </label>
 
           <label>
-            <span>Recommendation</span>
+            <span>Recommended Action</span>
             <textarea rows="3" value={form.recommendation} onChange={(event) => setForm({ ...form, recommendation: event.target.value })} />
           </label>
 
           <div className="rundeckClosingGrid">
             <label>
-              <span>Owner</span>
+              <span>Action Owner</span>
               <input value={form.owner} onChange={(event) => setForm({ ...form, owner: event.target.value })} placeholder="ABAP / Basis / Application" />
             </label>
             <label>
-              <span>Follow-up</span>
+              <span>Validation / Follow-up</span>
               <input value={form.follow_up} onChange={(event) => setForm({ ...form, follow_up: event.target.value })} placeholder="Validation after next execution" />
             </label>
           </div>
 
           <div className="rundeckClosingPreview">
-            <strong>Report Preview</strong>
+            <strong>Closing Summary</strong>
             <p><b>{row.consumer_key}</b> · {workloadTypeLabel(row.consumer_type)} · {reviewContext?.period?.toUpperCase() || '1D'}</p>
-            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · Critical WP checks {row.critical_wp_checks ?? '—'}.</p>
+            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · Critical WP samples {row.critical_wp_checks ?? '—'}.</p>
             <p>{form.finding}</p>
-            <p><b>{form.closing_status.replaceAll('_', ' ')}</b> · Owner: {form.owner || '—'} · {form.recommendation}</p>
+            <p><b>{form.closing_status.replaceAll('_', ' ')}</b> · Action Owner: {form.owner || '—'} · {form.recommendation}</p>
           </div>
 
           <div className="rundeckClosingActions">
-            <button type="button" onClick={() => onOpenFull?.(job)}>Open Full Analysis</button>
-            <button type="submit" className="is-primary" disabled={saving}>{saving ? 'Saving…' : closing ? 'Update Closing' : 'Save Closing'}</button>
+            <button type="button" onClick={() => onOpenFull?.(job)}>Open Detailed Analysis</button>
+            <button type="submit" className="is-primary" disabled={saving}>{saving ? 'Saving…' : closing ? 'Update Analysis' : 'Save Analysis'}</button>
           </div>
-          {saveMessage && <div className={`rundeckClosingMessage ${saveMessage === 'Closing saved' ? 'is-success' : ''}`}>{saveMessage}</div>}
+          {saveMessage && <div className={`rundeckClosingMessage ${saveMessage === 'Analysis saved' ? 'is-success' : ''}`}>{saveMessage}</div>}
         </>}
       </form>
     </div>
