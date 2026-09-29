@@ -1,0 +1,44 @@
+.rundeckWorkspaceDrawer{
+  position:fixed;
+  z-index:1180;
+  top:72px;
+  right:0;
+  bottom:0;
+  width:min(760px,52vw);
+  display:flex;
+  flex-direction:column;
+  border-left:1px solid rgba(126,147,158,.18);
+  background:var(--sphere-page,#0f151a);
+  box-shadow:-18px 0 46px rgba(0,0,0,.34);
+  color:var(--sphere-text,#e7edf0);
+}
+.rundeckWorkspaceDrawer>header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 16px 12px;
+  border-bottom:1px solid rgba(126,147,158,.12);
+  background:#11191f;
+}
+.rundeckWorkspaceDrawer>header span{
+  color:var(--sphere-accent,#4fc6c8);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.rundeckWorkspaceDrawer>header h3{margin:3px 0 2px;font-size:14px}
+.rundeckWorkspaceDrawer>header small{color:var(--sphere-text-muted,#8d9aa3);font-size:9px}
+.rundeckWorkspaceDrawer>header button{
+  width:30px;height:30px;border:1px solid rgba(126,147,158,.14);border-radius:5px;background:transparent;
+  color:var(--sphere-text-secondary,#b9c4ca);font-size:18px;cursor:pointer
+}
+.rundeckWorkspaceDrawerBody{overflow:auto;padding:0 16px 24px}
+.rundeckWorkspaceDrawerBody>.rundeckJobHistory,
+.rundeckWorkspaceDrawerBody>.rundeckInfrastructure{margin-top:10px}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234.is-embedded{margin-top:10px}
+.rundeckWorkspaceDrawer>footer{
+  display:flex;justify-content:flex-end;gap:8px;padding:9px 16px;border-top:1px solid rgba(126,147,158,.10);background:#11191f
+}
+@media(max-width:1180px){.rundeckWorkspaceDrawer{top:0;width:100%}}
