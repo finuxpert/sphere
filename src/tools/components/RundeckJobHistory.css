@@ -654,3 +654,72 @@
 .rundeckSm37Verification.is-compact > p {
   margin-bottom: 6px;
 }
+
+/* SPHERE v1.34.7 — drawer-aware performance analysis density. */
+.rundeckJobHistory.is-drawer-presentation{
+  container-type:normal;
+  width:100%;
+  min-width:0;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryContent{
+  width:100%;
+  min-width:0;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryOverview{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:8px 18px;
+  width:100%;
+  max-width:none;
+  margin-top:4px!important;
+  padding:3px 0 5px!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryGroup{
+  min-width:0;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px 8px;
+  width:100%;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary>span{
+  min-width:0;
+  display:block;
+  padding:4px 0;
+  white-space:normal;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary b{
+  display:block;
+  margin-bottom:1px;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobTimeline{
+  gap:4px 14px!important;
+  margin:3px 0 2px!important;
+  padding:5px 0!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceDisclosure{
+  width:100%;
+  margin-top:2px!important;
+  padding-top:4px!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceWrap,
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceChart{
+  width:100%!important;
+  max-width:none!important;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobPerformanceChart{
+  max-height:none!important;
+  min-height:280px;
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckSingleSample{
+  width:100%;
+}
+@media(max-width:760px){
+  .rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryOverview{
+    grid-template-columns:1fr;
+  }
+  .rundeckJobHistory.is-drawer-presentation .rundeckJobHistorySummary{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
