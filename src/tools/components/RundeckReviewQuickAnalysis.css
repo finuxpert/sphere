@@ -1,0 +1,208 @@
+.rundeckQuickAnalysisDrawer{
+  position:fixed;
+  z-index:1200;
+  top:72px;
+  right:0;
+  bottom:0;
+  width:min(760px,52vw);
+  display:flex;
+  flex-direction:column;
+  border-left:1px solid rgba(126,147,158,.18);
+  background:var(--sphere-page,#0f151a);
+  box-shadow:-18px 0 46px rgba(0,0,0,.34);
+  color:var(--sphere-text,#e7edf0);
+}
+.rundeckQuickAnalysisDrawer:focus{outline:none}
+.rundeckQuickAnalysisHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 16px 12px;
+  border-bottom:1px solid rgba(126,147,158,.12);
+  background:#11191f;
+}
+.rundeckQuickAnalysisHead span{
+  color:var(--sphere-accent,#4fc6c8);
+  font-size:8.5px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.rundeckQuickAnalysisHead h3{
+  margin:3px 0 2px;
+  font-size:15px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.rundeckQuickAnalysisHead small{
+  color:var(--sphere-text-muted,#8d9aa3);
+  font-size:9px;
+}
+.rundeckQuickClose{
+  width:30px;
+  height:30px;
+  border:1px solid rgba(126,147,158,.14);
+  border-radius:5px;
+  background:transparent;
+  color:var(--sphere-text-secondary,#b9c4ca);
+  font-size:18px;
+  cursor:pointer;
+}
+.rundeckQuickMetrics{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:1px;
+  border-bottom:1px solid rgba(126,147,158,.10);
+  background:rgba(126,147,158,.08);
+}
+.rundeckQuickMetrics span{
+  min-width:0;
+  padding:8px 9px;
+  background:var(--sphere-page,#0f151a);
+  color:var(--sphere-text-secondary,#b9c4ca);
+  font-size:9px;
+}
+.rundeckQuickMetrics b{
+  display:block;
+  margin-bottom:2px;
+  color:var(--sphere-text-muted,#8d9aa3);
+  font-size:7.8px;
+  text-transform:uppercase;
+}
+.rundeckQuickScroll{
+  overflow:auto;
+  padding:0 16px 24px;
+}
+.rundeckQuickSection{
+  border-bottom:1px solid rgba(126,147,158,.08);
+}
+.rundeckQuickAnalysisDrawer .rundeckJobHistory{
+  margin-top:8px;
+}
+.rundeckQuickAnalysisDrawer .rundeckJobHistoryHead{
+  display:none;
+}
+.rundeckQuickAnalysisDrawer .rundeckJobHistoryOverview{
+  grid-template-columns:1fr;
+}
+.rundeckQuickAnalysisDrawer .rundeckEvidenceTimeline{
+  margin-top:8px;
+}
+.rundeckClosingForm{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid rgba(126,147,158,.12);
+}
+.rundeckClosingHead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.rundeckClosingHead span{
+  display:block;
+  color:var(--sphere-accent,#4fc6c8);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.rundeckClosingHead strong{font-size:12px}
+.rundeckClosingHead small{color:var(--sphere-text-muted,#8d9aa3);font-size:8.5px}
+.rundeckClosingForm label{
+  display:block;
+  margin-top:9px;
+}
+.rundeckClosingForm label>span{
+  display:block;
+  margin-bottom:4px;
+  color:var(--sphere-text-muted,#8d9aa3);
+  font-size:8.3px;
+  font-weight:750;
+  text-transform:uppercase;
+}
+.rundeckClosingForm input,
+.rundeckClosingForm select,
+.rundeckClosingForm textarea{
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid rgba(126,147,158,.16);
+  border-radius:5px;
+  padding:7px 8px;
+  background:#10181e;
+  color:var(--sphere-text,#e7edf0);
+  font:inherit;
+  font-size:9.5px;
+  resize:vertical;
+}
+.rundeckClosingForm input:focus,
+.rundeckClosingForm select:focus,
+.rundeckClosingForm textarea:focus{
+  outline:1px solid rgba(79,198,200,.55);
+  outline-offset:1px;
+}
+.rundeckClosingGrid{
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  gap:10px;
+}
+.rundeckClosingPreview{
+  margin-top:12px;
+  padding:9px 10px;
+  border:1px solid rgba(126,147,158,.10);
+  border-radius:5px;
+  background:rgba(126,147,158,.025);
+}
+.rundeckClosingPreview strong{font-size:9.5px}
+.rundeckClosingPreview p{
+  margin:4px 0 0;
+  color:var(--sphere-text-secondary,#b9c4ca);
+  font-size:8.8px;
+  line-height:1.45;
+}
+.rundeckClosingActions{
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+  margin-top:12px;
+}
+.rundeckClosingActions button{
+  min-height:28px;
+  border:1px solid rgba(126,147,158,.16);
+  border-radius:5px;
+  padding:5px 9px;
+  background:transparent;
+  color:var(--sphere-text-secondary,#b9c4ca);
+  font-size:9px;
+  cursor:pointer;
+}
+.rundeckClosingActions button.is-primary{
+  border-color:rgba(79,198,200,.30);
+  background:rgba(79,198,200,.12);
+  color:var(--sphere-accent,#4fc6c8);
+}
+.rundeckClosingActions button:disabled{opacity:.55;cursor:wait}
+.rundeckClosingMessage{
+  margin-top:6px;
+  color:var(--sphere-warning,#d8b35f);
+  font-size:8.6px;
+}
+.rundeckClosingMessage.is-success{color:var(--sphere-positive,#75cfa5)}
+.rundeckReviewTableV1231 tbody tr.is-quick-selected{
+  background:rgba(79,198,200,.08);
+  box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8);
+}
+@media(max-width:1180px){
+  .rundeckQuickAnalysisDrawer{
+    top:0;
+    width:100%;
+  }
+  .rundeckQuickMetrics{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .rundeckClosingGrid{
+    grid-template-columns:1fr;
+  }
+}
