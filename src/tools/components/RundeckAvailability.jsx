@@ -206,47 +206,31 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
     {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}
 
     {data && <>
-      <div className="rundeckAvailabilityBody">
-        <div className="rundeckAvailabilityGroup" aria-label="SAP application server availability">
-          <span className="rundeckAvailabilityLabel">SAP App</span>
-          <div className="rundeckAvailabilityApps">{healthyApps ? <span><b>{appsUp}/{apps.length}</b><Status value="UP" /></span> : <ServiceList rows={apps} />}</div>
-        </div>
-        <div className="rundeckAvailabilityGroup" aria-label="HANA availability">
-          <span className="rundeckAvailabilityLabel">HANA</span>
-          <div className="rundeckAvailabilityInfra">
-            {healthyHana
-              ? <span><b>{hanaUp}/{hanaRows.length}</b><Status value="UP" /></span>
-              : <><span>Primary <Status value={hana.PRIMARY?.status || 'UNKNOWN'} /></span><span>Secondary <Status value={hana.SECONDARY?.status || 'UNKNOWN'} /></span><span>DR <Status value={hana.DR?.status || 'UNKNOWN'} /></span></>}
-          </div>
-        </div>
-        <div className="rundeckAvailabilityGroup" aria-label="Web Dispatcher availability">
-          <span className="rundeckAvailabilityLabel">Web</span>
-          <div className="rundeckAvailabilityInfra">
-            {healthyWeb
-              ? <span><b>{webUp}/{webRows.length}</b><Status value="UP" /></span>
-              : <><span>HTTP <Status value={web.HTTP?.status || 'UNKNOWN'} /></span><span>HTTPS <Status value={web.HTTPS?.status || 'UNKNOWN'} /></span></>}
-          </div>
-        </div>
+      <div className="rundeckAvailabilitySummaryStrip" aria-label="Availability summary">
+        <span><b>SAP APP</b><strong>{apps.length ? `${appsUp}/${apps.length} UP` : '—'}</strong></span>
+        <span><b>HANA</b><strong>{hanaRows.length ? `${hanaUp}/${hanaRows.length} UP` : '—'}</strong></span>
+        <span><b>WEB</b><strong>{webRows.length ? `${webUp}/${webRows.length} UP` : '—'}</strong></span>
+        <span><b>TECHNICAL</b><strong>{technicalDownCount > 0 ? `${technicalCheckCount - technicalDownCount}/${technicalCheckCount} PASS` : `${technicalCheckCount}/${technicalCheckCount} PASS`}</strong></span>
       </div>
 
-      <details className="rundeckAvailabilityMore" open={technicalDownCount > 0 ? true : undefined}>
-        <summary>Technical checks <span>{technicalDownCount > 0 ? `${technicalCheckCount - technicalDownCount}/${technicalCheckCount} passed · ${technicalDownCount} down` : `${technicalCheckCount}/${technicalCheckCount} passed`}</span></summary>
-        <div className="rundeckAvailabilityMoreBody">
+      <div className="rundeckAvailabilityDetailSections">
+        <section>
+          <h4>Landscape Checks</h4>
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
             <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>
             <div><b>Replication</b><MatrixCell row={replication.PRIMARY} /><MatrixCell row={replication.SECONDARY} /><MatrixCell row={replication.DR} /></div>
             <div><b>SSH</b><MatrixCell row={ssh.PRIMARY} /><MatrixCell row={ssh.SECONDARY} /><MatrixCell row={ssh.DR} /></div>
           </div>
-          <div className="rundeckAvailabilityTechnicalRow">
-            <span className="rundeckAvailabilityLabel">SAP App SSH</span>
-            <div className="rundeckAvailabilityInfra"><ServiceList rows={appSsh} /></div>
-          </div>
-          {otherSsh.length > 0 && <div className="rundeckAvailabilityTechnicalRow">
-            <span className="rundeckAvailabilityLabel">Other SSH</span>
-            <div className="rundeckAvailabilityInfra"><ServiceList rows={otherSsh} /></div>
-          </div>}
-        </div>
-      </details>
+        </section>
+        <section>
+          <h4>SAP APP SSH</h4>
+          <div className="rundeckAvailabilityInfra"><ServiceList rows={appSsh} /></div>
+        </section>
+        {otherSsh.length > 0 && <section>
+          <h4>Other SSH</h4>
+          <div className="rundeckAvailabilityInfra"><ServiceList rows={otherSsh} /></div>
+        </section>}
+      </div>
     </>}
   </section>
 }
