@@ -34,6 +34,8 @@ const files = {
   serverTrend: read('src/tools/components/RundeckServerTrend.jsx'),
   systemHealth: read('src/tools/components/RundeckSystemHealth.jsx'),
   jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
+  workspaceDrawer: read('src/tools/components/RundeckWorkspaceDrawer.jsx'),
+  workspaceDrawerCss: read('src/tools/components/RundeckWorkspaceDrawer.css'),
   api: read('backend/rundeck_api.py'),
   apiCore: read('backend/rundeck_api_core.py'),
   intelligence: read('backend/rundeck_job_intelligence.py'),
@@ -48,7 +50,7 @@ const files = {
 }
 
 const checks = [
-  ['Basis terminology version is v1.34.1', files.version.includes("APP_VERSION = '1.34.1'") && files.version.includes('basis-terminology-ui-v1.34.1')],
+  ['detail-on-demand version is v1.34.2', files.version.includes("APP_VERSION = '1.34.2'") && files.version.includes('detail-on-demand-ui-v1.34.2')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -81,7 +83,10 @@ const checks = [
   ['Performance History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
   ['Selected job performance opens by default for each selected context', files.jobHistory.includes('key={`performance-${contentKey}`}') && files.jobHistory.includes('className="rundeckJobPerformanceDisclosure" open')],
   ['Selected job header exposes JOB or PROGRAM badge', files.jobHistory.includes('rundeckJobTypeBadge') && files.jobHistory.includes('displayType')],
-  ['Review selection still scrolls to selected analysis panel', files.wrapper.includes('scrollToSelectedWorkload') && files.wrapper.includes('onSelectJob?.(job)')],
+  ['Selected job inline panel is compact and launches Performance Analysis', files.core.includes('rundeckSelectedCompact') && files.core.includes('Open Performance Analysis') && !files.core.includes('<RundeckJobHistory')],
+  ['Performance History and Infrastructure launch from compact detail row', files.wrapper.includes('rundeckCompactDetailRow') && files.wrapper.includes("setDetailDrawer('history')") && files.wrapper.includes("setDetailDrawer('infrastructure')")],
+  ['Generic analysis drawer supports escape close and responsive full width', files.workspaceDrawer.includes("event.key === 'Escape'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer') && files.workspaceDrawerCss.includes('@media(max-width:1180px)')],
+  ['Selected job opens detail-on-demand drawer instead of page scroll', files.wrapper.includes("setDetailDrawer('job')") && !files.wrapper.includes('scrollToSelectedWorkload')],
   ['SAP Job Check is limited to JOB context and compact while disconnected', files.jobHistory.includes("toUpperCase() === 'JOB' && <details") && files.jobHistory.includes('rundeckSm37Verification is-compact')],
   ['operator copy uses jobs and programs instead of generic workload labels', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Current Jobs & Programs') && files.performanceReview.includes('Jobs & Programs to Review') && read('src/tools/components/RundeckJobHistory.jsx').includes('Selected Job / Program')],
   ['performance history uses plain record wording', read('src/tools/components/RundeckObservationHistory.jsx').includes('Performance History') && read('src/tools/components/RundeckObservationHistory.jsx').includes('records')],
@@ -148,4 +153,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.1 Basis terminology checks passed.')
+console.log('\nSPHERE v1.34.2 detail-on-demand checks passed.')
