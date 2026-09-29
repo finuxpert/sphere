@@ -77,6 +77,18 @@ function identitySummary(row = {}) {
   return parts.join(' · ') || workloadTypeLabel(row.consumer_type)
 }
 
+function hasReviewSignal(row = {}) {
+  const details = row.details || {}
+  const status = String(row.review_status || row.status || '').toUpperCase()
+  const anomaly = String(row.anomaly_status || details.anomaly_status || '').toUpperCase()
+  return Boolean(
+    row.review_required ||
+    details.review_required ||
+    ['REVIEW REQUIRED', 'ATTENTION', 'CRITICAL'].includes(status) ||
+    ['ABOVE BASELINE', 'ANOMALY'].includes(anomaly)
+  )
+}
+
 function identityTitle(row = {}) {
   const details = row.details || {}
   const values = []
@@ -96,7 +108,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext }) {
   const [rows, setRows] = React.useState([])
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
@@ -142,6 +154,20 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     return () => window.clearInterval(timer)
   }, [rows.length])
 
+  React.useEffect(() => {
+    if (!selectedJob?.key || !selectedJob?.host || !onSelectedContext || !rows.length) return
+    const match = rows.find((row) => (
+      row.consumer_key === selectedJob.key &&
+      row.host === selectedJob.host &&
+      (!selectedJob.consumerType || row.consumer_type === selectedJob.consumerType)
+    ))
+    if (!match) return
+    const context = jobContext(match)
+    if (!context) return
+    const changed = ['cpuPct', 'memoryGb', 'processes', 'wp', 'criticalWp'].some((key) => context[key] !== selectedJob[key])
+    if (changed) onSelectedContext(context)
+  }, [rows, selectedJob, onSelectedContext])
+
   const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
   const visible = showAll ? sortedRows : sortedRows.slice(0, 10)
   const latestObservedAt = rows.reduce((latest, row) => {
@@ -178,6 +204,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             const active = context && selectedJob?.key === context.key && selectedJob?.host === context.host
             const pss = pssGb(row)
             const cpu = Number(row.cpu_pct)
+            const cpuNeedsAttention = hasReviewSignal(row)
             const processes = processCount(details)
             const identity = identitySummary(row)
             const fullIdentity = identityTitle(row)
@@ -199,7 +226,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
                 <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }}>{row.consumer_key}</button>
                 <small title={fullIdentity || identity}>{identity}</small>
               </td>
-              <td title={CPU_HINT} className={Number.isFinite(cpu) && cpu >= 80 ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
+              <td title={CPU_HINT} className={Number.isFinite(cpu) && cpuNeedsAttention ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
               <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
               <td>{numberText(processes, 0)}</td>
               <td>{wpText(details)}</td>
