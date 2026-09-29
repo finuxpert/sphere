@@ -72,10 +72,10 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
   const activeCount = Number(data?.active ?? items.length)
   const resolvedCount = Number(data?.resolved ?? 0)
-  const criticalApps = new Set(items.filter((row) => severityFor(row, row.latest_value) === 'CRITICAL').map((row) => shortHost(row.host || 'APP'))).size
   const peakCriticalWp = items
     .filter((row) => row.code === 'WP_CRITICAL')
     .reduce((peak, row) => Math.max(peak, Number(row.peak_value || 0)), 0)
+  const longestActive = items.reduce((longest, row) => Math.max(longest, Number(row.duration_seconds || 0)), 0)
 
   if (compact) {
     const top = items.slice(0, 3)
@@ -107,9 +107,9 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
     {!error && data && <>
       <div className="rundeckSapIssuesSummaryStrip" aria-label="SAP issue summary">
-        <span><b>Active</b><strong>{activeCount}</strong></span>
-        <span><b>Critical APP</b><strong>{criticalApps}</strong></span>
-        <span><b>Peak Critical WP</b><strong>{peakCriticalWp || '—'}</strong></span>
+        <span><b>Active Issues</b><strong>{activeCount}</strong></span>
+        <span><b>Highest WP Count</b><strong>{peakCriticalWp || '—'}</strong></span>
+        <span><b>Longest Active</b><strong>{longestActive ? durationText(longestActive) : '—'}</strong></span>
       </div>
       <div className="rundeckSapIssuesTableWrap">
       <table className="rundeckSapIssuesTableV1231">
