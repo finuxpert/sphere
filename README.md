@@ -1,48 +1,69 @@
 # SPHERE
 
-SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP Basis operations workspace for performance monitoring, ST03N/LOG analysis, operational evidence, Case History, and initial performance investigation support.
+SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current stable Rundeck baseline: **v1.33.0**
+Current application version on the Rundeck DEV and PROD lines: **v1.34.29**.
 
-Production: **https://sphere.astraotoparts.co.id**  
-Development: **https://sphere.astraotoparts.co.id/dev/**
+- Production: https://sphere.astraotoparts.co.id
+- Development: https://sphere.astraotoparts.co.id/dev/
 
-## Branch model
+## Current positioning
 
-Only these four branches are active:
+SPHERE is not a replacement for SAP standard troubleshooting tools and it does not declare a final root cause automatically.
+
+Its role is to centralize retained performance evidence, correlate SAP Application Server resource conditions with SAP workload context, support historical evaluation, and make the initial investigation path faster and more consistent.
+
+Primary operating flow:
+
+```text
+Collect → Monitor → Detect → Correlate → Evaluate → Investigate → Report
+```
+
+The current source of truth for implemented flow and feature scope is:
+
+`docs/CURRENT-FLOW-AND-FEATURES.md`
+
+## Active release lines
+
+The repository keeps four release branches:
 
 | Branch | Purpose |
 |---|---|
-| `sphere-prod` | Manual-only production line. Operators upload collected `.txt`/`.log` files through **Upload Logs**; this branch does not depend on the Rundeck REST API. |
-| `sphere-dev` | Development line for the manual Upload Logs workflow; no automatic Rundeck API ingestion. |
-| `rundeck-sphere-prod` | **Active production line.** Automatically ingests retained collection evidence through the Rundeck REST API; manual Upload Logs remains available as fallback. |
-| `rundeck-sphere-dev` | Development/test line for the Rundeck REST API integration before promotion to `rundeck-sphere-prod`. |
+| `sphere-dev` | Manual Upload Logs development line |
+| `sphere-prod` | Manual Upload Logs production line |
+| `rundeck-sphere-dev` | Active Rundeck-integrated development/test line |
+| `rundeck-sphere-prod` | Active Rundeck-integrated production line |
 
-Promotion paths:
+Temporary cleanup/hotfix branches may exist while work is in progress, but they are not release lines and should be removed after their changes are contained in an active branch.
+
+Promotion path for the active Rundeck runtime:
 
 ```text
-sphere-dev
-    ↓ PR
-sphere-prod
-
 rundeck-sphere-dev
-    ↓ QA + PROD readiness
+    ↓ QA + readiness
     ↓ Pull Request
 rundeck-sphere-prod
     ↓ production build/deploy
 https://sphere.astraotoparts.co.id
 ```
 
-Do not develop directly on a production branch and do not force-reset a production branch to DEV. Temporary/hotfix branches should be removed after their commits are contained in the corresponding active branch.
+Do not develop directly on a production branch and do not force-reset a production branch to DEV.
 
-## Data-ingestion modes
+## Data ingestion
 
-SPHERE has two intentionally separate ingestion modes:
+SPHERE supports two intentional ingestion modes.
 
-- **Manual branch family (`sphere-dev` / `sphere-prod`)** — the operator collects/export logs externally and uploads the resulting text/log file through **Upload Logs**. No Rundeck API is required.
-- **Rundeck branch family (`rundeck-sphere-dev` / `rundeck-sphere-prod`)** — SPHERE automatically discovers completed Rundeck executions and reads execution metadata/output through the **Rundeck REST API**. SPHERE does not SSH/SCP directly to SAP application servers. Manual Upload Logs remains available as an operational fallback.
+### Rundeck-integrated runtime
 
-The current active production runtime is `rundeck-sphere-prod`.
+The active production runtime uses `rundeck-sphere-prod`.
+
+Rundeck is responsible for SAP-side collection. SPHERE discovers completed Rundeck executions, reads retained execution output through the Rundeck REST API, validates/normalizes the evidence, stores operational history, and presents it through the SPHERE UI.
+
+SPHERE must not SSH/SCP directly to SAP Application Servers.
+
+### Manual fallback
+
+Manual Upload Logs remains available as an operational fallback. The manual branch family (`sphere-dev` / `sphere-prod`) does not require the Rundeck REST API.
 
 ## Application architecture
 
@@ -50,15 +71,44 @@ The current active production runtime is `rundeck-sphere-prod`.
 - Backend: FastAPI
 - Database: PostgreSQL
 - Collector/orchestrator: Rundeck
-- Web proxy: Nginx
+- Reverse proxy: Nginx
 - Production API service: `sphere-rundeck-prod-api.service`
 - DEV API service: `sphere-rundeck-api.service`
+- Collector poller: systemd service/timer
+- Infrastructure poller: systemd service/timer
+- Collector watchdog: systemd service/timer
+- Observability: Prometheus-compatible metrics and alert rules
 
-SPHERE does not connect directly to SAP application servers. Rundeck remains responsible for SAP server collection. SPHERE consumes and visualizes the retained evidence.
+## Active user workspaces
 
-## Rundeck release workflow
+The main navigation exposes two analysis workspaces:
 
-### 1. Validate DEV
+1. **ST03N Analysis** — SAP workload and response-time analysis.
+2. **Performance Analysis** — SAP performance, infrastructure, workload, historical evaluation, evidence, and investigation.
+
+Performance Analysis currently provides:
+
+- Live Monitoring and History modes
+- Infrastructure overview: filesystem, network, and storage I/O
+- SAP Application Server status
+- Server performance trend
+- Current Workloads
+- Selected Job / Program context
+- Job / Program Performance analysis
+- Observation History
+- Infrastructure Analysis
+- Correlated Events
+- SAP Availability
+- SAP Issues
+- System Data
+- System Health
+- Jobs & Programs to Review for 1 Day / 7 Days / 30 Days
+- Workload Explorer / historical analysis
+- PDF performance report/export
+
+Authoritative live SM37 execution evidence is a separate trust plane. The UI must continue to show the source as not connected until an approved SM37 execution feed is configured. Sampled Work Process evidence must never be presented as an authoritative SM37 match.
+
+## Release validation
 
 On `JAHSVR-SPHERE`:
 
@@ -72,7 +122,7 @@ npm run qa
 bash ops/rundeck/prod-readiness-check.sh
 ```
 
-Required final gate:
+Required final readiness markers:
 
 ```text
 READINESS PASS: collector fresh, watchdog healthy, auto-healing enabled
@@ -80,77 +130,33 @@ SPHERE PROD READINESS PASS
 HEAD <validated-dev-sha>
 ```
 
-The readiness script supports normal Git checkouts and Git worktrees; `.git` does not need to be a directory.
+A Vite chunk-size warning is informational. A failed unit test, QA command, readiness check, Nginx validation, API smoke test, or deployment gate is a release blocker.
 
-### 2. Promote through GitHub
+Production deployment procedures and rollback behavior are documented in:
 
-Create a normal Pull Request:
+`ops/rundeck/OPERATIONS.md`
 
-```text
-base:    rundeck-sphere-prod
-compare: rundeck-sphere-dev
-```
+## Current documentation
 
-Review the diff and merge normally. Do not use force push or replace the PROD ref with the DEV ref.
+Use these documents as active references:
 
-### 3. Deploy production
+- `docs/CURRENT-FLOW-AND-FEATURES.md` — implemented operating flow and feature inventory
+- `docs/RUNDECK_INTEGRATION_RUNBOOK.md` — Rundeck API integration and security boundary
+- `docs/BASIS-JOB-INTELLIGENCE.md` — sampled workload vs authoritative SM37 execution trust boundary
+- `docs/LEGACY-TELEMETRY-COMPATIBILITY.md` — compatibility rules for historical enhanced telemetry markers
+- `docs/rundeck-development.md` — DEV runtime and UI/collector contract
+- `docs/VISUAL-QA.md` — optional Playwright visual regression checks
+- `docs/ai-coding-workflow-style.md` — repository implementation workflow
+- `ops/rundeck/OPERATIONS.md` — release, deployment, watchdog, platform health, and retention operations
 
-After the PR is merged:
-
-```bash
-cd /root/rundeck-sphere-prod
-git fetch origin
-git reset --hard origin/rundeck-sphere-prod
-npm ci
-npm run qa
-npm run build
-bash ops/rundeck/deploy-prod.sh
-```
-
-Successful deployment ends with:
-
-```text
-PRODUCTION DEPLOY SUCCESS
-REVISION <prod-sha>
-```
-
-`deploy-prod.sh` is transactional. It validates the PROD checkout, build base, API/service health, production routes, platform readiness, DEV isolation, and legacy API guardrails. If activation or smoke validation fails, it restores the previous production web/API release and Nginx configuration.
-
-Detailed operational procedures are documented in `ops/rundeck/OPERATIONS.md`.
-
-## Validation
-
-Primary release gates:
-
-```bash
-/opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
-npm run qa
-bash ops/rundeck/prod-readiness-check.sh
-```
-
-A Vite chunk-size warning is an optimization warning, not automatically a release failure. A non-zero QA/build/readiness exit code is a release blocker.
-
-## Rundeck integration
-
-Rundeck integration, ACL, credential handling, token rotation, and security guardrails are documented in:
-
-`docs/RUNDECK_INTEGRATION_RUNBOOK.md`
-
-Never commit Rundeck tokens, passwords, or runtime credentials to GitHub.
-
-## Naming standard
-
-- New application, script, service, documentation, and file names use **SPHERE** terminology.
-- Do not introduce new `RCA`, temporary, hotfix, final, cleanup, or version-number-only filenames.
-- Historical protocol aliases may remain only where required for backward compatibility with already-deployed collectors.
-- Prefer semantic names that describe ownership and purpose rather than release numbers.
+Historical competition copy, one-off optimization notes, and obsolete RCA-era validation documents are intentionally not maintained as current documentation.
 
 ## Repository guardrails
 
-- Preserve the four active branches above.
-- Remove temporary branches only after confirming they are fully contained in an active branch.
-- Preserve active parser, frontend, backend, database, migration, test, and deployment dependencies.
-- Preserve collector protocol compatibility during the migration from historical marker names to SPHERE naming.
-- Preserve database migration history.
-- Do not restore retired CBJ monitoring/deployment assets into active SPHERE branches.
-- Production changes must pass DEV validation and be promoted through a PR.
+- Preserve the four release branches above.
+- Remove temporary branches only after confirming their commits are contained in an active branch.
+- Preserve active parser, frontend, backend, PostgreSQL migration, test, and deployment dependencies.
+- Preserve backward compatibility for historical collector markers only where the active parser still requires it.
+- Do not introduce new RCA-named product files or version-number-only documentation.
+- Never commit Rundeck tokens, SAP credentials, passwords, private keys, raw SAP logs, or runtime secrets.
+- Production changes must pass DEV validation and be promoted through a normal Pull Request.
