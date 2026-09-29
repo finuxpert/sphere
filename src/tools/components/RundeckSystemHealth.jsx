@@ -50,8 +50,8 @@ function primaryHealthSignal(hosts, availability, serviceCritical, stale, availa
   const top = ranked[0]
   if (top?.score >= 500) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'CPU, memory or I/O needs review on this server.' }
   if (top?.score >= 400) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'Resource pressure signal; validate CPU, memory and I/O evidence.' }
-  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload CRITICAL`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
-  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · SAP Workload ATTENTION`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
+  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Jobs / Programs CRITICAL`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
+  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Jobs / Programs ATTENTION`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
   if (availability === 'ATTENTION') return { level: 'ATTENTION', text: 'SAP availability attention', detail: 'Review service availability evidence.' }
   return null
 }
@@ -126,7 +126,7 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
   const availabilityAge = availabilityCollectedAt ? Math.max(0, Math.floor((Date.now() - Date.parse(availabilityCollectedAt)) / 60000)) : null
   const availabilityStale = Number.isFinite(availabilityAge) && availabilityAge >= 20
   const primarySignal = primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale, availabilityAge)
-  const title = `System Health reflects service impact and OS resource pressure. SAP workload signals can raise ATTENTION without declaring an outage. Availability ${availability}${availabilityStale ? ` · evidence ${availabilityAge}m old` : ''}${stale ? ' · performance data stale' : ''}.`
+  const title = `System Health reflects service impact and OS resource pressure. Job and program signals can raise ATTENTION without declaring an outage. Availability ${availability}${availabilityStale ? ` · evidence ${availabilityAge}m old` : ''}${stale ? ' · performance data stale' : ''}.`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
