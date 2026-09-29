@@ -36,7 +36,7 @@ const durationText = (seconds) => {
 }
 
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
 
@@ -72,6 +72,16 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp }) {
 
   const activeCount = Number(data?.active ?? items.length)
   const resolvedCount = Number(data?.resolved ?? 0)
+
+  if (compact) {
+    const top = items.slice(0, 3)
+    return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
+      <strong>{error ? 'Unavailable' : `${activeCount} active`}</strong>
+      <small>{top.length ? top.map((row) => `${shortHost(row.host || 'APP')} ${issueLabel(row.signal || row.code)} ${valueText(row.latest_value, row.unit)}`).join(' · ') : 'No active SAP issues'}</small>
+      <em>View issues ›</em>
+    </button>
+  }
 
   const inspect = (row) => {
     if (!row?.host || !onInspectApp) return
