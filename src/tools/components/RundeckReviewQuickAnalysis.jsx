@@ -136,6 +136,8 @@ export default function RundeckReviewQuickAnalysis({
   if (!row) return null
 
   const reason = evaluationReasonText(row) || row.status || 'Review'
+  const reviewDataPoints = Number(row.occurrences ?? row.observations ?? 0)
+  const limitedSample = Number.isFinite(reviewDataPoints) && reviewDataPoints > 0 && reviewDataPoints < 6
   const summaryMetrics = {
     avg_cpu_pct: row.avg_cpu_pct,
     peak_cpu_pct: row.peak_cpu_pct,
@@ -209,7 +211,7 @@ export default function RundeckReviewQuickAnalysis({
       <span><b>CPU Avg</b>{pct(row.avg_cpu_pct)}</span>
       <span><b>CPU Peak</b>{pct(row.peak_cpu_pct)}</span>
       <span><b>Memory Avg (PSS)</b>{gb(row.avg_pss_gb)}</span>
-      <span><b>Data Points</b>{row.occurrences ?? '—'}</span>
+      <span className={limitedSample ? 'is-limited-sample' : ''}><b>Data Points</b>{row.occurrences ?? row.observations ?? '—'}{limitedSample && <em className="rundeckQuickSampleHint">Limited sample</em>}</span>
       <span><b>Critical WP During Period</b>{row.critical_wp_checks ?? '—'}</span>
       <span><b>Baseline</b>{row.anomaly_status || row.baseline_status || '—'}</span>
     </div>

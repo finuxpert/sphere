@@ -1173,3 +1173,34 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckInvestigationConte
   color:#526873!important;
   opacity:1!important;
 }
+
+
+/* SPHERE release-hardening — align selected-workload actions as one investigation workspace. */
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+  align-items:stretch!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
+  display:grid!important;
+  grid-template-rows:auto auto minmax(0,1fr) auto!important;
+  align-content:stretch!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard .rundeckEvidenceCardTitle{
+  align-self:start;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard>em{
+  align-self:end;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  column-gap:8px!important;
+  padding-left:10px!important;
+  padding-right:10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button>span{
+  align-self:center;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button>em{
+  justify-self:end;
+}

@@ -410,3 +410,22 @@ html[data-theme="light"] .rundeckClosingMessage.is-success{color:#287a55!importa
   .rundeckQuickAnalysisDrawer .rundeckEvidenceEvents{max-height:180px}
   .rundeckQuickAnalysisDrawer .rundeckClosingPreview p{line-height:1.32}
 }
+
+
+/* SPHERE release-hardening — small review samples stay visible without implying a conclusion. */
+.rundeckQuickMetrics span.is-limited-sample{
+  position:relative;
+}
+.rundeckQuickSampleHint{
+  display:block;
+  margin-top:2px;
+  color:var(--sphere-warning,#d8b35f);
+  font-size:7.6px;
+  font-style:normal;
+  font-weight:760;
+  line-height:1.15;
+  white-space:nowrap;
+}
+html[data-theme="light"] .rundeckQuickSampleHint{
+  color:#8a620f!important;
+}

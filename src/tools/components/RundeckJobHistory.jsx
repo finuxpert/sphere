@@ -262,11 +262,11 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     const issueInRange = Number.isFinite(issueTs) && Number.isFinite(firstTs) && Number.isFinite(lastTs) && issueTs >= firstTs && issueTs <= lastTs
 
     const lanes = [
-      { id: 'cpu', name: 'CPU Usage %', height: expanded ? 126 : 76 },
-      profile.hasPss ? { id: 'pss', name: 'PSS Memory GB', height: expanded ? 82 : 50 } : null,
-      profile.hasIo ? { id: 'io', name: 'I/O MiB/s', height: expanded ? 70 : 44 } : null,
+      { id: 'cpu', name: 'CPU', height: expanded ? 126 : 76 },
+      profile.hasPss ? { id: 'pss', name: 'PSS Memory', height: expanded ? 82 : 50 } : null,
+      profile.hasIo ? { id: 'io', name: 'I/O', height: expanded ? 70 : 44 } : null,
       profile.hasWp ? { id: 'wp', name: 'WP', height: expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28) } : null,
-      profile.hasCritical ? { id: 'event', name: 'APP Critical WP', height: expanded ? 38 : 28 } : null,
+      profile.hasCritical ? { id: 'event', name: 'Critical WP', height: expanded ? 38 : 28 } : null,
     ].filter(Boolean)
 
     let top = 16
@@ -366,7 +366,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
         grid: grids,
         graphic: lanes.map((lane,index)=>({
           type:'text',left:8,top:Math.max(0,grids[index].top+3),silent:true,
-          style:{text:lane.id==='event'?'APP Critical WP':lane.id==='wp'?'WP Count':lane.name,fill:colors.secondary,font:'700 9px sans-serif'},
+          style:{text:lane.id==='wp'?'WP Count':lane.name,fill:colors.secondary,font:'700 9.5px sans-serif'},
         })),
         xAxis: lanes.map((lane, index) => ({
           ...axisBase,
@@ -482,9 +482,9 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
         {type:'time',gridIndex:2,min:first,max:last,splitNumber:chartAxisSplitNumber(first,last),axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,showMinLabel:true,showMaxLabel:true,margin:10,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
       ],
       graphic:[
-        {type:'text',left:64,top:8,silent:true,style:{text:'CPU %',fill:colors.secondary,font:'600 10px sans-serif'}},
-        {type:'text',left:64,top:170,silent:true,style:{text:'PSS GB',fill:colors.secondary,font:'600 10px sans-serif'}},
-        {type:'text',left:64,top:290,silent:true,style:{text:'Critical WP',fill:colors.secondary,font:'600 9px sans-serif'}},
+        {type:'text',left:64,top:8,silent:true,style:{text:'CPU',fill:colors.secondary,font:'700 10px sans-serif'}},
+        {type:'text',left:64,top:170,silent:true,style:{text:'PSS Memory',fill:colors.secondary,font:'700 10px sans-serif'}},
+        {type:'text',left:64,top:290,silent:true,style:{text:'Critical WP',fill:colors.secondary,font:'700 9.5px sans-serif'}},
       ],
       yAxis:[
         {type:'value',gridIndex:0,name:'',axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
