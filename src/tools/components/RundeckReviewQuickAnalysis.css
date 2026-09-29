@@ -362,3 +362,51 @@ html[data-theme="light"] .rundeckClosingMessage.is-success{color:#287a55!importa
   .rundeckQuickMetrics span{padding-top:6px;padding-bottom:6px}
   .rundeckQuickScroll{padding-bottom:20px}
 }
+
+
+/* SPHERE RC freeze — compact Review evidence and lighter closing summary density. */
+.rundeckQuickAnalysisDrawer .rundeckEvidenceTimeline{
+  margin-top:6px;
+}
+.rundeckQuickAnalysisDrawer .rundeckEvidenceSummary{
+  min-height:24px;
+  padding-bottom:3px;
+}
+.rundeckQuickAnalysisDrawer .rundeckEvidenceBody{
+  padding-top:3px;
+}
+.rundeckQuickAnalysisDrawer .rundeckEvidenceEvents{
+  max-height:220px;
+  padding-top:0;
+  padding-bottom:1px;
+}
+.rundeckQuickAnalysisDrawer .rundeckEvidenceEvent{
+  padding:2px 0;
+}
+.rundeckQuickAnalysisDrawer .rundeckEvidenceTechnical{
+  margin-top:3px;
+  padding-top:3px;
+}
+.rundeckQuickAnalysisDrawer .rundeckClosingForm{
+  margin-top:10px;
+  padding-top:9px;
+}
+.rundeckQuickAnalysisDrawer .rundeckClosingHead{
+  margin-bottom:7px;
+}
+.rundeckQuickAnalysisDrawer .rundeckClosingForm label{
+  margin-top:7px;
+}
+.rundeckQuickAnalysisDrawer .rundeckClosingPreview{
+  margin-top:9px;
+  padding:8px 9px;
+}
+.rundeckQuickAnalysisDrawer .rundeckClosingPreview p{
+  margin-top:3px;
+  font-size:8.6px;
+  line-height:1.38;
+}
+@media(max-height:800px) and (min-width:1181px){
+  .rundeckQuickAnalysisDrawer .rundeckEvidenceEvents{max-height:180px}
+  .rundeckQuickAnalysisDrawer .rundeckClosingPreview p{line-height:1.32}
+}

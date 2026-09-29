@@ -740,7 +740,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 {rangeLoading && <div className="rundeckJobHistoryState">Loading {range.toUpperCase()} performance…</div>}
                 {rangeError && <div className="rundeckJobHistoryState is-error">{rangeError}</div>}
                 {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={incidentStart} /> : null}
-                {!rangeLoading && !rangeError && historicalTrend && !historicalTrend.items?.length && <div className="rundeckJobHistoryState">No retained observations in this range.</div>}
+                {!rangeLoading && !rangeError && historicalTrend && !historicalTrend.items?.length && <div className="rundeckJobHistoryState rundeckJobHistoricalEmpty">
+                  <SphereIcon name="history" />
+                  <strong>No retained observations in this range</strong>
+                  <small>Try another range with retained data.</small>
+                </div>}
               </div>}
         </section>
       </div>

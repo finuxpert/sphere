@@ -1011,3 +1011,40 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpiso
 .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart canvas{
   image-rendering:auto;
 }
+
+
+/* SPHERE RC freeze — intentional historical empty state without changing drawer geometry. */
+.rundeckJobHistoricalRange .rundeckJobHistoricalEmpty{
+  min-height:260px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin:4px 0 0;
+  padding:18px;
+  box-sizing:border-box;
+  color:var(--sphere-text-muted,#718089);
+  text-align:center;
+}
+.rundeckJobHistoricalEmpty .sphereIcon{
+  font-size:18px;
+  color:var(--sphere-text-muted,#718089);
+  opacity:.72;
+}
+.rundeckJobHistoricalEmpty strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:11px;
+  font-weight:740;
+}
+.rundeckJobHistoricalEmpty small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9.5px;
+  line-height:1.35;
+}
+html[data-theme="light"] .rundeckJobHistoricalEmpty strong{color:#314851!important}
+html[data-theme="light"] .rundeckJobHistoricalEmpty small,
+html[data-theme="light"] .rundeckJobHistoricalEmpty .sphereIcon{color:#687a83!important}
+@media(max-height:800px){
+  .rundeckJobHistoricalRange .rundeckJobHistoricalEmpty{min-height:220px}
+}
