@@ -1,7 +1,6 @@
 import React from 'react'
 import RundeckAppServers from './RundeckAppServers.jsx'
 import RundeckInvestigationContext from './RundeckInvestigationContext.jsx'
-import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
@@ -16,9 +15,17 @@ export default function RundeckMonitoringHistoryCore(props) {
     </section>
     <section className="rundeckWorkloadBandV1234 rundeckWorkloadBandV1235">
       <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-current-workload">{props.currentWorkloadContent}</div>
-      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-selected-workload">
+      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-selected-workload is-compact-selected">
         <RundeckInvestigationContext job={props.selectedJob} />
-        <RundeckJobHistory job={props.selectedJob} refreshToken={props.refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} />
+        {props.selectedJob?.key
+          ? <div className="rundeckSelectedCompact">
+              <div>
+                <strong>{props.selectedJob.key}</strong>
+                <small>Detailed CPU, memory, WP, I/O and history are available on demand.</small>
+              </div>
+              <button type="button" onClick={props.onOpenSelectedAnalysis}>Open Performance Analysis</button>
+            </div>
+          : <div className="rundeckSelectedCompact is-empty">Select a job or program to analyze.</div>}
       </div>
     </section>
     {props.operationalEvidenceContent}
