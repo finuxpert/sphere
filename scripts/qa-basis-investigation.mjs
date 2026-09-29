@@ -50,7 +50,7 @@ const files = {
 }
 
 const checks = [
-  ['detail-on-demand version is v1.34.2', files.version.includes("APP_VERSION = '1.34.2'") && files.version.includes('detail-on-demand-ui-v1.34.2')],
+  ['single-overlay version is v1.34.3', files.version.includes("APP_VERSION = '1.34.3'") && files.version.includes('single-overlay-ui-v1.34.3')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -86,6 +86,9 @@ const checks = [
   ['Selected job inline panel is compact and launches Performance Analysis', files.core.includes('rundeckSelectedCompact') && files.core.includes('Open Performance Analysis') && !files.core.includes('<RundeckJobHistory')],
   ['Performance History and Infrastructure launch from compact detail row', files.wrapper.includes('rundeckCompactDetailRow') && files.wrapper.includes("setDetailDrawer('history')") && files.wrapper.includes("setDetailDrawer('infrastructure')")],
   ['Generic analysis drawer supports escape close and responsive full width', files.workspaceDrawer.includes("event.key === 'Escape'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer') && files.workspaceDrawerCss.includes('@media(max-width:1180px)')],
+  ['Only one analysis overlay is controlled by the workspace', files.wrapper.includes('const [activeOverlay, setActiveOverlay]') && files.wrapper.includes("activeOverlay?.type === 'review'") && files.wrapper.includes("activeOverlay?.type === 'history'") && files.wrapper.includes("activeOverlay?.type === 'infrastructure'")],
+  ['Performance Review delegates its drawer to the central overlay manager', files.performanceReview.includes('onOpenQuickAnalysis') && files.performanceReview.includes('externalQuickKey') && files.performanceReview.includes('!onOpenQuickAnalysis && quickRow')],
+  ['Opening a new analysis replaces the previous overlay instead of stacking', !files.wrapper.includes('detailDrawer') && files.wrapper.includes("setActiveOverlay({ type: 'job' })") && files.wrapper.includes("setActiveOverlay({ type: 'review', row, reviewContext })")],
   ['Selected job opens detail-on-demand drawer instead of page scroll', files.wrapper.includes("setDetailDrawer('job')") && !files.wrapper.includes('scrollToSelectedWorkload')],
   ['SAP Job Check is limited to JOB context and compact while disconnected', files.jobHistory.includes("toUpperCase() === 'JOB' && <details") && files.jobHistory.includes('rundeckSm37Verification is-compact')],
   ['operator copy uses jobs and programs instead of generic workload labels', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Current Jobs & Programs') && files.performanceReview.includes('Jobs & Programs to Review') && read('src/tools/components/RundeckJobHistory.jsx').includes('Selected Job / Program')],
@@ -153,4 +156,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.2 detail-on-demand checks passed.')
+console.log('\nSPHERE v1.34.3 single-overlay checks passed.')
