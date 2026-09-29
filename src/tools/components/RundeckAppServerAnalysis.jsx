@@ -48,7 +48,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
     }).catch(failure=>{if(failure.name!=='AbortError')setError(failure.message||'APP analysis unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return()=>controller.abort()
-  },[app?.host,latestCollectionId,refreshToken])
+  },[app,latestCollectionId,refreshToken])
 
   if(!app) return null
   const resolvedApp=hostSnapshot || app
