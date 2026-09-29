@@ -50,8 +50,8 @@ function primaryHealthSignal(hosts, availability, serviceCritical, stale, availa
   const top = ranked[0]
   if (top?.score >= 500) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'CPU, memory or I/O needs review on this server.' }
   if (top?.score >= 400) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'Resource pressure signal; validate CPU, memory and I/O evidence.' }
-  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Jobs / Programs CRITICAL`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
-  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Jobs / Programs ATTENTION`, detail: `Critical WP ${top.wp} · OS Resource ${top.resource}. Open the server and selected job for details.` }
+  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Critical WP ${top.wp}`, detail: `Critical WP ${top.wp} observed on this APP · OS Resource ${top.resource}. Open the server and selected job for timing correlation.` }
+  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Critical WP ${top.wp}`, detail: `Critical WP ${top.wp} observed on this APP · OS Resource ${top.resource}. Open the server and selected job for timing correlation.` }
   if (availability === 'ATTENTION') return { level: 'ATTENTION', text: 'SAP availability attention', detail: 'Review service availability evidence.' }
   return null
 }

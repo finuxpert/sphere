@@ -143,3 +143,31 @@ html[data-theme="light"] .sphereThemeControl select{
   color:#26363e!important;
   border-color:rgba(45,63,72,.18)!important;
 }
+
+/* Pre-PROD light-theme closure: remove remaining dark islands and washed-out text. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckCurrentWorkload,.rundeckSelectedCompact,.rundeckEvidenceCard,.rundeckAvailability,
+  .rundeckSapIssuesV1231,.rundeckReviewTableV1231,.rundeckOperationalSummaryCards
+){color:#172229!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckCurrentWorkload p,.rundeckCurrentWorkload small,.rundeckSelectedCompact small,
+  .rundeckEvidenceCard small,.rundeckEvidenceCard em,.rundeckAvailability small,
+  .rundeckSapIssuesV1231 small,.rundeckReviewTableV1231 small
+){color:#5d6e77!important;opacity:1!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer,
+html[data-theme="light"] .rundeckWorkspaceDrawer>header,
+html[data-theme="light"] .rundeckWorkspaceDrawerBody,
+html[data-theme="light"] .rundeckWorkspaceDrawer footer,
+html[data-theme="light"] .rundeckQuickAnalysisDrawer,
+html[data-theme="light"] .rundeckQuickAnalysisBody{background:#f4f7f8!important;color:#172229!important;border-color:rgba(45,63,72,.13)!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer :is(table,tbody,tr,td),
+html[data-theme="light"] .rundeckQuickAnalysisDrawer :is(table,tbody,tr,td){color:#27363e!important;border-color:rgba(45,63,72,.09)!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer th,
+html[data-theme="light"] .rundeckQuickAnalysisDrawer th{background:#e8eef0!important;color:#52636d!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer :is(select,input,button[role="combobox"]),
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(select,input,button[role="combobox"]){background:#fff!important;color:#26363e!important;border-color:rgba(45,63,72,.18)!important}
+html[data-theme="light"] .rundeckJobHistory :is(.rundeckJobHistoryHead h3,.rundeckJobPerformanceTitle>span){color:#172229!important}
+html[data-theme="light"] .rundeckJobHistory :is(.rundeckJobHistoryHead small,.rundeckJobHistorySummary>span,.rundeckJobHistoricalSummary span){color:#394a53!important}
+html[data-theme="light"] .rundeckJobHistory :is(.rundeckJobHistorySummary b,.rundeckJobHistoricalSummary b,.rundeckJobSectionLabel,.rundeckJobCurrentSemantics,.rundeckJobCorrelationDisclaimer){color:#61727b!important}
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{align-self:start;min-height:0!important;height:auto!important}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompact{min-height:0!important;height:auto!important;padding-bottom:10px!important}

@@ -745,3 +745,12 @@
   .rundeckJobRangeTabs{flex-wrap:wrap}
   .rundeckJobHistoricalSummary{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Final pre-PROD hierarchy and historical correlation semantics. */
+.rundeckJobHistoricalAnalysis{margin-top:8px;padding-top:8px;border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))}
+.rundeckJobSectionLabel{margin-bottom:5px;color:var(--sphere-text-muted,#718089);font-size:9.5px;font-weight:800;letter-spacing:.045em;text-transform:uppercase}
+.rundeckJobHistoricalAnalysis .rundeckJobPerformanceRange{margin-top:0}
+.rundeckJobCurrentSemantics{display:block;margin-top:-2px;color:var(--sphere-text-muted,#718089);font-size:9.5px}
+.rundeckJobCorrelationDisclaimer{margin-left:auto;color:var(--sphere-text-muted,#718089);font-size:9px;font-style:normal}
+.rundeckJobHistoricalRangeChart{height:330px}
+@media(max-width:780px){.rundeckJobCorrelationDisclaimer{width:100%;margin-left:0}}

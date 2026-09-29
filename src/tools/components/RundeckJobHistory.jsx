@@ -409,27 +409,77 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
     const items = trend?.items || []
     const cpuKey = mode === 'peak' ? 'peak_cpu_pct' : 'avg_cpu_pct'
     const pssKey = mode === 'peak' ? 'peak_pss_gb' : 'avg_pss_gb'
+    const processKey = mode === 'peak' ? 'max_processes' : 'avg_processes'
     const first = Date.parse(items[0]?.bucket || '')
     const last = Date.parse(items.at(-1)?.bucket || '')
     const issue = Date.parse(incidentStart || '')
     const issueInRange = Number.isFinite(issue) && Number.isFinite(first) && Number.isFinite(last) && issue >= first && issue <= last
+    const nearestBucket = (value) => {
+      const target = Date.parse(value || '')
+      if (!Number.isFinite(target) || !items.length) return items[0] || null
+      return items.reduce((best, row) => {
+        const current = Date.parse(row.bucket || '')
+        if (!Number.isFinite(current)) return best
+        if (!best) return row
+        return Math.abs(current - target) < Math.abs(Date.parse(best.bucket || '') - target) ? row : best
+      }, null)
+    }
+    const issueMark = issueInRange ? {
+      symbol:'none',
+      label:{formatter:'Issue start',color:colors.warning,fontSize:9},
+      lineStyle:{color:colors.warning,type:'dashed'},
+      data:[{xAxis:incidentStart}],
+    } : undefined
     return {
       backgroundColor:'transparent',
       animationDuration:180,
       textStyle:{color:colors.text},
-      grid:[{left:62,right:18,top:26,height:138},{left:62,right:18,top:196,height:78}],
+      grid:[
+        {left:62,right:18,top:24,height:116},
+        {left:62,right:18,top:170,height:68},
+        {left:62,right:18,top:266,height:24},
+      ],
       xAxis:[
         {type:'time',gridIndex:0,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
-        {type:'time',gridIndex:1,axisLabel:{color:colors.muted,fontSize:10},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:1,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:2,axisLabel:{color:colors.muted,fontSize:10},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
       ],
       yAxis:[
         {type:'value',gridIndex:0,name:'CPU %',nameTextStyle:{color:colors.secondary,fontSize:10},axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
         {type:'value',gridIndex:1,name:'PSS GB',nameTextStyle:{color:colors.secondary,fontSize:10},axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
+        {type:'value',gridIndex:2,min:0,max:1,name:'Critical WP',nameTextStyle:{color:colors.secondary,fontSize:9},axisLabel:{show:false},axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}},
       ],
-      tooltip:{trigger:'axis',confine:true,backgroundColor:colors.panel,borderWidth:0,textStyle:{color:colors.text,fontSize:10}},
+      axisPointer:{link:[{xAxisIndex:'all'}]},
+      tooltip:{
+        trigger:'axis',
+        confine:true,
+        backgroundColor:colors.panel,
+        borderWidth:0,
+        textStyle:{color:colors.text,fontSize:10},
+        formatter:(points=[])=>{
+          if(!points.length)return ''
+          const row=nearestBucket(points[0]?.axisValue)
+          if(!row)return ''
+          const cpu=row[cpuKey]
+          const pss=row[pssKey]
+          const processes=row[processKey]
+          const critical=Number(row.max_critical_wp||0)
+          const checks=Number(row.checks||0)
+          const criticalChecks=Number(row.critical_wp_checks||0)
+          return [
+            `<b>${formatWib(row.bucket,true)} WIB</b>`,
+            `CPU ${mode === 'peak' ? 'peak' : 'avg'} <b>${cpu == null ? '—' : `${numberText(cpu,1)}%`}</b>`,
+            `PSS ${mode === 'peak' ? 'peak' : 'avg'} <b>${pss == null ? '—' : `${numberText(pss,2)} GB`}</b>`,
+            `Processes <b>${processes == null ? '—' : numberText(processes,mode === 'peak' ? 0 : 1)}</b>`,
+            `Critical WP <b>${critical}</b> · overlap <b>${criticalChecks} / ${checks} samples</b>`,
+            `Samples / checks <b>${Number(row.observations||0)} / ${checks}</b>`,
+          ].join('<br/>')
+        },
+      },
       series:[
-        {name:`${mode === 'peak' ? 'Peak' : 'Avg'} CPU`,type:'line',showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[cpuKey]]),lineStyle:{width:2},markLine:issueInRange?{symbol:'none',label:{formatter:'Issue start',color:colors.warning,fontSize:9},lineStyle:{color:colors.warning,type:'dashed'},data:[{xAxis:incidentStart}]}:undefined},
-        {name:`${mode === 'peak' ? 'Peak' : 'Avg'} PSS`,type:'line',xAxisIndex:1,yAxisIndex:1,showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[pssKey]]),lineStyle:{width:2}},
+        {name:`${mode === 'peak' ? 'Peak' : 'Avg'} CPU`,type:'line',showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[cpuKey]]),lineStyle:{width:2,color:colors.accent},itemStyle:{color:colors.accent},markLine:issueMark},
+        {name:`${mode === 'peak' ? 'Peak' : 'Avg'} PSS`,type:'line',xAxisIndex:1,yAxisIndex:1,showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[pssKey]]),lineStyle:{width:2,color:colors.memory},itemStyle:{color:colors.memory}},
+        {name:'Critical WP',type:'scatter',xAxisIndex:2,yAxisIndex:2,symbol:'triangle',symbolSize:(value,params)=>Math.min(12,6+Number(params?.data?.critical||0)),itemStyle:{color:colors.danger},data:items.filter(row=>Number(row.max_critical_wp||0)>0).map(row=>({value:[row.bucket,.5],critical:Number(row.max_critical_wp||0),checks:Number(row.critical_wp_checks||0)}))},
       ],
     }
   },[incidentStart,mode,trend])
@@ -444,7 +494,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
     observer?.observe(ref.current)
     return()=>{observer?.disconnect();window.removeEventListener('resize',resize);chart.dispose()}
   },[option])
-  return <div ref={ref} className="rundeckJobHistoricalRangeChart" role="img" aria-label="Historical CPU and PSS performance trend" />
+  return <div ref={ref} className="rundeckJobHistoricalRangeChart" role="img" aria-label="Historical CPU, PSS and Critical WP overlap trend" />
 }
 
 export default function RundeckJobHistory({ job = null, refreshToken = '', incidentStart = '', latestCollectionId = '', presentation = 'inline' }) {
@@ -566,7 +616,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     {history && <div key={contentKey} className="rundeckJobHistoryContent">
       <div className="rundeckJobHistoryOverview">
         <section className="rundeckJobHistoryGroup" aria-label="Observation summary">
-          <strong>History</strong>
+          <strong>Selected Episode</strong>
           <div className="rundeckJobHistorySummary">
             <span><b>First Seen</b>{formatWib(stats.firstSeen, true)} WIB</span>
             <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
@@ -575,7 +625,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           </div>
         </section>
         <section className="rundeckJobHistoryGroup" aria-label="Performance summary">
-          <strong>Performance</strong>
+          <strong>Episode Performance</strong>
           <div className="rundeckJobHistorySummary">
             <span title={CPU_HINT}><b>Avg CPU</b>{numberText(stats.avgCpu)}%</span>
             <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%</span>
@@ -605,9 +655,12 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
+        <small className="rundeckJobCorrelationDisclaimer">Timing correlation only — not proof of root cause</small>
       </div>}
 
-      <section className="rundeckJobPerformanceRange" aria-label="Performance time range">
+      <section className="rundeckJobHistoricalAnalysis" aria-label="Historical analysis">
+        <div className="rundeckJobSectionLabel">Historical Analysis</div>
+        <div className="rundeckJobPerformanceRange" aria-label="Performance time range">
         <div className="rundeckJobRangeTabs" role="group" aria-label="Performance time range">
           {PERFORMANCE_RANGES.map(([key,label]) => <button key={key} type="button" disabled={key !== 'current' && !historicalEligible} className={range===key?'is-active':''} aria-pressed={range===key} onClick={()=>setRange(key)}>{label}</button>)}
         </div>
@@ -615,12 +668,14 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <button type="button" className={rangeMode==='avg'?'is-active':''} aria-pressed={rangeMode==='avg'} onClick={()=>setRangeMode('avg')}>Avg</button>
           <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
         </div>}
+        </div>
+        <small className="rundeckJobCurrentSemantics" title="Current = selected observation episode">Current = selected observation episode</small>
       </section>
 
       {range === 'current'
         ? <section key={`performance-${contentKey}`} className="rundeckJobPerformanceDisclosure is-direct">
             <div className="rundeckJobPerformanceTitle">
-              <span><SphereIcon name="trend" /> Current Performance</span>
+              <span title="Current = selected observation episode"><SphereIcon name="trend" /> Selected Episode Performance</span>
               <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
               {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP overlap</em>}
             </div>
@@ -637,7 +692,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
               <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
               <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
               <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
-              <span><b>Critical WP Samples</b>{historicalSummary?.critical_wp_checks ?? '—'}</span>
+              <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP Overlap</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} / ${historicalSummary.checks ?? 0} samples` : '—'}</span>
             </div>
             <div className="rundeckJobHistoricalTitle"><strong>{historicalModeLabel} historical performance</strong><small>{historicalTrend?.bucket ? `${historicalTrend.bucket} buckets` : 'Retained observations'}</small></div>
             {rangeLoading && <div className="rundeckJobHistoryState">Loading {range.toUpperCase()} performance…</div>}

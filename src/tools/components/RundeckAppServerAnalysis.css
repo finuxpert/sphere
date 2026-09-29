@@ -15,3 +15,16 @@
 .rundeckAppServerTableWrap td:first-child small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sphere-text-muted,#718089);font-size:8.4px}
 .rundeckAppServerState{padding:10px 0;color:var(--sphere-text-secondary,#a9b5bb);font-size:9.5px}.rundeckAppServerState.is-error{color:var(--sphere-danger,#db7d86)}
 @media(max-width:760px){.rundeckAppServerSummary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Full light-surface APP analysis drawer. */
+html[data-theme="light"] .rundeckAppServerAnalysis,
+html[data-theme="light"] .rundeckAppServerWorkloads,
+html[data-theme="light"] .rundeckAppServerTableWrap{background:#f4f7f8!important;color:#172229!important}
+html[data-theme="light"] .rundeckAppServerSummary{background:rgba(45,63,72,.08)!important;border-color:rgba(45,63,72,.13)!important}
+html[data-theme="light"] .rundeckAppServerSummary span{background:#fff!important;color:#27363e!important}
+html[data-theme="light"] .rundeckAppServerSummary b,
+html[data-theme="light"] .rundeckAppServerWorkloads>header small,
+html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{color:#5d6e77!important}
+html[data-theme="light"] .rundeckAppServerTableWrap table{background:#fff!important;color:#27363e!important}
+html[data-theme="light"] .rundeckAppServerTableWrap th{background:#e8eef0!important;color:#52636d!important}
+html[data-theme="light"] .rundeckAppServerTableWrap td{background:#fff!important;color:#27363e!important;border-color:rgba(45,63,72,.09)!important}
