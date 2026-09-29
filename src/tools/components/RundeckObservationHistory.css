@@ -138,3 +138,21 @@
   text-decoration: underline;
   outline: none;
 }
+
+/* SPHERE v1.33.8 — keep history summary readable on one scan line. */
+.rundeckObservationHistoryV1234 > summary {
+  flex-wrap: wrap;
+}
+.rundeckObservationHistorySummary {
+  padding-left: 8px;
+  border-left: 1px solid rgba(126,147,158,.10);
+  line-height: 1.25;
+}
+@media (max-width: 1180px) {
+  .rundeckObservationHistorySummary {
+    flex-basis: 100%;
+    margin-left: 22px;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
