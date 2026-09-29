@@ -35,7 +35,7 @@ const metricLabelForTrend = (metric, fallback = 'Metric') => {
 }
 
 export default function RundeckMonitoringHistory(props) {
-  const { onTrendContext, onSelectJob, refreshToken, selectedJob } = props
+  const { onTrendContext, onSelectJob, refreshToken, selectedJob, systemDataContent = null, systemDataSummary = '' } = props
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [monitoringMode, setMonitoringMode] = React.useState('live')
@@ -119,6 +119,11 @@ export default function RundeckMonitoringHistory(props) {
               <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
               <em>›</em>
             </button>
+            {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'menu' } })}>
+              <SphereIcon name="database" />
+              <span><b>System Data</b><small>{systemDataSummary || 'Collections · SPHERE Services'}</small></span>
+              <em>›</em>
+            </button>}
           </section>
 
           {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
@@ -142,6 +147,11 @@ export default function RundeckMonitoringHistory(props) {
                 <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
                 <em>›</em>
               </button>
+              <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'menu' } })}>
+                <SphereIcon name="history" />
+                <span><b>Correlated Events</b><small>Operational evidence and timing correlation</small></span>
+                <em>›</em>
+              </button>
               <button type="button" onClick={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'menu' } })}>
                 <SphereIcon name="server" />
                 <span><b>SAP Availability</b><small>SAP App · HANA · Web · Technical Checks</small></span>
@@ -152,6 +162,11 @@ export default function RundeckMonitoringHistory(props) {
                 <span><b>SAP Issues</b><small>Active SAP operational issues</small></span>
                 <em>›</em>
               </button>
+              {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'menu' } })}>
+                <SphereIcon name="database" />
+                <span><b>System Data</b><small>{systemDataSummary || 'Collections · SPHERE Services'}</small></span>
+                <em>›</em>
+              </button>}
             </section>
           </RundeckWorkspaceDrawer>}
 
@@ -190,6 +205,16 @@ export default function RundeckMonitoringHistory(props) {
               }}
               embedded
             />
+          </RundeckWorkspaceDrawer>}
+
+          {activeOverlay?.type === 'system-data' && systemDataContent && <RundeckWorkspaceDrawer
+            title="System Data"
+            subtitle={systemDataSummary || 'Collection History · SPHERE Services'}
+            onClose={() => setActiveOverlay(null)}
+            onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
+            backLabel="Back to Analysis Menu"
+          >
+            {systemDataContent}
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'evidence' && <RundeckWorkspaceDrawer
