@@ -821,3 +821,110 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveJobSource{
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveJobSource strong{color:#263a43!important}
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveJobSource span{color:#40545e!important}
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveJobSource small{color:#596b74!important}
+
+
+/* SPHERE RC final DEV polish — RDP-safe light contrast and flat operational hierarchy. */
+html[data-theme="light"]{
+  --sphere-text:#16252c;
+  --sphere-text-secondary:#3b505a;
+  --sphere-text-muted:#566a74;
+  --sphere-border-subtle:rgba(45,63,72,.18);
+  --sphere-chart-grid:rgba(62,82,92,.20);
+  --sphere-chart-1:#147d86;
+  --sphere-chart-2:#4b865d;
+  --sphere-chart-3:#6756a8;
+  --sphere-chart-4:#9a6533;
+  --sphere-chart-5:#3f7c8b;
+  --sphere-memory:#5579b0;
+  --sphere-io-read:#3c8162;
+  --sphere-io-write:#875e99;
+  --sphere-wp:#9a6c20;
+  --sphere-warning:#94630f;
+  --sphere-danger:#ad4e58;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckPanel h2,.rundeckSectionTitle h3,.rundeckMonitoringHead h3,
+  .rundeckCurrentWorkloadHead h3,.rundeckReviewHeadV1231 h3,
+  .rundeckServerSection h3,.rundeckTrendSection h3
+){
+  color:#1d3038!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckLandscapeMeta,.rundeckSectionTitle span,.rundeckRcaHint,
+  .rundeckCurrentWorkloadCount,.rundeckReviewHeadV1231 span,
+  .rundeckSourceFreshness,.rundeckLiveScope span
+){
+  color:#526873!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckServerTable td,.rundeckCurrentWorkload td,.rundeckReviewTableV1231 td
+){
+  color:#243840!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckServerTable th,.rundeckCurrentWorkload th,.rundeckReviewTableV1231 th
+){
+  color:#465c66!important;
+  background:#e4ecef!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckServerTable tbody tr.is-selected,.rundeckServerTable tbody tr.is-cross-panel-focus,
+  .rundeckCurrentWorkload tbody tr.is-selected,.rundeckReviewTableV1231 tbody tr.is-selected
+){
+  background:rgba(20,125,134,.105)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompact,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  border-color:rgba(45,63,72,.12)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard:hover,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button:hover{
+  background:rgba(20,125,134,.045)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckEvidenceCardTitle,.rundeckSelectedSecondaryAnalysis button b
+){color:#21363f!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckEvidenceCard>strong,.rundeckEvidenceCard>small,
+  .rundeckSelectedSecondaryAnalysis button small
+){color:#4d626c!important;opacity:1!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span{
+  background:transparent!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel{
+  color:#425963!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span{
+  color:#1e3139!important;
+  border-color:rgba(45,63,72,.11)!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics b{
+  color:#536973!important;
+}
+html[data-theme="light"] :is(.rundeckJobPerformanceChart,.rundeckJobHistoricalRangeChart,.rundeckTrendChart){
+  filter:saturate(1.18) contrast(1.07);
+}
+html[data-theme="light"] .rundeckTrendPointModal{
+  background:#fff!important;
+  border-color:rgba(45,63,72,.20)!important;
+}
+html[data-theme="light"] .rundeckTrendPointModalHeader,
+html[data-theme="light"] .rundeckTrendPointModalBody{
+  background:#fff!important;
+  color:#1d3038!important;
+}
+html[data-theme="light"] .rundeckTrendPointModalHeader h4{color:#1d3038!important}
+html[data-theme="light"] .rundeckTrendPointModalHeader small{color:#526873!important}

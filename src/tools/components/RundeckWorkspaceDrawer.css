@@ -367,10 +367,6 @@
   background:rgba(126,147,158,.018);
   box-sizing:border-box;
 }
-html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{
-  background:#fff!important;
-  border-color:rgba(45,63,72,.15)!important;
-}
 @media(max-width:900px){
   .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards,
   .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards.is-two{
