@@ -784,9 +784,9 @@
   grid-template-rows:auto auto;
   width:100%;
   overflow:hidden;
-  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));
-  border-radius:6px;
-  background:rgba(126,147,158,.015);
+  border:1px solid rgba(126,147,158,.075)!important;
+  border-radius:4px!important;
+  background:transparent!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel{
   grid-row:1;
@@ -796,7 +796,8 @@
   font-weight:800;
   letter-spacing:.035em;
   text-transform:uppercase;
-  background:rgba(126,147,158,.035);
+  background:transparent!important;
+  padding-bottom:5px!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-episode{grid-column:1/5}
 .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-performance{
@@ -816,8 +817,9 @@
   min-width:0;
   min-height:48px;
   padding:7px 9px;
-  border-top:1px solid var(--sphere-border-subtle,rgba(126,147,158,.08));
-  border-left:1px solid var(--sphere-border-subtle,rgba(126,147,158,.08));
+  border-top:1px solid rgba(126,147,158,.07)!important;
+  border-left:1px solid rgba(126,147,158,.065)!important;
+  background:transparent!important;
   color:var(--sphere-text,#e7edf0);
   font-size:10px;
 }
@@ -839,9 +841,12 @@
   min-height:38px!important;
   margin:8px 0 0!important;
   padding:7px 9px!important;
-  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))!important;
-  border-left:2px solid rgba(216,179,95,.55)!important;
-  border-radius:4px!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+  border-right:0!important;
+  border-bottom:1px solid rgba(126,147,158,.06)!important;
+  border-left:2px solid rgba(216,179,95,.45)!important;
+  border-radius:0!important;
+  background:transparent!important;
   box-sizing:border-box;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline>strong{margin:0!important}
@@ -871,10 +876,11 @@
   position:sticky;
   top:0;
   align-self:start;
-  padding:9px;
-  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));
-  border-radius:6px;
-  background:rgba(126,147,158,.018);
+  padding:8px 14px 8px 4px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.055)!important;
+  border-radius:0!important;
+  background:transparent!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalAnalysis{
   width:100%;
@@ -941,10 +947,10 @@
 .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
   width:100%;
   min-height:470px;
-  padding:8px 10px 6px;
-  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10));
-  border-radius:6px;
-  background:rgba(126,147,158,.012);
+  padding:4px 0 4px 8px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
   box-sizing:border-box;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceDisclosure,
@@ -1005,13 +1011,3 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpiso
 .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart canvas{
   image-rendering:auto;
 }
-
-
-/* SPHERE RC — one Performance workspace; internal hierarchy uses dividers. */
-.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix{border-color:rgba(126,147,158,.075)!important;border-radius:4px!important;background:transparent!important}
-.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel{background:transparent!important;padding-bottom:5px!important}
-.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span{border-top-color:rgba(126,147,158,.07)!important;border-left-color:rgba(126,147,158,.065)!important;background:transparent!important}
-.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{border:0!important;border-right:1px solid rgba(126,147,158,.055)!important;border-radius:0!important;background:transparent!important;padding:8px 14px 8px 4px!important}
-.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{border:0!important;border-radius:0!important;background:transparent!important;padding:4px 0 4px 8px!important}
-.rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline{border-top:1px solid rgba(126,147,158,.08)!important;border-right:0!important;border-bottom:1px solid rgba(126,147,158,.06)!important;border-left:2px solid rgba(216,179,95,.45)!important;border-radius:0!important;background:transparent!important}
-html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix,html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar,html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas,html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel{background:transparent!important}

@@ -364,9 +364,13 @@
 .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{
   min-height:68px!important;
   padding:8px 10px!important;
-  background:rgba(126,147,158,.018);
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
   box-sizing:border-box;
 }
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard:last-child{border-right:0!important}
 @media(max-width:900px){
   .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards,
   .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards.is-two{
@@ -375,7 +379,5 @@
 }
 
 
-/* SPHERE RC — lighter drilldown surfaces; the drawer remains the single boundary. */
+/* SPHERE RC — analysis drawer body uses the drawer as its single surface boundary. */
 .rundeckWorkspaceDrawer:is(.is-evidence,.is-availability,.is-issues,.is-system-data,.is-wide) .rundeckWorkspaceDrawerBody{background:transparent}
-.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{border:0!important;border-right:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;background:transparent!important}.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard:last-child{border-right:0!important}
-html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{background:transparent!important}
