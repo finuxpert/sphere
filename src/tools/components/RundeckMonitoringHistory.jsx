@@ -47,14 +47,14 @@ export default function RundeckMonitoringHistory(props) {
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
     onSelectJob?.(job)
-    setActiveOverlay({ type: 'job' })
+    setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })
   }, [onSelectJob])
 
   const openJobInLive = React.useCallback((job) => {
     if (!job?.key) return
     setMonitoringMode('live')
     onSelectJob?.(job)
-    setActiveOverlay({ type: 'job' })
+    setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })
   }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
@@ -89,7 +89,7 @@ export default function RundeckMonitoringHistory(props) {
             onTrendContext={forwardTrendContext}
             operationalEvidenceContent={operationalEvidenceContent}
             appFocusRequest={appFocusRequest}
-            onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
+            onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })}
             onInspectApp={inspectApp}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
@@ -105,17 +105,41 @@ export default function RundeckMonitoringHistory(props) {
             />
           </section>
           <section className="rundeckCompactDetailRow" aria-label="Additional analysis">
-            <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history' })} disabled={!selectedJob?.key}>
+            <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
               <SphereIcon name="history" />
               <span><b>Performance History</b><small>90-day saved performance history</small></span>
               <em>›</em>
             </button>
-            <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure' })}>
+            <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'menu' } })}>
               <SphereIcon name="server" />
               <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
               <em>›</em>
             </button>
           </section>
+
+          {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
+            title="Analysis Menu"
+            subtitle={selectedJob?.key ? selectedJob.key : 'Performance Analysis'}
+            onClose={() => setActiveOverlay(null)}
+          >
+            <section className="rundeckDrawerAnalysisMenu" aria-label="Analysis options">
+              <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
+                <SphereIcon name="trend" />
+                <span><b>Job / Program Performance</b><small>{selectedJob?.key || 'Select a job or program first'}</small></span>
+                <em>›</em>
+              </button>
+              <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
+                <SphereIcon name="history" />
+                <span><b>Performance History</b><small>90-day saved performance history</small></span>
+                <em>›</em>
+              </button>
+              <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'menu' } })}>
+                <SphereIcon name="server" />
+                <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
+                <em>›</em>
+              </button>
+            </section>
+          </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
             title={selectedJob.key}
@@ -137,6 +161,8 @@ export default function RundeckMonitoringHistory(props) {
             title="Performance History"
             subtitle={selectedJob.key}
             onClose={() => setActiveOverlay(null)}
+            onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
+            backLabel={activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
             <RundeckObservationHistory
               job={selectedJob}
@@ -170,6 +196,8 @@ export default function RundeckMonitoringHistory(props) {
             title="Infrastructure Analysis"
             subtitle="Filesystem · Network · Storage I/O"
             onClose={() => setActiveOverlay(null)}
+            onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
+            backLabel={activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
             <RundeckInfrastructure incidentStart={props.incidentStart || ''} />
           </RundeckWorkspaceDrawer>}
