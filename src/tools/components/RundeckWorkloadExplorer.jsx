@@ -6,8 +6,8 @@ import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const TYPES = [['ALL', 'All'], ['JOB', 'Jobs'], ['PROGRAM', 'Programs']]
-const PERIODS = [['24h', '24H'], ['3d', '3D'], ['7d', '7D'], ['30d', '30D']]
-const RANGE_DAYS = { '24h': 1, '3d': 3, '7d': 7, '30d': 30 }
+const PERIODS = [['3h', '3H'], ['6h', '6H'], ['24h', '24H'], ['3d', '3D'], ['7d', '7D'], ['30d', '30D']]
+const RANGE_DAYS = { '3h': 1, '6h': 1, '24h': 1, '3d': 3, '7d': 7, '30d': 30 }
 
 const token = (name, fallback) => typeof window === 'undefined'
   ? fallback
