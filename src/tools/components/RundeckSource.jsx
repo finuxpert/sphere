@@ -46,31 +46,6 @@ const ageLabel = (minutes) => {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
-const durationText = (seconds) => {
-  const value = Number(seconds)
-  if (!Number.isFinite(value) || value < 0) return '—'
-  if (value < 60) return `${Math.round(value)}s`
-  const minutes = Math.floor(value / 60)
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-  return rest ? `${hours}h ${rest}m` : `${hours}h`
-}
-
-const formatBytes = (value) => {
-  const bytes = Number(value)
-  if (!Number.isFinite(bytes) || bytes < 0) return '—'
-  if (bytes < 1024) return `${bytes} B`
-  const units = ['KB', 'MB', 'GB', 'TB']
-  let size = bytes / 1024
-  let index = 0
-  while (size >= 1024 && index < units.length - 1) {
-    size /= 1024
-    index += 1
-  }
-  return `${size.toLocaleString('en-US', { maximumFractionDigits: size >= 10 ? 1 : 2 })} ${units[index]}`
-}
-
 const pssText = (row = {}) => {
   const raw = row.details?.total_pss_gb ?? row.details?.pss_gb
   const value = Number(raw)
