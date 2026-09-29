@@ -171,3 +171,95 @@ html[data-theme="light"] .rundeckJobHistory :is(.rundeckJobHistoryHead small,.ru
 html[data-theme="light"] .rundeckJobHistory :is(.rundeckJobHistorySummary b,.rundeckJobHistoricalSummary b,.rundeckJobSectionLabel,.rundeckJobCurrentSemantics,.rundeckJobCorrelationDisclaimer){color:#61727b!important}
 .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-selected-workload{align-self:start;min-height:0!important;height:auto!important}
 .appShell:has(.rundeckPanel) .rundeckSelectedCompact{min-height:0!important;height:auto!important;padding-bottom:10px!important}
+
+/* SPHERE v1.34.13 — light-mode contrast closure and compact popup polish. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveOverview,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveOverviewHead,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveScope{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveScope select{
+  background:#fff!important;
+  color:#1d2c34!important;
+  border-color:rgba(45,63,72,.24)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveScope span{
+  color:#5a6b74!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckCurrentWorkloadHead h3,.rundeckCurrentWorkloadName button,
+  .rundeckSelectedCompactIdentity strong,.rundeckEvidenceCardTitle,
+  .rundeckCompactDetailRow b,.rundeckPerformanceReviewBand td:first-child,
+  .rundeckPerformanceReviewBand td:first-child button
+){
+  color:#203038!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckCurrentWorkloadName small,.rundeckCurrentWorkloadCount,
+  .rundeckSelectedCompactIdentity small,.rundeckSelectedCompactMetrics span,
+  .rundeckEvidenceCard>small,.rundeckEvidenceCard>em,
+  .rundeckCompactDetailRow small,.rundeckPerformanceReviewBand td,
+  .rundeckPerformanceReviewBand small
+){
+  color:#556771!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics b{
+  color:#667780!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckReviewReasonChips span{
+  color:#40545e!important;
+  border-color:rgba(45,63,72,.20)!important;
+  background:#f9fbfb!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckOperationalSummaryCards>button,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCompactDetailRow>button{
+  background:#fff!important;
+  color:#203038!important;
+  border-color:rgba(45,63,72,.16)!important;
+  opacity:1!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCompactDetailRow>button:hover,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckOperationalSummaryCards>button:hover{
+  background:#f4fbfb!important;
+  border-color:rgba(22,125,134,.30)!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-app-detail,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance>header,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-app-detail>header{
+  background:#f7f9fa!important;
+  border-color:rgba(45,63,72,.15)!important;
+}
+html[data-theme="light"] .rundeckJobRangeTabs,
+html[data-theme="light"] .rundeckJobRangeMode{
+  background:#fff!important;
+  border-color:rgba(45,63,72,.17)!important;
+}
+html[data-theme="light"] .rundeckJobRangeTabs button,
+html[data-theme="light"] .rundeckJobRangeMode button{
+  color:#4f626c!important;
+}
+html[data-theme="light"] .rundeckJobRangeTabs button.is-active,
+html[data-theme="light"] .rundeckJobRangeMode button.is-active{
+  background:#dff2f2!important;
+  color:#0f5960!important;
+  box-shadow:inset 0 0 0 1px rgba(22,125,134,.18)!important;
+}
+html[data-theme="light"] .rundeckAppServerTableWrap td:first-child strong{
+  color:#203038!important;
+}
+html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{
+  color:#61727b!important;
+}
+html[data-theme="light"] .rundeckJobHistoricalRangeChart,
+html[data-theme="light"] .rundeckJobPerformanceChart{
+  border:1px solid rgba(45,63,72,.08);
+  border-radius:6px;
+}

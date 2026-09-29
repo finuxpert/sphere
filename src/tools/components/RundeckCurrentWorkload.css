@@ -200,3 +200,11 @@
   color: var(--sphere-accent, #4fc6c8);
   font-weight: 800;
 }
+
+/* SPHERE v1.34.13 — use available live-workspace height for operator scanning. */
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+  max-height:370px;
+}
+@media(max-height:760px){
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{max-height:315px}
+}

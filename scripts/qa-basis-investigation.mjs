@@ -66,7 +66,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.12', files.version.includes("APP_VERSION = '1.34.12'") && files.version.includes('monitoring-flow-ui-v1.34.12')],
+  ['monitoring flow version is v1.34.13', files.version.includes("APP_VERSION = '1.34.13'") && files.version.includes('monitoring-flow-ui-v1.34.13')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -159,6 +159,10 @@ const checks = [
   ['Timing correlation explicitly preserves RCA boundary', files.jobHistory.includes('Timing correlation only — not proof of root cause')],
   ['SAP Availability drawer shows technical checks directly without nested details', files.availability.includes('rundeckAvailabilitySummaryStrip') && files.availability.includes('Landscape Checks') && !files.availability.includes('<details className="rundeckAvailabilityMore"')],
   ['Drawer widths are content-aware for performance and operational detail', files.workspaceDrawer.includes("size = 'default'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-wide') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-medium')],
+  ['Performance and APP detail drawers shrink to content with viewport caps', files.wrapper.includes('size="performance"') && files.wrapper.includes('size="app-detail"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-performance') && files.workspaceDrawerCss.includes('bottom:auto') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 116px)')],
+  ['Current Jobs uses more vertical workspace for operator scanning', files.currentWorkloadCss.includes('max-height:370px')],
+  ['Light mode closes host selector dark island and preserves active range contrast', files.accessibilityThemeFinal.includes('.rundeckLiveOverviewHead') && files.accessibilityThemeFinal.includes('#dff2f2') && files.accessibilityThemeFinal.includes('#0f5960')],
+  ['Light mode keeps workload review and operational cards readable', files.accessibilityThemeFinal.includes('.rundeckCurrentWorkloadName button') && files.accessibilityThemeFinal.includes('.rundeckReviewReasonChips span') && files.accessibilityThemeFinal.includes('.rundeckCompactDetailRow>button')],
   ['Light theme swaps SPHERE logo and defines accessible surface tokens', files.sphereLogo.includes("theme === 'light'") && files.accessibilityTheme.includes('html[data-theme="light"]') && files.accessibilityTheme.includes('--sphere-page:#f4f7f8')],
   ['Accessibility theme loads after workspace CSS', files.main.indexOf("SphereWorkspacePerf2026.css") < files.main.indexOf("accessibility-theme-v13411.css")],
   ['Operator typography raises table and navigation font floors', files.accessibilityTheme.includes('font-size:10.6px!important') && files.accessibilityTheme.includes('font-size:12px!important')],
@@ -225,4 +229,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.12 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.13 monitoring flow and deep-analysis checks passed.')

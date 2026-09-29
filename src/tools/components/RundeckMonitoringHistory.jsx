@@ -91,7 +91,7 @@ export default function RundeckMonitoringHistory(props) {
             onClose={() => setActiveOverlay(null)}
             onBack={() => setActiveOverlay(null)}
             backLabel="Back to History"
-            size="wide"
+            size="performance"
           >
             <RundeckJobHistory job={activeOverlay.job} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
           </RundeckWorkspaceDrawer>}
@@ -184,7 +184,7 @@ export default function RundeckMonitoringHistory(props) {
           {activeOverlay?.type === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
             title={selectedJob.key}
             subtitle="Job / Program Performance Analysis"
-            size="wide"
+            size="performance"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'app'
@@ -277,6 +277,7 @@ export default function RundeckMonitoringHistory(props) {
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
             title={activeOverlay.app.host ? activeOverlay.app.host.split('.').shift() : 'APP Server'}
             subtitle="SAP App Server Analysis"
+            size="app-detail"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'issues' ? 'Back to SAP Issues' : 'Back'}

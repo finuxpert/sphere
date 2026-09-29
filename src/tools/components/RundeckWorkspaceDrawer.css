@@ -236,3 +236,47 @@
   .rundeckWorkspaceDrawer.is-wide,
   .rundeckWorkspaceDrawer.is-medium{width:100%}
 }
+
+/* SPHERE v1.34.13 — content-aware performance and APP detail drawers. */
+.rundeckWorkspaceDrawer.is-performance{
+  top:92px;
+  right:14px;
+  bottom:auto;
+  width:min(790px,52vw);
+  max-height:calc(100vh - 116px);
+  border:1px solid rgba(126,147,158,.18);
+  border-radius:10px 0 0 10px;
+  overflow:hidden;
+}
+.rundeckWorkspaceDrawer.is-app-detail{
+  top:92px;
+  right:14px;
+  bottom:auto;
+  width:min(900px,59vw);
+  max-height:calc(100vh - 116px);
+  border:1px solid rgba(126,147,158,.18);
+  border-radius:10px 0 0 10px;
+  overflow:hidden;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody,
+.rundeckWorkspaceDrawer.is-app-detail .rundeckWorkspaceDrawerBody{
+  min-height:0;
+  overflow:auto;
+  padding-bottom:16px;
+}
+.rundeckWorkspaceDrawer.is-performance>header,
+.rundeckWorkspaceDrawer.is-app-detail>header{
+  padding-top:11px;
+  padding-bottom:10px;
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-performance,
+  .rundeckWorkspaceDrawer.is-app-detail{
+    top:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    max-height:none;
+    border-radius:0;
+  }
+}
