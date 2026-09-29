@@ -169,3 +169,62 @@
 @media(max-width:640px){
   .rundeckWorkspaceDrawer>header .rundeckWorkspaceBack em{display:none}
 }
+
+/* SPHERE v1.34.9 — in-drawer analysis menu for switching tools without closing. */
+.rundeckDrawerAnalysisMenu{
+  display:grid;
+  gap:8px;
+  padding:12px 0 4px;
+}
+.rundeckDrawerAnalysisMenu>button{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:48px;
+  width:100%;
+  padding:9px 10px;
+  border:1px solid rgba(126,147,158,.12);
+  border-radius:6px;
+  background:rgba(126,147,158,.02);
+  color:var(--sphere-text-secondary,#b9c4ca);
+  text-align:left;
+  cursor:pointer;
+}
+.rundeckDrawerAnalysisMenu>button:hover,
+.rundeckDrawerAnalysisMenu>button:focus-visible{
+  border-color:rgba(79,198,200,.30);
+  background:rgba(79,198,200,.045);
+  outline:none;
+}
+.rundeckDrawerAnalysisMenu>button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.rundeckDrawerAnalysisMenu .sphereIcon{
+  color:var(--sphere-text-muted,#718089);
+}
+.rundeckDrawerAnalysisMenu span{
+  min-width:0;
+}
+.rundeckDrawerAnalysisMenu b,
+.rundeckDrawerAnalysisMenu small{
+  display:block;
+}
+.rundeckDrawerAnalysisMenu b{
+  color:var(--sphere-text,#e7edf0);
+  font-size:10px;
+}
+.rundeckDrawerAnalysisMenu small{
+  margin-top:2px;
+  overflow:hidden;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.8px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckDrawerAnalysisMenu em{
+  color:var(--sphere-text-muted,#718089);
+  font-size:14px;
+  font-style:normal;
+}
