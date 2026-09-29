@@ -96,8 +96,8 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   const lastPss = pssValues.length ? pssValues[0] : null
   const historySummary = rows.length
     ? [
-        cpuValues.length ? `CPU ${numberText(cpuValues.reduce((sum, value) => sum + value, 0) / cpuValues.length, 1)}% avg · ${numberText(Math.max(...cpuValues), 1)}% peak` : '',
-        firstPss !== null && lastPss !== null ? `Memory ${numberText(firstPss, 2)} → ${numberText(lastPss, 2)} GB` : '',
+        cpuValues.length ? `CPU ${numberText(cpuValues.reduce((sum, value) => sum + value, 0) / cpuValues.length, 1)}–${numberText(Math.max(...cpuValues), 1)}%` : '',
+        firstPss !== null && lastPss !== null ? `Memory ${numberText(firstPss, 2)}→${numberText(lastPss, 2)} GB` : '',
         criticalValues.length ? `Critical WP ${Math.min(...criticalValues)}–${Math.max(...criticalValues)}` : '',
       ].filter(Boolean).join(' · ')
     : ''
@@ -143,7 +143,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
     <summary>
       <SphereIcon name="history" /> Performance History
-      <span>{error ? 'unavailable' : `90 days · ${rows.length} records`}</span>
+      <span>{error ? 'unavailable' : `90D · ${rows.length} records`}</span>
       {historySummary && <small className="rundeckObservationHistorySummary">{historySummary}</small>}
     </summary>
     {content}
