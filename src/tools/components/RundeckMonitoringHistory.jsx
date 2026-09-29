@@ -122,7 +122,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Job / Program Performance Analysis"
             onClose={() => setActiveOverlay(null)}
           >
-            <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} />
+            <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
