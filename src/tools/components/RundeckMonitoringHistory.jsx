@@ -199,6 +199,25 @@ export default function RundeckMonitoringHistory(props) {
                     : 'Back'}
           >
             <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
+            <div className="rundeckPerformanceDrawerEvidence" aria-label="Related operational analysis">
+              <RundeckOperationalEvidence
+                refreshToken={refreshToken}
+                selectedJob={selectedJob}
+                onOpenEvidence={(job) => setActiveOverlay({
+                  type: 'evidence',
+                  job,
+                  returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null },
+                })}
+                onOpenAvailability={() => setActiveOverlay({
+                  type: 'availability',
+                  returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null },
+                })}
+                onOpenIssues={() => setActiveOverlay({
+                  type: 'issues',
+                  returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null },
+                })}
+              />
+            </div>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
@@ -238,7 +257,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Operational evidence and timing correlation"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
-            backLabel="Back to Analysis Menu"
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance' : 'Back to Analysis Menu'}
           >
             <RundeckEvidenceTimeline
               refreshToken={refreshToken}
@@ -253,7 +272,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="SAP App · HANA · Web · Technical Checks"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
-            backLabel="Back to Analysis Menu"
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance' : 'Back to Analysis Menu'}
           >
             <RundeckAvailability refreshToken={refreshToken} />
           </RundeckWorkspaceDrawer>}
@@ -264,7 +283,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Active SAP issues"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}
-            backLabel="Back to Analysis Menu"
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance' : 'Back to Analysis Menu'}
           >
             <RundeckSapIssues
               refreshToken={refreshToken}
@@ -272,7 +291,7 @@ export default function RundeckMonitoringHistory(props) {
                 if (!context?.host) return
                 focusSequence.current += 1
                 setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
-                setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: { type: 'menu' } } })
+                setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
               }}
             />
           </RundeckWorkspaceDrawer>}

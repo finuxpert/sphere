@@ -342,3 +342,38 @@
     top:0;right:0;bottom:0;width:100%;max-height:none;border-radius:0;
   }
 }
+
+/* SPHERE v1.34.25 — keep the three operational drilldowns inside Performance Analysis. */
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence{
+  width:100%;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid rgba(126,147,158,.10);
+  box-sizing:border-box;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin:0!important;
+  padding:0!important;
+  border-top:0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards.is-two{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{
+  min-height:68px!important;
+  padding:8px 10px!important;
+  background:rgba(126,147,158,.018);
+  box-sizing:border-box;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{
+  background:#fff!important;
+  border-color:rgba(45,63,72,.15)!important;
+}
+@media(max-width:900px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards,
+  .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards.is-two{
+    grid-template-columns:1fr!important;
+  }
+}
