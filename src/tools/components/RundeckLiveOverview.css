@@ -621,3 +621,40 @@
 .appShell:has(.rundeckPanel) .rundeckLiveJobsCard.is-pending-compact .rundeckLiveFeedPending {
   padding: 0;
 }
+
+/* SPHERE v1.34.4 — reduce cockpit noise and keep SM37 as integration status. */
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:24px;
+  margin-top:5px;
+  padding:3px 1px;
+  border-top:1px solid rgba(126,147,158,.06);
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.8px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:8.8px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource span{
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.4px;
+  font-weight:700;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.6px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  text-transform:none;
+  font-weight:700;
+}
+@media(max-width:900px){
+  .appShell:has(.rundeckPanel) .rundeckLiveCardGrid{grid-template-columns:1fr}
+}
