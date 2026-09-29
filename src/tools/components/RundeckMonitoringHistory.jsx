@@ -160,37 +160,37 @@ export default function RundeckMonitoringHistory(props) {
             onClose={() => setActiveOverlay(null)}
           >
             <section className="rundeckDrawerAnalysisMenu" aria-label="Analysis options">
-              <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'job', returnTo: { type: 'selected' } })} disabled={!selectedJob?.key}>
+              <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'job', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
                 <SphereIcon name="trend" />
                 <span><b>Job / Program Performance</b><small>{selectedJob?.key || 'Select a job or program first'}</small></span>
                 <em>›</em>
               </button>
-              <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })} disabled={!selectedJob?.key}>
+              <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'menu' } })} disabled={!selectedJob?.key}>
                 <SphereIcon name="history" />
                 <span><b>Observation History</b><small>Saved runs and observation records</small></span>
                 <em>›</em>
               </button>
-              <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}>
+              <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'menu' } })}>
                 <SphereIcon name="server" />
                 <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
                 <em>›</em>
               </button>
-              <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'selected' } })}>
+              <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'menu' } })}>
                 <SphereIcon name="history" />
                 <span><b>Correlated Events</b><small>Operational evidence and timing correlation</small></span>
                 <em>›</em>
               </button>
-              <button type="button" onClick={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'selected' } })}>
+              <button type="button" onClick={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'menu' } })}>
                 <SphereIcon name="server" />
                 <span><b>SAP Availability</b><small>SAP App · HANA · Web · Technical Checks</small></span>
                 <em>›</em>
               </button>
-              <button type="button" onClick={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}>
+              <button type="button" onClick={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'menu' } })}>
                 <SphereIcon name="alert" />
                 <span><b>SAP Issues</b><small>Active SAP operational issues</small></span>
                 <em>›</em>
               </button>
-              {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
+              {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'menu' } })}>
                 <SphereIcon name="database" />
                 <span><b>System Data</b><small>{systemDataSummary || 'Collections · SPHERE Services'}</small></span>
                 <em>›</em>
