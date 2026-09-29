@@ -170,7 +170,7 @@ def list_analysis_closures(
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Database history is not enabled")
-    conditions = ["closed_at >= now() - (:days || ' days')::interval"]
+    conditions = ["closed_at >= now() - make_interval(days => :days)"]
     params: dict = {"days": max(1, min(int(days), 365)), "limit": max(1, min(int(limit), 500))}
     if consumer_type:
         conditions.append("consumer_type = :consumer_type")
