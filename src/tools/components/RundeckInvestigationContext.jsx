@@ -59,8 +59,8 @@ const sourceMeta = (job = {}) => {
     return {
       tone: 'live',
       label: 'SELECTED JOB / PROGRAM · LIVE',
-      detail: [shortHost(job.host || ''), 'Current workloads'].filter(Boolean).join(' · '),
-      note: 'Selected directly from Current Workloads.',
+      detail: [shortHost(job.host || ''), 'Current jobs & programs'].filter(Boolean).join(' · '),
+      note: 'Selected directly from Current Jobs & Programs.',
     }
   }
   return {
