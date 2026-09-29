@@ -31,6 +31,9 @@ const files = {
   currentWorkloadCss: read('src/tools/components/RundeckCurrentWorkload.css'),
   availabilityCss: read('src/tools/components/RundeckAvailability.css'),
   evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
+  evidenceTimeline: read('src/tools/components/RundeckEvidenceTimeline.jsx'),
+  sapIssues: read('src/tools/components/RundeckSapIssues.jsx'),
+  operationalEvidence: read('src/tools/components/RundeckOperationalEvidence.jsx'),
   investigationContext: read('src/tools/components/RundeckInvestigationContext.jsx'),
   investigationFlow: read('src/tools/components/RundeckInvestigationFlow.css'),
   sm37Portal: read('src/tools/components/RundeckSm37LivePortal.jsx'),
@@ -55,7 +58,7 @@ const files = {
 }
 
 const checks = [
-  ['analysis menu version is v1.34.9', files.version.includes("APP_VERSION = '1.34.9'") && files.version.includes('analysis-menu-ui-v1.34.9')],
+  ['operational drawers version is v1.34.10', files.version.includes("APP_VERSION = '1.34.10'") && files.version.includes('operational-drawers-ui-v1.34.10')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -121,6 +124,13 @@ const checks = [
   ['Infrastructure can return to Analysis Menu without closing', files.wrapper.includes("type: 'infrastructure', returnTo: { type: 'menu' }")],
   ['Direct Job Performance can return to Analysis Menu', files.wrapper.includes("type: 'job', returnTo: { type: 'menu' }")],
   ['Analysis Menu styles expose three compact navigation cards', files.workspaceDrawerCss.includes('.rundeckDrawerAnalysisMenu') && files.workspaceDrawerCss.includes('grid-template-columns:auto minmax(0,1fr) auto')],
+  ['Operational evidence is summarized as three compact interactive cards', files.operationalEvidence.includes('rundeckOperationalSummaryCards') && files.evidenceTimeline.includes('compact = false') && files.availability.includes('compact = false') && files.sapIssues.includes('compact = false')],
+  ['Correlated Events opens in the shared analysis drawer', files.wrapper.includes("activeOverlay?.type === 'evidence'") && files.wrapper.includes('Operational evidence and timing correlation')],
+  ['SAP Availability opens in the shared analysis drawer', files.wrapper.includes("activeOverlay?.type === 'availability'") && files.wrapper.includes('SAP App · HANA · Web · Technical Checks')],
+  ['SAP Issues opens in the shared analysis drawer and can drill into APP analysis', files.wrapper.includes("activeOverlay?.type === 'issues'") && files.wrapper.includes("returnTo: { type: 'issues'")],
+  ['Infrastructure current snapshot and history are visible side by side', files.infrastructure.includes('rundeckInfraWorkspace') && files.infrastructure.includes('rundeckInfraTrendWorkspace') && files.infrastructureCss.includes('grid-template-columns:minmax(330px,42fr) minmax(420px,58fr)')],
+  ['Infrastructure history no longer requires opening a disclosure', !files.infrastructure.includes('ref={trendRef}') && !files.infrastructure.includes('<details ref={trendRef}')],
+  ['Infrastructure selected series is forced into the visible chart groups', files.infrastructure.includes('map.has(selectedSeries)') && files.infrastructure.includes('visible[visible.length-1]')],
   ['Review analysis uses full-width drawer performance layout', files.quickAnalysis.includes('presentation="drawer"') && files.quickAnalysisCss.includes('width:min(860px,58vw)') && files.quickAnalysisCss.includes('.rundeckJobPerformanceChart')],
   ['Infrastructure drawer spacing is compact enough to expose history earlier', files.workspaceDrawerCss.includes('.rundeckInfraFreshness') && files.workspaceDrawerCss.includes('margin-bottom:8px') && files.workspaceDrawerCss.includes('.rundeckInfraTrendDisclosure')],
   ['Infrastructure drawer gives Filesystem a full-width row', files.workspaceDrawerCss.includes('.rundeckInfraGrid article:first-child') && files.workspaceDrawerCss.includes('grid-column:1/-1')],
@@ -191,4 +201,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.9 analysis menu checks passed.')
+console.log('\nSPHERE v1.34.10 operational drawer and infrastructure split-view checks passed.')
