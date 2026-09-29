@@ -104,13 +104,13 @@ export default function RundeckMonitoringHistory(props) {
           <section className="rundeckCompactDetailRow" aria-label="Additional analysis">
             <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history' })} disabled={!selectedJob?.key}>
               <SphereIcon name="history" />
-              <span><b>Performance History</b><small>Open saved job/program observations</small></span>
-              <em>Open</em>
+              <span><b>Performance History</b><small>90-day saved performance history</small></span>
+              <em>›</em>
             </button>
             <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure' })}>
               <SphereIcon name="server" />
-              <span><b>Infrastructure Analysis</b><small>Filesystem, network and storage history</small></span>
-              <em>Open</em>
+              <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
+              <em>›</em>
             </button>
           </section>
 
