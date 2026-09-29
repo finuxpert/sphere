@@ -166,6 +166,21 @@ function chartAxisText(value, start, end) {
   }).format(date)
 }
 
+function chartAxisSplitNumber(start, end) {
+  const span = Number(end) - Number(start)
+  if (!Number.isFinite(span) || span <= 0) return 5
+  if (span <= 6 * 60 * 60 * 1000) return 6
+  if (span <= 24 * 60 * 60 * 1000) return 6
+  if (span <= 7 * 24 * 60 * 60 * 1000) return 7
+  return 6
+}
+
+function issueMarkerPosition(issueTs, startTs, endTs) {
+  const span = Number(endTs) - Number(startTs)
+  if (!Number.isFinite(issueTs) || !Number.isFinite(span) || span <= 0) return 'insideEndTop'
+  return (issueTs - Number(startTs)) / span > .72 ? 'insideStartTop' : 'insideEndTop'
+}
+
 function temporalText(issueStart, firstSeen) {
   const issue = Date.parse(issueStart || '')
   const first = Date.parse(firstSeen || '')
@@ -278,7 +293,9 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
         showMinLabel: true,
         showMaxLabel: true,
         formatter: (value) => chartAxisText(value, firstTs, lastTs),
+        margin: 10,
       },
+      splitNumber: chartAxisSplitNumber(firstTs, lastTs),
       axisPointer: { show: true, snap: true, lineStyle: { color: colors.muted, width: 1, type: 'dashed' } },
     }
     const yBase = {
@@ -314,7 +331,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
       silent: true,
       symbol: ['none', 'none'],
       lineStyle: { color: colors.warning, type: 'dashed', width: 1, opacity: .62 },
-      label: { formatter: `Issue Started · ${formatWib(incidentStart, true)} WIB`, color: colors.warning, fontSize: 8, padding: [0,0,3,0], position: 'insideEndTop' },
+      label: { formatter: `Issue Started · ${formatWib(incidentStart, true)} WIB`, color: colors.warning, fontSize: 8, padding: [0,0,3,0], position: issueMarkerPosition(issueTs, firstTs, lastTs) },
       data: [{ xAxis: incidentStart }],
     } : undefined
 
@@ -446,7 +463,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
     }
     const issueMark = issueInRange ? {
       symbol:'none',
-      label:{formatter:`Issue Started · ${formatWib(incidentStart,true)} WIB`,color:colors.warning,fontSize:9,padding:[0,0,3,0]},
+      label:{formatter:`Issue Started · ${formatWib(incidentStart,true)} WIB`,color:colors.warning,fontSize:9,padding:[0,0,3,0],position:issueMarkerPosition(issue,first,last)},
       lineStyle:{color:colors.warning,type:'dashed',opacity:.62},
       data:[{xAxis:incidentStart}],
     } : undefined
@@ -455,14 +472,14 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
       animationDuration:180,
       textStyle:{color:colors.text},
       grid:[
-        {left:64,right:20,top:26,height:138},
-        {left:64,right:20,top:188,height:88},
-        {left:64,right:20,top:306,height:30},
+        {left:70,right:44,top:26,height:138},
+        {left:70,right:44,top:188,height:88},
+        {left:70,right:44,top:306,height:30},
       ],
       xAxis:[
         {type:'time',gridIndex:0,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
         {type:'time',gridIndex:1,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
-        {type:'time',gridIndex:2,min:first,max:last,axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,showMinLabel:true,showMaxLabel:true,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:2,min:first,max:last,splitNumber:chartAxisSplitNumber(first,last),axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,showMinLabel:true,showMaxLabel:true,margin:10,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
       ],
       graphic:[
         {type:'text',left:64,top:8,silent:true,style:{text:'CPU %',fill:colors.secondary,font:'600 10px sans-serif'}},

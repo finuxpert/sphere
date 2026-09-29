@@ -38,6 +38,14 @@ function formatTrendAxis(value, range) {
   return formatWib(value, false)
 }
 
+function trendAxisSplitNumber(range) {
+  if (range === '30d') return 6
+  if (range === '7d') return 7
+  if (range === '24h') return 6
+  if (range === '6h') return 6
+  return 5
+}
+
 const palette = () => ({ text: token('--sphere-text', '#e7edf0'), secondary: token('--sphere-text-secondary', '#a9b5bb'), muted: token('--sphere-text-muted', '#718089'), grid: token('--sphere-chart-grid', 'rgba(126,147,158,.08)'), panel: token('--sphere-surface-1', '#141d23'), attention: token('--sphere-attention', '#6aa2d8'), warning: token('--sphere-warning', '#d8b35f'), danger: token('--sphere-danger', '#db7d86'), series: [token('--sphere-chart-1', '#72a9e8'), token('--sphere-chart-2', '#8cc985'), token('--sphere-chart-3', '#aaa0df'), token('--sphere-chart-4', '#e1a16c'), token('--sphere-chart-5', '#5dcbd1')] })
 
 async function json(url, signal) {
@@ -162,7 +170,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       animationDuration: 140,
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
       legend: { top: 0, type: 'scroll', itemWidth: 14, itemHeight: 8, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 9 } },
-      grid: { left: 52, right: 58, top: 38, bottom: compactPoints ? 28 : 43 },
+      grid: { left: 58, right: 72, top: 38, bottom: compactPoints ? 34 : 48 },
       tooltip: {
         trigger: 'axis',
         confine: true,
@@ -180,7 +188,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           return lines.join('<br/>')
         },
       },
-      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, showMinLabel: true, showMaxLabel: true, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, showMinLabel: true, showMaxLabel: true, margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
