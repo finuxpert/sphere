@@ -975,3 +975,23 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* SPHERE v1.33.9 — let System Data use the full available grid width. */
+.rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
+  width: 100%;
+  max-width: none !important;
+}
+.rundeckSupportingDataBody > details {
+  width: 100%;
+  min-width: 0;
+}
+.rundeckHistory,
+.rundeckPlatformHealth {
+  width: 100%;
+  min-width: 0;
+}
+.rundeckPlatformTableWrap,
+.rundeckHistoryTableWrap {
+  width: 100%;
+  min-width: 0;
+}
