@@ -139,6 +139,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
             title="Analysis Menu"
+            size="menu"
             subtitle={selectedJob?.key ? selectedJob.key : 'Performance Analysis'}
             onClose={() => setActiveOverlay(null)}
           >
@@ -246,7 +247,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'availability' && <RundeckWorkspaceDrawer
             title="SAP Availability"
-            size="medium"
+            size="availability"
             subtitle="SAP App · HANA · Web · Technical Checks"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => setActiveOverlay(activeOverlay.returnTo) : null}

@@ -152,6 +152,20 @@ function durationText(firstSeen, lastSeen) {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
+function chartAxisText(value, start, end) {
+  const span = Number(end) - Number(start)
+  if (!Number.isFinite(span) || span <= 24 * 60 * 60 * 1000) return formatWib(value, false)
+  if (span <= 72 * 60 * 60 * 1000) return formatWib(value, true)
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    day: '2-digit',
+    month: 'short',
+    ...(span <= 7 * 24 * 60 * 60 * 1000 ? { hour: '2-digit', minute: '2-digit', hour12: false } : {}),
+  }).format(date)
+}
+
 function temporalText(issueStart, firstSeen) {
   const issue = Date.parse(issueStart || '')
   const first = Date.parse(firstSeen || '')
@@ -193,6 +207,8 @@ function chartProfile(rows = []) {
     hasWp: wpValues.length > 0,
     wpVariable: new Set(wpValues.map((value) => Number(value).toFixed(2))).size > 1,
     hasCritical: rows.some((row) => Number(row.host_wp_critical || 0) > 0),
+    criticalSamples: rows.filter((row) => Number(row.host_wp_critical || 0) > 0).length,
+    totalSamples: rows.length,
   }
 }
 
@@ -261,7 +277,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
         hideOverlap: true,
         showMinLabel: true,
         showMaxLabel: true,
-        formatter: (value) => formatWib(value, false),
+        formatter: (value) => chartAxisText(value, firstTs, lastTs),
       },
       axisPointer: { show: true, snap: true, lineStyle: { color: colors.muted, width: 1, type: 'dashed' } },
     }
@@ -297,8 +313,8 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     const issueMark = issueInRange ? {
       silent: true,
       symbol: ['none', 'none'],
-      lineStyle: { color: colors.warning, type: 'dashed', width: 1 },
-      label: { formatter: 'Issue start', color: colors.warning, fontSize: 8 },
+      lineStyle: { color: colors.warning, type: 'dashed', width: 1, opacity: .62 },
+      label: { formatter: 'Issue start', color: colors.warning, fontSize: 8, padding: [0,0,3,0] },
       data: [{ xAxis: incidentStart }],
     } : undefined
 
@@ -331,6 +347,10 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
         backgroundColor: 'transparent',
         textStyle: { color: colors.text },
         grid: grids,
+        graphic: lanes.map((lane,index)=>({
+          type:'text',left:68,top:Math.max(0,grids[index].top-13),silent:true,
+          style:{text:lane.id==='event'?'Critical WP':lane.name,fill:colors.secondary,font:'600 9px sans-serif'},
+        })),
         xAxis: lanes.map((lane, index) => ({
           ...axisBase,
           gridIndex: index,
@@ -342,7 +362,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
           : {
               ...yBase,
               gridIndex: index,
-              name: lane.name,
+              name: '',
               splitLine: lane.id === 'wp' && !profile.wpVariable ? { show: false } : yBase.splitLine,
               splitNumber: lane.id === 'wp' ? 1 : 2,
               axisLabel: lane.id === 'wp'
@@ -426,8 +446,8 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
     }
     const issueMark = issueInRange ? {
       symbol:'none',
-      label:{formatter:'Issue start',color:colors.warning,fontSize:9},
-      lineStyle:{color:colors.warning,type:'dashed'},
+      label:{formatter:'Issue start',color:colors.warning,fontSize:9,padding:[0,0,3,0]},
+      lineStyle:{color:colors.warning,type:'dashed',opacity:.62},
       data:[{xAxis:incidentStart}],
     } : undefined
     return {
@@ -442,12 +462,17 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
       xAxis:[
         {type:'time',gridIndex:0,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
         {type:'time',gridIndex:1,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
-        {type:'time',gridIndex:2,axisLabel:{color:colors.muted,fontSize:10},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:2,axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+      ],
+      graphic:[
+        {type:'text',left:62,top:8,silent:true,style:{text:'CPU %',fill:colors.secondary,font:'600 10px sans-serif'}},
+        {type:'text',left:62,top:154,silent:true,style:{text:'PSS GB',fill:colors.secondary,font:'600 10px sans-serif'}},
+        {type:'text',left:62,top:251,silent:true,style:{text:'Critical WP',fill:colors.secondary,font:'600 9px sans-serif'}},
       ],
       yAxis:[
-        {type:'value',gridIndex:0,name:'CPU %',nameTextStyle:{color:colors.secondary,fontSize:10},axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
-        {type:'value',gridIndex:1,name:'PSS GB',nameTextStyle:{color:colors.secondary,fontSize:10},axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
-        {type:'value',gridIndex:2,min:0,max:1,name:'Critical WP',nameTextStyle:{color:colors.secondary,fontSize:9},axisLabel:{show:false},axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}},
+        {type:'value',gridIndex:0,name:'',axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
+        {type:'value',gridIndex:1,name:'',axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},
+        {type:'value',gridIndex:2,min:0,max:1,name:'',axisLabel:{show:false},axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}},
       ],
       axisPointer:{link:[{xAxisIndex:'all'}]},
       tooltip:{
@@ -659,7 +684,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
       </div>}
 
       <section className="rundeckJobHistoricalAnalysis" aria-label="Historical analysis">
-        <div className="rundeckJobSectionLabel">Historical Analysis</div>
+        <div className="rundeckJobSectionLabel">Performance Analysis</div>
         <div className="rundeckJobPerformanceRange" aria-label="Performance time range">
         <div className="rundeckJobRangeTabs" role="group" aria-label="Performance time range">
           {PERFORMANCE_RANGES.map(([key,label]) => <button key={key} type="button" disabled={key !== 'current' && !historicalEligible} className={range===key?'is-active':''} aria-pressed={range===key} onClick={()=>setRange(key)}>{label}</button>)}
@@ -669,7 +694,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
         </div>}
         </div>
-        <small className="rundeckJobCurrentSemantics" title="Current = selected observation episode">Current = selected observation episode</small>
+        <small className="rundeckJobCurrentSemantics" title="Current = selected observation episode">Current = selected episode</small>
       </section>
 
       {range === 'current'
@@ -677,7 +702,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             <div className="rundeckJobPerformanceTitle">
               <span title="Current = selected observation episode"><SphereIcon name="trend" /> Selected Episode Performance</span>
               <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
-              {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP overlap</em>}
+              {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP overlap · {profile.criticalSamples}/{profile.totalSamples} samples</em>}
             </div>
             {episodeItems.length === 1
               ? <SingleSamplePerformance row={episodeItems[0]} />

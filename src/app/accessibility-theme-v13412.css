@@ -263,3 +263,48 @@ html[data-theme="light"] .rundeckJobPerformanceChart{
   border:1px solid rgba(45,63,72,.08);
   border-radius:6px;
 }
+
+/* SPHERE v1.34.14 — final RDP-safe light contrast and analysis polish. */
+html[data-theme="light"]{
+  --sphere-accent:#14747b;
+  --sphere-positive:#287a55;
+  --sphere-text:#172229;
+  --sphere-text-secondary:#3f515a;
+  --sphere-text-muted:#60717a;
+  --sphere-border-subtle:rgba(45,63,72,.16);
+  --sphere-chart-grid:rgba(62,82,92,.16);
+}
+.rundeckJobHistory.is-drawer-presentation .rundeckJobHistoryOverview{
+  padding:6px 8px!important;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.11));
+  border-radius:6px;
+  background:rgba(126,147,158,.018);
+}
+.rundeckJobCorrelationDisclaimer{font-weight:650}
+.rundeckJobRangeTabs button,.rundeckJobRangeMode button{min-height:32px!important;padding-left:9px!important;padding-right:9px!important}
+.rundeckJobPerformanceTitle em{white-space:nowrap}
+.rundeckInfraTrendSummary{min-height:30px!important;padding:6px 8px!important}
+.rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{height:278px!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer>header .rundeckWorkspaceBack{
+  background:#fff!important;color:#31464f!important;border-color:rgba(45,63,72,.24)!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer>header .rundeckWorkspaceBack em{color:#31464f!important}
+html[data-theme="light"] .rundeckDrawerAnalysisMenu>button{
+  background:#fff!important;color:#31464f!important;border-color:rgba(45,63,72,.17)!important;
+}
+html[data-theme="light"] .rundeckDrawerAnalysisMenu b{color:#203038!important}
+html[data-theme="light"] .rundeckDrawerAnalysisMenu :is(small,.sphereIcon,em){color:#596b74!important;opacity:1!important}
+html[data-theme="light"] .rundeckAvailability :is(.rundeckAvailabilityHead h3,.rundeckAvailabilityDetailSections h4){color:#203038!important;opacity:1!important}
+html[data-theme="light"] .rundeckAvailability :is(.rundeckAvailabilityHead span,.rundeckAvailabilityMuted,.rundeckAvailabilityLabel){color:#5a6c75!important;opacity:1!important}
+html[data-theme="light"] .rundeckAvailabilitySummaryStrip strong{color:#244c3c!important;font-weight:760!important;opacity:1!important}
+html[data-theme="light"] .rundeckAvailabilitySummaryStrip b{color:#5b6c75!important;opacity:1!important}
+html[data-theme="light"] .rundeckAvailabilityDetailSections section{background:#fff!important;border-color:rgba(45,63,72,.16)!important}
+html[data-theme="light"] .rundeckAvailabilityStatus.is-up,
+html[data-theme="light"] .rundeckAvailabilityStatus.is-normal{color:#287a55!important;font-weight:760!important}
+html[data-theme="light"] .rundeckAvailabilityMatrix :is(span,b),
+html[data-theme="light"] .rundeckAvailabilityApps :is(span,b),
+html[data-theme="light"] .rundeckAvailabilityInfra :is(span,b){opacity:1!important}
+html[data-theme="light"] .rundeckInfraTrendSummary{background:#eef3f4!important;color:#263840!important}
+html[data-theme="light"] .rundeckInfraTrendSummary :is(strong,span){color:#435760!important;opacity:1!important}
+html[data-theme="light"] .rundeckInfraLegend span{color:#4f626c!important;opacity:1!important}
+html[data-theme="light"] .rundeckInfraChartWrap .yTick text{fill:#596b74!important}
