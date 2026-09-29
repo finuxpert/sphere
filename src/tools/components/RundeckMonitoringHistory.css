@@ -922,3 +922,43 @@
     grid-template-columns:1fr;
   }
 }
+
+/* SPHERE v1.34.11 — three secondary analysis launchers and readable issue summary. */
+.rundeckCompactDetailRow{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.rundeckCompactDetailRow button b{font-size:10.2px}
+.rundeckCompactDetailRow button small{font-size:9.2px}
+.rundeckSapIssuesSummaryStrip{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:1px;
+  margin:8px 0;
+  border:1px solid rgba(126,147,158,.10);
+  border-radius:5px;
+  overflow:hidden;
+  background:rgba(126,147,158,.06);
+}
+.rundeckSapIssuesSummaryStrip span{
+  min-width:0;
+  padding:7px 8px;
+  background:var(--sphere-page,#0f151a);
+}
+.rundeckSapIssuesSummaryStrip b,
+.rundeckSapIssuesSummaryStrip strong{
+  display:block;
+}
+.rundeckSapIssuesSummaryStrip b{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.rundeckSapIssuesSummaryStrip strong{
+  margin-top:2px;
+  color:var(--sphere-text,#e7edf0);
+  font-size:12px;
+}
+@media(max-width:1100px){
+  .rundeckCompactDetailRow{grid-template-columns:1fr}
+}
