@@ -55,7 +55,7 @@ const files = {
 }
 
 const checks = [
-  ['drawer navigation version is v1.34.8', files.version.includes("APP_VERSION = '1.34.8'") && files.version.includes('drawer-navigation-ui-v1.34.8')],
+  ['analysis menu version is v1.34.9', files.version.includes("APP_VERSION = '1.34.9'") && files.version.includes('analysis-menu-ui-v1.34.9')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
@@ -116,6 +116,11 @@ const checks = [
   ['Review to Job navigation can return to review analysis', files.wrapper.includes("returnTo: { type: 'review', row: activeOverlay.row, reviewContext: activeOverlay.reviewContext }") && files.wrapper.includes("'Back to Review'" )],
   ['Performance History drilldown can return without closing analysis', files.wrapper.includes("returnTo: { type: 'history' }") && files.wrapper.includes("'Back to Performance History'")],
   ['Drawer Back control has compact header styling', files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawerHeaderActions') && files.workspaceDrawerCss.includes('.rundeckWorkspaceBack')],
+  ['Analysis Menu exists inside the same drawer', files.wrapper.includes("activeOverlay?.type === 'menu'") && files.wrapper.includes('rundeckDrawerAnalysisMenu') && files.wrapper.includes('Analysis Menu')],
+  ['Performance History can return to Analysis Menu without closing', files.wrapper.includes("type: 'history', returnTo: { type: 'menu' }") && files.wrapper.includes("'Back to Analysis Menu'")],
+  ['Infrastructure can return to Analysis Menu without closing', files.wrapper.includes("type: 'infrastructure', returnTo: { type: 'menu' }")],
+  ['Direct Job Performance can return to Analysis Menu', files.wrapper.includes("type: 'job', returnTo: { type: 'menu' }")],
+  ['Analysis Menu styles expose three compact navigation cards', files.workspaceDrawerCss.includes('.rundeckDrawerAnalysisMenu') && files.workspaceDrawerCss.includes('grid-template-columns:auto minmax(0,1fr) auto')],
   ['Review analysis uses full-width drawer performance layout', files.quickAnalysis.includes('presentation="drawer"') && files.quickAnalysisCss.includes('width:min(860px,58vw)') && files.quickAnalysisCss.includes('.rundeckJobPerformanceChart')],
   ['Infrastructure drawer spacing is compact enough to expose history earlier', files.workspaceDrawerCss.includes('.rundeckInfraFreshness') && files.workspaceDrawerCss.includes('margin-bottom:8px') && files.workspaceDrawerCss.includes('.rundeckInfraTrendDisclosure')],
   ['Infrastructure drawer gives Filesystem a full-width row', files.workspaceDrawerCss.includes('.rundeckInfraGrid article:first-child') && files.workspaceDrawerCss.includes('grid-column:1/-1')],
@@ -186,4 +191,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.8 drawer navigation checks passed.')
+console.log('\nSPHERE v1.34.9 analysis menu checks passed.')
