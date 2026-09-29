@@ -499,3 +499,17 @@
 .rundeckHistoricalSnapshotHead strong {
   font-size: 9.4px;
 }
+
+/* SPHERE v1.34.19 — History should look intentional before and after search. */
+.rundeckExplorerHeader{padding-bottom:12px!important}
+.rundeckExplorerHeader h3{font-size:14px!important;color:var(--sphere-text,#e7edf0)!important}
+.rundeckExplorerHeader p{font-size:10px!important;color:var(--sphere-text-secondary,#a9b5bb)!important}
+.rundeckExplorerSearch{min-width:min(560px,54vw)!important}
+.rundeckExplorerSearch input{font-size:10.5px!important}
+.rundeckExplorerResults,.rundeckExplorerDetail{min-height:235px!important}
+.rundeckExplorerEmptyState{min-height:180px!important}
+.rundeckExplorerEmptyState .sphereIcon{width:22px!important;height:22px!important}
+.rundeckExplorerEmptyState strong{font-size:12px!important}
+.rundeckExplorerEmptyState span{font-size:10px!important}
+html[data-theme="light"] .rundeckExplorerHeader h3{color:#203038!important}
+html[data-theme="light"] .rundeckExplorerHeader p{color:#52666f!important}

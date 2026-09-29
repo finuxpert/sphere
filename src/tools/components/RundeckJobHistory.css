@@ -754,3 +754,33 @@
 .rundeckJobCorrelationDisclaimer{margin-left:auto;color:var(--sphere-text-muted,#718089);font-size:9px;font-style:normal}
 .rundeckJobHistoricalRangeChart{height:330px}
 @media(max-width:780px){.rundeckJobCorrelationDisclaimer{width:100%;margin-left:0}}
+
+/* SPHERE v1.34.19 — final performance-analysis readability. */
+.rundeckWorkspaceDrawer.is-performance{width:min(980px,64vw)!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody{padding-left:16px!important;padding-right:16px!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryOverview{grid-template-columns:1fr!important;gap:4px!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistorySummary{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistorySummary>span{
+  min-height:44px!important;padding:7px 9px!important;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.11))!important;
+  border-radius:5px!important;background:rgba(126,147,158,.018)!important;
+  font-size:11px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistorySummary b{font-size:9px!important;margin-bottom:3px!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline{
+  min-height:34px!important;padding:7px 8px!important;
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.10))!important;
+  border-left:2px solid rgba(216,179,95,.55)!important;border-radius:4px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobCorrelationDisclaimer{font-size:9.5px!important;font-weight:700!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{margin-top:10px!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{min-height:34px!important;font-size:10.5px!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{min-height:440px!important}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{height:390px!important}
+@media(max-width:1180px){
+ .rundeckWorkspaceDrawer.is-performance{width:100%!important}
+}

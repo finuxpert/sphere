@@ -67,7 +67,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.18', files.version.includes("APP_VERSION = '1.34.18'") && files.version.includes('monitoring-flow-ui-v1.34.18')],
+  ['monitoring flow version is v1.34.19', files.version.includes("APP_VERSION = '1.34.19'") && files.version.includes('monitoring-flow-ui-v1.34.19')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -100,7 +100,15 @@ const checks = [
   ['Current Workloads keeps explicit compact column allocation', files.currentWorkloadCss.includes('table-layout: fixed') && files.currentWorkloadCss.includes('nth-child(2)') && files.currentWorkloadCss.includes('width: 45%')],
   ['Current Workloads exposes multi-core CPU semantics and selected identity', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('CPU Total ↓') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Selected · {selectedContext}')],
   ['Trend chart point opens a compact modal instead of expanding the live page', files.serverTrend.includes('rundeckTrendPointModalBackdrop') && files.serverTrend.includes('aria-modal="true"') && files.serverTrend.includes('closeTrendDetails') && !files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
-  ['Trend modal uses one hierarchy and full-width actionable workload rows', files.serverTrend.includes('rundeckTrendModalContext') && files.serverTrend.includes('rundeckTrendWorkloadRow') && files.serverTrend.includes('open Performance Analysis') && files.accessibilityThemeFinal.includes('width:min(610px,68vw)') && files.accessibilityThemeFinal.includes('grid-template-columns:minmax(0,1fr) 72px 78px 48px 18px')],
+  ['Trend modal uses one hierarchy and full-width actionable workload rows', files.serverTrend.includes('rundeckTrendModalContext') && files.serverTrend.includes('rundeckTrendWorkloadRow') && files.serverTrend.includes('open Performance Analysis')],
+  ['Trend modal restores graph context with a selected-sample mini chart', files.serverTrend.includes('MiniTrendContext') && files.serverTrend.includes('rundeckTrendMiniMarkerLine') && files.accessibilityThemeFinal.includes('.rundeckTrendMiniContext')],
+  ['Trend modal traps focus locks page scroll and restores focus', files.serverTrend.includes("document.body.style.overflow = 'hidden'") && files.serverTrend.includes("event.key !== 'Tab'") && files.serverTrend.includes('restoreFocusRef.current?.focus')],
+  ['Trend point selection ignores distant clicks', files.serverTrend.includes('distance > 900')],
+  ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('CPU can exceed 100%') && files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes(' GB')],
+  ['Performance drawer uses wider balanced multi-lane charts', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistoryCss.includes('width:min(980px,64vw)') && files.jobHistoryCss.includes('min-height:440px')],
+  ['Current Jobs reserves desktop space for five or more scan rows', files.currentWorkloadCss.includes('height:360px!important')],
+  ['History empty states use stronger intentional visual hierarchy', files.workloadExplorerCss.includes('min-height:235px') && files.workloadExplorerCss.includes('.rundeckExplorerEmptyState strong')],
+  ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
   ['APP analysis and selected job/program contexts are explicitly named', files.wrapper.includes('SAP App Server Analysis') && files.appServerAnalysis.includes('Jobs & Programs on') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
   ['Observation History defaults to eight rows with explicit expansion', files.observationHistory.includes('rows.slice(0, 8)') && files.observationHistory.includes('View all ${rows.length}')],
   ['Observation History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
@@ -245,4 +253,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.18 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.19 monitoring flow and deep-analysis checks passed.')

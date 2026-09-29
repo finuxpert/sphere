@@ -208,7 +208,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         const current = ((point[0] - pixel[0]) ** 2) + ((point[1] - pixel[1]) ** 2)
         if (current < distance) { distance = current; nearest = { seriesIndex, dataIndex, item } }
       }))
-      if (!nearest) return
+      if (!nearest || distance > 900) return
       chart.dispatchAction({ type: 'showTip', seriesIndex: nearest.seriesIndex, dataIndex: nearest.dataIndex })
       const item = nearest.item
       const availability = trend?.metric === 'availability'
@@ -258,7 +258,66 @@ function processCount(consumer) {
   return value === null || value === undefined ? null : Number(value)
 }
 
-function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
+function MiniTrendContext({ trend, selected, range }) {
+  const model = React.useMemo(() => {
+    const host = selected?.host || ''
+    const rows = (trend?.items || [])
+      .filter((row) => shortHost(row.host || '') === shortHost(host))
+      .map((row) => {
+        const at = Date.parse(row.bucket || '')
+        const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
+        return Number.isFinite(at) && Number.isFinite(value) ? { at, value } : null
+      })
+      .filter(Boolean)
+      .sort((a,b)=>a.at-b.at)
+    if (rows.length < 2) return null
+    const minAt = rows[0].at
+    const maxAt = rows.at(-1).at
+    const values = rows.map((row)=>row.value)
+    const minValue = Math.min(...values)
+    const maxValue = Math.max(...values)
+    const spanAt = Math.max(1, maxAt-minAt)
+    const spanValue = Math.max(1e-9, maxValue-minValue)
+    const point = (row) => ({
+      x: 12 + ((row.at-minAt)/spanAt)*496,
+      y: 68 - ((row.value-minValue)/spanValue)*50,
+    })
+    const points = rows.map((row)=>point(row))
+    const selectedAt = Date.parse(selected?.at || '')
+    const selectedRow = Number.isFinite(selectedAt)
+      ? rows.reduce((best,row)=>!best || Math.abs(row.at-selectedAt)<Math.abs(best.at-selectedAt) ? row : best,null)
+      : rows.at(-1)
+    const marker = selectedRow ? point(selectedRow) : null
+    return {
+      points: points.map((p)=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),
+      marker,
+      minValue,
+      maxValue,
+      selectedValue:selectedRow?.value,
+    }
+  },[selected,trend])
+
+  if(!model) return null
+  return <section className="rundeckTrendMiniContext" aria-label="Trend context around selected sample">
+    <header>
+      <div><span>Trend Context</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
+      <small>{numberText(model.minValue,1)}–{numberText(model.maxValue,1)}{selected?.unit || trend?.unit || ''}</small>
+    </header>
+    <svg viewBox="0 0 520 84" role="img" aria-label="Mini trend with selected sample marker">
+      <line x1="12" y1="18" x2="508" y2="18" className="rundeckTrendMiniGrid" />
+      <line x1="12" y1="43" x2="508" y2="43" className="rundeckTrendMiniGrid" />
+      <line x1="12" y1="68" x2="508" y2="68" className="rundeckTrendMiniGrid" />
+      <polyline points={model.points} className="rundeckTrendMiniLine" />
+      {model.marker && <>
+        <line x1={model.marker.x} y1="10" x2={model.marker.x} y2="72" className="rundeckTrendMiniMarkerLine" />
+        <circle cx={model.marker.x} cy={model.marker.y} r="4" className="rundeckTrendMiniMarker" />
+      </>}
+    </svg>
+    <footer><span>Selected sample</span><strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong></footer>
+  </section>
+}
+
+function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, range }) {
   if (!selected && !loading && !error) return null
   const selectedRow = selectedTimelineRow(selected, timeline)
   const consumers = selectedRow?.top_consumers || []
@@ -277,7 +336,9 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
       </div>
     </div>
 
-    {loading && <div className="rundeckHistoryState">Loading saved history…</div>}
+    <MiniTrendContext trend={trend} selected={selected} range={range} />
+
+    {loading && <div className="rundeckHistoryState rundeckTrendModalLoading"><span className="rundeckTrendModalSpinner" aria-hidden="true" /> Loading saved history…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
 
     {!loading && !error && selected && <section className="rundeckTrendWorkloadPanel">
@@ -290,7 +351,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
       </header>
 
       <div className="rundeckTrendWorkloadHead" aria-hidden="true">
-        <span>Job / Program</span><span>CPU</span><span>Memory</span><span>Proc</span><span />
+        <span>Job / Program</span><span title="CPU can exceed 100% when a workload uses multiple CPU cores.">CPU</span><span>Memory</span><span>Processes</span><span />
       </div>
 
       <div className="rundeckTrendWorkloadRows">
@@ -307,7 +368,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob }) {
           >
             <span className="rundeckTrendWorkloadIdentity"><b>{index + 1}. {consumer.consumer_key}</b><small>{workloadTypeLabel(consumer.consumer_type)}</small></span>
             <span>{numberText(consumer.cpu_pct, 1)}%</span>
-            <span>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)}G`}</span>
+            <span>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)} GB`}</span>
             <span>{processes === null || Number.isNaN(processes) ? '—' : numberText(processes, 0)}</span>
             <span className="rundeckTrendWorkloadChevron">›</span>
           </button>
@@ -334,6 +395,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [timelineLoading, setTimelineLoading] = React.useState(false)
   const [timelineError, setTimelineError] = React.useState('')
   const timelineRequestSequence = React.useRef(0)
+  const modalRef = React.useRef(null)
+  const restoreFocusRef = React.useRef(null)
   const availabilityMetric = Boolean(AVAILABILITY_CATEGORIES[metric])
 
   React.useEffect(() => { onTrendContext?.({ metric, metricLabel: trend?.metric_label || metricLabel(metric), range, rangeLabel: rangeLabel(range), mode }) }, [metric, mode, onTrendContext, range, trend?.metric_label])
@@ -381,11 +444,37 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
 
   React.useEffect(() => {
     if (!selected) return undefined
+    restoreFocusRef.current = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const timer = window.setTimeout(() => {
+      modalRef.current?.querySelector('[data-trend-modal-close]')?.focus()
+    }, 0)
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') closeTrendDetails()
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeTrendDetails()
+        return
+      }
+      if (event.key !== 'Tab' || !modalRef.current) return
+      const focusable = [...modalRef.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter((node) => !node.hasAttribute('hidden'))
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable.at(-1)
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+      restoreFocusRef.current?.focus?.()
+    }
   }, [closeTrendDetails, selected])
 
   const openSelectedJob = React.useCallback((context) => {
@@ -404,13 +493,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
     {!selected && <div className="rundeckRcaHint">Click a chart point to inspect saved job and program data without expanding the page.</div>}
     {selected && <div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
-      <section className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
+      <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
           <div><span>SPHERE ANALYSIS</span><h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</small></div>
-          <button type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
+          <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
-          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} />
+          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} trend={trend} range={range} />
         </div>
       </section>
     </div>}

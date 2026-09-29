@@ -247,15 +247,15 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     const issueInRange = Number.isFinite(issueTs) && Number.isFinite(firstTs) && Number.isFinite(lastTs) && issueTs >= firstTs && issueTs <= lastTs
 
     const lanes = [
-      { id: 'cpu', name: 'CPU Usage %', height: expanded ? 104 : 62 },
-      profile.hasPss ? { id: 'pss', name: 'PSS Memory GB', height: expanded ? 64 : 42 } : null,
-      profile.hasIo ? { id: 'io', name: 'I/O MiB/s', height: expanded ? 58 : 38 } : null,
-      profile.hasWp ? { id: 'wp', name: 'WP', height: expanded ? (profile.wpVariable ? 48 : 34) : (profile.wpVariable ? 34 : 22) } : null,
-      profile.hasCritical ? { id: 'event', name: '', height: expanded ? 20 : 16 } : null,
+      { id: 'cpu', name: 'CPU Usage %', height: expanded ? 126 : 76 },
+      profile.hasPss ? { id: 'pss', name: 'PSS Memory GB', height: expanded ? 82 : 50 } : null,
+      profile.hasIo ? { id: 'io', name: 'I/O MiB/s', height: expanded ? 70 : 44 } : null,
+      profile.hasWp ? { id: 'wp', name: 'WP', height: expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28) } : null,
+      profile.hasCritical ? { id: 'event', name: '', height: expanded ? 28 : 20 } : null,
     ].filter(Boolean)
 
     let top = 16
-    const gap = 14
+    const gap = expanded ? 16 : 14
     const grids = lanes.map((lane) => {
       const grid = { left: 68, right: 18, top, height: lane.height }
       top += lane.height + gap
@@ -455,9 +455,9 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
       animationDuration:180,
       textStyle:{color:colors.text},
       grid:[
-        {left:62,right:18,top:24,height:116},
-        {left:62,right:18,top:170,height:68},
-        {left:62,right:18,top:266,height:24},
+        {left:64,right:20,top:26,height:138},
+        {left:64,right:20,top:188,height:88},
+        {left:64,right:20,top:306,height:30},
       ],
       xAxis:[
         {type:'time',gridIndex:0,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
@@ -465,9 +465,9 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
         {type:'time',gridIndex:2,axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
       ],
       graphic:[
-        {type:'text',left:62,top:8,silent:true,style:{text:'CPU %',fill:colors.secondary,font:'600 10px sans-serif'}},
-        {type:'text',left:62,top:154,silent:true,style:{text:'PSS GB',fill:colors.secondary,font:'600 10px sans-serif'}},
-        {type:'text',left:62,top:251,silent:true,style:{text:'Critical WP',fill:colors.secondary,font:'600 9px sans-serif'}},
+        {type:'text',left:64,top:8,silent:true,style:{text:'CPU %',fill:colors.secondary,font:'600 10px sans-serif'}},
+        {type:'text',left:64,top:170,silent:true,style:{text:'PSS GB',fill:colors.secondary,font:'600 10px sans-serif'}},
+        {type:'text',left:64,top:290,silent:true,style:{text:'Critical WP',fill:colors.secondary,font:'600 9px sans-serif'}},
       ],
       yAxis:[
         {type:'value',gridIndex:0,name:'',axisLabel:{color:colors.muted,fontSize:10},splitLine:{lineStyle:{color:colors.grid}}},

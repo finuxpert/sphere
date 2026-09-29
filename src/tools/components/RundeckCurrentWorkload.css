@@ -222,3 +222,13 @@
     max-height:350px!important;
   }
 }
+
+/* SPHERE v1.34.19 — show a useful live workload scan depth on desktop. */
+@media(min-width:1181px) and (min-height:720px){
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+    height:360px!important;max-height:360px!important;
+    scrollbar-gutter:stable!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkload th{font-size:8.5px!important}
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkload td{padding-top:6px!important;padding-bottom:6px!important}
+}

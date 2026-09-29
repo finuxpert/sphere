@@ -709,3 +709,73 @@ html[data-theme="light"] .rundeckTrendWorkloadRow:focus-visible{
     column-gap:5px;
   }
 }
+
+/* SPHERE v1.34.19 — release-candidate contrast, modal context and operational surfaces. */
+.rundeckTrendPointModal{width:min(760px,76vw)!important}
+.rundeckTrendPointModalBody{max-height:calc(min(760px,100vh - 56px) - 70px)!important}
+.rundeckTrendMiniContext{
+  overflow:hidden;border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));
+  border-radius:7px;background:rgba(126,147,158,.018);
+}
+.rundeckTrendMiniContext>header{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 10px 4px;
+}
+.rundeckTrendMiniContext>header>div{display:grid;gap:2px}
+.rundeckTrendMiniContext>header span{color:var(--sphere-accent,#4fc6c8);font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.rundeckTrendMiniContext>header strong{color:var(--sphere-text,#e7edf0);font-size:10px}
+.rundeckTrendMiniContext>header small{color:var(--sphere-text-muted,#718089);font-size:8.5px}
+.rundeckTrendMiniContext svg{display:block;width:100%;height:92px;padding:0 4px}
+.rundeckTrendMiniGrid{stroke:var(--sphere-chart-grid,rgba(126,147,158,.10));stroke-width:1}
+.rundeckTrendMiniLine{fill:none;stroke:var(--sphere-accent,#4fc6c8);stroke-width:2}
+.rundeckTrendMiniMarkerLine{stroke:var(--sphere-warning,#d8b35f);stroke-width:1;stroke-dasharray:3 3;opacity:.8}
+.rundeckTrendMiniMarker{fill:var(--sphere-warning,#d8b35f);stroke:var(--sphere-page,#0f151a);stroke-width:2}
+.rundeckTrendMiniContext>footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 10px 7px;color:var(--sphere-text-muted,#718089);font-size:8.5px;
+}
+.rundeckTrendMiniContext>footer strong{color:var(--sphere-text-secondary,#a9b5bb);font-size:9px}
+.rundeckTrendModalLoading{display:flex!important;align-items:center!important;gap:7px!important;min-height:38px!important}
+.rundeckTrendModalSpinner{
+  width:12px;height:12px;border:2px solid rgba(126,147,158,.20);border-top-color:var(--sphere-accent,#4fc6c8);
+  border-radius:50%;animation:rundeckTrendSpin .7s linear infinite;
+}
+@keyframes rundeckTrendSpin{to{transform:rotate(360deg)}}
+.rundeckTrendWorkloadHead,.rundeckTrendWorkloadRow{
+  grid-template-columns:minmax(0,1fr) 82px 92px 72px 18px!important;
+}
+.rundeckTrendWorkloadRow{min-height:46px!important;font-size:10px!important}
+.rundeckTrendWorkloadIdentity b{font-size:10px!important}
+.rundeckTrendWorkloadIdentity small{font-size:8.5px!important}
+.rundeckTrendWorkloadPanel>header strong{font-size:11px!important}
+.rundeckTrendWorkloadPanel>header small{font-size:9px!important}
+html[data-theme="light"] .rundeckTrendMiniContext{background:#fff!important;border-color:rgba(45,63,72,.17)!important}
+html[data-theme="light"] .rundeckTrendMiniContext>header strong{color:#203038!important}
+html[data-theme="light"] .rundeckTrendMiniContext>header small,
+html[data-theme="light"] .rundeckTrendMiniContext>footer{color:#52666f!important}
+html[data-theme="light"] .rundeckTrendMiniContext>footer strong{color:#31464f!important}
+
+/* Light theme: healthy is readable, not disabled. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+ .rundeckLiveCard h4,.rundeckLiveRows span,.rundeckLiveMetricPair span,
+ .rundeckEvidenceCardTitle,.rundeckEvidenceCard>strong,.rundeckEvidenceCard>small,
+ .rundeckReviewHeadV1231 h3,.rundeckReviewHeadV1231 span
+){opacity:1!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveCard h4{color:#31464f!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows span{color:#52666f!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCardTitle{color:#203038!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>strong{color:#40545e!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>small{color:#52666f!important}
+
+/* SAP Issues: summary values are operational data, never ghost text. */
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip b{color:#596b74!important;opacity:1!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip strong{color:#203038!important;opacity:1!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesV1231 td strong{color:#31464f!important;opacity:1!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckIssueNowV1231 strong{color:#73580e!important;opacity:1!important}
+
+/* System Data primary states and links. */
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataState.is-ready{color:#287a55!important;font-weight:800!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataMore{font-size:10px!important;font-weight:760!important;color:#11676e!important}
+
+/* Stronger chart labels / thresholds under RDP compression. */
+html[data-theme="light"] .rundeckTrendChart{filter:saturate(1.18) contrast(1.06)!important}
