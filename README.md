@@ -147,6 +147,8 @@ Use these documents as active references:
 - `docs/rundeck-development.md` — DEV runtime and UI/collector contract
 - `docs/VISUAL-QA.md` — optional Playwright visual regression checks
 - `docs/ai-coding-workflow-style.md` — repository implementation workflow
+- `docs/presentation/IFUNTASTIC-2026.md` — presentation storyline, safe wording, evaluation boundary, and animation guidance
+- `docs/presentation/ASSET-SOURCES.md` — approved branding/screenshot sources and presentation sanitization rules
 - `ops/rundeck/OPERATIONS.md` — release, deployment, watchdog, platform health, and retention operations
 
 Historical competition copy, one-off optimization notes, and obsolete RCA-era validation documents are intentionally not maintained as current documentation.
