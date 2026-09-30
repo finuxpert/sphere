@@ -1,6 +1,6 @@
 import unittest
 
-from backend.rundeck_workload_explorer import normalize_type, range_config
+from backend.rundeck_workload_explorer import _parse_anchor, normalize_type, range_config
 
 
 class WorkloadExplorerV124Tests(unittest.TestCase):
@@ -14,6 +14,15 @@ class WorkloadExplorerV124Tests(unittest.TestCase):
     def test_invalid_range_is_rejected(self):
         with self.assertRaises(ValueError):
             range_config("90d")
+
+    def test_historical_anchor_accepts_iso_timestamp(self):
+        parsed = _parse_anchor("2026-09-30T02:58:00+07:00")
+        self.assertIsNotNone(parsed.tzinfo)
+        self.assertEqual(parsed.isoformat(), "2026-09-30T02:58:00+07:00")
+
+    def test_invalid_historical_anchor_is_rejected(self):
+        with self.assertRaises(ValueError):
+            _parse_anchor("not-a-time")
 
     def test_workload_type_contract(self):
         self.assertEqual(normalize_type("job"), "JOB")

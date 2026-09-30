@@ -108,9 +108,10 @@ def workload_summary_endpoint(
     consumer_type: str = Query(..., alias="type", pattern="^(JOB|PROGRAM)$"),
     range_key: str = Query("24h", alias="range", pattern="^(3h|6h|24h|3d|7d|30d)$"),
     host: str | None = Query(None, max_length=120),
+    anchor_at: str | None = Query(None, alias="at", max_length=64),
 ):
     try:
-        return workload_summary(job, consumer_type=consumer_type, range_key=range_key, host=host)
+        return workload_summary(job, consumer_type=consumer_type, range_key=range_key, host=host, anchor_at=anchor_at)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:
@@ -125,9 +126,10 @@ def workload_trend_endpoint(
     consumer_type: str = Query(..., alias="type", pattern="^(JOB|PROGRAM)$"),
     range_key: str = Query("24h", alias="range", pattern="^(3h|6h|24h|3d|7d|30d)$"),
     host: str | None = Query(None, max_length=120),
+    anchor_at: str | None = Query(None, alias="at", max_length=64),
 ):
     try:
-        return workload_trend(job, consumer_type=consumer_type, range_key=range_key, host=host)
+        return workload_trend(job, consumer_type=consumer_type, range_key=range_key, host=host, anchor_at=anchor_at)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:

@@ -49,7 +49,7 @@ async function loadHistory(job, signal) {
   return response.json()
 }
 
-async function loadRangeHistory(job, range, signal) {
+async function loadRangeHistory(job, range, signal, anchorAt = '') {
   const type = String(job.consumerType || '').toUpperCase()
   if (!['JOB','PROGRAM'].includes(type)) throw new Error('Historical range is available for Job and Program context.')
   const params = new URLSearchParams({
@@ -58,6 +58,7 @@ async function loadRangeHistory(job, range, signal) {
     range,
   })
   if (job.host) params.set('host', job.host)
+  if (anchorAt) params.set('at', anchorAt)
   const [summaryResponse, trendResponse] = await Promise.all([
     fetch(`${API}/history/workload/summary?${params.toString()}`, { cache: 'no-store', signal }),
     fetch(`${API}/history/workload/trend?${params.toString()}`, { cache: 'no-store', signal }),
@@ -586,6 +587,14 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     return () => controller.abort()
   }, [jobAt, jobConsumerType, jobHost, jobKey, refreshToken])
 
+  const selectedRangeAnchor = React.useMemo(() => {
+    const selectedItems = selectObservationEpisode(history?.items || [], jobAt)
+    if (!selectedItems.length) return ''
+    const selectedLatest = selectedItems.at(-1)
+    if (latestCollectionId && selectedLatest?.collection_id === latestCollectionId) return ''
+    return selectedLatest?.collected_at || jobAt || ''
+  }, [history, jobAt, latestCollectionId])
+
   React.useEffect(() => {
     if (!jobKey || range === 'current') {
       setRangeData(null)
@@ -597,12 +606,12 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     const requestedJob = { key: jobKey, host: jobHost, consumerType: jobConsumerType }
     setRangeLoading(true)
     setRangeError('')
-    loadRangeHistory(requestedJob, range, controller.signal)
+    loadRangeHistory(requestedJob, range, controller.signal, selectedRangeAnchor)
       .then(setRangeData)
       .catch((failure) => { if (failure.name !== 'AbortError') setRangeError(failure.message || 'Historical performance unavailable') })
       .finally(() => { if (!controller.signal.aborted) setRangeLoading(false) })
     return () => controller.abort()
-  }, [jobConsumerType, jobHost, jobKey, range, refreshToken])
+  }, [jobConsumerType, jobHost, jobKey, range, refreshToken, selectedRangeAnchor])
 
   if (!jobKey) return null
 
