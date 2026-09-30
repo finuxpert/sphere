@@ -448,8 +448,12 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
     const cpuKey = mode === 'peak' ? 'peak_cpu_pct' : 'avg_cpu_pct'
     const pssKey = mode === 'peak' ? 'peak_pss_gb' : 'avg_pss_gb'
     const processKey = mode === 'peak' ? 'max_processes' : 'avg_processes'
-    const first = Date.parse(items[0]?.bucket || '')
-    const last = Date.parse(items.at(-1)?.bucket || '')
+    const firstItem = Date.parse(items[0]?.bucket || '')
+    const lastItem = Date.parse(items.at(-1)?.bucket || '')
+    const windowStart = Date.parse(trend?.window_start || '')
+    const windowEnd = Date.parse(trend?.window_end || '')
+    const first = Number.isFinite(windowStart) ? windowStart : firstItem
+    const last = Number.isFinite(windowEnd) ? windowEnd : lastItem
     const issue = Date.parse(incidentStart || '')
     const issueInRange = Number.isFinite(issue) && Number.isFinite(first) && Number.isFinite(last) && issue >= first && issue <= last
     const nearestBucket = (value) => {
@@ -478,8 +482,8 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
         {left:70,right:44,top:306,height:30},
       ],
       xAxis:[
-        {type:'time',gridIndex:0,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
-        {type:'time',gridIndex:1,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:0,min:first,max:last,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
+        {type:'time',gridIndex:1,min:first,max:last,axisLabel:{show:false},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
         {type:'time',gridIndex:2,min:first,max:last,splitNumber:chartAxisSplitNumber(first,last),axisLabel:{color:colors.muted,fontSize:10,hideOverlap:true,showMinLabel:true,showMaxLabel:true,margin:10,formatter:(value)=>chartAxisText(value,first,last)},axisLine:{lineStyle:{color:colors.grid}},splitLine:{show:false}},
       ],
       graphic:[
