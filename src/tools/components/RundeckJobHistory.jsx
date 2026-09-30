@@ -127,17 +127,40 @@ function average(values = []) {
   return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : null
 }
 
+function peakObservation(items = [], getter) {
+  let best = null
+  items.forEach((row) => {
+    const value = getter(row)
+    if (value === null || value === undefined || !Number.isFinite(Number(value))) return
+    if (!best || Number(value) > best.value) best = { value: Number(value), at: row.collected_at || '' }
+  })
+  return best
+}
+
 function episodeStats(items = []) {
-  if (!items.length) return { firstSeen: '', lastSeen: '', avgCpu: null, peakCpu: null, avgPss: null, avgProcesses: null }
+  if (!items.length) return {
+    firstSeen: '', lastSeen: '', avgCpu: null, peakCpu: null, peakCpuAt: '',
+    avgPss: null, peakPss: null, peakPssAt: '', avgProcesses: null,
+    peakCriticalWp: null, peakCriticalWpAt: '',
+  }
   const ordered = [...items].sort((left, right) => Date.parse(left.collected_at) - Date.parse(right.collected_at))
   const cpu = ordered.map((row) => rowMetric(row, 'cpu')).filter((value) => value !== null)
+  const pss = ordered.map((row) => rowMetric(row, 'pss')).filter((value) => value !== null)
+  const cpuPeak = peakObservation(ordered, (row) => rowMetric(row, 'cpu'))
+  const pssPeak = peakObservation(ordered, (row) => rowMetric(row, 'pss'))
+  const criticalPeak = peakObservation(ordered, (row) => numeric(row.host_wp_critical))
   return {
     firstSeen: ordered[0]?.collected_at || '',
     lastSeen: ordered.at(-1)?.collected_at || '',
     avgCpu: average(cpu),
-    peakCpu: cpu.length ? Math.max(...cpu) : null,
-    avgPss: average(ordered.map((row) => rowMetric(row, 'pss'))),
+    peakCpu: cpuPeak?.value ?? null,
+    peakCpuAt: cpuPeak?.at || '',
+    avgPss: average(pss),
+    peakPss: pssPeak?.value ?? null,
+    peakPssAt: pssPeak?.at || '',
     avgProcesses: average(ordered.map((row) => rowMetric(row, 'processes'))),
+    peakCriticalWp: criticalPeak?.value ?? null,
+    peakCriticalWpAt: criticalPeak?.at || '',
   }
 }
 
@@ -518,7 +541,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
             `CPU ${mode === 'peak' ? 'peak' : 'avg'} <b>${cpu == null ? '—' : `${numberText(cpu,1)}%`}</b>`,
             `PSS ${mode === 'peak' ? 'peak' : 'avg'} <b>${pss == null ? '—' : `${numberText(pss,2)} GB`}</b>`,
             `Processes <b>${processes == null ? '—' : numberText(processes,mode === 'peak' ? 0 : 1)}</b>`,
-            `Critical WP <b>${critical}</b> · during period <b>${criticalChecks} / ${checks} checks</b>`,
+            `Critical WP <b>${critical}</b>, checks <b>${criticalChecks} of ${checks}</b>`,
             `Data points / checks <b>${Number(row.observations||0)} / ${checks}</b>`,
           ].join('<br/>')
         },
@@ -647,7 +670,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const wpNumber = String(latestDetails.wp || '').trim()
   const wpContext = [wpType, wpNumber].filter(Boolean).join(' ') || '—'
   const displayType = workloadTypeLabel(displayConsumerType || latest?.consumer_type)
-  const contextText = [appName, program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' · ')
+  const contextText = [appName, program && program.toUpperCase() !== String(displayKey).toUpperCase() ? program : ''].filter(Boolean).join(' / ')
 
   const drawerPresentation = presentation === 'drawer'
   const historicalSummary = rangeData?.summary || null
@@ -659,7 +682,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     <div className="rundeckJobHistoryHead">
       <div>
         <span>Selected Job / Program</span>
-        <h3><SphereIcon name="target" /> {displayKey} <span className="rundeckJobTypeBadge">{displayType}</span> {history && <em className={isCurrent ? 'is-current' : 'is-ended'}>{isCurrent ? 'CURRENT' : 'NO LONGER SEEN'}</em>}</h3>
+        <h3><SphereIcon name="target" /> {displayKey} <span className="rundeckJobTypeBadge">{displayType}</span> {history && <em className={isCurrent ? 'is-current' : 'is-ended'}>{isCurrent ? 'CURRENTLY OBSERVED' : 'NO LONGER OBSERVED'}</em>}</h3>
         <small>{contextText}</small>
       </div>
     </div>
@@ -675,10 +698,10 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <div className="rundeckJobEpisodeMetrics">
           <span><b>First Seen</b>{formatWib(stats.firstSeen, true)} WIB</span>
           <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
-          <span><b>Duration</b>{observed}</span>
+          <span><b>Observation Span</b>{observed}</span>
           <span><b>Records</b>{episodeItems.length}</span>
           <span title={CPU_HINT}><b>Avg CPU</b>{numberText(stats.avgCpu)}%</span>
-          <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%</span>
+          <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}</span>
           <span><b>Avg PSS</b>{stats.avgPss === null ? '—' : `${numberText(stats.avgPss, 2)} GB`}</span>
           <span><b>Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
         </div>
@@ -704,7 +727,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Same time window — root cause not confirmed</small>
+        <small className="rundeckJobCorrelationDisclaimer">Timing: Same time window. Root cause: Not confirmed.</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
@@ -726,8 +749,8 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           {range === 'current'
             ? <div className="rundeckJobPerformanceTitle">
                 <span title="Current shows the selected observation period"><SphereIcon name="trend" /> Selected Period Performance</span>
-                <small>{numberText(stats.avgCpu)}% avg · {numberText(stats.peakCpu)}% peak{stats.avgPss === null ? '' : ` · ${numberText(stats.avgPss, 2)} GB PSS`}</small>
-                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP during period · {profile.criticalSamples}/{profile.totalSamples} data points</em>}
+                <small>CPU Avg: {numberText(stats.avgCpu)}%</small><small>CPU Peak: {numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}</small>{stats.avgPss !== null && <small>PSS Avg: {numberText(stats.avgPss, 2)} GB{stats.peakPss !== null ? `, Peak: ${numberText(stats.peakPss, 2)} GB${stats.peakPssAt ? ` at ${formatWib(stats.peakPssAt, false)}` : ''}` : ''}</small>}
+                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP: {profile.criticalSamples} of {profile.totalSamples} data points{stats.peakCriticalWp ? `, Peak: ${numberText(stats.peakCriticalWp, 0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : ''}</em>}
               </div>
             : <div className="rundeckJobHistoricalSummary">
                 <span><b>Range</b>{range.toUpperCase()}</span>
@@ -735,7 +758,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
                 <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
                 <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
-                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP During Period</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} / ${historicalSummary.checks ?? 0} data points` : '—'}</span>
+                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} data points` : '—'}</span>
               </div>}
         </aside>
 
