@@ -66,3 +66,14 @@ Before putting operational screenshots into a public or competition deck:
 - use at most 2–3 callouts on one screenshot
 - keep current UI and historical UI visually distinguishable
 - captions should explain why the screenshot matters, not repeat the slide title
+
+
+## Final deck asset rule
+
+The final competition deck uses repository branding assets where available and real implementation screenshots for technical evidence.
+
+Final deck identity and validation status are documented in:
+
+`docs/presentation/FINAL-DECK-RELEASE.md`
+
+Do not rebuild SPHERE branding from screenshots, add decorative AI-generated infrastructure imagery, or use generic icons when the same point can be shown with a real SAP, OS, Rundeck, or SPHERE screenshot.
