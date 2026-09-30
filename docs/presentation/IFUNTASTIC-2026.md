@@ -149,3 +149,28 @@ Use a restrained corporate style:
 - avoid Bounce, Spin, large Zoom, 3D, or decorative motion
 
 Compatibility and editability take priority over complex object animation.
+
+
+## Final competition deck
+
+Final presentation deliverable:
+
+`SPHERE_iFuntastic_2026_v3_Competition_Final_POWERPOINT_SAFE.pptx`
+
+Release details, SHA-256, PowerPoint compatibility notes, and final competition finishing rules are recorded in:
+
+`docs/presentation/FINAL-DECK-RELEASE.md`
+
+The earlier `...Final_Smooth.pptx` build must not be used because Microsoft PowerPoint may request content repair.
+
+Final visual direction:
+
+- prioritize evidence over decorative elements
+- keep slide alignment and spacing consistent
+- use SAP Basis / Infrastructure language
+- remove unnecessary semicolons, mixed separators, generic icons, and AI/marketing jargon
+- keep screenshots tightly cropped and readable
+- treat the evaluation slide as the key competition evidence slide
+- replace initial time estimates with validated measurements before final submission when available
+
+Compatibility and editability take priority over complex slide transitions or object animations.
