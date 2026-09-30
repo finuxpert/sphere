@@ -149,6 +149,7 @@ Use these documents as active references:
 - `docs/ai-coding-workflow-style.md` — repository implementation workflow
 - `docs/presentation/IFUNTASTIC-2026.md` — presentation storyline, safe wording, evaluation boundary, and animation guidance
 - `docs/presentation/ASSET-SOURCES.md` — approved branding/screenshot sources and presentation sanitization rules
+- `docs/presentation/FINAL-DECK-RELEASE.md` — final iFuntastic deck identity, PowerPoint compatibility status, checksum, and submission boundary
 - `ops/rundeck/OPERATIONS.md` — release, deployment, watchdog, platform health, and retention operations
 
 Historical competition copy, one-off optimization notes, and obsolete RCA-era validation documents are intentionally not maintained as current documentation.
