@@ -43,6 +43,7 @@ cleanup() {
     /tmp/sphere-prod-sap-health.json \
     /tmp/sphere-prod-latest.json \
     /tmp/sphere-prod-evaluation.json \
+    /tmp/sphere-prod-infra-hosts.json \
     /tmp/sphere-prod-metrics.txt \
     /tmp/sphere-prod-watchdog.json \
     /tmp/sphere-prod-jobs-source.json \
@@ -238,6 +239,9 @@ require_contains "Rundeck collections" /tmp/sphere-prod-latest.json 'collection_
 
 smoke_fetch "Rundeck evaluation" "https://sphere.astraotoparts.co.id/api/evaluation/workloads?period=1d&type=ALL&limit=1" /tmp/sphere-prod-evaluation.json
 require_contains "Rundeck evaluation" /tmp/sphere-prod-evaluation.json '"items"'
+
+smoke_fetch "Rundeck infrastructure hosts" "https://sphere.astraotoparts.co.id/api/infra/hosts" /tmp/sphere-prod-infra-hosts.json
+require_contains "Rundeck infrastructure hosts" /tmp/sphere-prod-infra-hosts.json '"items"'
 
 smoke_fetch "Rundeck metrics" "https://sphere.astraotoparts.co.id/api/metrics" /tmp/sphere-prod-metrics.txt
 require_contains "Rundeck metrics collection age" /tmp/sphere-prod-metrics.txt 'sphere_collection_age_seconds'
