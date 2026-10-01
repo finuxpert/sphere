@@ -70,6 +70,7 @@ def evidence_timeline_endpoint(
     host: str | None = Query(None, max_length=120),
     consumer_type: str | None = Query(None, alias="type", pattern="^(JOB|PROGRAM|PROCESS)$"),
     availability_range: str = Query("7d", pattern="^(30m|1h|3h|6h|24h|7d|30d)$"),
+    anchor_at: str | None = Query(None, alias="at", max_length=64),
 ):
     try:
         return evidence_timeline(
@@ -77,6 +78,7 @@ def evidence_timeline_endpoint(
             host=host,
             consumer_type=consumer_type,
             availability_range=availability_range,
+            anchor_at=anchor_at,
         )
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
