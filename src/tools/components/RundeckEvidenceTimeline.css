@@ -263,3 +263,17 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEve
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent strong{color:#24363e!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent small{color:#586b75!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary{color:#40545e!important}
+
+
+.rundeckEvidenceScope{
+  display:block;
+  color:var(--sphere-text-muted);
+  font-size:9px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.rundeckEvidenceSummary .rundeckEvidenceScope{
+  margin-left:auto;
+  margin-right:8px;
+}
