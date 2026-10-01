@@ -13,10 +13,11 @@ function gitValue(...args) {
 
 const gitSha = String(process.env.GITHUB_SHA || gitValue('rev-parse', '--short=7', 'HEAD')).slice(0, 7)
 const appEnv = String(process.env.GITHUB_REF_NAME || gitValue('branch', '--show-current'))
+const isDevBuild = /dev/i.test(appEnv)
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/dev/',
+  base: isDevBuild ? '/dev/' : '/',
   plugins: [react()],
   define: {
     'import.meta.env.VITE_GIT_SHA': JSON.stringify(gitSha),
