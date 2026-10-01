@@ -1,8 +1,8 @@
 # SPHERE Current Flow and Features
 
-This document is the source of truth for the implemented SPHERE operating flow on **v1.34.29**.
+This document is the source of truth for the implemented SPHERE operating flow on **v1.34.37**.
 
-It describes what the current application does. It is intentionally separated from competition copy, future roadmap ideas, and unmeasured business-impact claims.
+It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 
 ## Product position
 
@@ -12,9 +12,9 @@ Operational position:
 
 **SAP Performance Monitoring, Evaluation & Investigation Platform**
 
-SPHERE centralizes SAP performance evidence and helps operators move from a broad symptom such as "SAP is slow" toward a narrower, evidence-backed investigation scope.
+SPHERE helps SAP Basis/Infrastructure teams move from a broad symptom such as “SAP is slow” toward a narrower, evidence-backed investigation scope.
 
-SPHERE does not replace SAP standard tools such as ST03N, SM50/SM66, SM37, STAD, ST05, SAT, database/SQL analysis, enqueue/lock analysis, traces, or dumps. Deep validation remains a SAP Basis activity when the case requires it.
+SPHERE does not replace ST03N, SM50/SM66, SM37, STAD, ST05, SAT, SQL analysis, enqueue/lock analysis, dumps, or traces.
 
 ## End-to-end flow
 
@@ -42,154 +42,216 @@ Investigate selected context
 Operational evidence / PDF report
 ```
 
-Presentation shorthand:
+Short form:
 
 ```text
 Collect → Monitor → Detect → Correlate → Evaluate → Investigate → Report
 ```
 
-## 1. Collect
+## 1. Collect and ingest
 
-Rundeck is the SAP-side automation and orchestration layer.
+Rundeck is the SAP-side automation layer.
 
-Responsibilities:
+SPHERE:
 
-- execute the approved SAP collection workflow
-- collect data consistently across the configured SAP Application Servers
-- retain execution metadata and output
-- expose completed execution data through the Rundeck REST API
+- discovers eligible completed executions;
+- reads execution metadata/output through Rundeck REST API;
+- validates expected hosts;
+- stores collection manifests and retained raw evidence;
+- projects normalized host/workload data into PostgreSQL;
+- keeps READY / PARTIAL / FAILED semantics explicit.
 
-SPHERE does not SSH or SCP directly to SAP Application Servers.
+SPHERE must not SSH/SCP directly to SAP Application Servers.
 
-Manual Upload Logs remains available as a fallback path.
+## 2. Live Monitoring layout
 
-## 2. Ingest and retain
-
-The Rundeck-integrated backend:
-
-- discovers eligible completed executions
-- reads execution metadata and output
-- validates expected hosts and collection completeness
-- stores retained operational history
-- projects normalized data into PostgreSQL
-- keeps raw collection evidence for audit/investigation
-- separates READY/PARTIAL/FAILED collection semantics
-
-The database currently includes retained structures for monitoring history, workload observations, SAP job execution evidence, infrastructure monitoring, and analysis closure/evidence data.
-
-## 3. Monitor
-
-The primary Performance Analysis workspace has two top-level modes:
-
-- **Live Monitoring**
-- **History**
-
-Live Monitoring provides an operator-oriented view of current retained evidence rather than a collection of unrelated technical screens.
-
-### Infrastructure overview
-
-Current infrastructure monitoring covers:
-
-- filesystem utilization
-- network RX/TX
-- network errors/drops
-- storage I/O utilization
-- data freshness/stale indication
-- multi-host selection
-
-### SAP Application Servers
-
-The Application Server view gives a per-host operational context and supports focused inspection.
-
-### Server Trend
-
-Historical server trend supports resource investigation across selectable periods/metrics and keeps live/current context distinct from historical evidence.
-
-### Current Workloads
-
-Current workload evidence surfaces active Job/Program consumers and their relationship with SAP Application Server context.
-
-## 4. Detect
-
-SPHERE surfaces operational signals that may require attention, including:
-
-- CPU usage
-- memory usage
-- I/O Wait
-- Critical Work Process
-- filesystem pressure
-- storage I/O pressure
-- network drops/errors
-- SAP operational issues
-- SAP availability observations
-- heavy or recurring Job / Program workload
-- stale/partial monitoring evidence
-
-Status/evaluation signals narrow investigation. They must not be presented as an automatic final root-cause declaration.
-
-## 5. Correlate
-
-The central investigation model is:
+The active Live Monitoring hierarchy is:
 
 ```text
-Application Server
-    → Resource condition
-    → Critical WP context
-    → Current workload
-    → Job / ABAP Program
-    → Historical pattern
-    → Operational evidence
+System / Collector / Data status
+
+Infrastructure summary
+
+SAP App Servers              Server Trend
+Current Jobs & Programs      Selected Job / Program
+
+Correlated Events | SAP Availability | SAP Issues
+Observation History | Infrastructure Analysis | System Data
+
+Jobs & Programs to Review
 ```
 
-This allows a user to move beyond a host-only statement such as "CPU is high" and inspect which SAP workload was observed around the same period.
+The UI uses progressive disclosure. Deep evidence is opened in drawers/modals instead of expanding the live page indefinitely.
 
-Correlation is evidence of timing/context. Correlation alone does not prove causality.
+## 3. Infrastructure
 
-## 6. Evaluate Jobs and Programs
+### Current summary
 
-The **Jobs & Programs to Review** feature supports:
+Infrastructure summary distinguishes:
 
-- periods: 1 Day, 7 Days, 30 Days
-- filters: All, Programs, Jobs
-- review reason
-- average CPU
-- peak CPU
-- memory
-- data-quality/coverage warning
-- quick analysis
-- full Job / Program performance analysis
+- **Filesystem Capacity**
+- **Network**
+- **Storage I/O Activity**
 
-The evaluation plane is deterministic and based on retained workload observations.
+A full filesystem and normal storage I/O are not contradictory; they are different metrics.
 
-## 7. Investigate
+### Infrastructure Analysis
 
-The current analysis workspace exposes progressive drill-down instead of putting every detail on the main screen.
+Infrastructure Analysis provides current state plus retained history.
 
-Available investigation views include:
+History ranges use explicit WIB date/time labels and retained-history coverage. Time before the first retained sample is not presented as zero.
 
-- Job / Program Performance
-- Observation History
-- Infrastructure Analysis
-- Correlated Events
-- SAP Availability
-- SAP Issues
-- System Data
-- Application Server Analysis
-- Quick Analysis / Review Result
+Storage `util_pct` values above 100 are kept visible as source-quality evidence and marked for verification rather than silently clamped.
 
-The selected Job/Program context can carry key metrics such as CPU, memory, process count, and Critical WP evidence into the deeper analysis views.
+## 4. SAP Application Servers
 
-## 8. Historical analysis
+APP1–APP5 provide current retained host context.
 
-History mode provides the Workload Explorer and historical Job/Program analysis.
+APP Critical WP is an APP-server observation. It is not a workload execution result.
 
-It supports review of retained workload patterns and recurring behavior rather than relying only on a single live snapshot.
+Selecting an APP opens Application Server Analysis. Cross-focus may highlight the related APP but must not auto-expand unrelated drill-downs.
 
-Historical evidence remains context. A historical similarity or recurring pattern must not be presented as proof of the current incident's root cause.
+## 5. Server Trend
 
-## 9. Availability
+Server Trend supports selectable ranges, metrics, Average/Peak modes, collection gaps, date-aware WIB axes, and point selection.
 
-The availability plane keeps explicit category semantics for:
+### Historical bucket semantics
+
+Server Trend is bucketed for longer ranges.
+
+Peak mode keeps these separate:
+
+- **Bucket** — aggregation interval shown on the chart;
+- **Peak At** — exact retained sample timestamp producing the bucket peak;
+- **Peak Value** — exact selected metric value;
+- **Peak Collection** — exact saved collection used for workload detail.
+
+Trend Details must preserve all four. The mini-history marker is anchored to the clicked bucket, while the displayed peak timestamp remains the exact sample time.
+
+Average mode represents the bucket average and must not be presented as a raw sample.
+
+## 6. Current Jobs & Programs
+
+Current workloads are grouped Job/Program observations from the latest aligned READY collection.
+
+Displayed workload evidence includes:
+
+- grouped CPU;
+- PSS Memory;
+- process count;
+- APP Critical WP context;
+- Program/Job identity when captured.
+
+Grouped workload CPU may exceed 100% because multiple processes/CPU cores can be aggregated.
+
+## 7. Selected Job / Program
+
+Selected workload context exposes:
+
+- CPU / Avg CPU depending on source;
+- PSS Memory / Avg PSS;
+- Processes / Avg Processes;
+- APP Critical WP or APP Critical WP overlap;
+- Analyze Performance action.
+
+A selection originating from Performance Review uses review-period metrics rather than pretending to be a current live snapshot.
+
+## 8. Performance Analysis
+
+Performance Analysis is one shared investigation surface for current, review, historical, and trend-snapshot launches.
+
+### Selected Period
+
+Episode summary includes:
+
+- First Seen / First Loaded when history is truly truncated at the selected episode boundary;
+- Last Seen;
+- Observation Span / Loaded Span;
+- Observations;
+- Avg CPU;
+- Peak CPU;
+- Avg PSS;
+- Avg Processes.
+
+History truncation is episode-aware. A globally truncated response does not automatically make every selected episode “First Loaded”.
+
+### Ranges
+
+- Current
+- 3H
+- 6H
+- 24H
+- 7D
+- 30D
+
+`Current` means the selected workload episode.
+
+Low-sample episodes are labelled explicitly.
+
+### Chart lanes
+
+Current observation analysis can expose:
+
+- CPU
+- PSS Memory
+- I/O
+- WP Count
+- APP Critical WP
+
+Historical ranges use aggregate data and must not be presented as raw observations.
+
+### Point drill-down
+
+Clicking a raw/current chart point opens **Observation Details**.
+
+Clicking a historical bucket opens **Historical Bucket Details**.
+
+The two are intentionally different evidence types.
+
+## 9. SAP WP / Trace Signals
+
+When retained by the collector, Performance Analysis exposes process/WP-level evidence including:
+
+- PID;
+- WP type / WP number;
+- Program;
+- CPU Signal;
+- Error at Snapshot;
+- Latest Trace Error;
+- Error Recency;
+- RABAX;
+- RXMSG;
+- SXPG;
+- JobStart counter;
+- Log Path;
+- observed timestamp.
+
+Rows are drillable into **SAP WP Signal Details**.
+
+Important rules:
+
+- `Error at Snapshot` is populated only when collector `error_recency=AT_SNAPSHOT`.
+- `Latest Trace Error` may be historical.
+- WP trace counters are retained observation evidence, not authoritative job execution status.
+- SM37 remains the authority for SAP background-job execution status.
+
+Older retained observations may legitimately show that WP/Trace signals were not retained.
+
+## 10. Correlated Events
+
+Correlation timing uses retained timestamps.
+
+Possible states include aligned/same-window, limited evidence, insufficient timing data, and no overlap.
+
+For live/review investigation, exact selected episode boundaries are used where available.
+
+Historical selected-time analysis is anchored to the selected observation and is not automatically reclassified against the current incident.
+
+Correlation is supporting evidence only. Root cause remains unconfirmed until validated with SAP and infrastructure evidence.
+
+## 11. SAP Availability
+
+Availability categories remain explicit:
 
 - SAP Application availability
 - HANA System DB availability
@@ -201,111 +263,84 @@ Missing observations are not inferred as DOWN.
 
 Observed availability percentages describe retained checks; they are not automatically an SLA calculation.
 
-## 10. Operational evidence
+## 12. Jobs & Programs to Review
 
-SPHERE includes evidence-oriented investigation capabilities such as:
+Performance Review supports:
 
-- operational event timeline
-- performance incident context
-- correlated event evidence
-- observation history
-- retained collection identity
-- source/data-quality states
+- 1 Day
+- 7 Days
+- 30 Days
+- All / Programs / Jobs
 
-This evidence is designed to support SAP Basis, ABAP, Application Support, Infrastructure, and reporting workflows using the same retained facts.
+Evaluation uses retained workload observations and includes average/peak CPU, Avg PSS, occurrence/coverage context, and APP Critical WP overlap.
 
-## 11. System and collector health
+Review Result defaults to further investigation rather than an automatic program-optimization verdict.
 
-SPHERE monitors its own collection/runtime health separately from SAP performance state.
+No automatic ABAP/Application owner is assigned without explicit evidence.
 
-Relevant controls include:
+Evaluation results are cached per committed collection so repeated reads do not recompute the same window unnecessarily.
 
-- collector freshness
-- collector watchdog
-- auto-healing/recovery state
-- platform health
-- PostgreSQL/runtime health
-- retention status
-- Prometheus-compatible metrics
-- alert rules
-- release readiness gates
+## 13. History and Workload Explorer
 
-"Collector running", "collector health", "system health", and "data aligned/partial" are separate concepts and must not be collapsed into one status.
+History mode supports retained workload investigation without implying that old evidence caused the current incident.
 
-## 12. Reporting
+Historical selections remain visually and semantically distinct from live/current state.
 
-The current application supports PDF performance reporting/export.
+Trend-snapshot launches reuse the same Performance Analysis surface and carry the exact saved workload snapshot when available.
 
-Reports are evidence summaries for operational communication. They do not convert a correlation signal into a final root-cause verdict.
+## 14. System and collector health
 
-## 13. ST03N Analysis workspace
+SPHERE keeps separate concepts for:
 
-SPHERE keeps a separate **ST03N Analysis** workspace for SAP workload and response-time analysis.
+- System Health
+- Collector Health
+- Performance READY cycle
+- Collector RUNNING cycle
+- Availability READY cycle
+- Data freshness/alignment
+- watchdog and auto-healing state
 
-The main navigation currently exposes only:
-
-- ST03N Analysis
-- Performance Analysis
-
-Old Comparator/RCA navigation must not be documented as an active primary workspace.
-
-## 14. LOG analysis compatibility
-
-The current LOG engine still supports detailed resource/workload analysis and historical enhanced telemetry markers where required for backward compatibility.
-
-Active analysis includes host/resource status, workload consumers, CPU/memory, I/O Wait, Critical WP, process-level context, error/short-dump signals, and drill-down.
-
-Historical `RCA-EXT` markers may still be parsed as a protocol compatibility requirement. Their names are not current SPHERE product terminology.
-
-See `docs/LEGACY-TELEMETRY-COMPATIBILITY.md`.
+These must not be collapsed into one status.
 
 ## 15. SM37 trust boundary
 
-SPHERE distinguishes two evidence planes:
+SPHERE distinguishes:
 
-1. **Sampled Work Process / workload observations**
-2. **Authoritative SAP job execution records**
+1. sampled Work Process / workload observations;
+2. authoritative SAP job execution evidence.
 
-A sampled Work Process observation may show that a Job or Program was observed on an Application Server. It must never be promoted to an authoritative SM37 execution match by inference.
+A sampled WP observation must never be promoted to an SM37 execution match by inference.
 
-The current live overview intentionally reports the authoritative SM37 source as not connected until an approved execution feed is configured.
+Until an approved authoritative feed is connected, the UI reports SM37 as not connected/not configured.
 
 See `docs/BASIS-JOB-INTELLIGENCE.md`.
 
-## Presentation-safe feature list
+## 16. Reporting
 
-For presentations, use these implemented headline capabilities:
+PDF export/reporting summarizes retained operational evidence.
+
+A report must not convert correlation into a final root-cause verdict.
+
+## Presentation-safe feature list
 
 1. Automated SAP performance data collection
 2. Live SAP performance monitoring
 3. Application Server and infrastructure health
-4. Current workload detection
+4. Current Job/Program workload detection
 5. Resource-to-workload correlation
-6. Job and Program performance review
-7. Quick analysis and investigation workspace
-8. Historical trend and Workload Explorer
-9. Operational evidence, availability, and SAP issues
+6. Job/Program performance review
+7. Historical trend and Workload Explorer
+8. Observation/Bucket/WP signal drill-down
+9. Availability, SAP Issues, and operational evidence
 10. PDF reporting and retained evidence
-
-Supporting capabilities:
-
-- ST03N Analysis
-- LOG analysis
-- Observation History
-- System Health
-- watchdog/auto-healing
-- Prometheus-compatible observability
-- manual Upload Logs fallback
 
 ## Claims that must not be made without measured evidence
 
-Do not present these as established facts unless a formal measurement is available:
+Do not claim:
 
-- a fixed percentage reduction in investigation time
-- a guaranteed root-cause detection rate
-- guaranteed incident prevention
-- guaranteed performance improvement
-- authoritative SM37 live monitoring when the approved execution source is not connected
-- SLA availability derived from observed checks
-
-Use actual measured incident data when quantitative benefit claims are required.
+- fixed percentage reduction in investigation time;
+- guaranteed root-cause detection;
+- guaranteed incident prevention;
+- guaranteed performance improvement;
+- authoritative live SM37 monitoring while no approved feed is connected;
+- SLA availability from retained observation percentages.
