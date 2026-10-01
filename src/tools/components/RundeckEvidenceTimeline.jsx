@@ -8,6 +8,8 @@ const API = `${import.meta.env.BASE_URL}api`
 function sourceLabel(value = '') {
   if (value === 'Workload') return 'Job / Program'
   if (value === 'Host') return 'APP Server'
+  if (value === 'Issue Start') return 'Issue Start'
+  if (value === 'Selected Time') return 'Selected Time'
   return value || 'Unknown'
 }
 
@@ -24,6 +26,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const jobKey = job?.key || ''
   const host = job?.host || ''
   const consumerType = job?.consumerType || ''
+  const anchorAt = job?.at || ''
 
   React.useEffect(() => {
     if (!incidentActive) {
@@ -36,6 +39,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     if (jobKey) params.set('job', jobKey)
     if (host) params.set('host', host)
     if (consumerType) params.set('type', consumerType)
+    if (anchorAt) params.set('at', anchorAt)
     setLoading(true)
     fetch(`${API}/analysis/evidence?${params.toString()}`, { cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
@@ -56,7 +60,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [consumerType, host, incidentActive, jobKey, refreshToken])
+  }, [anchorAt, consumerType, host, incidentActive, jobKey, refreshToken])
 
   if (!incidentActive) return null
 
