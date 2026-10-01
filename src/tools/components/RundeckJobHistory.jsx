@@ -597,6 +597,9 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const jobHost = job?.host || ''
   const jobConsumerType = job?.consumerType || ''
   const jobAt = job?.at || ''
+  const jobSource = job?.source || ''
+  const historicalContext = Boolean(jobAt) || ['workload-explorer', 'observation-history', 'trend-snapshot'].includes(jobSource)
+  const effectiveIncidentStart = historicalContext ? '' : incidentStart
 
   React.useEffect(() => {
     setRange('current')
@@ -658,7 +661,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   }, [jobConsumerType, jobHost, jobKey, range, refreshToken, selectedRangeAnchor])
 
   React.useEffect(() => {
-    if (!jobKey || !incidentStart || !history) {
+    if (!jobKey || !history || (!effectiveIncidentStart && !jobAt)) {
       setEvidenceAlignment(null)
       return undefined
     }
@@ -679,7 +682,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         if (failure.name !== 'AbortError') setEvidenceAlignment(null)
       })
     return () => controller.abort()
-  }, [history, incidentStart, jobAt, jobConsumerType, jobHost, jobKey, refreshToken])
+  }, [effectiveIncidentStart, history, jobAt, jobConsumerType, jobHost, jobKey, refreshToken])
 
   if (!jobKey) return null
 
@@ -699,7 +702,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const latest = episodeItems[0] || null
   const latestDetails = latest?.details || {}
   const isCurrent = Boolean(latestCollectionId && latest?.collection_id === latestCollectionId)
-  const timelineText = temporalText(incidentStart, stats.firstSeen)
+  const timelineText = temporalText(effectiveIncidentStart, stats.firstSeen)
   const timingState = String(evidenceAlignment?.state || '').toUpperCase()
   const timingLabel = timingState === 'ALIGNED'
     ? 'Same time window'
@@ -795,9 +798,9 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <p>SM37 job data is not connected. Check Job Name, Program and execution time manually if needed.</p>
       </details>}
 
-      {(incidentStart || timelineText) && <div className="rundeckJobTimeline">
+      {(effectiveIncidentStart || timelineText) && <div className="rundeckJobTimeline">
         <strong>Timing</strong>
-        <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
+        <span><b>Issue Start</b>{effectiveIncidentStart ? `${formatWib(effectiveIncidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
         <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel}. {timingState === 'NO OVERLAP' ? noOverlapText : 'Based on nearest retained observations around the issue/selected time. '}Root cause: Not confirmed.</small>
@@ -841,14 +844,14 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 {episodeItems.length === 1
                   ? <SingleSamplePerformance row={episodeItems[0]} />
                   : episodeItems.length > 1
-                    ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={incidentStart} expanded={drawerPresentation} />
+                    ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={effectiveIncidentStart} expanded={drawerPresentation} />
                     : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
               </div>
             : <div className="rundeckJobHistoricalRange">
                 <div className="rundeckJobHistoricalTitle"><strong>Performance History · {historicalModeLabel}</strong><small>{historicalTrend?.bucket ? `${historicalTrend.bucket} buckets` : 'Retained observations'}</small></div>
                 {rangeLoading && <div className="rundeckJobHistoryState">Loading {range.toUpperCase()} performance…</div>}
                 {rangeError && <div className="rundeckJobHistoryState is-error">{rangeError}</div>}
-                {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={incidentStart} /> : null}
+                {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={effectiveIncidentStart} /> : null}
                 {!rangeLoading && !rangeError && historicalTrend && !historicalTrend.items?.length && <div className="rundeckJobHistoryState rundeckJobHistoricalEmpty">
                   <SphereIcon name="history" />
                   <strong>No retained observations in this range</strong>
