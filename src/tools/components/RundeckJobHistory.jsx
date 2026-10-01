@@ -698,6 +698,10 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         : timingState === 'INSUFFICIENT DATA'
           ? 'Insufficient timing data'
           : 'Timing not confirmed'
+  const noOverlapMinutes = Number(evidenceAlignment?.workload_gap_minutes)
+  const noOverlapText = Number.isFinite(noOverlapMinutes)
+    ? `Workload last observed ${Math.floor(noOverlapMinutes / 60)}h ${Math.round(noOverlapMinutes % 60)}m before issue start. `
+    : ''
   const observed = durationText(stats.firstSeen, stats.lastSeen)
   const profile = chartProfile(episodeItems)
   const contentKey = `${displayHost}|${displayConsumerType}|${displayKey}|${displayAt}`
@@ -774,7 +778,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel}. Based on nearest retained observations around the issue/selected time. Root cause: Not confirmed.</small>
+        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel}. {timingState === 'NO OVERLAP' ? noOverlapText : 'Based on nearest retained observations around the issue/selected time. '}Root cause: Not confirmed.</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
