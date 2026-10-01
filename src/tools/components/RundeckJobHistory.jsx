@@ -598,6 +598,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const jobConsumerType = job?.consumerType || ''
   const jobAt = job?.at || ''
   const jobSource = job?.source || ''
+  const jobSnapshot = job?.snapshot || null
   const historicalContext = Boolean(jobAt) || ['workload-explorer', 'observation-history', 'trend-snapshot'].includes(jobSource)
   const effectiveIncidentStart = historicalContext ? '' : incidentStart
 
@@ -700,7 +701,20 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const episodeItems = [...episodeItemsAsc].reverse()
   const stats = episodeStats(episodeItemsAsc)
   const latest = episodeItems[0] || null
-  const latestDetails = latest?.details || {}
+  const snapshotRow = jobSnapshot && jobSource === 'trend-snapshot'
+    ? {
+        ...jobSnapshot,
+        host: jobSnapshot.host || displayHost,
+        consumer_type: jobSnapshot.consumer_type || displayConsumerType,
+        consumer_key: jobSnapshot.consumer_key || displayKey,
+        collected_at: jobSnapshot.collected_at || displayAt,
+        details: jobSnapshot.details || {},
+      }
+    : null
+  const selectedObservation = snapshotRow || (displayAt ? nearestRow(episodeItemsAsc, displayAt) : latest)
+  const latestDetails = selectedObservation?.details && Object.keys(selectedObservation.details).length
+    ? selectedObservation.details
+    : (latest?.details || {})
   const isCurrent = Boolean(latestCollectionId && latest?.collection_id === latestCollectionId)
   const timelineText = temporalText(effectiveIncidentStart, stats.firstSeen)
   const timingState = String(evidenceAlignment?.state || '').toUpperCase()
@@ -719,11 +733,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     : ''
   const observed = durationText(stats.firstSeen, stats.lastSeen)
   const profile = chartProfile(episodeItems)
-  const contentKey = `${displayHost}|${displayConsumerType}|${displayKey}|${displayAt}`
+  const contentKey = `${displayHost}|${displayConsumerType}|${displayKey}|${displayAt}|${jobSnapshot?.collection_id || ''}`
   const program = String(latestDetails.program || '').trim()
   const appName = shortHost(displayHost || latest?.host || '')
   const jobName = String(latestDetails.job_name || (String(displayConsumerType || latest?.consumer_type).toUpperCase() === 'JOB' ? displayKey : '')).trim()
-  const observedAt = latest?.collected_at || displayAt || stats.lastSeen
+  const observedAt = selectedObservation?.collected_at || latest?.collected_at || displayAt || stats.lastSeen
   const wpType = String(latestDetails.wp_type || '').trim()
   const wpNumber = String(latestDetails.wp || '').trim()
   const wpContext = [wpType, wpNumber].filter(Boolean).join(' ') || '—'
@@ -735,7 +749,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const historicalTrend = rangeData?.trend || null
   const historicalModeLabel = rangeMode === 'peak' ? 'Peak' : 'Average'
   const historicalEligible = ['JOB','PROGRAM'].includes(String(displayConsumerType || latest?.consumer_type || '').toUpperCase())
-  const signalObservation = displayAt ? nearestRow(episodeItemsAsc, displayAt) : latest
+  const signalObservation = selectedObservation
   const signalDetails = signalObservation?.details || {}
   const wpSignals = Array.isArray(signalDetails.wp_signals) ? signalDetails.wp_signals : []
   const visibleWpSignals = wpSignals.slice(0, 8)
@@ -782,6 +796,15 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <span><b>Avg Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
         </div>
       </section>
+
+      {snapshotRow && <section className="rundeckHistoricalSnapshotContext" aria-label="Selected historical observation">
+        <div><span>Selected Observation</span><strong>{snapshotRow.collected_at ? `${formatWib(snapshotRow.collected_at, true)} WIB` : '—'}</strong></div>
+        <div><span>CPU Usage</span><strong>{rowMetric(snapshotRow, 'cpu') === null ? '—' : `${numberText(rowMetric(snapshotRow, 'cpu'), 1)}%`}</strong></div>
+        <div><span>PSS Memory</span><strong>{rowMetric(snapshotRow, 'pss') === null ? '—' : `${numberText(rowMetric(snapshotRow, 'pss'), 2)} GB`}</strong></div>
+        <div><span>Processes</span><strong>{numberText(rowMetric(snapshotRow, 'processes'), 0)}</strong></div>
+        <div><span>Program</span><strong>{String(snapshotRow.details?.program || '').trim() || 'Not captured'}</strong></div>
+        <div><span>WP</span><strong>{[snapshotRow.details?.wp_type, snapshotRow.details?.wp].filter(Boolean).join(' ') || 'Not captured'}</strong></div>
+      </section>}
 
       {String(displayConsumerType || latest?.consumer_type || '').toUpperCase() === 'JOB' && <details className="rundeckSm37Verification is-compact" aria-label="SAP job check">
         <summary className="rundeckSm37VerificationHead">
