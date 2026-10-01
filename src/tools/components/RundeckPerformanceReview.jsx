@@ -98,7 +98,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
 
       <div className="rundeckReviewTableWrapV1231">
         <table className="rundeckReviewTableV1231">
-          <thead><tr><th>Job / Program</th><th>Reason</th><th>Avg CPU</th><th>Peak CPU</th><th>Memory</th></tr></thead>
+          <thead><tr><th>Job / Program</th><th>Reason</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th></tr></thead>
           <tbody>
             {visibleRows.map((row) => {
               const selected = selectedJob?.key === row.consumer_key && selectedJob?.consumerType === row.consumer_type
