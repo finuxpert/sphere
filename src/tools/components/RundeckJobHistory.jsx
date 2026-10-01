@@ -691,11 +691,13 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const timingState = String(evidenceAlignment?.state || '').toUpperCase()
   const timingLabel = timingState === 'ALIGNED'
     ? 'Same time window'
-    : timingState === 'LIMITED'
-      ? 'Limited timing'
-      : timingState === 'INSUFFICIENT DATA'
-        ? 'Insufficient timing data'
-        : 'Timing not confirmed'
+    : timingState === 'NO OVERLAP'
+      ? 'No overlap'
+      : timingState === 'LIMITED'
+        ? 'Limited timing'
+        : timingState === 'INSUFFICIENT DATA'
+          ? 'Insufficient timing data'
+          : 'Timing not confirmed'
   const observed = durationText(stats.firstSeen, stats.lastSeen)
   const profile = chartProfile(episodeItems)
   const contentKey = `${displayHost}|${displayConsumerType}|${displayKey}|${displayAt}`
