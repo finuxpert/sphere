@@ -295,6 +295,40 @@ def assess_workload(
     }
 
 
+def _workload_source_relation(conn) -> tuple[str, str]:
+    """Prefer the full retained JOB/PROGRAM observation projection.
+
+    Legacy Top Consumer rows are used only for collections that do not yet have
+    matching workload observations, preserving older history without biasing
+    newer evaluation toward only the hottest consumers.
+    """
+    observed = bool(conn.execute(text(
+        "SELECT to_regclass('public.rundeck_workload_observations') IS NOT NULL"
+    )).scalar())
+    if not observed:
+        return "rundeck_top_consumers", "TOP_CONSUMERS_ONLY"
+    return """(
+        SELECT wo.collection_id, wo.collected_at, wo.host, wo.consumer_type, wo.consumer_key,
+               NULLIF(wo.details->>'performance_rank', '')::integer AS rank,
+               wo.cpu_pct, wo.ram_pct, wo.details
+          FROM rundeck_workload_observations wo
+        UNION ALL
+        SELECT tc.collection_id, tc.collected_at, tc.host, tc.consumer_type, tc.consumer_key,
+               tc.rank, tc.cpu_pct, tc.ram_pct, tc.details
+          FROM {source} tc
+         WHERE tc.consumer_type IN ('JOB', 'PROGRAM')
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM rundeck_workload_observations wo
+                WHERE wo.collection_id = tc.collection_id
+                  AND wo.host = tc.host
+                  AND wo.collected_at = tc.collected_at
+                  AND wo.consumer_type = tc.consumer_type
+                  AND wo.consumer_key = tc.consumer_key
+           )
+    )""", "ALL_OBSERVED_ACTIVE_WORKLOADS"
+
+
 def _complete_collection_clause(alias: str = "c") -> str:
     return (
         f"{alias}.status = 'READY' "
@@ -304,6 +338,7 @@ def _complete_collection_clause(alias: str = "c") -> str:
 
 
 def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) -> list[dict]:
+    source, _coverage_scope = _workload_source_relation(conn)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
     params: dict[str, Any] = {"start": start, "end": end}
     if type_clause:
@@ -355,7 +390,7 @@ def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) 
                AVG(hb.wp_active_pct) AS app_wp_baseline_pct,
                MAX(tc.rank) AS max_rank_seen,
                COUNT(*) FILTER (WHERE tc.details->>'resource_aggregation' = 'SUM_BY_CONSUMER') AS aggregate_resource_observations
-          FROM rundeck_top_consumers tc
+          FROM {source} tc
           JOIN complete_collections cc ON cc.collection_id = tc.collection_id
           LEFT JOIN host_signal hs
             ON hs.collection_id = tc.collection_id AND hs.host = tc.host
@@ -370,6 +405,7 @@ def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) 
 
 
 def _historical_baseline(conn, end: datetime, consumer_type: str) -> list[dict]:
+    source, _coverage_scope = _workload_source_relation(conn)
     start = end - timedelta(days=HISTORICAL_BASELINE_DAYS)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
     params: dict[str, Any] = {"start": start, "end": end}
@@ -397,7 +433,7 @@ def _historical_baseline(conn, end: datetime, consumer_type: str) -> list[dict]:
                ) AS pss_p95_gb,
                MIN(tc.collected_at) AS first_seen,
                MAX(tc.collected_at) AS last_seen
-          FROM rundeck_top_consumers tc
+          FROM {source} tc
           JOIN complete_collections cc ON cc.collection_id = tc.collection_id
          WHERE tc.collected_at >= :start
            AND tc.collected_at < :end
@@ -409,6 +445,7 @@ def _historical_baseline(conn, end: datetime, consumer_type: str) -> list[dict]:
 
 
 def _recent_shift_window(conn, end: datetime, consumer_type: str) -> list[dict]:
+    source, _coverage_scope = _workload_source_relation(conn)
     recent_start = end - timedelta(hours=SHIFT_RECENT_HOURS)
     previous_start = recent_start - timedelta(hours=SHIFT_RECENT_HOURS)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
@@ -426,7 +463,7 @@ def _recent_shift_window(conn, end: datetime, consumer_type: str) -> list[dict]:
                COUNT(*) FILTER (WHERE tc.collected_at >= :previous_start AND tc.collected_at < :recent_start) AS previous_observations,
                AVG(tc.cpu_pct) FILTER (WHERE tc.collected_at >= :recent_start AND tc.collected_at < :end) AS recent_avg_cpu_pct,
                COUNT(*) FILTER (WHERE tc.collected_at >= :recent_start AND tc.collected_at < :end) AS recent_observations
-          FROM rundeck_top_consumers tc
+          FROM {source} tc
           JOIN rundeck_collections c ON c.collection_id = tc.collection_id
          WHERE {_complete_collection_clause('c')}
            AND tc.collected_at >= :previous_start
@@ -499,12 +536,13 @@ def _collection_quality(conn, start: datetime, end: datetime) -> dict:
 
 
 def _sampling_quality(conn, start: datetime, end: datetime) -> dict:
+    source, coverage_scope = _workload_source_relation(conn)
     row = conn.execute(text(f"""
         SELECT MAX(tc.rank) AS observed_rank_depth,
                COUNT(*) AS observations,
                COUNT(*) FILTER (WHERE tc.details->>'resource_aggregation' = 'SUM_BY_CONSUMER') AS aggregate_observations,
                MAX(NULLIF(tc.details->>'persisted_rank_limit', '')::integer) AS recorded_rank_limit
-          FROM rundeck_top_consumers tc
+          FROM {source} tc
           JOIN rundeck_collections c ON c.collection_id = tc.collection_id
          WHERE {_complete_collection_clause('c')}
            AND tc.collected_at >= :start
@@ -517,8 +555,13 @@ def _sampling_quality(conn, start: datetime, end: datetime) -> dict:
         "recorded_rank_limit": int(row.get("recorded_rank_limit") or 0) or None,
         "observed_rank_depth": int(row.get("observed_rank_depth") or 0),
         "resource_aggregation_coverage_pct": round(aggregate_observations / observations * 100.0, 1) if observations else 0.0,
-        "seen_definition": "Observed in persisted top-consumer collection cycles; not an execution counter.",
-        "wp_overlap_basis": "Critical WP overlap is measured on the same SAP App Server and collection check. Excess overlap subtracts the App Server WP-active baseline.",
+        "coverage_scope": coverage_scope,
+        "seen_definition": (
+            "Observed JOB/PROGRAM rows retained from RCA-WP collection cycles; not an SM37 execution counter."
+            if coverage_scope == "ALL_OBSERVED_ACTIVE_WORKLOADS"
+            else "Observed in legacy persisted top-consumer collection cycles; not an SM37 execution counter."
+        ),
+        "wp_overlap_basis": "APP Critical WP overlap is measured on the same SAP App Server and collection check. It is temporal co-observation, not workload-level causation.",
         "direct_wp_match_available": False,
     }
 
