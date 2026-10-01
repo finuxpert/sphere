@@ -89,6 +89,11 @@ const checks = [
   ['Job Performance timing is a horizontal full-width RCA strip', files.jobHistoryCss.includes('grid-template-columns:auto auto auto minmax(0,1fr)')],
   ['Observation History uses a content-aware drawer', files.wrapper.includes('size="observation-history"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-observation-history')],
   ['APP analysis uses explicit workload type badges', files.appServerAnalysis.includes('rundeckAppTypeBadge') && files.appServerAnalysisCss.includes('.rundeckAppTypeBadge.is-job')],
+  ['APP analysis labels host-level Critical WP and observation duration without implying workload causation', files.appServerAnalysis.includes('APP Critical WP active') && files.appServerAnalysis.includes('Observed Duration:')],
+  ['APP workload list states observation scope and avoids active or captured claims', files.appServerAnalysis.includes('observed workloads') && files.appServerAnalysis.includes('Source:') && !files.appServerAnalysis.includes(' captured</small>')],
+  ['Current workload API prefers all observed JOB and PROGRAM rows with legacy Top Consumers fallback', read('backend/rundeck_job_history.py').includes('rundeck_workload_observations') && read('backend/rundeck_job_history.py').includes('ALL_OBSERVED_ACTIVE_WORKLOADS') && read('backend/rundeck_job_history.py').includes("tc.consumer_type IN ('JOB', 'PROGRAM')")],
+  ['APP analysis scopes workload retrieval to the selected host before applying the result limit', files.appServerAnalysis.includes('&host=${encodeURIComponent(app.host)}&limit=100') && files.apiCore.includes('host: str | None = Query(None')],
+  ['Observed workload classification keeps RCA-WP identity provenance separate from SM37 authority', read('backend/rundeck_consumers.py').includes('identity_source') && read('backend/rundeck_consumers.py').includes('identity_authority') && files.appServerAnalysis.includes('not SM37 execution status')],
 
   ['SAP Job Source renders as a visible neutral integrity strip', files.accessibilityThemeFinal.includes('.rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
