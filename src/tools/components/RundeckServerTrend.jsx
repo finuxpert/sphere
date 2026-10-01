@@ -267,6 +267,18 @@ function snapshotContext(selected, row, consumer) {
     collectionId: row?.collection_id || selected?.collectionId || '',
     trendMode: selected?.mode || '',
     trendMetric: selected?.metricLabel || '',
+    snapshot: {
+      collection_id: consumer.collection_id || row?.collection_id || selected?.collectionId || '',
+      collected_at: consumer.collected_at || selected?.at || '',
+      host: consumer.host || row?.host || selected?.host || '',
+      consumer_type: consumer.consumer_type || '',
+      consumer_key: consumer.consumer_key || '',
+      rank: consumer.rank ?? null,
+      cpu_pct: consumer.cpu_pct ?? null,
+      ram_pct: consumer.ram_pct ?? null,
+      host_wp_critical: row?.wp_critical ?? null,
+      details: consumer.details || {},
+    },
   }
 }
 
