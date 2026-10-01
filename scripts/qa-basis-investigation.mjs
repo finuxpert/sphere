@@ -24,6 +24,7 @@ const files = {
   closingMigration: read('backend/db/migrations/versions/20260929_0007_rundeck_analysis_closures.py'),
   evaluationBackend: read('backend/rundeck_evaluation.py'),
   consumersBackend: read('backend/rundeck_consumers.py'),
+  jobHistoryBackend: read('backend/rundeck_job_history.py'),
   infrastructure: read('src/tools/components/RundeckInfrastructure.jsx'),
   infrastructureCss: read('src/tools/components/RundeckInfrastructure.css'),
   infrastructureBackend: read('backend/rundeck_infra_api.py'),
@@ -73,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.30', files.version.includes("APP_VERSION = '1.34.30'") && files.version.includes('monitoring-flow-ui-v1.34.30')],
+  ['monitoring flow version is v1.34.31', files.version.includes("APP_VERSION = '1.34.31'") && files.version.includes('monitoring-flow-ui-v1.34.31')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -134,10 +135,15 @@ const checks = [
   ['Current Workloads exposes multi-core CPU semantics and selected identity', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('CPU Total ↓') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Selected · {selectedContext}')],
   ['Trend chart point opens a compact modal instead of expanding the live page', files.serverTrend.includes('rundeckTrendPointModalBackdrop') && files.serverTrend.includes('aria-modal="true"') && files.serverTrend.includes('closeTrendDetails') && !files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
   ['Trend modal uses one hierarchy and full-width actionable workload rows', files.serverTrend.includes('rundeckTrendModalContext') && files.serverTrend.includes('rundeckTrendWorkloadRow') && files.serverTrend.includes('open Performance Analysis')],
-  ['Trend modal restores graph context with time labels and a selected-point marker', files.serverTrend.includes('MiniTrendContext') && files.serverTrend.includes('rundeckTrendMiniMarkerLine') && files.serverTrend.includes('formatTrendAxis(model.firstAt, range)') && files.serverTrend.includes('Selected point ·') && files.accessibilityThemeFinal.includes('.rundeckTrendMiniContext')],
+  ['Trend modal restores graph context with time labels and a selected-point marker', files.serverTrend.includes('MiniTrendContext') && files.serverTrend.includes('rundeckTrendMiniMarkerLine') && files.serverTrend.includes('formatTrendAxis(model.firstAt, range)') && files.serverTrend.includes("'Peak sample' : 'Selected sample'") && files.serverTrend.includes('Bucket') && files.accessibilityThemeFinal.includes('.rundeckTrendMiniContext')],
   ['Trend modal traps focus locks page scroll and restores focus', files.serverTrend.includes("document.body.style.overflow = 'hidden'") && files.serverTrend.includes("event.key !== 'Tab'") && files.serverTrend.includes('restoreFocusRef.current?.focus')],
   ['Trend point selection ignores distant clicks', files.serverTrend.includes('distance > 900')],
   ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('CPU can exceed 100%') && files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes(' GB')],
+  ['Trend modal distinguishes actual sample time from aggregation bucket time', files.serverTrend.includes('selectedActualAt') && files.serverTrend.includes('selectedBucketAt') && files.serverTrend.includes('Top ${consumers.length} workload') && files.serverTrend.includes('Top workload CPU') && files.serverTrend.includes('Host Resource:')],
+  ['Workload evidence exposes NO OVERLAP when an episode ended before the issue window', files.evidenceBackend.includes('"state": "NO OVERLAP"') && files.evidenceBackend.includes('workload_gap_minutes') && files.jobHistory.includes("timingState === 'NO OVERLAP'") && files.evidenceTimeline.includes("state === 'NO OVERLAP'")],
+  ['Job history reports truncation instead of presenting a loaded limit as complete lifetime', files.jobHistoryBackend.includes('observation_count') && files.jobHistoryBackend.includes('loaded_observations') && files.jobHistoryBackend.includes('history_truncated') && files.jobHistory.includes("'First Loaded'") && files.jobHistory.includes("'Loaded Span'")],
+  ['WP signal labels distinguish resource classification counters and missing program capture', files.jobHistory.includes('CPU Signal') && files.jobHistory.includes('RABAX / RXMSG Count') && files.jobHistory.includes('SXPG / JobStart Count') && files.jobHistory.includes('Not captured') && files.jobHistory.includes('WP/Trace signal was not retained for this observation')],
+  ['APP Critical WP wording is scoped to the workload period rather than the current incident', files.jobHistory.includes('APP Critical WP during workload period') && files.jobHistory.includes('not proof of incident overlap')],
   ['Performance drawer uses a full-width controls and chart workspace', files.jobHistory.includes("height: expanded ? 126 : 76") && files.jobHistory.includes('rundeckJobAnalysisWorkspace') && files.jobHistoryCss.includes('grid-template-columns:minmax(250px,28fr) minmax(0,72fr)') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
   ['Performance drawer keeps Correlated Events Availability and SAP Issues in its bottom context rail', files.wrapper.includes('rundeckPerformanceDrawerEvidence') && files.wrapper.includes("returnTo: { type: 'job'") && files.workspaceDrawerCss.includes('.rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards')],
   ['Performance operational drilldowns return directly to Job Performance', files.wrapper.includes("activeOverlay.returnTo?.type === 'job' ? 'Back to Performance'")],
