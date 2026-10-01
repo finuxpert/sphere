@@ -97,15 +97,15 @@ def availability_transition_events(snapshots: list[dict], since=None) -> list[di
     return events
 
 
-def _latest_episode(items: list[dict]) -> list[dict]:
+def _episodes(items: list[dict]) -> list[list[dict]]:
     ordered = sorted(
         [row for row in items if _dt(row.get("collected_at"))],
         key=lambda row: _dt(row.get("collected_at")),
     )
     if not ordered:
         return []
-    episodes = []
-    current = []
+    episodes: list[list[dict]] = []
+    current: list[dict] = []
     for row in ordered:
         stamp = _dt(row.get("collected_at"))
         previous = _dt(current[-1].get("collected_at")) if current else None
@@ -115,7 +115,39 @@ def _latest_episode(items: list[dict]) -> list[dict]:
         current.append(row)
     if current:
         episodes.append(current)
-    return episodes[-1]
+    return episodes
+
+
+def _episode_near(items: list[dict], anchor_at=None) -> list[dict]:
+    episodes = _episodes(items)
+    if not episodes:
+        return []
+    anchor = _dt(anchor_at)
+    if not anchor:
+        return episodes[-1]
+    return min(
+        episodes,
+        key=lambda episode: min(
+            abs((_dt(row.get("collected_at")) - anchor).total_seconds())
+            for row in episode if _dt(row.get("collected_at"))
+        ),
+    )
+
+
+def _nearest_item(items: list[dict], anchor_at):
+    anchor = _dt(anchor_at)
+    candidates = [row for row in items if _dt(row.get("collected_at"))]
+    if not anchor or not candidates:
+        return candidates[-1] if candidates else None
+    return min(candidates, key=lambda row: abs((_dt(row.get("collected_at")) - anchor).total_seconds()))
+
+
+def _nearest_snapshot(snapshots: list[dict], anchor_at):
+    anchor = _dt(anchor_at)
+    candidates = [row for row in snapshots if _dt(row.get("collected_at"))]
+    if not anchor or not candidates:
+        return candidates[-1] if candidates else None
+    return min(candidates, key=lambda row: abs((_dt(row.get("collected_at")) - anchor).total_seconds()))
 
 
 def _num(value, digits=1):
@@ -125,7 +157,7 @@ def _num(value, digits=1):
         return "—"
 
 
-def _workload(incident: dict, job: str | None, host: str | None, consumer_type: str | None):
+def _workload(incident: dict, job: str | None, host: str | None, consumer_type: str | None, anchor_at=None):
     current = incident.get("current_workload") or {}
     key = str(job or current.get("consumer_key") or "").strip()
     if not key:
@@ -137,7 +169,7 @@ def _workload(incident: dict, job: str | None, host: str | None, consumer_type: 
         history = sap_job_history(key, since, host=resolved_host, consumer_type=resolved_type, limit=1000)
     except RuntimeError:
         return {"consumer_key": key, "consumer_type": resolved_type, "host": resolved_host, "checks": 0, "first_seen": None, "last_seen": None, "items": []}
-    episode = _latest_episode(history.get("items") or [])
+    episode = _episode_near(history.get("items") or [], anchor_at)
     first_seen = _dt(episode[0].get("collected_at")) if episode else None
     last_seen = _dt(episode[-1].get("collected_at")) if episode else None
     return {
@@ -165,12 +197,12 @@ def _availability_evidence(snapshots: list[dict], since=None) -> list[dict]:
     return events
 
 
-def evidence_timeline(job=None, host=None, consumer_type=None, availability_range=DEFAULT_AVAILABILITY_RANGE) -> dict:
+def evidence_timeline(job=None, host=None, consumer_type=None, availability_range=DEFAULT_AVAILABILITY_RANGE, anchor_at=None) -> dict:
     if availability_range not in RANGE_HOURS:
         raise ValueError("Unsupported availability range")
 
     incident = performance_incident_summary()
-    workload = _workload(incident, job, host, consumer_type)
+    workload = _workload(incident, job, host, consumer_type, anchor_at=anchor_at)
 
     availability_error = None
     try:
@@ -186,9 +218,18 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
     latest_availability_snapshot = snapshots[-1] if snapshots else None
 
     performance_at = incident.get("last_observed") or incident.get("collection_finished_at")
-    workload_at = workload.get("last_seen") if workload else None
-    availability_at = latest_availability_snapshot.get("collected_at") if latest_availability_snapshot else None
-    alignment = source_alignment({"Performance": performance_at, "Workload": workload_at, "Availability": availability_at})
+    selected_anchor = _dt(anchor_at)
+    correlation_anchor = selected_anchor or issue_start or _dt(performance_at)
+    workload_near_issue = _nearest_item((workload or {}).get("items") or [], correlation_anchor)
+    availability_near_issue = _nearest_snapshot(snapshots, correlation_anchor)
+    workload_at = workload_near_issue.get("collected_at") if workload_near_issue else None
+    availability_at = availability_near_issue.get("collected_at") if availability_near_issue else None
+    alignment_sources = {
+        "Selected Time" if selected_anchor else "Issue Start": correlation_anchor,
+        "Workload": workload_at,
+        "Availability": availability_at,
+    }
+    alignment = source_alignment(alignment_sources)
 
     events = []
     signal = incident.get("primary_signal") or {}
@@ -263,7 +304,10 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
             "last_observed": _iso(incident.get("last_observed")),
             "primary_signal": signal,
         },
-        "selected_workload": {key: value for key, value in (workload or {}).items() if key != "items"} if workload else None,
+        "selected_workload": {
+            **{key: value for key, value in (workload or {}).items() if key != "items"},
+            "correlation_observed_at": _iso(workload_at),
+        } if workload else None,
         "alignment": alignment,
         "summary": {
             "alignment": alignment.get("state"),
@@ -280,5 +324,5 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "events": events,
         "interpretation": interpretation,
-        "note": "Timing and co-observation are supporting evidence only; root cause still requires SAP and infrastructure validation.",
+        "note": "Timing alignment is measured around the selected time or issue start using the nearest retained workload and availability observations. Co-observation is supporting evidence only; root cause still requires SAP and infrastructure validation.",
     }

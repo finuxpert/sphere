@@ -202,6 +202,12 @@ def parse_top_consumers(
         details = {
             "job_name": _clean(representative.get("job_name")),
             "program": _clean(representative.get("program")),
+            "identity_source": (
+                "job_name" if group["consumer_type"] == "JOB"
+                else "program" if group["consumer_type"] == "PROGRAM"
+                else "pid"
+            ),
+            "identity_authority": "RCA_WP_OBSERVATION",
             "wp": _clean(representative.get("wp")),
             "wp_type": _clean(representative.get("type")),
             "user": _first(representative, "user", "sap_user", "username", "bname"),

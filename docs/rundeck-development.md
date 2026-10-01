@@ -1,101 +1,200 @@
-# Rundeck development
+# Rundeck Development
 
-Source: `rundeck-sphere-dev`, checkout `/root/rundeck-sphere-dev`, URL https://sphere.astraotoparts.co.id/dev/.
-Production source: `sphere-prod`, checkout `/root/sphere-prod`; production is not redeployed.
-`sphere-dev` is not deployed. `rundeck-sphere-prod` remains reserved until integration stabilizes.
+This document describes the active SPHERE Rundeck DEV runtime.
 
-## Runtime
+## Runtime identity
 
-Development webroot `/var/www/sphere-dev/current`, backend `/opt/sphere-rundeck-dev/current`, dedicated venv and API port 8091. Production webroot `/var/www/sphere.astraotoparts.co.id/current` and API port 8090 remain unchanged.
+- Repository: `finuxpert/sphere`
+- DEV branch: `rundeck-sphere-dev`
+- PROD branch: `rundeck-sphere-prod`
+- DEV checkout: `/root/rundeck-sphere-dev`
+- PROD checkout: `/root/rundeck-sphere-prod`
+- DEV URL: https://sphere.astraotoparts.co.id/dev/
+- PROD URL: https://sphere.astraotoparts.co.id/
+- Current application version: **v1.34.29**
 
-Storage `/var/lib/sphere/ingestion/{inbox,processing,archive,rejected,manifests}`. This data is outside Git. The development API mounts only read-only collection routes; existing PostgreSQL/evidence code and migrations are retained but production evidence writes are not routed from development. Case History API is not available in this isolated collection-only development service.
+The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line. It is not the active Rundeck-integrated production runtime.
 
-## Authentication and activation
+## Architecture boundary
 
-Provide `/etc/sphere/rundeck-dev.env` using the example in `ops/rundeck`. The token must have read-only access to Project `Linux`, the collector job, execution history and output. Store the token in `/etc/sphere/rundeck-readonly.token`, readable by the `sphere` service account, never in Git or browser configuration.
+SPHERE does not connect directly to SAP Application Servers.
 
-The poller is configured by stable job identity rather than Job UUID:
+```text
+SAP Application Servers
+    ↓
+Rundeck
+    ↓ REST API
+SPHERE FastAPI
+    ↓
+PostgreSQL + retained raw evidence
+    ↓
+SPHERE React UI
+```
 
-- `RUNDECK_PROJECT=Linux`
-- `RUNDECK_JOB_GROUP=SAP/AOP`
-- `RUNDECK_JOB_NAME=[Critical]-[Daily Check] SPHERE SAP Work Proccess Check`
-- five expected AOP hostnames
+Rundeck remains responsible for SAP-side collection.
 
-The current Job UUID is observed only for diagnostics and may change when the Rundeck workflow is recreated. A replacement workflow remains compatible when project, group and normalized job name stay the same.
+## DEV runtime
 
-The timer checks once a minute; Rundeck retains its existing ten-minute collection schedule. Initial activation ingests only the newest matching execution and does not backfill the historical execution backlog.
+- Webroot: `/var/www/sphere-dev/current`
+- Backend release: `/opt/sphere-rundeck-dev/current`
+- DEV API port: `8091`
+- DEV API service: `sphere-rundeck-api.service`
+- Collector poller: `sphere-rundeck-poller.service/.timer`
+- Infrastructure poller: `sphere-rundeck-infra-poller.service/.timer`
+- Collector watchdog: `sphere-rundeck-watchdog.service/.timer`
 
-Only origin `http://10.14.55.205:4440` is used. HTTP redirects are rejected; no authentication bypass, SSH, SCP, mounts, or SAP connections.
+Production uses its own release paths and API service/port and must not be changed by a DEV deployment.
 
-## Verified connectivity
+Retained ingestion data lives outside Git under `/var/lib/sphere/ingestion`.
 
-Validated on 2026-09-10 with the dedicated read-only token:
+## Rundeck access
 
-- API v44 execution `521054`: HTTP 200
-- project: `Linux`
-- status: `succeeded`
-- successful nodes: 5/5 (`AOPH1PAPPDC` through `AOPH5PAPPDC`)
-- execution output API: HTTP 200
-- `completed=true`
-- `execCompleted=true`
-- 1,355 output entries
-- node identity available per API entry
-- SPHERE server to Rundeck API: HTTP 200
-- development API `/dev/api/health`: HTTP 200
-- production URL and development URL both remained HTTP 200
+Use server-side credentials only.
 
-The poller uses `/api/44/project/<project>/executions` with stable job filters, then `/api/44/execution/<id>/output?format=json&offset=0`. It requires completed output and converts the returned log entries to plain text before passing them to the existing collection validator and JavaScript parser pipeline.
+Reader credential:
 
-## Contract
+- stored outside Git
+- read-only execution/output access
+- consumed by the collector poller
 
-Manifest: collection_id (`rundeck-<execution_id>`), execution_id, status, started_at, finished_at, expected_hosts (list), received_hosts (list), checksum (SHA-256), source (`rundeck`), created_at, size_bytes and raw_path. Additional error field is stored on rejected collections.
+Runner credential:
 
-PROCESSING is resumable after interruption; terminal execution IDs are deduplicated. A successful execution with exactly the five expected hosts and complete V2.2 snapshot envelopes is READY. Fewer hosts yields PARTIAL. Failed executions, HTML, malformed/truncated envelopes, unexpected hosts and unsupported formats yield FAILED. Raw READY data goes to archive; other terminal data goes to rejected. A single poller lock prevents concurrent ingestion. Atomic manifest replacement publishes the raw artifact only after it exists. Latest selects READY by execution finish time, never PARTIAL.
+- separate from the reader credential
+- may be available only for explicitly approved actions
+- must not be exposed to the browser
 
-The envelope validator is deliberately restricted to complete WP-SCOUT/V2.2 text. JavaScript metric parsers and RCA compatibility markers are unchanged. No metrics are parsed in Python.
+Do not put Rundeck tokens in source code, GitHub, frontend environment files, browser storage, screenshots, or logs.
 
-## Read-only routes
+See `docs/RUNDECK_INTEGRATION_RUNBOOK.md`.
 
-- GET `/dev/api/health`
-- GET `/dev/api/collections`
-- GET `/dev/api/collections/latest`
-- GET `/dev/api/collections/{collection_id}`
-- GET `/dev/api/collections/{collection_id}/raw`
+## Collection identity
 
-No new upload or mutating endpoint. Automatic mode fetches latest READY every minute and passes downloaded text through the same browser upload/parser pipeline. Manual Upload Logs stays available from the source selector. No READY collection shows an explicit waiting message.
+The collector is discovered through stable Rundeck job identity rather than relying only on a mutable Job UUID.
 
-## Validation and deployment
+Primary identity includes the approved project/group/job contract. The current UUID may be used after discovery but must not be the permanent source of truth.
 
-Run npm ci, lint, test, build and audit, Python syntax and ingestion tests, and Alembic migration validation before deployment. `ops/rundeck/deploy-dev.sh` requires a clean checkout of the correct branch and a build containing `/dev/assets/`; it preserves production symlink targets and index checksum, installs only the dedicated development services, adds `/dev` nginx locations, checks nginx syntax and smoke tests the development URL. System paths require host permissions.
+Collection readiness is based on completed execution/output evidence and expected-node validation.
 
+Core collection states:
 
-## Live Monitoring UI contract (2026-09-23)
+- PROCESSING
+- READY
+- PARTIAL
+- FAILED
 
-The DEV Live Monitoring console is intentionally exception-oriented and keeps the stable backend collector unchanged.
+Latest operational data must come from an aligned READY collection cycle. The UI must not construct a fake current landscape by mixing independent latest timestamps from different hosts.
 
-- Top-level modes are `Live Monitoring` and `History`.
-- Infrastructure summary covers filesystem, network, storage I/O and SAP Jobs source readiness.
-- `SAP Jobs` remains non-authoritative until the SM37 execution feed is configured. The legacy `RundeckJobMonitor` component has been removed from the active codebase; dynamic SM37 verification remains available only as contextual evidence.
-- SAP App Servers and Server Trend use a 35/65 desktop composition. Selected workload cross-focus highlights the matching APP and trend series but must not auto-expand Critical WP drilldown.
-- APP server Critical WP drilldown is user-initiated. When expanded it is contained inside the APP pane and must not stretch the Server Trend row.
-- Current Workloads and Selected Workload use a 38/62 desktop composition.
-- Workload Performance, Observation History, Infrastructure Trend, Infrastructure details and Supporting Data are progressive-disclosure layers. They should remain collapsed by default unless a user explicitly opens them.
-- Performance Review shows the top review rows first and exposes the full set on demand.
-- Healthy states are visually subdued; ATTENTION/CRITICAL and stale/partial data states carry the visual emphasis.
-- `Collection running` is an execution state, `Collector Health` is platform health, and `Data ALIGNED/PARTIAL` describes cross-source timing/alignment. These semantics must not be merged into one status.
-- Infrastructure host selection is persisted in local storage. Trend metric/range/aggregation preferences are also persisted.
-- Historical selections must remain visibly distinct from current/live state; retained evidence is correlation context and does not establish root cause.
+## Active UI contract
 
-### UI regression rule
+The main navigation exposes:
 
-Do not reintroduce automatic APP drilldown expansion from workload selection. A selected workload may cross-highlight APP and trend context only. A Critical WP drilldown opens only from an explicit APP/SAP Issue interaction.
+- **ST03N Analysis**
+- **Performance Analysis**
 
-### CSS cleanup policy
+Performance Analysis exposes two top-level modes:
 
-Several historical Rundeck polish stylesheets remain imported by `ToolLogWorkspace.jsx`. They are treated as active until consolidated and visually regression-tested. Cleanup must remove only proven dead/unreferenced files; do not delete imported polish layers merely because their names look old.
+- **Live Monitoring**
+- **History**
 
-Dead code removed on 2026-09-23:
-- `RundeckJobMonitor.jsx`
-- `RundeckJobMonitor.css`
-- `RundeckEvidence.css`
+### Live Monitoring
 
+Current primary areas include:
+
+- infrastructure overview
+- SAP Application Servers
+- Server Trend
+- Current Workloads
+- selected Job / Program context
+- operational evidence
+- System Health
+- Jobs & Programs to Review
+
+Secondary analysis is opened through progressive disclosure/drawers:
+
+- Job / Program Performance
+- Observation History
+- Infrastructure Analysis
+- Correlated Events
+- SAP Availability
+- SAP Issues
+- System Data
+- Application Server Analysis
+- Quick Analysis
+
+### History
+
+History mode uses the Workload Explorer and historical Job/Program detail.
+
+Historical selections must remain visually distinct from current/live state.
+
+## UI behavior rules
+
+- Selected workload cross-focus may highlight the matching Application Server and trend context.
+- It must not auto-expand Critical WP drill-down.
+- APP-server Critical WP drill-down is user initiated.
+- Healthy states should be visually quieter than ATTENTION/CRITICAL/stale/partial states.
+- Data freshness and collection identity must remain visible.
+- A missing availability observation must not be rendered as DOWN.
+- Historical correlation does not establish root cause.
+- A sampled workload observation does not establish an authoritative SM37 execution match.
+- Do not document Comparator/RCA as an active primary navigation workspace.
+
+## Performance Review
+
+The active evaluation endpoint supports:
+
+- `1d`
+- `7d`
+- `30d`
+
+and workload filters:
+
+- `ALL`
+- `PROGRAM`
+- `JOB`
+
+Evaluation inputs include retained workload occurrence/resource observations. Evaluation status is an investigation/review signal, not a root-cause verdict.
+
+## SM37 integration state
+
+The backend supports an approved authoritative execution-evidence plane, but the current live overview intentionally treats the live SM37 source as **not connected** until an approved feed is configured.
+
+Do not infer SM37 MATCHED/PARTIAL MATCH from sampled Work Process evidence.
+
+See `docs/BASIS-JOB-INTELLIGENCE.md`.
+
+## Validation
+
+From `/root/rundeck-sphere-dev`:
+
+```bash
+git fetch origin
+git reset --hard origin/rundeck-sphere-dev
+
+/opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
+npm run qa
+bash ops/rundeck/prod-readiness-check.sh
+```
+
+Expected final readiness markers:
+
+```text
+READINESS PASS: collector fresh, watchdog healthy, auto-healing enabled
+SPHERE PROD READINESS PASS
+HEAD <validated-dev-sha>
+```
+
+Optional browser visual checks are documented in `docs/VISUAL-QA.md`.
+
+## Promotion
+
+Promote only through a normal Pull Request:
+
+```text
+base:    rundeck-sphere-prod
+compare: rundeck-sphere-dev
+```
+
+Do not force-reset PROD to DEV.
+
+Production deployment and rollback procedures are documented in `ops/rundeck/OPERATIONS.md`.
