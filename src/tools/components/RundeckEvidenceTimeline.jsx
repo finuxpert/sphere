@@ -75,8 +75,10 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const hasThreshold = Number.isFinite(threshold)
   const alignmentHint = state === 'ALIGNED'
     ? `Source timestamps are within the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Timing alignment supports correlation only; it does not establish causation.`
-    : state === 'LIMITED'
-      ? `Source timestamps exceed the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Cross-source conclusions are limited.`
+    : state === 'NO OVERLAP'
+      ? 'The selected workload episode ended before the current issue window beyond the configured correlation tolerance.'
+      : state === 'LIMITED'
+        ? `Source timestamps exceed the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Cross-source conclusions are limited.`
       : state === 'INSUFFICIENT DATA'
         ? 'Fewer than two timestamped evidence sources are available.'
         : 'Cross-source timing status.'
