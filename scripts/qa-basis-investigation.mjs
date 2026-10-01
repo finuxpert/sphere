@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.33', files.version.includes("APP_VERSION = '1.34.33'") && files.version.includes('monitoring-flow-ui-v1.34.33')],
+  ['monitoring flow version is v1.34.34', files.version.includes("APP_VERSION = '1.34.34'") && files.version.includes('monitoring-flow-ui-v1.34.34')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -270,6 +270,12 @@ const checks = [
   ['Infrastructure rows can focus history series', files.infrastructure.includes('openTrend') && files.infrastructure.includes('selectedSeries')],
   ['Infrastructure history supports 30D and timestamped Critical WP marker', files.infrastructure.includes("'30d'") && files.infrastructure.includes('Critical WP Started') && files.infrastructure.includes('formatTime(incidentStart)') && files.infrastructureBackend.includes('"30d": 720') && files.infrastructureBackend.includes('24h|7d|30d')],
   ['Infrastructure selected series exposes current min max change and secondary peaks', files.infrastructure.includes('trendCurrent') && files.infrastructure.includes('trendMin') && files.infrastructure.includes('trendMax') && files.infrastructure.includes('Peak TX') && files.infrastructure.includes('Peak write')],
+  ['Infrastructure status distinguishes operational state from source category', files.infrastructure.includes('<b>State</b> <strong') && files.infrastructure.includes('<b>Source</b> Infrastructure') && !files.infrastructure.includes('<b>State</b> infrastructure')],
+  ['Infrastructure history labels range-start change and network drop delta semantics', files.infrastructure.includes('Change from range start') && files.infrastructure.includes('Peak drop delta') && files.infrastructure.includes('combined RX + TX dropped-counter delta')],
+  ['Infrastructure history exposes retained coverage instead of implying zero before first sample', files.infrastructureBackend.includes('first_observed_at') && files.infrastructureBackend.includes('last_observed_at') && files.infrastructure.includes('Retained history starts') && files.infrastructure.includes('no retained collection')],
+  ['Storage utilization over 100 remains visible as source-quality evidence instead of silent clamping', files.infrastructureBackend.includes("'SOURCE_OVER_100'") && files.infrastructure.includes('Source util >100% - verify') && files.infrastructure.includes("storageSourceOver100?'Reported Max':'Max'")],
+  ['Infrastructure distinguishes filesystem capacity from storage IO activity', files.infrastructure.includes('<small>Capacity</small>') && files.infrastructure.includes('<small>I/O Activity</small>') && files.infrastructure.includes('Storage I/O utilization with write peaks')],
+  ['Correlated Events declares whether timing is current-incident or selected-observation context', files.evidenceTimeline.includes("anchorAt ? 'Selected observation context' : 'Current incident context'") && files.evidenceTimeline.includes('rundeckEvidenceScope')],
   ['Infrastructure summary never aggregates unrelated series', files.infrastructure.includes("selectedSeries?trend.filter") && files.infrastructure.includes(":[]") && files.infrastructure.includes('Selected: {selectedSeries}') && !files.infrastructure.includes("'All series'")],
   ['Infrastructure auto-selects highest-risk available series', files.infrastructure.includes('grouped.set(key,Math.max') && files.infrastructure.includes('if(top)setSelectedSeries(top)')],
   ['Infrastructure filesystem chart has fixed percentage scale and thresholds', files.infrastructure.includes("[0,50,75,90,100]") && files.infrastructure.includes('Warn 75%') && files.infrastructure.includes('Crit 90%')],
@@ -325,4 +331,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.33 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.34 monitoring flow and deep-analysis checks passed.')
