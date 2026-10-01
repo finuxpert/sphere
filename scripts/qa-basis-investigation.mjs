@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.35', files.version.includes("APP_VERSION = '1.34.35'") && files.version.includes('monitoring-flow-ui-v1.34.35')],
+  ['monitoring flow version is v1.34.36', files.version.includes("APP_VERSION = '1.34.36'") && files.version.includes('monitoring-flow-ui-v1.34.36')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -187,6 +187,13 @@ const checks = [
   ['Review reason chips remain supporting context instead of competing with workload identity', files.monitoringCss.includes('.rundeckReviewReasonChips span') && files.monitoringCss.includes('font-weight:560!important')],
   ['Infrastructure issue strip stays compact but has a stronger left-edge cue', files.liveOverviewCss.includes('infrastructure exception remains compact') && files.liveOverviewCss.includes('min-height:28px!important') && files.liveOverviewCss.includes('border-left-width:3px!important')],
   ['Infrastructure analysis history chart uses a full investigation-height canvas', files.infrastructureCss.includes('infrastructure history uses the drawer canvas') && files.infrastructureCss.includes('height:390px!important') && files.infrastructureCss.includes('height:330px!important')],
+  ['Performance chart supports exact observation drilldown without changing raw observation semantics', files.jobHistory.includes('onSelectObservation') && files.jobHistory.includes("setDetailView({ type: 'observation', row })") && files.jobHistory.includes('Observation Details') && files.jobHistory.includes('APP Critical WP')],
+  ['Historical performance buckets open bucket-specific aggregate details instead of raw-observation labels', files.jobHistory.includes('onSelectBucket') && files.jobHistory.includes("type: 'bucket'") && files.jobHistory.includes('Historical Bucket Details') && files.jobHistory.includes('APP Critical WP overlap')],
+  ['WP trace rows expose keyboard-accessible detail drilldown while preserving SM37 authority', files.jobHistory.includes("role=\"button\"") && files.jobHistory.includes("type: 'wp'") && files.jobHistory.includes('SAP WP Signal Details') && files.jobHistory.includes('SM37 remains the authority for SAP job execution status')],
+  ['Low-sample workload episodes are explicitly labelled and use adaptive chart height', files.jobHistory.includes('Limited samples -') && files.jobHistory.includes('const compactEpisode = rows.length <= 10') && files.jobHistory.includes('laneScale = compactEpisode ? .76 : 1')],
+  ['Performance issue marker label is short and horizontal', files.jobHistory.includes("formatter: `Issue · ${formatWib(incidentStart, false)}`") && files.jobHistory.includes('rotate: 0')],
+  ['Infrastructure chart uses internal 320px plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=320') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
+  ['Live APP workload and review rows expose hover drilldown affordance without action columns', files.monitoringCss.includes('make drilldown targets discoverable') && files.monitoringCss.includes("content:'›'") && files.monitoringCss.includes('.rundeckReviewTableV1231 tbody tr[role="button"]')],
   ['Performance Review marks genuinely small observation sets without turning the hint into RCA', files.quickAnalysis.includes('limitedSample') && files.quickAnalysis.includes('Limited sample') && files.quickAnalysisCss.includes('.rundeckQuickSampleHint')],
   ['Review drawer keeps evidence compact and closing summary readable at short desktop height', files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckEvidenceEvent') && files.quickAnalysisCss.includes('max-height:220px') && files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckClosingPreview p') && files.quickAnalysisCss.includes('line-height:1.38')],
   ['Performance Review delegates its drawer to the central overlay manager', files.performanceReview.includes('onOpenQuickAnalysis') && files.performanceReview.includes('externalQuickKey') && files.performanceReview.includes('!onOpenQuickAnalysis && quickRow')],
@@ -339,4 +346,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.35 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.36 monitoring flow and deep-analysis checks passed.')
