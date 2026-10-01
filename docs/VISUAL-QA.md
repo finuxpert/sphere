@@ -106,7 +106,7 @@ npx playwright install chromium
 Run against DEV:
 
 ```bash
-SPHERE_VISUAL_BASE_URL='https://sphere.astraotparts.co.id/dev/#/tool/logs' npm run qa:visual
+SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' npm run qa:visual
 ```
 
 Only update screenshot baselines after manual review. Do not update snapshots merely to make a failure disappear.
