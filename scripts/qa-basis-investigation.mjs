@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.34', files.version.includes("APP_VERSION = '1.34.34'") && files.version.includes('monitoring-flow-ui-v1.34.34')],
+  ['monitoring flow version is v1.34.35', files.version.includes("APP_VERSION = '1.34.35'") && files.version.includes('monitoring-flow-ui-v1.34.35')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -179,6 +179,14 @@ const checks = [
   ['Performance charts expose explicit operator-friendly lane labels', files.jobHistory.includes("name: 'CPU'") && files.jobHistory.includes("name: 'PSS Memory'") && files.jobHistory.includes("name: 'APP Critical WP'") && files.jobHistory.includes("text:'PSS Memory'")],
   ['Selected workload investigation rows keep aligned evidence and navigation actions', files.monitoringCss.includes('grid-template-rows:auto auto minmax(0,1fr) auto') && files.monitoringCss.includes('grid-template-columns:auto minmax(0,1fr) auto')],
   ['Selected workload evidence and supporting analysis share one aligned three-column authority', files.monitoringCss.includes('--selected-investigation-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.95fr)') && files.monitoringCss.includes('grid-template-columns:var(--selected-investigation-columns)!important') && files.monitoringCss.includes('margin-top:0!important') && files.monitoringCss.includes('border-top:0!important')],
+  ['Live Server Trend uses a readable desktop chart height without changing the 35/65 layout', files.monitoringCss.includes('.is-server-trend .rundeckTrendChart') && files.monitoringCss.includes('height:286px!important') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
+  ['Selected workload keeps primary evidence taller than secondary analysis launchers', files.monitoringCss.includes('.rundeckSelectedOperationalEvidence .rundeckEvidenceCard') && files.monitoringCss.includes('min-height:74px!important') && files.monitoringCss.includes('.rundeckSelectedSecondaryAnalysis button') && files.monitoringCss.includes('min-height:48px!important')],
+  ['Selected live metrics use PSS Memory and APP Critical WP terminology', files.core.includes('<b>PSS Memory</b>') && files.core.includes('<b>APP Critical WP</b>') && files.core.includes('APP-server observation, not workload execution status')],
+  ['Current Jobs secondary identity is visually subordinate to the workload name', files.currentWorkloadCss.includes('primary workload identity first') && files.currentWorkloadCss.includes('.rundeckCurrentWorkloadName small') && files.currentWorkloadCss.includes('opacity:.86')],
+  ['Correlated Events drawer separates title scope status and timing while increasing event scan spacing', files.evidenceTimelineCss.includes('grid-template-areas:') && files.evidenceTimelineCss.includes('"title status"') && files.evidenceTimelineCss.includes('padding:6px 0!important')],
+  ['Review reason chips remain supporting context instead of competing with workload identity', files.monitoringCss.includes('.rundeckReviewReasonChips span') && files.monitoringCss.includes('font-weight:560!important')],
+  ['Infrastructure issue strip stays compact but has a stronger left-edge cue', files.liveOverviewCss.includes('infrastructure exception remains compact') && files.liveOverviewCss.includes('min-height:28px!important') && files.liveOverviewCss.includes('border-left-width:3px!important')],
+  ['Infrastructure analysis history chart uses a full investigation-height canvas', files.infrastructureCss.includes('infrastructure history uses the drawer canvas') && files.infrastructureCss.includes('height:390px!important') && files.infrastructureCss.includes('height:330px!important')],
   ['Performance Review marks genuinely small observation sets without turning the hint into RCA', files.quickAnalysis.includes('limitedSample') && files.quickAnalysis.includes('Limited sample') && files.quickAnalysisCss.includes('.rundeckQuickSampleHint')],
   ['Review drawer keeps evidence compact and closing summary readable at short desktop height', files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckEvidenceEvent') && files.quickAnalysisCss.includes('max-height:220px') && files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckClosingPreview p') && files.quickAnalysisCss.includes('line-height:1.38')],
   ['Performance Review delegates its drawer to the central overlay manager', files.performanceReview.includes('onOpenQuickAnalysis') && files.performanceReview.includes('externalQuickKey') && files.performanceReview.includes('!onOpenQuickAnalysis && quickRow')],
@@ -331,4 +339,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.34 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.35 monitoring flow and deep-analysis checks passed.')
