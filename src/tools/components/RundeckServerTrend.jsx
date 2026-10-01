@@ -307,9 +307,9 @@ function MiniTrendContext({ trend, selected, range }) {
       y: 68 - ((row.value-minValue)/spanValue)*50,
     })
     const points = rows.map((row)=>point(row))
-    const selectedAt = Date.parse(selected?.at || '')
-    const selectedRow = Number.isFinite(selectedAt)
-      ? rows.reduce((best,row)=>!best || Math.abs(row.at-selectedAt)<Math.abs(best.at-selectedAt) ? row : best,null)
+    const selectedActualAt = Date.parse(selected?.at || '')
+    const selectedRow = Number.isFinite(selectedActualAt)
+      ? rows.reduce((best,row)=>!best || Math.abs(row.at-selectedActualAt)<Math.abs(best.at-selectedActualAt) ? row : best,null)
       : rows.at(-1)
     const marker = selectedRow ? point(selectedRow) : null
     return {
@@ -320,7 +320,8 @@ function MiniTrendContext({ trend, selected, range }) {
       selectedValue:selectedRow?.value,
       firstAt:minAt,
       lastAt:maxAt,
-      selectedAt:selectedRow?.at,
+      selectedActualAt:Number.isFinite(selectedActualAt) ? selectedActualAt : selectedRow?.at,
+      selectedBucketAt:selectedRow?.at,
     }
   },[selected,trend])
 
@@ -340,10 +341,13 @@ function MiniTrendContext({ trend, selected, range }) {
         <circle cx={model.marker.x} cy={model.marker.y} r="4" className="rundeckTrendMiniMarker" />
       </>}
       <text x="12" y="94" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
-      {model.selectedAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedAt, range)}</text>}
+      {model.selectedBucketAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
       <text x="508" y="94" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
     </svg>
-    <footer><span>Selected point · {model.selectedAt ? `${formatWib(model.selectedAt, true)} WIB` : '—'}</span><strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong></footer>
+    <footer>
+      <span>{selected?.mode === 'max' ? 'Peak sample' : 'Selected sample'} · {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'}{model.selectedBucketAt ? ` · Bucket ${formatWib(model.selectedBucketAt, true)} WIB` : ''}</span>
+      <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong>
+    </footer>
   </section>
 }
 
@@ -362,7 +366,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, 
       </div>
       <div className="rundeckTrendModalContextMeta">
         {collectionId && <span>Collection {collectionId.replace(/^rundeck-/, '').slice(0, 18)}</span>}
-        {resourceState && <span className={`rundeckInlineStatus is-${resourceState.toLowerCase()}`}>{resourceState}</span>}
+        {resourceState && <span className={`rundeckInlineStatus is-${resourceState.toLowerCase()}`}>Host Resource: {resourceState}</span>}
       </div>
     </div>
 
@@ -375,13 +379,13 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, 
       <header>
         <div>
           <span>History at Selected Time</span>
-          <strong>{consumers.length} workload{consumers.length === 1 ? '' : 's'} observed</strong>
+          <strong>Top {consumers.length} workload{consumers.length === 1 ? '' : 's'} loaded</strong>
         </div>
-        {consumers[0]?.consumer_key && <small>Top CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
+        {consumers[0]?.consumer_key && <small>Top workload CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
       </header>
 
       <div className="rundeckTrendWorkloadHead" aria-hidden="true">
-        <span>Job / Program</span><span title="CPU can exceed 100% when a workload uses multiple CPU cores.">CPU</span><span>Memory</span><span>Processes</span><span />
+        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">Workload CPU</span><span>PSS Memory</span><span>Processes</span><span />
       </div>
 
       <div className="rundeckTrendWorkloadRows">
