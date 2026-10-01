@@ -1322,3 +1322,48 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     min-height:248px!important;
   }
 }
+
+
+/* SPHERE v1.34.36 — make drilldown targets discoverable without adding action columns. */
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"],
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"]{
+  cursor:pointer;
+  transition:background 120ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable:hover,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"]:hover,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"]:hover{
+  background:rgba(79,198,200,.045);
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable td:first-child strong::after,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"] .rundeckCurrentWorkloadName button::after,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"] .rundeckReviewWorkloadV1231 button::after{
+  content:'›';
+  display:inline-block;
+  margin-left:6px;
+  color:transparent;
+  font-size:11px;
+  transform:translateX(-2px);
+  transition:color 120ms ease,transform 120ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable:hover td:first-child strong::after,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"]:hover .rundeckCurrentWorkloadName button::after,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"]:hover .rundeckReviewWorkloadV1231 button::after{
+  color:var(--sphere-accent,#4fc6c8);
+  transform:translateX(0);
+}
+.appShell:has(.rundeckPanel) .rundeckCorrelatedCard{
+  min-height:82px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCorrelatedCard .rundeckEvidenceScope{
+  margin-top:1px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;
+  font-weight:560;
+  text-transform:none;
+  letter-spacing:0;
+}
+.appShell:has(.rundeckPanel) .rundeckCorrelatedCard strong{
+  margin-top:3px;
+}
