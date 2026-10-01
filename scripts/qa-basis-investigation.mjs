@@ -317,4 +317,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.29 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.31 monitoring flow and deep-analysis checks passed.')
