@@ -1268,3 +1268,57 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     border-right:0!important;
   }
 }
+
+
+/* SPHERE v1.34.35 — final live cockpit hierarchy and density pass. */
+.appShell:has(.rundeckPanel) .is-server-trend .rundeckTrendChart{
+  height:286px!important;
+  min-height:272px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompact{
+  margin-top:4px!important;
+  padding:6px 8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence{
+  margin-top:5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+  gap:7px!important;
+  padding-top:7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
+  min-height:74px!important;
+  padding:7px 9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
+  gap:7px!important;
+  margin-top:5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  min-height:48px!important;
+  padding:5px 8px!important;
+  background:rgba(126,147,158,.012)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button small{
+  color:var(--sphere-text-muted,#718089)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewReasonChips span{
+  border-color:rgba(126,147,158,.11)!important;
+  background:rgba(126,147,158,.018)!important;
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:560!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSystemHealthV1231{
+  gap:7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSystemHealthPrimary>span:first-child,
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131 summary>span:first-child{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:620!important;
+}
+@media(max-height:780px){
+  .appShell:has(.rundeckPanel) .is-server-trend .rundeckTrendChart{
+    height:258px!important;
+    min-height:248px!important;
+  }
+}
