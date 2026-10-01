@@ -61,7 +61,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       <span><b>CPU</b>{metric(resolvedApp.cpu_pct,'%')}</span>
       <span><b>Memory</b>{metric(resolvedApp.ram_pct,'%')}</span>
       <span><b>I/O Wait</b>{metric(resolvedApp.io_wait_pct,'%')}</span>
-      <span><b>Critical WP</b>{metric(resolvedApp.wp_critical)}</span>
+      <span><b>APP Critical WP</b>{metric(resolvedApp.wp_critical)}</span>
     </div>
 
     {incident && <div className="rundeckAppServerIssue">
@@ -77,7 +77,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
       {!loading && !error && <><div className="rundeckAppServerSource">Source: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'Workload Observation' : 'Top Consumers fallback'} | Collection: {latestCollectionId} | APP: {hostLabel}</div><div className="rundeckAppServerTableWrap"><table>
-        <thead><tr><th>Job / Program</th><th>Type</th><th>CPU</th><th>Memory</th><th>Processes</th></tr></thead>
+        <thead><tr><th>Job / Program</th><th>Type</th><th title="Grouped workload CPU across observed processes; can exceed 100% on multi-core systems">CPU</th><th title="Aggregate PSS memory for the observed workload">Memory</th><th title="Unique PIDs grouped into this workload observation">Processes</th></tr></thead>
         <tbody>
           {rows.map((row,index)=><tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}-${index}`} tabIndex={0} role="button"
             onClick={()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}
