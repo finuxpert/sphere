@@ -197,7 +197,15 @@ def _availability_evidence(snapshots: list[dict], since=None) -> list[dict]:
     return events
 
 
-def evidence_timeline(job=None, host=None, consumer_type=None, availability_range=DEFAULT_AVAILABILITY_RANGE, anchor_at=None) -> dict:
+def evidence_timeline(
+    job=None,
+    host=None,
+    consumer_type=None,
+    availability_range=DEFAULT_AVAILABILITY_RANGE,
+    anchor_at=None,
+    episode_start=None,
+    episode_end=None,
+) -> dict:
     if availability_range not in RANGE_HOURS:
         raise ValueError("Unsupported availability range")
 
@@ -230,8 +238,9 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         "Availability": availability_at,
     }
     alignment = source_alignment(alignment_sources)
-    workload_last_seen = _dt((workload or {}).get("last_seen"))
-    if issue_start and workload_last_seen and workload_last_seen < issue_start:
+    workload_first_seen = _dt(episode_start) or _dt((workload or {}).get("first_seen"))
+    workload_last_seen = _dt(episode_end) or _dt((workload or {}).get("last_seen"))
+    if not selected_anchor and issue_start and workload_last_seen and workload_last_seen < issue_start:
         gap_minutes = round((issue_start - workload_last_seen).total_seconds() / 60.0, 1)
         if gap_minutes > float(alignment.get("threshold_minutes") or MAX_SKEW_MINUTES):
             alignment = {
@@ -320,6 +329,8 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "selected_workload": {
             **{key: value for key, value in (workload or {}).items() if key != "items"},
+            "first_seen": _iso(workload_first_seen),
+            "last_seen": _iso(workload_last_seen),
             "correlation_observed_at": _iso(workload_at),
         } if workload else None,
         "alignment": alignment,
@@ -338,5 +349,5 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "events": events,
         "interpretation": interpretation,
-        "note": "Timing alignment uses retained timestamps. NO OVERLAP means the selected workload episode ended before the current issue window beyond the configured correlation tolerance. Co-observation is supporting evidence only; root cause still requires SAP and infrastructure validation.",
+        "note": "Timing alignment uses retained timestamps. For live/review analysis, NO OVERLAP is calculated from the exact selected episode end when supplied. Historical selected-time analysis is anchored to the selected observation and is not reclassified against the current incident. Co-observation is supporting evidence only; root cause still requires SAP and infrastructure validation.",
     }
