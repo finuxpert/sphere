@@ -2,154 +2,126 @@
 
 ## Scope
 
-This runbook documents the SPHERE automatic ingestion path for the `rundeck-sphere-*` branch family. SPHERE reads completed Rundeck execution metadata and output through the Rundeck REST API.
+This runbook documents the automatic ingestion path for the active `rundeck-sphere-*` branch family.
 
-Current active production runs from `rundeck-sphere-prod` at `https://sphere.astraotoparts.co.id`.
+- DEV: `rundeck-sphere-dev` → https://sphere.astraotoparts.co.id/dev/
+- PROD: `rundeck-sphere-prod` → https://sphere.astraotoparts.co.id/
 
-Rundeck development runs from `rundeck-sphere-dev` at `https://sphere.astraotoparts.co.id/dev/` and must be promoted through the documented DEV → PR → PROD flow.
+The manual `sphere-dev` / `sphere-prod` family remains a separate Upload Logs fallback line.
 
-## Branch and ingestion contract
-
-- `sphere-dev` / `sphere-prod`: **manual Upload Logs only**. Operators provide collected `.txt`/`.log` files; these branches do not depend on the Rundeck REST API.
-- `rundeck-sphere-dev` / `rundeck-sphere-prod`: **automatic Rundeck API ingestion**. SPHERE reads Rundeck execution metadata/output through REST API endpoints and retains manual file upload as fallback.
-- Rundeck is the SAP-side collector. SPHERE must not SSH/SCP directly to SAP application servers.
-
-## Rundeck source
-
-- Rundeck host: `10.14.55.205`
-- Port: `4440`
-- Project: `Linux`
-- Job group: `SAP/AOP`
-- Current job name: `[Critical]-[Daily Check] SPHERE SAP Work Proccess Check`
-- Current collector command: `sudo -n -u aopadm /usr/bin/bash /SAP_ARCH/tmp_fikri/SPHERE-Collect.sh`
-- Schedule: every 10 minutes
-- Target nodes: `AOPH1PAPPDC`, `AOPH2PAPPDC`, `AOPH3PAPPDC`, `AOPH4PAPPDC`, `AOPH5PAPPDC`
-
-SPHERE must not SSH, SCP, mount, or connect directly to SAP application servers. Rundeck remains responsible for SAP-side collection.
-
-## Read-only API access
-
-SPHERE uses a dedicated Rundeck API token with:
-
-- Token name: `SPHERE Read Only`
-- Effective user: `sphere_api`
-- Role/group: `sphere_reader`
-- Project scope: `Linux`
-
-The `sphere_reader` ACL is intentionally read-only:
-
-- project: `read`
-- job: `read`, `view`, `view_history`
-- node: `read`
-- event: `read`
-
-It must not receive `run`, `update`, `create`, `delete`, `kill`, admin, or key-storage permissions.
-
-Do not use the existing `admin`, `user_aop`, or `api_token_group` permissions for SPHERE ingestion because those roles are broader than required.
-
-## Token lifecycle
-
-The current `SPHERE Read Only` token expires on **2026-10-10 14:50:34 WIB**.
-
-The token value must never be committed to GitHub or written into frontend source code. Store it only in server-side secret/configuration storage on the SPHERE server.
-
-Before expiry:
-
-1. Generate a replacement `SPHERE Read Only` token with effective user `sphere_api` and role `sphere_reader`.
-2. Update the token on the SPHERE server.
-3. Verify the Rundeck API returns HTTP 200.
-4. Verify execution metadata and execution output can still be read.
-5. Only after validation, revoke/delete the old token.
-
-If the token expires before rotation, automatic Rundeck ingestion will fail authentication until the token is replaced. Manual Upload Logs using operator-provided `.txt`/`.log` files remains the fallback path.
-
-## Verified API behavior
-
-API v44 is the current validated API version.
-
-A read-only test against execution `521054` returned HTTP 200 and confirmed:
-
-- execution status: `succeeded`
-- project: `Linux`
-- 5 successful nodes
-- output endpoint returned HTTP 200
-- output was complete
-- output contained 1,355 entries
-- node identity is present per output entry
-
-Use execution metadata and output APIs rather than reading `.rdlog` directly from `/var/lib/rundeck`.
-
-Recommended API flow:
+## Architecture boundary
 
 ```text
-Rundeck execution discovery
-        ↓
-latest eligible execution ID
-        ↓
-execution metadata
-        ↓
-execution output JSON
-        ↓
-validate completion + expected nodes
-        ↓
-SPHERE collection
-        ↓
-existing JavaScript parser
-        ↓
-LOG Analysis
+SAP Application Servers
+    ↓
+Rundeck
+    ↓ REST API
+SPHERE FastAPI
+    ↓
+PostgreSQL + retained raw evidence
+    ↓
+SPHERE React UI
 ```
 
-## Collection state
+SPHERE must not SSH/SCP directly to SAP Application Servers.
 
-Use collection IDs in this form:
+Rundeck remains the SAP-side collector/orchestrator.
+
+## Collector identity
+
+Current approved collection scope:
+
+- project: `Linux`
+- group: `SAP/AOP`
+- target APP nodes: `AOPH1PAPPDC` through `AOPH5PAPPDC`
+- cadence: approximately every 10 minutes
+
+Stable project/group/job identity is the production lookup contract.
+
+Do not hardcode a Rundeck Job UUID as the permanent source of truth because workflows may be recreated.
+
+## Collection identity and readiness
+
+SPHERE collection IDs use:
 
 ```text
 rundeck-<execution_id>
 ```
 
-Example:
+Core states:
+
+- PROCESSING
+- READY
+- PARTIAL
+- FAILED
+
+A collection becomes READY only when the execution is complete and expected-node evidence is complete.
+
+The latest operational landscape must come from one aligned READY cycle.
+
+## API access
+
+Use server-side credentials only.
+
+Reader access is intentionally read-only and limited to execution/output discovery required by SPHERE.
+
+Runner credentials are separate and may be enabled only for explicitly approved mutating operations.
+
+Never put tokens in:
+
+- GitHub;
+- frontend source;
+- browser storage;
+- screenshots;
+- application logs.
+
+Credential rotation dates belong in server-side operational/secret-management records, not in this repository document.
+
+## Execution/output contract
+
+Preferred flow:
 
 ```text
-rundeck-521054
+Rundeck job discovery
+        ↓
+eligible completed execution
+        ↓
+execution metadata
+        ↓
+execution output
+        ↓
+expected-node validation
+        ↓
+SPHERE collection manifest
+        ↓
+normalization / PostgreSQL projection
+        ↓
+retained raw evidence
 ```
 
-Recommended states:
+Use Rundeck REST execution/output APIs rather than reading `.rdlog` directly from the Rundeck filesystem.
 
-- `PROCESSING`
-- `READY`
-- `PARTIAL`
-- `FAILED`
+## Source-of-truth rules
 
-A collection should become `READY` only when the execution is complete and all expected nodes are successful.
-
-## Job recreation / workflow rotation
-
-Rundeck jobs may be recreated periodically. SPHERE must therefore **not hardcode the current Job UUID**.
-
-The current Job UUID may be recorded for troubleshooting, but it must not be the primary production lookup key.
-
-Discovery should use stable job identity such as:
-
-- project `Linux`
-- group `SAP/AOP`
-- stable SPHERE job name or another dedicated stable identifier
-
-After discovering the active job, SPHERE may use its current UUID to query executions.
-
-If a Rundeck workflow is recreated with a new UUID, SPHERE integration should continue working as long as the stable project/group/job identity is preserved.
-
-## Important status rule
-
-Do not use the historical `execution.xml` field `average-duration-exceeded` as the sole READY/FAILED decision. A validated sample showed that state metadata and the Rundeck execution API reported the execution and all five nodes as successful.
-
-Use the execution API/state result and node completion status as the source of truth for collection readiness.
+- Use execution API status and node completion for collection readiness.
+- Do not use historical `average-duration-exceeded` metadata as the sole success/failure decision.
+- Retain execution/collection identity for investigation.
+- Do not synthesize missing host evidence.
+- Do not merge independent host timestamps into a fake “latest” cycle.
 
 ## Security guardrails
 
 - No direct SAP-server connection from SPHERE.
 - No Rundeck admin token in SPHERE.
-- No API token in GitHub.
-- No raw SAP logs committed to GitHub.
-- No filesystem mount of `/var/lib/rundeck` into SPHERE.
-- Prefer Rundeck REST API for execution metadata and output.
-- Keep Manual Upload Logs available as operational fallback.
+- No credentials in Git.
+- No raw SAP logs in Git.
+- No mounted Rundeck internal data directory into SPHERE.
+- Prefer REST API execution/output access.
+- Keep Manual Upload Logs as operational fallback.
+
+## Related documentation
+
+- `docs/CURRENT-FLOW-AND-FEATURES.md`
+- `docs/BASIS-JOB-INTELLIGENCE.md`
+- `docs/rundeck-development.md`
+- `ops/rundeck/OPERATIONS.md`
