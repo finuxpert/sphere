@@ -584,7 +584,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {selected && <div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
       <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
-          <div><span>SPHERE ANALYSIS</span><h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</small></div>
+          <div>
+            <span>SPHERE ANALYSIS</span>
+            <h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4>
+            <small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</small>
+            <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
+          </div>
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
