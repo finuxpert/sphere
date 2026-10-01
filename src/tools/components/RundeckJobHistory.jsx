@@ -71,6 +71,18 @@ async function loadRangeHistory(job, range, signal, anchorAt = '') {
   return { summary: await summaryResponse.json(), trend: await trendResponse.json() }
 }
 
+
+async function loadEvidenceAlignment(job, signal) {
+  const params = new URLSearchParams({ availability_range: '7d' })
+  if (job?.key) params.set('job', job.key)
+  if (job?.host) params.set('host', job.host)
+  if (job?.consumerType) params.set('type', job.consumerType)
+  const response = await fetch(`${API}/analysis/evidence?${params.toString()}`, { cache: 'no-store', signal })
+  if (!response.ok) return null
+  const result = await response.json()
+  return result?.alignment || null
+}
+
 function rowMetric(row, key) {
   const details = row?.details || {}
   if (key === 'cpu') return numeric(row?.cpu_pct)
@@ -268,7 +280,7 @@ function SingleSamplePerformance({ row }) {
         ? <><span><b>I/O Read</b>{numberText(read, 2)} MiB/s</span><span><b>I/O Write</b>{numberText(write, 2)} MiB/s</span></>
         : <span><b>I/O</b>0 MiB/s</span>}
       <span><b>WP</b>{numberText(wp, 0)}</span>
-      {critical > 0 && <span className="is-attention"><b>Critical WP</b>{critical}</span>}
+      {critical > 0 && <span className="is-attention"><b>APP Critical WP</b>{critical}</span>}
     </div>
     <div className="rundeckSingleSampleAxis"><i /><strong>{formatWib(row.collected_at, false)}</strong></div>
   </div>
@@ -290,7 +302,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
       profile.hasPss ? { id: 'pss', name: 'PSS Memory', height: expanded ? 82 : 50 } : null,
       profile.hasIo ? { id: 'io', name: 'I/O', height: expanded ? 70 : 44 } : null,
       profile.hasWp ? { id: 'wp', name: 'WP', height: expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28) } : null,
-      profile.hasCritical ? { id: 'event', name: 'Critical WP', height: expanded ? 38 : 28 } : null,
+      profile.hasCritical ? { id: 'event', name: 'APP Critical WP', height: expanded ? 38 : 28 } : null,
     ].filter(Boolean)
 
     let top = 16
@@ -549,7 +561,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
       series:[
         {name:`${mode === 'peak' ? 'Peak' : 'Avg'} CPU`,type:'line',showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[cpuKey]]),lineStyle:{width:2,color:colors.accent},itemStyle:{color:colors.accent},markLine:issueMark},
         {name:`${mode === 'peak' ? 'Peak' : 'Avg'} PSS`,type:'line',xAxisIndex:1,yAxisIndex:1,showSymbol:items.length<80,symbolSize:4,data:items.map(row=>[row.bucket,row[pssKey]]),lineStyle:{width:2,color:colors.memory},itemStyle:{color:colors.memory}},
-        {name:'Critical WP',type:'scatter',xAxisIndex:2,yAxisIndex:2,symbol:'triangle',symbolSize:(value,params)=>Math.min(12,6+Number(params?.data?.critical||0)),itemStyle:{color:colors.danger},data:items.filter(row=>Number(row.max_critical_wp||0)>0).map(row=>({value:[row.bucket,.5],critical:Number(row.max_critical_wp||0),checks:Number(row.critical_wp_checks||0)}))},
+        {name:'APP Critical WP',type:'scatter',xAxisIndex:2,yAxisIndex:2,symbol:'triangle',symbolSize:(value,params)=>Math.min(12,6+Number(params?.data?.critical||0)),itemStyle:{color:colors.danger},data:items.filter(row=>Number(row.max_critical_wp||0)>0).map(row=>({value:[row.bucket,.5],critical:Number(row.max_critical_wp||0),checks:Number(row.critical_wp_checks||0)}))},
       ],
     }
   },[incidentStart,mode,trend])
@@ -577,6 +589,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const [rangeData, setRangeData] = React.useState(null)
   const [rangeLoading, setRangeLoading] = React.useState(false)
   const [rangeError, setRangeError] = React.useState('')
+  const [evidenceAlignment, setEvidenceAlignment] = React.useState(null)
   const jobKey = job?.key || ''
   const jobHost = job?.host || ''
   const jobConsumerType = job?.consumerType || ''
@@ -586,6 +599,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     setRange('current')
     setRangeData(null)
     setRangeError('')
+    setEvidenceAlignment(null)
   }, [jobAt, jobConsumerType, jobHost, jobKey])
 
   React.useEffect(() => {
@@ -640,6 +654,20 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     return () => controller.abort()
   }, [jobConsumerType, jobHost, jobKey, range, refreshToken, selectedRangeAnchor])
 
+  React.useEffect(() => {
+    if (!jobKey || !incidentStart) {
+      setEvidenceAlignment(null)
+      return undefined
+    }
+    const controller = new AbortController()
+    loadEvidenceAlignment({ key: jobKey, host: jobHost, consumerType: jobConsumerType }, controller.signal)
+      .then((alignment) => setEvidenceAlignment(alignment))
+      .catch((failure) => {
+        if (failure.name !== 'AbortError') setEvidenceAlignment(null)
+      })
+    return () => controller.abort()
+  }, [incidentStart, jobConsumerType, jobHost, jobKey, refreshToken])
+
   if (!jobKey) return null
 
   const displayJob = resolvedJob || { key: jobKey, host: jobHost, consumerType: jobConsumerType, at: jobAt }
@@ -659,6 +687,14 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const latestDetails = latest?.details || {}
   const isCurrent = Boolean(latestCollectionId && latest?.collection_id === latestCollectionId)
   const timelineText = temporalText(incidentStart, stats.firstSeen)
+  const timingState = String(evidenceAlignment?.state || '').toUpperCase()
+  const timingLabel = timingState === 'ALIGNED'
+    ? 'Same time window'
+    : timingState === 'LIMITED'
+      ? 'Limited timing'
+      : timingState === 'INSUFFICIENT DATA'
+        ? 'Insufficient timing data'
+        : 'Timing not confirmed'
   const observed = durationText(stats.firstSeen, stats.lastSeen)
   const profile = chartProfile(episodeItems)
   const contentKey = `${displayHost}|${displayConsumerType}|${displayKey}|${displayAt}`
@@ -727,7 +763,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Timing: Same time window. Root cause: Not confirmed.</small>
+        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel}. Root cause: Not confirmed.</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
@@ -750,7 +786,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             ? <div className="rundeckJobPerformanceTitle">
                 <span title="Current shows the selected observation period"><SphereIcon name="trend" /> Selected Period Performance</span>
                 <small>CPU Avg: {numberText(stats.avgCpu)}%</small><small>CPU Peak: {numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}</small>{stats.avgPss !== null && <small>PSS Avg: {numberText(stats.avgPss, 2)} GB{stats.peakPss !== null ? `, Peak: ${numberText(stats.peakPss, 2)} GB${stats.peakPssAt ? ` at ${formatWib(stats.peakPssAt, false)}` : ''}` : ''}</small>}
-                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">Critical WP: {profile.criticalSamples} of {profile.totalSamples} data points{stats.peakCriticalWp ? `, Peak: ${numberText(stats.peakCriticalWp, 0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : ''}</em>}
+                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">APP Critical WP: {profile.criticalSamples} of {profile.totalSamples} data points{stats.peakCriticalWp ? `, Peak: ${numberText(stats.peakCriticalWp, 0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : ''}</em>}
               </div>
             : <div className="rundeckJobHistoricalSummary">
                 <span><b>Range</b>{range.toUpperCase()}</span>
@@ -758,7 +794,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
                 <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
                 <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
-                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>Critical WP</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} data points` : '—'}</span>
+                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>APP Critical WP</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} data points` : '—'}</span>
               </div>}
         </aside>
 
