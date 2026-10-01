@@ -160,6 +160,7 @@ def parse_top_consumers(
             "users": set(),
             "pids": set(),
             "wp_types": set(),
+            "wp_signals": [],
             "representative": {},
         })
         if cpu is not None:
@@ -184,6 +185,27 @@ def parse_top_consumers(
             current["pids"].add(pid)
         if wp_type:
             current["wp_types"].add(wp_type)
+
+        error_recency = _clean(row.get("error_recency")).upper()
+        latest_error_code = _clean(row.get("error_code"))
+        current["wp_signals"].append({
+            "pid": pid,
+            "wp": wp,
+            "wp_type": wp_type,
+            "cpu_class": _clean(row.get("cpu_class")).upper(),
+            "rabax": _number(row.get("rabax_tail_count")),
+            "sxpg": _number(row.get("sxpg_tail_count")),
+            "job_counter": _number(row.get("jobstart_tail_count")),
+            "rxmsg": _number(row.get("rxmsg_tail_count")),
+            "program": program,
+            "error_at_snapshot": latest_error_code if error_recency == "AT_SNAPSHOT" else "",
+            "latest_trace_error": latest_error_code,
+            "error_program": _clean(row.get("error_program")),
+            "error_recency": error_recency,
+            "latest_error_ts": _clean(row.get("latest_error_ts")),
+            "latest_error_age_sec": _number(row.get("latest_error_age_sec")),
+            "log_path": _clean(row.get("log_path")),
+        })
 
         representative_cpu = _number(current["representative"].get("cpu_interval_pct"))
         if not current["representative"] or (cpu is not None and (representative_cpu is None or cpu > representative_cpu)):
@@ -238,6 +260,16 @@ def parse_top_consumers(
             "users": sorted(group["users"]),
             "pids": sorted(group["pids"]),
             "wp_types": sorted(group["wp_types"]),
+            "wp_signals": sorted(
+                group["wp_signals"],
+                key=lambda item: (
+                    0 if item.get("error_at_snapshot") else 1,
+                    0 if item.get("latest_trace_error") else 1,
+                    -(item.get("rabax") or 0),
+                    str(item.get("pid") or ""),
+                ),
+            ),
+            "wp_signal_semantics": "Error at Snapshot is populated only when collector error_recency=AT_SNAPSHOT. Latest Trace Error may be historical and is not an SM37 job status.",
         }
         by_snapshot_host[(group["host"], group["collected_at"])].append({
             "host": group["host"],

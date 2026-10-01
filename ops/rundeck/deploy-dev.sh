@@ -88,7 +88,8 @@ PY
 fetch_json() {
   local url="$1"
   local path="$2"
-  curl --noproxy '*' -fsS --max-time 15 "$url" -o "$path"
+  local timeout="${3:-15}"
+  curl --noproxy '*' -fsS --max-time "$timeout" "$url" -o "$path"
   assert_json_file "$path"
 }
 
@@ -215,7 +216,9 @@ assert_json_file /tmp/sphere-dev-health.json
 cat /tmp/sphere-dev-health.json
 
 # Evaluation SQL is part of the release contract.
-fetch_json 'http://127.0.0.1:8091/evaluation/workloads?period=1d&type=ALL&limit=5' /tmp/sphere-dev-evaluation.json
+# Evaluation performs several retained-history aggregates on a cold API process.
+# Keep ordinary JSON smoke tests at 15s, but allow a bounded 30s cold-start window here.
+fetch_json 'http://127.0.0.1:8091/evaluation/workloads?period=1d&type=ALL&limit=5' /tmp/sphere-dev-evaluation.json 30
 grep -q '"period":"1d"' /tmp/sphere-dev-evaluation.json
 grep -q '"wp_excess_association_pct"' /tmp/sphere-dev-evaluation.json
 cat /tmp/sphere-dev-evaluation.json

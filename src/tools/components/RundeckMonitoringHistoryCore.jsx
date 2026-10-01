@@ -21,14 +21,23 @@ export default function RundeckMonitoringHistoryCore(props) {
           ? <div className="rundeckSelectedCompact">
               <div className="rundeckSelectedCompactIdentity">
                 <strong>{props.selectedJob.key}</strong>
-                <small>{props.selectedJob.host || 'APP'} · {String(props.selectedJob.consumerType || 'Job / Program').toUpperCase()}</small>
+                <small>{props.selectedJob.source === 'performance-review'
+                  ? `Review Selection - ${String(props.selectedJob.reviewPeriod || '1d').toUpperCase()}`
+                  : `${props.selectedJob.host || 'APP'} · ${String(props.selectedJob.consumerType || 'Job / Program').toUpperCase()}`}</small>
               </div>
-              <div className="rundeckSelectedCompactMetrics">
-                <span><b>CPU</b>{props.selectedJob.cpuPct === null || props.selectedJob.cpuPct === undefined ? '—' : `${Number(props.selectedJob.cpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
-                <span><b>Memory</b>{props.selectedJob.memoryGb === null || props.selectedJob.memoryGb === undefined ? '—' : `${Number(props.selectedJob.memoryGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
-                <span><b>Processes</b>{props.selectedJob.processes ?? '—'}</span>
-                <span><b>Critical WP</b>{props.selectedJob.criticalWp ?? '—'}</span>
-              </div>
+              {props.selectedJob.source === 'performance-review' && props.selectedJob.reviewMetrics
+                ? <div className="rundeckSelectedCompactMetrics">
+                    <span><b>Avg CPU</b>{props.selectedJob.reviewMetrics.avgCpuPct == null ? '—' : `${Number(props.selectedJob.reviewMetrics.avgCpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
+                    <span><b>Avg PSS</b>{props.selectedJob.reviewMetrics.avgPssGb == null ? '—' : `${Number(props.selectedJob.reviewMetrics.avgPssGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
+                    <span><b>Avg Processes</b>{props.selectedJob.reviewMetrics.avgProcesses == null ? '—' : Number(props.selectedJob.reviewMetrics.avgProcesses).toLocaleString('en-US',{maximumFractionDigits:1})}</span>
+                    <span title="APP Critical WP overlap is APP-level co-observation during the selected review period, not job execution status."><b>APP Critical WP overlap</b>{props.selectedJob.reviewMetrics.criticalWpChecks == null ? '—' : `${props.selectedJob.reviewMetrics.criticalWpChecks} / ${props.selectedJob.reviewMetrics.hostObservations ?? '—'} checks`}</span>
+                  </div>
+                : <div className="rundeckSelectedCompactMetrics">
+                    <span><b>CPU</b>{props.selectedJob.cpuPct === null || props.selectedJob.cpuPct === undefined ? '—' : `${Number(props.selectedJob.cpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
+                    <span><b>PSS Memory</b>{props.selectedJob.memoryGb === null || props.selectedJob.memoryGb === undefined ? '—' : `${Number(props.selectedJob.memoryGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
+                    <span><b>Processes</b>{props.selectedJob.processes ?? '—'}</span>
+                    <span title="APP Critical WP is an APP-server observation, not workload execution status."><b>APP Critical WP</b>{props.selectedJob.criticalWp ?? '—'}</span>
+                  </div>}
               <button type="button" onClick={props.onOpenSelectedAnalysis}>Analyze Performance</button>
             </div>
           : <div className="rundeckSelectedCompact is-empty">Select a job or program to analyze.</div>}

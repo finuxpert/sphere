@@ -179,11 +179,15 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         textStyle: { color: colors.text, fontSize: 10 },
         formatter: (points = []) => {
           if (!points.length) return ''
-          const at = points[0]?.axisValue
-          const lines = [`<b>${formatWib(at, true)} WIB</b>`]
+          const bucketAt = points[0]?.axisValue
+          const lines = [`<b>Bucket: ${formatWib(bucketAt, true)} WIB</b>`]
           points.filter((point) => point?.data?.value?.[1] !== null && point?.data?.value?.[1] !== undefined).forEach((point) => {
             const value = point.data.value[1]
-            lines.push(`${point.marker || ''}${point.seriesName} <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b>`)
+            if (mode === 'max' && point.data?.peakAt) {
+              lines.push(`${point.marker || ''}${point.seriesName} Peak <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b> · Peak at ${formatWib(point.data.peakAt, true)} WIB`)
+            } else {
+              lines.push(`${point.marker || ''}${point.seriesName} ${mode === 'max' ? 'Peak' : 'Avg'} <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b>`)
+            }
           })
           return lines.join('<br/>')
         },
@@ -221,31 +225,65 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     echarts.getInstanceByDom?.(ref.current)?.dispose()
     const chart = echarts.init(ref.current, null, { renderer: 'canvas' })
     chart.setOption(option, true)
-    const click = (event) => {
+    let lastExactClickAt = 0
+
+    const selectItem = (item, seriesIndex = null, dataIndex = null) => {
+      if (!item || item.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
+      if (seriesIndex !== null && dataIndex !== null) chart.dispatchAction({ type: 'showTip', seriesIndex, dataIndex })
+      const availability = trend?.metric === 'availability'
+      const selectedAt = availability ? item.bucket : (mode === 'max' ? (item.peakAt || item.bucket) : item.bucket)
+      const selectedCollectionId = availability ? '' : (mode === 'max' ? (item.peakCollectionId || '') : '')
+      onSelect?.({
+        host: item.host,
+        at: selectedAt,
+        collectionId: selectedCollectionId,
+        bucket: item.bucket,
+        value: availability ? item.status : (mode === 'max' ? item.max : item.avg),
+        status: item.status,
+        availability,
+        mode,
+        metricLabel: trend?.metric_label || metricLabel(trend?.metric),
+        unit: availability ? '' : (trend?.unit || ''),
+      })
+    }
+
+    const exactClick = (params) => {
+      const item = params?.data
+      if (!item || item.gap) return
+      lastExactClickAt = Date.now()
+      selectItem(item, params.seriesIndex, params.dataIndex)
+    }
+
+    const fallbackClick = (event) => {
+      if (Date.now() - lastExactClickAt < 80) return
       const pixel = [event?.offsetX, event?.offsetY]
       if (!chart.containPixel({ gridIndex: 0 }, pixel)) return
       let nearest = null
       let distance = Number.POSITIVE_INFINITY
       ;(option.series || []).forEach((series, seriesIndex) => (series.data || []).forEach((item, dataIndex) => {
+        if (item?.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
         const point = chart.convertToPixel({ seriesIndex }, item.value)
         if (!Array.isArray(point)) return
         const current = ((point[0] - pixel[0]) ** 2) + ((point[1] - pixel[1]) ** 2)
         if (current < distance) { distance = current; nearest = { seriesIndex, dataIndex, item } }
       }))
       if (!nearest || distance > 900) return
-      chart.dispatchAction({ type: 'showTip', seriesIndex: nearest.seriesIndex, dataIndex: nearest.dataIndex })
-      const item = nearest.item
-      const availability = trend?.metric === 'availability'
-      const selectedAt = availability ? item.bucket : (mode === 'max' ? (item.peakAt || item.bucket) : item.bucket)
-      const selectedCollectionId = availability ? '' : (mode === 'max' ? (item.peakCollectionId || '') : '')
-      onSelect?.({ host: item.host, at: selectedAt, collectionId: selectedCollectionId, bucket: item.bucket, value: availability ? item.status : (mode === 'max' ? item.max : item.avg), status: item.status, availability, mode, metricLabel: trend?.metric_label || metricLabel(trend?.metric), unit: availability ? '' : (trend?.unit || '') })
+      selectItem(nearest.item, nearest.seriesIndex, nearest.dataIndex)
     }
-    chart.getZr().on('click', click)
+
+    chart.on('click', exactClick)
+    chart.getZr().on('click', fallbackClick)
     const resize = () => chart.resize()
     window.addEventListener('resize', resize)
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null
     observer?.observe(ref.current)
-    return () => { observer?.disconnect(); window.removeEventListener('resize', resize); chart.getZr().off('click', click); chart.dispose() }
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', resize)
+      chart.off('click', exactClick)
+      chart.getZr().off('click', fallbackClick)
+      chart.dispose()
+    }
   }, [mode, onSelect, option, trend])
 
   return <div ref={ref} className="rundeckTrendChart" role="img" aria-label="Server trend" />
@@ -267,6 +305,20 @@ function snapshotContext(selected, row, consumer) {
     collectionId: row?.collection_id || selected?.collectionId || '',
     trendMode: selected?.mode || '',
     trendMetric: selected?.metricLabel || '',
+    trendBucket: selected?.bucket || '',
+    trendValue: selected?.value ?? null,
+    snapshot: {
+      collection_id: consumer.collection_id || row?.collection_id || selected?.collectionId || '',
+      collected_at: consumer.collected_at || selected?.at || '',
+      host: consumer.host || row?.host || selected?.host || '',
+      consumer_type: consumer.consumer_type || '',
+      consumer_key: consumer.consumer_key || '',
+      rank: consumer.rank ?? null,
+      cpu_pct: consumer.cpu_pct ?? null,
+      ram_pct: consumer.ram_pct ?? null,
+      host_wp_critical: row?.wp_critical ?? null,
+      details: consumer.details || {},
+    },
   }
 }
 
@@ -307,20 +359,23 @@ function MiniTrendContext({ trend, selected, range }) {
       y: 68 - ((row.value-minValue)/spanValue)*50,
     })
     const points = rows.map((row)=>point(row))
-    const selectedAt = Date.parse(selected?.at || '')
-    const selectedRow = Number.isFinite(selectedAt)
-      ? rows.reduce((best,row)=>!best || Math.abs(row.at-selectedAt)<Math.abs(best.at-selectedAt) ? row : best,null)
+    const selectedActualAt = Date.parse(selected?.at || '')
+    const selectedBucketAt = Date.parse(selected?.bucket || '')
+    const selectedRow = Number.isFinite(selectedBucketAt)
+      ? rows.reduce((best,row)=>!best || Math.abs(row.at-selectedBucketAt)<Math.abs(best.at-selectedBucketAt) ? row : best,null)
       : rows.at(-1)
     const marker = selectedRow ? point(selectedRow) : null
+    const selectedValue = Number(selected?.value)
     return {
       points: points.map((p)=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),
       marker,
       minValue,
       maxValue,
-      selectedValue:selectedRow?.value,
+      selectedValue:Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value,
       firstAt:minAt,
       lastAt:maxAt,
-      selectedAt:selectedRow?.at,
+      selectedActualAt:Number.isFinite(selectedActualAt) ? selectedActualAt : selectedRow?.at,
+      selectedBucketAt:Number.isFinite(selectedBucketAt) ? selectedBucketAt : selectedRow?.at,
     }
   },[selected,trend])
 
@@ -340,10 +395,13 @@ function MiniTrendContext({ trend, selected, range }) {
         <circle cx={model.marker.x} cy={model.marker.y} r="4" className="rundeckTrendMiniMarker" />
       </>}
       <text x="12" y="94" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
-      {model.selectedAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedAt, range)}</text>}
+      {model.selectedBucketAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
       <text x="508" y="94" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
     </svg>
-    <footer><span>Selected point · {model.selectedAt ? `${formatWib(model.selectedAt, true)} WIB` : '—'}</span><strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong></footer>
+    <footer>
+      <span>{selected?.mode === 'max' ? 'Peak sample' : 'Selected sample'} · {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'}{model.selectedBucketAt ? ` · Bucket ${formatWib(model.selectedBucketAt, true)} WIB` : ''}</span>
+      <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong>
+    </footer>
   </section>
 }
 
@@ -358,11 +416,12 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, 
     <div className="rundeckTrendModalContext">
       <div>
         <span>{selected?.mode === 'max' ? 'Peak sample' : 'Selected sample'} · saved history</span>
-        <strong>{selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</strong>
+        <strong>{selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</strong>
+        <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'}: {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket: ${formatWib(selected.bucket, true)} WIB` : ''}</small>
       </div>
       <div className="rundeckTrendModalContextMeta">
         {collectionId && <span>Collection {collectionId.replace(/^rundeck-/, '').slice(0, 18)}</span>}
-        {resourceState && <span className={`rundeckInlineStatus is-${resourceState.toLowerCase()}`}>{resourceState}</span>}
+        {resourceState && <span className={`rundeckInlineStatus is-${resourceState.toLowerCase()}`}>Host Resource: {resourceState}</span>}
       </div>
     </div>
 
@@ -375,13 +434,13 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, 
       <header>
         <div>
           <span>History at Selected Time</span>
-          <strong>{consumers.length} workload{consumers.length === 1 ? '' : 's'} observed</strong>
+          <strong>Top {consumers.length} workload{consumers.length === 1 ? '' : 's'} loaded</strong>
         </div>
-        {consumers[0]?.consumer_key && <small>Top CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
+        {consumers[0]?.consumer_key && <small>Top workload CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
       </header>
 
       <div className="rundeckTrendWorkloadHead" aria-hidden="true">
-        <span>Job / Program</span><span title="CPU can exceed 100% when a workload uses multiple CPU cores.">CPU</span><span>Memory</span><span>Processes</span><span />
+        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">Workload CPU</span><span>PSS Memory</span><span>Processes</span><span />
       </div>
 
       <div className="rundeckTrendWorkloadRows">
@@ -525,7 +584,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {selected && <div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
       <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
-          <div><span>SPHERE ANALYSIS</span><h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4><small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.at ? `${formatWib(selected.at, true)} WIB` : 'Selected point'}</small></div>
+          <div>
+            <span>SPHERE ANALYSIS</span>
+            <h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4>
+            <small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</small>
+            <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
+          </div>
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
