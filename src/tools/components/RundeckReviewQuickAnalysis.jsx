@@ -26,7 +26,7 @@ function suggestedFinding(row = {}) {
   else if (signals.cpu_spike) parts.push('A CPU spike was observed during the selected review period.')
   if (signals.high_memory) parts.push('Memory usage was above the normal range for this job or program.')
   if (signals.performance_shift || signals.increasing) parts.push('CPU usage increased compared with the previous review period.')
-  if (signals.critical_wp_correlated || signals.wp_excess_association) parts.push('Critical Work Process activity overlapped with this job or program.')
+  if (signals.critical_wp_correlated || signals.wp_excess_association) parts.push('APP Critical WP was observed on the same APP collection checks as this job or program.')
   if (signals.baseline_anomaly) parts.push('Performance was above the retained historical baseline.')
   if (!parts.length) parts.push('This job or program met the configured performance review criteria.')
   parts.push('This is a performance correlation, not a confirmed root cause.')
@@ -36,19 +36,16 @@ function suggestedFinding(row = {}) {
 function suggestedRecommendation(row = {}) {
   const signals = row.signals || {}
   if (signals.sustained_high_cpu || signals.high_memory || signals.baseline_anomaly) {
-    return 'Review the program logic, execution duration and data volume with the ABAP or application owner. Validate CPU, memory and Critical WP again on the next execution.'
+    return 'Review the execution context, program logic and data volume as needed. Validate workload CPU, PSS memory and APP Critical WP again on the next observed run.'
   }
   if (signals.performance_shift || signals.increasing) {
     return 'Compare this execution with previous runs and review any recent program, variant, data-volume or scheduling changes. Validate again on the next run.'
   }
-  return 'Monitor the next execution and compare CPU, memory, duration and Critical WP before closing the review.'
+  return 'Monitor the next observed run and compare workload CPU, PSS memory, observation span and APP Critical WP before closing the review.'
 }
 
-function defaultStatus(row = {}) {
-  const signals = row.signals || {}
-  if (signals.sustained_high_cpu || signals.high_memory || signals.baseline_anomaly) return 'OPTIMIZATION_NEEDED'
-  if (signals.performance_shift || signals.increasing) return 'OBSERVE'
-  return 'OBSERVE'
+function defaultStatus() {
+  return 'NEEDS_FURTHER_RCA'
 }
 
 export default function RundeckReviewQuickAnalysis({
@@ -111,8 +108,8 @@ export default function RundeckReviewQuickAnalysis({
           closing_status: item?.closing_status || defaultStatus(row),
           finding: item?.finding || suggestedFinding(row),
           recommendation: item?.recommendation || suggestedRecommendation(row),
-          owner: item?.owner || 'ABAP / Application',
-          follow_up: item?.follow_up || 'Validate the next execution and compare CPU, memory, duration and Critical WP.',
+          owner: item?.owner || '',
+          follow_up: item?.follow_up || 'Validate the next observed run and compare workload CPU, PSS memory, observation span and APP Critical WP.',
         })
       })
       .catch((error) => {
@@ -122,8 +119,8 @@ export default function RundeckReviewQuickAnalysis({
           closing_status: defaultStatus(row),
           finding: suggestedFinding(row),
           recommendation: suggestedRecommendation(row),
-          owner: 'ABAP / Application',
-          follow_up: 'Validate the next execution and compare CPU, memory, duration and Critical WP.',
+          owner: '',
+          follow_up: 'Validate the next observed run and compare workload CPU, PSS memory, observation span and APP Critical WP.',
         })
         setSaveMessage(error.message || 'Analysis result storage unavailable')
       })
@@ -212,7 +209,7 @@ export default function RundeckReviewQuickAnalysis({
       <span><b>CPU Peak</b>{pct(row.peak_cpu_pct)}</span>
       <span><b>Memory Avg (PSS)</b>{gb(row.avg_pss_gb)}</span>
       <span className={limitedSample ? 'is-limited-sample' : ''}><b>Data Points</b>{row.occurrences ?? row.observations ?? '—'}{limitedSample && <em className="rundeckQuickSampleHint">Limited sample</em>}</span>
-      <span><b>Critical WP During Period</b>{row.critical_wp_checks ?? '—'}</span>
+      <span title="APP-level temporal overlap; not workload-level causation"><b>APP Critical WP Checks</b>{row.critical_wp_checks ?? '—'}</span>
       <span><b>Baseline</b>{row.anomaly_status || row.baseline_status || '—'}</span>
     </div>
 
@@ -254,25 +251,25 @@ export default function RundeckReviewQuickAnalysis({
           </label>
 
           <label>
-            <span>Recommended Action</span>
+            <span>Suggested Check</span>
             <textarea rows="3" value={form.recommendation} onChange={(event) => setForm({ ...form, recommendation: event.target.value })} />
           </label>
 
           <div className="rundeckClosingGrid">
             <label>
               <span>Action Owner</span>
-              <input value={form.owner} onChange={(event) => setForm({ ...form, owner: event.target.value })} placeholder="ABAP / Basis / Application" />
+              <input value={form.owner} onChange={(event) => setForm({ ...form, owner: event.target.value })} placeholder="Assign after validation" />
             </label>
             <label>
               <span>Validation / Follow-up</span>
-              <input value={form.follow_up} onChange={(event) => setForm({ ...form, follow_up: event.target.value })} placeholder="Validation after next execution" />
+              <input value={form.follow_up} onChange={(event) => setForm({ ...form, follow_up: event.target.value })} placeholder="Validation after next observed run" />
             </label>
           </div>
 
           <div className="rundeckClosingPreview">
             <strong>Closing Summary</strong>
             <p><b>{row.consumer_key}</b> · {workloadTypeLabel(row.consumer_type)} · {reviewContext?.period?.toUpperCase() || '1D'}</p>
-            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · Critical WP during period {row.critical_wp_checks ?? '—'}.</p>
+            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · APP Critical WP checks {row.critical_wp_checks ?? '—'}.</p>
             <p>{form.finding}</p>
             <p><b>{form.closing_status.replaceAll('_', ' ')}</b> · Action Owner: {form.owner || '—'} · {form.recommendation}</p>
           </div>
