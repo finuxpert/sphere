@@ -34,9 +34,9 @@ export default function RundeckMonitoringHistoryCore(props) {
                   </div>
                 : <div className="rundeckSelectedCompactMetrics">
                     <span><b>CPU</b>{props.selectedJob.cpuPct === null || props.selectedJob.cpuPct === undefined ? '—' : `${Number(props.selectedJob.cpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
-                    <span><b>Memory</b>{props.selectedJob.memoryGb === null || props.selectedJob.memoryGb === undefined ? '—' : `${Number(props.selectedJob.memoryGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
+                    <span><b>PSS Memory</b>{props.selectedJob.memoryGb === null || props.selectedJob.memoryGb === undefined ? '—' : `${Number(props.selectedJob.memoryGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
                     <span><b>Processes</b>{props.selectedJob.processes ?? '—'}</span>
-                    <span><b>Critical WP</b>{props.selectedJob.criticalWp ?? '—'}</span>
+                    <span title="APP Critical WP is an APP-server observation, not workload execution status."><b>APP Critical WP</b>{props.selectedJob.criticalWp ?? '—'}</span>
                   </div>}
               <button type="button" onClick={props.onOpenSelectedAnalysis}>Analyze Performance</button>
             </div>
