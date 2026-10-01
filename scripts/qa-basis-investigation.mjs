@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.31', files.version.includes("APP_VERSION = '1.34.31'") && files.version.includes('monitoring-flow-ui-v1.34.31')],
+  ['monitoring flow version is v1.34.32', files.version.includes("APP_VERSION = '1.34.32'") && files.version.includes('monitoring-flow-ui-v1.34.32')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -141,6 +141,12 @@ const checks = [
   ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('CPU can exceed 100%') && files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes(' GB')],
   ['Trend modal distinguishes actual sample time from aggregation bucket time', files.serverTrend.includes('selectedActualAt') && files.serverTrend.includes('selectedBucketAt') && files.serverTrend.includes('Top {consumers.length} workload') && files.serverTrend.includes('Top workload CPU') && files.serverTrend.includes('Host Resource:')],
   ['Workload evidence exposes NO OVERLAP when an episode ended before the issue window', files.evidenceBackend.includes('"state": "NO OVERLAP"') && files.evidenceBackend.includes('workload_gap_minutes') && files.jobHistory.includes("timingState === 'NO OVERLAP'") && files.evidenceTimeline.includes("state === 'NO OVERLAP'")],
+  ['Evidence timing accepts exact selected episode boundaries and suppresses current-incident NO OVERLAP for historical anchors', files.api.includes('episode_start: str | None') && files.api.includes('episode_end: str | None') && files.evidenceBackend.includes('workload_first_seen = _dt(episode_start)') && files.evidenceBackend.includes('workload_last_seen = _dt(episode_end)') && files.evidenceBackend.includes('if not selected_anchor and issue_start')],
+  ['Job Performance sends displayed episode boundaries to evidence correlation', files.jobHistory.includes("params.set('episode_start', job.episodeStart)") && files.jobHistory.includes("params.set('episode_end', job.episodeEnd)") && files.jobHistory.includes('const episodeStart = selectedEpisode[0]?.collected_at') && files.jobHistory.includes('const episodeEnd = selectedEpisode.at(-1)?.collected_at')],
+  ['History truncation labels are episode-aware instead of global', files.jobHistory.includes('selectedEpisodeFirstAt === oldestLoadedAt') && files.jobHistory.includes("'First Loaded'") && files.jobHistory.includes("'Loaded Span'")],
+  ['Review-selected workload card uses review-period metrics instead of blank live metrics', files.core.includes("props.selectedJob.source === 'performance-review'") && files.core.includes('Review Selection -') && files.core.includes('Avg CPU') && files.core.includes('APP Critical WP overlap')],
+  ['Historical Performance hides current incident timing from the selected-time drawer', files.jobHistory.includes('historicalContext') && files.jobHistory.includes("'workload-explorer', 'observation-history', 'trend-snapshot'") && files.jobHistory.includes('effectiveIncidentStart')],
+  ['Performance evaluation cache is keyed to the committed collection anchor', files.evaluationBackend.includes('anchor_key = end.isoformat()') && files.evaluationBackend.includes('cache_key = (period_key, type_key, limit_key, anchor_key)') && files.evaluationBackend.includes('_EVALUATION_CACHE.clear()')],
   ['Job history reports truncation instead of presenting a loaded limit as complete lifetime', files.jobHistoryBackend.includes('observation_count') && files.jobHistoryBackend.includes('loaded_observations') && files.jobHistoryBackend.includes('history_truncated') && files.jobHistory.includes("'First Loaded'") && files.jobHistory.includes("'Loaded Span'")],
   ['WP signal labels distinguish resource classification counters and missing program capture', files.jobHistory.includes('CPU Signal') && files.jobHistory.includes('RABAX / RXMSG Count') && files.jobHistory.includes('SXPG / JobStart Count') && files.jobHistory.includes('Not captured') && files.jobHistory.includes('WP/Trace signal was not retained for this observation')],
   ['APP Critical WP wording is scoped to the workload period rather than the current incident', files.jobHistory.includes('APP Critical WP during workload period') && files.jobHistory.includes('not proof of incident overlap')],
@@ -317,4 +323,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.31 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.32 monitoring flow and deep-analysis checks passed.')
