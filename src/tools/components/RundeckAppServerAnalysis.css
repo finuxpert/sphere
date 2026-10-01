@@ -45,3 +45,13 @@ html[data-theme="light"] .rundeckAppTypeBadge.is-job{color:#0f6870!important;bor
 html[data-theme="light"] .rundeckAppTypeBadge.is-program{color:#315f9c!important;border-color:rgba(55,111,189,.28)!important}
 html[data-theme="light"] .rundeckAppServerWorkloads>header small,
 html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{color:#50636d!important}
+
+
+/* Accuracy context for APP workload observations. */
+.rundeckAppServerSource{
+  margin:0 0 6px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.8px;
+  line-height:1.35;
+}
+html[data-theme="light"] .rundeckAppServerSource{color:#5d6e77!important}

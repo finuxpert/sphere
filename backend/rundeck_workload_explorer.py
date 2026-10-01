@@ -84,7 +84,23 @@ def _source_relation(conn) -> tuple[str, str]:
     )""", "ALL_OBSERVED_ACTIVE_WORKLOADS"
 
 
-def _anchor_time(conn) -> datetime:
+def _parse_anchor(value: str | datetime | None) -> datetime | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        parsed = value
+    else:
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("Invalid historical anchor timestamp") from exc
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def _anchor_time(conn, anchor_at: str | datetime | None = None) -> datetime:
+    requested = _parse_anchor(anchor_at)
+    if requested is not None:
+        return requested.astimezone(timezone.utc)
     value = conn.execute(text(f"""
         SELECT MAX(COALESCE(c.finished_at, c.started_at))
           FROM rundeck_collections c
@@ -173,6 +189,7 @@ def workload_summary(
     consumer_type: str,
     range_key: str = "24h",
     host: str | None = None,
+    anchor_at: str | datetime | None = None,
 ) -> dict:
     key = str(consumer_key or "").strip()
     if not key:
@@ -187,7 +204,7 @@ def workload_summary(
     engine = _engine()
     with engine.connect() as conn:
         source, coverage_scope = _source_relation(conn)
-        end = _anchor_time(conn) + timedelta(microseconds=1)
+        end = _anchor_time(conn, anchor_at) + timedelta(microseconds=1)
         start = end - timedelta(hours=config["hours"])
         params: dict[str, Any] = {
             "start": start,
@@ -251,6 +268,7 @@ def workload_trend(
     consumer_type: str,
     range_key: str = "24h",
     host: str | None = None,
+    anchor_at: str | datetime | None = None,
 ) -> dict:
     key = str(consumer_key or "").strip()
     if not key:
@@ -265,7 +283,7 @@ def workload_trend(
     engine = _engine()
     with engine.connect() as conn:
         source, coverage_scope = _source_relation(conn)
-        end = _anchor_time(conn) + timedelta(microseconds=1)
+        end = _anchor_time(conn, anchor_at) + timedelta(microseconds=1)
         start = end - timedelta(hours=config["hours"])
         params: dict[str, Any] = {
             "start": start,

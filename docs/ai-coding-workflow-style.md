@@ -1,331 +1,162 @@
 # AI Coding Workflow Style
 
-This document describes the preferred coding workflow for SPHERE and other CBJ/Finuxpert web apps.
+This document defines the preferred implementation workflow for the SPHERE repository.
 
-The goal is to improve web apps continuously while keeping the codebase clean, auditable, and easy to continue in a new ChatGPT prompt.
-
-## Working style
-
-Use this pattern for every improvement:
+## Current repository identity
 
 ```text
-Improve + document + keep rollback easy
+Repo       : finuxpert/sphere
+DEV        : rundeck-sphere-dev
+PROD       : rundeck-sphere-prod
+DEV URL    : https://sphere.astraotoparts.co.id/dev/
+PROD URL   : https://sphere.astraotoparts.co.id/
 ```
 
-Do not just make visual patches. Each improvement should also leave a clear trail:
+The manual Upload Logs branch family (`sphere-dev` / `sphere-prod`) is separate from the active Rundeck-integrated release line.
+
+## Working pattern
+
+```text
+small change → validate DEV → smoke/readiness → review → PR → PROD
+```
+
+Keep rollback easy and leave a clear audit trail.
+
+For each meaningful change, document:
 
 - what changed
 - why it changed
-- where the file lives
-- how it deploys
-- what to check after deploy
-- what must not be reintroduced
+- files affected
+- validation performed
+- deploy state
+- rollback path when relevant
 
-## Preferred implementation approach
+## DEV first
 
-### 1. Incremental only
+Implement and validate on `rundeck-sphere-dev`.
 
-Avoid large rewrites unless explicitly requested.
+Do not modify `rundeck-sphere-prod` directly for normal feature work.
 
-Preferred:
-
-```text
-small patch -> deploy DEV -> smoke test -> continue
-```
-
-Avoid:
+Production promotion uses a normal PR:
 
 ```text
-big rewrite -> many files changed -> hard to debug -> hard rollback
+base:    rundeck-sphere-prod
+compare: rundeck-sphere-dev
 ```
 
-### 2. DEV first
+Do not force-reset PROD to DEV.
 
-For SPHERE:
+## Current active UI workspaces
+
+The main navigation currently exposes only:
 
 ```text
-Repo   : finuxpert/sphere
-Branch : dev
-Target : sapdev
-URL    : https://sapdev.cbj-kontruksi.com
+#/tool/analyzer  → ST03N Analysis
+#/tool/logs      → Performance Analysis
 ```
 
-Never touch PROD unless explicitly requested.
+Do not document or reintroduce `#/tool/comparer` as an active primary workspace unless it is intentionally restored as a product decision.
 
-### 3. Auto deploy on dev push
+## Current Performance Analysis structure
 
-The DEV deploy workflow should run automatically on push to branch `dev`.
+Top-level modes:
 
-Expected file:
+- Live Monitoring
+- History
+
+Primary Live Monitoring areas include:
+
+- infrastructure overview
+- SAP Application Servers
+- Server Trend
+- Current Workloads
+- selected Job / Program context
+- System Health
+- Jobs & Programs to Review
+
+Use progressive disclosure/drawers for deeper analysis rather than permanently expanding all secondary data.
+
+## Implementation preference
+
+Prefer the smallest change that solves the problem without weakening investigation semantics.
+
+For UI work:
+
+1. understand the current component/data flow first
+2. prefer localized CSS/layout changes when behavior is already correct
+3. change React/backend logic only when the required behavior cannot be achieved safely at presentation level
+4. preserve explicit loading/error/empty/stale/partial states
+5. preserve source identity and trust-boundary wording
+
+Do not reintroduce runtime DOM patchers, MutationObserver-based UI injectors, or recursive DOM enhancers as a substitute for component-level implementation.
+
+## Active style reality
+
+The current Rundeck Performance Analysis workspace still imports multiple historical SPHERE/Rundeck CSS layers through `ToolLogWorkspace.jsx`.
+
+Do not delete a stylesheet only because its filename contains an old version number. Remove or consolidate it only after confirming that it is not imported/referenced and after visual regression testing.
+
+Long term, semantic filenames are preferred over version-number-only names.
+
+## Trust boundaries that code must preserve
+
+- SPHERE does not SSH/SCP directly to SAP Application Servers.
+- Rundeck is the SAP-side collection/orchestration layer.
+- Sampled workload evidence is not authoritative SM37 execution evidence.
+- Historical correlation is not proof of root cause.
+- Missing availability observations are not automatically DOWN.
+- Current/live evidence must remain visually distinct from historical evidence.
+- collector state, platform health, and data alignment are separate concepts.
+
+## Required validation
+
+For normal Rundeck DEV work:
+
+```bash
+/opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
+npm run qa
+bash ops/rundeck/prod-readiness-check.sh
+```
+
+Use `docs/VISUAL-QA.md` when a UI change can affect layout, overflow, density, responsive behavior, or interaction.
+
+## Commit style
+
+Use concise semantic messages, for example:
 
 ```text
-.github/workflows/dev-deploy.yml
+docs: align SPHERE flow with v1.34.29
+ui: refine selected workload analysis
+fix: preserve APP highlight-only focus
+test: cover shared API path methods
 ```
 
-Expected behavior:
+Avoid vague messages such as `update`, `changes`, or `wip`.
 
-```text
-push dev -> auto deploy sapdev
-```
+## Documentation rule
 
-Manual workflow is acceptable, but the preferred flow is no manual clicking when possible.
+Before describing a feature as current:
 
-### 4. Keep UI changes structured
+1. verify the active branch
+2. verify the current component/backend path
+3. distinguish implemented behavior from roadmap
+4. distinguish measured outcomes from estimates
+5. update `docs/CURRENT-FLOW-AND-FEATURES.md` when the product flow materially changes
 
-For SPHERE, newer UI polish layers must be centralized through:
+Do not keep competition copy or one-off historical implementation notes as current product documentation.
 
-```text
-src/app/enterprise-theme.css
-```
+## Handoff template
 
-Do not import each new UI file directly in `main.jsx`.
-
-Preferred:
-
-```css
-@import './enterprise-ui-system.css';
-@import './enterprise-navigation.css';
-@import './evidence-history-ux.css';
-@import './investigation-workspace-ux.css';
-@import './log-evidence-ux.css';
-@import './st03n-impact-ux.css';
-@import './comparer-process-ux.css';
-@import './pdf-export-ux.css';
-```
-
-`main.jsx` should keep one newer enterprise theme import:
-
-```js
-import './app/enterprise-theme.css'
-```
-
-### 5. Prefer CSS-only polish before changing logic
-
-When improving UI/UX:
-
-Preferred first pass:
-
-```text
-CSS-only polish
-```
-
-Only change React/parser logic when CSS cannot solve the problem.
-
-This reduces the chance of breaking:
-
-- upload
-- parser
-- PDF export
-- Evidence API
-- tool routing
-- lazy loading
-
-### 6. Do not reintroduce unstable runtime hacks
-
-Never reintroduce:
-
-```text
-MutationObserver UI patcher
-recursive DOM injector
-runtime dashboard enhancer
-delayed heavy UI patching
-large FORCE_UI_CSS override layer
-```
-
-These previously caused:
-
-```text
-blank screen
-stuck loading module
-render lag
-mobile freeze
-hard-to-debug UI state
-```
-
-### 7. Use clear build stamps
-
-When a deploy needs to be identifiable, update:
-
-```text
-APP_BUILD_STAMP
-```
-
-Example:
-
-```js
-const APP_BUILD_STAMP = 'sphere-20260909-pdf-export-ux'
-```
-
-Use meaningful names, not random text.
-
-### 8. Commit message style
-
-Use short imperative commit messages:
-
-```text
-Add Comparator UX polish
-Import enterprise theme
-Upgrade structured SPHERE PDF report export
-Auto deploy sapdev on dev branch push
-Document enterprise theme structure
-```
-
-Avoid vague commit messages:
-
-```text
-update
-fix
-changes
-wip
-```
-
-## Preferred web app audit flow
-
-For any web app audit, use this sequence:
-
-### Phase 1: Inventory
-
-Check:
-
-- framework
-- entrypoint
-- routes
-- CSS layers
-- build/deploy workflow
-- risky runtime hacks
-- bundle size warning
-- current branch
-- target environment
-
-### Phase 2: Safety rules
-
-Confirm:
-
-- DEV only
-- no PROD changes
-- no nginx/Cloudflare unless requested
-- no secret/token commits
-- no `.env` real values
-- no private key or credential dump
-
-### Phase 3: UI/UX polish
-
-Prioritize:
-
-- navigation
-- layout consistency
-- readable cards
-- evidence/table readability
-- mobile spacing
-- export/report buttons
-- loading/empty/error states
-
-### Phase 4: Maintainability cleanup
-
-After several patches, consolidate:
-
-- central CSS imports
-- theme notes
-- docs
-- repeated style rules
-- unused old override files if confirmed safe
-
-### Phase 5: Report and handoff
-
-Every major patch batch should end with a summary:
+For a major implementation batch, summarize:
 
 ```text
 Repo
 Branch
-Target URL
+Version/build
 Changed files
-Commits
-Deploy status
-Smoke test URLs
-Rollback notes
-Next recommended step
-```
-
-## Standard ChatGPT continuation prompt
-
-Use this when starting a new prompt for this repo:
-
-```text
-Lanjut SPHERE coding style.
-Repo: finuxpert/sphere
-Branch: dev
-Target: sapdev
-URL: https://sapdev.cbj-kontruksi.com
-
-Working style:
-- incremental only
-- DEV first, never PROD unless requested
-- improve + document + keep rollback easy
-- prefer CSS-only polish before changing logic
-- keep UI polish centralized through src/app/enterprise-theme.css
-- do not import every new CSS file directly in main.jsx
-- do not reintroduce MutationObserver/runtime injector/DOM enhancer
-- commit messages must be clear
-- auto deploy runs on push to dev
-
-Current theme entrypoint:
-src/app/enterprise-theme.css
-
-Important docs:
-- docs/enterprise-theme-notes.md
-- docs/ai-coding-workflow-style.md
-
-Goal:
-Audit or improve the requested web app feature while keeping code clean and documented.
-```
-
-## Standard audit prompt for other web apps
-
-Use this for another web app repo:
-
-```text
-Audit this web app with my coding style:
-- incremental only
-- DEV/staging first
-- no PROD unless requested
-- improve + document + keep rollback easy
-- avoid large rewrites
-- prefer CSS-only UI/UX polish before changing logic
-- centralize theme/style imports
-- document changed files, commits, deploy status, smoke test URLs, and rollback notes
-- do not commit secrets, .env, private keys, tokens, or dumps
-
-Start by checking repo structure, build workflow, deploy target, CSS layers, and risky runtime hacks.
-Then propose or apply the safest first patch.
-```
-
-## Current SPHERE UI layers
-
-Current newer polish layers:
-
-```text
-src/app/enterprise-ui-system.css
-src/app/enterprise-navigation.css
-src/app/evidence-history-ux.css
-src/app/investigation-workspace-ux.css
-src/app/log-evidence-ux.css
-src/app/st03n-impact-ux.css
-src/app/comparer-process-ux.css
-src/app/pdf-export-ux.css
-```
-
-Current PDF export sources:
-
-```text
-src/features/pdf/structuredPdf.js
-src/features/cases/casePdfExport.js
-src/tools/sphereExport.js
-```
-
-Current core tools:
-
-```text
-#/tool/comparer
-#/tool/analyzer
-#/tool/logs
+Behavior changed
+Validation
+Deploy/readiness status
+Known limitation
+Rollback/next step
 ```

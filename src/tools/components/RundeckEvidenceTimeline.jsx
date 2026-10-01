@@ -8,6 +8,8 @@ const API = `${import.meta.env.BASE_URL}api`
 function sourceLabel(value = '') {
   if (value === 'Workload') return 'Job / Program'
   if (value === 'Host') return 'APP Server'
+  if (value === 'Issue Start') return 'Issue Start'
+  if (value === 'Selected Time') return 'Selected Time'
   return value || 'Unknown'
 }
 
@@ -24,6 +26,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const jobKey = job?.key || ''
   const host = job?.host || ''
   const consumerType = job?.consumerType || ''
+  const anchorAt = job?.at || ''
 
   React.useEffect(() => {
     if (!incidentActive) {
@@ -36,6 +39,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     if (jobKey) params.set('job', jobKey)
     if (host) params.set('host', host)
     if (consumerType) params.set('type', consumerType)
+    if (anchorAt) params.set('at', anchorAt)
     setLoading(true)
     fetch(`${API}/analysis/evidence?${params.toString()}`, { cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
@@ -56,7 +60,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [consumerType, host, incidentActive, jobKey, refreshToken])
+  }, [anchorAt, consumerType, host, incidentActive, jobKey, refreshToken])
 
   if (!incidentActive) return null
 
@@ -78,11 +82,10 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         : 'Cross-source timing status.'
 
   if (compact) {
-    const latest = events.slice(0, 2).map((event) => event.title).join(' · ')
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
-      <strong>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}{events.length ? ` · ${events.length} events` : ''}</strong>
-      <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m time difference` : 'Timing unavailable'}{latest ? ` · ${latest}` : ''}</small>
+      <strong>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}{events.length ? `, ${events.length} events` : ''}</strong>
+      <small>{hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}</small>
       <em>View events ›</em>
     </button>
   }
@@ -91,7 +94,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Correlated Events</span>
       <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}</span>
-      <small>{hasSkew ? `${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m time difference` : 'timing'}{events.length ? ` · ${events.length} events` : ''}</small>
+      <small>{hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}{events.length ? `, Events: ${events.length}` : ''}</small>
     </div>
 
     <div className="rundeckEvidenceBody">
