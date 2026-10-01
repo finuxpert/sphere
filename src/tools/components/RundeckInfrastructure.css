@@ -243,3 +243,44 @@
 .rundeckInfraTrendWorkspace{border:0!important;border-left:1px solid rgba(126,147,158,.08)!important;border-radius:0!important;background:transparent!important}.rundeckInfraTrendSummary{padding:5px 0!important;border:0!important;border-top:1px solid rgba(126,147,158,.06)!important;border-bottom:1px solid rgba(126,147,158,.06)!important;border-radius:0!important;background:transparent!important}.rundeckInfraChartWrap svg{background:transparent!important}
 .rundeckInfra header p,.rundeckInfraTrendWorkspaceHead small,.rundeckInfraTrendWorkspaceHead em,.rundeckInfraLegend,.rundeckInfraTrend>small{color:var(--sphere-text-muted,#8d9aa3)!important}
 @media(max-width:980px){.rundeckInfraTrendWorkspace{border-left:0!important;border-top:1px solid rgba(126,147,158,.08)!important}}
+
+
+.rundeckInfraCoverageNote{
+  margin:6px 0 8px;
+  padding:6px 8px;
+  border:1px dashed var(--sphere-border);
+  border-radius:6px;
+  color:var(--sphere-text-secondary);
+  background:var(--sphere-surface-1);
+  font-size:10px;
+}
+.rundeckInfraTrendSummary .is-attention{
+  color:var(--sphere-warning);
+  font-weight:700;
+}
+.rundeckInfra .cardHead>div>small{
+  display:block;
+  margin-top:1px;
+  color:var(--sphere-text-muted);
+  font-size:9px;
+  font-weight:500;
+}
+
+
+/* SPHERE v1.34.35 — infrastructure history uses the drawer canvas, not a thin strip. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:390px!important;
+  min-height:390px!important;
+}
+@media(max-height:820px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:330px!important;
+    min-height:330px!important;
+  }
+}
+@media(max-width:980px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:300px!important;
+    min-height:300px!important;
+  }
+}

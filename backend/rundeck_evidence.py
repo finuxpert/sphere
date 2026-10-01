@@ -197,7 +197,15 @@ def _availability_evidence(snapshots: list[dict], since=None) -> list[dict]:
     return events
 
 
-def evidence_timeline(job=None, host=None, consumer_type=None, availability_range=DEFAULT_AVAILABILITY_RANGE, anchor_at=None) -> dict:
+def evidence_timeline(
+    job=None,
+    host=None,
+    consumer_type=None,
+    availability_range=DEFAULT_AVAILABILITY_RANGE,
+    anchor_at=None,
+    episode_start=None,
+    episode_end=None,
+) -> dict:
     if availability_range not in RANGE_HOURS:
         raise ValueError("Unsupported availability range")
 
@@ -230,6 +238,18 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         "Availability": availability_at,
     }
     alignment = source_alignment(alignment_sources)
+    workload_first_seen = _dt(episode_start) or _dt((workload or {}).get("first_seen"))
+    workload_last_seen = _dt(episode_end) or _dt((workload or {}).get("last_seen"))
+    if not selected_anchor and issue_start and workload_last_seen and workload_last_seen < issue_start:
+        gap_minutes = round((issue_start - workload_last_seen).total_seconds() / 60.0, 1)
+        if gap_minutes > float(alignment.get("threshold_minutes") or MAX_SKEW_MINUTES):
+            alignment = {
+                **alignment,
+                "state": "NO OVERLAP",
+                "workload_gap_minutes": gap_minutes,
+                "workload_last_seen": _iso(workload_last_seen),
+                "issue_start": _iso(issue_start),
+            }
 
     events = []
     signal = incident.get("primary_signal") or {}
@@ -283,7 +303,10 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
     events = events[-16:]
 
     interpretation = []
-    if issue_start and workload and _dt(workload.get("first_seen")):
+    if alignment.get("state") == "NO OVERLAP":
+        minutes = int(float(alignment.get("workload_gap_minutes") or 0))
+        interpretation.append(f"Selected workload was last observed {minutes // 60}h {minutes % 60}m before the current issue window; no retained workload observation overlaps the issue start.")
+    elif issue_start and workload and _dt(workload.get("first_seen")):
         first = _dt(workload.get("first_seen"))
         if first < issue_start:
             minutes = int((issue_start - first).total_seconds() // 60)
@@ -306,6 +329,8 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "selected_workload": {
             **{key: value for key, value in (workload or {}).items() if key != "items"},
+            "first_seen": _iso(workload_first_seen),
+            "last_seen": _iso(workload_last_seen),
             "correlation_observed_at": _iso(workload_at),
         } if workload else None,
         "alignment": alignment,
@@ -324,5 +349,5 @@ def evidence_timeline(job=None, host=None, consumer_type=None, availability_rang
         },
         "events": events,
         "interpretation": interpretation,
-        "note": "Timing alignment is measured around the selected time or issue start using the nearest retained workload and availability observations. Co-observation is supporting evidence only; root cause still requires SAP and infrastructure validation.",
+        "note": "Timing alignment uses retained timestamps. For live/review analysis, NO OVERLAP is calculated from the exact selected episode end when supplied. Historical selected-time analysis is anchored to the selected observation and is not reclassified against the current incident. Co-observation is supporting evidence only; root cause still requires SAP and infrastructure validation.",
     }

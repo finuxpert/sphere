@@ -145,6 +145,16 @@ export default function RundeckMonitoringHistory(props) {
                   consumerType: row.consumer_type,
                   source: 'performance-review',
                   days: reviewContext?.days || 1,
+                  reviewPeriod: reviewContext?.period || '1d',
+                  reviewMetrics: {
+                    avgCpuPct: row.avg_cpu_pct ?? null,
+                    peakCpuPct: row.peak_cpu_pct ?? null,
+                    avgPssGb: row.avg_pss_gb ?? null,
+                    avgProcesses: row.avg_process_count ?? null,
+                    observations: row.observations ?? row.occurrences ?? null,
+                    criticalWpChecks: row.critical_wp_host_checks ?? row.critical_wp_checks ?? null,
+                    hostObservations: row.host_observations ?? null,
+                  },
                 }
                 onSelectJob?.(reviewJob)
                 setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
@@ -361,6 +371,16 @@ export default function RundeckMonitoringHistory(props) {
                   consumerType: activeOverlay.row.consumer_type,
                   source: 'performance-review',
                   days: activeOverlay.reviewContext?.days || 1,
+                  reviewPeriod: activeOverlay.reviewContext?.period || '1d',
+                  reviewMetrics: {
+                    avgCpuPct: activeOverlay.row.avg_cpu_pct ?? null,
+                    peakCpuPct: activeOverlay.row.peak_cpu_pct ?? null,
+                    avgPssGb: activeOverlay.row.avg_pss_gb ?? null,
+                    avgProcesses: activeOverlay.row.avg_process_count ?? null,
+                    observations: activeOverlay.row.observations ?? activeOverlay.row.occurrences ?? null,
+                    criticalWpChecks: activeOverlay.row.critical_wp_host_checks ?? activeOverlay.row.critical_wp_checks ?? null,
+                    hostObservations: activeOverlay.row.host_observations ?? null,
+                  },
                 }
                 onSelectJob?.(reviewJob)
                 setActiveOverlay({ type: 'job', reviewRow: activeOverlay.row, reviewContext: activeOverlay.reviewContext })

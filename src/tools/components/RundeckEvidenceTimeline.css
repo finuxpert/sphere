@@ -263,3 +263,65 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEve
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent strong{color:#24363e!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent small{color:#586b75!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary{color:#40545e!important}
+
+
+.rundeckEvidenceScope{
+  display:block;
+  color:var(--sphere-text-muted);
+  font-size:9px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.rundeckEvidenceSummary .rundeckEvidenceScope{
+  margin-left:auto;
+  margin-right:8px;
+}
+
+
+/* SPHERE v1.34.35 — correlation scope sits under title; status remains evidence, not toolbar chrome. */
+.rundeckEvidenceTimeline .rundeckEvidenceSummary{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:
+    "title status"
+    "scope timing";
+  column-gap:10px;
+  row-gap:2px;
+  align-items:center;
+  min-height:38px;
+  padding-bottom:7px;
+}
+.rundeckEvidenceTimeline .rundeckEvidenceTitle{grid-area:title}
+.rundeckEvidenceTimeline .rundeckEvidenceScope{
+  grid-area:scope;
+  margin:0!important;
+  font-size:8.2px;
+  text-transform:none;
+  letter-spacing:0;
+}
+.rundeckEvidenceTimeline .rundeckEvidenceAlignment{
+  grid-area:status;
+  justify-self:end;
+}
+.rundeckEvidenceTimeline .rundeckEvidenceSummary>small{
+  grid-area:timing;
+  justify-self:end;
+  margin-left:0!important;
+}
+.rundeckEvidenceTimeline .rundeckEvidenceEvent{
+  padding:6px 0!important;
+}
+.rundeckEvidenceTimeline .rundeckEvidenceEvents{
+  padding-top:3px;
+}
+@container (max-width:620px){
+  .rundeckEvidenceTimeline .rundeckEvidenceSummary{
+    grid-template-columns:1fr;
+    grid-template-areas:"title" "scope" "status" "timing";
+  }
+  .rundeckEvidenceTimeline .rundeckEvidenceAlignment,
+  .rundeckEvidenceTimeline .rundeckEvidenceSummary>small{
+    justify-self:start;
+  }
+}

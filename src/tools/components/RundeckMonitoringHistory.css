@@ -1268,3 +1268,102 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     border-right:0!important;
   }
 }
+
+
+/* SPHERE v1.34.35 — final live cockpit hierarchy and density pass. */
+.appShell:has(.rundeckPanel) .is-server-trend .rundeckTrendChart{
+  height:286px!important;
+  min-height:272px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompact{
+  margin-top:4px!important;
+  padding:6px 8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence{
+  margin-top:5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+  gap:7px!important;
+  padding-top:7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
+  min-height:74px!important;
+  padding:7px 9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
+  gap:7px!important;
+  margin-top:5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  min-height:48px!important;
+  padding:5px 8px!important;
+  background:rgba(126,147,158,.012)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button small{
+  color:var(--sphere-text-muted,#718089)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewReasonChips span{
+  border-color:rgba(126,147,158,.11)!important;
+  background:rgba(126,147,158,.018)!important;
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:560!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSystemHealthV1231{
+  gap:7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSystemHealthPrimary>span:first-child,
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131 summary>span:first-child{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:620!important;
+}
+@media(max-height:780px){
+  .appShell:has(.rundeckPanel) .is-server-trend .rundeckTrendChart{
+    height:258px!important;
+    min-height:248px!important;
+  }
+}
+
+
+/* SPHERE v1.34.36 — make drilldown targets discoverable without adding action columns. */
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"],
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"]{
+  cursor:pointer;
+  transition:background 120ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable:hover,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"]:hover,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"]:hover{
+  background:rgba(79,198,200,.045);
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable td:first-child strong::after,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"] .rundeckCurrentWorkloadName button::after,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"] .rundeckReviewWorkloadV1231 button::after{
+  content:'›';
+  display:inline-block;
+  margin-left:6px;
+  color:transparent;
+  font-size:11px;
+  transform:translateX(-2px);
+  transition:color 120ms ease,transform 120ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable tr.is-expandable:hover td:first-child strong::after,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr[role="button"]:hover .rundeckCurrentWorkloadName button::after,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr[role="button"]:hover .rundeckReviewWorkloadV1231 button::after{
+  color:var(--sphere-accent,#4fc6c8);
+  transform:translateX(0);
+}
+.appShell:has(.rundeckPanel) .rundeckCorrelatedCard{
+  min-height:82px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCorrelatedCard .rundeckEvidenceScope{
+  margin-top:1px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;
+  font-weight:560;
+  text-transform:none;
+  letter-spacing:0;
+}
+.appShell:has(.rundeckPanel) .rundeckCorrelatedCard strong{
+  margin-top:3px;
+}

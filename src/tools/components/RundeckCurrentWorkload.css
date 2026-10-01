@@ -224,3 +224,16 @@
     max-height:290px!important;
   }
 }
+
+
+/* SPHERE v1.34.35 — primary workload identity first, technical context second. */
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName small{
+  margin-top:2px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.2px;
+  font-weight:500;
+  opacity:.86;
+}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button{
+  font-weight:720;
+}

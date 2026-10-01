@@ -163,10 +163,23 @@ def trend(
                      NULLIF(metrics->>'write_iops','')::double precision AS value2,
                      NULLIF(metrics->>'write_mbps','')::double precision AS write_mbps,
                      NULLIF(metrics->>'read_iops','')::double precision AS read_iops,
-                     NULLIF(metrics->>'read_mbps','')::double precision AS read_mbps
+                     NULLIF(metrics->>'read_mbps','')::double precision AS read_mbps,
+                     CASE
+                       WHEN NULLIF(metrics->>'util_pct','')::double precision > 100 THEN 'SOURCE_OVER_100'
+                       ELSE 'OK'
+                     END AS quality_flag
               FROM rundeck_infra_samples
               WHERE collected_at>=:since AND kind='storage' {host_clause}
               ORDER BY collected_at,host,series_key
             """), params)
         items = [dict(row._mapping) for row in rows]
-    return {"range": range_key, "metric": metric, "since": since, "items": items}
+    first_observed_at = min((item.get("collected_at") for item in items if item.get("collected_at")), default=None)
+    last_observed_at = max((item.get("collected_at") for item in items if item.get("collected_at")), default=None)
+    return {
+        "range": range_key,
+        "metric": metric,
+        "since": since,
+        "first_observed_at": first_observed_at,
+        "last_observed_at": last_observed_at,
+        "items": items,
+    }

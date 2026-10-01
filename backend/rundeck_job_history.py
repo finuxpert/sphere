@@ -117,7 +117,8 @@ def sap_job_history(
     with engine.connect() as conn:
         source, coverage_scope = _source_relation(conn)
         summary_row = conn.execute(text(f"""
-            SELECT COUNT(DISTINCT t.collection_id) AS checks,
+            SELECT COUNT(*) AS observation_count,
+                   COUNT(DISTINCT t.collection_id) AS checks,
                    MIN(t.collected_at) AS first_seen,
                    MAX(t.collected_at) AS last_seen,
                    AVG(t.cpu_pct) AS avg_cpu_pct,
@@ -158,6 +159,9 @@ def sap_job_history(
         "consumer_key": consumer_key,
         "consumer_type": consumer_type.upper() if consumer_type else (items[0]["consumer_type"] if items else None),
         "host": host.upper() if host else None,
+        "observation_count": int(summary.get("observation_count") or 0),
+        "loaded_observations": len(items),
+        "history_truncated": int(summary.get("observation_count") or 0) > len(items),
         "checks": int(summary.get("checks") or 0),
         "first_seen": summary.get("first_seen"),
         "last_seen": summary.get("last_seen"),

@@ -40,7 +40,7 @@ SHIFT_INCREASE_PCT = max(0.0, float(os.getenv("SPHERE_EVAL_SHIFT_INCREASE_PCT", 
 SHIFT_CPU_MIN_DELTA_PP = max(0.0, float(os.getenv("SPHERE_EVAL_SHIFT_CPU_MIN_DELTA_PP", "20")))
 _CONFIDENCE_RANK = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
 EVALUATION_CACHE_TTL_SECONDS = max(5, int(os.getenv("SPHERE_EVAL_CACHE_TTL_SECONDS", "60")))
-_EVALUATION_CACHE: dict[tuple[str, str, int], tuple[float, dict]] = {}
+_EVALUATION_CACHE: dict[tuple[str, str, int, str], tuple[float, dict]] = {}
 
 
 def _number(value: Any) -> float | None:
@@ -585,12 +585,7 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
     if type_key not in {"ALL", "JOB", "PROGRAM"}:
         raise ValueError("type must be ALL, JOB or PROGRAM")
 
-    cache_key = (period_key, type_key, max(1, min(int(limit), 100)))
-    cached = _EVALUATION_CACHE.get(cache_key)
-    now = time.monotonic()
-    if cached and now - cached[0] < EVALUATION_CACHE_TTL_SECONDS:
-        return cached[1]
-
+    limit_key = max(1, min(int(limit), 100))
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Database history is not enabled")
@@ -598,6 +593,11 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
     days = PERIOD_DAYS[period_key]
     with engine.connect() as conn:
         end = _anchor_time(conn) + timedelta(microseconds=1)
+        anchor_key = end.isoformat()
+        cache_key = (period_key, type_key, limit_key, anchor_key)
+        cached = _EVALUATION_CACHE.get(cache_key)
+        if cached:
+            return cached[1]
         start = end - timedelta(days=days)
         previous_start = start - timedelta(days=days)
         current_quality = _collection_quality(conn, start, end)
@@ -698,7 +698,7 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         item.get("occurrences") or 0,
         item.get("avg_cpu_pct") or 0,
     ), reverse=True)
-    items = evaluated[:max(1, min(int(limit), 100))]
+    items = evaluated[:limit_key]
 
     summary = {
         "workloads": len(evaluated),
@@ -762,5 +762,6 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         "items": items,
         "method": "Deterministic complete-collection evaluation with workload-specific median and P95 baseline, recent CPU shift detection and App Server normalized Critical WP overlap. Investigation signal only; not root-cause proof.",
     }
+    _EVALUATION_CACHE.clear()
     _EVALUATION_CACHE[cache_key] = (time.monotonic(), result)
     return result

@@ -620,3 +620,11 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows span{
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows strong{
   color:#263a43!important;opacity:1!important;
 }
+
+
+/* SPHERE v1.34.35 — infrastructure exception remains compact but easier to scan. */
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary{
+  min-height:28px!important;
+  padding:4px 8px!important;
+  border-left-width:3px!important;
+}

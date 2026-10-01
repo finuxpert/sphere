@@ -27,6 +27,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const host = job?.host || ''
   const consumerType = job?.consumerType || ''
   const anchorAt = job?.at || ''
+  const correlationScope = anchorAt ? 'Selected observation context' : 'Current incident context'
 
   React.useEffect(() => {
     if (!incidentActive) {
@@ -73,10 +74,15 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const hasSkew = skew !== null && skew !== undefined && Number.isFinite(Number(skew))
   const threshold = Number(alignment.threshold_minutes)
   const hasThreshold = Number.isFinite(threshold)
+  const workloadGapMinutes = Number(alignment.workload_gap_minutes)
+  const hasWorkloadGap = Number.isFinite(workloadGapMinutes)
+  const workloadGapText = hasWorkloadGap ? `${Math.floor(workloadGapMinutes / 60)}h ${Math.round(workloadGapMinutes % 60)}m before issue` : ''
   const alignmentHint = state === 'ALIGNED'
     ? `Source timestamps are within the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Timing alignment supports correlation only; it does not establish causation.`
-    : state === 'LIMITED'
-      ? `Source timestamps exceed the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Cross-source conclusions are limited.`
+    : state === 'NO OVERLAP'
+      ? 'The selected workload episode ended before the current issue window beyond the configured correlation tolerance.'
+      : state === 'LIMITED'
+        ? `Source timestamps exceed the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Cross-source conclusions are limited.`
       : state === 'INSUFFICIENT DATA'
         ? 'Fewer than two timestamped evidence sources are available.'
         : 'Cross-source timing status.'
@@ -84,8 +90,9 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   if (compact) {
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
+      <span className="rundeckEvidenceScope">{correlationScope}</span>
       <strong>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}{events.length ? `, ${events.length} events` : ''}</strong>
-      <small>{hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}</small>
+      <small>{state === 'NO OVERLAP' && hasWorkloadGap ? `Workload ended: ${workloadGapText}` : hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}</small>
       <em>View events ›</em>
     </button>
   }
@@ -93,8 +100,9 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   return <section className="rundeckEvidenceTimeline" aria-label="Correlated events">
     <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Correlated Events</span>
+      <span className="rundeckEvidenceScope">{correlationScope}</span>
       <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}</span>
-      <small>{hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}{events.length ? `, Events: ${events.length}` : ''}</small>
+      <small>{state === 'NO OVERLAP' && hasWorkloadGap ? `Workload ended: ${workloadGapText}` : hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}{events.length ? `, Events: ${events.length}` : ''}</small>
     </div>
 
     <div className="rundeckEvidenceBody">
