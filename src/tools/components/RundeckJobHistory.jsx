@@ -554,8 +554,8 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
             `CPU ${mode === 'peak' ? 'peak' : 'avg'} <b>${cpu == null ? '—' : `${numberText(cpu,1)}%`}</b>`,
             `PSS ${mode === 'peak' ? 'peak' : 'avg'} <b>${pss == null ? '—' : `${numberText(pss,2)} GB`}</b>`,
             `Processes <b>${processes == null ? '—' : numberText(processes,mode === 'peak' ? 0 : 1)}</b>`,
-            `Critical WP <b>${critical}</b>, checks <b>${criticalChecks} of ${checks}</b>`,
-            `Data points / checks <b>${Number(row.observations||0)} / ${checks}</b>`,
+            `APP Critical WP <b>${critical}</b>, overlap checks <b>${criticalChecks} of ${checks}</b>`,
+            `Observations / checks <b>${Number(row.observations||0)} / ${checks}</b>`,
           ].join('<br/>')
         },
       },
