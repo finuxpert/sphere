@@ -77,6 +77,7 @@ async function loadEvidenceAlignment(job, signal) {
   if (job?.key) params.set('job', job.key)
   if (job?.host) params.set('host', job.host)
   if (job?.consumerType) params.set('type', job.consumerType)
+  if (job?.at) params.set('at', job.at)
   const response = await fetch(`${API}/analysis/evidence?${params.toString()}`, { cache: 'no-store', signal })
   if (!response.ok) return null
   const result = await response.json()
@@ -660,13 +661,13 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
       return undefined
     }
     const controller = new AbortController()
-    loadEvidenceAlignment({ key: jobKey, host: jobHost, consumerType: jobConsumerType }, controller.signal)
+    loadEvidenceAlignment({ key: jobKey, host: jobHost, consumerType: jobConsumerType, at: jobAt }, controller.signal)
       .then((alignment) => setEvidenceAlignment(alignment))
       .catch((failure) => {
         if (failure.name !== 'AbortError') setEvidenceAlignment(null)
       })
     return () => controller.abort()
-  }, [incidentStart, jobConsumerType, jobHost, jobKey, refreshToken])
+  }, [incidentStart, jobAt, jobConsumerType, jobHost, jobKey, refreshToken])
 
   if (!jobKey) return null
 
@@ -735,11 +736,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <span><b>First Seen</b>{formatWib(stats.firstSeen, true)} WIB</span>
           <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
           <span><b>Observation Span</b>{observed}</span>
-          <span><b>Records</b>{episodeItems.length}</span>
+          <span><b>Observations</b>{episodeItems.length}</span>
           <span title={CPU_HINT}><b>Avg CPU</b>{numberText(stats.avgCpu)}%</span>
           <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}</span>
           <span><b>Avg PSS</b>{stats.avgPss === null ? '—' : `${numberText(stats.avgPss, 2)} GB`}</span>
-          <span><b>Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
+          <span><b>Avg Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
         </div>
       </section>
 
@@ -763,7 +764,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{incidentStart ? `${formatWib(incidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel}. Root cause: Not confirmed.</small>
+        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel}. Based on nearest retained observations around the issue/selected time. Root cause: Not confirmed.</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
@@ -786,15 +787,15 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             ? <div className="rundeckJobPerformanceTitle">
                 <span title="Current shows the selected observation period"><SphereIcon name="trend" /> Selected Period Performance</span>
                 <small>CPU Avg: {numberText(stats.avgCpu)}%</small><small>CPU Peak: {numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}</small>{stats.avgPss !== null && <small>PSS Avg: {numberText(stats.avgPss, 2)} GB{stats.peakPss !== null ? `, Peak: ${numberText(stats.peakPss, 2)} GB${stats.peakPssAt ? ` at ${formatWib(stats.peakPssAt, false)}` : ''}` : ''}</small>}
-                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">APP Critical WP: {profile.criticalSamples} of {profile.totalSamples} data points{stats.peakCriticalWp ? `, Peak: ${numberText(stats.peakCriticalWp, 0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : ''}</em>}
+                {profile.hasCritical && <em title="Critical WP was recorded on the same SAP App Server during one or more workload observations.">APP Critical WP: {profile.criticalSamples} of {profile.totalSamples} observations{stats.peakCriticalWp ? `, Peak: ${numberText(stats.peakCriticalWp, 0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : ''}</em>}
               </div>
             : <div className="rundeckJobHistoricalSummary">
                 <span><b>Range</b>{range.toUpperCase()}</span>
-                <span><b>Data Points</b>{historicalSummary?.checks ?? '—'}</span>
+                <span><b>Checks</b>{historicalSummary?.checks ?? '—'}</span>
                 <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
                 <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
                 <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
-                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>APP Critical WP</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} data points` : '—'}</span>
+                <span title="Critical WP was observed on the same APP during retained workload samples; this is temporal overlap, not proof of causation."><b>APP Critical WP</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} observations` : '—'}</span>
               </div>}
         </aside>
 
