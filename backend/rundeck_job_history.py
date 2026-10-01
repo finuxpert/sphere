@@ -22,7 +22,7 @@ def _source_relation(conn) -> tuple[str, str]:
         UNION ALL
         SELECT tc.collection_id, tc.collected_at, tc.host, tc.consumer_type, tc.consumer_key,
                tc.rank, tc.cpu_pct, tc.ram_pct, tc.details
-          FROM {source} tc
+          FROM rundeck_top_consumers tc
          WHERE tc.consumer_type IN ('JOB', 'PROGRAM')
            AND NOT EXISTS (
                SELECT 1
@@ -36,10 +36,16 @@ def _source_relation(conn) -> tuple[str, str]:
     )""", "ALL_OBSERVED_ACTIVE_WORKLOADS"
 
 
-def current_sap_jobs(collection_id: str, limit: int = 50) -> dict:
+def current_sap_jobs(collection_id: str, limit: int = 50, host: str | None = None) -> dict:
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Database history is not enabled")
+
+    host_value = str(host or "").strip().upper() or None
+    host_clause = "AND t.host = :host" if host_value else ""
+    params = {"collection_id": collection_id, "limit": limit}
+    if host_value:
+        params["host"] = host_value
 
     with engine.connect() as conn:
         source, coverage_scope = _source_relation(conn)
@@ -48,7 +54,8 @@ def current_sap_jobs(collection_id: str, limit: int = 50) -> dict:
               FROM {source} t
              WHERE t.collection_id = :collection_id
                AND t.consumer_type IN ('JOB', 'PROGRAM')
-        """), {"collection_id": collection_id}).scalar() or 0)
+               {host_clause}
+        """), params).scalar() or 0)
         rows = conn.execute(text(f"""
             SELECT t.collection_id,
                    c.execution_id,
@@ -65,14 +72,16 @@ def current_sap_jobs(collection_id: str, limit: int = 50) -> dict:
                 ON c.collection_id = t.collection_id
              WHERE t.collection_id = :collection_id
                AND t.consumer_type IN ('JOB', 'PROGRAM')
+               {host_clause}
              ORDER BY t.cpu_pct DESC NULLS LAST,
                       t.ram_pct DESC NULLS LAST,
                       t.host ASC,
                       t.rank ASC NULLS LAST
              LIMIT :limit
-        """), {"collection_id": collection_id, "limit": limit}).mappings().all()
+        """), params).mappings().all()
         return {
             "collection_id": collection_id,
+            "host": host_value,
             "coverage_scope": coverage_scope,
             "total": total,
             "items": [dict(row) for row in rows],
