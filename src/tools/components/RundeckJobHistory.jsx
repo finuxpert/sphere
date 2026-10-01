@@ -714,6 +714,13 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const historicalTrend = rangeData?.trend || null
   const historicalModeLabel = rangeMode === 'peak' ? 'Peak' : 'Average'
   const historicalEligible = ['JOB','PROGRAM'].includes(String(displayConsumerType || latest?.consumer_type || '').toUpperCase())
+  const signalObservation = displayAt ? nearestRow(episodeItemsAsc, displayAt) : latest
+  const signalDetails = signalObservation?.details || {}
+  const wpSignals = Array.isArray(signalDetails.wp_signals) ? signalDetails.wp_signals : []
+  const visibleWpSignals = wpSignals.slice(0, 8)
+  const snapshotErrorCount = wpSignals.filter((item) => String(item?.error_at_snapshot || '').trim()).length
+  const retainedTraceErrorCount = wpSignals.filter((item) => String(item?.latest_trace_error || '').trim()).length
+  const wpSignalObservedAt = signalObservation?.collected_at || observedAt
 
   return <section className={`rundeckJobHistory ${drawerPresentation ? 'is-drawer-presentation' : ''}`} aria-label="Selected job or program performance" aria-busy={loading}>
     <div className="rundeckJobHistoryHead">
@@ -821,6 +828,52 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
               </div>}
         </section>
       </div>
+
+      {wpSignals.length > 0 && <section className="rundeckWpSignalPanel" aria-label="Observed SAP work process and trace signals">
+        <div className="rundeckWpSignalHead">
+          <div>
+            <strong>Observed SAP WP / Trace Signals</strong>
+            <small>{wpSignalObservedAt ? `${formatWib(wpSignalObservedAt, true)} WIB` : 'Selected observation'} · {wpSignals.length} process row{wpSignals.length === 1 ? '' : 's'}</small>
+          </div>
+          <div className="rundeckWpSignalSummary">
+            <span className={snapshotErrorCount ? 'is-attention' : ''}>Error at Snapshot: {snapshotErrorCount}</span>
+            <span>Trace Error Retained: {retainedTraceErrorCount}</span>
+          </div>
+        </div>
+        <div className="rundeckWpSignalTableWrap">
+          <table className="rundeckWpSignalTable">
+            <thead><tr>
+              <th>PID / WP</th>
+              <th>Program</th>
+              <th>CPU Class</th>
+              <th>Error at Snapshot</th>
+              <th>Latest Trace Error</th>
+              <th>RABAX / RXMSG</th>
+              <th>SXPG / JobStart</th>
+            </tr></thead>
+            <tbody>
+              {visibleWpSignals.map((item, index) => {
+                const pid = String(item?.pid || '').trim() || '—'
+                const wp = [item?.wp_type, item?.wp].filter(Boolean).join(' ') || '—'
+                const currentError = String(item?.error_at_snapshot || '').trim()
+                const latestError = String(item?.latest_trace_error || '').trim()
+                const recency = String(item?.error_recency || '').trim()
+                return <tr key={`${pid}-${wp}-${index}`}>
+                  <td><b>{pid}</b><small>{wp}</small></td>
+                  <td title={item?.program || ''}>{item?.program || '—'}</td>
+                  <td>{item?.cpu_class || '—'}</td>
+                  <td className={currentError ? 'is-attention' : ''}>{currentError || '—'}</td>
+                  <td>{latestError || '—'}{latestError && recency && <small>{recency.replaceAll('_', ' ')}</small>}</td>
+                  <td>{numberText(item?.rabax ?? 0, 0)} / {numberText(item?.rxmsg ?? 0, 0)}</td>
+                  <td>{numberText(item?.sxpg ?? 0, 0)} / {numberText(item?.job_counter ?? 0, 0)}</td>
+                </tr>
+              })}
+            </tbody>
+          </table>
+        </div>
+        {wpSignals.length > visibleWpSignals.length && <small className="rundeckWpSignalMore">Showing {visibleWpSignals.length} of {wpSignals.length} process rows, prioritized by snapshot error, retained trace error and RABAX count.</small>}
+        <p className="rundeckWpSignalNote">Source: retained WP-SCOUT observation. “Error at Snapshot” is shown only when the collector marks the error AT_SNAPSHOT. “Latest Trace Error” can be historical and does not mean the SAP job failed. SM37 remains the authority for SAP job execution status.</p>
+      </section>}
     </div>}
   </section>
 }
