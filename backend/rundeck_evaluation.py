@@ -315,7 +315,7 @@ def _workload_source_relation(conn) -> tuple[str, str]:
         UNION ALL
         SELECT tc.collection_id, tc.collected_at, tc.host, tc.consumer_type, tc.consumer_key,
                tc.rank, tc.cpu_pct, tc.ram_pct, tc.details
-          FROM {source} tc
+          FROM rundeck_top_consumers tc
          WHERE tc.consumer_type IN ('JOB', 'PROGRAM')
            AND NOT EXISTS (
                SELECT 1
