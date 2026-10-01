@@ -33,6 +33,7 @@ const files = {
   availabilityCss: read('src/tools/components/RundeckAvailability.css'),
   evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
   evidenceTimeline: read('src/tools/components/RundeckEvidenceTimeline.jsx'),
+  evidenceBackend: read('backend/rundeck_evidence.py'),
   sapIssues: read('src/tools/components/RundeckSapIssues.jsx'),
   operationalEvidence: read('src/tools/components/RundeckOperationalEvidence.jsx'),
   investigationContext: read('src/tools/components/RundeckInvestigationContext.jsx'),
