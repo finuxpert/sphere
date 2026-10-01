@@ -97,6 +97,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trend,setTrend]=React.useState([])
+  const [trendMeta,setTrendMeta]=React.useState(null)
   const [selectedSeries,setSelectedSeries]=React.useState('')
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
@@ -120,7 +121,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
 
   React.useEffect(()=>{refresh();const t=setInterval(refresh,60000);return()=>clearInterval(t)},[refresh])
   React.useEffect(()=>{if(!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[selectedHost])
-  React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active)setTrend(body.items||[])}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
+  React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrend(body.items||[]);setTrendMeta(body)}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
   const fsState=data.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')
   const netState=data.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')
@@ -135,6 +136,10 @@ export default function RundeckInfrastructure({incidentStart=''}){
   const trendMin=selectedValues.length?Math.min(...selectedValues):null
   const trendMax=selectedValues.length?Math.max(...selectedValues):null
   const trendChange=selectedValues.length>1?selectedValues.at(-1)-selectedValues[0]:null
+  const storageSourceOver100=trendMetric==='storage'&&selectedTrendRows.some(row=>row.quality_flag==='SOURCE_OVER_100'||Number(row.value)>100)
+  const coverageStart=trendMeta?.first_observed_at||''
+  const requestedStart=trendMeta?.since||''
+  const coverageDelayed=coverageStart&&requestedStart&&(new Date(coverageStart).getTime()-new Date(requestedStart).getTime()>15*60*1000)
   React.useEffect(()=>{
     if(!trend.length)return
     if(selectedSeries&&trend.some((row)=>(row.series_key||'series')===selectedSeries))return
@@ -161,7 +166,8 @@ export default function RundeckInfrastructure({incidentStart=''}){
       <span><b>Last collected</b> {formatTime(collectedAt)} WIB</span>
       <span><b>Freshness</b> {ageText(collectedAt)} · {stale?'STALE':'FRESH'}</span>
       <span><b>Sampling</b> {metric(hostRow?.sample_seconds,'s')}</span>
-      <span><b>State</b> infrastructure</span>
+      <span><b>State</b> <strong className={`is-${overall.toLowerCase()}`}>{overall}</strong></span>
+      <span><b>Source</b> Infrastructure</span>
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
@@ -169,7 +175,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
       <div className="rundeckInfraCurrent">
         <div className="rundeckInfraCurrentLabel">Current Snapshot</div>
         <div className="rundeckInfraGrid">
-      <article><div className="cardHead"><h4>Filesystem</h4><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity</small></div><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${statusFs(row.used_pct).toLowerCase()}`}>{statusFs(row.used_pct)}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article>
         <div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div>
         <table>
@@ -200,7 +206,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
         </table>
       </article>
       <article>
-        <div className="cardHead"><h4>Storage I/O</h4><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div>
+        <div className="cardHead"><div><h4>Storage I/O</h4><small>I/O Activity</small></div><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div>
         <table>
           <thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead>
           <tbody>
@@ -246,14 +252,16 @@ export default function RundeckInfrastructure({incidentStart=''}){
         <span>Current {metric(trendCurrent,trendMetric==='network'?' Mbps':'%')}</span>
         <span>Min {metric(trendMin,trendMetric==='network'?' Mbps':'%')}</span>
         <span>Max {metric(trendMax,trendMetric==='network'?' Mbps':'%')}</span>
-        {trendChange!==null&&<span>Change {trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
+        {trendChange!==null&&<span>Change from range start {trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
         {trendMetric==='network'&&selectedValues2.length>0&&<span>Peak TX {metric(Math.max(...selectedValues2),' Mbps')}</span>}
-        {trendMetric==='network'&&selectedDrops.length>0&&<span>Drops {metric(Math.max(...selectedDrops))}</span>}
+        {trendMetric==='network'&&selectedDrops.length>0&&<span title="Maximum combined RX + TX dropped-counter delta reported in one retained sample.">Peak drop delta {metric(Math.max(...selectedDrops))}</span>}
         {trendMetric==='storage'&&selectedValues2.length>0&&<span>Peak write {metric(Math.max(...selectedValues2),' IOPS')}</span>}
+        {storageSourceOver100&&<span className="is-attention" title="The collector stored a storage util_pct source value above 100. SPHERE keeps the raw value visible instead of silently clamping it. Verify collector/device mapping before treating it as a physical utilization percentage.">Source util &gt;100% - verify</span>}
         {trendMetric==='storage'&&selectedWriteMbps.length>0&&<span>Peak write {metric(Math.max(...selectedWriteMbps),' MB/s')}</span>}
       </div>}
+      {coverageDelayed&&<div className="rundeckInfraCoverageNote">Retained history starts {formatTime(coverageStart)} WIB; earlier time in this range has no retained collection.</div>}
       <SparkChart items={trend} metricType={trendMetric} selectedSeries={selectedSeries} incidentStart={incidentStart}/>
-        <small>{trendMetric==='filesystem'?'Filesystem usage':trendMetric==='network'?'Network RX history with TX peak and drops':'Storage utilization with write peaks'} · {range.toUpperCase()}</small>
+        <small>{trendMetric==='filesystem'?'Filesystem capacity usage':trendMetric==='network'?'Network RX history with TX peak and drop deltas':'Storage I/O utilization with write peaks'} · {range.toUpperCase()}</small>
       </section>
     </div>
   </section>
