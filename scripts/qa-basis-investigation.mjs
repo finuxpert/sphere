@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.32', files.version.includes("APP_VERSION = '1.34.32'") && files.version.includes('monitoring-flow-ui-v1.34.32')],
+  ['monitoring flow version is v1.34.33', files.version.includes("APP_VERSION = '1.34.33'") && files.version.includes('monitoring-flow-ui-v1.34.33')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -135,6 +135,8 @@ const checks = [
   ['Current Workloads exposes multi-core CPU semantics and selected identity', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('CPU Total ↓') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('Selected · {selectedContext}')],
   ['Trend chart point opens a compact modal instead of expanding the live page', files.serverTrend.includes('rundeckTrendPointModalBackdrop') && files.serverTrend.includes('aria-modal="true"') && files.serverTrend.includes('closeTrendDetails') && !files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
   ['Trend modal uses one hierarchy and full-width actionable workload rows', files.serverTrend.includes('rundeckTrendModalContext') && files.serverTrend.includes('rundeckTrendWorkloadRow') && files.serverTrend.includes('open Performance Analysis')],
+  ['Trend snapshot launches shared Performance Analysis with exact saved workload details', files.serverTrend.includes("source: 'trend-snapshot'") && files.serverTrend.includes('snapshot: {') && files.serverTrend.includes('details: consumer.details || {}') && files.jobHistory.includes("jobSource === 'trend-snapshot'") && files.jobHistory.includes('const snapshotRow = jobSnapshot') && files.jobHistory.includes('const selectedObservation = snapshotRow')],
+  ['Historical trend snapshot exposes selected observation identity and reuses WP trace signal panel', files.jobHistory.includes('Selected Observation') && files.jobHistory.includes('rundeckHistoricalSnapshotContext') && files.jobHistory.includes("const signalObservation = selectedObservation") && files.jobHistory.includes('Observed SAP WP / Trace Signals') && files.jobHistoryCss.includes('.rundeckHistoricalSnapshotContext')],
   ['Trend modal restores graph context with time labels and a selected-point marker', files.serverTrend.includes('MiniTrendContext') && files.serverTrend.includes('rundeckTrendMiniMarkerLine') && files.serverTrend.includes('formatTrendAxis(model.firstAt, range)') && files.serverTrend.includes("'Peak sample' : 'Selected sample'") && files.serverTrend.includes('Bucket') && files.accessibilityThemeFinal.includes('.rundeckTrendMiniContext')],
   ['Trend modal traps focus locks page scroll and restores focus', files.serverTrend.includes("document.body.style.overflow = 'hidden'") && files.serverTrend.includes("event.key !== 'Tab'") && files.serverTrend.includes('restoreFocusRef.current?.focus')],
   ['Trend point selection ignores distant clicks', files.serverTrend.includes('distance > 900')],
@@ -323,4 +325,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.32 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.33 monitoring flow and deep-analysis checks passed.')
