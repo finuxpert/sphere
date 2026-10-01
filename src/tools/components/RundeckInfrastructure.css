@@ -265,3 +265,22 @@
   font-size:9px;
   font-weight:500;
 }
+
+
+/* SPHERE v1.34.35 — infrastructure history uses the drawer canvas, not a thin strip. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:390px!important;
+  min-height:390px!important;
+}
+@media(max-height:820px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:330px!important;
+    min-height:330px!important;
+  }
+}
+@media(max-width:980px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:300px!important;
+    min-height:300px!important;
+  }
+}
