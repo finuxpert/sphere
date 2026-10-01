@@ -23,6 +23,7 @@ const files = {
   closingBackend: read('backend/rundeck_closing.py'),
   closingMigration: read('backend/db/migrations/versions/20260929_0007_rundeck_analysis_closures.py'),
   evaluationBackend: read('backend/rundeck_evaluation.py'),
+  consumersBackend: read('backend/rundeck_consumers.py'),
   infrastructure: read('src/tools/components/RundeckInfrastructure.jsx'),
   infrastructureCss: read('src/tools/components/RundeckInfrastructure.css'),
   infrastructureBackend: read('backend/rundeck_infra_api.py'),
@@ -72,7 +73,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.29', files.version.includes("APP_VERSION = '1.34.29'") && files.version.includes('monitoring-flow-ui-v1.34.29')],
+  ['monitoring flow version is v1.34.30', files.version.includes("APP_VERSION = '1.34.30'") && files.version.includes('monitoring-flow-ui-v1.34.30')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -80,6 +81,8 @@ const checks = [
   ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
   ['Job Performance drawer reserves full release-candidate chart space', files.jobHistoryCss.includes('min-height:455px') && files.jobHistoryCss.includes('height:430px')],
   ['Job Performance summary uses a full-width eight-cell episode matrix', files.jobHistory.includes('rundeckJobEpisodeMatrix') && files.jobHistory.includes('Performance Summary') && files.jobHistoryCss.includes('grid-template-columns:repeat(8,minmax(0,1fr))')],
+  ['WP trace signals preserve per-PID collector evidence with snapshot recency guard', files.consumersBackend.includes('wp_signals') && files.consumersBackend.includes('error_at_snapshot') && files.consumersBackend.includes('error_recency == "AT_SNAPSHOT"') && files.consumersBackend.includes('latest_trace_error')],
+  ['Performance Analysis exposes WP trace signals without claiming SM37 failure', files.jobHistory.includes('Observed SAP WP / Trace Signals') && files.jobHistory.includes('Error at Snapshot') && files.jobHistory.includes('Latest Trace Error') && files.jobHistory.includes('SM37 remains the authority for SAP job execution status') && files.jobHistoryCss.includes('.rundeckWpSignalPanel')],
   ['Selected workload pane stays content-height beside the tall Current Jobs scan area', files.workspace.includes('height:fit-content!important') && files.workspace.includes('is-selected-workload') && files.monitoringCss.includes('compact selected workload card')],
   ['Operational evidence uses the selected-workload whitespace instead of overlapping the next section', files.monitoringCore.includes('rundeckSelectedOperationalEvidence') && files.monitoringCss.includes('.rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards')],
   ['Operational context cards use final 40 28 32 selected-pane proportions', files.monitoringCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,28fr) minmax(0,32fr)')],
