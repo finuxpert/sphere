@@ -268,7 +268,7 @@ def history_current_jobs(
     limit: int = Query(50, ge=1, le=100),
 ):
     try:
-        return {"collection_id": collection_id, "items": current_sap_jobs(collection_id, limit=limit)}
+        return current_sap_jobs(collection_id, limit=limit)
     except RuntimeError as error:
         raise HTTPException(503, str(error)) from None
 
