@@ -372,7 +372,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, on
       silent: true,
       symbol: ['none', 'none'],
       lineStyle: { color: colors.warning, type: 'dashed', width: 1, opacity: .62 },
-      label: { formatter: `Issue Started · ${formatWib(incidentStart, true)} WIB`, color: colors.warning, fontSize: 8, padding: [0,0,3,0], position: issueMarkerPosition(issueTs, firstTs, lastTs) },
+      label: { formatter: `Issue · ${formatWib(incidentStart, false)}`, color: colors.warning, fontSize: 8, rotate: 0, padding: [0,0,3,0], position: issueMarkerPosition(issueTs, firstTs, lastTs) },
       data: [{ xAxis: incidentStart }],
     } : undefined
 
@@ -516,7 +516,7 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '', onSelec
     }
     const issueMark = issueInRange ? {
       symbol:'none',
-      label:{formatter:`Issue Started · ${formatWib(incidentStart,true)} WIB`,color:colors.warning,fontSize:9,padding:[0,0,3,0],position:issueMarkerPosition(issue,first,last)},
+      label:{formatter:`Issue · ${formatWib(incidentStart,false)}`,color:colors.warning,fontSize:9,rotate:0,padding:[0,0,3,0],position:issueMarkerPosition(issue,first,last)},
       lineStyle:{color:colors.warning,type:'dashed',opacity:.62},
       data:[{xAxis:incidentStart}],
     } : undefined
