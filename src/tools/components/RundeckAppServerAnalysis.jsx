@@ -38,11 +38,11 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
     const controller=new AbortController()
     setLoading(true); setError('')
     Promise.all([
-      fetch(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latestCollectionId)}&limit=100`,{cache:'no-store',signal:controller.signal}).then(async r=>{if(!r.ok)throw new Error(`Job / Program detail unavailable (${r.status})`);return r.json()}),
+      fetch(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latestCollectionId)}&host=${encodeURIComponent(app.host)}&limit=100`,{cache:'no-store',signal:controller.signal}).then(async r=>{if(!r.ok)throw new Error(`Job / Program detail unavailable (${r.status})`);return r.json()}),
       fetch(`${API}/analysis/performance`,{cache:'no-store',signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch(`${API}/history/hosts/latest`,{cache:'no-store',signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null),
     ]).then(([result,analysis,hosts])=>{
-      const hostRows=(result.items||[]).filter(row=>row.host===app.host).sort((a,b)=>Number(b.cpu_pct||0)-Number(a.cpu_pct||0))
+      const hostRows=(result.items||[]).sort((a,b)=>Number(b.cpu_pct||0)-Number(a.cpu_pct||0))
       setRows(hostRows)
       setWorkloadMeta({total:Number(result.total||0),coverage_scope:String(result.coverage_scope||'')})
       const latestHost=(hosts?.items||[]).find(row=>row.host===app.host || shortHost(row.host)===shortHost(app.host))
@@ -83,7 +83,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
             onClick={()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}
             onKeyDown={(event)=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}}>
             <td><strong>{row.consumer_key}</strong><small>{row.details?.program || row.details?.job_name || ''}</small></td>
-            <td><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{String(row.consumer_type||'—').toUpperCase()}</span></td>
+            <td><span title={`Observation classification from ${row.details?.identity_source || 'RCA-WP metadata'}; not SM37 execution status`} className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{String(row.consumer_type||'—').toUpperCase()}</span></td>
             <td>{metric(row.cpu_pct,'%')}</td>
             <td>{pssText(row)}</td>
             <td>{processText(row)}</td>
