@@ -1,6 +1,6 @@
 # Rundeck Development
 
-This document describes the active SPHERE Rundeck DEV runtime.
+This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 
 ## Runtime identity
 
@@ -11,69 +11,42 @@ This document describes the active SPHERE Rundeck DEV runtime.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current application version: **v1.34.29**
+- Current application version: **v1.34.37**
 
-The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line. It is not the active Rundeck-integrated production runtime.
+The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
-## Architecture boundary
+## Runtime paths
 
-SPHERE does not connect directly to SAP Application Servers.
+DEV:
+
+- web: `/var/www/sphere-dev/current`
+- API: `/opt/sphere-rundeck-dev/current`
+- API port: `8091`
+- service: `sphere-rundeck-api.service`
+
+PROD:
+
+- web: `/var/www/sphere.astraotoparts.co.id/current`
+- API: `/opt/sphere-rundeck-prod/current`
+- API port: `8092`
+- service: `sphere-rundeck-prod-api.service`
+
+Retained ingestion data is outside Git under `/var/lib/sphere/ingestion`.
+
+## Frontend base-path contract
+
+Vite base is branch-aware:
 
 ```text
-SAP Application Servers
-    ↓
-Rundeck
-    ↓ REST API
-SPHERE FastAPI
-    ↓
-PostgreSQL + retained raw evidence
-    ↓
-SPHERE React UI
+rundeck-sphere-dev  → /dev/
+rundeck-sphere-prod → /
 ```
 
-Rundeck remains responsible for SAP-side collection.
-
-## DEV runtime
-
-- Webroot: `/var/www/sphere-dev/current`
-- Backend release: `/opt/sphere-rundeck-dev/current`
-- DEV API port: `8091`
-- DEV API service: `sphere-rundeck-api.service`
-- Collector poller: `sphere-rundeck-poller.service/.timer`
-- Infrastructure poller: `sphere-rundeck-infra-poller.service/.timer`
-- Collector watchdog: `sphere-rundeck-watchdog.service/.timer`
-
-Production uses its own release paths and API service/port and must not be changed by a DEV deployment.
-
-Retained ingestion data lives outside Git under `/var/lib/sphere/ingestion`.
-
-## Rundeck access
-
-Use server-side credentials only.
-
-Reader credential:
-
-- stored outside Git
-- read-only execution/output access
-- consumed by the collector poller
-
-Runner credential:
-
-- separate from the reader credential
-- may be available only for explicitly approved actions
-- must not be exposed to the browser
-
-Do not put Rundeck tokens in source code, GitHub, frontend environment files, browser storage, screenshots, or logs.
-
-See `docs/RUNDECK_INTEGRATION_RUNBOOK.md`.
+Production deployment intentionally blocks a bundle that still references `/dev/assets/`.
 
 ## Collection identity
 
-The collector is discovered through stable Rundeck job identity rather than relying only on a mutable Job UUID.
-
-Primary identity includes the approved project/group/job contract. The current UUID may be used after discovery but must not be the permanent source of truth.
-
-Collection readiness is based on completed execution/output evidence and expected-node validation.
+The collector is discovered through stable project/group/job identity rather than relying only on a mutable Rundeck UUID.
 
 Core collection states:
 
@@ -82,119 +55,125 @@ Core collection states:
 - PARTIAL
 - FAILED
 
-Latest operational data must come from an aligned READY collection cycle. The UI must not construct a fake current landscape by mixing independent latest timestamps from different hosts.
+Latest operational data must come from one aligned READY collection cycle.
 
-## Active UI contract
+The UI must not construct a fake current landscape by combining independent “latest” host timestamps.
 
-The main navigation exposes:
+## Current UI contract
 
-- **ST03N Analysis**
-- **Performance Analysis**
+Main navigation:
 
-Performance Analysis exposes two top-level modes:
+- ST03N Analysis
+- Performance Analysis
 
-- **Live Monitoring**
-- **History**
+Performance Analysis modes:
 
-### Live Monitoring
+- Live Monitoring
+- History
 
-Current primary areas include:
+### Live Monitoring primary layout
 
-- infrastructure overview
-- SAP Application Servers
+- Infrastructure summary
+- SAP App Servers
 - Server Trend
-- Current Workloads
-- selected Job / Program context
-- operational evidence
-- System Health
+- Current Jobs & Programs
+- Selected Job / Program
+- Correlated Events
+- SAP Availability
+- SAP Issues
+- Observation History
+- Infrastructure Analysis
+- System Data
 - Jobs & Programs to Review
 
-Secondary analysis is opened through progressive disclosure/drawers:
+### Shared investigation surfaces
 
-- Job / Program Performance
+- Application Server Analysis
+- Performance Analysis
+- Observation Details
+- Historical Bucket Details
+- SAP WP Signal Details
 - Observation History
 - Infrastructure Analysis
 - Correlated Events
 - SAP Availability
 - SAP Issues
 - System Data
-- Application Server Analysis
 - Quick Analysis
 
-### History
+## Interaction rules
 
-History mode uses the Workload Explorer and historical Job/Program detail.
+- Current Job/Program row opens Performance Analysis.
+- APP row opens Application Server Analysis.
+- Server Trend point opens Trend Details.
+- Trend Details workload row opens the same shared Performance Analysis.
+- Raw/current performance point opens Observation Details.
+- Historical aggregate point opens Historical Bucket Details.
+- WP/Trace row opens SAP WP Signal Details.
+- Back/Close behavior must preserve investigation context.
+- Do not auto-expand unrelated APP Critical WP details.
 
-Historical selections must remain visually distinct from current/live state.
+## Historical point contract
 
-## UI behavior rules
+For bucketed Server Trend Peak mode, keep separate:
 
-- Selected workload cross-focus may highlight the matching Application Server and trend context.
-- It must not auto-expand Critical WP drill-down.
-- APP-server Critical WP drill-down is user initiated.
-- Healthy states should be visually quieter than ATTENTION/CRITICAL/stale/partial states.
-- Data freshness and collection identity must remain visible.
-- A missing availability observation must not be rendered as DOWN.
-- Historical correlation does not establish root cause.
-- A sampled workload observation does not establish an authoritative SM37 execution match.
-- Do not document Comparator/RCA as an active primary navigation workspace.
+- bucket timestamp;
+- exact peak timestamp;
+- exact peak value;
+- exact peak collection ID.
 
-## Performance Review
+The mini-history marker follows the clicked bucket. The displayed Peak At remains the exact sample time.
 
-The active evaluation endpoint supports:
+Do not use nearest-bucket recomputation to replace the value the operator clicked.
 
-- `1d`
-- `7d`
-- `30d`
+## Performance Analysis contract
 
-and workload filters:
+- Current = selected workload episode.
+- Current/3H/6H/24H/7D/30D are supported.
+- Current raw observations and historical buckets are different evidence types.
+- History truncation labels are episode-aware.
+- Historical selected-time analysis is not automatically correlated against the current incident.
+- WP/Trace signals may be absent in older retained observations.
 
-- `ALL`
-- `PROGRAM`
-- `JOB`
+## Evidence rules
 
-Evaluation inputs include retained workload occurrence/resource observations. Evaluation status is an investigation/review signal, not a root-cause verdict.
-
-## SM37 integration state
-
-The backend supports an approved authoritative execution-evidence plane, but the current live overview intentionally treats the live SM37 source as **not connected** until an approved feed is configured.
-
-Do not infer SM37 MATCHED/PARTIAL MATCH from sampled Work Process evidence.
-
-See `docs/BASIS-JOB-INTELLIGENCE.md`.
+- Correlation does not prove causation.
+- APP Critical WP is APP-level evidence.
+- Missing availability observation is not DOWN.
+- Grouped workload CPU may exceed 100%.
+- PSS is the current workload memory metric.
+- Historical RSS and current PSS are not 1:1 comparable.
+- `Latest Trace Error` may be historical.
+- SM37 status must not be inferred from WP sampling.
 
 ## Validation
 
-From `/root/rundeck-sphere-dev`:
+DEV:
 
 ```bash
+cd /root/rundeck-sphere-dev
 git fetch origin
 git reset --hard origin/rundeck-sphere-dev
-
-/opt/sphere-rundeck-dev/venv/bin/python -m unittest backend.tests.test_rundeck
 npm run qa
 bash ops/rundeck/prod-readiness-check.sh
 ```
 
-Expected final readiness markers:
+Production after approved promotion:
 
-```text
-READINESS PASS: collector fresh, watchdog healthy, auto-healing enabled
-SPHERE PROD READINESS PASS
-HEAD <validated-dev-sha>
+```bash
+cd /root/rundeck-sphere-prod
+git fetch origin
+git reset --hard origin/rundeck-sphere-prod
+npm run build
+bash ops/rundeck/deploy-prod.sh
 ```
 
-Optional browser visual checks are documented in `docs/VISUAL-QA.md`.
+Chunk-size warnings are informational. QA/readiness/build/deploy failures are blockers.
 
-## Promotion
-
-Promote only through a normal Pull Request:
-
-```text
-base:    rundeck-sphere-prod
-compare: rundeck-sphere-dev
-```
+## Promotion rule
 
 Do not force-reset PROD to DEV.
 
-Production deployment and rollback procedures are documented in `ops/rundeck/OPERATIONS.md`.
+When branches diverge, build a release branch from the current PROD head and overlay only approved DEV changes, preserving PROD-only deploy/routing/service files.
+
+See `ops/rundeck/OPERATIONS.md`.
