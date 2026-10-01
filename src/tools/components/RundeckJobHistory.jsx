@@ -289,7 +289,7 @@ function SingleSamplePerformance({ row }) {
   </div>
 }
 
-function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) {
+function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, onSelectObservation = null }) {
   const ref = React.useRef(null)
   const chartConfig = React.useMemo(() => {
     const colors = palette()
@@ -300,12 +300,14 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     const issueTs = Date.parse(incidentStart || '')
     const issueInRange = Number.isFinite(issueTs) && Number.isFinite(firstTs) && Number.isFinite(lastTs) && issueTs >= firstTs && issueTs <= lastTs
 
+    const compactEpisode = rows.length <= 10
+    const laneScale = compactEpisode ? .76 : 1
     const lanes = [
-      { id: 'cpu', name: 'CPU', height: expanded ? 126 : 76 },
-      profile.hasPss ? { id: 'pss', name: 'PSS Memory', height: expanded ? 82 : 50 } : null,
-      profile.hasIo ? { id: 'io', name: 'I/O', height: expanded ? 70 : 44 } : null,
-      profile.hasWp ? { id: 'wp', name: 'WP', height: expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28) } : null,
-      profile.hasCritical ? { id: 'event', name: 'APP Critical WP', height: expanded ? 38 : 28 } : null,
+      { id: 'cpu', name: 'CPU', height: Math.round((expanded ? 126 : 76) * laneScale) },
+      profile.hasPss ? { id: 'pss', name: 'PSS Memory', height: Math.round((expanded ? 82 : 50) * laneScale) } : null,
+      profile.hasIo ? { id: 'io', name: 'I/O', height: Math.round((expanded ? 70 : 44) * laneScale) } : null,
+      profile.hasWp ? { id: 'wp', name: 'WP', height: Math.round((expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28)) * laneScale) } : null,
+      profile.hasCritical ? { id: 'event', name: 'APP Critical WP', height: Math.round((expanded ? 38 : 28) * laneScale) } : null,
     ].filter(Boolean)
 
     let top = 16
@@ -395,6 +397,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     return {
       height: chartHeight,
       profile,
+      rows,
       option: {
         animationDuration: 180,
         animationDurationUpdate: 220,
@@ -461,6 +464,12 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     echarts.getInstanceByDom?.(ref.current)?.dispose()
     const chart = echarts.init(ref.current, null, { renderer: 'canvas' })
     chart.setOption(chartConfig.option, true)
+    const handleClick = (params) => {
+      const raw = Array.isArray(params?.data) ? params.data[0] : params?.data?.value?.[0]
+      const row = nearestRow(chartConfig.rows || [], raw)
+      if (row) onSelectObservation?.(row)
+    }
+    chart.on('click', handleClick)
     const resize = () => chart.resize()
     window.addEventListener('resize', resize)
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null
@@ -468,9 +477,10 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
     return () => {
       observer?.disconnect()
       window.removeEventListener('resize', resize)
+      chart.off('click', handleClick)
       chart.dispose()
     }
-  }, [chartConfig.option])
+  }, [chartConfig, onSelectObservation])
 
   return <div className="rundeckJobPerformanceWrap">
     {!chartConfig.profile.hasIo && <div className="rundeckHiddenMetric">I/O 0 MiB/s</div>}
@@ -478,7 +488,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false }) 
   </div>
 }
 
-function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
+function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '', onSelectBucket = null }) {
   const ref = React.useRef(null)
   const option = React.useMemo(() => {
     const colors = palette()
@@ -573,12 +583,26 @@ function HistoricalRangeChart({ trend, mode = 'avg', incidentStart = '' }) {
     echarts.getInstanceByDom?.(ref.current)?.dispose()
     const chart=echarts.init(ref.current,null,{renderer:'canvas'})
     chart.setOption(option,true)
+    const handleClick=(params)=>{
+      const raw=Array.isArray(params?.data)?params.data[0]:params?.data?.value?.[0]
+      const target=Date.parse(raw||'')
+      const items=trend?.items||[]
+      if(!Number.isFinite(target)||!items.length)return
+      const row=items.reduce((best,item)=>{
+        const current=Date.parse(item.bucket||'')
+        if(!Number.isFinite(current))return best
+        if(!best)return item
+        return Math.abs(current-target)<Math.abs(Date.parse(best.bucket||'')-target)?item:best
+      },null)
+      if(row)onSelectBucket?.(row)
+    }
+    chart.on('click',handleClick)
     const resize=()=>chart.resize()
     window.addEventListener('resize',resize)
     const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null
     observer?.observe(ref.current)
-    return()=>{observer?.disconnect();window.removeEventListener('resize',resize);chart.dispose()}
-  },[option])
+    return()=>{observer?.disconnect();window.removeEventListener('resize',resize);chart.off('click',handleClick);chart.dispose()}
+  },[onSelectBucket,option,trend])
   return <div ref={ref} className="rundeckJobHistoricalRangeChart" role="img" aria-label="Historical CPU, PSS and Critical WP overlap trend" />
 }
 
@@ -593,6 +617,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const [rangeLoading, setRangeLoading] = React.useState(false)
   const [rangeError, setRangeError] = React.useState('')
   const [evidenceAlignment, setEvidenceAlignment] = React.useState(null)
+  const [detailView, setDetailView] = React.useState(null)
   const jobKey = job?.key || ''
   const jobHost = job?.host || ''
   const jobConsumerType = job?.consumerType || ''
@@ -607,6 +632,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     setRangeData(null)
     setRangeError('')
     setEvidenceAlignment(null)
+    setDetailView(null)
   }, [jobAt, jobConsumerType, jobHost, jobKey])
 
   React.useEffect(() => {
@@ -842,7 +868,8 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
               </div>}
             </div>
-            <small className="rundeckJobCurrentSemantics" title="Current shows the selected data period">Current = selected data period</small>
+            <small className="rundeckJobCurrentSemantics" title="Current shows the selected workload observation episode">Current = selected workload episode</small>
+            {range === 'current' && episodeItems.length > 1 && episodeItems.length <= 5 && <small className="rundeckJobLimitedSamples">Limited samples - {episodeItems.length} observations in selected period</small>}
           </section>
 
           {range === 'current'
@@ -867,14 +894,14 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 {episodeItems.length === 1
                   ? <SingleSamplePerformance row={episodeItems[0]} />
                   : episodeItems.length > 1
-                    ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={effectiveIncidentStart} expanded={drawerPresentation} />
+                    ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={effectiveIncidentStart} expanded={drawerPresentation} onSelectObservation={(row) => setDetailView({ type: 'observation', row })} />
                     : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
               </div>
             : <div className="rundeckJobHistoricalRange">
                 <div className="rundeckJobHistoricalTitle"><strong>Performance History · {historicalModeLabel}</strong><small>{historicalTrend?.bucket ? `${historicalTrend.bucket} buckets` : 'Retained observations'}</small></div>
                 {rangeLoading && <div className="rundeckJobHistoryState">Loading {range.toUpperCase()} performance…</div>}
                 {rangeError && <div className="rundeckJobHistoryState is-error">{rangeError}</div>}
-                {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={effectiveIncidentStart} /> : null}
+                {!rangeLoading && !rangeError && historicalTrend?.items?.length ? <HistoricalRangeChart trend={historicalTrend} mode={rangeMode} incidentStart={effectiveIncidentStart} onSelectBucket={(row) => setDetailView({ type: 'bucket', row, mode: rangeMode, range })} /> : null}
                 {!rangeLoading && !rangeError && historicalTrend && !historicalTrend.items?.length && <div className="rundeckJobHistoryState rundeckJobHistoricalEmpty">
                   <SphereIcon name="history" />
                   <strong>No retained observations in this range</strong>
@@ -913,7 +940,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 const currentError = String(item?.error_at_snapshot || '').trim()
                 const latestError = String(item?.latest_trace_error || '').trim()
                 const recency = String(item?.error_recency || '').trim()
-                return <tr key={`${pid}-${wp}-${index}`}>
+                return <tr key={`${pid}-${wp}-${index}`} className="is-actionable" tabIndex={0} role="button" onClick={() => setDetailView({ type: 'wp', item, observedAt: wpSignalObservedAt })} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setDetailView({ type: 'wp', item, observedAt: wpSignalObservedAt }) } }}>
                   <td><b>{pid}</b><small>{wp}</small></td>
                   <td title={item?.program || 'Program was not captured for this WP row'}>{item?.program || 'Not captured'}</td>
                   <td>{item?.cpu_class || '—'}</td>
@@ -932,6 +959,62 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <div className="rundeckWpSignalHead"><div><strong>Observed SAP WP / Trace Signals</strong><small>{wpSignalObservedAt ? `${formatWib(wpSignalObservedAt, true)} WIB` : 'Selected observation'}</small></div></div>
         <div className="rundeckJobHistoryState">WP/Trace signal was not retained for this observation. Older stored observations may predate this collector projection.</div>
       </section>}
+
+      {detailView && <div className="rundeckPointDetailBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDetailView(null) }}>
+        <section className="rundeckPointDetailModal" role="dialog" aria-modal="true" aria-label={detailView.type === 'wp' ? 'WP signal details' : detailView.type === 'bucket' ? 'Historical bucket details' : 'Observation details'}>
+          <header>
+            <div>
+              <span>SPHERE ANALYSIS</span>
+              <h4>{detailView.type === 'wp' ? 'SAP WP Signal Details' : detailView.type === 'bucket' ? 'Historical Bucket Details' : 'Observation Details'}</h4>
+              <small>{detailView.type === 'wp'
+                ? (detailView.observedAt ? `${formatWib(detailView.observedAt, true)} WIB` : 'Selected observation')
+                : detailView.type === 'bucket'
+                  ? `${formatWib(detailView.row?.bucket, true)} WIB - ${String(detailView.range || '').toUpperCase()} ${detailView.mode === 'peak' ? 'Peak' : 'Average'}`
+                  : `${formatWib(detailView.row?.collected_at, true)} WIB`}</small>
+            </div>
+            <button type="button" onClick={() => setDetailView(null)} aria-label="Close detail">×</button>
+          </header>
+
+          {detailView.type === 'observation' && <div className="rundeckPointDetailGrid">
+            <span><b>CPU Usage</b>{numberText(rowMetric(detailView.row, 'cpu'), 1)}%</span>
+            <span><b>PSS Memory</b>{rowMetric(detailView.row, 'pss') == null ? '—' : `${numberText(rowMetric(detailView.row, 'pss'), 2)} GB`}</span>
+            <span><b>Processes</b>{numberText(rowMetric(detailView.row, 'processes'), 0)}</span>
+            <span><b>I/O Read</b>{numberText(rowMetric(detailView.row, 'read'), 2)} MiB/s</span>
+            <span><b>I/O Write</b>{numberText(rowMetric(detailView.row, 'write'), 2)} MiB/s</span>
+            <span><b>APP Critical WP</b>{numberText(detailView.row?.host_wp_critical ?? 0, 0)}</span>
+            <span><b>Run</b>#{detailView.row?.execution_id || String(detailView.row?.collection_id || '').replace('rundeck-', '') || '—'}</span>
+            <span><b>Collection</b>{detailView.row?.collection_id || '—'}</span>
+          </div>}
+
+          {detailView.type === 'bucket' && <div className="rundeckPointDetailGrid">
+            <span><b>Avg CPU</b>{detailView.row?.avg_cpu_pct == null ? '—' : `${numberText(detailView.row.avg_cpu_pct, 1)}%`}</span>
+            <span><b>Peak CPU</b>{detailView.row?.peak_cpu_pct == null ? '—' : `${numberText(detailView.row.peak_cpu_pct, 1)}%`}</span>
+            <span><b>Avg PSS</b>{detailView.row?.avg_pss_gb == null ? '—' : `${numberText(detailView.row.avg_pss_gb, 2)} GB`}</span>
+            <span><b>Peak PSS</b>{detailView.row?.peak_pss_gb == null ? '—' : `${numberText(detailView.row.peak_pss_gb, 2)} GB`}</span>
+            <span><b>Avg Processes</b>{detailView.row?.avg_processes == null ? '—' : numberText(detailView.row.avg_processes, 1)}</span>
+            <span><b>Peak Processes</b>{detailView.row?.max_processes == null ? '—' : numberText(detailView.row.max_processes, 0)}</span>
+            <span><b>Checks</b>{numberText(detailView.row?.checks ?? 0, 0)}</span>
+            <span><b>Observations</b>{numberText(detailView.row?.observations ?? 0, 0)}</span>
+            <span><b>APP Critical WP overlap</b>{numberText(detailView.row?.critical_wp_checks ?? 0, 0)} of {numberText(detailView.row?.checks ?? 0, 0)} checks</span>
+            <span><b>Peak APP Critical WP</b>{numberText(detailView.row?.max_critical_wp ?? 0, 0)}</span>
+          </div>}
+
+          {detailView.type === 'wp' && <div className="rundeckPointDetailGrid">
+            <span><b>PID</b>{detailView.item?.pid || '—'}</span>
+            <span><b>WP</b>{[detailView.item?.wp_type, detailView.item?.wp].filter(Boolean).join(' ') || '—'}</span>
+            <span><b>Program</b>{detailView.item?.program || 'Not captured'}</span>
+            <span><b>CPU Signal</b>{detailView.item?.cpu_class || '—'}</span>
+            <span><b>Error at Snapshot</b>{detailView.item?.error_at_snapshot || '—'}</span>
+            <span><b>Latest Trace Error</b>{detailView.item?.latest_trace_error || '—'}</span>
+            <span><b>Error Recency</b>{String(detailView.item?.error_recency || '—').replaceAll('_', ' ')}</span>
+            <span><b>RABAX / RXMSG</b>{numberText(detailView.item?.rabax ?? 0, 0)} / {numberText(detailView.item?.rxmsg ?? 0, 0)}</span>
+            <span><b>SXPG / JobStart</b>{numberText(detailView.item?.sxpg ?? 0, 0)} / {numberText(detailView.item?.job_counter ?? 0, 0)}</span>
+            <span><b>Log Path</b>{detailView.item?.log_path || 'Not captured'}</span>
+          </div>}
+
+          {detailView.type === 'wp' && <p className="rundeckPointDetailNote">WP-SCOUT evidence only. Error at Snapshot is populated only for AT_SNAPSHOT evidence. Latest Trace Error may be historical. SM37 remains the authority for SAP job execution status.</p>}
+        </section>
+      </div>}
     </div>}
   </section>
 }
