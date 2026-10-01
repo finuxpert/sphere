@@ -78,6 +78,8 @@ async function loadEvidenceAlignment(job, signal) {
   if (job?.host) params.set('host', job.host)
   if (job?.consumerType) params.set('type', job.consumerType)
   if (job?.at) params.set('at', job.at)
+  if (job?.episodeStart) params.set('episode_start', job.episodeStart)
+  if (job?.episodeEnd) params.set('episode_end', job.episodeEnd)
   const response = await fetch(`${API}/analysis/evidence?${params.toString()}`, { cache: 'no-store', signal })
   if (!response.ok) return null
   const result = await response.json()
@@ -656,18 +658,28 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   }, [jobConsumerType, jobHost, jobKey, range, refreshToken, selectedRangeAnchor])
 
   React.useEffect(() => {
-    if (!jobKey || !incidentStart) {
+    if (!jobKey || !incidentStart || !history) {
       setEvidenceAlignment(null)
       return undefined
     }
+    const selectedEpisode = selectObservationEpisode(history.items || [], jobAt)
+    const episodeStart = selectedEpisode[0]?.collected_at || ''
+    const episodeEnd = selectedEpisode.at(-1)?.collected_at || ''
     const controller = new AbortController()
-    loadEvidenceAlignment({ key: jobKey, host: jobHost, consumerType: jobConsumerType, at: jobAt }, controller.signal)
+    loadEvidenceAlignment({
+      key: jobKey,
+      host: jobHost,
+      consumerType: jobConsumerType,
+      at: jobAt,
+      episodeStart,
+      episodeEnd,
+    }, controller.signal)
       .then((alignment) => setEvidenceAlignment(alignment))
       .catch((failure) => {
         if (failure.name !== 'AbortError') setEvidenceAlignment(null)
       })
     return () => controller.abort()
-  }, [incidentStart, jobAt, jobConsumerType, jobHost, jobKey, refreshToken])
+  }, [history, incidentStart, jobAt, jobConsumerType, jobHost, jobKey, refreshToken])
 
   if (!jobKey) return null
 
@@ -727,7 +739,17 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const snapshotErrorCount = wpSignals.filter((item) => String(item?.error_at_snapshot || '').trim()).length
   const retainedTraceErrorCount = wpSignals.filter((item) => String(item?.latest_trace_error || '').trim()).length
   const wpSignalObservedAt = signalObservation?.collected_at || observedAt
-  const historyTruncated = Boolean(history?.history_truncated)
+  const oldestLoadedAt = [...(history?.items || [])]
+    .map((row) => Date.parse(row?.collected_at || ''))
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b)[0]
+  const selectedEpisodeFirstAt = Date.parse(episodeItemsAsc[0]?.collected_at || '')
+  const historyTruncated = Boolean(
+    history?.history_truncated &&
+    Number.isFinite(oldestLoadedAt) &&
+    Number.isFinite(selectedEpisodeFirstAt) &&
+    selectedEpisodeFirstAt === oldestLoadedAt
+  )
 
   return <section className={`rundeckJobHistory ${drawerPresentation ? 'is-drawer-presentation' : ''}`} aria-label="Selected job or program performance" aria-busy={loading}>
     <div className="rundeckJobHistoryHead">
