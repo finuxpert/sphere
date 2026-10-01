@@ -1,77 +1,112 @@
 # SPHERE Visual QA
 
-SPHERE includes an optional Playwright visual-regression harness for the Rundeck dashboard. It is intentionally separate from the default `npm run qa` release gate so ordinary server deploys do not require browser binaries or external package installation.
+This checklist covers the current v1.34.37 operator UI.
 
-## Coverage
+Visual QA is separate from the default `npm run qa` release gate.
 
-The visual suite checks both 1920×1080 desktop and 1366×768 laptop viewports. It validates:
+## Viewports
 
-- SAP Performance Summary hierarchy and horizontal overflow;
-- Host Resource / SAP Workload readability;
-- minimum table text readability and major section spacing;
-- Performance Evaluation controls for 1 Day / 7 Days / 30 Days;
-- evaluation table rendering and responsive containment;
-- SAP Issues columns for SAP Signal, Current Severity and Peak Severity;
-- resolved issue semantics (`CLEARED`);
-- screenshots for overview, evaluation, and SAP Issues.
+Review at minimum:
 
-## One-time local setup
+- 1920×1080
+- 1600×900
+- 1366×768
+- browser scaling around 125% where available
 
-After the normal locked install (`npm ci`), install Playwright without changing `package.json` or `package-lock.json`:
+## Live Monitoring
+
+Validate:
+
+- SAP App Servers + Server Trend keep the intended two-column balance;
+- Server Trend chart remains readable without creating dead space;
+- Current Jobs & Programs rows remain compact and clickable;
+- Selected Job / Program metrics use PSS Memory and APP Critical WP terminology;
+- primary evidence cards remain visually stronger than Observation History / Infrastructure Analysis / System Data launchers;
+- Jobs & Programs to Review remains full width and does not create horizontal overflow;
+- Infrastructure issue strip is visible but not a full-page alert;
+- System Health, Collector Health, and data freshness remain distinct.
+
+## Click/drill-down behavior
+
+Validate:
+
+- APP row → Application Server Analysis;
+- Server Trend point → Trend Details;
+- Trend Details workload → Performance Analysis;
+- Current Job/Program row → Performance Analysis;
+- Review row → Performance Analysis;
+- performance raw point → Observation Details;
+- historical bucket → Historical Bucket Details;
+- WP/Trace row → SAP WP Signal Details;
+- drawer Back/Close returns to the correct investigation context.
+
+Clickable rows should show pointer/hover affordance without adding noisy Action columns.
+
+## Server Trend historical accuracy
+
+For Average mode:
+
+- tooltip says Avg;
+- selected timestamp is the bucket timestamp.
+
+For Peak mode:
+
+- tooltip shows Bucket;
+- Peak Value matches the clicked chart point;
+- Peak At is the exact retained sample timestamp;
+- Trend Details marker stays on the clicked bucket;
+- exact Peak Collection is used to load saved workloads;
+- the mini-history value must not jump to a nearest bucket value.
+
+## Performance Analysis
+
+Validate:
+
+- Current means selected workload episode;
+- <=5 observations show Limited samples;
+- low-sample chart height is compact;
+- Current raw observations and historical buckets open different detail dialogs;
+- x-axis formatting is readable for same-day and multi-day ranges;
+- issue marker label is horizontal and does not cover critical data;
+- bottom evidence cards remain reachable without excessive blank space;
+- WP/Trace table remains readable and rows open detail.
+
+## Infrastructure Analysis
+
+Validate:
+
+- Filesystem is labelled as Capacity;
+- Storage I/O is labelled as I/O Activity;
+- graph uses the full plot area;
+- 1H/6H axis shows time;
+- 24H shows date + time;
+- 7D/30D shows date;
+- retained-history coverage is explicit;
+- source storage util >100% is flagged, not silently clamped;
+- network drop display is labelled as a delta/peak delta, not an absolute packet-loss claim.
+
+## Evidence semantics
+
+Visual copy must not imply:
+
+- correlation = causation;
+- APP Critical WP = job failure;
+- Latest Trace Error = current error;
+- historical trace error = SM37 failure;
+- missing availability = DOWN;
+- historical selection = current incident causation.
+
+## Optional Playwright setup
 
 ```bash
 npm install --no-save @playwright/test
 npx playwright install chromium
 ```
 
-## Run against deployed DEV
+Run against DEV:
 
 ```bash
-SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' npm run qa:visual
+SPHERE_VISUAL_BASE_URL='https://sphere.astraotparts.co.id/dev/#/tool/logs' npm run qa:visual
 ```
 
-The suite saves screenshots/traces under `test-results/visual` and an HTML report under `playwright-report`.
-
-## Establish / update screenshot baselines
-
-Use this only after the DEV UI has been reviewed and accepted:
-
-```bash
-SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' \
-SPHERE_VISUAL_COMPARE=1 \
-npx playwright test -c playwright.config.mjs --update-snapshots
-```
-
-After approved baseline PNGs are committed, future runs can compare the dashboard with:
-
-```bash
-SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' \
-SPHERE_VISUAL_COMPARE=1 \
-npm run qa:visual
-```
-
-Do not update snapshots merely to make a failing test pass. Review layout, status semantics, clipping, overflow, and density changes first.
-
-
-## Live Monitoring regression checklist
-
-For the current operator console, visual review must also cover:
-
-- 1920×1080, 1600×900 and 1366×768 desktop/laptop layouts;
-- Windows/browser scaling around 125% where available;
-- APP server manual expand/collapse with Critical WP detail;
-- selected workload cross-highlight without automatic APP drilldown expansion;
-- Server Trend retaining its position and width while an APP drilldown is open;
-- no large blank area beneath Server Trend caused by the left APP pane;
-- Workload Performance collapsed by default and expandable without page-width shift;
-- Observation History capped to a contained scroll area;
-- SAP Issues using natural height when active rows fit without scrolling;
-- Infrastructure details collapsed by default;
-- Infrastructure Trend collapsed by default and limited to top-risk series;
-- Supporting Data collapsed by default;
-- action cluster and state cluster visually separated in the SAP Performance header;
-- `Collection running`, `Collector Health`, `System Health` and `Data ALIGNED/PARTIAL` remaining semantically distinct;
-- Live versus historical snapshot context remaining unambiguous;
-- no horizontal page overflow when any secondary disclosure is open.
-
-A failure where expanding APP1–APP5 increases the entire two-column Server Trend band height is a layout regression, even if no element technically overflows.
+Only update screenshot baselines after manual review. Do not update snapshots merely to make a failure disappear.
