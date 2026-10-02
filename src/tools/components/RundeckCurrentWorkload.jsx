@@ -186,7 +186,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     <div className="rundeckCurrentWorkloadHead">
       <h3><SphereIcon name="workload" /> Current Jobs & Programs <span className="rundeckCurrentWorkloadCount">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed - showing ${rows.length}` : `${workloadMeta.total || rows.length} observed`}</span></h3>
       <div className="rundeckCurrentWorkloadTools">
-        {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected job or program: ${selectedContext}`}>Selected · {selectedContext}</span>}
+        {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected job or program: ${selectedContext}`}>Selected: {selectedContext}</span>}
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
         {rows.length > 10 && <button type="button" onClick={() => setShowAll((value) => !value)}>
           {showAll ? 'Top 10' : `View ${rows.length}`}
