@@ -628,3 +628,54 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows strong{
   padding:4px 8px!important;
   border-left-width:3px!important;
 }
+
+
+/* SPHERE v1.34.38 — Performance Review long-range loading and density polish. */
+.appShell:has(.rundeckPanel) .rundeckReviewUpdating{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:22px;
+  margin:2px 0 4px;
+  color:var(--sphere-accent,#4fc6c8);
+  font-size:9px;
+  font-weight:650;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewUpdating span{
+  color:var(--sphere-text-muted,#718089);
+  font-weight:500;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableWrapV1231.is-updating{
+  opacity:.72;
+  transition:opacity 120ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewControlsV1231 .rundeckReviewSegmented button{
+  min-height:26px;
+  padding:3px 8px;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewControlsV1231 .rundeckReviewSegmented button:disabled{
+  cursor:wait;
+  opacity:.62;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231{
+  width:100%;
+  table-layout:fixed;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th:nth-child(1),
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td:nth-child(1){
+  width:35%;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th:nth-child(2),
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td:nth-child(2){
+  width:34%;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th:nth-child(3),
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td:nth-child(3),
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th:nth-child(4),
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td:nth-child(4){
+  width:11%;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 th:nth-child(5),
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td:nth-child(5){
+  width:9%;
+}
