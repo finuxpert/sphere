@@ -66,8 +66,23 @@ function gapDurationText(from, to) {
   return remain ? `${hours}h ${remain}m` : `${hours}h`
 }
 
+function gapTimeRangeText(from, to) {
+  const start = new Date(from)
+  const end = new Date(to)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—'
+  const dateFmt = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short' })
+  const timeFmt = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false })
+  const startDate = dateFmt.format(start)
+  const endDate = dateFmt.format(end)
+  const startTime = timeFmt.format(start).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
+  const endTime = timeFmt.format(end).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
+  return startDate === endDate
+    ? `${startTime} - ${endTime} WIB`
+    : `${startDate} ${startTime} - ${endDate} ${endTime} WIB`
+}
+
 function gapLabel(from, to) {
-  return `COLLECTION GAP · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}`
+  return `COLLECTION GAP - ${gapTimeRangeText(from, to)} - ${gapDurationText(from, to)}`
 }
 
 function resolvedGapIntervalMs(trend) {
@@ -114,12 +129,12 @@ function CollectionGapBand({ trend }) {
   return <details className={`rundeckCollectionGapBandV132 ${observed ? 'is-observation-gap' : ''}`} role="status">
     <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
       <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
-      <strong>{formatWib(from, false)}–{formatWib(to, false)} WIB</strong>
+      <strong>{gapTimeRangeText(from, to)}</strong>
       <small>{gapDurationText(from, to)} {observed ? 'without retained Service Availability observation' : 'without retained collection'}{gaps.length > 1 ? ` · +${gaps.length - 1} additional gap${gaps.length > 2 ? 's' : ''}` : ''}</small>
     </summary>
     {gaps.length > 1 && <div className="rundeckGapDetailsV133">
       {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
-        <b>{index + 1}</b><span>{formatWib(gapFrom, true)}–{formatWib(gapTo, true)} WIB</span><small>{gapDurationText(gapFrom, gapTo)}</small>
+        <b>{index + 1}</b><span>{gapTimeRangeText(gapFrom, gapTo)}</span><small>{gapDurationText(gapFrom, gapTo)}</small>
       </div>)}
       {gaps.length > 8 && <small>+{gaps.length - 8} more retained-gap interval{gaps.length - 8 === 1 ? '' : 's'}</small>}
     </div>}
