@@ -97,6 +97,35 @@ export default function RundeckMonitoringHistory(props) {
   </>
 
 
+  const performanceReviewContent = <RundeckPerformanceReview
+    refreshToken={refreshToken}
+    selectedJob={selectedJob}
+    onSelectJob={inspectJob}
+    incidentStart={props.incidentStart || ''}
+    onOpenQuickAnalysis={(row, reviewContext) => {
+      const reviewJob = {
+        key: row.consumer_key,
+        host: row?.hosts?.length === 1 ? row.hosts[0] : '',
+        consumerType: row.consumer_type,
+        source: 'performance-review',
+        days: reviewContext?.days || 1,
+        reviewPeriod: reviewContext?.period || '1d',
+        reviewMetrics: {
+          avgCpuPct: row.avg_cpu_pct ?? null,
+          peakCpuPct: row.peak_cpu_pct ?? null,
+          avgPssGb: row.avg_pss_gb ?? null,
+          avgProcesses: row.avg_process_count ?? null,
+          observations: row.observations ?? row.occurrences ?? null,
+          criticalWpChecks: row.critical_wp_host_checks ?? row.critical_wp_checks ?? null,
+          hostObservations: row.host_observations ?? null,
+        },
+      }
+      onSelectJob?.(reviewJob)
+      setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
+    }}
+    externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
+  />
+
   return <>
     <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
       <div className="rundeckMonitoringModeTabs" role="tablist" aria-label="Monitoring mode">
@@ -126,42 +155,13 @@ export default function RundeckMonitoringHistory(props) {
             onSelectJob={inspectJob}
             onTrendContext={forwardTrendContext}
             operationalEvidenceContent={operationalEvidenceContent}
+            performanceReviewContent={performanceReviewContent}
             appFocusRequest={appFocusRequest}
             onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
             onInspectApp={inspectApp}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
-          <section className="rundeckPerformanceReviewBand" aria-label="Jobs and programs to review">
-            <RundeckPerformanceReview
-              refreshToken={refreshToken}
-              selectedJob={selectedJob}
-              onSelectJob={inspectJob}
-              incidentStart={props.incidentStart || ''}
-              onOpenQuickAnalysis={(row, reviewContext) => {
-                const reviewJob = {
-                  key: row.consumer_key,
-                  host: row?.hosts?.length === 1 ? row.hosts[0] : '',
-                  consumerType: row.consumer_type,
-                  source: 'performance-review',
-                  days: reviewContext?.days || 1,
-                  reviewPeriod: reviewContext?.period || '1d',
-                  reviewMetrics: {
-                    avgCpuPct: row.avg_cpu_pct ?? null,
-                    peakCpuPct: row.peak_cpu_pct ?? null,
-                    avgPssGb: row.avg_pss_gb ?? null,
-                    avgProcesses: row.avg_process_count ?? null,
-                    observations: row.observations ?? row.occurrences ?? null,
-                    criticalWpChecks: row.critical_wp_host_checks ?? row.critical_wp_checks ?? null,
-                    hostObservations: row.host_observations ?? null,
-                  },
-                }
-                onSelectJob?.(reviewJob)
-                setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
-              }}
-              externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
-            />
-          </section>
 
           {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
             title="Analysis Menu"
