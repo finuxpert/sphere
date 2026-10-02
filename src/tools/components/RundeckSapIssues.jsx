@@ -78,11 +78,14 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const longestActive = items.reduce((longest, row) => Math.max(longest, Number(row.duration_seconds || 0)), 0)
 
   if (compact) {
-    const top = items.slice(0, 3)
+    const top = items[0]
+    const topSummary = top
+      ? `Highest: ${shortHost(top.host || 'APP')} ${issueLabel(top.signal || top.code)} ${valueText(top.latest_value, top.unit)}`
+      : 'No active SAP issues'
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
       <strong>{error ? 'Unavailable' : `${activeCount} active issue${activeCount === 1 ? '' : 's'}`}</strong>
-      <small>{top.length ? top.map((row) => `${shortHost(row.host || 'APP')} ${issueLabel(row.signal || row.code)} ${valueText(row.latest_value, row.unit)}`).join(' · ') : 'No active SAP issues'}</small>
+      <small>{topSummary}</small>
       <em>View issues ›</em>
     </button>
   }
