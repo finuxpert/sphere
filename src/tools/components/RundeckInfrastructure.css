@@ -545,3 +545,43 @@
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* SPHERE v1.34.43 — final infrastructure table and legend polish. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  grid-template-columns:minmax(0,34fr) minmax(0,66fr)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(1),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(1){width:40%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(2),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(2){width:20%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(3),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(3){width:20%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(4),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(4){width:20%!important}
+
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(1),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(1){width:36%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(2),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(2){width:14%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(3),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(3){width:27%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(4),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(4){width:23%!important}
+
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraLegend{
+  margin-top:-3px!important;
+  gap:6px 12px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraLegend span{
+  opacity:.48!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraLegend span.is-selected{
+  opacity:1!important;
+  color:var(--sphere-text,#e7edf0)!important;
+  font-weight:820!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap .series.is-dimmed,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap .seriesPoint.is-dimmed{
+  opacity:.11!important;
+}
