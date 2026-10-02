@@ -146,7 +146,7 @@ function AvailabilityCoverageBand({ trend }) {
   return <div className="rundeckCoverageBandV133">
     <span>History Coverage</span>
     <strong>starts {formatWib(trend.history_started_at, true)} WIB</strong>
-    <small>Earlier history in this selected range was not retained by SPHERE; this is not an availability outage.</small>
+    <small>Earlier history was not retained by SPHERE. This is not an outage.</small>
   </div>
 }
 
