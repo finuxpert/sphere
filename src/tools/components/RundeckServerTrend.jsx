@@ -33,7 +33,7 @@ function formatTrendAxis(value, range) {
     return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
   }
   if (range === '24h') {
-    return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
+    return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
   }
   return formatWib(value, false)
 }
@@ -200,9 +200,14 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         const dimmed = selectedKey && !focused
         return {
         name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
-        showSymbol: availabilityMode || compactPoints, symbolSize: focused ? 5 : availabilityMode ? 5 : (compactPoints ? 3.5 : 2.5),
-        lineStyle: { width: focused ? 2.8 : availabilityMode ? 2 : 1.8, opacity: dimmed ? .32 : 1 },
-        itemStyle: { opacity: dimmed ? .36 : 1 },
+        showSymbol: availabilityMode || compactPoints,
+        symbolSize: availabilityMode
+          ? ((value, params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? 8 : 3.5)
+          : (focused ? 5 : (compactPoints ? 3.5 : 2.5)),
+        lineStyle: { width: focused ? 2.8 : availabilityMode ? 1.5 : 1.8, opacity: dimmed ? .26 : availabilityMode ? .72 : 1 },
+        itemStyle: availabilityMode
+          ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: dimmed ? .28 : 1 }
+          : { opacity: dimmed ? .36 : 1 },
         emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.8, opacity: 1 } },
         data: [
           ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
@@ -212,7 +217,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         markArea: index === 0 && gaps.length ? {
           silent: true,
           label: { show: true, formatter: (params) => params?.name || (availabilityMode ? 'NO OBSERVATION' : 'COLLECTION GAP'), fontSize: 8, color: availabilityMode ? colors.attention : colors.warning, position: 'insideTop' },
-          itemStyle: { color: availabilityMode ? colors.attention : colors.warning, opacity: .06, borderColor: availabilityMode ? colors.attention : colors.warning, borderWidth: 1, borderType: 'dashed' },
+          itemStyle: { color: availabilityMode ? colors.attention : colors.warning, opacity: availabilityMode ? .035 : .06, borderColor: availabilityMode ? colors.attention : colors.warning, borderWidth: 1, borderType: 'dashed' },
           data: gaps.map(([from, to]) => [{ name: availabilityMode ? `NO OBSERVATION · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}` : gapLabel(from, to), xAxis: from }, { xAxis: to }]),
         } : undefined,
       }
