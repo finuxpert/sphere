@@ -565,3 +565,32 @@
     margin-top:14px!important;
   }
 }
+
+
+/* SPHERE v1.34.41 — final desktop viewport-fit proportions. */
+@media (min-width:1181px) {
+  .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 {
+    grid-template-columns:minmax(0,42fr) minmax(0,58fr)!important;
+    gap:12px!important;
+    margin-top:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235 .is-app-servers {
+    padding-right:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack {
+    margin-top:6px!important;
+    padding-top:5px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 {
+    margin-top:7px!important;
+    padding-top:6px!important;
+    gap:14px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-current-workload {
+    padding-right:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckCurrentWorkloadTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-review-workload .rundeckReviewTableWrapV1231 {
+    max-height:180px!important;
+  }
+}
