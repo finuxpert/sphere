@@ -1552,3 +1552,63 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     padding:4px 6px!important;
   }
 }
+
+
+/* SPHERE v1.34.41 — final one-screen density without reducing operator font floors. */
+@media (min-width:1181px) {
+  .appShell:has(.rundeckPanel) .is-server-trend .rundeckTrendChart {
+    height:268px!important;
+    min-height:258px!important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedCompact {
+    gap:5px 8px!important;
+    margin-top:2px!important;
+    padding:5px 7px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence {
+    margin-top:3px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards {
+    grid-auto-rows:54px!important;
+    min-height:54px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard {
+    min-height:54px!important;
+    height:54px!important;
+    padding:4px 7px!important;
+    grid-template-rows:auto auto minmax(0,1fr)!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard > em {
+    display:none!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard > strong,
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard > small {
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis {
+    grid-auto-rows:40px!important;
+    min-height:40px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis button {
+    min-height:40px!important;
+    height:40px!important;
+    padding:3px 7px!important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckCurrentWorkloadHead,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckReviewHeadV1231 {
+    margin-bottom:2px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckCurrentWorkload th,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckCurrentWorkload td,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckReviewTableV1231 th,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .rundeckReviewTableV1231 td {
+    padding-top:3px!important;
+    padding-bottom:3px!important;
+  }
+}
