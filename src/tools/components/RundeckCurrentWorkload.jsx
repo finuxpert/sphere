@@ -180,7 +180,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const freshness = latestObservedAt ? relativeAge(latestObservedAt, nowMs) : ''
   const freshnessMinutes = latestObservedAt ? ageMinutes(latestObservedAt, nowMs) : null
   const showFreshness = freshnessMinutes !== null && freshnessMinutes >= STALE_MINUTES
-  const selectedContext = selectedJob?.key && selectedJob?.host ? `${shortHost(selectedJob.host)} · ${selectedJob.key}` : ''
+  const selectedContext = selectedJob?.key && selectedJob?.host ? `${shortHost(selectedJob.host)} - ${selectedJob.key}` : ''
 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className="rundeckCurrentWorkloadHead">
