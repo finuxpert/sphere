@@ -51,7 +51,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
     return visible
   },[items,metricType,selectedSeries])
   const width=920,height=380
-  const pad={left:50,right:28,top:28,bottom:54}
+  const pad={left:46,right:22,top:14,bottom:34}
   const values=items.map(row=>Number(row.value)).filter(Number.isFinite)
   const rawMax=Math.max(1,...values)
   const min=0
@@ -273,8 +273,8 @@ export default function RundeckInfrastructure({incidentStart=''}){
           {trendChange!==null&&<span><b>Change from range start</b>{trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
           {trendMetric==='network'&&selectedValues2.length>0&&<span><b>Peak TX</b>{metric(Math.max(...selectedValues2),' Mbps')}</span>}
           {trendMetric==='network'&&selectedDrops.length>0&&<span title="Maximum combined RX + TX dropped-counter delta reported in one retained sample."><b>Peak Drop Delta</b>{metric(Math.max(...selectedDrops))}</span>}
-          {trendMetric==='storage'&&selectedValues2.length>0&&<span><b>Peak Write</b>{metric(Math.max(...selectedValues2),' IOPS')}</span>}
-          {trendMetric==='storage'&&selectedWriteMbps.length>0&&<span><b>Peak Write</b>{metric(Math.max(...selectedWriteMbps),' MB/s')}</span>}
+          {trendMetric==='storage'&&selectedValues2.length>0&&<span><b>Peak Write IOPS</b>{metric(Math.max(...selectedValues2),' IOPS')}</span>}
+          {trendMetric==='storage'&&selectedWriteMbps.length>0&&<span><b>Peak Write MB/s</b>{metric(Math.max(...selectedWriteMbps),' MB/s')}</span>}
           {storageSourceOver100&&<span className="is-attention" title="The collector stored a storage util_pct source value above 100. SPHERE keeps the raw value visible instead of silently clamping it. Verify collector/device mapping before treating it as a physical utilization percentage."><b>Source Quality</b>util &gt;100% - verify</span>}
         </div>
       </div>}
