@@ -270,7 +270,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
           <span><b>Current</b>{metric(trendCurrent,trendMetric==='network'?' Mbps':'%')}</span>
           <span><b>Min</b>{metric(trendMin,trendMetric==='network'?' Mbps':'%')}</span>
           <span><b>{storageSourceOver100?'Reported Max':'Max'}</b>{metric(trendMax,trendMetric==='network'?' Mbps':'%')}</span>
-          {trendChange!==null&&<span><b>Change</b>{trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
+          {trendChange!==null&&<span><b>Change from range start</b>{trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
           {trendMetric==='network'&&selectedValues2.length>0&&<span><b>Peak TX</b>{metric(Math.max(...selectedValues2),' Mbps')}</span>}
           {trendMetric==='network'&&selectedDrops.length>0&&<span title="Maximum combined RX + TX dropped-counter delta reported in one retained sample."><b>Peak Drop Delta</b>{metric(Math.max(...selectedDrops))}</span>}
           {trendMetric==='storage'&&selectedValues2.length>0&&<span><b>Peak Write</b>{metric(Math.max(...selectedValues2),' IOPS')}</span>}
