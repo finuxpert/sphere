@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.38', files.version.includes("APP_VERSION = '1.34.38'") && files.version.includes('monitoring-flow-ui-v1.34.38')],
+  ['monitoring flow version is v1.34.39', files.version.includes("APP_VERSION = '1.34.39'") && files.version.includes('monitoring-flow-ui-v1.34.39')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -198,7 +198,15 @@ const checks = [
   ['WP trace rows expose keyboard-accessible detail drilldown while preserving SM37 authority', files.jobHistory.includes("role=\"button\"") && files.jobHistory.includes("type: 'wp'") && files.jobHistory.includes('SAP WP Signal Details') && files.jobHistory.includes('SM37 remains the authority for SAP job execution status')],
   ['Low-sample workload episodes are explicitly labelled and use adaptive chart height', files.jobHistory.includes('Limited samples -') && files.jobHistory.includes('const compactEpisode = rows.length <= 10') && files.jobHistory.includes('laneScale = compactEpisode ? .76 : 1')],
   ['Performance issue marker label is short and horizontal', files.jobHistory.includes("formatter: `Issue · ${formatWib(incidentStart, false)}`") && files.jobHistory.includes('rotate: 0')],
-  ['Infrastructure chart uses internal 320px plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=320') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
+  ['Infrastructure chart uses expanded internal plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=380') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
+  ['Infrastructure analysis fixes Network Storage split and prevents clipped metric columns', files.infrastructureCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,60fr)!important') && files.infrastructureCss.includes('table-layout:fixed') && files.infrastructureCss.includes('nth-child(4)')],
+  ['Infrastructure history uses structured current min max change and secondary metric stats', files.infrastructure.includes('rundeckInfraTrendStats') && files.infrastructure.includes('<b>Current</b>') && files.infrastructure.includes('<b>Peak TX</b>') && files.infrastructure.includes('<b>Peak Drop Delta</b>')],
+  ['Selected Job distinguishes missing Critical WP from an observed zero', files.core.includes("'Not observed'") && files.core.includes('0 means the selected observation recorded no Critical WP')],
+  ['Selected Job evidence keeps primary cards stronger than flat secondary launchers', files.monitoringCss.includes('grid-auto-rows:76px!important') && files.monitoringCss.includes('grid-auto-rows:48px!important')],
+  ['Performance charts break retained-history gaps instead of drawing missing time as zero', files.jobHistory.includes('current - previous > GAP_MS') && files.jobHistory.includes('data.push([new Date(previous + 1).toISOString(), null])')],
+  ['Global WIB formatting standardizes clock labels to colon-separated HH:mm', read('src/tools/components/sapUiFormat.js').includes("replace(/(\\d{1,2})\\.(\\d{2})/g, '$1:$2')")],
+  ['Availability hierarchy makes DOWN points stronger while no-observation bands remain secondary', files.serverTrend.includes("=== 'DOWN' ? 8 : 3.5") && files.serverTrend.includes("opacity: availabilityMode ? .035 : .06")],
+  ['WP trace evidence is compacted without removing detail drilldown', files.jobHistoryCss.includes('max-height:170px') && files.jobHistoryCss.includes('padding:4px 6px!important') && files.jobHistory.includes('SAP WP Signal Details')],
   ['Live APP workload and review rows expose hover drilldown affordance without action columns', files.monitoringCss.includes('make drilldown targets discoverable') && files.monitoringCss.includes("content:'›'") && files.monitoringCss.includes('.rundeckReviewTableV1231 tbody tr[role="button"]')],
   ['Performance Review marks genuinely small observation sets without turning the hint into RCA', files.quickAnalysis.includes('limitedSample') && files.quickAnalysis.includes('Limited sample') && files.quickAnalysisCss.includes('.rundeckQuickSampleHint')],
   ['Review drawer keeps evidence compact and closing summary readable at short desktop height', files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckEvidenceEvent') && files.quickAnalysisCss.includes('max-height:220px') && files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckClosingPreview p') && files.quickAnalysisCss.includes('line-height:1.38')],
@@ -295,7 +303,7 @@ const checks = [
   ['Infrastructure history labels range-start change and network drop delta semantics', files.infrastructure.includes('Change from range start') && files.infrastructure.includes('Peak drop delta') && files.infrastructure.includes('combined RX + TX dropped-counter delta')],
   ['Infrastructure history exposes retained coverage instead of implying zero before first sample', files.infrastructureBackend.includes('first_observed_at') && files.infrastructureBackend.includes('last_observed_at') && files.infrastructure.includes('Retained history starts') && files.infrastructure.includes('no retained collection')],
   ['Storage utilization over 100 remains visible as source-quality evidence instead of silent clamping', files.infrastructureBackend.includes("'SOURCE_OVER_100'") && files.infrastructure.includes('Source util &gt;100% - verify') && files.infrastructure.includes("storageSourceOver100?'Reported Max':'Max'")],
-  ['Infrastructure distinguishes filesystem capacity from storage IO activity', files.infrastructure.includes('<small>Capacity</small>') && files.infrastructure.includes('<small>I/O Activity</small>') && files.infrastructure.includes('Storage I/O utilization with write peaks')],
+  ['Infrastructure distinguishes filesystem capacity from storage IO activity', files.infrastructure.includes('<small>Capacity</small>') && files.infrastructure.includes('<small>I/O Activity</small>') && files.infrastructure.includes('Storage I/O Activity - write peaks shown above')],
   ['Correlated Events declares whether timing is current-incident or selected-observation context', files.evidenceTimeline.includes("anchorAt ? 'Selected observation context' : 'Current incident context'") && files.evidenceTimeline.includes('rundeckEvidenceScope')],
   ['Infrastructure summary never aggregates unrelated series', files.infrastructure.includes("selectedSeries?trend.filter") && files.infrastructure.includes(":[]") && files.infrastructure.includes('Selected: {selectedSeries}') && !files.infrastructure.includes("'All series'")],
   ['Infrastructure auto-selects highest-risk available series', files.infrastructure.includes('grouped.set(key,Math.max') && files.infrastructure.includes('if(top)setSelectedSeries(top)')],
@@ -306,7 +314,7 @@ const checks = [
   ['System Data distinguishes normal from not configured services', files.source.includes('serviceNotConfiguredCount') && files.source.includes('not configured')],
   ['System Data drawer uses tabbed full-width panels', files.systemDataCss.includes('.rundeckSystemDataTabs') && files.systemDataCss.includes('.rundeckSystemDataTableWrap') && files.systemDataCss.includes('width:100%')],
   ['Aligned workload evidence stays visually subdued', files.evidenceCss.includes('.rundeckEvidenceAlignment.is-aligned') && files.evidenceCss.includes('opacity: .82')],
-  ['Stale availability freshness is consolidated without duplicate data-age row', files.availability.includes('Last reliable status: ${serviceState} · checked ${availabilityAge}m ago') && files.availability.includes('const showDataTrust = Boolean(collectionNotice || showCollectionGap)') && !files.availability.includes('Data age {availabilityAge}m')],
+  ['Stale availability freshness is consolidated without duplicate data-age row', files.availability.includes('Last reliable: ${serviceState} - checked ${availabilityAge}m ago') && files.availability.includes('const showDataTrust = Boolean(collectionNotice || showCollectionGap)') && !files.availability.includes('Data age {availabilityAge}m')],
   ['SM37 execution schema is authoritative and separate from WP sampling', files.migration.includes('sap_job_executions') && files.intelligence.includes('never promoted to an authoritative')],
   ['SM37 import supports dry run before apply', files.importer.includes('MODE=DRY-RUN') && files.importer.includes('--apply')],
   ['SM37 HTTP import is disabled by default and secret protected', files.api.includes('SPHERE_SM37_IMPORT_ENABLED') && files.api.includes('SPHERE_SM37_IMPORT_TOKEN') && files.api.includes('secrets.compare_digest') && files.api.includes('5000 records')],
@@ -352,4 +360,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.38 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.39 monitoring flow and deep-analysis checks passed.')
