@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.39', files.version.includes("APP_VERSION = '1.34.39'") && files.version.includes('monitoring-flow-ui-v1.34.39')],
+  ['monitoring flow version is v1.34.40', files.version.includes("APP_VERSION = '1.34.40'") && files.version.includes('monitoring-flow-ui-v1.34.40')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -120,7 +120,7 @@ const checks = [
   ['Correlated events use APP Server and Job Program terms', read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'Job / Program'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'APP Server'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes('SAME TIME WINDOW')],
   ['Correlated events can anchor timing to the selected observation', files.evidenceTimeline.includes("params.set('at', anchorAt)") && files.api.includes('anchor_at: str | None = Query(None, alias="at"') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot')],
   ['Issue correlation compares nearest retained observations instead of unrelated latest snapshots', files.evidenceBackend.includes('correlation_anchor') && files.evidenceBackend.includes('Issue Start') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot') && files.evidenceBackend.includes('Timing alignment uses retained timestamps')],
-  ['Current workload count distinguishes observed total from loaded rows', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('observed, ${rows.length} loaded') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('View ${rows.length}')],
+  ['Current workload count distinguishes observed total from displayed rows', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('observed - showing ${rows.length}') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('View ${rows.length}')],
   ['Performance summary labels averaged process count and observations precisely', files.jobHistory.includes('Avg Processes') && files.jobHistory.includes('<b>Observations</b>') && files.jobHistory.includes('<b>Checks</b>')],
   ['Closing workflow stores finding recommendation owner and follow-up', files.quickAnalysis.includes('closing_status') && files.quickAnalysis.includes('Analysis Summary') && files.quickAnalysis.includes('Suggested Check') && files.quickAnalysis.includes('Validation / Follow-up')],
   ['Closing API supports get save and history', files.api.includes('@app.get("/analysis/closing")') && files.api.includes('@app.post("/analysis/closing")') && files.api.includes('@app.get("/analysis/closings")')],
@@ -360,4 +360,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.39 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.40 monitoring flow and deep-analysis checks passed.')
