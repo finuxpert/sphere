@@ -441,3 +441,107 @@
   .rundeckInfraTrendSummary{grid-template-columns:1fr}
   .rundeckInfraTrendStats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* SPHERE v1.34.42 — infrastructure drawer finishing pass. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraWorkspace{
+  grid-template-columns:minmax(340px,42fr) minmax(440px,58fr)!important;
+  gap:12px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  grid-template-columns:minmax(0,38fr) minmax(0,62fr)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3){
+  padding-left:9px!important;
+  padding-right:9px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td{
+  padding-left:3px!important;
+  padding-right:3px!important;
+  font-size:10px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th{
+  overflow:visible!important;
+  text-overflow:clip!important;
+  font-size:8.2px!important;
+  letter-spacing:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(1),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(1){width:35%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(2),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(2){width:22%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(3),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(3){width:22%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th:nth-child(4),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td:nth-child(4){width:21%!important}
+
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(1),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(1){width:38%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(2),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(2){width:14%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(3),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(3){width:25%!important}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) th:nth-child(4),
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3) td:nth-child(4){width:23%!important}
+
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  min-height:0!important;
+  padding-top:7px!important;
+  padding-bottom:5px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspaceHead{
+  margin-bottom:1px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace>header{
+  min-height:30px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  grid-template-columns:minmax(128px,.85fr) minmax(0,3.15fr)!important;
+  margin:3px 0 2px!important;
+  padding:5px 0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary>strong{
+  color:var(--sphere-text,#e7edf0)!important;
+  font-size:10.4px!important;
+  font-weight:800!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats{
+  gap:3px 10px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats span:first-child{
+  color:var(--sphere-text,#e7edf0)!important;
+  font-weight:760!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats span:first-child b{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap{
+  margin-top:1px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:390px!important;
+  min-height:390px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraLegend{
+  margin-top:1px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrend>small{
+  margin-top:2px!important;
+}
+@media(max-height:820px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:330px!important;
+    min-height:330px!important;
+  }
+}
+@media(max-width:980px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraWorkspace,
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+    grid-template-columns:1fr!important;
+  }
+}
