@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.42', files.version.includes("APP_VERSION = '1.34.42'") && files.version.includes('monitoring-flow-ui-v1.34.42')],
+  ['monitoring flow version is v1.34.43', files.version.includes("APP_VERSION = '1.34.43'") && files.version.includes('monitoring-flow-ui-v1.34.43')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -360,4 +360,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.42 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.43 monitoring flow and deep-analysis checks passed.')
