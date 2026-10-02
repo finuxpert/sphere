@@ -88,11 +88,18 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         : 'Cross-source timing status.'
 
   if (compact) {
+    const timingState = state === 'ALIGNED' ? 'SAME TIME WINDOW' : state
+    const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
+      ? `Workload ended: ${workloadGapText}`
+      : state === 'LIMITED'
+        ? 'Timing coverage: LIMITED'
+        : hasSkew
+          ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m`
+          : correlationScope
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
-      <span className="rundeckEvidenceScope">{correlationScope}</span>
-      <strong>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}{events.length ? ` - ${events.length} events` : ''}</strong>
-      <small>{state === 'NO OVERLAP' && hasWorkloadGap ? `Workload ended: ${workloadGapText}` : hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}</small>
+      <strong>{events.length ? `${timingState} - ${events.length} events` : timingState}</strong>
+      <small>{timingDetail}</small>
       <em>View events ›</em>
     </button>
   }
