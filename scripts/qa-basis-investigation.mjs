@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.37', files.version.includes("APP_VERSION = '1.34.37'") && files.version.includes('monitoring-flow-ui-v1.34.37')],
+  ['monitoring flow version is v1.34.38', files.version.includes("APP_VERSION = '1.34.38'") && files.version.includes('monitoring-flow-ui-v1.34.38')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -109,7 +109,8 @@ const checks = [
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
   ['APP server detail moved from inline expansion to workspace drawer', !files.appServers.includes('rundeckWpInlinePanel') && files.core.includes('onInspectApp={props.onInspectApp}') && files.wrapper.includes("activeOverlay?.type === 'app'")],
   ['Performance Review top 4 mode does not use an internal scrollbar', files.performanceReview.includes("is-top4") && files.uiPolish.includes('.rundeckPerformanceReviewV1231.is-top4 .rundeckReviewTableWrapV1231') && files.uiPolish.includes('overflow: visible !important')],
-  ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Updating…')],
+  ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.performanceReview.includes("' is-updating'")],
+    ['Performance Review controls expose long-range loading state and compact column allocation', files.performanceReview.includes('Updating {periodLabel}') && files.performanceReview.includes('View all ${reviewRows.length} results') && files.liveOverview.includes('SPHERE v1.34.38') && files.liveOverview.includes('table-layout:fixed') && files.liveOverview.includes('nth-child(2)')],
   ['Performance Review rows open the shared Performance Analysis drawer', files.performanceReview.includes('onClick={() => openQuick(row)}') && files.wrapper.includes("source: 'performance-review'") && files.wrapper.includes("setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })")],
   ['Review Result drawer keeps related events and closing workflow without a duplicate performance renderer', !files.quickAnalysis.includes('RundeckJobHistory') && files.quickAnalysis.includes('RundeckEvidenceTimeline') && files.quickAnalysis.includes('Analysis Result') && files.quickAnalysis.includes('Open Performance Analysis')],
   ['Quick Analysis supports keyboard close and responsive drawer', files.quickAnalysis.includes("event.key === 'Escape'") && files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer') && files.quickAnalysisCss.includes('@media(max-width:1180px)')],
@@ -124,7 +125,7 @@ const checks = [
   ['Closing workflow stores finding recommendation owner and follow-up', files.quickAnalysis.includes('closing_status') && files.quickAnalysis.includes('Analysis Summary') && files.quickAnalysis.includes('Suggested Check') && files.quickAnalysis.includes('Validation / Follow-up')],
   ['Closing API supports get save and history', files.api.includes('@app.get("/analysis/closing")') && files.api.includes('@app.post("/analysis/closing")') && files.api.includes('@app.get("/analysis/closings")')],
   ['Closing persistence uses a dedicated migration and safe upsert identity', files.closingMigration.includes('rundeck_analysis_closures') && files.closingMigration.includes('uq_rundeck_analysis_closure_window') && files.closingBackend.includes('ON CONFLICT (consumer_type, consumer_key, host, period_key, window_end)')],
-  ['Performance evaluation uses short request cache', files.evaluationBackend.includes('EVALUATION_CACHE_TTL_SECONDS') && files.evaluationBackend.includes('_EVALUATION_CACHE[cache_key]')],
+  ['Performance evaluation uses bounded multi-key cache with runtime timing', files.evaluationBackend.includes('EVALUATION_CACHE_TTL_SECONDS') && files.evaluationBackend.includes('EVALUATION_CACHE_MAX_ENTRIES') && files.evaluationBackend.includes('def _cache_get') && files.evaluationBackend.includes('def _cache_put') && files.evaluationBackend.includes('duration_ms') && !files.evaluationBackend.includes('_EVALUATION_CACHE.clear()')],
   ['Performance evaluation prefers full retained workload observations with legacy Top Consumers fallback', files.evaluationBackend.includes('_workload_source_relation') && files.evaluationBackend.includes('rundeck_workload_observations') && files.evaluationBackend.includes('ALL_OBSERVED_ACTIVE_WORKLOADS')],
   ['Performance evaluation labels WP evidence as APP-level temporal overlap rather than workload causation', files.evaluationBackend.includes('APP Critical WP overlap') && files.evaluationBackend.includes('temporal co-observation, not workload-level causation')],
   ['Review Result defaults to Further RCA with no automatic owner assignment', files.quickAnalysis.includes("return 'NEEDS_FURTHER_RCA'") && files.quickAnalysis.includes("owner: item?.owner || ''") && files.quickAnalysis.includes("owner: ''")],
@@ -351,4 +352,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.37 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.38 monitoring flow and deep-analysis checks passed.')
