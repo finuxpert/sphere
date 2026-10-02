@@ -1294,3 +1294,41 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 @media(max-width:680px){
   .rundeckPointDetailGrid{grid-template-columns:1fr}
 }
+
+
+/* SPHERE v1.34.39 — final Performance Analysis density polish. */
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalPanel{
+  margin-top:7px!important;
+  padding-top:7px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalHead{
+  margin-bottom:5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTableWrap{
+  max-height:170px;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th,
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable td{
+  padding:4px 6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th{
+  font-size:8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable td{
+  font-size:8.8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th:nth-child(1){width:10%}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th:nth-child(2){width:21%}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th:nth-child(3){width:9%}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th:nth-child(4){width:16%}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th:nth-child(5){width:19%}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th:nth-child(6){width:13%}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th:nth-child(7){width:12%}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalNote{
+  margin-top:4px!important;
+  font-size:8.2px!important;
+  line-height:1.3!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobOperationalRail{
+  margin-top:7px!important;
+}
