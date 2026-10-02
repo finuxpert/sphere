@@ -1454,3 +1454,101 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* SPHERE v1.34.40 — compact Selected Job layout for the APP-side stack. */
+@media (min-width:1181px) {
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckInvestigationContext {
+    margin:0!important;
+    min-height:20px!important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedCompact {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-areas:
+      "identity action"
+      "metrics metrics"!important;
+    gap:6px 9px!important;
+    margin-top:3px!important;
+    padding:6px 8px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedCompactIdentity {
+    grid-area:identity;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedCompactMetrics {
+    grid-area:metrics;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedCompact > button {
+    grid-area:action;
+    align-self:start;
+    min-height:25px!important;
+    padding:4px 7px!important;
+    font-size:8.4px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedCompact.is-empty {
+    display:block!important;
+    padding:7px 8px!important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence {
+    margin-top:4px!important;
+    padding-bottom:0!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    grid-auto-rows:58px!important;
+    min-height:58px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard {
+    min-height:58px!important;
+    height:58px!important;
+    padding:5px 7px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCardTitle {
+    font-size:9px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceScope {
+    font-size:7.5px!important;
+    min-height:9px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard > strong {
+    font-size:8.6px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard > small {
+    font-size:7.8px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard > em {
+    margin-top:1px!important;
+    font-size:7.8px!important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    grid-auto-rows:42px!important;
+    min-height:42px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis button {
+    min-height:42px!important;
+    height:42px!important;
+    padding:4px 7px!important;
+    column-gap:6px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis button b {
+    font-size:8.7px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis button small {
+    font-size:7.7px!important;
+  }
+
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-review-workload .rundeckReviewHeadV1231 {
+    min-height:25px!important;
+    margin-bottom:3px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-review-workload .rundeckReviewTableV1231 th,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235 .is-review-workload .rundeckReviewTableV1231 td {
+    padding:4px 6px!important;
+  }
+}
