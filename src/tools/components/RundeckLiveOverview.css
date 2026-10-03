@@ -716,3 +716,43 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
   .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article:nth-child(2n){border-right:0!important}
   .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{border-bottom:1px solid rgba(126,147,158,.06)!important}
 }
+
+
+/* SPHERE v1.34.48 — tighter infrastructure scan density. */
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{
+  padding:7px 10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article>header{
+  margin-bottom:3px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows>div{
+  justify-content:flex-start!important;
+  gap:10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows span{
+  flex:0 1 62%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows strong{
+  margin-left:auto!important;
+  min-width:42px;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair{
+  grid-template-columns:repeat(2,minmax(0,140px))!important;
+  justify-content:start!important;
+  gap:18px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource{
+  min-height:27px!important;
+  padding:4px 2px!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource strong{
+  font-size:9.2px!important;
+  font-weight:780!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource span{
+  font-size:8.8px!important;
+}
