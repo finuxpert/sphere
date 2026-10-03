@@ -1735,3 +1735,28 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button small{
   font-size:8.7px!important;
 }
+
+
+/* SPHERE v1.34.49 — final cockpit signal hierarchy. */
+.appShell:has(.rundeckPanel) .rundeckCollectionGapBandV132{
+  opacity:.82!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCollectionGapBandV132>summary{
+  min-height:26px!important;
+  padding:4px 8px!important;
+  border-color:rgba(216,179,95,.16)!important;
+  background:rgba(216,179,95,.018)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCollectionGapBandV132>summary span{
+  font-size:7.8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCollectionGapBandV132>summary strong,
+.appShell:has(.rundeckPanel) .rundeckCollectionGapBandV132>summary small{
+  font-size:8.4px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource strong{
+  color:var(--sphere-text,#e7edf0)!important;
+}
