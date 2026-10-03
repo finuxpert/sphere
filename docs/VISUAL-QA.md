@@ -1,6 +1,6 @@
 # SPHERE Visual QA
 
-This checklist covers the current v1.34.51 operator UI.
+This checklist covers the current v1.34.52 operator UI.
 
 Visual QA is separate from the default `npm run qa` release gate.
 
@@ -101,7 +101,8 @@ Validate the one-page report at browser PDF preview around 77% and at a mobile-f
 - Performance and Availability source times are printed;
 - mismatched report source timing stays PARTIAL;
 - NOTES uses plain Basis wording and points job-status verification to SAP/SM37;
-- the report remains one page without clipping.
+- the report remains one page without clipping;
+- PDF Operational State matches the System Health severity semantics for the same source state.
 
 ## Evidence semantics
 
