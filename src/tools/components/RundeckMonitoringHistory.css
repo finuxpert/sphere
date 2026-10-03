@@ -1640,3 +1640,42 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   text-overflow:ellipsis!important;
   white-space:nowrap!important;
 }
+
+
+/* SPHERE v1.34.47 — flatter operational cockpit; preserve existing geometry. */
+.appShell:has(.rundeckPanel) .rundeckSelectedCompact{
+  margin-top:5px!important;
+  padding:7px 0!important;
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.07)!important;
+  border-bottom:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
+  gap:0!important;
+  border-top:1px solid rgba(126,147,158,.065)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard,
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
+  min-height:42px!important;
+  padding:6px 8px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.06)!important;
+  border-bottom:1px solid rgba(126,147,158,.055)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard:hover,
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button:hover{
+  background:rgba(79,198,200,.028)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBandPaneV1235{
+  border-radius:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTrendBandV1235,
+.appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
+  border-top:1px solid rgba(126,147,158,.07)!important;
+}
