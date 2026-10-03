@@ -284,9 +284,10 @@ function SingleSamplePerformance({ row }) {
   const write = rowMetric(row, 'write')
   const processes = rowMetric(row, 'processes')
   const wp = rowMetric(row, 'wp')
-  const critical = Number(row.host_wp_critical || 0)
-  return <div className="rundeckSingleSample" aria-label="Single job or program observation">
-    <div className="rundeckSingleSampleTime">{formatWib(row.collected_at, true)} WIB</div>
+  const hasCritical = row.host_wp_critical !== null && row.host_wp_critical !== undefined
+  const critical = hasCritical ? Number(row.host_wp_critical) : null
+  return <div className="rundeckSingleSample" aria-label="Selected job or program observation">
+    <div className="rundeckSingleSampleHead"><strong>Selected Observation</strong><span>{formatWib(row.collected_at, true)} WIB</span></div>
     <div className="rundeckSingleSampleMetrics">
       <span><b title={CPU_HINT}>CPU Usage</b>{numberText(rowMetric(row, 'cpu'), 1)}%</span>
       {pss !== null && <span><b>PSS Memory</b>{numberText(pss, 2)} GB</span>}
@@ -295,9 +296,9 @@ function SingleSamplePerformance({ row }) {
         ? <><span><b>I/O Read</b>{numberText(read, 2)} MiB/s</span><span><b>I/O Write</b>{numberText(write, 2)} MiB/s</span></>
         : <span><b>I/O</b>0 MiB/s</span>}
       <span><b>WP</b>{numberText(wp, 0)}</span>
-      {critical > 0 && <span className="is-attention"><b>APP Critical WP</b>{critical}</span>}
+      <span className={critical > 0 ? 'is-attention' : ''} title="APP Critical WP is APP-server data at this observation, not workload execution status."><b>APP Critical WP</b>{critical === null ? 'Not observed' : critical}</span>
     </div>
-    <div className="rundeckSingleSampleAxis"><i /><strong>{formatWib(row.collected_at, false)}</strong></div>
+    <div className="rundeckSingleSampleAxis"><i /><strong>{formatWib(row.collected_at, false)}</strong><small>Single saved observation - no trend line</small></div>
   </div>
 }
 
@@ -953,7 +954,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                   <td title={item?.program || 'Program was not captured for this WP row'}>{item?.program || 'Not captured'}</td>
                   <td>{item?.cpu_class || '—'}</td>
                   <td className={currentError ? 'is-attention' : ''}>{currentError || '—'}</td>
-                  <td>{latestError || '—'}{latestError && recency && <small>{recency.replaceAll('_', ' ')}</small>}</td>
+                  <td>{latestError || '—'}{latestError && <small>{recency === 'AT_SNAPSHOT' ? 'AT SNAPSHOT' : 'HISTORICAL'}</small>}</td>
                   <td>{numberText(item?.rabax ?? 0, 0)} / {numberText(item?.rxmsg ?? 0, 0)}</td>
                   <td>{numberText(item?.sxpg ?? 0, 0)} / {numberText(item?.job_counter ?? 0, 0)}</td>
                 </tr>
