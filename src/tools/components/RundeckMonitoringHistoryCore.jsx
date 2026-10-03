@@ -19,13 +19,13 @@ function SelectedWorkload(props) {
                 <span><b>Avg CPU</b>{props.selectedJob.reviewMetrics.avgCpuPct == null ? '—' : `${Number(props.selectedJob.reviewMetrics.avgCpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
                 <span><b>Avg PSS</b>{props.selectedJob.reviewMetrics.avgPssGb == null ? '—' : `${Number(props.selectedJob.reviewMetrics.avgPssGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
                 <span><b>Avg Processes</b>{props.selectedJob.reviewMetrics.avgProcesses == null ? '—' : Number(props.selectedJob.reviewMetrics.avgProcesses).toLocaleString('en-US',{maximumFractionDigits:1})}</span>
-                <span title="APP Critical WP overlap is APP-level co-observation during the selected review period, not job execution status."><b>APP Critical WP overlap</b>{props.selectedJob.reviewMetrics.criticalWpChecks == null ? '—' : `${props.selectedJob.reviewMetrics.criticalWpChecks} / ${props.selectedJob.reviewMetrics.hostObservations ?? '—'} checks`}</span>
+                <span title="APP Critical WP is APP-level co-observation during the selected review period, not job execution status."><b>APP Critical WP in period</b>{props.selectedJob.reviewMetrics.criticalWpChecks == null ? '—' : `${props.selectedJob.reviewMetrics.criticalWpChecks} / ${props.selectedJob.reviewMetrics.hostObservations ?? '—'} checks`}</span>
               </div>
             : <div className="rundeckSelectedCompactMetrics">
                 <span><b>CPU</b>{props.selectedJob.cpuPct === null || props.selectedJob.cpuPct === undefined ? '—' : `${Number(props.selectedJob.cpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
                 <span><b>PSS Memory</b>{props.selectedJob.memoryGb === null || props.selectedJob.memoryGb === undefined ? '—' : `${Number(props.selectedJob.memoryGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
                 <span><b>Processes</b>{props.selectedJob.processes ?? '—'}</span>
-                <span title="APP Critical WP is APP-server data for the selected workload observation. 0 means none were recorded; Not observed means this value was not retained."><b>APP Critical WP (workload)</b>{props.selectedJob.criticalWp === null || props.selectedJob.criticalWp === undefined ? 'Not observed for selected workload' : props.selectedJob.criticalWp}</span>
+                <span title="APP Critical WP is APP-server data for the selected workload observation. 0 means none were recorded; Not observed means this value was not retained."><b>APP Critical WP</b>{props.selectedJob.criticalWp === null || props.selectedJob.criticalWp === undefined ? 'Not observed for workload' : props.selectedJob.criticalWp}</span>
               </div>}
           <button type="button" onClick={props.onOpenSelectedAnalysis}>Analyze Performance</button>
         </div>
