@@ -11,7 +11,7 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current application version: **v1.34.37**
+- Current application version: **v1.34.51**
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
@@ -76,15 +76,14 @@ Performance Analysis modes:
 - Infrastructure summary
 - SAP App Servers
 - Server Trend
-- Current Jobs & Programs
-- Selected Job / Program
+- Selected Job / Program under the selected APP context
 - Correlated Events
 - SAP Availability
 - SAP Issues
 - Observation History
 - Infrastructure Analysis
 - System Data
-- Jobs & Programs to Review
+- Current Jobs & Programs beside Jobs & Programs to Review
 
 ### Shared investigation surfaces
 
@@ -129,6 +128,7 @@ Do not use nearest-bucket recomputation to replace the value the operator clicke
 ## Performance Analysis contract
 
 - Current = selected workload episode.
+- Current with exactly one saved observation renders a Selected Observation summary rather than a trend line.
 - Current/3H/6H/24H/7D/30D are supported.
 - Current raw observations and historical buckets are different evidence types.
 - History truncation labels are episode-aware.
@@ -139,12 +139,14 @@ Do not use nearest-bucket recomputation to replace the value the operator clicke
 
 - Correlation does not prove causation.
 - APP Critical WP is APP-level evidence.
+- Selected workload Critical WP preserves the distinction between observed zero and missing/not-retained evidence.
 - Missing availability observation is not DOWN.
 - Grouped workload CPU may exceed 100%.
 - PSS is the current workload memory metric.
 - Historical RSS and current PSS are not 1:1 comparable.
-- `Latest Trace Error` may be historical.
+- `Latest Trace Error` may be historical and is labelled AT SNAPSHOT or HISTORICAL in the UI.
 - SM37 status must not be inferred from WP sampling.
+- PDF report alignment uses the report's Performance and Availability source timestamps; mismatched timing remains PARTIAL rather than being silently normalized.
 
 ## Validation
 
