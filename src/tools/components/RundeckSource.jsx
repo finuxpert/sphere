@@ -7,7 +7,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
-import { overallOperationalState } from './rundeckStatusSemantics.js'
+import { systemHealthState } from './rundeckSystemHealth.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
 
@@ -137,6 +137,16 @@ function availabilityStatus(rows = [], name = '') {
   const key = String(name || '').toUpperCase()
   const row = rows.find((item) => String(item?.name || '').toUpperCase() === key)
   return String(row?.status || 'UNKNOWN').toUpperCase()
+}
+
+function availabilityServiceImpact(payload = {}) {
+  const apps = payload?.sap_app || []
+  const hana = payload?.hana_system_db || []
+  const web = payload?.web_dispatcher || []
+  const appDown = apps.some((row) => String(row?.status || '').toUpperCase() === 'DOWN')
+  const hanaPrimaryDown = hana.some((row) => String(row?.name || '').toUpperCase() === 'PRIMARY' && String(row?.status || '').toUpperCase() === 'DOWN')
+  const webDown = web.length > 0 && web.every((row) => String(row?.status || '').toUpperCase() === 'DOWN')
+  return appDown || hanaPrimaryDown || webDown
 }
 
 export default function RundeckSource({ onCollection }) {
@@ -337,7 +347,11 @@ export default function RundeckSource({ onCollection }) {
       if (typeof pdf.textWithLink === 'function' && REPORT_URL) pdf.textWithLink(APP_TAGLINE, brandX, 17, { url: REPORT_URL })
       else pdf.text(APP_TAGLINE, brandX, 17)
 
-      const status = overallHealth || 'NORMAL'
+      const availabilityState = String(availabilityResult?.summary?.service_state || availabilityResult?.summary?.sap_state || 'UNKNOWN').toUpperCase()
+      const status = systemHealthState(operationalHosts, {
+        availabilityState,
+        serviceCritical: availabilityServiceImpact(availabilityResult),
+      })
       const availabilityApps = availabilityResult?.sap_app || []
       const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
       const hanaRows = availabilityResult?.hana_system_db || []
@@ -569,13 +583,6 @@ export default function RundeckSource({ onCollection }) {
 
   const collectionAligned = !latest?.collection_id || !hostSnapshot?.collection_id || hostSnapshot.collection_id === latest.collection_id
   const operationalHosts = collectionAligned ? hosts : []
-  const overallHealth = !collectionAligned
-    ? 'WARNING'
-    : overallOperationalState(operationalHosts, {
-        stale: Boolean(health?.rundeck_stale),
-        incidentActive: Boolean(incidentSummary?.active),
-      })
-
   const collectionCount = history.length
   const partialCount = history.filter((row) => row.status === 'PARTIAL').length
   const failedCount = history.filter((row) => row.status === 'FAILED').length
