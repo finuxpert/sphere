@@ -7,12 +7,13 @@ const metric=(value,suffix='')=>value===null||value===undefined||value===''?'—
 const statusFs=(value)=>Number(value)>=90?'CRITICAL':Number(value)>=80?'ATTENTION':'NORMAL'
 const severityRank={NORMAL:0,ATTENTION:1,CRITICAL:2}
 const worst=(...states)=>states.reduce((a,b)=>(severityRank[b]||0)>(severityRank[a]||0)?b:a,'NORMAL')
-const formatTime=(value)=>value?new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short',hour12:false}).format(new Date(value)):'—'
+const normalizeClock=(value)=>String(value||'').replace(/(\d{1,2})\.(\d{2})/g,'$1:$2')
+const formatTime=(value)=>value?normalizeClock(new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short',hour12:false}).format(new Date(value))):'—'
 const formatAxisTime=(value,range)=>{
   if(!value)return '—'
   const date=new Date(value)
-  if(range==='1h'||range==='6h')return new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hour12:false}).format(date)
-  if(range==='24h')return new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(date)
+  if(range==='1h'||range==='6h')return normalizeClock(new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hour12:false}).format(date))
+  if(range==='24h')return normalizeClock(new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(date))
   return new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'short'}).format(date)
 }
 const ageText=(value)=>{
@@ -49,8 +50,8 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
     }
     return visible
   },[items,metricType,selectedSeries])
-  const width=920,height=320
-  const pad={left:42,right:24,top:24,bottom:48}
+  const width=920,height=380
+  const pad={left:46,right:22,top:14,bottom:34}
   const values=items.map(row=>Number(row.value)).filter(Number.isFinite)
   const rawMax=Math.max(1,...values)
   const min=0
@@ -85,13 +86,22 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
         <text x={x(tick)} y={height-12} textAnchor={index===0?'start':index===xTicks.length-1?'end':'middle'}>{formatAxisTime(tick,range)}</text>
       </g>)}
       {groups.map(([key,rows],index)=>{
-        const points=rows.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')
+        const cleanRows=rows.filter((row)=>Number.isFinite(Number(row.value))&&row.collected_at)
+        const points=cleanRows.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')
         const selected=!selectedSeries||key===selectedSeries
-        if(rows.length===1){
-          const row=rows[0]
-          return <circle key={key} cx={x(row.collected_at)} cy={y(row.value)} r="3.5" className={`seriesPoint s${index%8} ${selected?'is-selected':'is-dimmed'}`}/>
+        const latest=cleanRows.at(-1)
+        if(cleanRows.length===1){
+          const row=cleanRows[0]
+          return <circle key={key} cx={x(row.collected_at)} cy={y(row.value)} r="4" className={`seriesPoint s${index%8} ${selected?'is-selected':'is-dimmed'}`}>
+            <title>{key} - {metric(row.value,metricType==='network'?' Mbps':'%')} - {formatTime(row.collected_at)} WIB</title>
+          </circle>
         }
-        return <polyline key={key} points={points} className={`series s${index%8} ${selected?'is-selected':'is-dimmed'}`} fill="none"/>
+        return <g key={key}>
+          <polyline points={points} className={`series s${index%8} ${selected?'is-selected':'is-dimmed'}`} fill="none"/>
+          {selected&&latest&&<circle cx={x(latest.collected_at)} cy={y(latest.value)} r="4.2" className={`seriesPoint s${index%8} is-selected`}>
+            <title>{key} - {metric(latest.value,metricType==='network'?' Mbps':'%')} - {formatTime(latest.collected_at)} WIB</title>
+          </circle>}
+        </g>
       })}
     </svg>
     <div className="rundeckInfraLegend">{groups.map(([key],index)=><span key={key} className={`s${index%8} ${selectedSeries===key?'is-selected':''}`}><i/> {key}</span>)}</div>
@@ -166,7 +176,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
-      <div><p>Filesystem, network and storage for this server.</p></div>
+      <div><p>Current infrastructure state and retained history for this APP server.</p></div>
       <div className="rundeckInfraIdentity"><select aria-label="Infrastructure host" value={host==='AOQ'?'':host} onChange={e=>setSelectedHost(e.target.value)}>{data.hosts.map(row=><option key={row.host} value={row.host}>{row.source?`${row.source} · `:''}{row.host}</option>)}</select><span className={`state is-${overall.toLowerCase()}`}>{overall}</span></div>
     </header>
 
@@ -248,28 +258,29 @@ export default function RundeckInfrastructure({incidentStart=''}){
 
       <section className="rundeckInfraTrend rundeckInfraTrendWorkspace">
         <div className="rundeckInfraTrendWorkspaceHead">
-          <div><b>Infrastructure History</b><small>Usage history for {host}</small></div>
-          <em>{selectedSeries||'Selecting…'} · {range.toUpperCase()}</em>
+          <div><b>Infrastructure History</b><small>Retained measurements for {host}</small></div>
         </div>
-        <header><div><p>History for the selected server.</p></div><div className="controls">
+        <header><div/><div className="controls">
         <div>{['1h','6h','24h','7d','30d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
         <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>{setTrend([]);setTrendMetric(v);setSelectedSeries('')}}>{label}</button>)}</div>
       </div></header>
       {selectedSeries&&selectedValues.length>0&&<div className="rundeckInfraTrendSummary">
         <strong>Selected: {selectedSeries}</strong>
-        <span>Current {metric(trendCurrent,trendMetric==='network'?' Mbps':'%')}</span>
-        <span>Min {metric(trendMin,trendMetric==='network'?' Mbps':'%')}</span>
-        <span>{storageSourceOver100?'Reported Max':'Max'} {metric(trendMax,trendMetric==='network'?' Mbps':'%')}</span>
-        {trendChange!==null&&<span>Change from range start {trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
-        {trendMetric==='network'&&selectedValues2.length>0&&<span>Peak TX {metric(Math.max(...selectedValues2),' Mbps')}</span>}
-        {trendMetric==='network'&&selectedDrops.length>0&&<span title="Maximum combined RX + TX dropped-counter delta reported in one retained sample.">Peak drop delta {metric(Math.max(...selectedDrops))}</span>}
-        {trendMetric==='storage'&&selectedValues2.length>0&&<span>Peak write {metric(Math.max(...selectedValues2),' IOPS')}</span>}
-        {storageSourceOver100&&<span className="is-attention" title="The collector stored a storage util_pct source value above 100. SPHERE keeps the raw value visible instead of silently clamping it. Verify collector/device mapping before treating it as a physical utilization percentage.">Source util &gt;100% - verify</span>}
-        {trendMetric==='storage'&&selectedWriteMbps.length>0&&<span>Peak write {metric(Math.max(...selectedWriteMbps),' MB/s')}</span>}
+        <div className="rundeckInfraTrendStats">
+          <span><b>Current</b>{metric(trendCurrent,trendMetric==='network'?' Mbps':'%')}</span>
+          <span><b>Min</b>{metric(trendMin,trendMetric==='network'?' Mbps':'%')}</span>
+          <span><b>{storageSourceOver100?'Reported Max':'Max'}</b>{metric(trendMax,trendMetric==='network'?' Mbps':'%')}</span>
+          {trendChange!==null&&<span><b>Change from range start</b>{trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
+          {trendMetric==='network'&&selectedValues2.length>0&&<span><b>Peak TX</b>{metric(Math.max(...selectedValues2),' Mbps')}</span>}
+          {trendMetric==='network'&&selectedDrops.length>0&&<span title="Maximum combined RX + TX dropped-counter delta reported in one retained sample."><b>Peak Drop Delta</b>{metric(Math.max(...selectedDrops))}</span>}
+          {trendMetric==='storage'&&selectedValues2.length>0&&<span><b>Peak Write IOPS</b>{metric(Math.max(...selectedValues2),' IOPS')}</span>}
+          {trendMetric==='storage'&&selectedWriteMbps.length>0&&<span><b>Peak Write MB/s</b>{metric(Math.max(...selectedWriteMbps),' MB/s')}</span>}
+          {storageSourceOver100&&<span className="is-attention" title="The collector stored a storage util_pct source value above 100. SPHERE keeps the raw value visible instead of silently clamping it. Verify collector/device mapping before treating it as a physical utilization percentage."><b>Source Quality</b>util &gt;100% - verify</span>}
+        </div>
       </div>}
       {coverageDelayed&&<div className="rundeckInfraCoverageNote">Retained history starts {formatTime(coverageStart)} WIB; earlier time in this range has no retained collection.</div>}
       <SparkChart items={trend} metricType={trendMetric} selectedSeries={selectedSeries} incidentStart={incidentStart} range={range}/>
-        <small>{trendMetric==='filesystem'?'Filesystem capacity usage':trendMetric==='network'?'Network RX history with TX peak and drop deltas':'Storage I/O utilization with write peaks'} · {range.toUpperCase()}</small>
+        <small>{trendMetric==='filesystem'?'Filesystem Capacity':trendMetric==='network'?'RX Throughput History - TX peak and drop delta shown above':'Storage I/O Activity - write peaks shown above'} - {range.toUpperCase()}</small>
       </section>
     </div>
   </section>

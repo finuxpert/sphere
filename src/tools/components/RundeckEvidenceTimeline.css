@@ -325,3 +325,18 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSum
     justify-self:start;
   }
 }
+
+
+/* SPHERE v1.34.43 — concise correlated-event drawer hierarchy. */
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary{
+  min-height:36px!important;
+  padding-bottom:6px!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary>small{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+  font-size:9px!important;
+  font-weight:560!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent{
+  padding:5px 0!important;
+}

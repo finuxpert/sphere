@@ -88,11 +88,16 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         : 'Cross-source timing status.'
 
   if (compact) {
+    const timingState = state === 'ALIGNED' ? 'SAME TIME WINDOW' : state
+    const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
+      ? `Workload ended: ${workloadGapText}`
+      : hasSkew
+        ? `Timing: ${timingState} - ${Math.round(Number(skew))}m difference`
+        : `Timing: ${timingState}`
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
-      <span className="rundeckEvidenceScope">{correlationScope}</span>
-      <strong>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}{events.length ? `, ${events.length} events` : ''}</strong>
-      <small>{state === 'NO OVERLAP' && hasWorkloadGap ? `Workload ended: ${workloadGapText}` : hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}</small>
+      <strong>{events.length ? `${events.length} correlated event${events.length === 1 ? '' : 's'}` : 'No correlated events'}</strong>
+      <small>{timingDetail}</small>
       <em>View events ›</em>
     </button>
   }
@@ -102,7 +107,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Correlated Events</span>
       <span className="rundeckEvidenceScope">{correlationScope}</span>
       <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}</span>
-      <small>{state === 'NO OVERLAP' && hasWorkloadGap ? `Workload ended: ${workloadGapText}` : hasSkew ? `Time difference: ${Number(skew).toLocaleString('en-US', { maximumFractionDigits: 1 })}m` : 'Timing: unavailable'}{events.length ? `, Events: ${events.length}` : ''}</small>
+      <small>{events.length ? `${events.length} correlated event${events.length === 1 ? '' : 's'} - ` : ''}{state === 'NO OVERLAP' && hasWorkloadGap ? `Workload ended: ${workloadGapText}` : hasSkew ? `Time difference: ${Math.round(Number(skew))}m` : 'Timing: unavailable'}</small>
     </div>
 
     <div className="rundeckEvidenceBody">

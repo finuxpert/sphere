@@ -25,7 +25,7 @@ export const formatWib = (value, withDate = false, withSeconds = false) => {
     minute: '2-digit',
     ...(withSeconds ? { second: '2-digit' } : {}),
     hour12: false,
-  }).format(date)
+  }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
 }
 
 export const numberText = (value, digits = 1) => {

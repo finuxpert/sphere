@@ -80,22 +80,51 @@ export default function RundeckMonitoringHistory(props) {
     <section className="rundeckSelectedSecondaryAnalysis" aria-label="Additional analysis">
       <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })} disabled={!selectedJob?.key}>
         <SphereIcon name="history" />
-        <span><b>Observation History</b><small>Saved runs and observation records</small></span>
+        <span><b>Observation History</b><small>Saved observations</small></span>
         <em>›</em>
       </button>
       <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}>
         <SphereIcon name="server" />
-        <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
+        <span><b>Infrastructure Analysis</b><small>FS - Network - Storage</small></span>
         <em>›</em>
       </button>
       {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
         <SphereIcon name="database" />
-        <span><b>System Data</b><small>{systemDataSummary || 'Collections · SPHERE Services'}</small></span>
+        <span><b>System Data</b><small>{systemDataSummary ? systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 - $2') : 'Collections - Services'}</small></span>
         <em>›</em>
       </button>}
     </section>
   </>
 
+
+  const performanceReviewContent = <RundeckPerformanceReview
+    refreshToken={refreshToken}
+    selectedJob={selectedJob}
+    onSelectJob={inspectJob}
+    incidentStart={props.incidentStart || ''}
+    onOpenQuickAnalysis={(row, reviewContext) => {
+      const reviewJob = {
+        key: row.consumer_key,
+        host: row?.hosts?.length === 1 ? row.hosts[0] : '',
+        consumerType: row.consumer_type,
+        source: 'performance-review',
+        days: reviewContext?.days || 1,
+        reviewPeriod: reviewContext?.period || '1d',
+        reviewMetrics: {
+          avgCpuPct: row.avg_cpu_pct ?? null,
+          peakCpuPct: row.peak_cpu_pct ?? null,
+          avgPssGb: row.avg_pss_gb ?? null,
+          avgProcesses: row.avg_process_count ?? null,
+          observations: row.observations ?? row.occurrences ?? null,
+          criticalWpChecks: row.critical_wp_host_checks ?? row.critical_wp_checks ?? null,
+          hostObservations: row.host_observations ?? null,
+        },
+      }
+      onSelectJob?.(reviewJob)
+      setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
+    }}
+    externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
+  />
 
   return <>
     <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
@@ -126,42 +155,13 @@ export default function RundeckMonitoringHistory(props) {
             onSelectJob={inspectJob}
             onTrendContext={forwardTrendContext}
             operationalEvidenceContent={operationalEvidenceContent}
+            performanceReviewContent={performanceReviewContent}
             appFocusRequest={appFocusRequest}
             onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
             onInspectApp={inspectApp}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth refreshToken={refreshToken} />
-          <section className="rundeckPerformanceReviewBand" aria-label="Jobs and programs to review">
-            <RundeckPerformanceReview
-              refreshToken={refreshToken}
-              selectedJob={selectedJob}
-              onSelectJob={inspectJob}
-              incidentStart={props.incidentStart || ''}
-              onOpenQuickAnalysis={(row, reviewContext) => {
-                const reviewJob = {
-                  key: row.consumer_key,
-                  host: row?.hosts?.length === 1 ? row.hosts[0] : '',
-                  consumerType: row.consumer_type,
-                  source: 'performance-review',
-                  days: reviewContext?.days || 1,
-                  reviewPeriod: reviewContext?.period || '1d',
-                  reviewMetrics: {
-                    avgCpuPct: row.avg_cpu_pct ?? null,
-                    peakCpuPct: row.peak_cpu_pct ?? null,
-                    avgPssGb: row.avg_pss_gb ?? null,
-                    avgProcesses: row.avg_process_count ?? null,
-                    observations: row.observations ?? row.occurrences ?? null,
-                    criticalWpChecks: row.critical_wp_host_checks ?? row.critical_wp_checks ?? null,
-                    hostObservations: row.host_observations ?? null,
-                  },
-                }
-                onSelectJob?.(reviewJob)
-                setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
-              }}
-              externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
-            />
-          </section>
 
           {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
             title="Analysis Menu"

@@ -39,8 +39,51 @@ SHIFT_MIN_OBSERVATIONS = max(2, int(os.getenv("SPHERE_EVAL_SHIFT_MIN_OBSERVATION
 SHIFT_INCREASE_PCT = max(0.0, float(os.getenv("SPHERE_EVAL_SHIFT_INCREASE_PCT", "50")))
 SHIFT_CPU_MIN_DELTA_PP = max(0.0, float(os.getenv("SPHERE_EVAL_SHIFT_CPU_MIN_DELTA_PP", "20")))
 _CONFIDENCE_RANK = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
-EVALUATION_CACHE_TTL_SECONDS = max(5, int(os.getenv("SPHERE_EVAL_CACHE_TTL_SECONDS", "60")))
+EVALUATION_CACHE_TTL_SECONDS = max(5, int(os.getenv("SPHERE_EVAL_CACHE_TTL_SECONDS", "900")))
+EVALUATION_CACHE_MAX_ENTRIES = max(6, int(os.getenv("SPHERE_EVAL_CACHE_MAX_ENTRIES", "24")))
 _EVALUATION_CACHE: dict[tuple[str, str, int, str], tuple[float, dict]] = {}
+
+
+def _cache_get(key: tuple[str, str, int, str]) -> dict | None:
+    now = time.monotonic()
+    cached = _EVALUATION_CACHE.get(key)
+    if not cached:
+        return None
+    stored_at, payload = cached
+    if now - stored_at > EVALUATION_CACHE_TTL_SECONDS:
+        _EVALUATION_CACHE.pop(key, None)
+        return None
+    # Refresh recency without discarding the other period/type entries.
+    _EVALUATION_CACHE.pop(key, None)
+    _EVALUATION_CACHE[key] = (stored_at, payload)
+    return payload
+
+
+def _cache_put(key: tuple[str, str, int, str], payload: dict) -> None:
+    now = time.monotonic()
+    stale = [
+        cache_key for cache_key, (stored_at, _payload) in _EVALUATION_CACHE.items()
+        if now - stored_at > EVALUATION_CACHE_TTL_SECONDS
+    ]
+    for cache_key in stale:
+        _EVALUATION_CACHE.pop(cache_key, None)
+
+    _EVALUATION_CACHE.pop(key, None)
+    _EVALUATION_CACHE[key] = (now, payload)
+    while len(_EVALUATION_CACHE) > EVALUATION_CACHE_MAX_ENTRIES:
+        oldest_key = next(iter(_EVALUATION_CACHE))
+        _EVALUATION_CACHE.pop(oldest_key, None)
+
+
+def _runtime_payload(payload: dict, *, cache: str, duration_ms: float) -> dict:
+    return {
+        **payload,
+        "runtime": {
+            "cache": cache,
+            "duration_ms": round(max(0.0, duration_ms), 1),
+            "cache_entries": len(_EVALUATION_CACHE),
+        },
+    }
 
 
 def _number(value: Any) -> float | None:
@@ -578,6 +621,7 @@ def _anchor_time(conn) -> datetime:
 
 
 def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30) -> dict:
+    started = time.perf_counter()
     period_key = str(period or "1d").lower()
     if period_key not in PERIOD_DAYS:
         raise ValueError("period must be one of 1d, 7d, 30d")
@@ -595,9 +639,9 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         end = _anchor_time(conn) + timedelta(microseconds=1)
         anchor_key = end.isoformat()
         cache_key = (period_key, type_key, limit_key, anchor_key)
-        cached = _EVALUATION_CACHE.get(cache_key)
+        cached = _cache_get(cache_key)
         if cached:
-            return cached[1]
+            return _runtime_payload(cached, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
         start = end - timedelta(days=days)
         previous_start = start - timedelta(days=days)
         current_quality = _collection_quality(conn, start, end)
@@ -762,6 +806,5 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         "items": items,
         "method": "Deterministic complete-collection evaluation with workload-specific median and P95 baseline, recent CPU shift detection and App Server normalized Critical WP overlap. Investigation signal only; not root-cause proof.",
     }
-    _EVALUATION_CACHE.clear()
-    _EVALUATION_CACHE[cache_key] = (time.monotonic(), result)
-    return result
+    _cache_put(cache_key, result)
+    return _runtime_payload(result, cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)

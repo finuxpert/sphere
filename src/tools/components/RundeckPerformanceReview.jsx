@@ -12,9 +12,9 @@ const CPU_HINT = 'CPU Usage is the grouped workload observation and can exceed 1
 const pct = (value, digits = 1) => value === null || value === undefined ? '—' : `${numberText(value, digits)}%`
 const gb = (value) => value === null || value === undefined ? '—' : `${numberText(value, 2)} GB`
 
-function Segmented({ options, value, onChange, label }) {
+function Segmented({ options, value, onChange, label, disabled = false }) {
   return <div className="rundeckReviewSegmented" role="group" aria-label={label}>
-    {options.map(([key, text]) => <button key={key} type="button" className={value === key ? 'is-active' : ''} aria-pressed={value === key} onClick={() => onChange(key)}>{text}</button>)}
+    {options.map(([key, text]) => <button key={key} type="button" className={value === key ? 'is-active' : ''} aria-pressed={value === key} disabled={disabled} onClick={() => onChange(key)}>{text}</button>)}
   </div>
 }
 
@@ -27,6 +27,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [showAll, setShowAll] = React.useState(false)
   const [hasLoaded, setHasLoaded] = React.useState(false)
   const [quickRow, setQuickRow] = React.useState(null)
+  const [loadedPeriod, setLoadedPeriod] = React.useState('')
+  const [loadedType, setLoadedType] = React.useState('')
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -40,7 +42,12 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         }
         return response.json()
       })
-      .then((result) => { setData(result); setHasLoaded(true) })
+      .then((result) => {
+        setData(result)
+        setLoadedPeriod(period)
+        setLoadedType(type)
+        setHasLoaded(true)
+      })
       .catch((failure) => {
         if (failure.name !== 'AbortError') setError(failure.message || 'Performance review unavailable')
       })
@@ -51,6 +58,9 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   }, [period, type, refreshToken])
 
   const quality = data?.quality || {}
+  const periodLabel = PERIODS.find(([key]) => key === period)?.[1] || period.toUpperCase()
+  const typeLabel = TYPES.find(([key]) => key === type)?.[1] || type
+  const showingPreviousResult = loading && hasLoaded && (loadedPeriod !== period || loadedType !== type)
   const reviewRows = [...(data?.items || [])]
     .filter((row) => String(row.status || '').toUpperCase() === 'REVIEW REQUIRED')
     .sort((left, right) => Number(right.avg_cpu_pct || 0) - Number(left.avg_cpu_pct || 0))
@@ -80,14 +90,17 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} need attention · sorted by review priority</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
-        <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" />
-        <Segmented options={TYPES} value={type} onChange={(value) => { setType(value); setShowAll(false) }} label="Workload type" />
-        {reviewRows.length > 4 && <button type="button" className="rundeckReviewMoreV1237" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Top 4' : `View all ${reviewRows.length}`}</button>}
+        <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" disabled={loading && !hasLoaded} />
+        <Segmented options={TYPES} value={type} onChange={(value) => { setType(value); setShowAll(false) }} label="Workload type" disabled={loading && !hasLoaded} />
+        {reviewRows.length > 4 && <button type="button" className="rundeckReviewMoreV1237" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Top 4' : `View all ${reviewRows.length} results`}</button>}
       </div>
     </header>
 
     {loading && !hasLoaded && <div className="rundeckReviewState">Loading performance review…</div>}
-    {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">Updating…</div>}
+    {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">
+      Updating {periodLabel}{type !== 'ALL' ? ` · ${typeLabel}` : ''}…
+      {showingPreviousResult && <span>Showing previous result until the new review is ready.</span>}
+    </div>}
     {error && <div className="rundeckReviewState is-error">{error}</div>}
 
     {!error && data && <>
@@ -96,7 +109,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         {incomplete > 0 && <span>{numberText(incomplete, 0)} incomplete check{incomplete === 1 ? '' : 's'} excluded</span>}
       </div>}
 
-      <div className="rundeckReviewTableWrapV1231">
+      <div className={`rundeckReviewTableWrapV1231${loading && hasLoaded ? ' is-updating' : ''}`}>
         <table className="rundeckReviewTableV1231">
           <thead><tr><th>Job / Program</th><th>Reason</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th></tr></thead>
           <tbody>

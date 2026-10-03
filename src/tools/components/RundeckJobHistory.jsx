@@ -202,7 +202,7 @@ function chartAxisText(value, start, end) {
     day: '2-digit',
     month: 'short',
     ...(span <= 7 * 24 * 60 * 60 * 1000 ? { hour: '2-digit', minute: '2-digit', hour12: false } : {}),
-  }).format(date)
+  }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
 }
 
 function chartAxisSplitNumber(start, end) {
@@ -247,7 +247,19 @@ function nearestRow(rows, value) {
 }
 
 function metricSeriesData(rows, key) {
-  return rows.map((row) => [row.collected_at, rowMetric(row, key)])
+  const data = []
+  rows.forEach((row, index) => {
+    if (index > 0) {
+      const previous = Date.parse(rows[index - 1]?.collected_at || '')
+      const current = Date.parse(row?.collected_at || '')
+      if (Number.isFinite(previous) && Number.isFinite(current) && current - previous > GAP_MS) {
+        data.push([new Date(previous + 1).toISOString(), null])
+        data.push([new Date(current - 1).toISOString(), null])
+      }
+    }
+    data.push([row.collected_at, rowMetric(row, key)])
+  })
+  return data
 }
 
 function chartProfile(rows = []) {
