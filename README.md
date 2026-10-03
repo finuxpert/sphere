@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated release: **v1.34.37**.
+Current Rundeck-integrated DEV release: **v1.34.51**.
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -87,7 +87,8 @@ Performance Analysis exposes:
 - SAP Application Servers
 - Server Trend
 - Current Jobs & Programs
-- Selected Job / Program context
+- Selected Job / Program context with workload-scoped APP Critical WP wording
+- Jobs & Programs to Review beside Current Jobs & Programs
 - Performance Analysis with Current / 3H / 6H / 24H / 7D / 30D
 - Observation Details
 - Historical Bucket Details
@@ -100,19 +101,21 @@ Performance Analysis exposes:
 - System Health
 - Jobs & Programs to Review
 - Workload Explorer / historical analysis
-- PDF reporting
+- One-page PDF quick reporting for Basis/Infrastructure handoff
 
 ## Important evidence semantics
 
 - Correlation is temporal/context evidence; it is not proof of causation.
 - Missing availability observations are not inferred as DOWN.
-- APP Critical WP is APP-server evidence, not workload execution status.
+- APP Critical WP is APP-server evidence, not workload execution status. Selected-workload UI keeps **0** distinct from **Not observed for selected workload**.
 - CPU for grouped workloads may exceed 100% because multiple processes/CPU cores can be aggregated.
 - PSS is the current memory metric used in workload analysis. Legacy RSS evidence must not be compared 1:1.
 - Historical Server Trend uses bucketed values. Peak mode keeps **Bucket**, **Peak At**, **Peak Value**, and **Peak Collection** separate.
 - WP trace `Error at Snapshot` is only current-at-snapshot evidence when collector recency is `AT_SNAPSHOT`.
-- `Latest Trace Error` may be historical and does not mean the SAP job failed.
+- `Latest Trace Error` may be historical and does not mean the SAP job failed. The UI labels retained trace errors as **AT SNAPSHOT** or **HISTORICAL**.
 - SM37 remains the authority for SAP background-job execution status.
+- A Current Performance Analysis range with one saved observation is shown as a **Selected Observation**, not as a misleading trend line.
+- PDF reports show Performance and Availability source times and keep `ALIGNED` / `PARTIAL` explicit when the report sources are not from the same timing window.
 
 ## Build paths
 
