@@ -452,6 +452,21 @@ function signedDelta(value, previous, unit = '') {
   return `${delta > 0 ? '+' : ''}${numberText(delta, 1)}${unit}`
 }
 
+function trendAppComparison(trend, selected) {
+  const target = Date.parse(selected?.bucket || selected?.at || '')
+  if (!Number.isFinite(target)) return []
+  return (trend?.items || [])
+    .map((row) => {
+      const bucketAt = Date.parse(row.bucket || '')
+      const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
+      if (!Number.isFinite(bucketAt) || !Number.isFinite(value)) return null
+      return { host: shortHost(row.host || ''), bucketAt, value }
+    })
+    .filter(Boolean)
+    .filter((row) => Math.abs(row.bucketAt - target) <= 1000)
+    .sort((left, right) => left.host.localeCompare(right.host))
+}
+
 function workloadWp(consumer) {
   const details = consumer?.details || {}
   return [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
@@ -478,21 +493,33 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
         ? 'Nearest retained observation - same minute'
         : `Nearest retained observation - ${timingMinutes}m difference`
   const topContext = consumers[0] ? snapshotContext(selected, selectedRow, consumers[0]) : null
+  const appComparison = trendAppComparison(trend, selected)
+  const warning = Number(trend?.warning)
+  const critical = Number(trend?.critical)
+  const selectedValue = Number(selected?.value)
+  const aboveCritical = Number.isFinite(selectedValue) && Number.isFinite(critical) && selectedValue >= critical
+  const aboveWarning = Number.isFinite(selectedValue) && Number.isFinite(warning) && selectedValue >= warning
+  const thresholdText = [
+    Number.isFinite(warning) ? `Warn ${numberText(warning, 0)}${selectedUnit}` : '',
+    Number.isFinite(critical) ? `Critical ${numberText(critical, 0)}${selectedUnit}` : '',
+    neighbors.previous ? `${signedDelta(selectedValue, neighbors.previous.value, selectedUnit)} vs previous` : '',
+  ].filter(Boolean).join(' · ')
+  const topConsumer = consumers[0] || null
 
   return <section className="rundeckTrendModalContent" aria-live="polite">
-    <div className="rundeckTrendModalContext">
+    <section className="rundeckTrendSpikeSummary" aria-label="Selected trend point">
       <div>
-        <span>{selected?.mode === 'max' ? 'Peak sample' : 'Selected sample'} · saved history</span>
-        <strong>{selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</strong>
-        <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'}: {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket: ${formatWib(selected.bucket, true)} WIB` : ''}</small>
+        <span>Selected Point</span>
+        <strong>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(trend?.metric)} {aboveCritical || aboveWarning ? 'Spike' : 'Detail'}</strong>
+        <small>{selected?.mode === 'max' ? 'Peak' : 'Observed'} {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selectedUnit}`} at {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}</small>
       </div>
-      <div className="rundeckTrendModalContextMeta">
-        {collectionId && <span>Collection {collectionId.replace(/^rundeck-/, '').slice(0, 18)}</span>}
-        {resourceState && <span className={`rundeckInlineStatus is-${resourceState.toLowerCase()}`}>Host Resource: {resourceState}</span>}
+      <div className="rundeckTrendSpikeThreshold">
+        {thresholdText && <b>{thresholdText}</b>}
+        <small>{selected?.bucket ? `Bucket ${formatWib(selected.bucket, true)} WIB` : ''}{collectionId ? ` · Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : ''}</small>
       </div>
-    </div>
+    </section>
 
-    {!loading && !error && selectedRow && <section className="rundeckTrendInvestigationSnapshot" aria-label="APP snapshot at selected time">
+        {!loading && !error && selectedRow && <section className="rundeckTrendInvestigationSnapshot" aria-label="APP snapshot at selected time">
       <header><span>APP Snapshot at Selected Time</span><small>{selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}</small></header>
       <div className="rundeckTrendSnapshotMetrics">
         <span><b>CPU</b>{selectedRow.cpu_pct == null ? '—' : `${numberText(selectedRow.cpu_pct, 1)}%`}</span>
@@ -502,6 +529,16 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
         <span><b>Host Resource</b>{resourceState || 'UNKNOWN'}</span>
       </div>
       <p>APP Critical WP is APP-level evidence at the retained observation. It does not prove that a workload caused the spike.</p>
+    </section>}
+
+    {appComparison.length > 0 && <section className="rundeckTrendAppComparison" aria-label="APP comparison at selected time">
+      <header><span>APP Comparison</span><small>Same trend bucket</small></header>
+      <div>{appComparison.map((item) => <span key={item.host} className={item.host === shortHost(selected?.host || '') ? 'is-selected' : ''}><b>{item.host}</b>{numberText(item.value,1)}{selectedUnit}</span>)}</div>
+    </section>}
+
+    {topConsumer && <section className="rundeckTrendTopWorkload" aria-label="Top workload at selected time">
+      <div><span>Top Workload at Selected Time</span><strong title={topConsumer.consumer_key}>{topConsumer.consumer_key}</strong><small>{workloadTypeLabel(topConsumer.consumer_type)}</small></div>
+      <p>CPU <b>{numberText(topConsumer.cpu_pct,1)}%</b> · PSS <b>{pssValue(topConsumer)==null?'—':`${numberText(pssValue(topConsumer),2)} GB`}</b> · Processes <b>{processCount(topConsumer)==null?'—':numberText(processCount(topConsumer),0)}</b> · WP <b>{workloadWp(topConsumer)}</b></p>
     </section>}
 
     <section className="rundeckTrendComparison" aria-label="Selected point comparison">
@@ -528,10 +565,10 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
     {!loading && !error && selected && <section className="rundeckTrendWorkloadPanel">
       <header>
         <div>
-          <span>History at Selected Time</span>
+          <span>Top Workloads at Selected Time</span>
           <strong>Top {consumers.length} workload{consumers.length === 1 ? '' : 's'} loaded</strong>
         </div>
-        {consumers[0]?.consumer_key && <small>Top workload CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
+        {consumers[0]?.consumer_key && <small>Highest workload CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
       </header>
 
       <div className="rundeckTrendWorkloadHead" aria-hidden="true">
@@ -698,8 +735,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         <header className="rundeckTrendPointModalHeader">
           <div>
             <span>SPHERE ANALYSIS</span>
-            <h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4>
-            <small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</small>
+            <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(metric)} {Number(selected?.value) >= Number(trend?.warning) ? 'Spike' : 'Detail'}</h4>
+            <small>{selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</small>
             <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
           </div>
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
