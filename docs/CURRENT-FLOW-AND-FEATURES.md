@@ -1,6 +1,6 @@
 # SPHERE Current Flow and Features
 
-This document is the source of truth for the implemented SPHERE operating flow on **v1.34.52**.
+This document is the source of truth for the implemented SPHERE operating flow on **v1.34.53**.
 
 It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 
