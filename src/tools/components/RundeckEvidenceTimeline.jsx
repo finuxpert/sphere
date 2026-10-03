@@ -88,12 +88,12 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         : 'Cross-source timing status.'
 
   if (compact) {
-    const timingState = state === 'ALIGNED' ? 'SAME TIME WINDOW' : state
+    const timingState = state === 'ALIGNED' ? 'Same time window' : state
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
       ? `Workload ended: ${workloadGapText}`
       : hasSkew
-        ? `Timing: ${timingState} - ${Math.round(Number(skew))}m difference`
-        : `Timing: ${timingState}`
+        ? `${timingState} - ${Math.round(Number(skew))}m difference`
+        : timingState
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
       <strong>{events.length ? `${events.length} correlated event${events.length === 1 ? '' : 's'}` : 'No correlated events'}</strong>
