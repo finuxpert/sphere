@@ -1,6 +1,6 @@
 # SPHERE Current Flow and Features
 
-This document is the source of truth for the implemented SPHERE operating flow on **v1.34.51**.
+This document is the source of truth for the implemented SPHERE operating flow on **v1.34.52**.
 
 It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 
@@ -346,7 +346,8 @@ Report semantics:
 - both source times are printed in the report;
 - `ALIGNED` and `PARTIAL` remain explicit;
 - correlation is described as time-based context only;
-- job execution status must be checked in SAP/SM37 while the authoritative feed is not connected.
+- job execution status must be checked in SAP/SM37 while the authoritative feed is not connected;
+- PDF operational state follows the same System Health semantics as the UI: service/resource criticality can be CRITICAL, APP Critical WP alone is ATTENTION, and stale performance/availability data is WARNING.
 
 A report must not convert correlation into a final root-cause verdict.
 
