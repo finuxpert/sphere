@@ -76,7 +76,7 @@ const shortSignal = (label = '') => String(label || 'Performance issue')
 
 const issueSignalText = (label, value) => {
   const normalized = shortSignal(label)
-  if (/^Critical WP\b/i.test(normalized)) return `${value} Critical WP Active`
+  if (/^Critical WP\b/i.test(normalized)) return `Critical WP ${value}`
   return [normalized, value].filter(Boolean).join(' ')
 }
 
@@ -342,6 +342,14 @@ export default function RundeckSource({ onCollection }) {
       const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
       const hanaRows = availabilityResult?.hana_system_db || []
       const webRows = availabilityResult?.web_dispatcher || []
+      const reportPerformanceAt = latest?.collection_time_wib || latest?.finished_at || ''
+      const reportAvailabilityAt = availabilityResult?.collected_at || ''
+      const reportPerformanceTs = Date.parse(reportPerformanceAt || '')
+      const reportAvailabilityTs = Date.parse(reportAvailabilityAt || '')
+      const reportSkewMinutes = Number.isFinite(reportPerformanceTs) && Number.isFinite(reportAvailabilityTs)
+        ? Math.round(Math.abs(reportPerformanceTs - reportAvailabilityTs) / 60000)
+        : null
+      const reportDataAlignment = collectionAligned && reportSkewMinutes !== null && reportSkewMinutes <= 15 ? 'ALIGNED' : 'PARTIAL'
       const [sr, sg, sb] = pdfStatusColor(status)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(5.8)
@@ -376,7 +384,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(92, 105, 114)
       pdf.text(`Since ${formatTime(since)} WIB · Duration ${reportDuration(incidentSummary?.duration_seconds)} · Performance ${formatTime(latest?.finished_at)} WIB`, margin, 44.5)
       pdf.setFontSize(6.6)
-      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · Selected ${clipped(selectedJob?.key || current.consumer_key || 'No workload selected', 46)}`, margin + 145, 44.5)
+      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · ${formatTime(reportAvailabilityAt)} WIB · Selected ${clipped(selectedJob?.key || current.consumer_key || 'No workload selected', 34)}`, margin + 137, 44.5)
 
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, 48, W - margin, 48)
@@ -431,6 +439,12 @@ export default function RundeckSource({ onCollection }) {
         row?.consumer_key === inspectedWorkload && (!selectedJob?.host || !row?.host || row.host === selectedJob.host)
       )) || {}
       const inspectedProgram = distinctProgramText(inspectedSource)
+      const selectedCriticalWpRaw = selectedJob && Object.prototype.hasOwnProperty.call(selectedJob, 'criticalWp')
+        ? selectedJob.criticalWp
+        : (inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp)
+      const selectedCriticalWpText = selectedCriticalWpRaw === null || selectedCriticalWpRaw === undefined
+        ? 'Not observed'
+        : String(selectedCriticalWpRaw)
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.7)
@@ -459,7 +473,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.text(pssText(inspectedSource), margin + 27, selectedMetricY + 3.5)
       pdf.text(processText(inspectedSource), margin + 62, selectedMetricY + 3.5)
       pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 91, selectedMetricY + 3.5)
-      pdf.text(metric(selectedJob?.criticalWp ?? inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp), margin + 114, selectedMetricY + 3.5)
+      pdf.text(selectedCriticalWpText, margin + 114, selectedMetricY + 3.5)
       pdf.setFontSize(6.2)
       pdf.setTextColor(92, 105, 114)
       const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
@@ -499,7 +513,7 @@ export default function RundeckSource({ onCollection }) {
         pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY)
         if (reason) {
           pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(6.3)
+          pdf.setFontSize(6.6)
           pdf.text(clipped(`Reason: ${reason}`, 55), sideX, sideY + 3)
           sideY += 7.2
         } else {
@@ -516,8 +530,10 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.1)
       pdf.setTextColor(22, 31, 38)
-      const selectedCritWp = selectedJob?.criticalWp ?? inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp
-      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · APP Critical WP ${selectedCritWp ?? 'Not observed'} · Data ${dataAlignment} · Timing ${sourceSkewMinutes == null ? 'unknown' : `${sourceSkewMinutes}m difference`}`, margin, H - 23)
+      pdf.text(`Availability: ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · Critical WP: ${selectedCriticalWpText} · Data: ${reportDataAlignment} · Timing: ${reportSkewMinutes == null ? 'unknown' : `${reportSkewMinutes}m`}`, margin, H - 23)
+      pdf.setFontSize(6.2)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text(`Performance ${formatTime(reportPerformanceAt)} WIB · Availability ${formatTime(reportAvailabilityAt)} WIB`, margin + 158, H - 23)
 
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.1)
@@ -526,7 +542,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.7)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37: NOT CONNECTED · APP Critical WP: APP-level data · Timing match only · Check execution status in SAP (SM37).', margin, H - 14)
+      pdf.text('SM37: NOT CONNECTED · Critical WP: APP level · Correlation based on time · Check job status in SAP (SM37).', margin, H - 14)
       pdf.setDrawColor(210, 217, 221)
       pdf.line(margin, H - 11, W - margin, H - 11)
       pdf.setFontSize(7.2)
