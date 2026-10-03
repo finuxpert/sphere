@@ -115,6 +115,7 @@ function pdfStatusColor(status) {
   if (status === 'CRITICAL') return [190, 65, 73]
   if (status === 'WARNING') return [182, 132, 31]
   if (status === 'ATTENTION') return [88, 132, 184]
+  if (status === 'UNKNOWN' || status === 'WAITING') return [108, 122, 132]
   return [41, 131, 91]
 }
 
@@ -348,10 +349,6 @@ export default function RundeckSource({ onCollection }) {
       else pdf.text(APP_TAGLINE, brandX, 17)
 
       const availabilityState = String(availabilityResult?.summary?.service_state || availabilityResult?.summary?.sap_state || 'UNKNOWN').toUpperCase()
-      const status = systemHealthState(operationalHosts, {
-        availabilityState,
-        serviceCritical: availabilityServiceImpact(availabilityResult),
-      })
       const availabilityApps = availabilityResult?.sap_app || []
       const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
       const hanaRows = availabilityResult?.hana_system_db || []
@@ -363,7 +360,18 @@ export default function RundeckSource({ onCollection }) {
       const reportSkewMinutes = Number.isFinite(reportPerformanceTs) && Number.isFinite(reportAvailabilityTs)
         ? Math.round(Math.abs(reportPerformanceTs - reportAvailabilityTs) / 60000)
         : null
-      const reportDataAlignment = collectionAligned && reportSkewMinutes !== null && reportSkewMinutes <= 15 ? 'ALIGNED' : 'PARTIAL'
+      const reportAvailabilityAgeMinutes = Number.isFinite(reportAvailabilityTs)
+        ? Math.max(0, Math.floor((Date.now() - reportAvailabilityTs) / 60000))
+        : null
+      const reportAvailabilityStale = Number.isFinite(reportAvailabilityAgeMinutes) && reportAvailabilityAgeMinutes >= 20
+      const reportPerformanceStale = Boolean(health?.rundeck_stale)
+      const status = systemHealthState(operationalHosts, {
+        availabilityState,
+        serviceCritical: availabilityServiceImpact(availabilityResult),
+        stale: reportPerformanceStale,
+        availabilityStale: reportAvailabilityStale,
+      })
+      const reportDataAlignment = collectionAligned && reportSkewMinutes !== null && reportSkewMinutes <= 15 && !reportPerformanceStale && !reportAvailabilityStale ? 'ALIGNED' : 'PARTIAL'
       const [sr, sg, sb] = pdfStatusColor(status)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(5.8)
