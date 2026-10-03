@@ -762,10 +762,10 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     : timingState === 'NO OVERLAP'
       ? 'No overlap'
       : timingState === 'LIMITED'
-        ? 'Limited timing'
+        ? 'Limited'
         : timingState === 'INSUFFICIENT DATA'
-          ? 'Insufficient timing data'
-          : 'Timing not confirmed'
+          ? 'Insufficient data'
+          : 'Not confirmed'
   const noOverlapMinutes = Number(evidenceAlignment?.workload_gap_minutes)
   const noOverlapText = Number.isFinite(noOverlapMinutes)
     ? `Workload last observed ${Math.floor(noOverlapMinutes / 60)}h ${Math.round(noOverlapMinutes % 60)}m before issue start. `
@@ -865,7 +865,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{effectiveIncidentStart ? `${formatWib(effectiveIncidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel} · {timingState === 'NO OVERLAP' ? noOverlapText : 'nearest retained observations'} · cause not confirmed</small>
+        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel} · {timingState === 'NO OVERLAP' ? noOverlapText : 'nearest observations'} · cause not confirmed</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
@@ -892,7 +892,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             <span><b>Peak CPU</b>{range === 'current' ? `${numberText(stats.peakCpu)}%${stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}` : (historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`)}</span>
             <span><b>Avg PSS</b>{range === 'current' ? (stats.avgPss == null ? '—' : `${numberText(stats.avgPss,2)} GB`) : (historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`)}</span>
             <span><b>Peak PSS</b>{range === 'current' ? (stats.peakPss == null ? '—' : `${numberText(stats.peakPss,2)} GB${stats.peakPssAt ? ` at ${formatWib(stats.peakPssAt, false)}` : ''}`) : (historicalSummary?.peak_pss_gb == null ? '—' : `${numberText(historicalSummary.peak_pss_gb,2)} GB`)}</span>
-            <span className={(range === 'current' ? profile.criticalSamples : historicalSummary?.critical_wp_checks) ? 'is-attention' : ''} title="APP Critical WP is APP-server evidence observed during the workload period. It does not prove workload causation."><b>APP Critical WP overlap</b>{range === 'current' ? `${profile.criticalSamples} of ${profile.totalSamples} observations` : (historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} checks` : '—')}</span>
+            <span className={(range === 'current' ? profile.criticalSamples : historicalSummary?.critical_wp_checks) ? 'is-attention' : ''} title="APP Critical WP is APP-server evidence observed during the workload period. It does not prove workload causation."><b>APP Critical WP in period</b>{range === 'current' ? `${profile.criticalSamples} of ${profile.totalSamples} observations` : (historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} checks` : '—')}</span>
             <span className={(range === 'current' ? stats.peakCriticalWp : historicalSummary?.max_critical_wp) ? 'is-attention' : ''} title="Peak APP Critical WP is APP-server evidence during this workload range, not workload execution status."><b>Peak APP Critical WP</b>{range === 'current' ? `${numberText(stats.peakCriticalWp ?? 0,0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : (historicalSummary ? numberText(historicalSummary.max_critical_wp ?? 0,0) : '—')}</span>
           </div>
         </aside>
@@ -1004,7 +1004,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             <span><b>Peak Processes</b>{detailView.row?.max_processes == null ? '—' : numberText(detailView.row.max_processes, 0)}</span>
             <span><b>Checks</b>{numberText(detailView.row?.checks ?? 0, 0)}</span>
             <span><b>Observations</b>{numberText(detailView.row?.observations ?? 0, 0)}</span>
-            <span><b>APP Critical WP overlap</b>{numberText(detailView.row?.critical_wp_checks ?? 0, 0)} of {numberText(detailView.row?.checks ?? 0, 0)} checks</span>
+            <span><b>APP Critical WP in period</b>{numberText(detailView.row?.critical_wp_checks ?? 0, 0)} of {numberText(detailView.row?.checks ?? 0, 0)} checks</span>
             <span><b>Peak APP Critical WP</b>{numberText(detailView.row?.max_critical_wp ?? 0, 0)}</span>
           </div>}
 
