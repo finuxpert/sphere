@@ -200,7 +200,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
       </div>
     </div>
 
-    {showDataTrust && <div className="rundeckAvailabilityDataTrust" aria-label="Availability data quality">
+    {showDataTrust && <div className={`rundeckAvailabilityDataTrust${bundleState === 'RUNNING' ? ' is-running-info' : ''}`} aria-label="Availability data quality">
       {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
       {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Time difference {Math.round(skew / 60)}m</small>}
     </div>}
