@@ -130,7 +130,7 @@ function CollectionGapBand({ trend }) {
     <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
       <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
       <strong>{gapTimeRangeText(from, to)}</strong>
-      <small>{gapDurationText(from, to)} {observed ? 'observation gap' : 'retained data gap'}{gaps.length > 1 ? ` · +${gaps.length - 1} more` : ''}</small>
+      <small>{gapDurationText(from, to)}{gaps.length > 1 ? ` · +${gaps.length - 1} more` : ''}</small>
     </summary>
     {gaps.length > 1 && <div className="rundeckGapDetailsV133">
       {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
