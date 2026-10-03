@@ -359,6 +359,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(92, 105, 114)
       pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
 
+      const current = incidentSummary?.current_workload || {}
       const affected = shortHost(incidentSummary?.affected_server || '')
       const signal = incidentSummary?.primary_signal || {}
       const signalValue = metric(signal.value, signal.unit || '')
@@ -374,8 +375,9 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(7.1)
       pdf.setTextColor(92, 105, 114)
       pdf.text(`Since ${formatTime(since)} WIB · Duration ${reportDuration(incidentSummary?.duration_seconds)} · Performance ${formatTime(latest?.finished_at)} WIB`, margin, 44.5)
+      pdf.setFontSize(6.6)
+      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · Selected ${clipped(selectedJob?.key || current.consumer_key || 'No workload selected', 46)}`, margin + 145, 44.5)
 
-      const current = incidentSummary?.current_workload || {}
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, 48, W - margin, 48)
       pdf.setFont('helvetica', 'bold')
@@ -421,7 +423,7 @@ export default function RundeckSource({ onCollection }) {
         pdf.addImage(serverChart.toDataURL('image/jpeg', .92), 'JPEG', margin, chartY, serverChart.width * ratio, serverChart.height * ratio, undefined, 'FAST')
       }
 
-      const workY = 154
+      const workY = 156
       const leftW = contentW * .56
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
@@ -432,7 +434,9 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.2)
-      pdf.text(`SELECTED WORKLOAD · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 3)
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, workY - 7, W - margin, workY - 7)
+      pdf.text(`SELECTED WORKLOAD · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
       if (inspectedProgram) {
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7)
@@ -474,12 +478,12 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(8)
       pdf.text('BASIS REVIEW', sideX, workY - 3)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.2)
+      pdf.setFontSize(6.6)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('Prioritized from retained performance observations', sideX, workY + 0.8)
+      pdf.text('Prioritized for Basis review from retained performance observations', sideX, workY + 0.8)
       const reviewCols = [0, 58, 77, 96]
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(6.2)
+      pdf.setFontSize(6.5)
       ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
       pdf.setDrawColor(220, 226, 229)
       pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
@@ -488,20 +492,32 @@ export default function RundeckSource({ onCollection }) {
         const reason = evaluationReasonText(row)
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(6.7)
+        pdf.setFontSize(7.1)
         pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 34), sideX + reviewCols[0], sideY)
         pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY)
         pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY)
         pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY)
         if (reason) {
           pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(6)
+          pdf.setFontSize(6.3)
           pdf.text(clipped(`Review: ${reason}`, 55), sideX, sideY + 3)
-          sideY += 8
+          sideY += 7.2
         } else {
-          sideY += 6
+          sideY += 5.8
         }
       })
+
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, H - 31, W - margin, H - 31)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(6.5)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('EVIDENCE SUMMARY', margin, H - 27)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.5)
+      pdf.setTextColor(22, 31, 38)
+      const selectedCritWp = selectedJob?.criticalWp ?? inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp
+      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · APP Critical WP ${selectedCritWp ?? 'Not observed'} · Data ${dataAlignment} · Timing ${sourceSkewMinutes == null ? 'unknown' : `${sourceSkewMinutes}m difference`}`, margin, H - 23)
 
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(6.4)
