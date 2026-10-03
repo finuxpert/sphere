@@ -4,7 +4,7 @@ import RundeckInvestigationContext from './RundeckInvestigationContext.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 
 function SelectedWorkload(props) {
-  return <div className="rundeckSelectedStack is-selected-workload is-compact-selected">
+  return <div className={`rundeckSelectedStack is-selected-workload is-compact-selected${props.selectedJob?.key ? ' has-selection' : ''}`}>
     <RundeckInvestigationContext job={props.selectedJob} />
     {props.selectedJob?.key
       ? <div className="rundeckSelectedCompact">
