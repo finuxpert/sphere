@@ -237,3 +237,15 @@
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button{
   font-weight:720;
 }
+
+
+/* SPHERE v1.34.44 — separate selected context from workload actions. */
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTools{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadSelection{
+  margin-right:2px!important;
+}
