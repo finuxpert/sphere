@@ -1679,3 +1679,59 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 .appShell:has(.rundeckPanel) .rundeckWorkloadBandV1235{
   border-top:1px solid rgba(126,147,158,.07)!important;
 }
+
+
+/* SPHERE v1.34.48 — selected workload hierarchy polish without changing cockpit geometry. */
+.appShell:has(.rundeckPanel) .rundeckSelectedStack.has-selection{
+  position:relative;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedStack.has-selection::before{
+  content:'';
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:2px;
+  background:linear-gradient(180deg,rgba(79,198,200,.58),rgba(79,198,200,.08));
+  pointer-events:none;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedStack.has-selection .rundeckSelectedCompact{
+  padding-left:9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompactIdentity strong{
+  font-size:11.6px!important;
+  font-weight:820!important;
+  letter-spacing:.005em;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompactIdentity small{
+  margin-top:1px!important;
+  font-size:8.5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics{
+  gap:12px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics span{
+  font-size:9.7px!important;
+  font-weight:720!important;
+  font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompactMetrics b{
+  margin-bottom:1px!important;
+  font-size:7.8px!important;
+  font-weight:760!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompact>button{
+  min-height:28px!important;
+  padding:5px 9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence{
+  padding-left:8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard b,
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button b{
+  font-size:9.4px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard small,
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button small{
+  font-size:8.7px!important;
+}
