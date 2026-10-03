@@ -51,7 +51,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
     return visible
   },[items,metricType,selectedSeries])
   const width=920,height=380
-  const pad={left:46,right:22,top:14,bottom:34}
+  const pad={left:56,right:34,top:12,bottom:42}
   const values=items.map(row=>Number(row.value)).filter(Number.isFinite)
   const rawMax=Math.max(1,...values)
   const min=0
