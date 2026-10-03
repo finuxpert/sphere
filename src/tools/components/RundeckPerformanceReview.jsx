@@ -138,7 +138,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 }}
               >
                 <td className="rundeckReviewWorkloadV1231" title={title}>
-                  <button type="button" onClick={(event) => { event.stopPropagation(); openQuick(row) }}>{row.consumer_key}</button>
+                  <button type="button" title={row.consumer_key} onClick={(event) => { event.stopPropagation(); openQuick(row) }}>{row.consumer_key}</button>
                   <small>{workloadTypeLabel(row.consumer_type)}</small>
                 </td>
                 <td><div className="rundeckReviewReasonChips">{reasonParts.length ? reasonParts.map((part) => <span key={part}>{part}</span>) : <span>{row.status || 'Review'}</span>}</div></td>
