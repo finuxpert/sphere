@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.48', files.version.includes("APP_VERSION = '1.34.48'") && files.version.includes('monitoring-flow-ui-v1.34.48')],
+  ['monitoring flow version is v1.34.49', files.version.includes("APP_VERSION = '1.34.49'") && files.version.includes('monitoring-flow-ui-v1.34.49')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -94,6 +94,10 @@ const checks = [
   ['Selected workload hierarchy visually connects APP focus to workload evidence', files.monitoringCore.includes("has-selection") && files.monitoringCss.includes('SPHERE v1.34.48 — selected workload hierarchy polish')],
   ['Server Trend v1.34.48 keeps legend readable and collection gap copy compact', files.serverTrend.includes("fontSize: 10.2") && files.serverTrend.includes("retained data gap") && files.serverTrend.includes("observation gap")],
   ['PDF v2.1 adds evidence summary and keeps Basis Review concise', files.source.includes("pdf.text('EVIDENCE SUMMARY'") && files.source.includes('Prioritized for Basis review from retained performance observations') && files.source.includes('evaluationItems.slice(0, 3)')],  ['Trend Details exposes APP CPU Memory IO Wait Critical WP and workload WP evidence without causal verdicts', files.serverTrend.includes('<b>CPU</b>') && files.serverTrend.includes('<b>Memory</b>') && files.serverTrend.includes('<b>I/O Wait</b>') && files.serverTrend.includes('<b>APP Critical WP</b>') && files.serverTrend.includes('It does not prove that a workload caused the spike.') && files.serverTrend.includes('workloadWp(consumer)')],
+  ['Availability running refresh is informational rather than warning-styled', files.availability.includes("is-running-info") && files.availabilityCss.includes('SPHERE v1.34.49 — running availability refresh is informational')],
+  ['Performance Analysis v1.34.49 keeps controls compact without changing range semantics', files.jobHistoryCss.includes('SPHERE v1.34.49 — final compact Performance Analysis control rail') && files.jobHistoryCss.includes('min-height:36px!important')],
+  ['Final cockpit signal hierarchy subdues collection gaps while keeping SAP Job Source readable', files.monitoringCss.includes('SPHERE v1.34.49 — final cockpit signal hierarchy') && files.monitoringCss.includes('opacity:.82!important')],
+  ['PDF v2.1 final polish keeps chart breathing room and raises evidence note readability', files.source.includes('47 / serverChart.height') && files.source.includes("pdf.text('EVIDENCE SUMMARY'") && files.source.includes("pdf.text('OPERATIONAL NOTES'")],
   ['Trend Details can hand off to Infrastructure and Correlated Events', files.monitoringCore.includes('onOpenTrendInfrastructure') && files.monitoringCore.includes('onOpenTrendEvidence') && files.wrapper.includes('onOpenTrendInfrastructure') && files.wrapper.includes('onOpenTrendEvidence')],
   ['Trend investigation modal has dedicated snapshot comparison evidence and action geometry', files.accessibilityThemeFinal.includes('SPHERE v1.34.46 — trend spike investigation enrichment') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationSnapshot') && files.accessibilityThemeFinal.includes('.rundeckTrendComparison') && files.accessibilityThemeFinal.includes('.rundeckTrendEvidenceStrip') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationActions')],
   ['Infrastructure chart readability uses larger axes and annotations without changing drawer geometry', files.infrastructure.includes('const pad={left:56,right:34,top:12,bottom:42}') && files.infrastructureCss.includes('font-size:10.5px!important') && files.infrastructureCss.includes('.rundeckInfraChartWrap .issueMarker text')],
@@ -378,4 +382,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.48 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.49 monitoring flow and deep-analysis checks passed.')
