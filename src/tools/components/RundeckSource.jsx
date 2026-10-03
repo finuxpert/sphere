@@ -488,7 +488,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setDrawColor(220, 226, 229)
       pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
       let sideY = workY + 11
-      ;evaluationItems.slice(0, 4).forEach((row) => {
+      ;evaluationItems.slice(0, 3).forEach((row) => {
         const reason = evaluationReasonText(row)
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
