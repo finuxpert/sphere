@@ -463,7 +463,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(6.2)
       pdf.setTextColor(92, 105, 114)
       const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
-      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: retained workload observation · SM37 execution status not connected`, margin, selectedMetricY + 7.5)
+      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: workload observation · SM37 not connected`, margin, selectedMetricY + 7.5)
       if (workloadChart) {
         const chartTop = selectedMetricY + 10
         const chartMaxH = 20
@@ -526,7 +526,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.7)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37: NOT CONNECTED · APP Critical WP: APP-level evidence · Correlation: timing evidence only · Verify execution status in SAP before concluding the cause.', margin, H - 14)
+      pdf.text('SM37: NOT CONNECTED · APP Critical WP: APP-level data · Timing match only · Check execution status in SAP (SM37).', margin, H - 14)
       pdf.setDrawColor(210, 217, 221)
       pdf.line(margin, H - 11, W - margin, H - 11)
       pdf.setFontSize(7.2)
