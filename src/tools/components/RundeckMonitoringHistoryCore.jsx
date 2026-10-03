@@ -48,7 +48,15 @@ export default function RundeckMonitoringHistoryCore(props) {
         />
       </div>
       <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-server-trend">
-        <RundeckServerTrend refreshToken={props.refreshToken} databaseEnabled={props.databaseEnabled} selectedJob={props.selectedJob} onSelectJob={props.onSelectJob} onTrendContext={props.onTrendContext} />
+        <RundeckServerTrend
+          refreshToken={props.refreshToken}
+          databaseEnabled={props.databaseEnabled}
+          selectedJob={props.selectedJob}
+          onSelectJob={props.onSelectJob}
+          onTrendContext={props.onTrendContext}
+          onOpenInfrastructure={props.onOpenTrendInfrastructure}
+          onOpenEvidence={props.onOpenTrendEvidence}
+        />
       </div>
     </section>
     <section className="rundeckWorkloadBandV1234 rundeckWorkloadBandV1235">
