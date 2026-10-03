@@ -1,6 +1,6 @@
 # SPHERE Visual QA
 
-This checklist covers the current v1.34.52 operator UI.
+This checklist covers the current v1.34.53 operator UI.
 
 Visual QA is separate from the default `npm run qa` release gate.
 
