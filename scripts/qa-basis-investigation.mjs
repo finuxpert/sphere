@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.44', files.version.includes("APP_VERSION = '1.34.44'") && files.version.includes('monitoring-flow-ui-v1.34.44')],
+  ['monitoring flow version is v1.34.45', files.version.includes("APP_VERSION = '1.34.45'") && files.version.includes('monitoring-flow-ui-v1.34.45')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -83,6 +83,9 @@ const checks = [
 
   ['Final live compact evidence uses operator-readable timing and freshness copy', files.evidenceTimeline.includes("'Same time window'") && !files.evidenceTimeline.includes('Timing: ${timingState}') && files.availability.includes('Current service availability - checked') && files.availability.includes('Last reliable:')],
   ['Final live cockpit keeps review names bounded and selected controls separated', files.monitoringCss.includes('SPHERE v1.34.44') && files.monitoringCss.includes('text-overflow:ellipsis!important') && files.currentWorkloadCss.includes('gap:10px!important')],
+  ['Performance Analysis keeps one summary contract across Current and historical ranges', files.jobHistory.includes('rundeckJobHistoricalSummary is-unified') && files.jobHistory.includes("range === 'current' ? 'Observations' : 'Checks'") && files.jobHistory.includes("disabled={range==='current'}")],
+  ['Infrastructure chart readability uses larger axes and annotations without changing drawer geometry', files.infrastructure.includes('const pad={left:56,right:34,top:12,bottom:42}') && files.infrastructureCss.includes('font-size:10.5px!important') && files.infrastructureCss.includes('.rundeckInfraChartWrap .issueMarker text')],
+  ['PDF report adds selected workload metrics and operational evidence notes', files.source.includes("pdf.text('OPERATIONAL NOTES'") && files.source.includes("APP Critical WP is APP-level evidence") && files.source.includes("'PSS MEMORY'") && files.source.includes("'JOB / PROGRAM'")],
   ['Job Performance drawer reserves full release-candidate chart space', files.jobHistoryCss.includes('min-height:455px') && files.jobHistoryCss.includes('height:430px')],
   ['Job Performance summary uses a full-width eight-cell episode matrix', files.jobHistory.includes('rundeckJobEpisodeMatrix') && files.jobHistory.includes('Performance Summary') && files.jobHistoryCss.includes('grid-template-columns:repeat(8,minmax(0,1fr))')],
   ['WP trace signals preserve per-PID collector evidence with snapshot recency guard', files.consumersBackend.includes('wp_signals') && files.consumersBackend.includes('error_at_snapshot') && files.consumersBackend.includes('error_recency == "AT_SNAPSHOT"') && files.consumersBackend.includes('latest_trace_error')],
@@ -283,7 +286,7 @@ const checks = [
   ['Light theme defines RDP-safe monitoring tokens', files.accessibilityThemeFinal.includes('--sphere-accent:#14747b') && files.accessibilityThemeFinal.includes('--sphere-positive:#287a55') && files.accessibilityThemeFinal.includes('--sphere-text-secondary:#3f515a')],
   ['ST03N honors the global light theme with shared readable surfaces', files.st03nTheme.includes('html[data-theme="light"] .rca26Shell') && files.st03nTheme.includes('--bg:#f4f7f8') && files.st03nTheme.includes('.rca26Table th')],
   ['Current Jobs and Selected Job use one balanced content-driven desktop layout', files.workspace.includes('grid-template-columns:minmax(0,45fr) minmax(0,55fr)') && files.workspace.includes('height:fit-content!important') && !files.liveOverviewCss.includes('minmax(0,38fr) minmax(0,62fr)')],
-  ['Review queue tells operators that rows are sorted by review priority', files.performanceReview.includes('sorted by review priority')],
+  ['Review queue frames ranking as Basis prioritization rather than an automatic verdict', files.performanceReview.includes('prioritized for Basis review') && !files.performanceReview.includes('items need attention · sorted by review priority')],
   ['Final light hierarchy strengthens healthy states and source integrity text', files.accessibilityThemeFinal.includes('.rundeckSm37VerificationHead strong') && files.accessibilityThemeFinal.includes('.rundeckStatus.is-normal') && files.accessibilityThemeFinal.includes('.rundeckReviewWorkloadV1231 button')],
   ['Final APP rows remain readable in light mode with a distinct selected focus state', files.accessibilityThemeFinal.includes('.rundeckServerTable tbody tr:not(.is-cross-panel-focus) td') && files.accessibilityThemeFinal.includes('box-shadow:inset 2px 0 0 rgba(20,125,134,.55)')],
   ['Selected workload gives evidence more height than secondary launchers', files.monitoringCss.includes('grid-auto-rows:70px!important') && files.monitoringCss.includes('height:70px!important') && files.monitoringCss.includes('grid-auto-rows:58px!important')],
@@ -363,4 +366,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.44 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.45 monitoring flow and deep-analysis checks passed.')
