@@ -735,7 +735,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         <header className="rundeckTrendPointModalHeader">
           <div>
             <span>SPHERE ANALYSIS</span>
-            <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(metric)} {Number(selected?.value) >= Number(trend?.warning) ? 'Spike' : 'Detail'}</h4>
+            <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(metric)} {trend?.warning !== null && trend?.warning !== undefined && Number.isFinite(Number(trend.warning)) && Number(selected?.value) >= Number(trend.warning) ? 'Spike' : 'Detail'}</h4>
             <small>{selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</small>
             <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
           </div>
