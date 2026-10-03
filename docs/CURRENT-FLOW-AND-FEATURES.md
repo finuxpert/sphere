@@ -1,6 +1,6 @@
 # SPHERE Current Flow and Features
 
-This document is the source of truth for the implemented SPHERE operating flow on **v1.34.37**.
+This document is the source of truth for the implemented SPHERE operating flow on **v1.34.51**.
 
 It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 
@@ -73,12 +73,11 @@ System / Collector / Data status
 Infrastructure summary
 
 SAP App Servers              Server Trend
-Current Jobs & Programs      Selected Job / Program
-
+Selected Job / Program
 Correlated Events | SAP Availability | SAP Issues
 Observation History | Infrastructure Analysis | System Data
 
-Jobs & Programs to Review
+Current Jobs & Programs      Jobs & Programs to Review
 ```
 
 The UI uses progressive disclosure. Deep evidence is opened in drawers/modals instead of expanding the live page indefinitely.
@@ -154,6 +153,12 @@ Selected workload context exposes:
 - APP Critical WP or APP Critical WP overlap;
 - Analyze Performance action.
 
+APP Critical WP is scoped carefully in the selected-workload surface:
+
+- `0` means the selected observation retained an APP Critical WP value of zero;
+- `Not observed for selected workload` means the value was not retained for that selection;
+- neither state is an SM37 job result.
+
 A selection originating from Performance Review uses review-period metrics rather than pretending to be a current live snapshot.
 
 ## 8. Performance Analysis
@@ -197,6 +202,8 @@ Current observation analysis can expose:
 - I/O
 - WP Count
 - APP Critical WP
+
+When Current contains only one saved observation, SPHERE shows a **Selected Observation** summary instead of drawing a trend line from one point.
 
 Historical ranges use aggregate data and must not be presented as raw observations.
 
@@ -274,6 +281,8 @@ Performance Review supports:
 
 Evaluation uses retained workload observations and includes average/peak CPU, Avg PSS, occurrence/coverage context, and APP Critical WP overlap.
 
+The review queue is presented as **items sorted by review priority**. It supports operator investigation and does not present the ordering as an automatic root-cause or optimization verdict.
+
 Review Result defaults to further investigation rather than an automatic program-optimization verdict.
 
 No automatic ABAP/Application owner is assigned without explicit evidence.
@@ -317,7 +326,27 @@ See `docs/BASIS-JOB-INTELLIGENCE.md`.
 
 ## 16. Reporting
 
-PDF export/reporting summarizes retained operational evidence.
+PDF export/reporting is a one-page quick report intended for fast Basis/Infrastructure handoff, including chat/mobile sharing.
+
+Current report sections are:
+
+- **SUMMARY**
+- Availability
+- SAP APP Server Status
+- Server CPU Trend
+- Selected Workload
+- Jobs / Programs to Review
+- **CHECK SUMMARY**
+- **NOTES**
+
+Report semantics:
+
+- selected workload keeps `0` distinct from `Not observed` for APP Critical WP;
+- report data alignment is derived from the Performance and Availability timestamps used for the report;
+- both source times are printed in the report;
+- `ALIGNED` and `PARTIAL` remain explicit;
+- correlation is described as time-based context only;
+- job execution status must be checked in SAP/SM37 while the authoritative feed is not connected.
 
 A report must not convert correlation into a final root-cause verdict.
 
