@@ -864,7 +864,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{effectiveIncidentStart ? `${formatWib(effectiveIncidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel}. {timingState === 'NO OVERLAP' ? noOverlapText : 'Based on nearest retained observations around the issue/selected time. '}Root cause: Not confirmed.</small>
+        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel} · {timingState === 'NO OVERLAP' ? noOverlapText : 'nearest retained observations'} · cause not confirmed</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
