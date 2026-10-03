@@ -679,3 +679,40 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows strong{
 .appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td:nth-child(5){
   width:9%;
 }
+
+
+/* SPHERE v1.34.47 — main infrastructure scan strip uses dividers, not cards. */
+.appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.07)!important;
+  border-bottom:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>div{
+  background:transparent!important;
+  border-right:1px solid rgba(126,147,158,.06)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>div:last-child{border-right:0!important}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid{
+  gap:0!important;
+  border-top:1px solid rgba(126,147,158,.07)!important;
+  border-bottom:1px solid rgba(126,147,158,.07)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{
+  padding:7px 9px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article:last-child{border-right:0!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>div{
+  background:transparent!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article:nth-child(2n){border-right:0!important}
+  .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{border-bottom:1px solid rgba(126,147,158,.06)!important}
+}
