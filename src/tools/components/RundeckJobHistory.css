@@ -1389,3 +1389,47 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
   background:transparent!important;
 }
 .rundeckJobHistoricalSummary.is-unified>span:nth-last-child(-n+2){border-bottom:0!important}
+
+
+/* SPHERE v1.34.49 — final compact Performance Analysis control rail. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalAnalysis{
+  padding-bottom:6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{
+  gap:6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs{
+  gap:2px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{
+  min-height:29px!important;
+  padding:4px 6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode{
+  margin-top:5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobCurrentSemantics{
+  display:block;
+  margin-top:5px!important;
+  font-size:8.5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified{
+  margin-top:5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span{
+  min-height:36px!important;
+  padding:5px 8px 5px 0!important;
+  font-size:9.1px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span b{
+  margin-bottom:1px!important;
+  font-size:7.8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalHead strong{
+  font-size:10.8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th{
+  font-size:8.3px!important;
+  font-weight:780!important;
+}
