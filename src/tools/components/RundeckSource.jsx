@@ -413,12 +413,12 @@ export default function RundeckSource({ onCollection }) {
         const trendMetric = String(trendContext.metricLabel || 'Performance').toUpperCase()
         const trendRange = String(trendContext.rangeLabel || '6H').toUpperCase()
         pdf.text(`SERVER ${trendMetric} TREND · ${trendRange}`, margin, chartY - 3)
-        const ratio = Math.min(contentW / serverChart.width, 38 / serverChart.height)
+        const ratio = Math.min(contentW / serverChart.width, 46 / serverChart.height)
         pdf.addImage(serverChart.toDataURL('image/jpeg', .92), 'JPEG', margin, chartY, serverChart.width * ratio, serverChart.height * ratio, undefined, 'FAST')
       }
 
-      const workY = 154
-      const leftW = contentW * .66
+      const workY = 151
+      const leftW = contentW * .60
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
       const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
@@ -431,13 +431,28 @@ export default function RundeckSource({ onCollection }) {
       pdf.text(`SELECTED WORKLOAD · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 3)
       if (inspectedProgram) {
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(6.7)
+        pdf.setFontSize(7)
         pdf.setTextColor(92, 105, 114)
         pdf.text(`Program ${clipped(inspectedProgram, 48)}`, margin, workY + 0.8)
       }
+      const selectedMetricY = inspectedProgram ? workY + 5.2 : workY + 2
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(6.6)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('CPU', margin, selectedMetricY)
+      pdf.text('PSS MEMORY', margin + 30, selectedMetricY)
+      pdf.text('PROCESSES', margin + 67, selectedMetricY)
+      pdf.text('WP', margin + 99, selectedMetricY)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7.4)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin, selectedMetricY + 3.5)
+      pdf.text(pssText(inspectedSource), margin + 30, selectedMetricY + 3.5)
+      pdf.text(processText(inspectedSource), margin + 67, selectedMetricY + 3.5)
+      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 18), margin + 99, selectedMetricY + 3.5)
       if (workloadChart) {
-        const chartTop = inspectedProgram ? workY + 3 : workY
-        const chartMaxH = inspectedProgram ? 38 : 41
+        const chartTop = selectedMetricY + 7
+        const chartMaxH = 24
         const ratio = Math.min(leftW / workloadChart.width, chartMaxH / workloadChart.height)
         pdf.addImage(workloadChart.toDataURL('image/jpeg', .94), 'JPEG', margin, chartTop, workloadChart.width * ratio, workloadChart.height * ratio, undefined, 'FAST')
       }
@@ -451,36 +466,47 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8)
       pdf.text('TOP WORKLOADS', sideX, workY - 3)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.3)
-      let sideY = workY + 3
-      ;(workloadResult.items || []).slice(0, 4).forEach((row, index) => {
+      pdf.setFontSize(6.4)
+      pdf.setTextColor(92, 105, 114)
+      const topCols = [0, 57, 75, 94]
+      ;['JOB / PROGRAM', 'CPU', 'PSS', 'PROC'].forEach((label, index) => pdf.text(label, sideX + topCols[index], workY + 1.5))
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(sideX, workY + 3, W - margin, workY + 3)
+      let sideY = workY + 8
+      ;(workloadResult.items || []).slice(0, 4).forEach((row) => {
         const evaluation = evaluationFor(row)
-        const evaluationStatus = evaluation?.status || ''
         const evaluationReason = evaluation ? evaluationReasonText(evaluation) : ''
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7.3)
-        pdf.text(`${index + 1}. ${shortHost(row.host)}  ${clipped(row.consumer_key, 32)}`, sideX, sideY)
-        pdf.setTextColor(92, 105, 114)
         pdf.setFontSize(6.8)
-        pdf.text(`CPU ${metric(row.cpu_pct, '%')}  ·  PSS ${pssText(row)}  ·  Proc ${processText(row)}`, sideX, sideY + 3.2)
-        if (evaluationStatus) {
-          pdf.setFont('helvetica', 'bold')
-          pdf.setTextColor(71, 87, 97)
-          pdf.setFontSize(6.4)
-          pdf.text(clipped(`${evaluationStatus}${evaluationReason ? ` · ${evaluationReason}` : ''}`, 46), sideX, sideY + 6.2)
-          sideY += 10.4
-        } else {
+        pdf.text(clipped(`${shortHost(row.host)}  ${row.consumer_key}`, 35), sideX + topCols[0], sideY)
+        pdf.text(metric(row.cpu_pct, '%'), sideX + topCols[1], sideY)
+        pdf.text(pssText(row), sideX + topCols[2], sideY)
+        pdf.text(processText(row), sideX + topCols[3], sideY)
+        if (evaluationReason) {
+          pdf.setTextColor(92, 105, 114)
+          pdf.setFontSize(6.1)
+          pdf.text(clipped(`Review: ${evaluationReason}`, 52), sideX, sideY + 3)
           sideY += 8
+        } else {
+          sideY += 6
         }
       })
 
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(6.4)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('OPERATIONAL NOTES', margin, H - 18)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.1)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text('SM37 execution status: NOT CONNECTED  ·  APP Critical WP is APP-level evidence  ·  Correlation supports investigation; it does not prove causation.', margin, H - 14)
       pdf.setDrawColor(210, 217, 221)
-      pdf.line(margin, H - 12, W - margin, H - 12)
+      pdf.line(margin, H - 11, W - margin, H - 11)
       pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SPHERE · Rundeck', margin, H - 7)
+      pdf.text(`SPHERE · Rundeck · Run #${latest?.execution_id || '—'}`, margin, H - 6)
+      pdf.text('Page 1 / 1', W - margin - 18, H - 6)
 
       const host = shortHost(incidentSummary?.affected_server || selectedJob?.host || 'SAP') || 'SAP'
       const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
