@@ -366,7 +366,7 @@ export default function RundeckSource({ onCollection }) {
       const since = incidentSummary?.signal_active_since || incidentSummary?.detected_since
       pdf.setTextColor(71, 87, 97)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(6.6)
+      pdf.setFontSize(7.1)
       pdf.text('SITUATION SUMMARY', margin, 35)
       pdf.setTextColor(22, 31, 38)
       pdf.setFontSize(9.8)
@@ -381,7 +381,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, 48, W - margin, 48)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(6.5)
+      pdf.setFontSize(6.9)
       pdf.setTextColor(71, 87, 97)
       pdf.text('AVAILABILITY', margin, 52.5)
       pdf.setFont('helvetica', 'normal')
@@ -399,7 +399,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.text('SAP APP SERVER STATUS', margin, y)
       y += 4
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.8)
+      pdf.setFontSize(7.1)
       const columns = [0, 52, 92, 136, 180]
       ;['APP', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
       y += 4
@@ -415,7 +415,7 @@ export default function RundeckSource({ onCollection }) {
       const chartY = y + 5
       if (serverChart) {
         pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(8.2)
+        pdf.setFontSize(8.6)
         const trendMetric = String(trendContext.metricLabel || 'Performance').toUpperCase()
         const trendRange = String(trendContext.rangeLabel || '6H').toUpperCase()
         pdf.text(`SERVER ${trendMetric} TREND · ${trendRange}`, margin, chartY - 3)
@@ -433,7 +433,7 @@ export default function RundeckSource({ onCollection }) {
       const inspectedProgram = distinctProgramText(inspectedSource)
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8.2)
+      pdf.setFontSize(8.7)
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, workY - 7, W - margin, workY - 7)
       pdf.text(`SELECTED WORKLOAD · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
@@ -445,7 +445,7 @@ export default function RundeckSource({ onCollection }) {
       }
       const selectedMetricY = inspectedProgram ? workY + 5.2 : workY + 2
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(6.6)
+      pdf.setFontSize(6.9)
       pdf.setTextColor(71, 87, 97)
       pdf.text('CPU', margin, selectedMetricY)
       pdf.text('PSS MEMORY', margin + 27, selectedMetricY)
@@ -453,7 +453,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.text('WP', margin + 91, selectedMetricY)
       pdf.text('APP CRIT WP', margin + 114, selectedMetricY)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.4)
+      pdf.setFontSize(7.7)
       pdf.setTextColor(22, 31, 38)
       pdf.text(metric(inspectedSource.cpu_pct, '%'), margin, selectedMetricY + 3.5)
       pdf.text(pssText(inspectedSource), margin + 27, selectedMetricY + 3.5)
@@ -475,7 +475,7 @@ export default function RundeckSource({ onCollection }) {
       const sideX = margin + leftW + 7
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8)
+      pdf.setFontSize(8.6)
       pdf.text('BASIS REVIEW', sideX, workY - 3)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.6)
@@ -483,7 +483,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.text('Prioritized for Basis review from retained performance observations', sideX, workY + 0.8)
       const reviewCols = [0, 58, 77, 96]
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(6.5)
+      pdf.setFontSize(6.8)
       ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
       pdf.setDrawColor(220, 226, 229)
       pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
@@ -492,7 +492,7 @@ export default function RundeckSource({ onCollection }) {
         const reason = evaluationReasonText(row)
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7.1)
+        pdf.setFontSize(7.4)
         pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 34), sideX + reviewCols[0], sideY)
         pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY)
         pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY)
@@ -510,21 +510,21 @@ export default function RundeckSource({ onCollection }) {
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, H - 31, W - margin, H - 31)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7)
+      pdf.setFontSize(7.3)
       pdf.setTextColor(71, 87, 97)
       pdf.text('EVIDENCE SUMMARY', margin, H - 27)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.9)
+      pdf.setFontSize(7.1)
       pdf.setTextColor(22, 31, 38)
       const selectedCritWp = selectedJob?.criticalWp ?? inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp
       pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · APP Critical WP ${selectedCritWp ?? 'Not observed'} · Data ${dataAlignment} · Timing ${sourceSkewMinutes == null ? 'unknown' : `${sourceSkewMinutes}m difference`}`, margin, H - 23)
 
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(6.8)
+      pdf.setFontSize(7.1)
       pdf.setTextColor(71, 87, 97)
       pdf.text('OPERATIONAL NOTES', margin, H - 18)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.4)
+      pdf.setFontSize(6.7)
       pdf.setTextColor(92, 105, 114)
       pdf.text('SM37: NOT CONNECTED · APP Critical WP: APP-level evidence · Correlation: timing evidence only · Verify execution status in SAP before concluding the cause.', margin, H - 14)
       pdf.setDrawColor(210, 217, 221)
