@@ -87,7 +87,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     <header className="rundeckReviewHeadV1231">
       <div>
         <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>
-        {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} prioritized for Basis review</span>}
+        {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} · sorted by review priority</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
         <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" disabled={loading && !hasLoaded} />
