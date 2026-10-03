@@ -1114,3 +1114,171 @@ html[data-theme="light"] .rundeckTrendInvestigationActions button:first-child{co
   .rundeckTrendInvestigationActions{justify-content:stretch}
   .rundeckTrendInvestigationActions button{flex:1}
 }
+
+
+/* SPHERE v1.34.47 — flat Basis investigation surfaces and desktop no-scroll trend details. */
+@media(min-width:1000px) and (min-height:760px){
+  .rundeckTrendPointModal{
+    width:min(930px,86vw)!important;
+    max-height:calc(100vh - 28px)!important;
+  }
+  .rundeckTrendPointModalBody{
+    max-height:none!important;
+    overflow:hidden!important;
+    padding:9px 14px 10px!important;
+  }
+  .rundeckTrendModalContent{gap:0!important}
+  .rundeckTrendMiniContext svg{height:86px!important}
+  .rundeckTrendWorkloadRow{min-height:34px!important;padding-top:4px!important;padding-bottom:4px!important}
+}
+.rundeckTrendSpikeSummary,
+.rundeckTrendInvestigationSnapshot,
+.rundeckTrendAppComparison,
+.rundeckTrendTopWorkload,
+.rundeckTrendComparison,
+.rundeckTrendMiniContext,
+.rundeckTrendEvidenceStrip,
+.rundeckTrendWorkloadPanel{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rundeckTrendSpikeSummary,
+.rundeckTrendInvestigationSnapshot,
+.rundeckTrendAppComparison,
+.rundeckTrendTopWorkload,
+.rundeckTrendComparison,
+.rundeckTrendMiniContext,
+.rundeckTrendEvidenceStrip,
+.rundeckTrendWorkloadPanel{
+  padding:7px 0!important;
+  border-bottom:1px solid rgba(126,147,158,.085)!important;
+}
+.rundeckTrendSpikeSummary{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  padding-top:1px!important;
+}
+.rundeckTrendSpikeSummary>div:first-child{display:grid;gap:2px}
+.rundeckTrendSpikeSummary span,
+.rundeckTrendAppComparison>header span,
+.rundeckTrendTopWorkload span,
+.rundeckTrendComparison>header span,
+.rundeckTrendInvestigationSnapshot>header span{
+  color:var(--sphere-accent,#4fc6c8)!important;
+  font-size:8px!important;font-weight:820!important;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.rundeckTrendSpikeSummary strong{
+  color:var(--sphere-text,#e7edf0);font-size:14px;font-weight:820;
+}
+.rundeckTrendSpikeSummary small,
+.rundeckTrendSpikeThreshold small{
+  color:var(--sphere-text-muted,#718089);font-size:8.7px;
+}
+.rundeckTrendSpikeThreshold{text-align:right}
+.rundeckTrendSpikeThreshold b{
+  display:block;color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9.6px;font-weight:760;
+}
+.rundeckTrendInvestigationSnapshot>header,
+.rundeckTrendAppComparison>header,
+.rundeckTrendComparison>header{
+  padding:0 0 5px!important;
+}
+.rundeckTrendSnapshotMetrics{
+  border:0!important;
+  gap:0!important;
+}
+.rundeckTrendSnapshotMetrics>span{
+  padding:3px 10px 3px 0!important;
+  border:0!important;background:transparent!important;
+}
+.rundeckTrendInvestigationSnapshot>p{
+  padding:4px 0 0!important;border:0!important;background:transparent!important;
+}
+.rundeckTrendAppComparison>header{
+  display:flex;justify-content:space-between;gap:12px;
+}
+.rundeckTrendAppComparison>header small{
+  color:var(--sphere-text-muted,#718089);font-size:8.5px;
+}
+.rundeckTrendAppComparison>div{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+.rundeckTrendAppComparison>div>span{
+  display:flex;align-items:baseline;gap:5px;
+  min-width:0;padding:2px 0;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9.5px;font-variant-numeric:tabular-nums;
+}
+.rundeckTrendAppComparison>div>span b{
+  color:var(--sphere-text-muted,#718089);font-size:8px;
+}
+.rundeckTrendAppComparison>div>span.is-selected{
+  color:var(--sphere-accent,#4fc6c8);font-weight:820;
+}
+.rundeckTrendAppComparison>div>span.is-selected b{color:var(--sphere-accent,#4fc6c8)}
+.rundeckTrendTopWorkload{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;
+}
+.rundeckTrendTopWorkload>div{display:grid;gap:1px;min-width:0}
+.rundeckTrendTopWorkload strong{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--sphere-text,#e7edf0);font-size:11px;
+}
+.rundeckTrendTopWorkload small{
+  color:var(--sphere-text-muted,#718089);font-size:8px;
+}
+.rundeckTrendTopWorkload p{
+  margin:0;color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;white-space:nowrap;
+}
+.rundeckTrendTopWorkload p b{color:var(--sphere-text,#e7edf0)}
+.rundeckTrendComparison>div{
+  border:0!important;
+  gap:0!important;
+}
+.rundeckTrendComparison>div>span{
+  padding:2px 12px 2px 0!important;
+  border:0!important;background:transparent!important;
+}
+.rundeckTrendComparison>div>span.is-selected{background:transparent!important}
+.rundeckTrendMiniContext>header{padding:0 0 2px!important}
+.rundeckTrendMiniContext>footer{padding:0!important}
+.rundeckTrendEvidenceStrip{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  padding:5px 0!important;
+}
+.rundeckTrendEvidenceStrip>span{
+  padding:2px 12px 2px 0!important;
+  border:0!important;
+}
+.rundeckTrendWorkloadPanel>header{
+  padding:0 0 5px!important;border:0!important;
+}
+.rundeckTrendWorkloadHead{
+  min-height:22px!important;padding:3px 0!important;
+  background:rgba(126,147,158,.035)!important;
+}
+.rundeckTrendWorkloadRow{
+  padding-left:0!important;padding-right:0!important;
+}
+.rundeckTrendInvestigationActions{
+  padding:7px 0 0!important;
+}
+html[data-theme="light"] .rundeckTrendSpikeSummary,
+html[data-theme="light"] .rundeckTrendInvestigationSnapshot,
+html[data-theme="light"] .rundeckTrendAppComparison,
+html[data-theme="light"] .rundeckTrendTopWorkload,
+html[data-theme="light"] .rundeckTrendComparison,
+html[data-theme="light"] .rundeckTrendMiniContext,
+html[data-theme="light"] .rundeckTrendEvidenceStrip,
+html[data-theme="light"] .rundeckTrendWorkloadPanel{background:transparent!important}
+@media(max-width:999px), (max-height:759px){
+  .rundeckTrendPointModalBody{overflow:auto!important}
+  .rundeckTrendAppComparison>div{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rundeckTrendTopWorkload{grid-template-columns:1fr}
+  .rundeckTrendTopWorkload p{white-space:normal}
+}
