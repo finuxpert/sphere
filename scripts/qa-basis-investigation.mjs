@@ -75,7 +75,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.52', files.version.includes("APP_VERSION = '1.34.52'") && files.version.includes('monitoring-flow-ui-v1.34.52')],
+  ['monitoring flow version is v1.34.53', files.version.includes("APP_VERSION = '1.34.53'") && files.version.includes('monitoring-flow-ui-v1.34.53')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -108,6 +108,7 @@ const checks = [
   ['System Health and PDF both promote stale performance or availability data to WARNING', files.systemHealthState.includes('availabilityStale = false') && files.systemHealthState.includes("resourceStates.includes('WARNING') || stale || availabilityStale") && files.systemHealth.includes('availabilityStale') && files.source.includes('reportAvailabilityStale') && files.source.includes('reportPerformanceStale')],
   ['PDF unknown or waiting operational state is neutral instead of green', files.source.includes("status === 'UNKNOWN' || status === 'WAITING'")],
   ['Performance timing copy avoids duplicated timing wording', files.jobHistory.includes("? 'Limited'") && files.jobHistory.includes('nearest observations') && !files.jobHistory.includes('Limited timing')],
+  ['DEV QA gate script prints failed checks and builds only after QA pass', read('ops/rundeck/qa-build-dev.sh').includes("grep -n '^FAIL '") && read('ops/rundeck/qa-build-dev.sh').includes('QA FAILED - build skipped.') && read('ops/rundeck/qa-build-dev.sh').includes('QA PASS - running build...')],
   ['PDF v1.34.50 raises report typography while preserving one-page geometry', files.source.includes("pdf.setFontSize(8.7)") && files.source.includes("pdf.setFontSize(8.6)") && files.source.includes("pdf.setFontSize(7.3)") && files.source.includes("47 / serverChart.height")],
   ['Trend Details can hand off to Infrastructure and Correlated Events', files.monitoringCore.includes('onOpenTrendInfrastructure') && files.monitoringCore.includes('onOpenTrendEvidence') && files.wrapper.includes('onOpenTrendInfrastructure') && files.wrapper.includes('onOpenTrendEvidence')],
   ['Trend investigation modal has dedicated snapshot comparison evidence and action geometry', files.accessibilityThemeFinal.includes('SPHERE v1.34.46 — trend spike investigation enrichment') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationSnapshot') && files.accessibilityThemeFinal.includes('.rundeckTrendComparison') && files.accessibilityThemeFinal.includes('.rundeckTrendEvidenceStrip') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationActions')],
@@ -220,7 +221,7 @@ const checks = [
   ['Selected workload evidence and supporting analysis share one aligned three-column authority', files.monitoringCss.includes('--selected-investigation-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.95fr)') && files.monitoringCss.includes('grid-template-columns:var(--selected-investigation-columns)!important') && files.monitoringCss.includes('margin-top:0!important') && files.monitoringCss.includes('border-top:0!important')],
   ['Live Server Trend uses a readable desktop chart height without changing the 35/65 layout', files.monitoringCss.includes('.is-server-trend .rundeckTrendChart') && files.monitoringCss.includes('height:286px!important') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['Selected workload keeps primary evidence taller than secondary analysis launchers', files.monitoringCss.includes('.rundeckSelectedOperationalEvidence .rundeckEvidenceCard') && files.monitoringCss.includes('min-height:74px!important') && files.monitoringCss.includes('.rundeckSelectedSecondaryAnalysis button') && files.monitoringCss.includes('min-height:48px!important')],
-  ['Selected live metrics use PSS Memory and workload-scoped APP Critical WP terminology', files.core.includes('<b>PSS Memory</b>') && files.core.includes('<b>APP Critical WP (workload)</b>') && files.core.includes('APP Critical WP is APP-server data for the selected workload observation.') && files.core.includes('0 means none were recorded') && files.core.includes('Not observed for selected workload')],
+  ['Selected live metrics use PSS Memory and workload-scoped APP Critical WP terminology', files.core.includes('<b>PSS Memory</b>') && files.core.includes('<b>APP Critical WP</b>') && files.core.includes('APP Critical WP is APP-server data for the selected workload observation.') && files.core.includes('0 means none were recorded') && files.core.includes('Not observed for workload')],
   ['Current Jobs secondary identity is visually subordinate to the workload name', files.currentWorkloadCss.includes('primary workload identity first') && files.currentWorkloadCss.includes('.rundeckCurrentWorkloadName small') && files.currentWorkloadCss.includes('opacity:.86')],
   ['Correlated Events drawer separates title scope status and timing while increasing event scan spacing', files.evidenceTimelineCss.includes('grid-template-areas:') && files.evidenceTimelineCss.includes('"title status"') && files.evidenceTimelineCss.includes('padding:6px 0!important')],
   ['Review reason chips remain supporting context instead of competing with workload identity', files.monitoringCss.includes('.rundeckReviewReasonChips span') && files.monitoringCss.includes('font-weight:560!important')],
@@ -234,7 +235,7 @@ const checks = [
   ['Infrastructure chart uses expanded internal plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=380') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
   ['Infrastructure analysis fixes Network Storage split and prevents clipped metric columns', files.infrastructureCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,60fr)!important') && files.infrastructureCss.includes('table-layout:fixed') && files.infrastructureCss.includes('nth-child(4)')],
   ['Infrastructure history uses structured current min max change and secondary metric stats', files.infrastructure.includes('rundeckInfraTrendStats') && files.infrastructure.includes('<b>Current</b>') && files.infrastructure.includes('<b>Peak TX</b>') && files.infrastructure.includes('<b>Peak Drop Delta</b>')],
-  ['Selected Job distinguishes missing Critical WP from an observed zero', files.core.includes('Not observed for selected workload') && files.core.includes('0 means none were recorded')],
+  ['Selected Job distinguishes missing Critical WP from an observed zero', files.core.includes('Not observed for workload') && files.core.includes('0 means none were recorded')],
   ['Selected Job evidence keeps primary cards stronger than flat secondary launchers', files.monitoringCss.includes('grid-auto-rows:76px!important') && files.monitoringCss.includes('grid-auto-rows:48px!important')],
   ['Performance charts break retained-history gaps instead of drawing missing time as zero', files.jobHistory.includes('current - previous > GAP_MS') && files.jobHistory.includes('data.push([new Date(previous + 1).toISOString(), null])')],
   ['Global WIB formatting standardizes clock labels to colon-separated HH:mm', read('src/tools/components/sapUiFormat.js').includes("replace(/(\\d{1,2})\\.(\\d{2})/g, '$1:$2')")],
@@ -393,4 +394,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.52 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.53 monitoring flow and deep-analysis checks passed.')
