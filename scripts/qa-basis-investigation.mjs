@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.47', files.version.includes("APP_VERSION = '1.34.47'") && files.version.includes('monitoring-flow-ui-v1.34.47')],
+  ['monitoring flow version is v1.34.48', files.version.includes("APP_VERSION = '1.34.48'") && files.version.includes('monitoring-flow-ui-v1.34.48')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -89,8 +89,11 @@ const checks = [
   ['Trend Details desktop uses a flat no-scroll investigation surface with mobile fallback', files.accessibilityThemeFinal.includes('SPHERE v1.34.47 — flat Basis investigation surfaces') && files.accessibilityThemeFinal.includes('overflow:hidden!important') && files.accessibilityThemeFinal.includes('max-height:759px')],
   ['Main live infrastructure and selected evidence use dividers instead of nested cards', files.liveOverviewCss.includes('SPHERE v1.34.47 — main infrastructure scan strip') && files.monitoringCss.includes('SPHERE v1.34.47 — flatter operational cockpit')],
   ['Infrastructure and Performance Analysis use the v1.34.47 flat visual contract', files.infrastructureCss.includes('SPHERE v1.34.47 — flat infrastructure workspace') && files.jobHistoryCss.includes('SPHERE v1.34.47 — flatten Performance Analysis summary')],
-  ['PDF v2 follows the current Basis workflow with situation summary selected evidence and Basis Review', files.source.includes("pdf.text('SITUATION SUMMARY'") && files.source.includes("pdf.text('BASIS REVIEW'") && files.source.includes('Prioritized from retained performance observations') && files.source.includes('Verify execution status in SAP before concluding the cause.')],
-  ['Trend Details exposes APP CPU Memory IO Wait Critical WP and workload WP evidence without causal verdicts', files.serverTrend.includes('<b>CPU</b>') && files.serverTrend.includes('<b>Memory</b>') && files.serverTrend.includes('<b>I/O Wait</b>') && files.serverTrend.includes('<b>APP Critical WP</b>') && files.serverTrend.includes('It does not prove that a workload caused the spike.') && files.serverTrend.includes('workloadWp(consumer)')],
+  ['PDF v2 follows the current Basis workflow with situation summary selected evidence and Basis Review', files.source.includes("pdf.text('SITUATION SUMMARY'") && files.source.includes("pdf.text('BASIS REVIEW'") && files.source.includes('Prioritized for Basis review from retained performance observations') && files.source.includes('Verify execution status in SAP before concluding the cause.')],
+
+  ['Selected workload hierarchy visually connects APP focus to workload evidence', files.monitoringCore.includes("has-selection") && files.monitoringCss.includes('SPHERE v1.34.48 — selected workload hierarchy polish')],
+  ['Server Trend v1.34.48 keeps legend readable and collection gap copy compact', files.serverTrend.includes("fontSize: 10.2") && files.serverTrend.includes("retained data gap") && files.serverTrend.includes("observation gap")],
+  ['PDF v2.1 adds evidence summary and keeps Basis Review concise', files.source.includes("pdf.text('EVIDENCE SUMMARY'") && files.source.includes('Prioritized for Basis review from retained performance observations') && files.source.includes('evaluationItems.slice(0, 3)')],  ['Trend Details exposes APP CPU Memory IO Wait Critical WP and workload WP evidence without causal verdicts', files.serverTrend.includes('<b>CPU</b>') && files.serverTrend.includes('<b>Memory</b>') && files.serverTrend.includes('<b>I/O Wait</b>') && files.serverTrend.includes('<b>APP Critical WP</b>') && files.serverTrend.includes('It does not prove that a workload caused the spike.') && files.serverTrend.includes('workloadWp(consumer)')],
   ['Trend Details can hand off to Infrastructure and Correlated Events', files.monitoringCore.includes('onOpenTrendInfrastructure') && files.monitoringCore.includes('onOpenTrendEvidence') && files.wrapper.includes('onOpenTrendInfrastructure') && files.wrapper.includes('onOpenTrendEvidence')],
   ['Trend investigation modal has dedicated snapshot comparison evidence and action geometry', files.accessibilityThemeFinal.includes('SPHERE v1.34.46 — trend spike investigation enrichment') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationSnapshot') && files.accessibilityThemeFinal.includes('.rundeckTrendComparison') && files.accessibilityThemeFinal.includes('.rundeckTrendEvidenceStrip') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationActions')],
   ['Infrastructure chart readability uses larger axes and annotations without changing drawer geometry', files.infrastructure.includes('const pad={left:56,right:34,top:12,bottom:42}') && files.infrastructureCss.includes('font-size:10.5px!important') && files.infrastructureCss.includes('.rundeckInfraChartWrap .issueMarker text')],
@@ -375,4 +378,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.47 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.48 monitoring flow and deep-analysis checks passed.')
