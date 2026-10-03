@@ -1332,3 +1332,28 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 .rundeckWorkspaceDrawer.is-performance .rundeckJobOperationalRail{
   margin-top:7px!important;
 }
+
+
+/* SPHERE v1.34.45 — normalize Performance Analysis across Current and historical ranges. */
+.rundeckJobHistoricalSummary.is-unified{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:0!important;
+  margin-top:8px!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span{
+  min-height:50px!important;
+  padding:8px 10px!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span.is-attention{
+  color:var(--sphere-warning,#d8b35f)!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span.is-attention b{
+  color:var(--sphere-warning,#d8b35f)!important;
+}
+.rundeckJobRangeMode button:disabled{
+  cursor:default!important;
+  opacity:.48!important;
+}
+.rundeckJobRangeMode button:disabled.is-active{
+  opacity:.72!important;
+}
