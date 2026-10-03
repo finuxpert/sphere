@@ -74,12 +74,15 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.43', files.version.includes("APP_VERSION = '1.34.43'") && files.version.includes('monitoring-flow-ui-v1.34.43')],
+  ['monitoring flow version is v1.34.44', files.version.includes("APP_VERSION = '1.34.44'") && files.version.includes('monitoring-flow-ui-v1.34.44')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
   ['Evidence Issues and System Data use content-aware drawer modes', files.wrapper.includes('size="evidence"') && files.wrapper.includes('size="issues"') && files.wrapper.includes('size="system-data"') && files.accessibilityThemeFinal.includes('.is-evidence,.is-issues,.is-system-data')],
   ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
+
+  ['Final live compact evidence uses operator-readable timing and freshness copy', files.evidenceTimeline.includes("'Same time window'") && !files.evidenceTimeline.includes('Timing: ${timingState}') && files.availability.includes('Current service availability - checked') && files.availability.includes('Last reliable:')],
+  ['Final live cockpit keeps review names bounded and selected controls separated', files.monitoringCss.includes('SPHERE v1.34.44') && files.monitoringCss.includes('text-overflow:ellipsis!important') && files.currentWorkloadCss.includes('gap:10px!important')],
   ['Job Performance drawer reserves full release-candidate chart space', files.jobHistoryCss.includes('min-height:455px') && files.jobHistoryCss.includes('height:430px')],
   ['Job Performance summary uses a full-width eight-cell episode matrix', files.jobHistory.includes('rundeckJobEpisodeMatrix') && files.jobHistory.includes('Performance Summary') && files.jobHistoryCss.includes('grid-template-columns:repeat(8,minmax(0,1fr))')],
   ['WP trace signals preserve per-PID collector evidence with snapshot recency guard', files.consumersBackend.includes('wp_signals') && files.consumersBackend.includes('error_at_snapshot') && files.consumersBackend.includes('error_recency == "AT_SNAPSHOT"') && files.consumersBackend.includes('latest_trace_error')],
@@ -360,4 +363,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.43 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.44 monitoring flow and deep-analysis checks passed.')
