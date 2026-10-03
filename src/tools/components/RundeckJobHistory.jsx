@@ -875,29 +875,23 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
               <div className="rundeckJobRangeTabs" role="group" aria-label="Performance time range">
                 {PERFORMANCE_RANGES.map(([key,label]) => <button key={key} type="button" disabled={key !== 'current' && !historicalEligible} className={range===key?'is-active':''} aria-pressed={range===key} onClick={()=>setRange(key)}>{label}</button>)}
               </div>
-              {range !== 'current' && <div className="rundeckJobRangeMode" role="group" aria-label="Historical aggregation">
-                <button type="button" className={rangeMode==='avg'?'is-active':''} aria-pressed={rangeMode==='avg'} onClick={()=>setRangeMode('avg')}>Avg</button>
-                <button type="button" className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
-              </div>}
+              <div className="rundeckJobRangeMode" role="group" aria-label="Performance aggregation">
+                <button type="button" disabled={range==='current'} title={range==='current'?'Avg and Peak are identical for the selected workload episode.':''} className={rangeMode==='avg'?'is-active':''} aria-pressed={rangeMode==='avg'} onClick={()=>setRangeMode('avg')}>Avg</button>
+                <button type="button" disabled={range==='current'} title={range==='current'?'Avg and Peak are identical for the selected workload episode.':''} className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
+              </div>
             </div>
             <small className="rundeckJobCurrentSemantics" title="Current shows the selected workload observation episode">Current = selected workload episode</small>
             {range === 'current' && episodeItems.length > 1 && episodeItems.length <= 5 && <small className="rundeckJobLimitedSamples">Limited samples - {episodeItems.length} observations in selected period</small>}
           </section>
 
-          {range === 'current'
-            ? <div className="rundeckJobPerformanceTitle">
-                <span title="Current shows the selected observation period"><SphereIcon name="trend" /> Selected Period Performance</span>
-                <small>CPU Avg: {numberText(stats.avgCpu)}%</small><small>CPU Peak: {numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}</small>{stats.avgPss !== null && <small>PSS Avg: {numberText(stats.avgPss, 2)} GB{stats.peakPss !== null ? `, Peak: ${numberText(stats.peakPss, 2)} GB${stats.peakPssAt ? ` at ${formatWib(stats.peakPssAt, false)}` : ''}` : ''}</small>}
-                {profile.hasCritical && <em title="APP Critical WP was recorded during the workload observation period. This does not by itself establish incident overlap or causation.">APP Critical WP during workload period: {profile.criticalSamples} of {profile.totalSamples} observations{stats.peakCriticalWp ? `, Peak: ${numberText(stats.peakCriticalWp, 0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : ''}</em>}
-              </div>
-            : <div className="rundeckJobHistoricalSummary">
-                <span><b>Range</b>{range.toUpperCase()}</span>
-                <span><b>Checks</b>{historicalSummary?.checks ?? '—'}</span>
-                <span><b>Avg CPU</b>{historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`}</span>
-                <span><b>Peak CPU</b>{historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`}</span>
-                <span><b>Avg PSS</b>{historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`}</span>
-                <span title="APP Critical WP was observed during retained workload checks. This is workload-period evidence, not proof of incident overlap or causation."><b>APP Critical WP during workload period</b>{historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} checks` : '—'}</span>
-              </div>}
+          <div className="rundeckJobHistoricalSummary is-unified">
+            <span><b>Range</b>{range === 'current' ? 'Current' : range.toUpperCase()}</span>
+            <span><b>{range === 'current' ? 'Observations' : 'Checks'}</b>{range === 'current' ? profile.totalSamples : (historicalSummary?.checks ?? '—')}</span>
+            <span><b>Avg CPU</b>{range === 'current' ? `${numberText(stats.avgCpu)}%` : (historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`)}</span>
+            <span><b>Peak CPU</b>{range === 'current' ? `${numberText(stats.peakCpu)}%${stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}` : (historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`)}</span>
+            <span><b>Avg PSS</b>{range === 'current' ? (stats.avgPss == null ? '—' : `${numberText(stats.avgPss,2)} GB`) : (historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`)}</span>
+            <span className={(range === 'current' ? profile.criticalSamples : historicalSummary?.critical_wp_checks) ? 'is-attention' : ''} title="APP Critical WP is APP-server evidence observed during the workload period. It does not prove workload causation."><b>APP Critical WP overlap</b>{range === 'current' ? `${profile.criticalSamples} of ${profile.totalSamples} observations${stats.peakCriticalWp ? ` - peak ${numberText(stats.peakCriticalWp,0)}` : ''}` : (historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} checks` : '—')}</span>
+          </div>
         </aside>
 
         <section className="rundeckJobAnalysisCanvas" aria-label="Performance chart">
