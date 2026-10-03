@@ -363,30 +363,34 @@ export default function RundeckSource({ onCollection }) {
       const signal = incidentSummary?.primary_signal || {}
       const signalValue = metric(signal.value, signal.unit || '')
       const since = incidentSummary?.signal_active_since || incidentSummary?.detected_since
-      pdf.setTextColor(22, 31, 38)
+      pdf.setTextColor(71, 87, 97)
       pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(6.6)
+      pdf.text('SITUATION SUMMARY', margin, 35)
+      pdf.setTextColor(22, 31, 38)
       pdf.setFontSize(9.8)
-      pdf.text(`PRIMARY ISSUE · ${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 36)
+      pdf.text(`${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 40)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.5)
+      pdf.setFontSize(7.1)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`Since ${formatTime(since)} WIB  ·  Duration ${reportDuration(incidentSummary?.duration_seconds)}`, margin, 41)
+      pdf.text(`Since ${formatTime(since)} WIB · Duration ${reportDuration(incidentSummary?.duration_seconds)} · Performance ${formatTime(latest?.finished_at)} WIB`, margin, 44.5)
 
       const current = incidentSummary?.current_workload || {}
-      pdf.setFillColor(235, 240, 242)
-      pdf.roundedRect(margin, 45, contentW, 17, 1, 1, 'F')
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, 48, W - margin, 48)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.5)
+      pdf.setFontSize(6.5)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('AVAILABILITY', margin + 4, 50)
+      pdf.text('AVAILABILITY', margin, 52.5)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.9)
+      pdf.setFontSize(7)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`SAP APP  ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin + 4, 54)
-      pdf.text(`HANA  P ${availabilityStatus(hanaRows, 'PRIMARY')}  ·  S ${availabilityStatus(hanaRows, 'SECONDARY')}  ·  DR ${availabilityStatus(hanaRows, 'DR')}`, margin + 4, 58)
-      pdf.text(`WEB  HTTP ${availabilityStatus(webRows, 'HTTP')}  ·  HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 4, 61.5)
+      pdf.text(`SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin, 57)
+      pdf.text(`HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}`, margin + 48, 57)
+      pdf.text(`WEB HTTP ${availabilityStatus(webRows, 'HTTP')} · HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 126, 57)
+      pdf.line(margin, 61, W - margin, 61)
 
-      let y = 69
+      let y = 68
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.2)
       pdf.setTextColor(22, 31, 38)
@@ -413,12 +417,12 @@ export default function RundeckSource({ onCollection }) {
         const trendMetric = String(trendContext.metricLabel || 'Performance').toUpperCase()
         const trendRange = String(trendContext.rangeLabel || '6H').toUpperCase()
         pdf.text(`SERVER ${trendMetric} TREND · ${trendRange}`, margin, chartY - 3)
-        const ratio = Math.min(contentW / serverChart.width, 46 / serverChart.height)
+        const ratio = Math.min(contentW / serverChart.width, 50 / serverChart.height)
         pdf.addImage(serverChart.toDataURL('image/jpeg', .92), 'JPEG', margin, chartY, serverChart.width * ratio, serverChart.height * ratio, undefined, 'FAST')
       }
 
-      const workY = 151
-      const leftW = contentW * .60
+      const workY = 154
+      const leftW = contentW * .56
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
       const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
@@ -440,53 +444,59 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(6.6)
       pdf.setTextColor(71, 87, 97)
       pdf.text('CPU', margin, selectedMetricY)
-      pdf.text('PSS MEMORY', margin + 30, selectedMetricY)
-      pdf.text('PROCESSES', margin + 67, selectedMetricY)
-      pdf.text('WP', margin + 99, selectedMetricY)
+      pdf.text('PSS MEMORY', margin + 27, selectedMetricY)
+      pdf.text('PROCESSES', margin + 62, selectedMetricY)
+      pdf.text('WP', margin + 91, selectedMetricY)
+      pdf.text('APP CRIT WP', margin + 114, selectedMetricY)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.4)
       pdf.setTextColor(22, 31, 38)
       pdf.text(metric(inspectedSource.cpu_pct, '%'), margin, selectedMetricY + 3.5)
-      pdf.text(pssText(inspectedSource), margin + 30, selectedMetricY + 3.5)
-      pdf.text(processText(inspectedSource), margin + 67, selectedMetricY + 3.5)
-      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 18), margin + 99, selectedMetricY + 3.5)
+      pdf.text(pssText(inspectedSource), margin + 27, selectedMetricY + 3.5)
+      pdf.text(processText(inspectedSource), margin + 62, selectedMetricY + 3.5)
+      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 91, selectedMetricY + 3.5)
+      pdf.text(metric(selectedJob?.criticalWp ?? inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp), margin + 114, selectedMetricY + 3.5)
+      pdf.setFontSize(6.2)
+      pdf.setTextColor(92, 105, 114)
+      const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
+      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: retained workload observation · SM37 execution status not connected`, margin, selectedMetricY + 7.5)
       if (workloadChart) {
-        const chartTop = selectedMetricY + 7
-        const chartMaxH = 24
+        const chartTop = selectedMetricY + 10
+        const chartMaxH = 20
         const ratio = Math.min(leftW / workloadChart.width, chartMaxH / workloadChart.height)
         pdf.addImage(workloadChart.toDataURL('image/jpeg', .94), 'JPEG', margin, chartTop, workloadChart.width * ratio, workloadChart.height * ratio, undefined, 'FAST')
       }
 
       const evaluationItems = evaluationResult.items || []
-      const evaluationFor = (row) => evaluationItems.find((item) => (
-        item.consumer_key === row.consumer_key && item.consumer_type === row.consumer_type
-      )) || null
       const sideX = margin + leftW + 7
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8)
-      pdf.text('TOP WORKLOADS', sideX, workY - 3)
-      pdf.setFontSize(6.4)
+      pdf.text('BASIS REVIEW', sideX, workY - 3)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.2)
       pdf.setTextColor(92, 105, 114)
-      const topCols = [0, 57, 75, 94]
-      ;['JOB / PROGRAM', 'CPU', 'PSS', 'PROC'].forEach((label, index) => pdf.text(label, sideX + topCols[index], workY + 1.5))
+      pdf.text('Prioritized from retained performance observations', sideX, workY + 0.8)
+      const reviewCols = [0, 58, 77, 96]
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(6.2)
+      ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
       pdf.setDrawColor(220, 226, 229)
-      pdf.line(sideX, workY + 3, W - margin, workY + 3)
-      let sideY = workY + 8
-      ;(workloadResult.items || []).slice(0, 4).forEach((row) => {
-        const evaluation = evaluationFor(row)
-        const evaluationReason = evaluation ? evaluationReasonText(evaluation) : ''
+      pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
+      let sideY = workY + 11
+      ;evaluationItems.slice(0, 4).forEach((row) => {
+        const reason = evaluationReasonText(row)
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(6.8)
-        pdf.text(clipped(`${shortHost(row.host)}  ${row.consumer_key}`, 35), sideX + topCols[0], sideY)
-        pdf.text(metric(row.cpu_pct, '%'), sideX + topCols[1], sideY)
-        pdf.text(pssText(row), sideX + topCols[2], sideY)
-        pdf.text(processText(row), sideX + topCols[3], sideY)
-        if (evaluationReason) {
+        pdf.setFontSize(6.7)
+        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 34), sideX + reviewCols[0], sideY)
+        pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY)
+        pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY)
+        pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY)
+        if (reason) {
           pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(6.1)
-          pdf.text(clipped(`Review: ${evaluationReason}`, 52), sideX, sideY + 3)
+          pdf.setFontSize(6)
+          pdf.text(clipped(`Review: ${reason}`, 55), sideX, sideY + 3)
           sideY += 8
         } else {
           sideY += 6
@@ -500,12 +510,12 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.1)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37 execution status: NOT CONNECTED  ·  APP Critical WP is APP-level evidence  ·  Correlation supports investigation; it does not prove causation.', margin, H - 14)
+      pdf.text('SM37: NOT CONNECTED · APP Critical WP: APP-level evidence · Correlation: timing evidence only · Verify execution status in SAP before concluding the cause.', margin, H - 14)
       pdf.setDrawColor(210, 217, 221)
       pdf.line(margin, H - 11, W - margin, H - 11)
       pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`SPHERE · Rundeck · Run #${latest?.execution_id || '—'}`, margin, H - 6)
+      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 6)
       pdf.text('Page 1 / 1', W - margin - 18, H - 6)
 
       const host = shortHost(incidentSummary?.affected_server || selectedJob?.host || 'SAP') || 'SAP'
