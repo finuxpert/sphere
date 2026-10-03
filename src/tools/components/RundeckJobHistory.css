@@ -1357,3 +1357,35 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 .rundeckJobRangeMode button:disabled.is-active{
   opacity:.72!important;
 }
+
+
+/* SPHERE v1.34.47 — flatten Performance Analysis summary without changing semantics. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+  border-bottom:1px solid rgba(126,147,158,.08)!important;
+  border-radius:0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-performance{
+  border-left:0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span{
+  border-left:0!important;
+  border-top:1px solid rgba(126,147,158,.055)!important;
+  padding-left:0!important;
+}
+.rundeckJobHistoricalSummary.is-unified{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.075)!important;
+  border-bottom:1px solid rgba(126,147,158,.075)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span{
+  min-height:42px!important;
+  padding:6px 10px 6px 0!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+  background:transparent!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span:nth-last-child(-n+2){border-bottom:0!important}
