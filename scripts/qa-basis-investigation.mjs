@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.45', files.version.includes("APP_VERSION = '1.34.45'") && files.version.includes('monitoring-flow-ui-v1.34.45')],
+  ['monitoring flow version is v1.34.46', files.version.includes("APP_VERSION = '1.34.46'") && files.version.includes('monitoring-flow-ui-v1.34.46')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -84,6 +84,10 @@ const checks = [
   ['Final live compact evidence uses operator-readable timing and freshness copy', files.evidenceTimeline.includes("'Same time window'") && !files.evidenceTimeline.includes('Timing: ${timingState}') && files.availability.includes('Current service availability - checked') && files.availability.includes('Last reliable:')],
   ['Final live cockpit keeps review names bounded and selected controls separated', files.monitoringCss.includes('SPHERE v1.34.44') && files.monitoringCss.includes('text-overflow:ellipsis!important') && files.currentWorkloadCss.includes('gap:10px!important')],
   ['Performance Analysis keeps one summary contract across Current and historical ranges', files.jobHistory.includes('rundeckJobHistoricalSummary is-unified') && files.jobHistory.includes("range === 'current' ? 'Observations' : 'Checks'") && files.jobHistory.includes("disabled={range==='current'}")],
+  ['Trend Details promotes a clicked spike into a Basis investigation snapshot', files.serverTrend.includes('APP Snapshot at Selected Time') && files.serverTrend.includes('Point Comparison') && files.serverTrend.includes('Supporting evidence') && files.serverTrend.includes('Nearest retained observation') && files.serverTrend.includes('Analyze Top Workload')],
+  ['Trend Details exposes APP CPU Memory IO Wait Critical WP and workload WP evidence without causal verdicts', files.serverTrend.includes('<b>CPU</b>') && files.serverTrend.includes('<b>Memory</b>') && files.serverTrend.includes('<b>I/O Wait</b>') && files.serverTrend.includes('<b>APP Critical WP</b>') && files.serverTrend.includes('It does not prove that a workload caused the spike.') && files.serverTrend.includes('workloadWp(consumer)')],
+  ['Trend Details can hand off to Infrastructure and Correlated Events', files.monitoringCore.includes('onOpenTrendInfrastructure') && files.monitoringCore.includes('onOpenTrendEvidence') && files.wrapper.includes('onOpenTrendInfrastructure') && files.wrapper.includes('onOpenTrendEvidence')],
+  ['Trend investigation modal has dedicated snapshot comparison evidence and action geometry', files.accessibilityThemeFinal.includes('SPHERE v1.34.46 — trend spike investigation enrichment') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationSnapshot') && files.accessibilityThemeFinal.includes('.rundeckTrendComparison') && files.accessibilityThemeFinal.includes('.rundeckTrendEvidenceStrip') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationActions')],
   ['Infrastructure chart readability uses larger axes and annotations without changing drawer geometry', files.infrastructure.includes('const pad={left:56,right:34,top:12,bottom:42}') && files.infrastructureCss.includes('font-size:10.5px!important') && files.infrastructureCss.includes('.rundeckInfraChartWrap .issueMarker text')],
   ['PDF report adds selected workload metrics and operational evidence notes', files.source.includes("pdf.text('OPERATIONAL NOTES'") && files.source.includes("APP Critical WP is APP-level evidence") && files.source.includes("'PSS MEMORY'") && files.source.includes("'JOB / PROGRAM'")],
   ['Job Performance drawer reserves full release-candidate chart space', files.jobHistoryCss.includes('min-height:455px') && files.jobHistoryCss.includes('height:430px')],
@@ -366,4 +370,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.45 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.46 monitoring flow and deep-analysis checks passed.')
