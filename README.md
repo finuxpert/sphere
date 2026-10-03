@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated DEV release: **v1.34.51**.
+Current Rundeck-integrated DEV release: **v1.34.52**.
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -116,6 +116,7 @@ Performance Analysis exposes:
 - SM37 remains the authority for SAP background-job execution status.
 - A Current Performance Analysis range with one saved observation is shown as a **Selected Observation**, not as a misleading trend line.
 - PDF reports show Performance and Availability source times and keep `ALIGNED` / `PARTIAL` explicit when the report sources are not from the same timing window.
+- PDF operational state uses the same service/resource/freshness semantics as the System Health header; Critical WP alone raises ATTENTION rather than declaring a service outage.
 
 ## Build paths
 
