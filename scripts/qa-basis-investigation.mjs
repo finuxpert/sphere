@@ -74,7 +74,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.50', files.version.includes("APP_VERSION = '1.34.50'") && files.version.includes('monitoring-flow-ui-v1.34.50')],
+  ['monitoring flow version is v1.34.51', files.version.includes("APP_VERSION = '1.34.51'") && files.version.includes('monitoring-flow-ui-v1.34.51')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -92,13 +92,17 @@ const checks = [
   ['PDF v2 follows the current Basis workflow with summary selected evidence and jobs/programs review', files.source.includes("pdf.text('SUMMARY'") && files.source.includes("pdf.text('JOBS / PROGRAMS TO REVIEW'") && files.source.includes('Observed CPU, PSS and APP Critical WP') && files.source.includes('Check execution status in SAP (SM37).')],
 
   ['Selected workload hierarchy visually connects APP focus to workload evidence', files.monitoringCore.includes("has-selection") && files.monitoringCss.includes('SPHERE v1.34.48 — selected workload hierarchy polish')],
-  ['Server Trend v1.34.48 keeps legend readable and collection gap copy compact', files.serverTrend.includes("fontSize: 10.2") && files.serverTrend.includes("retained data gap") && files.serverTrend.includes("observation gap")],
+  ['Server Trend v1.34.48 keeps legend readable and collection gap copy compact', files.serverTrend.includes("fontSize: 10.2") && files.serverTrend.includes('gapDurationText(from, to)') && files.serverTrend.includes("'Collection Gap'")],
   ['PDF v2.1 adds check summary and keeps jobs/programs review concise', files.source.includes("pdf.text('CHECK SUMMARY'") && files.source.includes('Observed CPU, PSS and APP Critical WP') && files.source.includes('evaluationItems.slice(0, 3)')],  ['Trend Details exposes APP CPU Memory IO Wait Critical WP and workload WP evidence without causal verdicts', files.serverTrend.includes('<b>CPU</b>') && files.serverTrend.includes('<b>Memory</b>') && files.serverTrend.includes('<b>I/O Wait</b>') && files.serverTrend.includes('<b>APP Critical WP</b>') && files.serverTrend.includes('It does not prove that a workload caused the spike.') && files.serverTrend.includes('workloadWp(consumer)')],
   ['Availability running refresh is informational rather than warning-styled', files.availability.includes("is-running-info") && files.availabilityCss.includes('SPHERE v1.34.49 — running availability refresh is informational')],
   ['Performance Analysis v1.34.49 keeps controls compact without changing range semantics', files.jobHistoryCss.includes('SPHERE v1.34.49 — final compact Performance Analysis control rail') && files.jobHistoryCss.includes('min-height:36px!important')],
   ['Final cockpit signal hierarchy subdues collection gaps while keeping SAP Job Source readable', files.monitoringCss.includes('SPHERE v1.34.49 — final cockpit signal hierarchy') && files.monitoringCss.includes('opacity:.82!important')],
   ['PDF v2.1 final polish keeps chart breathing room and raises report note readability', files.source.includes('47 / serverChart.height') && files.source.includes("pdf.text('CHECK SUMMARY'") && files.source.includes("pdf.text('NOTES'")],
   ['Performance Analysis v1.34.50 improves typography without changing analysis geometry', files.jobHistoryCss.includes('SPHERE v1.34.50 — typography/readability freeze pass') && files.jobHistory.includes('cause not confirmed') && files.jobHistory.includes('nearest retained observations')],
+  ['Current single-observation analysis uses a selected-observation summary instead of an empty trend', files.jobHistory.includes('Selected Observation') && files.jobHistory.includes('Single saved observation - no trend line') && files.jobHistoryCss.includes('SPHERE v1.34.51 — single-observation and trace clarity')],
+  ['WP trace rows label retained historical errors directly', files.jobHistory.includes("recency === 'AT_SNAPSHOT' ? 'AT SNAPSHOT' : 'HISTORICAL'")],
+  ['PDF preserves missing workload Critical WP and shows exact report source times', files.source.includes('selectedCriticalWpText') && files.source.includes('reportPerformanceAt') && files.source.includes('reportAvailabilityAt') && files.source.includes('reportDataAlignment')],
+  ['PDF quick report uses plain Basis wording for timing and job status checks', files.source.includes('Correlation based on time') && files.source.includes('Check job status in SAP (SM37).')],
   ['PDF v1.34.50 raises report typography while preserving one-page geometry', files.source.includes("pdf.setFontSize(8.7)") && files.source.includes("pdf.setFontSize(8.6)") && files.source.includes("pdf.setFontSize(7.3)") && files.source.includes("47 / serverChart.height")],
   ['Trend Details can hand off to Infrastructure and Correlated Events', files.monitoringCore.includes('onOpenTrendInfrastructure') && files.monitoringCore.includes('onOpenTrendEvidence') && files.wrapper.includes('onOpenTrendInfrastructure') && files.wrapper.includes('onOpenTrendEvidence')],
   ['Trend investigation modal has dedicated snapshot comparison evidence and action geometry', files.accessibilityThemeFinal.includes('SPHERE v1.34.46 — trend spike investigation enrichment') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationSnapshot') && files.accessibilityThemeFinal.includes('.rundeckTrendComparison') && files.accessibilityThemeFinal.includes('.rundeckTrendEvidenceStrip') && files.accessibilityThemeFinal.includes('.rundeckTrendInvestigationActions')],
@@ -225,7 +229,7 @@ const checks = [
   ['Infrastructure chart uses expanded internal plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=380') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
   ['Infrastructure analysis fixes Network Storage split and prevents clipped metric columns', files.infrastructureCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,60fr)!important') && files.infrastructureCss.includes('table-layout:fixed') && files.infrastructureCss.includes('nth-child(4)')],
   ['Infrastructure history uses structured current min max change and secondary metric stats', files.infrastructure.includes('rundeckInfraTrendStats') && files.infrastructure.includes('<b>Current</b>') && files.infrastructure.includes('<b>Peak TX</b>') && files.infrastructure.includes('<b>Peak Drop Delta</b>')],
-  ['Selected Job distinguishes missing Critical WP from an observed zero', files.core.includes("'Not observed'") && files.core.includes('0 means the selected observation recorded no Critical WP')],
+  ['Selected Job distinguishes missing Critical WP from an observed zero', files.core.includes('Not observed for selected workload') && files.core.includes('0 means none were recorded')],
   ['Selected Job evidence keeps primary cards stronger than flat secondary launchers', files.monitoringCss.includes('grid-auto-rows:76px!important') && files.monitoringCss.includes('grid-auto-rows:48px!important')],
   ['Performance charts break retained-history gaps instead of drawing missing time as zero', files.jobHistory.includes('current - previous > GAP_MS') && files.jobHistory.includes('data.push([new Date(previous + 1).toISOString(), null])')],
   ['Global WIB formatting standardizes clock labels to colon-separated HH:mm', read('src/tools/components/sapUiFormat.js').includes("replace(/(\\d{1,2})\\.(\\d{2})/g, '$1:$2')")],
@@ -304,7 +308,7 @@ const checks = [
   ['Light theme defines RDP-safe monitoring tokens', files.accessibilityThemeFinal.includes('--sphere-accent:#14747b') && files.accessibilityThemeFinal.includes('--sphere-positive:#287a55') && files.accessibilityThemeFinal.includes('--sphere-text-secondary:#3f515a')],
   ['ST03N honors the global light theme with shared readable surfaces', files.st03nTheme.includes('html[data-theme="light"] .rca26Shell') && files.st03nTheme.includes('--bg:#f4f7f8') && files.st03nTheme.includes('.rca26Table th')],
   ['Current Jobs and Selected Job use one balanced content-driven desktop layout', files.workspace.includes('grid-template-columns:minmax(0,45fr) minmax(0,55fr)') && files.workspace.includes('height:fit-content!important') && !files.liveOverviewCss.includes('minmax(0,38fr) minmax(0,62fr)')],
-  ['Review queue frames ranking as Basis prioritization rather than an automatic verdict', files.performanceReview.includes('prioritized for Basis review') && !files.performanceReview.includes('items need attention · sorted by review priority')],
+  ['Review queue frames ranking as Basis prioritization rather than an automatic verdict', files.performanceReview.includes('sorted by review priority') && !files.performanceReview.includes('prioritized for Basis review')],
   ['Final light hierarchy strengthens healthy states and source integrity text', files.accessibilityThemeFinal.includes('.rundeckSm37VerificationHead strong') && files.accessibilityThemeFinal.includes('.rundeckStatus.is-normal') && files.accessibilityThemeFinal.includes('.rundeckReviewWorkloadV1231 button')],
   ['Final APP rows remain readable in light mode with a distinct selected focus state', files.accessibilityThemeFinal.includes('.rundeckServerTable tbody tr:not(.is-cross-panel-focus) td') && files.accessibilityThemeFinal.includes('box-shadow:inset 2px 0 0 rgba(20,125,134,.55)')],
   ['Selected workload gives evidence more height than secondary launchers', files.monitoringCss.includes('grid-auto-rows:70px!important') && files.monitoringCss.includes('height:70px!important') && files.monitoringCss.includes('grid-auto-rows:58px!important')],
@@ -384,4 +388,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.50 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.51 monitoring flow and deep-analysis checks passed.')
