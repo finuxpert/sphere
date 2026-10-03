@@ -25,7 +25,7 @@ function SelectedWorkload(props) {
                 <span><b>CPU</b>{props.selectedJob.cpuPct === null || props.selectedJob.cpuPct === undefined ? '—' : `${Number(props.selectedJob.cpuPct).toLocaleString('en-US',{maximumFractionDigits:1})}%`}</span>
                 <span><b>PSS Memory</b>{props.selectedJob.memoryGb === null || props.selectedJob.memoryGb === undefined ? '—' : `${Number(props.selectedJob.memoryGb).toLocaleString('en-US',{maximumFractionDigits:2})} GB`}</span>
                 <span><b>Processes</b>{props.selectedJob.processes ?? '—'}</span>
-                <span title="APP Critical WP is APP-server evidence. 0 means the selected observation recorded no Critical WP; Not observed means this value was not retained for the selection."><b>APP Critical WP</b>{props.selectedJob.criticalWp === null || props.selectedJob.criticalWp === undefined ? 'Not observed' : props.selectedJob.criticalWp}</span>
+                <span title="APP Critical WP is APP-server data for the selected workload observation. 0 means none were recorded; Not observed means this value was not retained."><b>APP Critical WP (workload)</b>{props.selectedJob.criticalWp === null || props.selectedJob.criticalWp === undefined ? 'Not observed for selected workload' : props.selectedJob.criticalWp}</span>
               </div>}
           <button type="button" onClick={props.onOpenSelectedAnalysis}>Analyze Performance</button>
         </div>
