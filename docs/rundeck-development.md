@@ -11,7 +11,7 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current application version: **v1.34.51**
+- Current application version: **v1.34.52**
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
@@ -147,6 +147,7 @@ Do not use nearest-bucket recomputation to replace the value the operator clicke
 - `Latest Trace Error` may be historical and is labelled AT SNAPSHOT or HISTORICAL in the UI.
 - SM37 status must not be inferred from WP sampling.
 - PDF report alignment uses the report's Performance and Availability source timestamps; mismatched timing remains PARTIAL rather than being silently normalized.
+- System Health and PDF status use the same resource/service/freshness semantics; stale performance or availability data raises WARNING, while Critical WP without service/resource impact remains ATTENTION.
 
 ## Validation
 
