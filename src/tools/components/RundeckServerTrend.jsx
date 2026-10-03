@@ -130,7 +130,7 @@ function CollectionGapBand({ trend }) {
     <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
       <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
       <strong>{gapTimeRangeText(from, to)}</strong>
-      <small>{gapDurationText(from, to)} {observed ? 'without retained Service Availability observation' : 'without retained collection'}{gaps.length > 1 ? ` · +${gaps.length - 1} additional gap${gaps.length > 2 ? 's' : ''}` : ''}</small>
+      <small>{gapDurationText(from, to)} {observed ? 'observation gap' : 'retained data gap'}{gaps.length > 1 ? ` · +${gaps.length - 1} more` : ''}</small>
     </summary>
     {gaps.length > 1 && <div className="rundeckGapDetailsV133">
       {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
@@ -179,12 +179,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
     const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
-    if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 8, position: 'insideEndTop' } })
-    if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 8, position: 'insideEndTop' } })
+    if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
+    if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     return {
       animationDuration: 140,
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
-      legend: { top: 0, type: 'scroll', itemWidth: 14, itemHeight: 8, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 9 } },
+      legend: { top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 10.2, fontWeight: 600 } },
       grid: { left: 58, right: 72, top: 38, bottom: compactPoints ? 34 : 48 },
       tooltip: {
         trigger: 'axis',
