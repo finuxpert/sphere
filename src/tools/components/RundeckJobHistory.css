@@ -1475,3 +1475,65 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 .rundeckWorkspaceDrawer.is-performance .rundeckWpSignalNote{
   font-size:8.5px!important;
 }
+
+
+/* SPHERE v1.34.51 — single-observation and trace clarity. */
+.rundeckSingleSample{
+  display:grid;
+  align-content:start;
+  min-height:180px;
+  padding-top:10px!important;
+}
+.rundeckSingleSampleHead{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(126,147,158,.08);
+}
+.rundeckSingleSampleHead strong{
+  color:var(--sphere-text,#e7edf0);
+  font-size:12px;
+  font-weight:800;
+}
+.rundeckSingleSampleHead span{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckSingleSampleMetrics{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0!important;
+  margin-top:0!important;
+}
+.rundeckSingleSampleMetrics span{
+  display:grid!important;
+  gap:2px!important;
+  padding:9px 10px 8px 0;
+  border-bottom:1px solid rgba(126,147,158,.05);
+}
+.rundeckSingleSampleAxis{
+  height:38px!important;
+  margin-top:12px!important;
+}
+.rundeckSingleSampleAxis small{
+  position:absolute;
+  top:23px;
+  left:50%;
+  transform:translateX(-50%);
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.3px;
+  white-space:nowrap;
+}
+.rundeckWpSignalTable td small{
+  display:block;
+  margin-top:2px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+  font-weight:700;
+  letter-spacing:.02em;
+}
+@media(max-width:900px){
+  .rundeckSingleSampleMetrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
