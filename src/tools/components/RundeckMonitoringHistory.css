@@ -1612,3 +1612,31 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     padding-bottom:3px!important;
   }
 }
+
+
+/* SPHERE v1.34.44 — final live cockpit micro-consistency pass. */
+.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard small{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+  opacity:.92!important;
+  font-weight:540!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSystemHealthV1231{
+  gap:11px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSystemHealthPrimary,
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131 summary{
+  gap:6px!important;
+  padding-right:10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231{
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewWorkloadV1231 button{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
