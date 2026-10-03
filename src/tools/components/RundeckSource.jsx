@@ -367,7 +367,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(71, 87, 97)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.1)
-      pdf.text('SITUATION SUMMARY', margin, 35)
+      pdf.text('SUMMARY', margin, 35)
       pdf.setTextColor(22, 31, 38)
       pdf.setFontSize(9.8)
       pdf.text(`${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 40)
@@ -476,11 +476,11 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.6)
-      pdf.text('BASIS REVIEW', sideX, workY - 3)
+      pdf.text('JOBS / PROGRAMS TO REVIEW', sideX, workY - 3)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.6)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('Prioritized for Basis review from retained performance observations', sideX, workY + 0.8)
+      pdf.text('Observed CPU, PSS and APP Critical WP', sideX, workY + 0.8)
       const reviewCols = [0, 58, 77, 96]
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(6.8)
@@ -500,7 +500,7 @@ export default function RundeckSource({ onCollection }) {
         if (reason) {
           pdf.setTextColor(92, 105, 114)
           pdf.setFontSize(6.3)
-          pdf.text(clipped(`Review: ${reason}`, 55), sideX, sideY + 3)
+          pdf.text(clipped(`Reason: ${reason}`, 55), sideX, sideY + 3)
           sideY += 7.2
         } else {
           sideY += 5.8
@@ -512,7 +512,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.3)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('EVIDENCE SUMMARY', margin, H - 27)
+      pdf.text('CHECK SUMMARY', margin, H - 27)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.1)
       pdf.setTextColor(22, 31, 38)
@@ -522,7 +522,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.1)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('OPERATIONAL NOTES', margin, H - 18)
+      pdf.text('NOTES', margin, H - 18)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.7)
       pdf.setTextColor(92, 105, 114)
