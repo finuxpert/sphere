@@ -333,3 +333,18 @@
 .rundeckAvailabilityMatrix .is-head{background:rgba(126,147,158,.025)!important}
 .rundeckAvailabilityHead span,.rundeckAvailabilityMuted{color:var(--sphere-text-muted,#8d9aa3)!important;font-size:9.2px!important}
 @media(max-width:720px){.rundeckAvailabilitySummaryStrip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* SPHERE v1.34.49 — running availability refresh is informational, not a warning. */
+.rundeckAvailabilityDataTrust.is-running-info{
+  color:var(--sphere-text-muted,#718089)!important;
+}
+.rundeckAvailabilityDataTrust.is-running-info .rundeckAvailabilityBundle.is-running{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+  border-color:rgba(126,147,158,.12)!important;
+  background:rgba(126,147,158,.025)!important;
+}
+html[data-theme="light"] .rundeckAvailabilityDataTrust.is-running-info .rundeckAvailabilityBundle.is-running{
+  color:#52656e!important;
+  background:#f6f8f9!important;
+}
