@@ -23,7 +23,6 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
         <button type="button" role="tab" aria-selected={mode === 'review'} className={mode === 'review' ? 'is-active' : ''} onClick={() => setMode('review')}>Review</button>
         <button type="button" role="tab" aria-selected={mode === 'search'} className={mode === 'search' ? 'is-active' : ''} onClick={() => setMode('search')}>Search</button>
         </div>
-        <span>{mode === 'live' ? 'Current workload observations' : mode === 'review' ? 'Historical Basis review priority' : 'Historical search'}</span>
       </div>
     </header>
     <div className={`rundeckJobsProgramsWorkspaceBody is-${mode}`}>
