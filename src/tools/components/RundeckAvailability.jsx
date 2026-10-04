@@ -176,10 +176,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   if (compact) {
     return <button type="button" className="rundeckEvidenceCard rundeckAvailabilityCard" onClick={onOpen} aria-label="Open SAP Availability details">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> SAP Availability</span>
-      <strong>{apps.length ? `${appsUp}/${apps.length} APP` : 'APP —'} · {hanaRows.length ? `${hanaUp}/${hanaRows.length} HANA` : 'HANA —'} · {webRows.length ? `${webUp}/${webRows.length} Web` : 'Web —'}</strong>
-      <small>{stale
-        ? `Last reliable: ${serviceState} - checked ${availabilityAge}m ago`
-        : issueText || (availabilityAge !== null ? `Current service availability - checked ${availabilityAge}m ago` : 'Current service availability')}</small>
+      <strong>{apps.length ? `${appsUp}/${apps.length} APP` : 'APP —'} · {hanaRows.length ? `${hanaUp}/${hanaRows.length} HANA` : 'HANA —'} · {webRows.length ? `${webUp}/${webRows.length} Web` : 'Web —'}{stale ? ` · STALE ${availabilityAge}m` : ''}</strong>
       <em aria-hidden="true">›</em>
     </button>
   }
