@@ -106,7 +106,6 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const timingSummary = `${timingLabel}${hasSkew ? ` · ${Math.round(Number(skew))}m difference` : ''} · Cause not confirmed`
   const workloadGapMinutes = Number(alignment.workload_gap_minutes)
   const hasWorkloadGap = Number.isFinite(workloadGapMinutes)
-  const workloadGapText = hasWorkloadGap ? `${Math.floor(workloadGapMinutes / 60)}h ${Math.round(workloadGapMinutes % 60)}m before issue` : ''
   const alignmentHint = state === 'ALIGNED'
     ? `Source timestamps are within the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Timing alignment supports correlation only; it does not establish causation.`
     : state === 'NO OVERLAP'
@@ -160,7 +159,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
               <span className={`rundeckEvidenceDot is-${String(event.source || '').toLowerCase().replaceAll(' ', '-')}`} />
               <div>
                 <strong>{displayTitle}</strong>
-                <small>{isHost && host ? `${host} · ` : ''}{sourceLabel(event.source)}{event.state && <span className={`rundeckEvidenceStateChip is-${String(event.state).toLowerCase().replaceAll(' ','-')}`}>{event.state}</span>}</small>
+                <small>{isHost && host ? `${appLabel(host)} · ` : ''}{sourceLabel(event.source)}{event.state && <span className={`rundeckEvidenceStateChip is-${String(event.state).toLowerCase().replaceAll(' ','-')}`}>{event.state}</span>}</small>
               </div>
               {relation && <em className={`rundeckEvidenceRelation ${relation === 'ISSUE START' ? 'is-issue' : relation === 'SAME WINDOW' ? 'is-same' : ''}`}>{relation}</em>}
             </div>
