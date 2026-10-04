@@ -1014,3 +1014,80 @@
   padding-left:0!important;
   padding-right:0!important;
 }
+
+
+/* SPHERE v1.34.59 — typography, control and PDF-preview consistency pass. */
+.appShell:has(.rundeckPanel) .rundeckLandscapeHeader h2{
+  font-size:17px!important;
+  font-weight:800!important;
+  letter-spacing:-.015em!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta>span{
+  font-size:9.8px!important;
+  line-height:1.35!important;
+}
+.appShell:has(.rundeckPanel) .rundeckModeSwitch button,
+.appShell:has(.rundeckPanel) .rundeckPdfButton,
+.appShell:has(.rundeckPanel) .rundeckCollectButton{
+  min-height:29px!important;
+  font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCollectButton{
+  padding:0 9px!important;
+  border:1px solid rgba(79,198,200,.42)!important;
+  background:rgba(79,198,200,.045)!important;
+  color:var(--sphere-text,#e7edf0)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckPdfButton,
+.appShell:has(.rundeckPanel) .rundeckModeSwitch button{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckModeSwitch button:hover,
+.appShell:has(.rundeckPanel) .rundeckPdfButton:hover{
+  color:var(--sphere-accent,#4fc6c8)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckOperationalState>span:first-child,
+.appShell:has(.rundeckPanel) .rundeckDataAlignment>span:first-child{
+  font-size:8.9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckStatus{
+  min-height:19px!important;
+  font-size:8.5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable th{
+  font-size:7.4px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckServerTable td{
+  font-variant-numeric:tabular-nums!important;
+}
+.rundeckPdfPreviewBackdrop{
+  background:rgba(3,7,10,.82)!important;
+}
+.rundeckPdfPreview{
+  width:min(1240px,82vw)!important;
+  height:min(820px,86vh)!important;
+  border-color:rgba(126,147,158,.15)!important;
+  border-radius:6px!important;
+  box-shadow:0 20px 70px rgba(0,0,0,.48)!important;
+}
+.rundeckPdfPreview>header,
+.rundeckPdfPreview>footer{
+  min-height:42px!important;
+  padding:7px 10px!important;
+}
+.rundeckPdfPreview>header span{
+  font-size:8px!important;
+  letter-spacing:.06em!important;
+}
+.rundeckPdfPreview>header strong{
+  font-size:10px!important;
+}
+.rundeckPdfPreview>header button,
+.rundeckPdfPreview>footer a{
+  min-height:28px!important;
+  padding:5px 9px!important;
+  font-size:9px!important;
+}
+.rundeckPdfPreview iframe{
+  background:#343434!important;
+}
