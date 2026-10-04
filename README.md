@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated DEV release: **v1.34.53**.
+Current Rundeck-integrated DEV release: **v1.34.61**.
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -44,6 +44,25 @@ https://sphere.astraotoparts.co.id
 ```
 
 Do not force-reset PROD to DEV. PROD-only deployment/routing files must be preserved during promotion.
+
+## Single-server DEV/PROD deployment topology
+
+The active Rundeck-integrated DEV and PROD runtimes are deployed on the **same SPHERE server** with separate Git checkouts and isolated runtime paths:
+
+```text
+JAHSVR-SPHERE
+├─ /root/rundeck-sphere-dev   → branch rundeck-sphere-dev  → https://sphere.astraotoparts.co.id/dev/
+└─ /root/rundeck-sphere-prod  → branch rundeck-sphere-prod → https://sphere.astraotoparts.co.id/
+```
+
+Runtime separation:
+
+- DEV API: port `8091`, current API symlink `/opt/sphere-rundeck-dev/current`, current web symlink `/var/www/sphere-dev/current`.
+- PROD API: port `8092`, current API symlink `/opt/sphere-rundeck-prod/current`, current web symlink `/var/www/sphere.astraotoparts.co.id/current`.
+- DEV and PROD use different branch-aware Vite bases: `/dev/` and `/`.
+- A DEV deployment must leave the current PROD web/API release unchanged.
+- A PROD deployment must leave the current DEV web/API release unchanged.
+- Branch promotion is completed before production deployment. The production checkout consumes the approved `rundeck-sphere-prod` branch; it must not merge DEV during deployment.
 
 ## Runtime architecture
 
@@ -128,29 +147,36 @@ Vite base is branch-aware:
 
 Production deploy blocks activation if the built bundle still references `/dev/assets/`.
 
-## Validation
+## Validation and deployment
 
-DEV:
+Canonical DEV refresh, QA, readiness, and deployment:
 
 ```bash
-cd /root/rundeck-sphere-dev
-git fetch origin
-git reset --hard origin/rundeck-sphere-dev
-npm run qa
-bash ops/rundeck/prod-readiness-check.sh
+cd /root/rundeck-sphere-dev && \
+git fetch origin && \
+git reset --hard origin/rundeck-sphere-dev && \
+bash ops/rundeck/qa-build-dev.sh && \
+bash ops/rundeck/prod-readiness-check.sh && \
+bash ops/rundeck/deploy-dev.sh
 ```
 
-Production:
+Canonical PROD deployment after the approved DEV release has already been promoted to `rundeck-sphere-prod`:
 
 ```bash
-cd /root/rundeck-sphere-prod
-git fetch origin
-git reset --hard origin/rundeck-sphere-prod
-npm run build
+cd /root/rundeck-sphere-prod && \
+git fetch origin && \
+git reset --hard origin/rundeck-sphere-prod && \
+npm ci && \
+npm run qa && \
+npm run build && \
 bash ops/rundeck/deploy-prod.sh
 ```
 
-A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validation, API smoke tests, route isolation, or transactional deploy checks are release blockers.
+Expected production source is the remote `rundeck-sphere-prod` HEAD. Do **not** merge `rundeck-sphere-dev` inside the production checkout during deployment.
+
+`deploy-dev.sh` and `deploy-prod.sh` are transactional. They validate their target branch/runtime, update only their managed Nginx/runtime paths, perform smoke checks, and roll back the target environment on failure. Cross-environment guards verify that deploying one environment does not replace the other.
+
+A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validation, API smoke tests, route isolation, cross-environment guards, or transactional deploy checks are release blockers.
 
 ## Documentation map
 
