@@ -7,22 +7,26 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
     ? React.cloneElement(currentContent, { embedded: true })
     : currentContent
   const review = React.isValidElement(reviewContent)
-    ? React.cloneElement(reviewContent, { embedded: true, forceSearch: mode === 'search' })
+    ? React.cloneElement(reviewContent, {
+        embedded: true,
+        forceSearch: mode === 'search',
+        hideSearchButton: true,
+      })
     : reviewContent
 
   return <section className="rundeckJobsProgramsWorkspace" aria-label="Jobs and Programs workspace">
     <header className="rundeckJobsProgramsWorkspaceHead">
-      <div>
+      <div className="rundeckJobsProgramsIdentity">
         <h3><SphereIcon name="workload" /> Jobs & Programs</h3>
-        <span>{mode === 'live' ? 'Current workload observations' : mode === 'review' ? 'Historical Basis review priority' : 'Historical job / program search'}</span>
-      </div>
-      <div className="rundeckJobsProgramsModes" role="tablist" aria-label="Jobs and Programs mode">
+        <div className="rundeckJobsProgramsModes" role="tablist" aria-label="Jobs and Programs mode">
         <button type="button" role="tab" aria-selected={mode === 'live'} className={mode === 'live' ? 'is-active' : ''} onClick={() => setMode('live')}>Live</button>
         <button type="button" role="tab" aria-selected={mode === 'review'} className={mode === 'review' ? 'is-active' : ''} onClick={() => setMode('review')}>Review</button>
         <button type="button" role="tab" aria-selected={mode === 'search'} className={mode === 'search' ? 'is-active' : ''} onClick={() => setMode('search')}>Search</button>
+        </div>
+        <span>{mode === 'live' ? 'Current workload observations' : mode === 'review' ? 'Historical Basis review priority' : 'Historical search'}</span>
       </div>
     </header>
-    <div className="rundeckJobsProgramsWorkspaceBody">
+    <div className={`rundeckJobsProgramsWorkspaceBody is-${mode}`}>
       {mode === 'live' ? live : review}
     </div>
   </section>
