@@ -730,7 +730,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const openTrendInfrastructure = React.useCallback((context) => { closeTrendDetails(); onOpenInfrastructure?.(context) }, [closeTrendDetails, onOpenInfrastructure])
   const openTrendEvidence = React.useCallback((context) => { closeTrendDetails(); onOpenEvidence?.(context) }, [closeTrendDetails, onOpenEvidence])
 
-  const renderTrendState = (trend, loading, error, metric, onSelect) => {
+  const renderTrendState = (trend, loading, error, onSelect) => {
     if (!databaseEnabled) return <div className="rundeckHistoryState">Trend data is not available yet.</div>
     if (loading) return <div className="rundeckHistoryState">Loading trend…</div>
     if (error) return <div className="rundeckHistoryState is-error">{error}</div>
@@ -762,7 +762,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <section className="rundeckServerTrendPanelV1234 is-server-trend" aria-label="Server Trend">
         <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
         <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric} onChange={setServerMetric} ariaLabel="Server metric" /></div>
-        {renderTrendState(serverTrend, serverLoading, serverError, serverMetric, selectPoint)}
+        {renderTrendState(serverTrend, serverLoading, serverError, selectPoint)}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
@@ -771,7 +771,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline</span>}
         </div>
-        {renderTrendState(technicalTrend, technicalLoading, technicalError, technicalMetric, selectPoint)}
+        {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint)}
       </section>
     </div>
 
