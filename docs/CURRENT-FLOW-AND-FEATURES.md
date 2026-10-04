@@ -77,7 +77,7 @@ Selected Job / Program
 Correlated Events | SAP Availability | SAP Issues
 Observation History | Infrastructure Analysis | System Data
 
-Current Jobs & Programs      Jobs & Programs to Review
+Current Jobs & Programs      Selected Job / Program      Jobs & Programs to Review
 ```
 
 The UI uses progressive disclosure. Deep evidence is opened in drawers/modals instead of expanding the live page indefinitely.
@@ -374,3 +374,11 @@ Do not claim:
 - guaranteed performance improvement;
 - authoritative live SM37 monitoring while no approved feed is connected;
 - SLA availability from retained observation percentages.
+
+
+### v1.34.55 layout refinements
+
+- Current Jobs and Jobs & Programs to Review use equal-height internal scroll areas; the Live page remains the outer one-screen cockpit.
+- Selected Job stays fixed between the two workload lists with six analysis launchers in two rows.
+- Infrastructure Analysis is history-first: the retained trend is shown above the Current Snapshot; Filesystem / Network / Storage I/O use a 45 / 20 / 35 snapshot layout.
+- Correlated Events shows an explicit timing strip, issue-relative event labels, and keeps the RCA boundary visible with `Cause not confirmed`.
