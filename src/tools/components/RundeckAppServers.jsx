@@ -66,7 +66,7 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
   const criticalApps = appStates.filter((item) => item.state === 'CRITICAL').length
   const warningApps = appStates.filter((item) => item.state === 'WARNING' || item.state === 'ATTENTION').length
   const highestCpu = [...state.items].sort((a,b) => Number(b.cpu_pct || 0) - Number(a.cpu_pct || 0))[0]
-  const highestMemory = [...state.items].sort((a,b) => Number(b.ram_pct || 0) - Number(a.ram_pct || 0))[0]
+  const highestRam = [...state.items].sort((a,b) => Number(b.ram_pct || 0) - Number(a.ram_pct || 0))[0]
   const highestWp = [...state.items].sort((a,b) => Number(b.wp_critical || 0) - Number(a.wp_critical || 0))[0]
 
   return <section className="rundeckServerSection rundeckServerSectionV1234" aria-label="SAP App Servers">
@@ -76,12 +76,12 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
       <span><b>Needs attention</b><strong>{warningApps}</strong></span>
       <span><b>Critical</b><strong>{criticalApps}</strong></span>
       <span><b>Highest CPU</b><strong>{shortHost(highestCpu?.host)} {metric(highestCpu?.cpu_pct,'%')}</strong></span>
-      <span><b>Highest Memory</b><strong>{shortHost(highestMemory?.host)} {metric(highestMemory?.ram_pct,'%')}</strong></span>
+      <span><b>Highest RAM</b><strong>{shortHost(highestRam?.host)} {metric(highestRam?.ram_pct,'%')}</strong></span>
       <span><b>Highest APP Critical WP</b><strong>{shortHost(highestWp?.host)} {metric(highestWp?.wp_critical)}</strong></span>
     </div>}
     {state.error && <div className="rundeckHistoryState is-error">{state.error}</div>}
     {!state.error && <div className="rundeckServerTableWrap"><table className="rundeckServerTable">
-      <thead><tr><th>APP</th><th>CPU</th><th>Memory</th><th>I/O Wait</th><th>APP Critical WP</th><th>Status</th></tr></thead>
+      <thead><tr><th>APP</th><th>CPU</th><th>RAM</th><th>I/O Wait</th><th>APP Critical WP</th><th>Status</th></tr></thead>
       <tbody>{state.items.map((host) => {
         const wpCount = Number(host.wp_critical || 0)
         const actionable = Boolean(onInspectApp)
