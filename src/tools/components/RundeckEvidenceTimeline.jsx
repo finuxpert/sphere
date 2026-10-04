@@ -119,7 +119,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
       <strong>{events.length ? `${events.length} correlated event${events.length === 1 ? '' : 's'}` : 'No correlated events'}</strong>
       <small>{timingDetail}</small>
-      <em>View events ›</em>
+      <em aria-hidden="true">›</em>
     </button>
   }
 
