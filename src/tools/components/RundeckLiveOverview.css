@@ -917,3 +917,96 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
 .appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(4){width:14%!important}
 .appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(5){width:21%!important}
 .appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(6){width:21%!important}
+
+
+/* SPHERE v1.34.56 — SAP Issues operational indicator console. */
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesV1231.is-indicator-console{
+  display:grid;
+  gap:9px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:0;
+  border-top:1px solid rgba(126,147,158,.08);
+  border-bottom:1px solid rgba(126,147,158,.08);
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip>span{
+  display:grid;
+  gap:2px;
+  padding:7px 8px;
+  border-right:1px solid rgba(126,147,158,.07);
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip>span:last-child{border-right:0}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip b{
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+  text-transform:uppercase;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip strong{font-size:11px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorSection{
+  min-width:0;
+  border-top:1px solid rgba(126,147,158,.07);
+  padding-top:6px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueSectionTitle{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:4px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueSectionTitle h4{margin:0;font-size:10.5px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueSectionTitle small{color:var(--sphere-text-muted,#718089);font-size:8px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTableWrap{
+  max-height:360px;
+  overflow:auto;
+  scrollbar-gutter:stable;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th,
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable td{
+  padding:6px 8px;
+  border-bottom:1px solid rgba(126,147,158,.07);
+  text-align:left;
+  font-size:9px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:var(--sphere-surface-0,#10171c);
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+  text-transform:uppercase;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(1){width:17%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(2){width:23%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(3){width:16%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(4){width:16%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(5){width:28%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:18px;
+  font-size:8px;
+  font-weight:800;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus i{
+  width:6px;height:6px;border-radius:999px;background:currentColor;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-normal{color:var(--sphere-success,#64c99b)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-attention{color:var(--sphere-attention,#6aa2d8)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-warning{color:var(--sphere-warning,#d8b35f)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-critical{color:var(--sphere-danger,#db7d86)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-unknown{color:var(--sphere-text-muted,#718089)}
+.rundeckWorkspaceDrawer.is-issues tr.is-investigable{cursor:pointer}
+.rundeckWorkspaceDrawer.is-issues tr.is-investigable:hover{background:rgba(79,198,200,.035)}
+@media(max-width:1100px){
+  .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
