@@ -173,7 +173,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Production changes must be validated on DEV before promotion.
 
 
-### Live cockpit v1.34.57
+### Live cockpit v1.34.58
 
 - Live Monitoring is the single primary workspace; standalone History was removed.
 - Historical Job / Program search is available from Jobs & Programs to Review and opens the shared Performance Analysis drawer.
@@ -182,10 +182,21 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - SAP App Servers includes operational summary/status, and SAP Issues consolidates performance, availability, technical checks, and SM37 feed state.
 
 
-### Live cockpit v1.34.57
+### Live cockpit v1.34.58
 
 - Top cockpit is content-driven at 42/58 for SAP App Servers and Infrastructure; dead vertical space is removed.
 - Trend workspace now shows Server Trend 1 / Server Trend 2 / Technical Trend at roughly 35/35/30 with one shared Time Range, Interval, and Avg/Peak control rail. Defaults are CPU, Memory, and Load.
 - Current Jobs and Jobs & Programs to Review stay 50/50, use a compact equal-height scan area, and Current Jobs fills its full pane width.
 - Six analysis shortcuts remain always visible.
 - Analysis drawers share one restrained visual contract with fewer separators, lighter tables, consistent Back/Close navigation, and no “Back to Selected Job” wording.
+
+
+### Live cockpit v1.34.58
+
+- Host memory wording is now explicit RAM; workload memory remains PSS Memory.
+- Server Trend 1 and Server Trend 2 share one collection-gap strip instead of duplicating the same gap message.
+- The six analysis shortcuts show the selected workload context above them and use compact whole-tile actions.
+- Current Jobs and Review use adaptive bounded height rather than a fixed lower-band height.
+- SAP Issues uses drawer-level scrolling and clearer checked-indicator wording.
+- Observation History separates CPU, PSS and Critical WP ranges.
+- Infrastructure history is shorter on desktop so Current Snapshot is visible sooner and Network numeric values are not clipped.
