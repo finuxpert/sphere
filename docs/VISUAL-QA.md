@@ -131,7 +131,7 @@ SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' npm 
 Only update screenshot baselines after manual review. Do not update snapshots merely to make a failure disappear.
 
 
-## v1.34.57 cockpit and drawer checks
+## v1.34.58 cockpit and drawer checks
 
 - bottom workflow is equal-height Current / Selected / Review;
 - Current and Review lists scroll internally with sticky table headers;
@@ -141,7 +141,7 @@ Only update screenshot baselines after manual review. Do not update snapshots me
 - Correlated Events shows Timing, relation labels, and Cause not confirmed without implying causation.
 
 
-## v1.34.57 checks
+## v1.34.58 checks
 
 - no standalone History tab;
 - Current Jobs and Review are equal 50/50 panels with internal scrolling;
@@ -152,7 +152,7 @@ Only update screenshot baselines after manual review. Do not update snapshots me
 - SAP Issues shows performance, availability, HANA/Web/SSH and SM37 source indicators with NORMAL/WARNING/ATTENTION/CRITICAL states.
 
 
-## v1.34.57 cockpit checks
+## v1.34.58 cockpit checks
 
 - no large dead space between the top cockpit row and trend controls;
 - SAP App Servers has no desktop horizontal scrollbar;
