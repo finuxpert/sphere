@@ -1120,3 +1120,20 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
 .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesTableV1231 td{
   border-bottom-color:rgba(126,147,158,.045)!important;
 }
+
+
+/* SPHERE v1.34.58 — single-scroll issue drawer and compact shortcut summaries. */
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTableWrap{
+  max-height:none!important;
+  overflow:visible!important;
+  scrollbar-gutter:auto!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th{
+  position:static!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>strong{
+  max-width:100%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>small{
+  max-width:100%!important;
+}
