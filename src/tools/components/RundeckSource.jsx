@@ -314,10 +314,9 @@ export default function RundeckSource({ onCollection }) {
         if (!element) return null
         return html2canvas(element, { backgroundColor: '#0f151a', scale: 1.55, useCORS: true, logging: false })
       }
-      const [serverChart1, serverChart2, workloadChart] = await Promise.all([
+      const [serverChart1, serverChart2] = await Promise.all([
         capture('.is-server-trend-1 .rundeckTrendChart'),
         capture('.is-server-trend-2 .rundeckTrendChart'),
-        capture('.rundeckJobPerformanceChart, .rundeckSingleSample'),
       ])
       const trendTitle1 = panel.querySelector('.is-server-trend-1 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 1'
       const trendTitle2 = panel.querySelector('.is-server-trend-2 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 2'
