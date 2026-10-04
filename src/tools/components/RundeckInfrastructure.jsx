@@ -1,4 +1,5 @@
 import React from 'react'
+import SphereIcon from './SphereIcon.jsx'
 import './RundeckInfrastructure.css'
 
 const API=`${import.meta.env.BASE_URL}api/infra`
@@ -108,7 +109,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
   </div>
 }
 
-export default function RundeckInfrastructure({incidentStart=''}){
+export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null}){
   const [data,setData]=React.useState({hosts:[],fs:[],network:[],storage:[]})
   const [error,setError]=React.useState('')
   const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
@@ -137,7 +138,7 @@ export default function RundeckInfrastructure({incidentStart=''}){
     }catch(e){setError(e.message)}
   },[selectedHost])
 
-  React.useEffect(()=>{refresh();const t=setInterval(refresh,60000);return()=>clearInterval(t)},[refresh])
+  React.useEffect(()=>{refresh();const t=setInterval(refresh,60000);return()=>clearInterval(t)},[refresh,refreshToken])
   React.useEffect(()=>{if(!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[selectedHost])
   React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrend(body.items||[]);setTrendMeta(body)}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
@@ -145,6 +146,14 @@ export default function RundeckInfrastructure({incidentStart=''}){
   const netState=data.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')
   const storageState=data.storage.reduce((state,row)=>worst(state,signalStorage(row.metrics)),'NORMAL')
   const overall=stale?'ATTENTION':worst(fsState,netState,storageState)
+  const topFilesystem=[...data.fs].sort((a,b)=>Number(b.used_pct||0)-Number(a.used_pct||0))[0]
+  const compactSignal=topFilesystem
+    ? `${topFilesystem.mount_point||'Filesystem'} ${metric(topFilesystem.used_pct,'%')}`
+    : data.storage[0]
+      ? `${data.storage[0].metrics?.mount||data.storage[0].sample_key||'Storage'} ${metric(data.storage[0].metrics?.util_pct,'%')}`
+      : data.network[0]
+        ? `${data.network[0].sample_key||'Network'}`
+        : 'No current infrastructure sample'
   const selectedTrendRows=selectedSeries?trend.filter(row=>(row.series_key||'series')===selectedSeries):[]
   const selectedValues=selectedTrendRows.map(row=>Number(row.value)).filter(Number.isFinite)
   const selectedValues2=selectedTrendRows.map(row=>Number(row.value2)).filter(Number.isFinite)
@@ -173,6 +182,14 @@ export default function RundeckInfrastructure({incidentStart=''}){
   },[selectedSeries,trend,trendMetric])
 
   const openTrend=(metricType,series='')=>{setTrendMetric(metricType);setSelectedSeries(series)}
+
+  if(compact){
+    return <button type="button" className="rundeckEvidenceCard rundeckInfrastructureCard" onClick={onOpen} aria-label="Open Infrastructure Analysis">
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> Infrastructure Analysis</span>
+      <strong>{error ? 'Unavailable' : `${overall} · ${compactSignal}`}</strong>
+      <em aria-hidden="true">›</em>
+    </button>
+  }
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
