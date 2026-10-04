@@ -111,7 +111,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     const top=issueIndicators[0]
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
-      <strong>{error?'Unavailable':`${issueIndicators.length} indicator${issueIndicators.length===1?'':'s'} need attention`}</strong>
+      <strong>{error?'Unavailable':`${issueIndicators.length} need attention`}</strong>
       <small>{top ? `${top.scope} · ${top.indicator} · ${top.status}` : 'No active SAP issue indicator'}</small>
       <em aria-hidden="true">›</em>
     </button>
