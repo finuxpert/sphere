@@ -613,58 +613,89 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [])
   const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
-  const [metric, setMetric] = React.useState(METRICS.some(([key]) => key === saved.metric) || AVAILABILITY_CATEGORIES[saved.metric] ? saved.metric : 'cpu')
+  const [serverMetric, setServerMetric] = React.useState(METRICS.some(([key]) => key === saved.serverMetric) ? saved.serverMetric : (METRICS.some(([key]) => key === saved.metric) ? saved.metric : 'cpu'))
+  const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
-  const [trend, setTrend] = React.useState(null)
-  const [trendLoading, setTrendLoading] = React.useState(false)
-  const [trendError, setTrendError] = React.useState('')
+  const [serverTrend, setServerTrend] = React.useState(null)
+  const [technicalTrend, setTechnicalTrend] = React.useState(null)
+  const [serverLoading, setServerLoading] = React.useState(false)
+  const [technicalLoading, setTechnicalLoading] = React.useState(false)
+  const [serverError, setServerError] = React.useState('')
+  const [technicalError, setTechnicalError] = React.useState('')
   const [selected, setSelected] = React.useState(null)
+  const [selectedTrend, setSelectedTrend] = React.useState(null)
   const [timeline, setTimeline] = React.useState(null)
   const [timelineLoading, setTimelineLoading] = React.useState(false)
   const [timelineError, setTimelineError] = React.useState('')
   const timelineRequestSequence = React.useRef(0)
   const modalRef = React.useRef(null)
   const restoreFocusRef = React.useRef(null)
-  const availabilityMetric = Boolean(AVAILABILITY_CATEGORIES[metric])
 
-  React.useEffect(() => { onTrendContext?.({ metric, metricLabel: trend?.metric_label || metricLabel(metric), range, rangeLabel: rangeLabel(range), mode }) }, [metric, mode, onTrendContext, range, trend?.metric_label])
+  const loadTrend = React.useCallback((metric, setter, setLoading, setError, signal) => {
+    const category = AVAILABILITY_CATEGORIES[metric]
+    const url = category
+      ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}`
+      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`
+    setLoading(true)
+    setError('')
+    return json(url, signal)
+      .then((result) => setter(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result))
+      .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message || 'Unable to load trend.') })
+      .finally(() => { if (!signal.aborted) setLoading(false) })
+  }, [bucket, range])
+
   React.useEffect(() => {
-    try { window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({ range, bucket, metric, mode })) } catch { /* best-effort UI preference */ }
-  }, [bucket, metric, mode, range])
+    onTrendContext?.({ metric: serverMetric, metricLabel: serverTrend?.metric_label || metricLabel(serverMetric), range, rangeLabel: rangeLabel(range), mode })
+  }, [mode, onTrendContext, range, serverMetric, serverTrend?.metric_label])
+
+  React.useEffect(() => {
+    try { window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({ range, bucket, serverMetric, technicalMetric, mode })) } catch { /* best effort */ }
+  }, [bucket, mode, range, serverMetric, technicalMetric])
+
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
-    setTrendLoading(true); setTrendError('')
-    const category = AVAILABILITY_CATEGORIES[metric]
-    const url = category ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}` : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`
-    json(url, controller.signal).then((result) => setTrend(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result)).catch((failure) => { if (failure.name !== 'AbortError') setTrendError(failure.message || 'Unable to load trend.') }).finally(() => { if (!controller.signal.aborted) setTrendLoading(false) })
+    loadTrend(serverMetric, setServerTrend, setServerLoading, setServerError, controller.signal)
     return () => controller.abort()
-  }, [bucket, databaseEnabled, metric, range, refreshToken])
-  React.useEffect(() => { timelineRequestSequence.current += 1; setSelected(null); setTimeline(null); setTimelineLoading(false); setTimelineError('') }, [bucket, metric, mode, range])
+  }, [databaseEnabled, loadTrend, refreshToken, serverMetric])
 
-  const selectPoint = React.useCallback((point) => {
+  React.useEffect(() => {
+    if (!databaseEnabled) return undefined
+    const controller = new AbortController()
+    loadTrend(technicalMetric, setTechnicalTrend, setTechnicalLoading, setTechnicalError, controller.signal)
+    return () => controller.abort()
+  }, [databaseEnabled, loadTrend, refreshToken, technicalMetric])
+
+  React.useEffect(() => {
+    timelineRequestSequence.current += 1
+    setSelected(null)
+    setSelectedTrend(null)
+    setTimeline(null)
+    setTimelineLoading(false)
+    setTimelineError('')
+  }, [bucket, mode, range, serverMetric, technicalMetric])
+
+  const selectPoint = React.useCallback((point, sourceTrend) => {
     timelineRequestSequence.current += 1
     const requestSequence = timelineRequestSequence.current
-    setSelected(point); setTimeline(null); setTimelineLoading(false); setTimelineError('')
+    setSelected(point)
+    setSelectedTrend(sourceTrend)
+    setTimeline(null)
+    setTimelineLoading(false)
+    setTimelineError('')
     if (!point?.at || (point.availability && !/^APP\d+$/i.test(String(shortHost(point.host || ''))))) return
     setTimelineLoading(true)
     const collection = point.collectionId ? `&collection_id=${encodeURIComponent(point.collectionId)}` : ''
     json(`${API}/history/timeline?at=${encodeURIComponent(point.at)}&window_minutes=5${collection}`)
-      .then((result) => {
-        if (timelineRequestSequence.current !== requestSequence) return
-        setTimeline(result)
-      })
-      .catch((failure) => {
-        if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load saved history.')
-      })
-      .finally(() => {
-        if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false)
-      })
+      .then((result) => { if (timelineRequestSequence.current === requestSequence) setTimeline(result) })
+      .catch((failure) => { if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load saved history.') })
+      .finally(() => { if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false) })
   }, [])
 
   const closeTrendDetails = React.useCallback(() => {
     timelineRequestSequence.current += 1
     setSelected(null)
+    setSelectedTrend(null)
     setTimeline(null)
     setTimelineLoading(false)
     setTimelineError('')
@@ -675,26 +706,16 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     restoreFocusRef.current = document.activeElement
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const timer = window.setTimeout(() => {
-      modalRef.current?.querySelector('[data-trend-modal-close]')?.focus()
-    }, 0)
+    const timer = window.setTimeout(() => modalRef.current?.querySelector('[data-trend-modal-close]')?.focus(), 0)
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        closeTrendDetails()
-        return
-      }
+      if (event.key === 'Escape') { event.preventDefault(); closeTrendDetails(); return }
       if (event.key !== 'Tab' || !modalRef.current) return
-      const focusable = [...modalRef.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
-        .filter((node) => !node.hasAttribute('hidden'))
+      const focusable = [...modalRef.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((node) => !node.hasAttribute('hidden'))
       if (!focusable.length) return
       const first = focusable[0]
       const last = focusable.at(-1)
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault(); last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault(); first.focus()
-      }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => {
@@ -705,44 +726,69 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     }
   }, [closeTrendDetails, selected])
 
-  const openSelectedJob = React.useCallback((context) => {
-    closeTrendDetails()
-    onSelectJob?.(context)
-  }, [closeTrendDetails, onSelectJob])
+  const openSelectedJob = React.useCallback((context) => { closeTrendDetails(); onSelectJob?.(context) }, [closeTrendDetails, onSelectJob])
+  const openTrendInfrastructure = React.useCallback((context) => { closeTrendDetails(); onOpenInfrastructure?.(context) }, [closeTrendDetails, onOpenInfrastructure])
+  const openTrendEvidence = React.useCallback((context) => { closeTrendDetails(); onOpenEvidence?.(context) }, [closeTrendDetails, onOpenEvidence])
 
-  const openTrendInfrastructure = React.useCallback((context) => {
-    closeTrendDetails()
-    onOpenInfrastructure?.(context)
-  }, [closeTrendDetails, onOpenInfrastructure])
+  const renderTrendState = (trend, loading, error, metric, onSelect) => {
+    if (!databaseEnabled) return <div className="rundeckHistoryState">Trend data is not available yet.</div>
+    if (loading) return <div className="rundeckHistoryState">Loading trend…</div>
+    if (error) return <div className="rundeckHistoryState is-error">{error}</div>
+    if (trend?.items?.length > 0) return <>
+      <TrendFreshness trend={trend} />
+      <AvailabilityCoverageBand trend={trend} />
+      <CollectionGapBand trend={trend} />
+      <AvailabilityObservationSummary trend={trend} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={selectedJob?.host || ''} />
+    </>
+    return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
+  }
 
-  const openTrendEvidence = React.useCallback((context) => {
-    closeTrendDetails()
-    onOpenEvidence?.(context)
-  }, [closeTrendDetails, onOpenEvidence])
+  const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
+  const activeTrend = selectedTrend || serverTrend
+  const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric
 
-  return <section className="rundeckServerTrendPanelV1234" aria-label="Server Trend">
-    <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
-    <div className="rundeckTrendToolbar"><div className="rundeckTrendGroup"><Segmented options={METRICS} value={metric} onChange={setMetric} ariaLabel="Performance metric" /></div><div className="rundeckTrendGroup"><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Time period" /></div>{!availabilityMetric && <div className="rundeckTrendGroup"><Segmented options={[["avg", "Avg"], ["max", "Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>}</div>
-    <details className="rundeckAdvancedControls"><summary>Advanced</summary><div><button type="button" className={metric === 'load' ? 'is-active' : ''} onClick={() => setMetric('load')}>Load</button><button type="button" className={metric === 'swap' ? 'is-active' : ''} onClick={() => setMetric('swap')}>Swap I/O</button><button type="button" className={metric === 'hana' ? 'is-active' : ''} onClick={() => setMetric('hana')}>HANA</button><button type="button" className={metric === 'replication' ? 'is-active' : ''} onClick={() => setMetric('replication')}>Replication</button><button type="button" className={metric === 'ssh' ? 'is-active' : ''} onClick={() => setMetric('ssh')}>SSH</button><button type="button" className={metric === 'web' ? 'is-active' : ''} onClick={() => setMetric('web')}>Web Dispatcher</button>{!availabilityMetric && <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div></details>
-    {!databaseEnabled && <div className="rundeckHistoryState">Trend data is not available yet.</div>}
-    {databaseEnabled && trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
-    {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
-    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><AvailabilityCoverageBand trend={trend} /><CollectionGapBand trend={trend} /><AvailabilityObservationSummary trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} selectedHost={selectedJob?.host || ''} /></>}
-    {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
+  return <section className="rundeckDualTrendV13456" aria-label="Server and Technical Trend">
+    <div className="rundeckTrendSharedControls">
+      <span>Time Range</span>
+      <Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" />
+      <span>Interval</span>
+      <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />
+      <span>View</span>
+      <Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" />
+    </div>
+
+    <div className="rundeckDualTrendGrid">
+      <section className="rundeckServerTrendPanelV1234 is-server-trend" aria-label="Server Trend">
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
+        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric} onChange={setServerMetric} ariaLabel="Server metric" /></div>
+        {renderTrendState(serverTrend, serverLoading, serverError, serverMetric, selectPoint)}
+      </section>
+
+      <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend</h3></div>
+        <div className="rundeckTrendToolbar">
+          <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
+          {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline</span>}
+        </div>
+        {renderTrendState(technicalTrend, technicalLoading, technicalError, technicalMetric, selectPoint)}
+      </section>
+    </div>
+
     {!selected && <div className="rundeckRcaHint">Click a chart point to inspect saved job and program data without expanding the page.</div>}
     {selected && <div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
       <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
           <div>
             <span>SPHERE ANALYSIS</span>
-            <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(metric)} {trend?.warning !== null && trend?.warning !== undefined && Number.isFinite(Number(trend.warning)) && Number(selected?.value) >= Number(trend.warning) ? 'Spike' : 'Detail'}</h4>
-            <small>{selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</small>
+            <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(activeMetric)} {activeTrend?.warning !== null && activeTrend?.warning !== undefined && Number.isFinite(Number(activeTrend.warning)) && Number(selected?.value) >= Number(activeTrend.warning) ? 'Spike' : 'Detail'}</h4>
+            <small>{selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || activeTrend?.unit || ''}`}</small>
             <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
           </div>
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
-          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} onOpenInfrastructure={openTrendInfrastructure} onOpenEvidence={openTrendEvidence} trend={trend} range={range} />
+          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} onOpenInfrastructure={openTrendInfrastructure} onOpenEvidence={openTrendEvidence} trend={activeTrend} range={range} />
         </div>
       </section>
     </div>}
