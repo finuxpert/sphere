@@ -18,15 +18,33 @@ Never force-reset PROD to DEV.
 
 When branches diverge, preserve PROD-only deployment/routing/service files.
 
-## DEV validation
+## Runtime topology: DEV and PROD share one host
+
+Both active Rundeck environments run on `JAHSVR-SPHERE`:
+
+| Environment | Checkout | Branch | URL | API |
+|---|---|---|---|---|
+| DEV | `/root/rundeck-sphere-dev` | `rundeck-sphere-dev` | `/dev/` | `8091` |
+| PROD | `/root/rundeck-sphere-prod` | `rundeck-sphere-prod` | `/` | `8092` |
+
+They are isolated by separate checkout, release directories, current symlinks, API service/port, and managed Nginx routing blocks. Deployment is performed locally on this same host.
+
+The deployment host does **not** promote branches. Promotion is completed first; deployment then fetches and resets the matching checkout to its approved remote branch.
+
+## DEV validation and deployment
+
+Canonical DEV command:
 
 ```bash
-cd /root/rundeck-sphere-dev
-git fetch origin
-git reset --hard origin/rundeck-sphere-dev
-npm run qa
-bash ops/rundeck/prod-readiness-check.sh
+cd /root/rundeck-sphere-dev && \
+git fetch origin && \
+git reset --hard origin/rundeck-sphere-dev && \
+bash ops/rundeck/qa-build-dev.sh && \
+bash ops/rundeck/prod-readiness-check.sh && \
+bash ops/rundeck/deploy-dev.sh
 ```
+
+The sequence intentionally keeps the checkout on `rundeck-sphere-dev`. `qa-build-dev.sh` runs lint/Basis contract QA/build, readiness validates backend/watchdog/platform health, and `deploy-dev.sh` transactionally activates only the DEV runtime while verifying PROD remains unchanged.
 
 Expected readiness marker:
 
