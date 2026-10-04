@@ -246,7 +246,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle={selectedJob.key}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to Selected Job' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
+            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to Live Monitoring' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
             <RundeckObservationHistory
               job={selectedJob}
@@ -266,7 +266,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle={systemDataSummary || 'Collection History · SPHERE Services'}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to Selected Job' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to Live Monitoring' : 'Back to Analysis Menu'}
           >
             {systemDataContent}
           </RundeckWorkspaceDrawer>}
@@ -277,7 +277,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Operational evidence and timing correlation"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance' : activeOverlay.returnTo?.type === 'selected' ? 'Back to Selected Job' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to Live Monitoring' : 'Back to Analysis Menu'}
           >
             <RundeckEvidenceTimeline
               refreshToken={refreshToken}
@@ -292,7 +292,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="SAP App · HANA · Web · Technical Checks"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance' : activeOverlay.returnTo?.type === 'selected' ? 'Back to Selected Job' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to Live Monitoring' : 'Back to Analysis Menu'}
           >
             <RundeckAvailability refreshToken={refreshToken} />
           </RundeckWorkspaceDrawer>}
@@ -303,7 +303,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Active SAP issues"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance' : activeOverlay.returnTo?.type === 'selected' ? 'Back to Selected Job' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to Live Monitoring' : 'Back to Analysis Menu'}
           >
             <RundeckSapIssues
               refreshToken={refreshToken}
@@ -341,7 +341,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Filesystem · Network · Storage I/O"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to Selected Job' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
+            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to Live Monitoring' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
             <RundeckInfrastructure incidentStart={props.incidentStart || ''} />
           </RundeckWorkspaceDrawer>}
