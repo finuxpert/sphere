@@ -1585,3 +1585,27 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
     grid-template-columns:minmax(215px,27fr) minmax(0,73fr)!important;
   }
 }
+
+/* SPHERE DEV finishing — give the summary enough room without stealing chart focus. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+  grid-template-columns:minmax(280px,31fr) minmax(0,69fr)!important;
+  gap:10px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{
+  padding-right:10px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{
+  min-height:25px!important;
+  padding:2px 5px!important;
+  font-size:8.7px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTableWrap{
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+}
+@media(max-width:1360px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+    grid-template-columns:minmax(250px,30fr) minmax(0,70fr)!important;
+  }
+}
