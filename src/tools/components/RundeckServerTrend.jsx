@@ -523,7 +523,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
       <header><span>APP Snapshot at Selected Time</span><small>{selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}</small></header>
       <div className="rundeckTrendSnapshotMetrics">
         <span><b>CPU</b>{selectedRow.cpu_pct == null ? '—' : `${numberText(selectedRow.cpu_pct, 1)}%`}</span>
-        <span><b>Memory</b>{selectedRow.ram_pct == null ? '—' : `${numberText(selectedRow.ram_pct, 1)}%`}</span>
+        <span><b>RAM</b>{selectedRow.ram_pct == null ? '—' : `${numberText(selectedRow.ram_pct, 1)}%`}</span>
         <span><b>I/O Wait</b>{selectedRow.io_wait_pct == null ? '—' : `${numberText(selectedRow.io_wait_pct, 1)}%`}</span>
         <span className={Number(selectedRow.wp_critical || 0) > 0 ? 'is-attention' : ''}><b>APP Critical WP</b>{selectedRow.wp_critical ?? 'Not observed'}</span>
         <span><b>Host Resource</b>{resourceState || 'UNKNOWN'}</span>
@@ -776,19 +776,19 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
 
     <div className="rundeckTripleTrendGrid">
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 1</h3></div>
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 1 <small>{metricLabel(serverMetric1)}</small></h3></div>
         <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric1} onChange={setServerMetric1} ariaLabel="Server Trend 1 metric" /></div>
         {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label="Server Trend 2">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 2</h3></div>
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 2 <small>{metricLabel(serverMetric2)}</small></h3></div>
         <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric2} onChange={setServerMetric2} ariaLabel="Server Trend 2 metric" /></div>
         {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend</h3></div>
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend <small>{metricLabel(technicalMetric)}</small></h3></div>
         <div className="rundeckTrendToolbar">
           <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Server Avg/Peak does not change this chart</span>}
