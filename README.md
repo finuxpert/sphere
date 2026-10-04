@@ -89,6 +89,7 @@ Performance Analysis exposes:
 - Current Jobs & Programs
 - Selected Job / Program context with workload-scoped APP Critical WP wording
 - Jobs & Programs to Review beside Current Jobs & Programs
+- Bottom workflow uses equal-height panels: Current Jobs and Review scroll internally while Selected Job remains fixed.
 - Performance Analysis with Current / 3H / 6H / 24H / 7D / 30D
 - Observation Details
 - Historical Bucket Details
