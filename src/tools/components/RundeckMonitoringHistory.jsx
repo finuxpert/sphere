@@ -89,6 +89,10 @@ export default function RundeckMonitoringHistory(props) {
   </>
 
 
+  const currentWorkloadContent = React.isValidElement(props.currentWorkloadContent)
+    ? React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })
+    : props.currentWorkloadContent
+
   const performanceReviewContent = <RundeckPerformanceReview
     refreshToken={refreshToken}
     selectedJob={selectedJob}
@@ -128,6 +132,7 @@ export default function RundeckMonitoringHistory(props) {
     <>
           <RundeckMonitoringHistoryCore
             {...props}
+            currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
             onTrendContext={forwardTrendContext}
             infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded />}
