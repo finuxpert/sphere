@@ -1,4 +1,5 @@
 import React from 'react'
+import SphereIcon from './SphereIcon.jsx'
 import './RundeckLiveOverview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
@@ -106,7 +107,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false }) 
   if (networkOverall !== 'NORMAL') exceptionParts.push('ATTENTION · Network errors/drops')
 
   return <section className={`rundeckLiveOverview${embedded ? ' is-embedded' : ''}`} aria-label="Live monitoring overview">
-    {embedded && <div className="rundeckEmbeddedInfrastructureTitle">Infrastructure</div>}
+    {embedded && <div className="rundeckEmbeddedInfrastructureTitle"><SphereIcon name="server" /> Infrastructure</div>}
     <header className="rundeckLiveOverviewHead">
       <div className="rundeckLiveScope">
         <select value={selectedHost} onChange={(event) => setSelectedHost(event.target.value)} aria-label="Monitoring host">
@@ -118,7 +119,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false }) 
     </header>
 
     {exceptionParts.length > 0 && <div className="rundeckLiveExceptionSummary" role="status">
-      <strong>Infrastructure · {exceptionParts.length} issue{exceptionParts.length === 1 ? '' : 's'}</strong>
+      <strong>{exceptionParts.length} issue{exceptionParts.length === 1 ? '' : 's'}</strong>
       <span>{exceptionParts.join(' · ')}</span>
     </div>}
 
