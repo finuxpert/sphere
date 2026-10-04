@@ -120,9 +120,9 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   if (compact) {
     const timingState = state === 'ALIGNED' ? 'Same time window' : state
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
-      ? `Workload ended: ${workloadGapText}`
+      ? `No overlap · ${Math.round(workloadGapMinutes)}m gap`
       : hasSkew
-        ? `${timingState} - ${Math.round(Number(skew))}m difference`
+        ? `${Math.round(Number(skew))}m difference`
         : timingState
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
