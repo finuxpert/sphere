@@ -180,7 +180,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
       <small>{stale
         ? `Last reliable: ${serviceState} - checked ${availabilityAge}m ago`
         : issueText || (availabilityAge !== null ? `Current service availability - checked ${availabilityAge}m ago` : 'Current service availability')}</small>
-      <em>View details ›</em>
+      <em aria-hidden="true">›</em>
     </button>
   }
 
