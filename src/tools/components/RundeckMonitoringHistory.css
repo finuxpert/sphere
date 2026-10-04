@@ -1760,3 +1760,91 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 .appShell:has(.rundeckPanel) .rundeckLiveJobSource strong{
   color:var(--sphere-text,#e7edf0)!important;
 }
+
+
+/* SPHERE v1.34.54 — bottom workflow row fits without page/internal scrolling. */
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedStack{
+  padding:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedStack .rundeckInvestigationContext{
+  min-height:25px!important;
+  padding:3px 0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompact{
+  min-height:58px!important;
+  padding:6px 7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompactIdentity strong{
+  font-size:10.8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompactIdentity small{
+  font-size:8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompactMetrics{
+  gap:5px!important;
+  margin-top:4px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompactMetrics b{
+  font-size:7.2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompactMetrics span{
+  font-size:8.7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompact>button{
+  min-height:24px!important;
+  padding:3px 7px!important;
+  font-size:8.1px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence{
+  margin-top:3px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-auto-rows:40px!important;
+  gap:0!important;
+  padding-top:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
+  min-height:40px!important;
+  height:40px!important;
+  padding:4px 6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-auto-rows:36px!important;
+  gap:0!important;
+  margin-top:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis button{
+  min-height:36px!important;
+  height:36px!important;
+  padding:3px 6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckEvidenceCard b,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis button b{
+  font-size:8.5px!important;
+  line-height:1.1!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckEvidenceCard small,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis button small{
+  font-size:7.5px!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkloadHead,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewHeadV1231{
+  min-height:28px!important;
+  margin-bottom:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkload table th,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkload table td,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewTableV1231 th,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewTableV1231 td{
+  padding:4px 6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkload td small,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewWorkloadV1231 small{
+  font-size:7.6px!important;
+}
