@@ -644,6 +644,7 @@ export default function RundeckSource({ onCollection }) {
     selectedJob={selectedJob}
     onSelectJob={selectJob}
     onSelectedContext={enrichSelectedJob}
+    compactLimit={3}
   />
 
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
