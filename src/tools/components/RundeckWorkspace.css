@@ -884,3 +884,88 @@
   font-variant-numeric:tabular-nums!important;
 }
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckReviewControlsV1231 button{font-size:8px!important}
+
+
+/* SPHERE v1.34.60 — merged Jobs & Programs workspace. */
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace{
+  width:100%;
+  min-width:0;
+  margin-top:4px;
+  border-top:1px solid rgba(126,147,158,.05);
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  min-height:38px;
+  padding:6px 0 4px;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead>div:first-child{
+  display:grid;
+  gap:1px;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead h3{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin:0;
+  font-size:11.4px;
+  font-weight:800;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead>div:first-child>span{
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes{
+  display:flex;
+  align-items:center;
+  gap:2px;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button{
+  min-height:24px;
+  padding:3px 8px;
+  border:0;
+  border-radius:3px;
+  background:transparent;
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.2px;
+  font-weight:720;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button:hover,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button:focus-visible{
+  color:var(--sphere-text,#e7edf0);
+  background:rgba(79,198,200,.035);
+  outline:none;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button.is-active{
+  color:var(--sphere-accent,#4fc6c8);
+  background:rgba(79,198,200,.07);
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody{
+  min-height:154px;
+  max-height:228px;
+  overflow:hidden;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkload,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckPerformanceReviewV1231{
+  height:100%;
+  min-height:0;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadHead.is-embedded,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewHeadV1231.is-embedded{
+  min-height:27px!important;
+  margin:0 0 3px!important;
+  padding:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody :is(.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231){
+  max-height:188px!important;
+  overflow-y:auto!important;
+  scrollbar-gutter:stable!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody table{
+  width:100%!important;
+}
+@media(max-width:900px){
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead{align-items:flex-start;flex-direction:column}
+}
