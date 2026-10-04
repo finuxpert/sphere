@@ -149,11 +149,11 @@ export default function RundeckMonitoringHistory(props) {
           </RundeckWorkspaceDrawer>}
         </>
       : <>
-          <RundeckLiveOverview refreshToken={refreshToken} />
           <RundeckMonitoringHistoryCore
             {...props}
             onSelectJob={inspectJob}
             onTrendContext={forwardTrendContext}
+            infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded />}
             operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
             appFocusRequest={appFocusRequest}
