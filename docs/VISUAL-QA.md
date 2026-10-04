@@ -129,3 +129,13 @@ SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' npm 
 ```
 
 Only update screenshot baselines after manual review. Do not update snapshots merely to make a failure disappear.
+
+
+## v1.34.55 cockpit and drawer checks
+
+- bottom workflow is equal-height Current / Selected / Review;
+- Current and Review lists scroll internally with sticky table headers;
+- Selected Job does not scroll in the compact cockpit;
+- Infrastructure History appears above Current Snapshot;
+- Current Snapshot columns remain Filesystem 45%, Network 20%, Storage I/O 35%;
+- Correlated Events shows Timing, relation labels, and Cause not confirmed without implying causation.
