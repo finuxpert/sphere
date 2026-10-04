@@ -249,3 +249,37 @@
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadSelection{
   margin-right:2px!important;
 }
+
+
+/* SPHERE v1.34.57 — fill the 50% Current Jobs pane without dead space. */
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload{
+  width:100%!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkloadTableWrap{
+  width:100%!important;
+  max-width:none!important;
+  overflow-x:hidden!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload table{
+  width:100%!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload th:nth-child(1),
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload td:nth-child(1){width:8%!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload th:nth-child(2),
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload td:nth-child(2){width:47%!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload th:nth-child(3),
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload td:nth-child(3){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload th:nth-child(4),
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload td:nth-child(4){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload th:nth-child(5),
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload td:nth-child(5){width:9%!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload th:nth-child(6),
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload td:nth-child(6){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload th,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload td{
+  padding-left:5px!important;
+  padding-right:5px!important;
+}
