@@ -15,6 +15,7 @@ import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
 import SphereIcon from './SphereIcon.jsx'
+import { formatWib, shortHost } from './sapUiFormat.js'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
 
@@ -61,7 +62,18 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'app', app: context })
   }, [])
 
+  const selectedContextTime = selectedJob?.at
+    ? `${formatWib(selectedJob.at, true)} WIB`
+    : selectedJob?.reviewPeriod
+      ? String(selectedJob.reviewPeriod).toUpperCase()
+      : ''
   const operationalEvidenceContent = <>
+    {selectedJob?.key && <div className="rundeckAnalysisContextStrip" title="Current workload context used by job-scoped analysis shortcuts">
+      <b>Analysis context</b>
+      <strong>{selectedJob.key}</strong>
+      {selectedJob.host && <span>{shortHost(selectedJob.host)}</span>}
+      {selectedContextTime && <span>{selectedContextTime}</span>}
+    </div>}
     <RundeckOperationalEvidence
       refreshToken={refreshToken}
       selectedJob={selectedJob}
