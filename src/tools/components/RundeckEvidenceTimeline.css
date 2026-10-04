@@ -340,3 +340,78 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSum
 .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent{
   padding:5px 0!important;
 }
+
+
+/* SPHERE v1.34.55 — investigation timeline hierarchy. */
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  margin:7px 0 3px;
+  padding:6px 0;
+  border-top:1px solid rgba(126,147,158,.08);
+  border-bottom:1px solid rgba(126,147,158,.08);
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip strong{
+  color:var(--sphere-text,#e7edf0);
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip span{
+  font-size:9.5px;
+  font-weight:650;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip small{
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.8px;
+  white-space:nowrap;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent{
+  grid-template-columns:118px 12px minmax(0,1fr) auto!important;
+  gap:7px!important;
+  align-items:start!important;
+  padding:6px 0!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent.is-primary-signal{
+  background:linear-gradient(90deg,rgba(219,125,134,.045),transparent 72%);
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent.is-primary-signal strong{
+  color:var(--sphere-warning,#d8b35f)!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceRelation{
+  align-self:center;
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+  font-style:normal;
+  font-weight:760;
+  letter-spacing:.03em;
+  white-space:nowrap;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceRelation.is-issue{
+  color:var(--sphere-warning,#d8b35f);
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceRelation.is-same{
+  color:var(--sphere-accent,#4fc6c8);
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTechnical{
+  margin-top:4px!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTechnical>summary{
+  font-size:9px!important;
+  font-weight:720!important;
+}
+@media(max-width:760px){
+  .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip{
+    grid-template-columns:1fr;
+  }
+  .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent{
+    grid-template-columns:90px 10px minmax(0,1fr)!important;
+  }
+  .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceRelation{
+    grid-column:3;
+    justify-self:start;
+  }
+}
