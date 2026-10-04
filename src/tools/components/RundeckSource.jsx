@@ -471,7 +471,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.2)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}   |   WEB HTTP ${availabilityStatus(webRows, 'HTTP')} · HTTPS ${availabilityStatus(webRows, 'HTTPS')}   |   DATA ${reportDataAlignment}   |   SM37 NOT CONNECTED`, margin + 35, technicalY + 4)
+      pdf.text(`SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}   |   COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}   |   HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}   |   DATA ${reportDataAlignment}   |   SM37 FEED NOT CONNECTED`, margin + 35, technicalY + 4)
 
       const workY = 158
       const leftW = contentW * .56
@@ -492,7 +492,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(9.2)
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, workY - 7, W - margin, workY - 7)
-      pdf.text(`ANALYSIS CONTEXT · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
+      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
       if (inspectedProgram) {
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7)
@@ -516,7 +516,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.text(processText(inspectedSource), margin + 62, selectedMetricY + 3.5)
       pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 91, selectedMetricY + 3.5)
       pdf.text(selectedCriticalWpText, margin + 114, selectedMetricY + 3.5)
-      pdf.setFontSize(6.8)
+      pdf.setFontSize(7)
       pdf.setTextColor(92, 105, 114)
       const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
       pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: workload observation · SM37 not connected`, margin, selectedMetricY + 7.5)
@@ -544,7 +544,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setDrawColor(220, 226, 229)
       pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
       let sideY = workY + 11
-      ;evaluationItems.slice(0, 3).forEach((row) => {
+      ;evaluationItems.slice(0, 4).forEach((row) => {
         const reason = evaluationReasonText(row)
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
@@ -555,7 +555,7 @@ export default function RundeckSource({ onCollection }) {
         pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY)
         if (reason) {
           pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(6.9)
+          pdf.setFontSize(7)
           pdf.text(clipped(`Reason: ${reason}`, 55), sideX, sideY + 3)
           sideY += 7.2
         } else {
@@ -573,7 +573,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
       pdf.text(`Availability: ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · Critical WP: ${selectedCriticalWpText} · Data: ${reportDataAlignment} · Timing: ${reportSkewMinutes == null ? 'unknown' : `${reportSkewMinutes}m`}`, margin, H - 23)
-      pdf.setFontSize(6.2)
+      pdf.setFontSize(7)
       pdf.setTextColor(92, 105, 114)
       pdf.text(`Performance ${formatTime(reportPerformanceAt)} WIB · Availability ${formatTime(reportAvailabilityAt)} WIB`, margin + 158, H - 23)
 
@@ -584,7 +584,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37 feed: NOT CONNECTED · APP Critical WP is host-level evidence · Timing correlation does not prove causation · Verify job status in SAP (SM37).', margin, H - 14)
+      pdf.text('SM37 Feed: NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation is UNKNOWN, not DOWN · Correlation does not prove causation.', margin, H - 14)
       pdf.setDrawColor(210, 217, 221)
       pdf.line(margin, H - 11, W - margin, H - 11)
       pdf.setFontSize(7.2)
@@ -670,7 +670,7 @@ export default function RundeckSource({ onCollection }) {
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
-        <h2 aria-label="SAP Performance"><SphereIcon name="activity" /><span className="rundeckPrimaryTitleText">SAP Performance</span></h2>
+        <h2 aria-label="SAP Performance"><SphereIcon name="activity" /></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span>{formatTime(latestCollectionAt, true)} WIB</span>
           <span>{appCount || '—'} APP</span>
