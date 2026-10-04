@@ -18,7 +18,7 @@ function Segmented({ options, value, onChange, label, disabled = false }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false }) {
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
   const [data, setData] = React.useState(null)
@@ -76,7 +76,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         .sort((left, right) => Number(right.peak_cpu_pct || right.avg_cpu_pct || 0) - Number(left.peak_cpu_pct || left.avg_cpu_pct || 0))
     : []
   const reviewCount = Number(data?.summary?.review_required ?? data?.summary?.needs_review ?? reviewRows.length)
-  const visibleRows = searchActive ? searchRows : reviewRows
+  const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)
   const lowCoverage = String(quality.confidence || '').toUpperCase() === 'LOW'
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
@@ -98,12 +98,16 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     <header className={`rundeckReviewHeadV1231${embedded ? ' is-embedded' : ''}`}>
       <div>
         {!embedded && <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>}
-        {!loading && !error && data && <span>{searchActive
-          ? `${searchRows.length} historical match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
-          : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · Basis review priority`}</span>}
+        {!loading && !error && data && <span>{forceSearch
+          ? (searchActive
+              ? `${searchRows.length} match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
+              : 'Search historical jobs and programs')
+          : searchActive
+            ? `${searchRows.length} historical match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
+            : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · Basis review priority`}</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
-        {!forceSearch && <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>}
+        {!forceSearch && !hideSearchButton && <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>}
         <Segmented options={PERIODS} value={period} onChange={(value) => setPeriod(value)} label="Review period" disabled={loading && !hasLoaded} />
         <Segmented options={TYPES} value={type} onChange={(value) => setType(value)} label="Workload type" disabled={loading && !hasLoaded} />
       </div>
@@ -171,7 +175,9 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 <td>{gb(row.avg_pss_gb)}</td>
               </tr>
             })}
-            {!visibleRows.length && <tr><td colSpan="5">{searchActive ? 'No historical job or program matches this search.' : 'No job or program needs review for this period.'}</td></tr>}
+            {!visibleRows.length && <tr><td colSpan="5">{forceSearch
+              ? (normalizedSearch.length < 2 ? 'Type at least 2 characters to search historical jobs and programs.' : 'No historical job or program matches this search.')
+              : searchActive ? 'No historical job or program matches this search.' : 'No job or program needs review for this period.'}</td></tr>}
           </tbody>
         </table>
       </div>
