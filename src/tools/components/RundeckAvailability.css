@@ -348,3 +348,28 @@ html[data-theme="light"] .rundeckAvailabilityDataTrust.is-running-info .rundeckA
   color:#52656e!important;
   background:#f6f8f9!important;
 }
+
+
+/* SPHERE v1.34.57 — flatter SAP Availability report. */
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip{
+  margin:8px 0 10px!important;
+  border-top:1px solid rgba(126,147,158,.045)!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip span{
+  padding:8px 10px!important;
+  border-left-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDetailSections section{
+  padding:10px 0!important;
+  border-top-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix>div{
+  border-top-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix .is-head{
+  background:rgba(126,147,158,.018)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityTechnicalRow + .rundeckAvailabilityTechnicalRow{
+  border-top:0!important;
+}
