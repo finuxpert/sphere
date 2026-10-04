@@ -106,6 +106,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false }) 
   if (networkOverall !== 'NORMAL') exceptionParts.push('ATTENTION · Network errors/drops')
 
   return <section className={`rundeckLiveOverview${embedded ? ' is-embedded' : ''}`} aria-label="Live monitoring overview">
+    {embedded && <div className="rundeckEmbeddedInfrastructureTitle">Infrastructure</div>}
     <header className="rundeckLiveOverviewHead">
       <div className="rundeckLiveScope">
         <select value={selectedHost} onChange={(event) => setSelectedHost(event.target.value)} aria-label="Monitoring host">
