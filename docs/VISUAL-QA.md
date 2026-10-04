@@ -131,7 +131,7 @@ SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' npm 
 Only update screenshot baselines after manual review. Do not update snapshots merely to make a failure disappear.
 
 
-## v1.34.55 cockpit and drawer checks
+## v1.34.56 cockpit and drawer checks
 
 - bottom workflow is equal-height Current / Selected / Review;
 - Current and Review lists scroll internally with sticky table headers;
@@ -139,3 +139,14 @@ Only update screenshot baselines after manual review. Do not update snapshots me
 - Infrastructure History appears above Current Snapshot;
 - Current Snapshot columns remain Filesystem 45%, Network 20%, Storage I/O 35%;
 - Correlated Events shows Timing, relation labels, and Cause not confirmed without implying causation.
+
+
+## v1.34.56 checks
+
+- no standalone History tab;
+- Current Jobs and Review are equal 50/50 panels with internal scrolling;
+- clicking a Current or Review row opens Performance Analysis directly;
+- Server Trend and Technical Trend render side by side at roughly 60/40;
+- historical search is available in Review and clearly labels historical matches;
+- SAP App Servers uses the available width with summary and Status;
+- SAP Issues shows performance, availability, HANA/Web/SSH and SM37 source indicators with NORMAL/WARNING/ATTENTION/CRITICAL states.
