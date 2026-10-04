@@ -1,5 +1,6 @@
 import RundeckAppServers from './RundeckAppServers.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
+import RundeckJobsProgramsWorkspace from './RundeckJobsProgramsWorkspace.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   return <section className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456">
@@ -33,13 +34,9 @@ export default function RundeckMonitoringHistoryCore(props) {
       {props.operationalEvidenceContent}
     </section>}
 
-    <section className="rundeckBottomBandV13456">
-      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-current-workload">
-        {props.currentWorkloadContent}
-      </div>
-      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-review-workload">
-        {props.performanceReviewContent}
-      </div>
-    </section>
+    <RundeckJobsProgramsWorkspace
+      currentContent={props.currentWorkloadContent}
+      reviewContent={props.performanceReviewContent}
+    />
   </section>
 }
