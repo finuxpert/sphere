@@ -855,3 +855,19 @@
     height:auto!important;min-height:180px!important;max-height:240px!important
   }
 }
+
+
+/* SPHERE v1.34.58 — adaptive lower cockpit height. */
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456>.rundeckBandPaneV1235{
+  height:auto!important;
+  min-height:154px!important;
+  max-height:214px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkloadTableWrap,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckReviewTableWrapV1231{
+  max-height:168px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckPerformanceReviewV1231,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload{
+  min-height:0!important;
+}
