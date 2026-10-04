@@ -97,15 +97,26 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   const historySummary = rows.length
     ? [
         cpuValues.length ? `CPU ${numberText(cpuValues.reduce((sum, value) => sum + value, 0) / cpuValues.length, 1)}–${numberText(Math.max(...cpuValues), 1)}%` : '',
-        firstPss !== null && lastPss !== null ? `Memory ${numberText(firstPss, 2)}→${numberText(lastPss, 2)} GB` : '',
+        firstPss !== null && lastPss !== null ? `PSS ${numberText(firstPss, 2)}→${numberText(lastPss, 2)} GB` : '',
         criticalValues.length ? `Critical WP ${Math.min(...criticalValues)}–${Math.max(...criticalValues)}` : '',
       ].filter(Boolean).join(' · ')
     : ''
 
+  const timeSpan = rows.length
+    ? `${formatWib(rows.at(-1)?.collected_at, true)}–${formatWib(rows[0]?.collected_at, true)} WIB`
+    : '—'
   const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
+    {!error && embedded && <div className="rundeckObservationHistoryContext">
+      <span><b>Observations</b><strong>{rows.length}</strong></span>
+      <span><b>APP</b><strong>{shortHost(job.host || rows[0]?.host || '—')}</strong></span>
+      <span><b>Time span</b><strong>{timeSpan}</strong></span>
+      {cpuValues.length > 0 && <span><b>CPU Range</b><strong>{numberText(Math.min(...cpuValues),1)}–{numberText(Math.max(...cpuValues),1)}%</strong></span>}
+      {pssValues.length > 0 && <span><b>PSS Memory Range</b><strong>{numberText(Math.min(...pssValues),2)}–{numberText(Math.max(...pssValues),2)} GB</strong></span>}
+      {criticalValues.length > 0 && <span><b>Critical WP Range</b><strong>{Math.min(...criticalValues)}–{Math.max(...criticalValues)}</strong></span>}
+    </div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
-      <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU</th><th>Memory</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
       <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')

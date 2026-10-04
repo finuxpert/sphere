@@ -57,6 +57,8 @@ This means the retained trace error was marked as current at the selected snapsh
 
 The most recent trace error retained by the collector.
 
+The UI exposes the recency beside the value as **AT SNAPSHOT** or **HISTORICAL** so the operator does not need to infer recency from a footer note.
+
 It may be `HISTORICAL` and must not be interpreted as:
 
 - current error;
@@ -82,6 +84,7 @@ Therefore:
 - grouped workload CPU can exceed 100%;
 - Program may be `Not captured` if the source row does not contain a usable Program;
 - APP Critical WP remains APP-level evidence, not workload causation.
+- In a selected workload, `0` and `Not observed for selected workload` are different states and must not be collapsed.
 
 ## Approved execution feed
 
@@ -149,9 +152,11 @@ Use:
 
 Use selected-period metrics, raw observation drill-down, historical bucket detail, and WP/Trace Signal detail.
 
+For a Current range containing one saved observation, SPHERE renders a **Selected Observation** summary instead of a one-point trend.
+
 ### Performance Review
 
-Use 1D/7D/30D review to prioritize investigation, not to declare failure or assign ownership automatically.
+Use 1D/7D/30D review as an operator queue sorted by review priority, not to declare failure, root cause, or ownership automatically.
 
 ### History
 

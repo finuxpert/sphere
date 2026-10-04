@@ -1,4 +1,5 @@
 import React from 'react'
+import SphereIcon from './SphereIcon.jsx'
 import './RundeckLiveOverview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
@@ -42,7 +43,7 @@ function Status({ value }) {
   return <span className={'rundeckLiveStatus is-' + value.toLowerCase()}>{value}</span>
 }
 
-export default function RundeckLiveOverview({ refreshToken }) {
+export default function RundeckLiveOverview({ refreshToken, embedded = false }) {
   const [hosts, setHosts] = React.useState([])
   const [selectedHost, setSelectedHost] = React.useState(() => {
     try { return window.localStorage.getItem(HOST_STORAGE_KEY) || '' } catch { return '' }
@@ -105,7 +106,8 @@ export default function RundeckLiveOverview({ refreshToken }) {
   if (storageOverall !== 'NORMAL') exceptionParts.push(`${storageOverall} · Storage I/O`)
   if (networkOverall !== 'NORMAL') exceptionParts.push('ATTENTION · Network errors/drops')
 
-  return <section className="rundeckLiveOverview" aria-label="Live monitoring overview">
+  return <section className={`rundeckLiveOverview${embedded ? ' is-embedded' : ''}`} aria-label="Live monitoring overview">
+    {embedded && <div className="rundeckEmbeddedInfrastructureTitle"><SphereIcon name="server" /> Infrastructure</div>}
     <header className="rundeckLiveOverviewHead">
       <div className="rundeckLiveScope">
         <select value={selectedHost} onChange={(event) => setSelectedHost(event.target.value)} aria-label="Monitoring host">
@@ -117,7 +119,7 @@ export default function RundeckLiveOverview({ refreshToken }) {
     </header>
 
     {exceptionParts.length > 0 && <div className="rundeckLiveExceptionSummary" role="status">
-      <strong>Infrastructure · {exceptionParts.length} issue{exceptionParts.length === 1 ? '' : 's'}</strong>
+      <strong>{exceptionParts.length} issue{exceptionParts.length === 1 ? '' : 's'}</strong>
       <span>{exceptionParts.join(' · ')}</span>
     </div>}
 

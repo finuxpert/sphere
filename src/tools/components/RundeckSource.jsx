@@ -7,7 +7,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { evaluationReasonText } from './rundeckEvaluationExplain.js'
-import { overallOperationalState } from './rundeckStatusSemantics.js'
+import { systemHealthState } from './rundeckSystemHealth.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
 
@@ -76,7 +76,7 @@ const shortSignal = (label = '') => String(label || 'Performance issue')
 
 const issueSignalText = (label, value) => {
   const normalized = shortSignal(label)
-  if (/^Critical WP\b/i.test(normalized)) return `${value} Critical WP Active`
+  if (/^Critical WP\b/i.test(normalized)) return `Critical WP ${value}`
   return [normalized, value].filter(Boolean).join(' ')
 }
 
@@ -115,6 +115,7 @@ function pdfStatusColor(status) {
   if (status === 'CRITICAL') return [190, 65, 73]
   if (status === 'WARNING') return [182, 132, 31]
   if (status === 'ATTENTION') return [88, 132, 184]
+  if (status === 'UNKNOWN' || status === 'WAITING') return [108, 122, 132]
   return [41, 131, 91]
 }
 
@@ -139,6 +140,16 @@ function availabilityStatus(rows = [], name = '') {
   return String(row?.status || 'UNKNOWN').toUpperCase()
 }
 
+function availabilityServiceImpact(payload = {}) {
+  const apps = payload?.sap_app || []
+  const hana = payload?.hana_system_db || []
+  const web = payload?.web_dispatcher || []
+  const appDown = apps.some((row) => String(row?.status || '').toUpperCase() === 'DOWN')
+  const hanaPrimaryDown = hana.some((row) => String(row?.name || '').toUpperCase() === 'PRIMARY' && String(row?.status || '').toUpperCase() === 'DOWN')
+  const webDown = web.length > 0 && web.every((row) => String(row?.status || '').toUpperCase() === 'DOWN')
+  return appDown || hanaPrimaryDown || webDown
+}
+
 export default function RundeckSource({ onCollection }) {
   const [latest, setLatest] = React.useState(null)
   const [health, setHealth] = React.useState(null)
@@ -154,7 +165,7 @@ export default function RundeckSource({ onCollection }) {
   const [pdfPreview, setPdfPreview] = React.useState(null)
   const [selectedJob, setSelectedJob] = React.useState(null)
   const [incidentSummary, setIncidentSummary] = React.useState(null)
-  const [trendContext, setTrendContext] = React.useState({ metricLabel: 'CPU', rangeLabel: '6H', mode: 'max' })
+  const [, setTrendContext] = React.useState({ metricLabel: 'CPU', rangeLabel: '6H', mode: 'max' })
   const loaded = React.useRef('')
   const panelRef = React.useRef(null)
   const onCollectionRef = React.useRef(onCollection)
@@ -303,10 +314,13 @@ export default function RundeckSource({ onCollection }) {
         if (!element) return null
         return html2canvas(element, { backgroundColor: '#0f151a', scale: 1.55, useCORS: true, logging: false })
       }
-      const [serverChart, workloadChart] = await Promise.all([
-        capture('.rundeckTrendChart'),
+      const [serverChart1, serverChart2, workloadChart] = await Promise.all([
+        capture('.is-server-trend-1 .rundeckTrendChart'),
+        capture('.is-server-trend-2 .rundeckTrendChart'),
         capture('.rundeckJobPerformanceChart, .rundeckSingleSample'),
       ])
+      const trendTitle1 = panel.querySelector('.is-server-trend-1 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 1'
+      const trendTitle2 = panel.querySelector('.is-server-trend-2 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 2'
 
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
       const W = pdf.internal.pageSize.getWidth()
@@ -333,69 +347,94 @@ export default function RundeckSource({ onCollection }) {
       }
       pdf.setTextColor(232, 238, 241)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(10.5)
+      pdf.setFontSize(11.2)
       if (typeof pdf.textWithLink === 'function' && REPORT_URL) pdf.textWithLink(APP_TAGLINE, brandX, 17, { url: REPORT_URL })
       else pdf.text(APP_TAGLINE, brandX, 17)
 
-      const status = overallHealth || 'NORMAL'
+      const availabilityState = String(availabilityResult?.summary?.service_state || availabilityResult?.summary?.sap_state || 'UNKNOWN').toUpperCase()
       const availabilityApps = availabilityResult?.sap_app || []
       const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
       const hanaRows = availabilityResult?.hana_system_db || []
       const webRows = availabilityResult?.web_dispatcher || []
+      const reportPerformanceAt = latest?.collection_time_wib || latest?.finished_at || ''
+      const reportAvailabilityAt = availabilityResult?.collected_at || ''
+      const reportPerformanceTs = Date.parse(reportPerformanceAt || '')
+      const reportAvailabilityTs = Date.parse(reportAvailabilityAt || '')
+      const reportSkewMinutes = Number.isFinite(reportPerformanceTs) && Number.isFinite(reportAvailabilityTs)
+        ? Math.round(Math.abs(reportPerformanceTs - reportAvailabilityTs) / 60000)
+        : null
+      const reportAvailabilityAgeMinutes = Number.isFinite(reportAvailabilityTs)
+        ? Math.max(0, Math.floor((Date.now() - reportAvailabilityTs) / 60000))
+        : null
+      const reportAvailabilityStale = Number.isFinite(reportAvailabilityAgeMinutes) && reportAvailabilityAgeMinutes >= 20
+      const reportPerformanceStale = Boolean(health?.rundeck_stale)
+      const status = systemHealthState(operationalHosts, {
+        availabilityState,
+        serviceCritical: availabilityServiceImpact(availabilityResult),
+        stale: reportPerformanceStale,
+        availabilityStale: reportAvailabilityStale,
+      })
+      const reportDataAlignment = collectionAligned && reportSkewMinutes !== null && reportSkewMinutes <= 15 && !reportPerformanceStale && !reportAvailabilityStale ? 'ALIGNED' : 'PARTIAL'
       const [sr, sg, sb] = pdfStatusColor(status)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(5.8)
+      pdf.setFontSize(6.5)
       pdf.setTextColor(153, 168, 177)
       pdf.text('OPERATIONAL STATE', W - margin - 28, 15.6, { align: 'right' })
       pdf.setFillColor(sr, sg, sb)
       pdf.rect(W - margin - 25, 11, 21, 7, 'F')
       pdf.setTextColor(255, 255, 255)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.4)
+      pdf.setFontSize(8)
       pdf.text(status, W - margin - 14.5, 15.7, { align: 'center' })
 
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.4)
+      pdf.setFontSize(7.8)
       pdf.setTextColor(92, 105, 114)
       pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
 
+      const current = incidentSummary?.current_workload || {}
       const affected = shortHost(incidentSummary?.affected_server || '')
       const signal = incidentSummary?.primary_signal || {}
       const signalValue = metric(signal.value, signal.unit || '')
       const since = incidentSummary?.signal_active_since || incidentSummary?.detected_since
-      pdf.setTextColor(22, 31, 38)
+      pdf.setTextColor(71, 87, 97)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(9.8)
-      pdf.text(`PRIMARY ISSUE · ${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 36)
+      pdf.setFontSize(7.6)
+      pdf.text('SUMMARY', margin, 35)
+      pdf.setTextColor(22, 31, 38)
+      pdf.setFontSize(10.5)
+      pdf.text(`${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 40)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.5)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`Since ${formatTime(since)} WIB  ·  Duration ${reportDuration(incidentSummary?.duration_seconds)}`, margin, 41)
+      pdf.text(`Since ${formatTime(since)} WIB · Duration ${reportDuration(incidentSummary?.duration_seconds)} · Performance ${formatTime(latest?.finished_at)} WIB`, margin, 44.5)
+      pdf.setFontSize(7)
+      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · ${formatTime(reportAvailabilityAt)} WIB · Selected ${clipped(selectedJob?.key || current.consumer_key || 'No workload selected', 34)}`, margin + 137, 44.5)
 
-      const current = incidentSummary?.current_workload || {}
-      pdf.setFillColor(235, 240, 242)
-      pdf.roundedRect(margin, 45, contentW, 17, 1, 1, 'F')
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, 48, W - margin, 48)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.5)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('AVAILABILITY', margin + 4, 50)
+      pdf.text('AVAILABILITY', margin, 52.5)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.9)
+      pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`SAP APP  ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin + 4, 54)
-      pdf.text(`HANA  P ${availabilityStatus(hanaRows, 'PRIMARY')}  ·  S ${availabilityStatus(hanaRows, 'SECONDARY')}  ·  DR ${availabilityStatus(hanaRows, 'DR')}`, margin + 4, 58)
-      pdf.text(`WEB  HTTP ${availabilityStatus(webRows, 'HTTP')}  ·  HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 4, 61.5)
+      pdf.text(`SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin, 57)
+      pdf.text(`HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}`, margin + 48, 57)
+      pdf.text(`WEB HTTP ${availabilityStatus(webRows, 'HTTP')} · HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 126, 57)
+      pdf.line(margin, 61, W - margin, 61)
 
-      let y = 69
+      let y = 68
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8.2)
+      pdf.setFontSize(8.8)
       pdf.setTextColor(22, 31, 38)
       pdf.text('SAP APP SERVER STATUS', margin, y)
       y += 4
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.8)
+      pdf.setFontSize(7.4)
       const columns = [0, 52, 92, 136, 180]
-      ;['APP', 'CPU', 'MEMORY', 'I/O WAIT', 'CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
+      ;['APP', 'CPU', 'RAM', 'I/O WAIT', 'APP CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
       y += 4
       operationalHosts.slice(0, 5).forEach((host) => {
         pdf.text(shortHost(host.host), margin + columns[0], y)
@@ -406,81 +445,152 @@ export default function RundeckSource({ onCollection }) {
         y += 4
       })
 
-      const chartY = y + 5
-      if (serverChart) {
+      const chartY = y + 6
+      const chartGap = 6
+      const chartColW = (contentW - chartGap) / 2
+      const chartMaxH = 40
+      const drawTrendChart = (chart, title, x) => {
+        if (!chart) return
         pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(8.2)
-        const trendMetric = String(trendContext.metricLabel || 'Performance').toUpperCase()
-        const trendRange = String(trendContext.rangeLabel || '6H').toUpperCase()
-        pdf.text(`SERVER ${trendMetric} TREND · ${trendRange}`, margin, chartY - 3)
-        const ratio = Math.min(contentW / serverChart.width, 38 / serverChart.height)
-        pdf.addImage(serverChart.toDataURL('image/jpeg', .92), 'JPEG', margin, chartY, serverChart.width * ratio, serverChart.height * ratio, undefined, 'FAST')
+        pdf.setFontSize(8.8)
+        pdf.setTextColor(22, 31, 38)
+        pdf.text(String(title || 'Server Trend').replace(/\s+/g, ' '), x, chartY - 3)
+        const ratio = Math.min(chartColW / chart.width, chartMaxH / chart.height)
+        pdf.addImage(chart.toDataURL('image/jpeg', .92), 'JPEG', x, chartY, chart.width * ratio, chart.height * ratio, undefined, 'FAST')
       }
+      drawTrendChart(serverChart1, trendTitle1, margin)
+      drawTrendChart(serverChart2, trendTitle2, margin + chartColW + chartGap)
 
-      const workY = 154
-      const leftW = contentW * .66
+      const technicalY = chartY + chartMaxH + 4
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, technicalY, W - margin, technicalY)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.7)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('TECHNICAL STATUS', margin, technicalY + 4)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7.2)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(`SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}   |   COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}   |   DATA ${reportDataAlignment}   |   AVAILABILITY ${availabilityState}   |   SM37 FEED NOT CONNECTED`, margin + 35, technicalY + 4)
+
+      const workY = 158
+      const leftW = contentW * .56
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
       const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
         row?.consumer_key === inspectedWorkload && (!selectedJob?.host || !row?.host || row.host === selectedJob.host)
       )) || {}
       const inspectedProgram = distinctProgramText(inspectedSource)
+      const selectedCriticalWpRaw = selectedJob && Object.prototype.hasOwnProperty.call(selectedJob, 'criticalWp')
+        ? selectedJob.criticalWp
+        : (inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp)
+      const selectedCriticalWpText = selectedCriticalWpRaw === null || selectedCriticalWpRaw === undefined
+        ? 'Not observed'
+        : String(selectedCriticalWpRaw)
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8.2)
-      pdf.text(`SELECTED WORKLOAD · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 3)
+      pdf.setFontSize(9.2)
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, workY - 7, W - margin, workY - 7)
+      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
       if (inspectedProgram) {
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(6.7)
+        pdf.setFontSize(7)
         pdf.setTextColor(92, 105, 114)
         pdf.text(`Program ${clipped(inspectedProgram, 48)}`, margin, workY + 0.8)
       }
+      const selectedMetricY = inspectedProgram ? workY + 5.2 : workY + 2
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.3)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('CPU', margin, selectedMetricY)
+      pdf.text('PSS MEMORY', margin + 27, selectedMetricY)
+      pdf.text('PROCESSES', margin + 62, selectedMetricY)
+      pdf.text('WP CONTEXT', margin + 91, selectedMetricY)
+      pdf.text('APP CRIT WP', margin + 114, selectedMetricY)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(8)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin, selectedMetricY + 3.5)
+      pdf.text(pssText(inspectedSource), margin + 27, selectedMetricY + 3.5)
+      pdf.text(processText(inspectedSource), margin + 62, selectedMetricY + 3.5)
+      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 91, selectedMetricY + 3.5)
+      pdf.text(selectedCriticalWpText, margin + 114, selectedMetricY + 3.5)
+      pdf.setFontSize(7)
+      pdf.setTextColor(92, 105, 114)
+      const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
+      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: workload observation · SM37 not connected`, margin, selectedMetricY + 7.5)
       if (workloadChart) {
-        const chartTop = inspectedProgram ? workY + 3 : workY
-        const chartMaxH = inspectedProgram ? 38 : 41
+        const chartTop = selectedMetricY + 10
+        const chartMaxH = 20
         const ratio = Math.min(leftW / workloadChart.width, chartMaxH / workloadChart.height)
         pdf.addImage(workloadChart.toDataURL('image/jpeg', .94), 'JPEG', margin, chartTop, workloadChart.width * ratio, workloadChart.height * ratio, undefined, 'FAST')
       }
 
       const evaluationItems = evaluationResult.items || []
-      const evaluationFor = (row) => evaluationItems.find((item) => (
-        item.consumer_key === row.consumer_key && item.consumer_type === row.consumer_type
-      )) || null
       const sideX = margin + leftW + 7
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8)
-      pdf.text('TOP WORKLOADS', sideX, workY - 3)
+      pdf.setFontSize(9)
+      pdf.text('JOBS & PROGRAMS · REVIEW', sideX, workY - 3)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.3)
-      let sideY = workY + 3
-      ;(workloadResult.items || []).slice(0, 4).forEach((row, index) => {
-        const evaluation = evaluationFor(row)
-        const evaluationStatus = evaluation?.status || ''
-        const evaluationReason = evaluation ? evaluationReasonText(evaluation) : ''
+      pdf.setFontSize(7)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text('Observed CPU, PSS Memory and APP Critical WP', sideX, workY + 0.8)
+      const reviewCols = [0, 58, 77, 96]
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.1)
+      ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
+      let sideY = workY + 11
+      ;evaluationItems.slice(0, 4).forEach((row) => {
+        const reason = evaluationReasonText(row)
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7.3)
-        pdf.text(`${index + 1}. ${shortHost(row.host)}  ${clipped(row.consumer_key, 32)}`, sideX, sideY)
-        pdf.setTextColor(92, 105, 114)
-        pdf.setFontSize(6.8)
-        pdf.text(`CPU ${metric(row.cpu_pct, '%')}  ·  PSS ${pssText(row)}  ·  Proc ${processText(row)}`, sideX, sideY + 3.2)
-        if (evaluationStatus) {
-          pdf.setFont('helvetica', 'bold')
-          pdf.setTextColor(71, 87, 97)
-          pdf.setFontSize(6.4)
-          pdf.text(clipped(`${evaluationStatus}${evaluationReason ? ` · ${evaluationReason}` : ''}`, 46), sideX, sideY + 6.2)
-          sideY += 10.4
+        pdf.setFontSize(7.6)
+        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 34), sideX + reviewCols[0], sideY)
+        pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY)
+        pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY)
+        pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY)
+        if (reason) {
+          pdf.setTextColor(92, 105, 114)
+          pdf.setFontSize(7)
+          pdf.text(clipped(`Reason: ${reason}`, 55), sideX, sideY + 3)
+          sideY += 7.2
         } else {
-          sideY += 8
+          sideY += 5.8
         }
       })
 
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, H - 31, W - margin, H - 31)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.8)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('CHECK SUMMARY', margin, H - 27)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7.5)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(`Availability: ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · Critical WP: ${selectedCriticalWpText} · Data: ${reportDataAlignment} · Timing: ${reportSkewMinutes == null ? 'unknown' : `${reportSkewMinutes}m`}`, margin, H - 23)
+      pdf.setFontSize(7)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text(`Performance ${formatTime(reportPerformanceAt)} WIB · Availability ${formatTime(reportAvailabilityAt)} WIB`, margin + 158, H - 23)
+
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.6)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('NOTES', margin, H - 18)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text('SM37 Feed: NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation is UNKNOWN, not DOWN · Correlation does not prove causation.', margin, H - 14)
       pdf.setDrawColor(210, 217, 221)
-      pdf.line(margin, H - 12, W - margin, H - 12)
+      pdf.line(margin, H - 11, W - margin, H - 11)
       pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SPHERE · Rundeck', margin, H - 7)
+      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 6)
+      pdf.text('Page 1 / 1', W - margin - 18, H - 6)
 
       const host = shortHost(incidentSummary?.affected_server || selectedJob?.host || 'SAP') || 'SAP'
       const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
@@ -501,13 +611,6 @@ export default function RundeckSource({ onCollection }) {
 
   const collectionAligned = !latest?.collection_id || !hostSnapshot?.collection_id || hostSnapshot.collection_id === latest.collection_id
   const operationalHosts = collectionAligned ? hosts : []
-  const overallHealth = !collectionAligned
-    ? 'WARNING'
-    : overallOperationalState(operationalHosts, {
-        stale: Boolean(health?.rundeck_stale),
-        incidentActive: Boolean(incidentSummary?.active),
-      })
-
   const collectionCount = history.length
   const partialCount = history.filter((row) => row.status === 'PARTIAL').length
   const failedCount = history.filter((row) => row.status === 'FAILED').length
@@ -561,12 +664,13 @@ export default function RundeckSource({ onCollection }) {
     selectedJob={selectedJob}
     onSelectJob={selectJob}
     onSelectedContext={enrichSelectedJob}
+    compactLimit={50}
   />
 
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
-        <h2><SphereIcon name="activity" /> SAP Performance Summary</h2>
+        <h2 aria-label="SAP Performance"><SphereIcon name="activity" /></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span>{formatTime(latestCollectionAt, true)} WIB</span>
           <span>{appCount || '—'} APP</span>
@@ -638,7 +742,7 @@ export default function RundeckSource({ onCollection }) {
     {pdfPreview && <div className="rundeckPdfPreviewBackdrop" role="dialog" aria-modal="true" aria-label="PDF preview">
       <section className="rundeckPdfPreview">
         <header>
-          <div><span>Report Preview</span><strong>{pdfPreview.filename}</strong></div>
+          <div><span>SPHERE REPORT PREVIEW</span><strong>{pdfPreview.filename}</strong></div>
           <button type="button" onClick={closePdfPreview} aria-label="Close PDF preview">Close</button>
         </header>
         <iframe src={pdfPreview.url} title="SPHERE PDF preview" />

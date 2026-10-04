@@ -5,7 +5,7 @@ import { evaluationReasonParts } from './rundeckEvaluationExplain.js'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 
 const API = `${import.meta.env.BASE_URL}api`
-const PERIODS = [['1d', '1 Day'], ['7d', '7 Days'], ['30d', '30 Days']]
+const PERIODS = [['1d', '1D'], ['7d', '7D'], ['30d', '30D']]
 const TYPES = [['ALL', 'All'], ['PROGRAM', 'Programs'], ['JOB', 'Jobs']]
 const CPU_HINT = 'CPU Usage is the grouped workload observation and can exceed 100 percent when more than one CPU core is used.'
 
@@ -18,17 +18,18 @@ function Segmented({ options, value, onChange, label, disabled = false }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '' }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false }) {
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
-  const [showAll, setShowAll] = React.useState(false)
   const [hasLoaded, setHasLoaded] = React.useState(false)
   const [quickRow, setQuickRow] = React.useState(null)
   const [loadedPeriod, setLoadedPeriod] = React.useState('')
   const [loadedType, setLoadedType] = React.useState('')
+  const [searchOpen, setSearchOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState('')
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -61,11 +62,21 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const periodLabel = PERIODS.find(([key]) => key === period)?.[1] || period.toUpperCase()
   const typeLabel = TYPES.find(([key]) => key === type)?.[1] || type
   const showingPreviousResult = loading && hasLoaded && (loadedPeriod !== period || loadedType !== type)
-  const reviewRows = [...(data?.items || [])]
+  const allRows = [...(data?.items || [])]
+  const reviewRows = allRows
     .filter((row) => String(row.status || '').toUpperCase() === 'REVIEW REQUIRED')
     .sort((left, right) => Number(right.avg_cpu_pct || 0) - Number(left.avg_cpu_pct || 0))
+  const normalizedSearch = searchQuery.trim().toLowerCase()
+  const effectiveSearchOpen = forceSearch || searchOpen
+  const searchActive = effectiveSearchOpen && normalizedSearch.length >= 2
+  const searchRows = searchActive
+    ? allRows.filter((row) => [row.consumer_key, row.program, row.details?.program]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch)))
+        .sort((left, right) => Number(right.peak_cpu_pct || right.avg_cpu_pct || 0) - Number(left.peak_cpu_pct || left.avg_cpu_pct || 0))
+    : []
   const reviewCount = Number(data?.summary?.review_required ?? data?.summary?.needs_review ?? reviewRows.length)
-  const visibleRows = showAll ? reviewRows : reviewRows.slice(0, 4)
+  const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)
   const lowCoverage = String(quality.confidence || '').toUpperCase() === 'LOW'
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
@@ -83,19 +94,36 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     onSelectJob?.(job)
   }
 
-  return <section className={`rundeckPerformanceReviewV1231 ${showAll ? 'is-expanded' : 'is-top4'}`} aria-label="Performance review">
-    <header className="rundeckReviewHeadV1231">
+  return <section className="rundeckPerformanceReviewV1231 is-scroll-list" aria-label="Performance review">
+    <header className={`rundeckReviewHeadV1231${embedded ? ' is-embedded' : ''}`}>
       <div>
-        <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>
-        {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} need attention · sorted by review priority</span>}
+        {!embedded && <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>}
+        {!loading && !error && data && <span>{forceSearch
+          ? (searchActive
+              ? `${searchRows.length} match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
+              : 'Search historical jobs and programs')
+          : searchActive
+            ? `${searchRows.length} historical match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
+            : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · Basis review priority`}</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
-        <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" disabled={loading && !hasLoaded} />
-        <Segmented options={TYPES} value={type} onChange={(value) => { setType(value); setShowAll(false) }} label="Workload type" disabled={loading && !hasLoaded} />
-        {reviewRows.length > 4 && <button type="button" className="rundeckReviewMoreV1237" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Top 4' : `View all ${reviewRows.length} results`}</button>}
+        {!forceSearch && !hideSearchButton && <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>}
+        <Segmented options={PERIODS} value={period} onChange={(value) => setPeriod(value)} label="Review period" disabled={loading && !hasLoaded} />
+        <Segmented options={TYPES} value={type} onChange={(value) => setType(value)} label="Workload type" disabled={loading && !hasLoaded} />
       </div>
     </header>
 
+    {effectiveSearchOpen && <div className="rundeckReviewSearch">
+      <input
+        type="search"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder="Search job or program (min. 2 characters)"
+        aria-label="Search historical job or program"
+        autoFocus
+      />
+      {searchQuery && <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search">×</button>}
+    </div>}
     {loading && !hasLoaded && <div className="rundeckReviewState">Loading performance review…</div>}
     {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">
       Updating {periodLabel}{type !== 'ALL' ? ` · ${typeLabel}` : ''}…
@@ -138,7 +166,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 }}
               >
                 <td className="rundeckReviewWorkloadV1231" title={title}>
-                  <button type="button" onClick={(event) => { event.stopPropagation(); openQuick(row) }}>{row.consumer_key}</button>
+                  <button type="button" title={row.consumer_key} onClick={(event) => { event.stopPropagation(); openQuick(row) }}>{row.consumer_key}</button>
                   <small>{workloadTypeLabel(row.consumer_type)}</small>
                 </td>
                 <td><div className="rundeckReviewReasonChips">{reasonParts.length ? reasonParts.map((part) => <span key={part}>{part}</span>) : <span>{row.status || 'Review'}</span>}</div></td>
@@ -147,7 +175,9 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 <td>{gb(row.avg_pss_gb)}</td>
               </tr>
             })}
-            {!reviewRows.length && <tr><td colSpan="5">No job or program needs review for this period.</td></tr>}
+            {!visibleRows.length && <tr><td colSpan="5">{forceSearch
+              ? (normalizedSearch.length < 2 ? 'Type at least 2 characters to search historical jobs and programs.' : 'No historical job or program matches this search.')
+              : searchActive ? 'No historical job or program matches this search.' : 'No job or program needs review for this period.'}</td></tr>}
           </tbody>
         </table>
       </div>

@@ -5,6 +5,22 @@ import { shortHost } from './sapUiFormat.js'
 const API = `${import.meta.env.BASE_URL}api`
 const metric = (value, suffix = '') => value === null || value === undefined || value === '' ? '—' : `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}${suffix}`
 
+const severityRank = { NORMAL: 0, ATTENTION: 1, WARNING: 2, CRITICAL: 3 }
+const maxSeverity = (...values) => values.reduce((best, value) => severityRank[value] > severityRank[best] ? value : best, 'NORMAL')
+const thresholdState = (value, warning, critical) => {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return 'NORMAL'
+  if (number >= critical) return 'CRITICAL'
+  if (number >= warning) return 'WARNING'
+  return 'NORMAL'
+}
+const hostState = (host = {}) => maxSeverity(
+  thresholdState(host.cpu_pct, 75, 90),
+  thresholdState(host.ram_pct, 75, 90),
+  thresholdState(host.io_wait_pct, 5, 10),
+  Number(host.wp_critical || 0) >= 3 ? 'CRITICAL' : Number(host.wp_critical || 0) > 0 ? 'ATTENTION' : 'NORMAL',
+)
+
 
 export default function RundeckAppServers({ refreshToken = '', latestCollectionId = '', onInspectApp, focusRequest = null }) {
   const [state, setState] = React.useState({ items: [], error: '' })
@@ -46,17 +62,32 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
   }, [focusRequest?.highlightOnly, focusRequest?.host, focusRequest?.token, onInspectApp, state.items])
 
   const focusedApp = shortHost(focusRequest?.host || '')
+  const appStates = state.items.map((host) => ({ host, state: hostState(host) }))
+  const criticalApps = appStates.filter((item) => item.state === 'CRITICAL').length
+  const warningApps = appStates.filter((item) => item.state === 'WARNING' || item.state === 'ATTENTION').length
+  const highestCpu = [...state.items].sort((a,b) => Number(b.cpu_pct || 0) - Number(a.cpu_pct || 0))[0]
+  const highestRam = [...state.items].sort((a,b) => Number(b.ram_pct || 0) - Number(a.ram_pct || 0))[0]
+  const highestWp = [...state.items].sort((a,b) => Number(b.wp_critical || 0) - Number(a.wp_critical || 0))[0]
 
   return <section className="rundeckServerSection rundeckServerSectionV1234" aria-label="SAP App Servers">
     <div className="rundeckSectionTitle"><h3><SphereIcon name="server" /> SAP App Servers</h3></div>
+    {!state.error && state.items.length > 0 && <div className="rundeckAppServerSummary">
+      <span><b>Observed</b><strong>{state.items.length} APP</strong></span>
+      <span><b>Needs attention</b><strong>{warningApps}</strong></span>
+      <span><b>Critical</b><strong>{criticalApps}</strong></span>
+      <span><b>Highest CPU</b><strong>{shortHost(highestCpu?.host)} {metric(highestCpu?.cpu_pct,'%')}</strong></span>
+      <span><b>Highest RAM</b><strong>{shortHost(highestRam?.host)} {metric(highestRam?.ram_pct,'%')}</strong></span>
+      <span><b>Highest APP Critical WP</b><strong>{shortHost(highestWp?.host)} {metric(highestWp?.wp_critical)}</strong></span>
+    </div>}
     {state.error && <div className="rundeckHistoryState is-error">{state.error}</div>}
     {!state.error && <div className="rundeckServerTableWrap"><table className="rundeckServerTable">
-      <thead><tr><th>APP</th><th>CPU</th><th>Memory</th><th>I/O Wait</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>APP</th><th>CPU</th><th>RAM</th><th>I/O Wait</th><th>APP Critical WP</th><th>Status</th></tr></thead>
       <tbody>{state.items.map((host) => {
         const wpCount = Number(host.wp_critical || 0)
         const actionable = Boolean(onInspectApp)
         const appKey = shortHost(host.host)
         const focused = Boolean(focusedApp && appKey === focusedApp)
+        const status = hostState(host)
         return <tr
             key={host.host}
             data-app-key={appKey}
@@ -74,8 +105,9 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
             <td>{metric(host.ram_pct, '%')}</td>
             <td>{metric(host.io_wait_pct, '%')}</td>
             <td className={wpCount > 0 ? (wpCount >= 3 ? 'is-critical' : 'is-attention') : ''}>{wpCount > 0 ? <><SphereIcon name="alert" /> {wpCount}</> : '0'}</td>
+            <td><span className={`rundeckAppServerStatus is-${status.toLowerCase()}`}>{status}</span></td>
           </tr>
-      })}{!state.items.length && <tr><td colSpan="5">No aligned APP server rows available.</td></tr>}</tbody>
+      })}{!state.items.length && <tr><td colSpan="6">No aligned APP server rows available.</td></tr>}</tbody>
     </table></div>}
   </section>
 }

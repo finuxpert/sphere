@@ -10,7 +10,7 @@ const DEFAULT_RANGE = '6h'
 const TREND_STORAGE_KEY = 'sphere.live.trend'
 const RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H'], ['24h', '24H'], ['7d', '7D'], ['30d', '30D']]
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
-const METRICS = [['cpu', 'CPU'], ['ram', 'Memory'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
+const METRICS = [['cpu', 'CPU'], ['ram', 'RAM'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
 const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
 const BUCKET_INTERVAL_MS = {
@@ -21,7 +21,7 @@ const BUCKET_INTERVAL_MS = {
   '1d': 24 * 60 * 60 * 1000,
 }
 
-const metricLabel = (value) => ({ cpu: 'CPU', ram: 'Memory', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
+const metricLabel = (value) => ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
 const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
 
@@ -130,7 +130,7 @@ function CollectionGapBand({ trend }) {
     <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
       <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
       <strong>{gapTimeRangeText(from, to)}</strong>
-      <small>{gapDurationText(from, to)} {observed ? 'without retained Service Availability observation' : 'without retained collection'}{gaps.length > 1 ? ` · +${gaps.length - 1} additional gap${gaps.length > 2 ? 's' : ''}` : ''}</small>
+      <small>{gapDurationText(from, to)}{gaps.length > 1 ? ` · +${gaps.length - 1} more` : ''}</small>
     </summary>
     {gaps.length > 1 && <div className="rundeckGapDetailsV133">
       {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
@@ -179,12 +179,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
     const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
-    if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 8, position: 'insideEndTop' } })
-    if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 8, position: 'insideEndTop' } })
+    if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
+    if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     return {
       animationDuration: 140,
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
-      legend: { top: 0, type: 'scroll', itemWidth: 14, itemHeight: 8, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 9 } },
+      legend: { top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 10.2, fontWeight: 600 } },
       grid: { left: 58, right: 72, top: 38, bottom: compactPoints ? 34 : 48 },
       tooltip: {
         trigger: 'axis',
@@ -425,27 +425,139 @@ function MiniTrendContext({ trend, selected, range }) {
   </section>
 }
 
-function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, range }) {
+function trendPointNeighbors(trend, selected) {
+  const host = shortHost(selected?.host || '')
+  const rows = (trend?.items || [])
+    .filter((row) => shortHost(row.host || '') === host)
+    .map((row) => {
+      const bucketAt = Date.parse(row.bucket || '')
+      const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
+      return Number.isFinite(bucketAt) && Number.isFinite(value) ? { ...row, bucketAt, value } : null
+    })
+    .filter(Boolean)
+    .sort((left, right) => left.bucketAt - right.bucketAt)
+  if (!rows.length) return { previous: null, current: null, next: null }
+  const target = Date.parse(selected?.bucket || selected?.at || '')
+  const index = Number.isFinite(target)
+    ? rows.reduce((bestIndex, row, rowIndex) => Math.abs(row.bucketAt - target) < Math.abs(rows[bestIndex].bucketAt - target) ? rowIndex : bestIndex, 0)
+    : rows.length - 1
+  return { previous: rows[index - 1] || null, current: rows[index] || null, next: rows[index + 1] || null }
+}
+
+function signedDelta(value, previous, unit = '') {
+  const currentValue = Number(value)
+  const previousValue = Number(previous)
+  if (!Number.isFinite(currentValue) || !Number.isFinite(previousValue)) return '—'
+  const delta = currentValue - previousValue
+  return `${delta > 0 ? '+' : ''}${numberText(delta, 1)}${unit}`
+}
+
+function trendAppComparison(trend, selected) {
+  const target = Date.parse(selected?.bucket || selected?.at || '')
+  if (!Number.isFinite(target)) return []
+  return (trend?.items || [])
+    .map((row) => {
+      const bucketAt = Date.parse(row.bucket || '')
+      const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
+      if (!Number.isFinite(bucketAt) || !Number.isFinite(value)) return null
+      return { host: shortHost(row.host || ''), bucketAt, value }
+    })
+    .filter(Boolean)
+    .filter((row) => Math.abs(row.bucketAt - target) <= 1000)
+    .sort((left, right) => left.host.localeCompare(right.host))
+}
+
+function workloadWp(consumer) {
+  const details = consumer?.details || {}
+  return [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
+}
+
+function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenInfrastructure, onOpenEvidence, trend, range }) {
   if (!selected && !loading && !error) return null
   const selectedRow = selectedTimelineRow(selected, timeline)
   const consumers = selectedRow?.top_consumers || []
   const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
   const resourceState = selectedRow ? hostResourceState(selectedRow) : ''
+  const neighbors = trendPointNeighbors(trend, selected)
+  const selectedUnit = selected?.unit || trend?.unit || ''
+  const rowTime = Date.parse(selectedRow?.collected_at || '')
+  const selectedTime = Date.parse(selected?.at || '')
+  const timingMinutes = Number.isFinite(rowTime) && Number.isFinite(selectedTime)
+    ? Math.round(Math.abs(rowTime - selectedTime) / 60000)
+    : null
+  const timingText = timeline?.correlation_mode === 'collection'
+    ? 'Exact saved collection'
+    : timingMinutes === null
+      ? 'Retained timing unavailable'
+      : timingMinutes === 0
+        ? 'Nearest retained observation - same minute'
+        : `Nearest retained observation - ${timingMinutes}m difference`
+  const topContext = consumers[0] ? snapshotContext(selected, selectedRow, consumers[0]) : null
+  const appComparison = trendAppComparison(trend, selected)
+  const warning = Number(trend?.warning)
+  const critical = Number(trend?.critical)
+  const selectedValue = Number(selected?.value)
+  const aboveCritical = Number.isFinite(selectedValue) && Number.isFinite(critical) && selectedValue >= critical
+  const aboveWarning = Number.isFinite(selectedValue) && Number.isFinite(warning) && selectedValue >= warning
+  const thresholdText = [
+    Number.isFinite(warning) ? `Warn ${numberText(warning, 0)}${selectedUnit}` : '',
+    Number.isFinite(critical) ? `Critical ${numberText(critical, 0)}${selectedUnit}` : '',
+    neighbors.previous ? `${signedDelta(selectedValue, neighbors.previous.value, selectedUnit)} vs previous` : '',
+  ].filter(Boolean).join(' · ')
+  const topConsumer = consumers[0] || null
 
   return <section className="rundeckTrendModalContent" aria-live="polite">
-    <div className="rundeckTrendModalContext">
+    <section className="rundeckTrendSpikeSummary" aria-label="Selected trend point">
       <div>
-        <span>{selected?.mode === 'max' ? 'Peak sample' : 'Selected sample'} · saved history</span>
-        <strong>{selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</strong>
-        <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'}: {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket: ${formatWib(selected.bucket, true)} WIB` : ''}</small>
+        <span>Selected Point</span>
+        <strong>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(trend?.metric)} {aboveCritical || aboveWarning ? 'Spike' : 'Detail'}</strong>
+        <small>{selected?.mode === 'max' ? 'Peak' : 'Observed'} {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selectedUnit}`} at {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}</small>
       </div>
-      <div className="rundeckTrendModalContextMeta">
-        {collectionId && <span>Collection {collectionId.replace(/^rundeck-/, '').slice(0, 18)}</span>}
-        {resourceState && <span className={`rundeckInlineStatus is-${resourceState.toLowerCase()}`}>Host Resource: {resourceState}</span>}
+      <div className="rundeckTrendSpikeThreshold">
+        {thresholdText && <b>{thresholdText}</b>}
+        <small>{selected?.bucket ? `Bucket ${formatWib(selected.bucket, true)} WIB` : ''}{collectionId ? ` · Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : ''}</small>
       </div>
-    </div>
+    </section>
+
+        {!loading && !error && selectedRow && <section className="rundeckTrendInvestigationSnapshot" aria-label="APP snapshot at selected time">
+      <header><span>APP Snapshot at Selected Time</span><small>{selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}</small></header>
+      <div className="rundeckTrendSnapshotMetrics">
+        <span><b>CPU</b>{selectedRow.cpu_pct == null ? '—' : `${numberText(selectedRow.cpu_pct, 1)}%`}</span>
+        <span><b>RAM</b>{selectedRow.ram_pct == null ? '—' : `${numberText(selectedRow.ram_pct, 1)}%`}</span>
+        <span><b>I/O Wait</b>{selectedRow.io_wait_pct == null ? '—' : `${numberText(selectedRow.io_wait_pct, 1)}%`}</span>
+        <span className={Number(selectedRow.wp_critical || 0) > 0 ? 'is-attention' : ''}><b>APP Critical WP</b>{selectedRow.wp_critical ?? 'Not observed'}</span>
+        <span><b>APP Resource</b>{resourceState || 'UNKNOWN'}</span>
+      </div>
+      <p>APP Critical WP is APP-level evidence at the retained observation. It does not prove that a workload caused the spike.</p>
+    </section>}
+
+    {appComparison.length > 0 && <section className="rundeckTrendAppComparison" aria-label="APP comparison at selected time">
+      <header><span>APP Comparison</span><small>Same trend bucket</small></header>
+      <div>{appComparison.map((item) => <span key={item.host} className={item.host === shortHost(selected?.host || '') ? 'is-selected' : ''}><b>{item.host}</b>{numberText(item.value,1)}{selectedUnit}</span>)}</div>
+    </section>}
+
+    {topConsumer && <section className="rundeckTrendTopWorkload" aria-label="Top workload at selected time">
+      <div><span>Top Workload at Selected Time</span><strong title={topConsumer.consumer_key}>{topConsumer.consumer_key}</strong><small>{workloadTypeLabel(topConsumer.consumer_type)}</small></div>
+      <p>CPU <b>{numberText(topConsumer.cpu_pct,1)}%</b> · PSS <b>{pssValue(topConsumer)==null?'—':`${numberText(pssValue(topConsumer),2)} GB`}</b> · Processes <b>{processCount(topConsumer)==null?'—':numberText(processCount(topConsumer),0)}</b> · WP <b>{workloadWp(topConsumer)}</b></p>
+    </section>}
+
+    <section className="rundeckTrendComparison" aria-label="Selected point comparison">
+      <header><span>Point Comparison</span><small>{selected?.mode === 'max' ? 'Peak' : 'Average'} {selected?.metricLabel || metricLabel(trend?.metric)}</small></header>
+      <div>
+        <span><b>Previous</b>{neighbors.previous ? `${numberText(neighbors.previous.value,1)}${selectedUnit}` : '—'}</span>
+        <span className="is-selected"><b>Selected</b>{selected?.value == null ? '—' : `${numberText(selected.value,1)}${selectedUnit}`}<small>{neighbors.previous ? signedDelta(selected.value, neighbors.previous.value, selectedUnit) + ' vs previous' : 'No previous retained bucket'}</small></span>
+        <span><b>Next</b>{neighbors.next ? `${numberText(neighbors.next.value,1)}${selectedUnit}` : '—'}</span>
+      </div>
+    </section>
 
     <MiniTrendContext trend={trend} selected={selected} range={range} />
+
+    {!loading && !error && selected && <section className="rundeckTrendEvidenceStrip" aria-label="Supporting evidence">
+      <span><b>Critical WP</b>{selectedRow?.wp_critical ?? 'Not observed'}</span>
+      <span><b>Host Resource</b>{resourceState || 'UNKNOWN'}</span>
+      <span><b>Timing</b>{timingText}</span>
+      <span><b>Collection</b>{collectionId ? collectionId.replace(/^rundeck-/, '').slice(0, 18) : '—'}</span>
+    </section>}
 
     {loading && <div className="rundeckHistoryState rundeckTrendModalLoading"><span className="rundeckTrendModalSpinner" aria-hidden="true" /> Loading saved history…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
@@ -453,14 +565,14 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, 
     {!loading && !error && selected && <section className="rundeckTrendWorkloadPanel">
       <header>
         <div>
-          <span>History at Selected Time</span>
+          <span>Top Workloads at Selected Time</span>
           <strong>Top {consumers.length} workload{consumers.length === 1 ? '' : 's'} loaded</strong>
         </div>
-        {consumers[0]?.consumer_key && <small>Top workload CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
+        {consumers[0]?.consumer_key && <small>Highest workload CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
       </header>
 
       <div className="rundeckTrendWorkloadHead" aria-hidden="true">
-        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">Workload CPU</span><span>PSS Memory</span><span>Processes</span><span />
+        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">Workload CPU</span><span>PSS Memory</span><span>Processes</span><span>WP</span><span />
       </div>
 
       <div className="rundeckTrendWorkloadRows">
@@ -479,73 +591,126 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, trend, 
             <span>{numberText(consumer.cpu_pct, 1)}%</span>
             <span>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)} GB`}</span>
             <span>{processes === null || Number.isNaN(processes) ? '—' : numberText(processes, 0)}</span>
+            <span>{workloadWp(consumer)}</span>
             <span className="rundeckTrendWorkloadChevron">›</span>
           </button>
         })}
         {!consumers.length && <div className="rundeckSnapshotEmpty">No saved job or program data was found for this APP at this time.</div>}
       </div>
     </section>}
+
+    {!loading && !error && selected && <div className="rundeckTrendInvestigationActions" aria-label="Trend investigation actions">
+      <button type="button" disabled={!topContext} onClick={() => topContext && onSelectJob?.(topContext)}>Analyze Top Workload</button>
+      <button type="button" onClick={() => onOpenInfrastructure?.({ host: selected?.host || '', at: selected?.at || '', collectionId })}>Infrastructure</button>
+      <button type="button" disabled={!topContext} onClick={() => topContext && onOpenEvidence?.(topContext)}>Correlated Events</button>
+    </div>}
   </section>
 }
 
-export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, onSelectJob, onTrendContext }) {
+export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence }) {
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
   const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
-  const [metric, setMetric] = React.useState(METRICS.some(([key]) => key === saved.metric) || AVAILABILITY_CATEGORIES[saved.metric] ? saved.metric : 'cpu')
+  const [serverMetric1, setServerMetric1] = React.useState(METRICS.some(([key]) => key === saved.serverMetric1) ? saved.serverMetric1 : (METRICS.some(([key]) => key === saved.serverMetric) ? saved.serverMetric : 'cpu'))
+  const [serverMetric2, setServerMetric2] = React.useState(METRICS.some(([key]) => key === saved.serverMetric2) ? saved.serverMetric2 : 'ram')
+  const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
-  const [trend, setTrend] = React.useState(null)
-  const [trendLoading, setTrendLoading] = React.useState(false)
-  const [trendError, setTrendError] = React.useState('')
+  const [serverTrend1, setServerTrend1] = React.useState(null)
+  const [serverTrend2, setServerTrend2] = React.useState(null)
+  const [technicalTrend, setTechnicalTrend] = React.useState(null)
+  const [serverLoading1, setServerLoading1] = React.useState(false)
+  const [serverLoading2, setServerLoading2] = React.useState(false)
+  const [technicalLoading, setTechnicalLoading] = React.useState(false)
+  const [serverError1, setServerError1] = React.useState('')
+  const [serverError2, setServerError2] = React.useState('')
+  const [technicalError, setTechnicalError] = React.useState('')
   const [selected, setSelected] = React.useState(null)
+  const [selectedTrend, setSelectedTrend] = React.useState(null)
   const [timeline, setTimeline] = React.useState(null)
   const [timelineLoading, setTimelineLoading] = React.useState(false)
   const [timelineError, setTimelineError] = React.useState('')
   const timelineRequestSequence = React.useRef(0)
   const modalRef = React.useRef(null)
   const restoreFocusRef = React.useRef(null)
-  const availabilityMetric = Boolean(AVAILABILITY_CATEGORIES[metric])
 
-  React.useEffect(() => { onTrendContext?.({ metric, metricLabel: trend?.metric_label || metricLabel(metric), range, rangeLabel: rangeLabel(range), mode }) }, [metric, mode, onTrendContext, range, trend?.metric_label])
+  const loadTrend = React.useCallback((metric, setter, setLoading, setError, signal) => {
+    const category = AVAILABILITY_CATEGORIES[metric]
+    const url = category
+      ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}`
+      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`
+    setLoading(true)
+    setError('')
+    return json(url, signal)
+      .then((result) => setter(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result))
+      .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message || 'Unable to load trend.') })
+      .finally(() => { if (!signal.aborted) setLoading(false) })
+  }, [bucket, range])
+
   React.useEffect(() => {
-    try { window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({ range, bucket, metric, mode })) } catch { /* best-effort UI preference */ }
-  }, [bucket, metric, mode, range])
+    onTrendContext?.({ metric: serverMetric1, metricLabel: serverTrend1?.metric_label || metricLabel(serverMetric1), range, rangeLabel: rangeLabel(range), mode })
+  }, [mode, onTrendContext, range, serverMetric1, serverTrend1?.metric_label])
+
+  React.useEffect(() => {
+    try {
+      window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({
+        range, bucket, serverMetric1, serverMetric2, technicalMetric, mode,
+      }))
+    } catch { /* best effort */ }
+  }, [bucket, mode, range, serverMetric1, serverMetric2, technicalMetric])
+
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
-    setTrendLoading(true); setTrendError('')
-    const category = AVAILABILITY_CATEGORIES[metric]
-    const url = category ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}` : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`
-    json(url, controller.signal).then((result) => setTrend(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result)).catch((failure) => { if (failure.name !== 'AbortError') setTrendError(failure.message || 'Unable to load trend.') }).finally(() => { if (!controller.signal.aborted) setTrendLoading(false) })
+    loadTrend(serverMetric1, setServerTrend1, setServerLoading1, setServerError1, controller.signal)
     return () => controller.abort()
-  }, [bucket, databaseEnabled, metric, range, refreshToken])
-  React.useEffect(() => { timelineRequestSequence.current += 1; setSelected(null); setTimeline(null); setTimelineLoading(false); setTimelineError('') }, [bucket, metric, mode, range])
+  }, [databaseEnabled, loadTrend, refreshToken, serverMetric1])
 
-  const selectPoint = React.useCallback((point) => {
+  React.useEffect(() => {
+    if (!databaseEnabled) return undefined
+    const controller = new AbortController()
+    loadTrend(serverMetric2, setServerTrend2, setServerLoading2, setServerError2, controller.signal)
+    return () => controller.abort()
+  }, [databaseEnabled, loadTrend, refreshToken, serverMetric2])
+
+  React.useEffect(() => {
+    if (!databaseEnabled) return undefined
+    const controller = new AbortController()
+    loadTrend(technicalMetric, setTechnicalTrend, setTechnicalLoading, setTechnicalError, controller.signal)
+    return () => controller.abort()
+  }, [databaseEnabled, loadTrend, refreshToken, technicalMetric])
+
+  React.useEffect(() => {
+    timelineRequestSequence.current += 1
+    setSelected(null)
+    setSelectedTrend(null)
+    setTimeline(null)
+    setTimelineLoading(false)
+    setTimelineError('')
+  }, [bucket, mode, range, serverMetric1, serverMetric2, technicalMetric])
+
+  const selectPoint = React.useCallback((point, sourceTrend) => {
     timelineRequestSequence.current += 1
     const requestSequence = timelineRequestSequence.current
-    setSelected(point); setTimeline(null); setTimelineLoading(false); setTimelineError('')
+    setSelected(point)
+    setSelectedTrend(sourceTrend)
+    setTimeline(null)
+    setTimelineLoading(false)
+    setTimelineError('')
     if (!point?.at || (point.availability && !/^APP\d+$/i.test(String(shortHost(point.host || ''))))) return
     setTimelineLoading(true)
     const collection = point.collectionId ? `&collection_id=${encodeURIComponent(point.collectionId)}` : ''
     json(`${API}/history/timeline?at=${encodeURIComponent(point.at)}&window_minutes=5${collection}`)
-      .then((result) => {
-        if (timelineRequestSequence.current !== requestSequence) return
-        setTimeline(result)
-      })
-      .catch((failure) => {
-        if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load saved history.')
-      })
-      .finally(() => {
-        if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false)
-      })
+      .then((result) => { if (timelineRequestSequence.current === requestSequence) setTimeline(result) })
+      .catch((failure) => { if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load saved history.') })
+      .finally(() => { if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false) })
   }, [])
 
   const closeTrendDetails = React.useCallback(() => {
     timelineRequestSequence.current += 1
     setSelected(null)
+    setSelectedTrend(null)
     setTimeline(null)
     setTimelineLoading(false)
     setTimelineError('')
@@ -556,26 +721,16 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     restoreFocusRef.current = document.activeElement
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const timer = window.setTimeout(() => {
-      modalRef.current?.querySelector('[data-trend-modal-close]')?.focus()
-    }, 0)
+    const timer = window.setTimeout(() => modalRef.current?.querySelector('[data-trend-modal-close]')?.focus(), 0)
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        closeTrendDetails()
-        return
-      }
+      if (event.key === 'Escape') { event.preventDefault(); closeTrendDetails(); return }
       if (event.key !== 'Tab' || !modalRef.current) return
-      const focusable = [...modalRef.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
-        .filter((node) => !node.hasAttribute('hidden'))
+      const focusable = [...modalRef.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((node) => !node.hasAttribute('hidden'))
       if (!focusable.length) return
       const first = focusable[0]
       const last = focusable.at(-1)
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault(); last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault(); first.focus()
-      }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => {
@@ -586,34 +741,75 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     }
   }, [closeTrendDetails, selected])
 
-  const openSelectedJob = React.useCallback((context) => {
-    closeTrendDetails()
-    onSelectJob?.(context)
-  }, [closeTrendDetails, onSelectJob])
+  const openSelectedJob = React.useCallback((context) => { closeTrendDetails(); onSelectJob?.(context) }, [closeTrendDetails, onSelectJob])
+  const openTrendInfrastructure = React.useCallback((context) => { closeTrendDetails(); onOpenInfrastructure?.(context) }, [closeTrendDetails, onOpenInfrastructure])
+  const openTrendEvidence = React.useCallback((context) => { closeTrendDetails(); onOpenEvidence?.(context) }, [closeTrendDetails, onOpenEvidence])
 
-  return <section className="rundeckServerTrendPanelV1234" aria-label="Server Trend">
-    <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
-    <div className="rundeckTrendToolbar"><div className="rundeckTrendGroup"><Segmented options={METRICS} value={metric} onChange={setMetric} ariaLabel="Performance metric" /></div><div className="rundeckTrendGroup"><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Time period" /></div>{!availabilityMetric && <div className="rundeckTrendGroup"><Segmented options={[["avg", "Avg"], ["max", "Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>}</div>
-    <details className="rundeckAdvancedControls"><summary>Advanced</summary><div><button type="button" className={metric === 'load' ? 'is-active' : ''} onClick={() => setMetric('load')}>Load</button><button type="button" className={metric === 'swap' ? 'is-active' : ''} onClick={() => setMetric('swap')}>Swap I/O</button><button type="button" className={metric === 'hana' ? 'is-active' : ''} onClick={() => setMetric('hana')}>HANA</button><button type="button" className={metric === 'replication' ? 'is-active' : ''} onClick={() => setMetric('replication')}>Replication</button><button type="button" className={metric === 'ssh' ? 'is-active' : ''} onClick={() => setMetric('ssh')}>SSH</button><button type="button" className={metric === 'web' ? 'is-active' : ''} onClick={() => setMetric('web')}>Web Dispatcher</button>{!availabilityMetric && <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div></details>
-    {!databaseEnabled && <div className="rundeckHistoryState">Trend data is not available yet.</div>}
-    {databaseEnabled && trendLoading && <div className="rundeckHistoryState">Loading trend…</div>}
-    {databaseEnabled && trendError && <div className="rundeckHistoryState is-error">{trendError}</div>}
-    {databaseEnabled && !trendLoading && !trendError && trend?.items?.length > 0 && <><TrendFreshness trend={trend} /><AvailabilityCoverageBand trend={trend} /><CollectionGapBand trend={trend} /><AvailabilityObservationSummary trend={trend} /><TrendChart trend={trend} mode={mode} range={range} onSelect={selectPoint} selectedHost={selectedJob?.host || ''} /></>}
-    {databaseEnabled && !trendLoading && !trendError && trend && !trend.items?.length && <div className="rundeckHistoryState">No stored data in this range yet.</div>}
-    {!selected && <div className="rundeckRcaHint">Click a chart point to inspect saved job and program data without expanding the page.</div>}
+  const renderTrendState = (trend, loading, error, onSelect, { showGap = true } = {}) => {
+    if (!databaseEnabled) return <div className="rundeckHistoryState">Trend data is not available yet.</div>
+    if (loading) return <div className="rundeckHistoryState">Loading trend…</div>
+    if (error) return <div className="rundeckHistoryState is-error">{error}</div>
+    if (trend?.items?.length > 0) return <>
+      <TrendFreshness trend={trend} />
+      <AvailabilityCoverageBand trend={trend} />
+      {showGap && <CollectionGapBand trend={trend} />}
+      <AvailabilityObservationSummary trend={trend} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={selectedJob?.host || ''} />
+    </>
+    return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
+  }
+
+  const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
+  const activeTrend = selectedTrend || serverTrend1
+  const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
+
+  return <section className="rundeckTripleTrendV13457" aria-label="Server and Technical Trends">
+    <div className="rundeckTrendSharedControls">
+      <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
+      <div className="rundeckTrendSharedGroup"><span>Interval</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
+      <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
+    </div>
+
+    {serverTrend1?.items?.length > 0 && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
+      <CollectionGapBand trend={serverTrend1} />
+    </div>}
+
+    <div className="rundeckTripleTrendGrid">
+      <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 1 <small>· {metricLabel(serverMetric1)}</small></h3></div>
+        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric1} onChange={setServerMetric1} ariaLabel="Server Trend 1 metric" /></div>
+        {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
+      </section>
+
+      <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label="Server Trend 2">
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 2 <small>· {metricLabel(serverMetric2)}</small></h3></div>
+        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric2} onChange={setServerMetric2} ariaLabel="Server Trend 2 metric" /></div>
+        {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
+      </section>
+
+      <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend <small>· {metricLabel(technicalMetric)}</small></h3></div>
+        <div className="rundeckTrendToolbar">
+          <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
+          {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
+        </div>
+        {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint)}
+      </section>
+    </div>
+
     {selected && <div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
       <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
           <div>
             <span>SPHERE ANALYSIS</span>
-            <h4>Trend Details · {selected?.host ? shortHost(selected.host) : 'APP'}</h4>
-            <small>{selected?.metricLabel || metricLabel(metric)} · {selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || trend?.unit || ''}`}</small>
+            <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(activeMetric)} {activeTrend?.warning !== null && activeTrend?.warning !== undefined && Number.isFinite(Number(activeTrend.warning)) && Number(selected?.value) >= Number(activeTrend.warning) ? 'Spike' : 'Detail'}</h4>
+            <small>{selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || activeTrend?.unit || ''}`}</small>
             <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
           </div>
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
-          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} trend={trend} range={range} />
+          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} onOpenInfrastructure={openTrendInfrastructure} onOpenEvidence={openTrendEvidence} trend={activeTrend} range={range} />
         </div>
       </section>
     </div>}

@@ -679,3 +679,461 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveRows strong{
 .appShell:has(.rundeckPanel) .rundeckReviewTableV1231 td:nth-child(5){
   width:9%;
 }
+
+
+/* SPHERE v1.34.47 — main infrastructure scan strip uses dividers, not cards. */
+.appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.07)!important;
+  border-bottom:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>div{
+  background:transparent!important;
+  border-right:1px solid rgba(126,147,158,.06)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>div:last-child{border-right:0!important}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid{
+  gap:0!important;
+  border-top:1px solid rgba(126,147,158,.07)!important;
+  border-bottom:1px solid rgba(126,147,158,.07)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{
+  padding:7px 9px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article:last-child{border-right:0!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>div{
+  background:transparent!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article:nth-child(2n){border-right:0!important}
+  .appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{border-bottom:1px solid rgba(126,147,158,.06)!important}
+}
+
+
+/* SPHERE v1.34.48 — tighter infrastructure scan density. */
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article{
+  padding:7px 10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveCardGrid article>header{
+  margin-bottom:3px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows>div{
+  justify-content:flex-start!important;
+  gap:10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows span{
+  flex:0 1 62%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveRows strong{
+  margin-left:auto!important;
+  min-width:42px;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair{
+  grid-template-columns:repeat(2,minmax(0,140px))!important;
+  justify-content:start!important;
+  gap:18px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource{
+  min-height:27px!important;
+  padding:4px 2px!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource strong{
+  font-size:9.2px!important;
+  font-weight:780!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveJobSource span{
+  font-size:8.8px!important;
+}
+
+
+/* SPHERE v1.34.54 — Infrastructure beside SAP App Servers. */
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded{
+  margin:0!important;
+  padding:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveOverviewHead{
+  position:static!important;
+  min-height:25px!important;
+  margin:0 0 3px!important;
+  padding:0!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveScope select{
+  min-width:175px!important;
+  min-height:25px!important;
+  padding:2px 6px!important;
+  font-size:8.8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveExceptionSummary{
+  min-height:23px!important;
+  margin:0 0 3px!important;
+  padding:3px 7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid{
+  grid-template-columns:minmax(0,39fr) minmax(0,31fr) minmax(0,30fr)!important;
+  gap:0!important;
+  border-top:1px solid rgba(126,147,158,.065)!important;
+  border-bottom:1px solid rgba(126,147,158,.065)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
+  min-height:82px!important;
+  padding:6px 8px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.065)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article:last-child{
+  border-right:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveRows,
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricPair{
+  gap:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource{
+  min-height:24px!important;
+  margin:3px 0 0!important;
+  padding:3px 1px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+
+/* SPHERE v1.34.55 — top-row Infrastructure heading and alignment. */
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckEmbeddedInfrastructureTitle{
+  min-height:22px;
+  margin:0 0 3px;
+  color:var(--sphere-text,#e7edf0);
+  font-size:12px;
+  font-weight:780;
+  line-height:22px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveOverviewHead{
+  min-height:27px!important;
+  padding:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveScope{
+  width:100%;
+  justify-content:space-between;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveScope select{
+  flex:0 1 245px;
+  width:min(245px,70%);
+}
+
+
+/* SPHERE v1.34.56 — Review historical search and APP server information density. */
+.appShell:has(.rundeckPanel) .rundeckReviewSearch{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-height:30px;
+  margin:2px 0 4px;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewSearch input{
+  width:100%;
+  min-height:28px;
+  padding:4px 8px;
+  border:1px solid rgba(126,147,158,.16);
+  border-radius:5px;
+  background:rgba(15,21,26,.55);
+  color:var(--sphere-text,#e7edf0);
+  font:inherit;
+  font-size:9px;
+  outline:none;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewSearch input:focus{
+  border-color:rgba(79,198,200,.45);
+}
+.appShell:has(.rundeckPanel) .rundeckReviewSearch>button{
+  min-width:28px;
+  min-height:28px;
+  border:1px solid rgba(126,147,158,.13);
+  border-radius:5px;
+  background:transparent;
+  color:var(--sphere-text-muted,#718089);
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  margin:2px 0 5px;
+  border-top:1px solid rgba(126,147,158,.07);
+  border-bottom:1px solid rgba(126,147,158,.07);
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary>span{
+  display:grid;
+  gap:1px;
+  min-width:0;
+  padding:5px 7px;
+  border-right:1px solid rgba(126,147,158,.06);
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary>span:nth-child(3n){border-right:0}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary b{
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.6px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus{
+  display:inline-flex;
+  align-items:center;
+  min-height:17px;
+  padding:1px 5px;
+  border:1px solid rgba(126,147,158,.12);
+  border-radius:999px;
+  font-size:7.3px;
+  font-weight:800;
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-normal{color:var(--sphere-success,#64c99b)}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-attention{color:var(--sphere-attention,#6aa2d8)}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-warning{color:var(--sphere-warning,#d8b35f)}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-critical{color:var(--sphere-danger,#db7d86)}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(1){width:15%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(2){width:13%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(3){width:16%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(4){width:14%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(5){width:21%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(6){width:21%!important}
+
+
+/* SPHERE v1.34.56 — SAP Issues operational indicator console. */
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesV1231.is-indicator-console{
+  display:grid;
+  gap:9px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:0;
+  border-top:1px solid rgba(126,147,158,.08);
+  border-bottom:1px solid rgba(126,147,158,.08);
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip>span{
+  display:grid;
+  gap:2px;
+  padding:7px 8px;
+  border-right:1px solid rgba(126,147,158,.07);
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip>span:last-child{border-right:0}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip b{
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+  text-transform:uppercase;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip strong{font-size:11px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorSection{
+  min-width:0;
+  border-top:1px solid rgba(126,147,158,.07);
+  padding-top:6px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueSectionTitle{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:4px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueSectionTitle h4{margin:0;font-size:10.5px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueSectionTitle small{color:var(--sphere-text-muted,#718089);font-size:8px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTableWrap{
+  max-height:360px;
+  overflow:auto;
+  scrollbar-gutter:stable;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th,
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable td{
+  padding:6px 8px;
+  border-bottom:1px solid rgba(126,147,158,.07);
+  text-align:left;
+  font-size:9px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:var(--sphere-surface-0,#10171c);
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+  text-transform:uppercase;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(1){width:17%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(2){width:23%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(3){width:16%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(4){width:16%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th:nth-child(5){width:28%}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:18px;
+  font-size:8px;
+  font-weight:800;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus i{
+  width:6px;height:6px;border-radius:999px;background:currentColor;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-normal{color:var(--sphere-success,#64c99b)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-attention{color:var(--sphere-attention,#6aa2d8)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-warning{color:var(--sphere-warning,#d8b35f)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-critical{color:var(--sphere-danger,#db7d86)}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueStatus.is-unknown{color:var(--sphere-text-muted,#718089)}
+.rundeckWorkspaceDrawer.is-issues tr.is-investigable{cursor:pointer}
+.rundeckWorkspaceDrawer.is-issues tr.is-investigable:hover{background:rgba(79,198,200,.035)}
+@media(max-width:1100px){
+  .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+
+/* SPHERE v1.34.57 — top row uses full width without horizontal APP-table scroll. */
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers,
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers>.rundeckServerSectionV1234{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary{
+  width:100%!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  margin:2px 0 4px!important;
+  border-top-color:rgba(126,147,158,.045)!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary>span{
+  padding:4px 5px!important;
+  border-right-color:rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary>span:nth-child(3n){
+  border-right:1px solid rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary>span:last-child{border-right:0!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary b{font-size:6.8px!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary strong{font-size:8px!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerSectionV1234{
+  overflow:hidden!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th,
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable td{
+  padding-left:4px!important;
+  padding-right:4px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th{
+  font-size:6.9px!important;
+  letter-spacing:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable td{
+  font-size:8.7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(1){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(2){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(3){width:15%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(4){width:14%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(5){width:23%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(6){width:24%!important}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveOverviewHead{
+  min-height:24px!important;
+  margin-bottom:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
+  min-height:72px!important;
+  padding-top:5px!important;
+  padding-bottom:5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource{
+  min-height:22px!important;
+  margin-top:2px!important;
+}
+
+
+/* SPHERE v1.34.57 — calmer SAP Issues indicator console. */
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesV1231.is-indicator-console{
+  gap:7px!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{
+  border-top-color:rgba(126,147,158,.045)!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip>span{
+  padding:6px 7px!important;
+  border-right-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorSection{
+  padding-top:5px!important;
+  border-top-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th,
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable td{
+  padding:5px 7px!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable tbody tr:has(.rundeckIssueStatus.is-normal){
+  opacity:.72;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable tbody tr:has(.rundeckIssueStatus.is-warning),
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable tbody tr:has(.rundeckIssueStatus.is-attention),
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable tbody tr:has(.rundeckIssueStatus.is-critical){
+  opacity:1;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorSection.is-history{
+  margin-top:1px!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesTableWrap{
+  border:0!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesTableV1231 th,
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesTableV1231 td{
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+
+
+/* SPHERE v1.34.58 — single-scroll issue drawer and compact shortcut summaries. */
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTableWrap{
+  max-height:none!important;
+  overflow:visible!important;
+  scrollbar-gutter:auto!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th{
+  position:static!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>strong{
+  max-width:100%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>small{
+  max-width:100%!important;
+}

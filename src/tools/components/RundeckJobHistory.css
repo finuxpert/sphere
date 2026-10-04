@@ -1332,3 +1332,280 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 .rundeckWorkspaceDrawer.is-performance .rundeckJobOperationalRail{
   margin-top:7px!important;
 }
+
+
+/* SPHERE v1.34.45 — normalize Performance Analysis across Current and historical ranges. */
+.rundeckJobHistoricalSummary.is-unified{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:0!important;
+  margin-top:8px!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span{
+  min-height:50px!important;
+  padding:8px 10px!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span.is-attention{
+  color:var(--sphere-warning,#d8b35f)!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span.is-attention b{
+  color:var(--sphere-warning,#d8b35f)!important;
+}
+.rundeckJobRangeMode button:disabled{
+  cursor:default!important;
+  opacity:.48!important;
+}
+.rundeckJobRangeMode button:disabled.is-active{
+  opacity:.72!important;
+}
+
+
+/* SPHERE v1.34.47 — flatten Performance Analysis summary without changing semantics. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.08)!important;
+  border-bottom:1px solid rgba(126,147,158,.08)!important;
+  border-radius:0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel.is-performance{
+  border-left:0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMetrics>span{
+  border-left:0!important;
+  border-top:1px solid rgba(126,147,158,.055)!important;
+  padding-left:0!important;
+}
+.rundeckJobHistoricalSummary.is-unified{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.075)!important;
+  border-bottom:1px solid rgba(126,147,158,.075)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span{
+  min-height:42px!important;
+  padding:6px 10px 6px 0!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+  background:transparent!important;
+}
+.rundeckJobHistoricalSummary.is-unified>span:nth-last-child(-n+2){border-bottom:0!important}
+
+
+/* SPHERE v1.34.49 — final compact Performance Analysis control rail. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalAnalysis{
+  padding-bottom:6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{
+  gap:6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs{
+  gap:2px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{
+  min-height:29px!important;
+  padding:4px 6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode{
+  margin-top:5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobCurrentSemantics{
+  display:block;
+  margin-top:5px!important;
+  font-size:8.5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified{
+  margin-top:5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span{
+  min-height:36px!important;
+  padding:5px 8px 5px 0!important;
+  font-size:9.1px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span b{
+  margin-bottom:1px!important;
+  font-size:7.8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalHead strong{
+  font-size:10.8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th{
+  font-size:8.3px!important;
+  font-weight:780!important;
+}
+
+
+/* SPHERE v1.34.50 — typography/readability freeze pass; geometry unchanged. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobSectionLabel{
+  font-size:8.8px!important;
+  font-weight:820!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobCurrentSemantics,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobLimitedSamples{
+  font-size:8.8px!important;
+  line-height:1.35!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+  font-size:9.5px!important;
+  line-height:1.25!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span b{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-size:8.1px!important;
+  font-weight:790!important;
+  letter-spacing:.01em!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span.is-attention,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span.is-attention b{
+  color:var(--sphere-warning,#d8b35f)!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobCorrelationDisclaimer{
+  font-size:8.7px!important;
+  line-height:1.3!important;
+  color:var(--sphere-text-muted,#718089)!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th{
+  font-size:8.5px!important;
+  letter-spacing:.01em!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable td{
+  font-size:9px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalNote{
+  font-size:8.5px!important;
+}
+
+
+/* SPHERE v1.34.51 — single-observation and trace clarity. */
+.rundeckSingleSample{
+  display:grid;
+  align-content:start;
+  min-height:180px;
+  padding-top:10px!important;
+}
+.rundeckSingleSampleHead{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(126,147,158,.08);
+}
+.rundeckSingleSampleHead strong{
+  color:var(--sphere-text,#e7edf0);
+  font-size:12px;
+  font-weight:800;
+}
+.rundeckSingleSampleHead span{
+  color:var(--sphere-text-muted,#718089);
+  font-size:9px;
+}
+.rundeckSingleSampleMetrics{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0!important;
+  margin-top:0!important;
+}
+.rundeckSingleSampleMetrics span{
+  display:grid!important;
+  gap:2px!important;
+  padding:9px 10px 8px 0;
+  border-bottom:1px solid rgba(126,147,158,.05);
+}
+.rundeckSingleSampleAxis{
+  height:38px!important;
+  margin-top:12px!important;
+}
+.rundeckSingleSampleAxis small{
+  position:absolute;
+  top:23px;
+  left:50%;
+  transform:translateX(-50%);
+  color:var(--sphere-text-muted,#718089);
+  font-size:8.3px;
+  white-space:nowrap;
+}
+.rundeckWpSignalTable td small{
+  display:block;
+  margin-top:2px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+  font-weight:700;
+  letter-spacing:.02em;
+}
+@media(max-width:900px){
+  .rundeckSingleSampleMetrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+
+/* SPHERE v1.34.61 — Performance Analysis chart-first finishing. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+  grid-template-columns:minmax(220px,25fr) minmax(0,75fr)!important;
+  gap:12px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{
+  padding:6px 12px 6px 2px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{
+  gap:4px!important;
+  margin:5px 0 4px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{
+  min-height:27px!important;
+  padding:3px 5px!important;
+  font-size:9px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span{
+  min-height:33px!important;
+  padding:4px 6px 4px 0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
+  min-height:440px!important;
+  padding-left:6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{
+  min-height:425px!important;
+  height:425px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
+  height:410px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalPanel{
+  margin-top:8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th,
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable td{
+  padding-top:4px!important;
+  padding-bottom:4px!important;
+}
+@media(max-width:1360px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+    grid-template-columns:minmax(215px,27fr) minmax(0,73fr)!important;
+  }
+}
+
+/* SPHERE DEV finishing — give the summary enough room without stealing chart focus. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+  grid-template-columns:minmax(280px,31fr) minmax(0,69fr)!important;
+  gap:10px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{
+  padding-right:10px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{
+  min-height:25px!important;
+  padding:2px 5px!important;
+  font-size:8.7px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTableWrap{
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+}
+@media(max-width:1360px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+    grid-template-columns:minmax(250px,30fr) minmax(0,70fr)!important;
+  }
+}

@@ -120,11 +120,11 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
 
   if (!target) return null
 
-  const state = systemHealthState(hosts, { availabilityState: availability, serviceCritical, stale, aligned: true })
-  const collector = platform?.collector || {}
-  const recovery = collector?.last_recovery || null
   const availabilityAge = availabilityCollectedAt ? Math.max(0, Math.floor((Date.now() - Date.parse(availabilityCollectedAt)) / 60000)) : null
   const availabilityStale = Number.isFinite(availabilityAge) && availabilityAge >= 20
+  const state = systemHealthState(hosts, { availabilityState: availability, serviceCritical, stale, availabilityStale })
+  const collector = platform?.collector || {}
+  const recovery = collector?.last_recovery || null
   const primarySignal = primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale, availabilityAge)
   const title = `System Health reflects service impact and OS resource pressure. Job and program signals can raise ATTENTION without declaring an outage. Availability ${availability}${availabilityStale ? ` · evidence ${availabilityAge}m old` : ''}${stale ? ' · performance data stale' : ''}.`
 

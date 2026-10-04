@@ -1,6 +1,6 @@
 # SPHERE Current Flow and Features
 
-This document is the source of truth for the implemented SPHERE operating flow on **v1.34.37**.
+This document is the source of truth for the implemented SPHERE operating flow on **v1.34.53**.
 
 It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 
@@ -73,12 +73,11 @@ System / Collector / Data status
 Infrastructure summary
 
 SAP App Servers              Server Trend
-Current Jobs & Programs      Selected Job / Program
-
+Selected Job / Program
 Correlated Events | SAP Availability | SAP Issues
 Observation History | Infrastructure Analysis | System Data
 
-Jobs & Programs to Review
+Current Jobs & Programs      Selected Job / Program      Jobs & Programs to Review
 ```
 
 The UI uses progressive disclosure. Deep evidence is opened in drawers/modals instead of expanding the live page indefinitely.
@@ -154,6 +153,12 @@ Selected workload context exposes:
 - APP Critical WP or APP Critical WP overlap;
 - Analyze Performance action.
 
+APP Critical WP is scoped carefully in the selected-workload surface:
+
+- `0` means the selected observation retained an APP Critical WP value of zero;
+- `Not observed for selected workload` means the value was not retained for that selection;
+- neither state is an SM37 job result.
+
 A selection originating from Performance Review uses review-period metrics rather than pretending to be a current live snapshot.
 
 ## 8. Performance Analysis
@@ -197,6 +202,8 @@ Current observation analysis can expose:
 - I/O
 - WP Count
 - APP Critical WP
+
+When Current contains only one saved observation, SPHERE shows a **Selected Observation** summary instead of drawing a trend line from one point.
 
 Historical ranges use aggregate data and must not be presented as raw observations.
 
@@ -274,6 +281,8 @@ Performance Review supports:
 
 Evaluation uses retained workload observations and includes average/peak CPU, Avg PSS, occurrence/coverage context, and APP Critical WP overlap.
 
+The review queue is presented as **items sorted by review priority**. It supports operator investigation and does not present the ordering as an automatic root-cause or optimization verdict.
+
 Review Result defaults to further investigation rather than an automatic program-optimization verdict.
 
 No automatic ABAP/Application owner is assigned without explicit evidence.
@@ -317,7 +326,28 @@ See `docs/BASIS-JOB-INTELLIGENCE.md`.
 
 ## 16. Reporting
 
-PDF export/reporting summarizes retained operational evidence.
+PDF export/reporting is a one-page quick report intended for fast Basis/Infrastructure handoff, including chat/mobile sharing.
+
+Current report sections are:
+
+- **SUMMARY**
+- Availability
+- SAP APP Server Status
+- Server CPU Trend
+- Selected Workload
+- Jobs / Programs to Review
+- **CHECK SUMMARY**
+- **NOTES**
+
+Report semantics:
+
+- selected workload keeps `0` distinct from `Not observed` for APP Critical WP;
+- report data alignment is derived from the Performance and Availability timestamps used for the report;
+- both source times are printed in the report;
+- `ALIGNED` and `PARTIAL` remain explicit;
+- correlation is described as time-based context only;
+- job execution status must be checked in SAP/SM37 while the authoritative feed is not connected;
+- PDF operational state follows the same System Health semantics as the UI: service/resource criticality can be CRITICAL, APP Critical WP alone is ATTENTION, and stale performance/availability data is WARNING.
 
 A report must not convert correlation into a final root-cause verdict.
 
@@ -344,3 +374,61 @@ Do not claim:
 - guaranteed performance improvement;
 - authoritative live SM37 monitoring while no approved feed is connected;
 - SLA availability from retained observation percentages.
+
+
+### v1.34.61 layout refinements
+
+- Current Jobs and Jobs & Programs to Review use equal-height internal scroll areas; the Live page remains the outer one-screen cockpit.
+- Selected Job stays fixed between the two workload lists with six analysis launchers in two rows.
+- Infrastructure Analysis is history-first: the retained trend is shown above the Current Snapshot; Filesystem / Network / Storage I/O use a 45 / 20 / 35 snapshot layout.
+- Correlated Events shows an explicit timing strip, issue-relative event labels, and keeps the RCA boundary visible with `Cause not confirmed`.
+
+
+### v1.34.61 live flow
+
+1. SAP App Servers + Infrastructure overview.
+2. Server Trend (60%) + Technical Trend (40%) with shared range controls.
+3. Current Jobs & Programs (50%) + Jobs & Programs to Review (50%).
+4. Current or Review row click opens the shared Performance Analysis drawer directly.
+5. Historical search lives inside Jobs & Programs to Review; there is no separate History tab.
+6. Performance Analysis exposes Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data.
+
+
+### v1.34.61 cockpit geometry
+
+1. SAP App Servers 42% + Infrastructure 58%, both content-driven.
+2. Shared trend controls.
+3. Server Trend 1 (CPU default) 35% + Server Trend 2 (Memory default) 35% + Technical Trend (Load default) 30%.
+4. Six analysis shortcuts.
+5. Current Jobs 50% + Jobs & Programs to Review 50%.
+6. Analysis drawers use the same flat header, summary, table, divider, and navigation treatment.
+
+
+### v1.34.61 semantic polish
+
+- Host/server memory = RAM (%); workload memory = PSS Memory (GB).
+- One shared collection coverage strip applies to the two Server Trends; availability observation gaps remain metric-specific in Technical Trend.
+- Analysis shortcuts inherit an explicit current workload context line.
+- Bottom Current/Review panes are content-adaptive with bounded scrolling.
+- SAP Issues is sorted by severity and uses the drawer as the primary scroll owner.
+
+
+### v1.34.61 consistency pass
+
+The live cockpit, six analysis shortcuts, drawers and PDF now share one terminology and hierarchy: RAM for APP/server memory, PSS Memory for workload memory, WP Context for SAP work-process context, and timing-correlation wording that does not claim causation or an exact Critical WP start unless the source proves it.
+
+
+### v1.34.61 final cockpit flow
+
+1. SAP Performance header and operational status.
+2. SAP App Servers + Infrastructure.
+3. Server Trend 1 + Server Trend 2 + Technical Trend.
+4. Selected workload context + six analysis shortcuts.
+5. One Jobs & Programs workspace with Live / Review / Search modes.
+6. All row selections open the shared Performance Analysis flow.
+7. PDF uses the same RAM / PSS Memory / WP Context / APP Critical WP terminology as the web UI.
+
+
+### v1.34.61 workspace behavior
+
+Jobs & Programs has three exclusive modes. Live shows current observations, Review shows Basis review priority, and Search shows no historical rows until at least two characters are entered. All rows continue into the same Performance Analysis drawer.

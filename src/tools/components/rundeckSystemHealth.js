@@ -5,13 +5,15 @@ const normalize = (value) => String(value || 'UNKNOWN').toUpperCase()
 export function systemHealthState(hosts = [], {
   availabilityState = 'UNKNOWN',
   serviceCritical = false,
+  stale = false,
+  availabilityStale = false,
 } = {}) {
   const resourceStates = hosts.map((host) => hostResourceState(host))
   const workloadStates = hosts.map((host) => sapWorkloadState(host))
   const availability = normalize(availabilityState)
 
   if (serviceCritical || availability === 'CRITICAL' || resourceStates.includes('CRITICAL')) return 'CRITICAL'
-  if (resourceStates.includes('WARNING')) return 'WARNING'
+  if (resourceStates.includes('WARNING') || stale || availabilityStale) return 'WARNING'
   if (availability === 'ATTENTION' || workloadStates.some((state) => state === 'ATTENTION' || state === 'CRITICAL')) return 'ATTENTION'
 
   if (!hosts.length && availability === 'UNKNOWN') return 'UNKNOWN'

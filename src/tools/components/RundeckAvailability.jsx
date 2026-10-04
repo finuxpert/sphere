@@ -176,9 +176,8 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   if (compact) {
     return <button type="button" className="rundeckEvidenceCard rundeckAvailabilityCard" onClick={onOpen} aria-label="Open SAP Availability details">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> SAP Availability</span>
-      <strong>{apps.length ? `${appsUp}/${apps.length} APP UP` : 'APP —'} · {hanaRows.length ? `${hanaUp}/${hanaRows.length} HANA UP` : 'HANA —'} · {webRows.length ? `${webUp}/${webRows.length} WEB UP` : 'WEB —'}</strong>
-      <small>{stale ? `Last reliable: ${serviceState} - checked ${availabilityAge}m ago` : issueText || 'Current service availability'}</small>
-      <em>View details ›</em>
+      <strong>{apps.length ? `${appsUp}/${apps.length} APP` : 'APP —'} · {hanaRows.length ? `${hanaUp}/${hanaRows.length} HANA` : 'HANA —'} · {webRows.length ? `${webUp}/${webRows.length} Web` : 'Web —'}{stale ? ` · STALE ${availabilityAge}m` : ''}</strong>
+      <em aria-hidden="true">›</em>
     </button>
   }
 
@@ -187,20 +186,20 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
       <div>
         <h3><SphereIcon name="server" /> SAP Availability</h3>
         <span title="Current snapshot from the Rundeck Service Availability job.">
-          {data?.collected_at ? `Updated ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
-          {data?.execution_id ? ` · Availability READY #${data.execution_id}` : ''}
+          {data?.collected_at ? `Last update ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
+          {data?.execution_id ? ` · Availability Run #${data.execution_id}` : ''}
         </span>
       </div>
       <div className="rundeckAvailabilityState">
         {displayState !== 'NORMAL' && <Status value={displayState} />}
-        {stale && <small>{availabilityAge}m old · last reliable {serviceState}</small>}
+        {stale && <small>{availabilityAge}m old · last reliable: {serviceState}</small>}
         {!stale && issueText && <small>{issueText}</small>}
       </div>
     </div>
 
-    {showDataTrust && <div className="rundeckAvailabilityDataTrust" aria-label="Availability data quality">
-      {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}</small>}
-      {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Time difference {Math.round(skew / 60)}m</small>}
+    {showDataTrust && <div className={`rundeckAvailabilityDataTrust${bundleState === 'RUNNING' ? ' is-running-info' : ''}`} aria-label="Availability data quality">
+      {collectionNotice && <small className={`rundeckAvailabilityBundle is-${bundleState.toLowerCase()}`} title={bundleTitle}>{collectionNotice}{bundleState === 'PARTIAL' ? ' · using last reliable data' : ''}</small>}
+      {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Data time difference {Math.round(skew / 60)}m</small>}
     </div>}
 
     {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}

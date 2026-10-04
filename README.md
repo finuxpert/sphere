@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated release: **v1.34.37**.
+Current Rundeck-integrated DEV release: **v1.34.53**.
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -87,7 +87,9 @@ Performance Analysis exposes:
 - SAP Application Servers
 - Server Trend
 - Current Jobs & Programs
-- Selected Job / Program context
+- Selected Job / Program context with workload-scoped APP Critical WP wording
+- Jobs & Programs to Review beside Current Jobs & Programs
+- Bottom workflow uses equal-height panels: Current Jobs and Review scroll internally while Selected Job remains fixed.
 - Performance Analysis with Current / 3H / 6H / 24H / 7D / 30D
 - Observation Details
 - Historical Bucket Details
@@ -100,19 +102,22 @@ Performance Analysis exposes:
 - System Health
 - Jobs & Programs to Review
 - Workload Explorer / historical analysis
-- PDF reporting
+- One-page PDF quick reporting for Basis/Infrastructure handoff
 
 ## Important evidence semantics
 
 - Correlation is temporal/context evidence; it is not proof of causation.
 - Missing availability observations are not inferred as DOWN.
-- APP Critical WP is APP-server evidence, not workload execution status.
+- APP Critical WP is APP-server evidence, not workload execution status. Selected-workload UI keeps **0** distinct from **Not observed for selected workload**.
 - CPU for grouped workloads may exceed 100% because multiple processes/CPU cores can be aggregated.
 - PSS is the current memory metric used in workload analysis. Legacy RSS evidence must not be compared 1:1.
 - Historical Server Trend uses bucketed values. Peak mode keeps **Bucket**, **Peak At**, **Peak Value**, and **Peak Collection** separate.
 - WP trace `Error at Snapshot` is only current-at-snapshot evidence when collector recency is `AT_SNAPSHOT`.
-- `Latest Trace Error` may be historical and does not mean the SAP job failed.
+- `Latest Trace Error` may be historical and does not mean the SAP job failed. The UI labels retained trace errors as **AT SNAPSHOT** or **HISTORICAL**.
 - SM37 remains the authority for SAP background-job execution status.
+- A Current Performance Analysis range with one saved observation is shown as a **Selected Observation**, not as a misleading trend line.
+- PDF reports show Performance and Availability source times and keep `ALIGNED` / `PARTIAL` explicit when the report sources are not from the same timing window.
+- PDF operational state uses the same service/resource/freshness semantics as the System Health header; Critical WP alone raises ATTENTION rather than declaring a service outage.
 
 ## Build paths
 
@@ -166,3 +171,62 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Never commit Rundeck tokens, SAP credentials, passwords, private keys, raw SAP logs, or runtime secrets.
 - Keep missing-data semantics explicit; do not synthesize unavailable evidence as zero.
 - Production changes must be validated on DEV before promotion.
+
+
+### Live cockpit v1.34.61
+
+- Live Monitoring is the single primary workspace; standalone History was removed.
+- Historical Job / Program search is available from Jobs & Programs to Review and opens the shared Performance Analysis drawer.
+- Current Jobs and Review use a direct 50/50 workflow; clicking either side opens Performance Analysis without an intermediate Selected Job card.
+- Trend workspace is split into Server Trend (60%) and Technical Trend (40%) with a shared time range.
+- SAP App Servers includes operational summary/status, and SAP Issues consolidates performance, availability, technical checks, and SM37 feed state.
+
+
+### Live cockpit v1.34.61
+
+- Top cockpit is content-driven at 42/58 for SAP App Servers and Infrastructure; dead vertical space is removed.
+- Trend workspace now shows Server Trend 1 / Server Trend 2 / Technical Trend at roughly 35/35/30 with one shared Time Range, Interval, and Avg/Peak control rail. Defaults are CPU, Memory, and Load.
+- Current Jobs and Jobs & Programs to Review stay 50/50, use a compact equal-height scan area, and Current Jobs fills its full pane width.
+- Six analysis shortcuts remain always visible.
+- Analysis drawers share one restrained visual contract with fewer separators, lighter tables, consistent Back/Close navigation, and no “Back to Selected Job” wording.
+
+
+### Live cockpit v1.34.61
+
+- Host memory wording is now explicit RAM; workload memory remains PSS Memory.
+- Server Trend 1 and Server Trend 2 share one collection-gap strip instead of duplicating the same gap message.
+- The six analysis shortcuts show the selected workload context above them and use compact whole-tile actions.
+- Current Jobs and Review use adaptive bounded height rather than a fixed lower-band height.
+- SAP Issues uses drawer-level scrolling and clearer checked-indicator wording.
+- Observation History separates CPU, PSS and Critical WP ranges.
+- Infrastructure history is shorter on desktop so Current Snapshot is visible sooner and Network numeric values are not clipped.
+
+
+### v1.34.61 visual consistency
+
+- Cockpit and drawer typography use one hierarchy for titles, labels, status text and numeric data.
+- Host memory is RAM; workload memory is PSS Memory everywhere including PDF.
+- Trend titles show the active metric with a middle-dot separator.
+- Analysis shortcuts and context text are more readable with less border chrome.
+- Current Jobs and Review tables use larger operational text and tabular numeric alignment.
+- PDF Preview chrome is more compact, while the one-page PDF increases report typography and uses RAM / PSS Memory / WP Context wording.
+
+
+### v1.34.61 cockpit consolidation
+
+- The obsolete Live Monitoring tab is removed; SAP Performance is the single cockpit view.
+- Current Jobs, Review and historical Search are merged into one full-width Jobs & Programs workspace with Live / Review / Search modes.
+- The analysis rail removes redundant helper labels and uses one-line shortcut summaries with a concise selected-workload context.
+- Infrastructure now uses the same SphereIcon title treatment as the other cockpit sections.
+- Correlated Events and SAP Availability drawers use the same spacing and hierarchy as the other analysis drawers.
+- PDF preview now mirrors the current cockpit more closely with two Server Trend charts, a Technical Status strip, Analysis Context and Jobs & Programs Review.
+
+
+### v1.34.61 finishing
+
+- Jobs & Programs now keeps Live / Review / Search beside the workspace title and uses the full available width.
+- Review no longer has a second Search button; Search is a dedicated mode with an empty pre-query state.
+- Live selected-row emphasis is reduced to a subtle background plus left accent.
+- Performance Analysis is slightly narrower, chart-first, and uses a restrained backdrop for focus.
+- Compact Correlated Events copy is shortened to avoid truncation.
+- The duplicate visible SAP Performance title text is suppressed while preserving an accessible heading.

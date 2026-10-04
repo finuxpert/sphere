@@ -333,3 +333,112 @@
 .rundeckAvailabilityMatrix .is-head{background:rgba(126,147,158,.025)!important}
 .rundeckAvailabilityHead span,.rundeckAvailabilityMuted{color:var(--sphere-text-muted,#8d9aa3)!important;font-size:9.2px!important}
 @media(max-width:720px){.rundeckAvailabilitySummaryStrip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* SPHERE v1.34.49 — running availability refresh is informational, not a warning. */
+.rundeckAvailabilityDataTrust.is-running-info{
+  color:var(--sphere-text-muted,#718089)!important;
+}
+.rundeckAvailabilityDataTrust.is-running-info .rundeckAvailabilityBundle.is-running{
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+  border-color:rgba(126,147,158,.12)!important;
+  background:rgba(126,147,158,.025)!important;
+}
+html[data-theme="light"] .rundeckAvailabilityDataTrust.is-running-info .rundeckAvailabilityBundle.is-running{
+  color:#52656e!important;
+  background:#f6f8f9!important;
+}
+
+
+/* SPHERE v1.34.57 — flatter SAP Availability report. */
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip{
+  margin:8px 0 10px!important;
+  border-top:1px solid rgba(126,147,158,.045)!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip span{
+  padding:8px 10px!important;
+  border-left-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDetailSections section{
+  padding:10px 0!important;
+  border-top-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix>div{
+  border-top-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix .is-head{
+  background:rgba(126,147,158,.018)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityTechnicalRow + .rundeckAvailabilityTechnicalRow{
+  border-top:0!important;
+}
+
+
+/* SPHERE v1.34.60 — SAP Availability hierarchy and reduced divider noise. */
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityHead{
+  align-items:flex-start!important;
+  gap:14px!important;
+  min-height:42px!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityHead h3{
+  font-size:11px!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityHead>div:first-child>span{
+  font-size:8.3px!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityState{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  padding-top:1px!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityState small{
+  font-size:8.3px!important;
+  white-space:nowrap!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDataTrust{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:0 0 5px!important;
+  padding:2px 0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDataTrust small{
+  font-size:8.2px!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  margin:5px 0 8px!important;
+  border-top:0!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip span{
+  padding:6px 10px 7px!important;
+  border-left:0!important;
+  border-right:1px solid rgba(126,147,158,.035)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip span:last-child{border-right:0!important}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip b{font-size:7.8px!important}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip strong{font-size:11px!important}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDetailSections section{
+  padding:8px 0!important;
+  border-top:0!important;
+  border-bottom:1px solid rgba(126,147,158,.04)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDetailSections section:last-child{border-bottom:0!important}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDetailSections h4{
+  margin:0 0 5px!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix>div{
+  min-height:25px!important;
+  border-top:0!important;
+  border-bottom:1px solid rgba(126,147,158,.035)!important;
+}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix>div:last-child{border-bottom:0!important}
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityInfra{
+  line-height:1.7!important;
+}

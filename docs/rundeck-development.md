@@ -11,7 +11,7 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current application version: **v1.34.37**
+- Current application version: **v1.34.53**
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
@@ -76,15 +76,14 @@ Performance Analysis modes:
 - Infrastructure summary
 - SAP App Servers
 - Server Trend
-- Current Jobs & Programs
-- Selected Job / Program
+- Selected Job / Program under the selected APP context
 - Correlated Events
 - SAP Availability
 - SAP Issues
 - Observation History
 - Infrastructure Analysis
 - System Data
-- Jobs & Programs to Review
+- Current Jobs & Programs beside Jobs & Programs to Review
 
 ### Shared investigation surfaces
 
@@ -129,6 +128,7 @@ Do not use nearest-bucket recomputation to replace the value the operator clicke
 ## Performance Analysis contract
 
 - Current = selected workload episode.
+- Current with exactly one saved observation renders a Selected Observation summary rather than a trend line.
 - Current/3H/6H/24H/7D/30D are supported.
 - Current raw observations and historical buckets are different evidence types.
 - History truncation labels are episode-aware.
@@ -139,12 +139,15 @@ Do not use nearest-bucket recomputation to replace the value the operator clicke
 
 - Correlation does not prove causation.
 - APP Critical WP is APP-level evidence.
+- Selected workload Critical WP preserves the distinction between observed zero and missing/not-retained evidence.
 - Missing availability observation is not DOWN.
 - Grouped workload CPU may exceed 100%.
 - PSS is the current workload memory metric.
 - Historical RSS and current PSS are not 1:1 comparable.
-- `Latest Trace Error` may be historical.
+- `Latest Trace Error` may be historical and is labelled AT SNAPSHOT or HISTORICAL in the UI.
 - SM37 status must not be inferred from WP sampling.
+- PDF report alignment uses the report's Performance and Availability source timestamps; mismatched timing remains PARTIAL rather than being silently normalized.
+- System Health and PDF status use the same resource/service/freshness semantics; stale performance or availability data raises WARNING, while Critical WP without service/resource impact remains ATTENTION.
 
 ## Validation
 
@@ -177,3 +180,38 @@ Do not force-reset PROD to DEV.
 When branches diverge, build a release branch from the current PROD head and overlay only approved DEV changes, preserving PROD-only deploy/routing/service files.
 
 See `ops/rundeck/OPERATIONS.md`.
+
+
+## v1.34.61 cockpit contract
+
+The desktop Live Monitoring workflow is APP/Infrastructure -> full-width Server Trend -> equal-height Current Jobs / Selected Job / Review. Current and Review may scroll internally; the page composition should not grow to expose all rows. Infrastructure Analysis is history-first and Correlated Events keeps timing correlation separate from RCA.
+
+
+## v1.34.61 workflow contract
+
+Do not reintroduce the standalone History tab or the intermediate Selected Job card in Live Monitoring. Historical lookup belongs to Performance Review search. Current and Review rows must open the shared Performance Analysis drawer. The trend row uses separate Server Trend and Technical Trend panels with shared range controls.
+
+
+## v1.34.61 UI contract
+
+Preserve the three-chart trend workspace and content-driven top band. Do not reintroduce fixed empty top-row height, the Selected Job card, or a standalone History tab. Analysis drawers should use whitespace and subtle section boundaries rather than repeated boxed surfaces or heavy row separators.
+
+
+## v1.34.61 semantics
+
+Keep host RAM and workload PSS separate in labels and QA. The two numeric Server Trends share collection coverage because they use the same retained performance collection timeline. Technical availability gaps remain independent and must continue to mean UNKNOWN/no observation, never DOWN.
+
+
+## v1.34.61 UI wording contract
+
+Use RAM only for host/server percentage memory and PSS Memory for workload GB. Use “first observed” for retained Critical WP evidence unless an authoritative event source provides an exact start. Prefer selected-workload context over generic incident wording. PDF and web UI must use the same operator terminology.
+
+
+## v1.34.61 flow contract
+
+Do not reintroduce the standalone Live Monitoring tab or split Current/Review lower layout. The lower cockpit is one Jobs & Programs workspace. Historical Search belongs to that workspace. Analysis shortcut copy should stay short and operational. Stale availability data must never be rendered as service DOWN. PDF and web must preserve the same operator terminology and semantics.
+
+
+## v1.34.61 merged workspace contract
+
+Keep Search as an exclusive Jobs & Programs mode, not a button inside Review. A Search query shorter than two characters must never fall back to Review rows. Keep the Performance Analysis drawer as the single destination for Live, Review and Search selections.

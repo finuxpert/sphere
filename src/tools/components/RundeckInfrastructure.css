@@ -585,3 +585,302 @@
 .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap .seriesPoint.is-dimmed{
   opacity:.11!important;
 }
+
+
+/* SPHERE v1.34.45 — infrastructure history readability pass. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  align-items:start!important;
+  margin:2px 0 1px!important;
+  padding:5px 0 6px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:6px 12px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats span{
+  font-size:9.8px!important;
+  line-height:1.25!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats b{
+  font-size:8.5px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats span:first-child{
+  font-size:11px!important;
+  font-weight:820!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats .is-attention{
+  padding-left:5px!important;
+  border-left:2px solid var(--sphere-warning,#d8b35f)!important;
+  font-weight:740!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCoverageNote{
+  margin:2px 0 1px!important;
+  padding:5px 8px!important;
+  min-height:0!important;
+  line-height:1.3!important;
+  font-size:9.4px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap{
+  margin-top:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap .xTick text,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap .yTick text{
+  font-size:10.5px!important;
+  font-weight:600!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap .threshold text{
+  font-size:10px!important;
+  font-weight:780!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap .issueMarker text{
+  font-size:10px!important;
+  font-weight:760!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraLegend{
+  margin-top:0!important;
+  gap:5px 10px!important;
+  font-size:9.6px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraLegend span{
+  opacity:.42!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraLegend span.is-selected{
+  opacity:1!important;
+  font-size:10px!important;
+  font-weight:820!important;
+}
+
+
+/* SPHERE v1.34.47 — flat infrastructure workspace. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraWorkspace{
+  gap:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrent{
+  padding-right:14px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  padding-left:14px!important;
+  border-left:1px solid rgba(126,147,158,.09)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  border-top:0!important;border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  padding:8px 0!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.07)!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:first-child{
+  border-bottom:1px solid rgba(126,147,158,.07)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2){
+  padding-right:10px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3){
+  padding-left:10px!important;
+  border-left:1px solid rgba(126,147,158,.07)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-selected td,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-active td{
+  background:rgba(79,198,200,.035)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-selected td:first-child,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-active td:first-child{
+  box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.065)!important;
+  border-bottom:1px solid rgba(126,147,158,.065)!important;
+  background:transparent!important;
+  border-radius:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCoverageNote{
+  padding:4px 0!important;
+  border:0!important;border-bottom:1px dashed rgba(126,147,158,.10)!important;
+  border-radius:0!important;background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraChartWrap{
+  border:0!important;background:transparent!important;
+}
+@media(max-width:980px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrent{padding-right:0!important}
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+    padding-left:0!important;border-left:0!important;border-top:1px solid rgba(126,147,158,.09)!important
+  }
+}
+
+
+/* SPHERE v1.34.55 — history-first infrastructure investigation flow. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraWorkspace{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-areas:
+    "history"
+    "snapshot"!important;
+  gap:12px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  grid-area:history!important;
+  order:1!important;
+  width:100%!important;
+  min-width:0!important;
+  padding:8px 0 10px!important;
+  border-left:0!important;
+  border-bottom:1px solid rgba(126,147,158,.09)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrent{
+  grid-area:snapshot!important;
+  order:2!important;
+  width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspaceHead{
+  display:flex!important;
+  align-items:end!important;
+  justify-content:space-between!important;
+  margin-bottom:2px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace>header{
+  display:flex!important;
+  justify-content:flex-end!important;
+  min-height:30px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  grid-template-columns:minmax(140px,.8fr) minmax(0,4.2fr)!important;
+  margin:4px 0 3px!important;
+  padding:6px 0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:4px 12px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:315px!important;
+  min-height:315px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrentLabel{
+  margin:0 0 5px!important;
+  padding-top:2px!important;
+  font-size:9px!important;
+  font-weight:800!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  display:grid!important;
+  grid-template-columns:minmax(0,45fr) minmax(0,20fr) minmax(0,35fr)!important;
+  align-items:start!important;
+  gap:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:first-child{
+  grid-column:auto!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  min-width:0!important;
+  padding:7px 10px!important;
+  border-bottom:0!important;
+  border-right:1px solid rgba(126,147,158,.07)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:first-child{
+  padding-left:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:last-child{
+  padding-right:0!important;
+  border-right:0!important;
+  border-left:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2){
+  padding-left:10px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3){
+  padding-left:10px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid td{
+  font-size:9.4px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid th{
+  font-size:8px!important;
+}
+@media(max-height:820px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:270px!important;
+    min-height:270px!important;
+  }
+}
+@media(max-width:980px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+    grid-template-columns:1fr!important;
+  }
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+    padding:8px 0!important;
+    border-right:0!important;
+    border-bottom:1px solid rgba(126,147,158,.07)!important;
+  }
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+
+/* SPHERE v1.34.57 — reduce infrastructure separators while keeping history first. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  padding-top:5px!important;
+  padding-bottom:8px!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  margin:3px 0 2px!important;
+  padding:5px 0!important;
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCoverageNote{
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  border-right-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid td{
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraFreshness{
+  margin-bottom:5px!important;
+  padding:4px 0!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrentLabel{
+  margin-bottom:3px!important;
+}
+
+
+/* SPHERE v1.34.58 — expose snapshot sooner and keep numeric network values readable. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  min-height:430px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:300px!important;
+  min-height:300px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) table{
+  table-layout:auto!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td{
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+  font-size:8.8px!important;
+}
+@media(max-height:820px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:270px!important;
+    min-height:270px!important;
+  }
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{min-height:395px!important}
+}

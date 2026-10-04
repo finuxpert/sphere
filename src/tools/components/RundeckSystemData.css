@@ -13,3 +13,29 @@
 .rundeckSystemDataMore{margin-top:7px;border:0;background:transparent;color:var(--sphere-accent,#4fc6c8);font-size:9.5px;cursor:pointer}
 .rundeckSystemDataDetail{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:8px;padding:6px 0!important;border:0!important;border-top:1px solid rgba(126,147,158,.065)!important;border-radius:0!important;background:transparent!important;color:var(--sphere-text-secondary,#a9b5bb);font-size:9.5px}
 @media(max-width:640px){.rundeckSystemDataTabs{flex-direction:column}.rundeckSystemDataTabs button{justify-content:flex-start}.rundeckSystemDataTableWrap{overflow-x:auto}.rundeckSystemData table{min-width:580px}}
+
+
+/* SPHERE v1.34.57 — lighter System Data drawer. */
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemData{
+  padding-top:7px!important;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataTabs{
+  margin-bottom:7px!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataTabs button{
+  min-height:31px!important;
+  padding:5px 9px!important;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataTableWrap{
+  border-top-color:rgba(126,147,158,.045)!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemData th,
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemData td{
+  padding:6px 7px!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemData tbody tr:hover{
+  background:rgba(79,198,200,.025)!important;
+}

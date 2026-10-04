@@ -118,6 +118,20 @@ Current valid readiness includes:
 
 SM37 not configured is not a release failure while the authoritative feed is intentionally absent.
 
+## QA output triage
+
+For a concise DEV contract result while preserving the full log:
+
+```bash
+cd /root/rundeck-sphere-dev
+git fetch origin
+git reset --hard origin/rundeck-sphere-dev
+npm run qa 2>&1 | tee /tmp/sphere-qa.log
+grep -n '^FAIL ' /tmp/sphere-qa.log || echo 'No FAIL checks found'
+```
+
+Do not treat the absence of a `FAIL` line as a successful run if npm/build exited non-zero for another reason; review the command exit status and the tail of the QA log.
+
 ## Evaluation performance
 
 Performance Review is cached per committed collection anchor.
@@ -159,9 +173,24 @@ Trend Details must load workloads from the exact peak collection.
 
 Per-process/WP evidence may include CPU signal, Error at Snapshot, Latest Trace Error, error recency, counters, and log path.
 
-`Latest Trace Error` may be historical.
+`Latest Trace Error` may be historical. The operator UI labels retained values as AT SNAPSHOT or HISTORICAL.
+
+Selected-workload APP Critical WP keeps observed zero separate from missing/not-retained evidence.
 
 SM37 remains the authoritative execution-status source.
+
+## PDF quick report
+
+The one-page report is intended for fast operational handoff.
+
+It must preserve:
+
+- selected collection/run identity;
+- selected workload identity;
+- observed-zero versus Not observed semantics;
+- explicit Performance and Availability source times;
+- report-level ALIGNED/PARTIAL timing state;
+- plain wording that does not turn time correlation into a root-cause verdict.
 
 ## Release troubleshooting
 
