@@ -182,21 +182,26 @@ When branches diverge, build a release branch from the current PROD head and ove
 See `ops/rundeck/OPERATIONS.md`.
 
 
-## v1.34.58 cockpit contract
+## v1.34.59 cockpit contract
 
 The desktop Live Monitoring workflow is APP/Infrastructure -> full-width Server Trend -> equal-height Current Jobs / Selected Job / Review. Current and Review may scroll internally; the page composition should not grow to expose all rows. Infrastructure Analysis is history-first and Correlated Events keeps timing correlation separate from RCA.
 
 
-## v1.34.58 workflow contract
+## v1.34.59 workflow contract
 
 Do not reintroduce the standalone History tab or the intermediate Selected Job card in Live Monitoring. Historical lookup belongs to Performance Review search. Current and Review rows must open the shared Performance Analysis drawer. The trend row uses separate Server Trend and Technical Trend panels with shared range controls.
 
 
-## v1.34.58 UI contract
+## v1.34.59 UI contract
 
 Preserve the three-chart trend workspace and content-driven top band. Do not reintroduce fixed empty top-row height, the Selected Job card, or a standalone History tab. Analysis drawers should use whitespace and subtle section boundaries rather than repeated boxed surfaces or heavy row separators.
 
 
-## v1.34.58 semantics
+## v1.34.59 semantics
 
 Keep host RAM and workload PSS separate in labels and QA. The two numeric Server Trends share collection coverage because they use the same retained performance collection timeline. Technical availability gaps remain independent and must continue to mean UNKNOWN/no observation, never DOWN.
+
+
+## v1.34.59 UI wording contract
+
+Use RAM only for host/server percentage memory and PSS Memory for workload GB. Use “first observed” for retained Critical WP evidence unless an authoritative event source provides an exact start. Prefer selected-workload context over generic incident wording. PDF and web UI must use the same operator terminology.
