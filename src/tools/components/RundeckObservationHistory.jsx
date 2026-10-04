@@ -112,7 +112,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
       <span><b>APP</b><strong>{shortHost(job.host || rows[0]?.host || '—')}</strong></span>
       <span><b>Time span</b><strong>{timeSpan}</strong></span>
       {cpuValues.length > 0 && <span><b>CPU Range</b><strong>{numberText(Math.min(...cpuValues),1)}–{numberText(Math.max(...cpuValues),1)}%</strong></span>}
-      {pssValues.length > 0 && <span><b>PSS Range</b><strong>{numberText(Math.min(...pssValues),2)}–{numberText(Math.max(...pssValues),2)} GB</strong></span>}
+      {pssValues.length > 0 && <span><b>PSS Memory Range</b><strong>{numberText(Math.min(...pssValues),2)}–{numberText(Math.max(...pssValues),2)} GB</strong></span>}
       {criticalValues.length > 0 && <span><b>Critical WP Range</b><strong>{Math.min(...criticalValues)}–{Math.max(...criticalValues)}</strong></span>}
     </div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
