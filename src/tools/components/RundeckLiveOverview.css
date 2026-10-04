@@ -1010,3 +1010,72 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
 @media(max-width:1100px){
   .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+
+/* SPHERE v1.34.57 — top row uses full width without horizontal APP-table scroll. */
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers,
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers>.rundeckServerSectionV1234{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary{
+  width:100%!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  margin:2px 0 4px!important;
+  border-top-color:rgba(126,147,158,.045)!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary>span{
+  padding:4px 5px!important;
+  border-right-color:rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary>span:nth-child(3n){
+  border-right:1px solid rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary>span:last-child{border-right:0!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary b{font-size:6.8px!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .rundeckAppServerSummary strong{font-size:8px!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerSectionV1234{
+  overflow:hidden!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th,
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable td{
+  padding-left:4px!important;
+  padding-right:4px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th{
+  font-size:6.9px!important;
+  letter-spacing:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable td{
+  font-size:8.7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(1){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(2){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(3){width:15%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(4){width:14%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(5){width:23%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(6){width:24%!important}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveOverviewHead{
+  min-height:24px!important;
+  margin-bottom:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
+  min-height:72px!important;
+  padding-top:5px!important;
+  padding-bottom:5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource{
+  min-height:22px!important;
+  margin-top:2px!important;
+}
