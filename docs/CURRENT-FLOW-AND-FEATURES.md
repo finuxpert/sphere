@@ -376,9 +376,19 @@ Do not claim:
 - SLA availability from retained observation percentages.
 
 
-### v1.34.55 layout refinements
+### v1.34.56 layout refinements
 
 - Current Jobs and Jobs & Programs to Review use equal-height internal scroll areas; the Live page remains the outer one-screen cockpit.
 - Selected Job stays fixed between the two workload lists with six analysis launchers in two rows.
 - Infrastructure Analysis is history-first: the retained trend is shown above the Current Snapshot; Filesystem / Network / Storage I/O use a 45 / 20 / 35 snapshot layout.
 - Correlated Events shows an explicit timing strip, issue-relative event labels, and keeps the RCA boundary visible with `Cause not confirmed`.
+
+
+### v1.34.56 live flow
+
+1. SAP App Servers + Infrastructure overview.
+2. Server Trend (60%) + Technical Trend (40%) with shared range controls.
+3. Current Jobs & Programs (50%) + Jobs & Programs to Review (50%).
+4. Current or Review row click opens the shared Performance Analysis drawer directly.
+5. Historical search lives inside Jobs & Programs to Review; there is no separate History tab.
+6. Performance Analysis exposes Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data.
