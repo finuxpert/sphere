@@ -79,9 +79,9 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     const app=shortHost(host.host)
     indicators.push(
       {scope:app,indicator:'CPU',status:pctState(host.cpu_pct,75,90),current:valueText(host.cpu_pct,'%'),reason:'Warn 75% · Crit 90%',host:host.host},
-      {scope:app,indicator:'Memory',status:pctState(host.ram_pct,75,90),current:valueText(host.ram_pct,'%'),reason:'Warn 75% · Crit 90%',host:host.host},
+      {scope:app,indicator:'RAM',status:pctState(host.ram_pct,75,90),current:valueText(host.ram_pct,'%'),reason:'Warn 75% · Crit 90%',host:host.host},
       {scope:app,indicator:'I/O Wait',status:pctState(host.io_wait_pct,5,10),current:valueText(host.io_wait_pct,'%'),reason:'Warn 5% · Crit 10%',host:host.host},
-      {scope:app,indicator:'APP Critical WP',status:wpState(host.wp_critical),current:String(Number(host.wp_critical||0)),reason:'1-2 attention · 3+ critical',host:host.host},
+      {scope:app,indicator:'APP Critical WP',status:wpState(host.wp_critical),current:String(Number(host.wp_critical||0)),reason:'Attention 1–2 · Critical ≥3',host:host.host},
     )
   })
 
@@ -123,16 +123,16 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{issueIndicators.length} need attention</span></header>
     {error&&<div className="rundeckReviewState is-error">{error}</div>}
     <div className="rundeckSapIssuesSummaryStrip">
-      <span><b>Indicators</b><strong>{indicators.length}</strong></span>
+      <span><b>Checked indicators</b><strong>{indicators.length}</strong></span>
       <span><b>Critical</b><strong>{criticalCount}</strong></span>
       <span><b>Warning / Attention</b><strong>{warningCount}</strong></span>
-      <span><b>Most impacted APP</b><strong>{mostImpacted}</strong></span>
+      <span><b>Most signals</b><strong>{mostImpacted}</strong></span>
       <span><b>Active incident rows</b><strong>{activeCount}</strong></span>
       <span><b>Longest active</b><strong>{longestActive?durationText(longestActive):'—'}</strong></span>
     </div>
 
     <section className="rundeckIssueIndicatorSection">
-      <div className="rundeckIssueSectionTitle"><h4>Current Indicator Status</h4><small>CPU · Memory · I/O Wait · Critical WP · Availability · HANA · Web · SSH · SM37</small></div>
+      <div className="rundeckIssueSectionTitle"><h4>Current Indicator Status</h4><small>CPU · RAM · I/O Wait · Critical WP · Availability · HANA · Web · SSH · SM37</small></div>
       <div className="rundeckIssueIndicatorTableWrap">
         <table className="rundeckIssueIndicatorTable">
           <thead><tr><th>Scope</th><th>Indicator</th><th>Status</th><th>Current</th><th>Basis Check</th></tr></thead>
