@@ -376,7 +376,7 @@ Do not claim:
 - SLA availability from retained observation percentages.
 
 
-### v1.34.58 layout refinements
+### v1.34.59 layout refinements
 
 - Current Jobs and Jobs & Programs to Review use equal-height internal scroll areas; the Live page remains the outer one-screen cockpit.
 - Selected Job stays fixed between the two workload lists with six analysis launchers in two rows.
@@ -384,7 +384,7 @@ Do not claim:
 - Correlated Events shows an explicit timing strip, issue-relative event labels, and keeps the RCA boundary visible with `Cause not confirmed`.
 
 
-### v1.34.58 live flow
+### v1.34.59 live flow
 
 1. SAP App Servers + Infrastructure overview.
 2. Server Trend (60%) + Technical Trend (40%) with shared range controls.
@@ -394,7 +394,7 @@ Do not claim:
 6. Performance Analysis exposes Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data.
 
 
-### v1.34.58 cockpit geometry
+### v1.34.59 cockpit geometry
 
 1. SAP App Servers 42% + Infrastructure 58%, both content-driven.
 2. Shared trend controls.
@@ -404,10 +404,15 @@ Do not claim:
 6. Analysis drawers use the same flat header, summary, table, divider, and navigation treatment.
 
 
-### v1.34.58 semantic polish
+### v1.34.59 semantic polish
 
 - Host/server memory = RAM (%); workload memory = PSS Memory (GB).
 - One shared collection coverage strip applies to the two Server Trends; availability observation gaps remain metric-specific in Technical Trend.
 - Analysis shortcuts inherit an explicit current workload context line.
 - Bottom Current/Review panes are content-adaptive with bounded scrolling.
 - SAP Issues is sorted by severity and uses the drawer as the primary scroll owner.
+
+
+### v1.34.59 consistency pass
+
+The live cockpit, six analysis shortcuts, drawers and PDF now share one terminology and hierarchy: RAM for APP/server memory, PSS Memory for workload memory, WP Context for SAP work-process context, and timing-correlation wording that does not claim causation or an exact Critical WP start unless the source proves it.
