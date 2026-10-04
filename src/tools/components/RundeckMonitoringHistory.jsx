@@ -70,8 +70,7 @@ export default function RundeckMonitoringHistory(props) {
         ? `${formatWib(props.latestCollectionAt, true)} WIB`
         : ''
   const operationalEvidenceContent = <>
-    {selectedJob?.key && <div className="rundeckAnalysisContextStrip" title="Current workload context used by job-scoped analysis shortcuts">
-      <b>Analysis context</b>
+    {selectedJob?.key && <div className="rundeckAnalysisContextStrip" title="Current workload used by the analysis shortcuts">
       <strong>{selectedJob.key}</strong>
       {selectedJob.host && <span>{shortHost(selectedJob.host)}</span>}
       {selectedContextTime && <span>{selectedContextTime}</span>}
@@ -86,7 +85,7 @@ export default function RundeckMonitoringHistory(props) {
     <section className="rundeckSelectedSecondaryAnalysis" aria-label="Additional analysis">
       <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })} disabled={!selectedJob?.key}>
         <SphereIcon name="history" />
-        <span><b>Observation History</b><small>{selectedJob?.host ? `Saved observations · ${shortHost(selectedJob.host)}` : 'Saved observations'}</small></span>
+        <span><b>Observation History</b><small>{selectedJob?.host ? `Observations · ${shortHost(selectedJob.host)}` : 'Select a workload first'}</small></span>
         <em>›</em>
       </button>
       <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}>
@@ -137,12 +136,6 @@ export default function RundeckMonitoringHistory(props) {
   />
 
   return <>
-    <div className="rundeckMonitoringModeBar" aria-label="Monitoring mode">
-      <div className="rundeckMonitoringModeTabs">
-        <button type="button" className="is-active" aria-current="page">Live Monitoring</button>
-      </div>
-    </div>
-
     <RundeckMonitoringHistoryCore
             {...props}
             currentWorkloadContent={currentWorkloadContent}
