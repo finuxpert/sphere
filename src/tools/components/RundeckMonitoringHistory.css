@@ -2282,3 +2282,68 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 @media(max-width:760px){
   .rundeckWorkspaceDrawerBody .rundeckObservationHistoryContext{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* SPHERE v1.34.58 — context-first cockpit finishing. */
+.appShell:has(.rundeckPanel) .rundeckSharedCollectionCoverage{
+  margin:0 0 3px!important;
+  width:100%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSharedCollectionCoverage .rundeckCollectionGapBandV132{
+  margin:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckSharedCollectionCoverage .rundeckCollectionGapBandV132>summary{
+  min-height:20px!important;
+  padding:2px 6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{
+  position:relative;
+  padding-top:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  min-height:25px;
+  padding:3px 7px;
+  border-bottom:1px solid rgba(126,147,158,.045);
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.8px;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip b{
+  flex:0 0 auto;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:7.4px;
+  text-transform:uppercase;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip strong{
+  min-width:0;
+  overflow:hidden;
+  color:var(--sphere-text,#e7edf0);
+  font-size:8.6px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip span{
+  flex:0 0 auto;
+  padding-left:7px;
+  border-left:1px solid rgba(126,147,158,.06);
+  white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>em{
+  font-size:13px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendModeNote{
+  max-width:190px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryContext{
+  grid-template-columns:auto auto auto repeat(3,minmax(0,1fr))!important;
+}
+@media(max-width:900px){
+  .rundeckWorkspaceDrawerBody .rundeckObservationHistoryContext{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
