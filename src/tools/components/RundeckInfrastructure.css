@@ -857,3 +857,30 @@
 .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrentLabel{
   margin-bottom:3px!important;
 }
+
+
+/* SPHERE v1.34.58 — expose snapshot sooner and keep numeric network values readable. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  min-height:430px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:300px!important;
+  min-height:300px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) table{
+  table-layout:auto!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2) td{
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+  font-size:8.8px!important;
+}
+@media(max-height:820px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:270px!important;
+    min-height:270px!important;
+  }
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{min-height:395px!important}
+}
