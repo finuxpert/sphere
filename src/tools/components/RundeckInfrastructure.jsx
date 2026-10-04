@@ -81,7 +81,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
         <g className="threshold is-warning"><line x1={pad.left} y1={y(75)} x2={width-pad.right} y2={y(75)}/><text x={width-pad.right-4} y={y(75)-4}>Warn 75%</text></g>
         <g className="threshold is-critical"><line x1={pad.left} y1={y(90)} x2={width-pad.right} y2={y(90)}/><text x={width-pad.right-4} y={y(90)-4}>Crit 90%</text></g>
       </>}
-      {issueInRange&&<g className="issueMarker"><line x1={x(incidentStart)} y1={pad.top} x2={x(incidentStart)} y2={height-pad.bottom}/><text x={x(incidentStart)+4} y={pad.top+10}>Critical WP Started · {formatTime(incidentStart)} WIB</text></g>}
+      {issueInRange&&<g className="issueMarker"><line x1={x(incidentStart)} y1={pad.top} x2={x(incidentStart)} y2={height-pad.bottom}/><text x={x(incidentStart)+4} y={pad.top+10}>Critical WP first observed · {formatTime(incidentStart)} WIB</text></g>}
       {xTicks.map((tick,index)=><g key={tick} className="xTick">
         <line x1={x(tick)} y1={height-pad.bottom} x2={x(tick)} y2={height-pad.bottom+4} className="axis"/>
         <text x={x(tick)} y={height-12} textAnchor={index===0?'start':index===xTicks.length-1?'end':'middle'}>{formatAxisTime(tick,range)}</text>
