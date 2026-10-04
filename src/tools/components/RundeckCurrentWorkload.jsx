@@ -108,7 +108,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 10 }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 50 }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
@@ -172,8 +172,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   }, [rows, selectedJob, onSelectedContext])
 
   const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
-  const visibleLimit = Math.max(1, Number(compactLimit || 10))
-  const visible = showAll ? sortedRows : sortedRows.slice(0, visibleLimit)
+  const visibleLimit = Math.max(1, Number(compactLimit || 50))
+  const visible = sortedRows.slice(0, visibleLimit)
   const latestObservedAt = rows.reduce((latest, row) => {
     const timestamp = Date.parse(row.collected_at || '')
     return Number.isFinite(timestamp) && timestamp > Date.parse(latest || '') ? row.collected_at : latest
@@ -187,11 +187,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     <div className="rundeckCurrentWorkloadHead">
       <h3><SphereIcon name="workload" /> Current Jobs & Programs <span className="rundeckCurrentWorkloadCount">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed - showing ${rows.length}` : `${workloadMeta.total || rows.length} observed`}</span></h3>
       <div className="rundeckCurrentWorkloadTools">
-        {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected job or program: ${selectedContext}`}>Selected: {selectedContext}</span>}
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
-        {rows.length > visibleLimit && <button type="button" onClick={() => setShowAll((value) => !value)}>
-          {showAll ? `Top ${visibleLimit}` : `View ${rows.length}`}
-        </button>}
       </div>
     </div>
 
