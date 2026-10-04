@@ -108,7 +108,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 10 }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
@@ -172,7 +172,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   }, [rows, selectedJob, onSelectedContext])
 
   const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
-  const visible = showAll ? sortedRows : sortedRows.slice(0, 10)
+  const visibleLimit = Math.max(1, Number(compactLimit || 10))
+  const visible = showAll ? sortedRows : sortedRows.slice(0, visibleLimit)
   const latestObservedAt = rows.reduce((latest, row) => {
     const timestamp = Date.parse(row.collected_at || '')
     return Number.isFinite(timestamp) && timestamp > Date.parse(latest || '') ? row.collected_at : latest
@@ -188,8 +189,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       <div className="rundeckCurrentWorkloadTools">
         {selectedContext && <span className="rundeckCurrentWorkloadSelection" title={`Selected job or program: ${selectedContext}`}>Selected: {selectedContext}</span>}
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
-        {rows.length > 10 && <button type="button" onClick={() => setShowAll((value) => !value)}>
-          {showAll ? 'Top 10' : `View ${rows.length}`}
+        {rows.length > visibleLimit && <button type="button" onClick={() => setShowAll((value) => !value)}>
+          {showAll ? `Top ${visibleLimit}` : `View ${rows.length}`}
         </button>}
       </div>
     </div>
