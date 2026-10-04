@@ -415,3 +415,31 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSum
     justify-self:start;
   }
 }
+
+
+/* SPHERE v1.34.57 — calmer correlated-events timeline. */
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary{
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip{
+  margin:5px 0 2px!important;
+  padding:5px 0!important;
+  border-top:1px solid rgba(126,147,158,.055)!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvents{
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent{
+  padding:7px 0!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent + .rundeckEvidenceEvent{
+  border-top:0!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTechnical{
+  margin-top:5px!important;
+  padding-top:5px!important;
+  border-top:1px solid rgba(126,147,158,.055)!important;
+}
