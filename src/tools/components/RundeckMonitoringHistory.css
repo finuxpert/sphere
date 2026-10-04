@@ -1998,3 +1998,96 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     border-top:1px solid rgba(126,147,158,.08);
   }
 }
+
+
+/* SPHERE v1.34.56 — always-visible six analysis shortcuts. */
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:0;
+  width:100%;
+  min-width:0;
+  margin:5px 0 4px;
+  border-top:1px solid rgba(126,147,158,.07);
+  border-bottom:1px solid rgba(126,147,158,.07);
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:0!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards{
+  border-right:1px solid rgba(126,147,158,.07)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  grid-template-rows:auto auto!important;
+  align-items:center!important;
+  column-gap:7px!important;
+  row-gap:1px!important;
+  min-width:0!important;
+  min-height:46px!important;
+  height:46px!important;
+  margin:0!important;
+  padding:5px 8px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.07)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--sphere-text,#e7edf0)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards>*:last-child,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button:last-child{
+  border-right:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard:hover,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button:hover{
+  background:rgba(79,198,200,.035)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .sphereIcon{
+  grid-row:1/3!important;
+  color:var(--sphere-text-muted,#718089)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCardTitle,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis span{
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 b,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCardTitle{
+  font-size:8.8px!important;
+  font-weight:760!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 small,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>strong{
+  min-width:0!important;
+  overflow:hidden!important;
+  color:var(--sphere-text-muted,#718089)!important;
+  font-size:7.6px!important;
+  font-weight:520!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>em,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis em{
+  grid-column:3!important;
+  grid-row:1/3!important;
+  align-self:center!important;
+  color:var(--sphere-text-muted,#718089)!important;
+  font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button:disabled{
+  opacity:.42!important;
+  cursor:not-allowed!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{grid-template-columns:1fr!important}
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards{border-right:0!important;border-bottom:1px solid rgba(126,147,158,.07)!important}
+}
