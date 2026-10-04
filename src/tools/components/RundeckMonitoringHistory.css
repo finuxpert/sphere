@@ -2091,3 +2091,131 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{grid-template-columns:1fr!important}
   .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards{border-right:0!important;border-bottom:1px solid rgba(126,147,158,.07)!important}
 }
+
+
+/* SPHERE v1.34.57 — three-chart trend workspace and compact analysis rail. */
+.appShell:has(.rundeckPanel) .rundeckTripleTrendV13457{
+  width:100%!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendSharedControls{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  flex-wrap:wrap!important;
+  gap:5px 16px!important;
+  min-height:27px!important;
+  margin:0 0 4px!important;
+  padding:0 0 4px!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendSharedGroup{
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendSharedGroup>span{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-size:7.7px!important;
+  font-weight:760!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid{
+  display:grid!important;
+  grid-template-columns:minmax(0,35fr) minmax(0,35fr) minmax(0,30fr)!important;
+  gap:0!important;
+  align-items:start!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid>.rundeckServerTrendPanelV1234{
+  min-width:0!important;
+  margin:0!important;
+  padding:0 12px!important;
+  border-right:1px solid rgba(126,147,158,.055)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid>.rundeckServerTrendPanelV1234:first-child{
+  padding-left:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid>.rundeckServerTrendPanelV1234:last-child{
+  padding-right:0!important;
+  border-right:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckMonitoringHead{
+  min-height:22px!important;
+  margin:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckMonitoringHead h3{
+  font-size:10.6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendToolbar{
+  min-height:25px!important;
+  margin:0 0 2px!important;
+  padding:0!important;
+  gap:1px!important;
+  flex-wrap:nowrap!important;
+  overflow:hidden!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendToolbar .rundeckSegmented{
+  flex-wrap:nowrap!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendToolbar .rundeckSegmented button{
+  min-height:21px!important;
+  padding:2px 5px!important;
+  font-size:7.5px!important;
+  white-space:nowrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendToolbar{
+  overflow-x:auto!important;
+  scrollbar-width:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendToolbar::-webkit-scrollbar{display:none!important}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendChart{
+  height:188px!important;
+  min-height:188px!important;
+  max-height:188px!important;
+  margin-top:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckCollectionGapBandV132{
+  margin:2px 0 1px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckCollectionGapBandV132>summary{
+  min-height:20px!important;
+  padding:2px 5px!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckCollectionGapBandV132>summary span{
+  font-size:6.9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckCollectionGapBandV132>summary strong,
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckCollectionGapBandV132>summary small{
+  font-size:7.2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendV13457>.rundeckRcaHint{
+  margin:1px 0 0!important;
+  padding:2px 0 3px!important;
+  font-size:7.8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{
+  margin:2px 0 3px!important;
+  border-top-color:rgba(126,147,158,.045)!important;
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button{
+  min-height:44px!important;
+  height:44px!important;
+  border-right-color:rgba(126,147,158,.045)!important;
+}
+@media(max-width:1280px){
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid{grid-template-columns:1fr 1fr!important}
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid>.is-technical-trend{
+    grid-column:1/-1!important;padding:8px 0 0!important;border-top:1px solid rgba(126,147,158,.055)!important
+  }
+}
+@media(max-width:900px){
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid{grid-template-columns:1fr!important}
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid>.is-technical-trend{grid-column:auto!important}
+}
