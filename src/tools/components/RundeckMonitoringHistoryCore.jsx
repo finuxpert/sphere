@@ -29,6 +29,10 @@ export default function RundeckMonitoringHistoryCore(props) {
       />
     </section>
 
+    {props.operationalEvidenceContent && <section className="rundeckAnalysisRailV13456" aria-label="Analysis shortcuts">
+      {props.operationalEvidenceContent}
+    </section>}
+
     <section className="rundeckBottomBandV13456">
       <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-current-workload">
         {props.currentWorkloadContent}
