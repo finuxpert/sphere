@@ -85,17 +85,17 @@ export default function RundeckMonitoringHistory(props) {
     <section className="rundeckSelectedSecondaryAnalysis" aria-label="Additional analysis">
       <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })} disabled={!selectedJob?.key}>
         <SphereIcon name="history" />
-        <span><b>Observation History</b><small>{selectedJob?.host ? `Observations · ${shortHost(selectedJob.host)}` : 'Select a workload first'}</small></span>
+        <span><b>Observation History</b><small>{selectedJob?.host ? `${selectedJob?.reviewMetrics?.observations ?? 'Saved'} observations · ${shortHost(selectedJob.host)}` : 'Select a workload first'}</small></span>
         <em>›</em>
       </button>
-      <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}>
-        <SphereIcon name="server" />
-        <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
-        <em>›</em>
-      </button>
+      <RundeckInfrastructure
+        refreshToken={refreshToken}
+        compact
+        onOpen={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}
+      />
       {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
         <SphereIcon name="database" />
-        <span><b>System Data</b><small>{systemDataSummary ? systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 - $2') : 'Collections - Services'}</small></span>
+        <span><b>System Data</b><small>{systemDataSummary ? systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2') : 'Collections · Services'}</small></span>
         <em>›</em>
       </button>}
     </section>
