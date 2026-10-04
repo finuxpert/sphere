@@ -24,6 +24,15 @@ function appLabel(host = '') {
   return match ? `APP${match[1]}` : value || 'APP'
 }
 
+function evidenceEventTitle(event = {}) {
+  const raw = String(event?.title || '').trim()
+  const source = String(event?.source || '').toUpperCase()
+  if (source === 'SAP SIGNAL' && /critical\s+work\s+process/i.test(raw)) {
+    return 'Critical Work Process first observed'
+  }
+  return raw || 'Operational event'
+}
+
 function eventRelation(eventAt = '', issueAt = '', thresholdMinutes = 15, source = '') {
   if (String(source || '').toUpperCase() === 'ISSUE START') return 'ISSUE START'
   const eventTs = Date.parse(eventAt || '')
@@ -146,7 +155,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
           {events.map((event, index) => {
             const relation = eventRelation(event.at, issueAt, hasThreshold ? threshold : 15, event.source)
             const isHost = String(event.source || '').toUpperCase() === 'HOST'
-            const displayTitle = isHost && host ? `${appLabel(host)} server observation` : event.title
+            const displayTitle = isHost && host ? `${appLabel(host)} server observation` : evidenceEventTitle(event)
             return <div className={`rundeckEvidenceEvent ${String(event.source || '').toUpperCase() === 'SAP SIGNAL' ? 'is-primary-signal' : ''}`} key={`${event.at}-${event.kind}-${index}`} title={event.detail || undefined}>
               <time>{formatWib(event.at, true)} WIB</time>
               <span className={`rundeckEvidenceDot is-${String(event.source || '').toLowerCase().replaceAll(' ', '-')}`} />
