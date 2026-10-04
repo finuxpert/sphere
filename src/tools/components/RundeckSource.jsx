@@ -314,10 +314,13 @@ export default function RundeckSource({ onCollection }) {
         if (!element) return null
         return html2canvas(element, { backgroundColor: '#0f151a', scale: 1.55, useCORS: true, logging: false })
       }
-      const [serverChart, workloadChart] = await Promise.all([
-        capture('.rundeckTrendChart'),
+      const [serverChart1, serverChart2, workloadChart] = await Promise.all([
+        capture('.is-server-trend-1 .rundeckTrendChart'),
+        capture('.is-server-trend-2 .rundeckTrendChart'),
         capture('.rundeckJobPerformanceChart, .rundeckSingleSample'),
       ])
+      const trendTitle1 = panel.querySelector('.is-server-trend-1 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 1'
+      const trendTitle2 = panel.querySelector('.is-server-trend-2 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 2'
 
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
       const W = pdf.internal.pageSize.getWidth()
@@ -442,18 +445,35 @@ export default function RundeckSource({ onCollection }) {
         y += 4
       })
 
-      const chartY = y + 5
-      if (serverChart) {
+      const chartY = y + 6
+      const chartGap = 6
+      const chartColW = (contentW - chartGap) / 2
+      const chartMaxH = 40
+      const drawTrendChart = (chart, title, x) => {
+        if (!chart) return
         pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(9.2)
-        const trendMetric = String(trendContext.metricLabel || 'Performance').toUpperCase()
-        const trendRange = String(trendContext.rangeLabel || '6H').toUpperCase()
-        pdf.text(`SERVER ${trendMetric} TREND · ${trendRange}`, margin, chartY - 3)
-        const ratio = Math.min(contentW / serverChart.width, 47 / serverChart.height)
-        pdf.addImage(serverChart.toDataURL('image/jpeg', .92), 'JPEG', margin, chartY, serverChart.width * ratio, serverChart.height * ratio, undefined, 'FAST')
+        pdf.setFontSize(8.8)
+        pdf.setTextColor(22, 31, 38)
+        pdf.text(String(title || 'Server Trend').replace(/\s+/g, ' '), x, chartY - 3)
+        const ratio = Math.min(chartColW / chart.width, chartMaxH / chart.height)
+        pdf.addImage(chart.toDataURL('image/jpeg', .92), 'JPEG', x, chartY, chart.width * ratio, chart.height * ratio, undefined, 'FAST')
       }
+      drawTrendChart(serverChart1, trendTitle1, margin)
+      drawTrendChart(serverChart2, trendTitle2, margin + chartColW + chartGap)
 
-      const workY = 156
+      const technicalY = chartY + chartMaxH + 4
+      pdf.setDrawColor(220, 226, 229)
+      pdf.line(margin, technicalY, W - margin, technicalY)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.7)
+      pdf.setTextColor(71, 87, 97)
+      pdf.text('TECHNICAL STATUS', margin, technicalY + 4)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7.2)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(`HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}   |   WEB HTTP ${availabilityStatus(webRows, 'HTTP')} · HTTPS ${availabilityStatus(webRows, 'HTTPS')}   |   DATA ${reportDataAlignment}   |   SM37 NOT CONNECTED`, margin + 35, technicalY + 4)
+
+      const workY = 158
       const leftW = contentW * .56
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
@@ -472,7 +492,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(9.2)
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, workY - 7, W - margin, workY - 7)
-      pdf.text(`SELECTED WORKLOAD · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
+      pdf.text(`ANALYSIS CONTEXT · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
       if (inspectedProgram) {
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7)
@@ -512,7 +532,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9)
-      pdf.text('JOBS / PROGRAMS TO REVIEW', sideX, workY - 3)
+      pdf.text('JOBS & PROGRAMS · REVIEW', sideX, workY - 3)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.setTextColor(92, 105, 114)
@@ -650,7 +670,7 @@ export default function RundeckSource({ onCollection }) {
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
-        <h2><SphereIcon name="activity" /> SAP Performance Summary</h2>
+        <h2><SphereIcon name="activity" /> SAP Performance</h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span>{formatTime(latestCollectionAt, true)} WIB</span>
           <span>{appCount || '—'} APP</span>
