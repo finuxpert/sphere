@@ -102,8 +102,17 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
       ].filter(Boolean).join(' · ')
     : ''
 
+  const timeSpan = rows.length
+    ? `${formatWib(rows.at(-1)?.collected_at, true)}–${formatWib(rows[0]?.collected_at, true)} WIB`
+    : '—'
   const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
+    {!error && embedded && <div className="rundeckObservationHistoryContext">
+      <span><b>Observations</b><strong>{rows.length}</strong></span>
+      <span><b>APP</b><strong>{shortHost(job.host || rows[0]?.host || '—')}</strong></span>
+      <span><b>Time span</b><strong>{timeSpan}</strong></span>
+      {historySummary && <span className="is-summary"><b>Range</b><strong>{historySummary}</strong></span>}
+    </div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
       <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU</th><th>Memory</th><th>Critical WP</th></tr></thead>
       <tbody>{visibleRows.map((row) => {
