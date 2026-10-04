@@ -129,8 +129,7 @@ export default function RundeckMonitoringHistory(props) {
       </div>
     </div>
 
-    <>
-          <RundeckMonitoringHistoryCore
+    <RundeckMonitoringHistoryCore
             {...props}
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
@@ -382,6 +381,5 @@ export default function RundeckMonitoringHistory(props) {
               setActiveOverlay({ type: 'job', reviewRow: activeOverlay.row, reviewContext: activeOverlay.reviewContext })
             }}
           />}
-        </>}
   </>
 }
