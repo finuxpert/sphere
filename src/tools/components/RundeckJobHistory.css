@@ -1537,3 +1537,51 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 @media(max-width:900px){
   .rundeckSingleSampleMetrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* SPHERE v1.34.61 — Performance Analysis chart-first finishing. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+  grid-template-columns:minmax(220px,25fr) minmax(0,75fr)!important;
+  gap:12px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar{
+  padding:6px 12px 6px 2px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceRange{
+  gap:4px!important;
+  margin:5px 0 4px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeTabs button,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode button{
+  min-height:27px!important;
+  padding:3px 5px!important;
+  font-size:9px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span{
+  min-height:33px!important;
+  padding:4px 6px 4px 0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
+  min-height:440px!important;
+  padding-left:6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{
+  min-height:425px!important;
+  height:425px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
+  height:410px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalPanel{
+  margin-top:8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th,
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable td{
+  padding-top:4px!important;
+  padding-bottom:4px!important;
+}
+@media(max-width:1360px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+    grid-template-columns:minmax(215px,27fr) minmax(0,73fr)!important;
+  }
+}
