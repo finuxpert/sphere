@@ -321,6 +321,9 @@ export default function RundeckSource({ onCollection }) {
       ])
       const trendTitle1 = panel.querySelector('.is-server-trend-1 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 1'
       const trendTitle2 = panel.querySelector('.is-server-trend-2 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 2'
+      const trendRangeLabel = panel.querySelector('[aria-label="Shared trend period"] .is-active')?.textContent?.trim() || ''
+      const trendIntervalLabel = panel.querySelector('[aria-label="Trend interval"] .is-active')?.textContent?.trim() || ''
+      const trendModeLabel = panel.querySelector('[aria-label="Server trend view"] .is-active')?.textContent?.trim() || ''
 
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
       const W = pdf.internal.pageSize.getWidth()
@@ -386,6 +389,19 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8)
       pdf.text(status, W - margin - 14.5, 15.7, { align: 'center' })
+      const operationalReason = reportDataAlignment !== 'ALIGNED'
+        ? 'Data partial'
+        : reportAvailabilityStale
+          ? 'Availability data stale'
+          : reportPerformanceStale
+            ? 'Performance data stale'
+            : ''
+      if (operationalReason) {
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(6.6)
+        pdf.setTextColor(192, 203, 209)
+        pdf.text(operationalReason, W - margin - 4, 21, { align: 'right' })
+      }
 
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.8)
@@ -454,7 +470,8 @@ export default function RundeckSource({ onCollection }) {
         pdf.setFont('helvetica', 'bold')
         pdf.setFontSize(8.8)
         pdf.setTextColor(22, 31, 38)
-        pdf.text(String(title || 'Server Trend').replace(/\s+/g, ' '), x, chartY - 3)
+        const trendContext = [trendRangeLabel, trendIntervalLabel, trendModeLabel].filter(Boolean).join(' · ')
+        pdf.text(`${String(title || 'Server Trend').replace(/\s+/g, ' ')}${trendContext ? ` · ${trendContext}` : ''}`, x, chartY - 3)
         const ratio = Math.min(chartColW / chart.width, chartMaxH / chart.height)
         pdf.addImage(chart.toDataURL('image/jpeg', .92), 'JPEG', x, chartY, chart.width * ratio, chart.height * ratio, undefined, 'FAST')
       }
