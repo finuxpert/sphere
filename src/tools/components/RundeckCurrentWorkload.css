@@ -304,3 +304,40 @@
   scrollbar-width:thin!important;
   scrollbar-color:rgba(126,147,158,.25) transparent!important;
 }
+
+
+/* SPHERE v1.34.61 — full-width Live table inside merged Jobs & Programs. */
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadTableWrap{
+  width:100%!important;
+  max-width:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload table{
+  width:100%!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(1),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(1){width:7%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(2),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(2){width:46%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(3),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(3){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(4),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(4){width:13%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(5),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(5){width:10%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(6),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(6){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadHead.is-embedded{
+  justify-content:flex-start!important;
+  min-height:25px!important;
+  gap:8px!important;
+  margin:0 0 2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadHead.is-embedded .rundeckCurrentWorkloadTools{
+  margin-left:auto!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload tbody tr.is-selected{
+  background:rgba(79,198,200,.045)!important;
+  box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important;
+}
