@@ -31,6 +31,7 @@ const files = {
   observationHistory: read('src/tools/components/RundeckObservationHistory.jsx'),
   uiPolish: read('src/tools/components/RundeckUiPolish.css'),
   sourceCss: read('src/tools/components/RundeckSource.css'),
+  currentWorkload: read('src/tools/components/RundeckCurrentWorkload.jsx'),
   currentWorkloadCss: read('src/tools/components/RundeckCurrentWorkload.css'),
   availabilityCss: read('src/tools/components/RundeckAvailability.css'),
   evidenceCss: read('src/tools/components/RundeckEvidenceTimeline.css'),
