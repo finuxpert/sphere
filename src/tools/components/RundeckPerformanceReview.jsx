@@ -24,7 +24,6 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
-  const [showAll, setShowAll] = React.useState(false)
   const [hasLoaded, setHasLoaded] = React.useState(false)
   const [quickRow, setQuickRow] = React.useState(null)
   const [loadedPeriod, setLoadedPeriod] = React.useState('')
@@ -90,8 +89,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} · sorted by review priority</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
-        <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" disabled={loading && !hasLoaded} />
-        <Segmented options={TYPES} value={type} onChange={(value) => { setType(value); setShowAll(false) }} label="Workload type" disabled={loading && !hasLoaded} />
+        <Segmented options={PERIODS} value={period} onChange={(value) => setPeriod(value)} label="Review period" disabled={loading && !hasLoaded} />
+        <Segmented options={TYPES} value={type} onChange={(value) => setType(value)} label="Workload type" disabled={loading && !hasLoaded} />
 
       </div>
     </header>
