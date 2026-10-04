@@ -810,3 +810,48 @@
 @media(max-width:1180px){
   .appShell:has(.rundeckPanel) .rundeckBottomBandV13456{grid-template-columns:1fr!important}
 }
+
+
+/* SPHERE v1.34.57 — compact cockpit geometry, remove dead space. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13456{
+  gap:5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454{
+  grid-template-columns:minmax(0,42fr) minmax(0,58fr)!important;
+  gap:16px!important;
+  align-items:start!important;
+  margin-top:5px!important;
+  height:auto!important;
+  min-height:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454>.rundeckBandPaneV1235{
+  align-self:start!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendBandV13454{
+  padding-top:3px!important;
+  border-top:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456{
+  gap:16px!important;
+  padding-top:5px!important;
+  border-top-color:rgba(126,147,158,.045)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456>.rundeckBandPaneV1235{
+  height:214px!important;
+  min-height:214px!important;
+  max-height:214px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckPerformanceReviewV1231{
+  width:100%!important;
+}
+@media(max-width:1180px){
+  .appShell:has(.rundeckPanel) .rundeckTopBandV13454{grid-template-columns:1fr!important}
+  .appShell:has(.rundeckPanel) .rundeckBottomBandV13456>.rundeckBandPaneV1235{
+    height:auto!important;min-height:180px!important;max-height:240px!important
+  }
+}
