@@ -1,6 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { formatWib, numberText, shortHost } from './sapUiFormat.js'
+import { numberText, shortHost } from './sapUiFormat.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const SEVERITY_RANK = { CRITICAL: 4, WARNING: 3, ATTENTION: 2, NORMAL: 1, UNKNOWN: 0 }
