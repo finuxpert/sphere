@@ -1848,3 +1848,30 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewWorkloadV1231 small{
   font-size:7.6px!important;
 }
+
+
+/* SPHERE v1.34.55 — selected-workload and top-row finishing. */
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable{
+  width:100%!important;
+  table-layout:fixed!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(1){width:19%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(2){width:18%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(3){width:22%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(4){width:18%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(5){width:23%!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompactIdentity strong{
+  font-size:11.4px!important;
+  font-weight:820!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedCompactIdentity small{
+  color:var(--sphere-text-muted,#718089)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckEvidenceCard b,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis button b{
+  font-size:8.9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckEvidenceCard small,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis button small{
+  font-size:7.8px!important;
+}
