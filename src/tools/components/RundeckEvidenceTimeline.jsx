@@ -143,7 +143,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     <div className={`rundeckEvidenceTimingStrip ${alignmentClass(state)}`}>
       <strong>Timing</strong>
       <span>{timingSummary}</span>
-      {issueAt && <small>Issue start {formatWib(issueAt, true)} WIB</small>}
+      {issueAt && <small>Issue reference {formatWib(issueAt, true)} WIB</small>}
     </div>
 
     <div className="rundeckEvidenceBody">
@@ -183,7 +183,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
           {interpretation.length > 0 && <div className="rundeckEvidenceInterpretation">
             <ul>{interpretation.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
           </div>}
-          <p className="rundeckEvidenceNote">{data.note}</p>
+          <p className="rundeckEvidenceNote">Timing alignment is supporting evidence only. Correlation does not prove causation. Verify job status in SAP and infrastructure sources.</p>
         </details>
       </>}
     </div>
