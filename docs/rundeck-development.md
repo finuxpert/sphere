@@ -15,6 +15,24 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
+## Single-server topology
+
+The active Rundeck DEV and PROD environments run on the **same JAHSVR-SPHERE host**. Isolation is by branch checkout, Vite base path, API port, release directory, systemd service, and Nginx managed block—not by a separate physical server.
+
+```text
+/root/rundeck-sphere-dev
+  branch: rundeck-sphere-dev
+  web:    /dev/
+  API:    127.0.0.1:8091
+
+/root/rundeck-sphere-prod
+  branch: rundeck-sphere-prod
+  web:    /
+  API:    127.0.0.1:8092
+```
+
+A DEV deploy must preserve the active PROD web/API symlinks. A PROD deploy must preserve the active DEV web/API symlinks. Both deploy scripts enforce this with cross-environment guard checks.
+
 ## Runtime paths
 
 DEV:
@@ -151,25 +169,30 @@ Do not use nearest-bucket recomputation to replace the value the operator clicke
 
 ## Validation
 
-DEV:
+DEV refresh, release gate, and deploy:
 
 ```bash
-cd /root/rundeck-sphere-dev
-git fetch origin
-git reset --hard origin/rundeck-sphere-dev
-npm run qa
-bash ops/rundeck/prod-readiness-check.sh
+cd /root/rundeck-sphere-dev && \
+git fetch origin && \
+git reset --hard origin/rundeck-sphere-dev && \
+bash ops/rundeck/qa-build-dev.sh && \
+bash ops/rundeck/prod-readiness-check.sh && \
+bash ops/rundeck/deploy-dev.sh
 ```
 
-Production after approved promotion:
+Production after approved promotion to `rundeck-sphere-prod`:
 
 ```bash
-cd /root/rundeck-sphere-prod
-git fetch origin
-git reset --hard origin/rundeck-sphere-prod
-npm run build
+cd /root/rundeck-sphere-prod && \
+git fetch origin && \
+git reset --hard origin/rundeck-sphere-prod && \
+npm ci && \
+npm run qa && \
+npm run build && \
 bash ops/rundeck/deploy-prod.sh
 ```
+
+Do not merge DEV inside `/root/rundeck-sphere-prod` as part of deployment. Promotion happens before deployment; the server-side PROD checkout only consumes the approved `origin/rundeck-sphere-prod` state.
 
 Chunk-size warnings are informational. QA/readiness/build/deploy failures are blockers.
 
