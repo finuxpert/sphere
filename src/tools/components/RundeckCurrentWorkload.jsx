@@ -113,7 +113,6 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
-  const [showAll, setShowAll] = React.useState(false)
   const [nowMs, setNowMs] = React.useState(() => Date.now())
 
   React.useEffect(() => {
@@ -150,7 +149,6 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     return () => controller.abort()
   }, [collectionId])
 
-  React.useEffect(() => setShowAll(false), [collectionId])
   React.useEffect(() => {
     if (!rows.length) return undefined
     const timer = window.setInterval(() => setNowMs(Date.now()), 30000)
