@@ -471,7 +471,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.2)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}   |   COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}   |   HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}   |   DATA ${reportDataAlignment}   |   SM37 FEED NOT CONNECTED`, margin + 35, technicalY + 4)
+      pdf.text(`SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}   |   COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}   |   DATA ${reportDataAlignment}   |   AVAILABILITY ${availabilityState}   |   SM37 FEED NOT CONNECTED`, margin + 35, technicalY + 4)
 
       const workY = 158
       const leftW = contentW * .56
