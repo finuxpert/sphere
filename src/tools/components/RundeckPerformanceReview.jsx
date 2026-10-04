@@ -65,7 +65,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     .filter((row) => String(row.status || '').toUpperCase() === 'REVIEW REQUIRED')
     .sort((left, right) => Number(right.avg_cpu_pct || 0) - Number(left.avg_cpu_pct || 0))
   const reviewCount = Number(data?.summary?.review_required ?? data?.summary?.needs_review ?? reviewRows.length)
-  const visibleRows = showAll ? reviewRows : reviewRows.slice(0, 4)
+  const visibleRows = reviewRows
   const lowCoverage = String(quality.confidence || '').toUpperCase() === 'LOW'
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
@@ -83,7 +83,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     onSelectJob?.(job)
   }
 
-  return <section className={`rundeckPerformanceReviewV1231 ${showAll ? 'is-expanded' : 'is-top4'}`} aria-label="Performance review">
+  return <section className="rundeckPerformanceReviewV1231 is-scroll-list" aria-label="Performance review">
     <header className="rundeckReviewHeadV1231">
       <div>
         <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>
@@ -92,7 +92,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
       <div className="rundeckReviewControlsV1231">
         <Segmented options={PERIODS} value={period} onChange={(value) => { setPeriod(value); setShowAll(false) }} label="Review period" disabled={loading && !hasLoaded} />
         <Segmented options={TYPES} value={type} onChange={(value) => { setType(value); setShowAll(false) }} label="Workload type" disabled={loading && !hasLoaded} />
-        {reviewRows.length > 4 && <button type="button" className="rundeckReviewMoreV1237" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Top 4' : `View all ${reviewRows.length} results`}</button>}
+
       </div>
     </header>
 
