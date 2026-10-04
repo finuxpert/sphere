@@ -100,7 +100,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         {!embedded && <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>}
         {!loading && !error && data && <span>{searchActive
           ? `${searchRows.length} historical match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
-          : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · review priority`}</span>}
+          : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · Basis review priority`}</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
         {!forceSearch && <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>}
