@@ -75,7 +75,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.53', files.version.includes("APP_VERSION = '1.34.53'") && files.version.includes('monitoring-flow-ui-v1.34.53')],
+  ['monitoring flow version is v1.34.54', files.version.includes("APP_VERSION = '1.34.54'") && files.version.includes('monitoring-flow-ui-v1.34.54')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['History remains available through the historical workload explorer', files.wrapper.includes('>History</button>') && files.wrapper.includes('RundeckWorkloadExplorer')],
   ['History has intentional search and selection empty states', files.explorer.includes('Search historical jobs and programs') && files.explorer.includes('Select a Job or Program') && files.accessibilityThemeFinal.includes('.rundeckExplorerEmptyState')],
@@ -118,9 +118,9 @@ const checks = [
   ['Job Performance summary uses a full-width eight-cell episode matrix', files.jobHistory.includes('rundeckJobEpisodeMatrix') && files.jobHistory.includes('Performance Summary') && files.jobHistoryCss.includes('grid-template-columns:repeat(8,minmax(0,1fr))')],
   ['WP trace signals preserve per-PID collector evidence with snapshot recency guard', files.consumersBackend.includes('wp_signals') && files.consumersBackend.includes('error_at_snapshot') && files.consumersBackend.includes('error_recency == "AT_SNAPSHOT"') && files.consumersBackend.includes('latest_trace_error')],
   ['Performance Analysis exposes WP trace signals without claiming SM37 failure', files.jobHistory.includes('Observed SAP WP / Trace Signals') && files.jobHistory.includes('Error at Snapshot') && files.jobHistory.includes('Latest Trace Error') && files.jobHistory.includes('SM37 remains the authority for SAP job execution status') && files.jobHistoryCss.includes('.rundeckWpSignalPanel')],
-  ['Selected workload pane stays content-height beside the tall Current Jobs scan area', files.workspace.includes('height:fit-content!important') && files.workspace.includes('is-selected-workload') && files.monitoringCss.includes('compact selected workload card')],
+  ['Selected workload stays compact in the center workflow column', files.monitoringCore.includes('is-selected-workload') && files.monitoringCss.includes('SPHERE v1.34.54 — bottom workflow row') && files.monitoringCss.includes('grid-auto-rows:40px!important') && files.monitoringCss.includes('grid-auto-rows:36px!important')],
   ['Operational evidence uses the selected-workload whitespace instead of overlapping the next section', files.monitoringCore.includes('rundeckSelectedOperationalEvidence') && files.monitoringCss.includes('.rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards')],
-  ['Operational context cards use final 40 28 32 selected-pane proportions', files.monitoringCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,28fr) minmax(0,32fr)')],
+  ['Selected operational actions use two compact three-column rows', files.monitoringCss.includes('.rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards') && files.monitoringCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important') && files.monitoringCss.includes('.rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis')],
   ['Current workload parent is no longer clamped by LiveOverview CSS', !files.liveOverviewCss.includes('.rundeckWorkloadBandV1235 .is-current-workload{\\n  max-height:240px')],
   ['Performance drawer has one release-candidate geometry authority', files.workspaceDrawerCss.includes('single performance drawer geometry authority') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-performance{') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 94px)') && !files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-performance{width:min(790px,52vw)') && !files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-performance{width:min(860px,56vw)')],
 
@@ -136,9 +136,12 @@ const checks = [
 
   ['SAP Job Source renders as a visible neutral integrity strip', files.accessibilityThemeFinal.includes('.rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
-  ['SAP App Servers and Server Trend preserve 35/65 layout', files.workspace.includes('.rundeckServerTrendBandV1235 {') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
-  ['Current Workloads and Selected Workload use the final 45/55 layout', files.workspace.includes('grid-template-columns:minmax(0,45fr) minmax(0,55fr)')],
-  ['operational 45/55 layout is preserved', files.workspace.includes('grid-template-columns: minmax(0, 45fr) minmax(0, 55fr)')],
+  ['Top cockpit row places SAP App Servers beside Infrastructure at 44/56', files.monitoringCore.includes('rundeckTopBandV13454') && files.monitoringCore.includes('is-infrastructure-overview') && files.workspace.includes('grid-template-columns:minmax(0,44fr) minmax(0,56fr)!important')],
+  ['Infrastructure overview is embedded in the top row instead of rendered as a standalone block', files.wrapper.includes('infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded />}') && files.liveOverview.includes("embedded = false") && files.liveOverviewCss.includes('SPHERE v1.34.54 — Infrastructure beside SAP App Servers')],
+  ['Bottom Current and Review tables avoid internal scrolling in compact mode', files.workspace.includes('.rundeckBottomBandV13454 .rundeckCurrentWorkloadTableWrap') && files.workspace.includes('.rundeckBottomBandV13454 .rundeckReviewTableWrapV1231') && files.workspace.includes('overflow:visible!important')],
+  ['Compact Review table keeps Job Reason and Peak CPU visible', files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(3)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(5)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(4){width:18%!important}')],
+  ['Server Trend owns a dedicated full-width middle row', files.monitoringCore.includes('rundeckTrendBandV13454') && files.workspace.includes('.rundeckTrendBandV13454') && files.workspace.includes('height:246px!important')],
+  ['Bottom cockpit row follows Current Selected Review 34 32 34 workflow', files.monitoringCore.includes('rundeckBottomBandV13454') && files.workspace.includes('grid-template-columns:minmax(0,34fr) minmax(0,32fr) minmax(0,34fr)!important')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
   ['APP server detail moved from inline expansion to workspace drawer', !files.appServers.includes('rundeckWpInlinePanel') && files.core.includes('onInspectApp={props.onInspectApp}') && files.wrapper.includes("activeOverlay?.type === 'app'")],
@@ -394,4 +397,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.53 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.54 monitoring flow and deep-analysis checks passed.')
