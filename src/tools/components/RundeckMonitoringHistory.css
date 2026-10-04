@@ -2347,3 +2347,12 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 @media(max-width:900px){
   .rundeckWorkspaceDrawerBody .rundeckObservationHistoryContext{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* SPHERE v1.34.58 — self-describing trend titles. */
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckMonitoringHead h3 small{
+  margin-left:5px;
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.6px;
+  font-weight:650;
+}
