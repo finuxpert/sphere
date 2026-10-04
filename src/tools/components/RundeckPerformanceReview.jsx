@@ -28,6 +28,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [quickRow, setQuickRow] = React.useState(null)
   const [loadedPeriod, setLoadedPeriod] = React.useState('')
   const [loadedType, setLoadedType] = React.useState('')
+  const [searchOpen, setSearchOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState('')
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -60,11 +62,20 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const periodLabel = PERIODS.find(([key]) => key === period)?.[1] || period.toUpperCase()
   const typeLabel = TYPES.find(([key]) => key === type)?.[1] || type
   const showingPreviousResult = loading && hasLoaded && (loadedPeriod !== period || loadedType !== type)
-  const reviewRows = [...(data?.items || [])]
+  const allRows = [...(data?.items || [])]
+  const reviewRows = allRows
     .filter((row) => String(row.status || '').toUpperCase() === 'REVIEW REQUIRED')
     .sort((left, right) => Number(right.avg_cpu_pct || 0) - Number(left.avg_cpu_pct || 0))
+  const normalizedSearch = searchQuery.trim().toLowerCase()
+  const searchActive = normalizedSearch.length >= 2
+  const searchRows = searchActive
+    ? allRows.filter((row) => [row.consumer_key, row.program, row.details?.program]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch)))
+        .sort((left, right) => Number(right.peak_cpu_pct || right.avg_cpu_pct || 0) - Number(left.peak_cpu_pct || left.avg_cpu_pct || 0))
+    : []
   const reviewCount = Number(data?.summary?.review_required ?? data?.summary?.needs_review ?? reviewRows.length)
-  const visibleRows = reviewRows
+  const visibleRows = searchActive ? searchRows : reviewRows
   const lowCoverage = String(quality.confidence || '').toUpperCase() === 'LOW'
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
@@ -86,15 +97,28 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     <header className="rundeckReviewHeadV1231">
       <div>
         <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>
-        {!loading && !error && data && <span>{reviewCount} item{reviewCount === 1 ? '' : 's'} · sorted by review priority</span>}
+        {!loading && !error && data && <span>{searchActive
+          ? `${searchRows.length} historical match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
+          : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · sorted by review priority`}</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
+        <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>
         <Segmented options={PERIODS} value={period} onChange={(value) => setPeriod(value)} label="Review period" disabled={loading && !hasLoaded} />
         <Segmented options={TYPES} value={type} onChange={(value) => setType(value)} label="Workload type" disabled={loading && !hasLoaded} />
-
       </div>
     </header>
 
+    {searchOpen && <div className="rundeckReviewSearch">
+      <input
+        type="search"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder="Search job or program (min. 2 characters)"
+        aria-label="Search historical job or program"
+        autoFocus
+      />
+      {searchQuery && <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search">×</button>}
+    </div>}
     {loading && !hasLoaded && <div className="rundeckReviewState">Loading performance review…</div>}
     {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">
       Updating {periodLabel}{type !== 'ALL' ? ` · ${typeLabel}` : ''}…
@@ -146,7 +170,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 <td>{gb(row.avg_pss_gb)}</td>
               </tr>
             })}
-            {!reviewRows.length && <tr><td colSpan="5">No job or program needs review for this period.</td></tr>}
+            {!visibleRows.length && <tr><td colSpan="5">{searchActive ? 'No historical job or program matches this search.' : 'No job or program needs review for this period.'}</td></tr>}
           </tbody>
         </table>
       </div>
