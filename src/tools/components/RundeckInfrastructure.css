@@ -822,3 +822,38 @@
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* SPHERE v1.34.57 — reduce infrastructure separators while keeping history first. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  padding-top:5px!important;
+  padding-bottom:8px!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  margin:3px 0 2px!important;
+  padding:5px 0!important;
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCoverageNote{
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  border-right-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid td{
+  border-bottom-color:rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraFreshness{
+  margin-bottom:5px!important;
+  padding:4px 0!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrentLabel{
+  margin-bottom:3px!important;
+}
