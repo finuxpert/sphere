@@ -173,10 +173,19 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Production changes must be validated on DEV before promotion.
 
 
-### Live cockpit v1.34.56
+### Live cockpit v1.34.57
 
 - Live Monitoring is the single primary workspace; standalone History was removed.
 - Historical Job / Program search is available from Jobs & Programs to Review and opens the shared Performance Analysis drawer.
 - Current Jobs and Review use a direct 50/50 workflow; clicking either side opens Performance Analysis without an intermediate Selected Job card.
 - Trend workspace is split into Server Trend (60%) and Technical Trend (40%) with a shared time range.
 - SAP App Servers includes operational summary/status, and SAP Issues consolidates performance, availability, technical checks, and SM37 feed state.
+
+
+### Live cockpit v1.34.57
+
+- Top cockpit is content-driven at 42/58 for SAP App Servers and Infrastructure; dead vertical space is removed.
+- Trend workspace now shows Server Trend 1 / Server Trend 2 / Technical Trend at roughly 35/35/30 with one shared Time Range, Interval, and Avg/Peak control rail. Defaults are CPU, Memory, and Load.
+- Current Jobs and Jobs & Programs to Review stay 50/50, use a compact equal-height scan area, and Current Jobs fills its full pane width.
+- Six analysis shortcuts remain always visible.
+- Analysis drawers share one restrained visual contract with fewer separators, lighter tables, consistent Back/Close navigation, and no “Back to Selected Job” wording.
