@@ -756,3 +756,59 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
 .appShell:has(.rundeckPanel) .rundeckLiveJobSource span{
   font-size:8.8px!important;
 }
+
+
+/* SPHERE v1.34.54 — Infrastructure beside SAP App Servers. */
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded{
+  margin:0!important;
+  padding:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveOverviewHead{
+  position:static!important;
+  min-height:25px!important;
+  margin:0 0 3px!important;
+  padding:0!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveScope select{
+  min-width:175px!important;
+  min-height:25px!important;
+  padding:2px 6px!important;
+  font-size:8.8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveExceptionSummary{
+  min-height:23px!important;
+  margin:0 0 3px!important;
+  padding:3px 7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid{
+  grid-template-columns:minmax(0,39fr) minmax(0,31fr) minmax(0,30fr)!important;
+  gap:0!important;
+  border-top:1px solid rgba(126,147,158,.065)!important;
+  border-bottom:1px solid rgba(126,147,158,.065)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
+  min-height:82px!important;
+  padding:6px 8px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.065)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article:last-child{
+  border-right:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveRows,
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricPair{
+  gap:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource{
+  min-height:24px!important;
+  margin:3px 0 0!important;
+  padding:3px 1px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
