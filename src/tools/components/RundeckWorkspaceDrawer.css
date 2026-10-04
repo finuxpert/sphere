@@ -452,3 +452,27 @@
   font-size:9px!important;
   font-variant-numeric:tabular-nums!important;
 }
+
+
+/* SPHERE v1.34.61 — focused Performance Analysis drawer geometry. */
+.rundeckWorkspaceDrawer.is-performance{
+  width:min(1100px,72vw)!important;
+  max-height:calc(100vh - 88px)!important;
+  box-shadow:
+    0 0 0 100vmax rgba(3,7,10,.18),
+    -8px 12px 34px rgba(0,0,0,.34)!important;
+}
+.rundeckWorkspaceDrawer.is-performance>header{
+  padding:10px 13px 8px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody{
+  padding-left:13px!important;
+  padding-right:13px!important;
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-performance{
+    width:100%!important;
+    max-height:none!important;
+    box-shadow:none!important;
+  }
+}
