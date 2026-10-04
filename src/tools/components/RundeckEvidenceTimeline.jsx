@@ -43,7 +43,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const host = job?.host || ''
   const consumerType = job?.consumerType || ''
   const anchorAt = job?.at || ''
-  const correlationScope = anchorAt ? 'Selected observation context' : 'Current incident context'
+  const correlationScope = anchorAt ? 'Selected observation context' : 'Selected workload context'
 
   React.useEffect(() => {
     if (!incidentActive) {
@@ -146,7 +146,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
           {events.map((event, index) => {
             const relation = eventRelation(event.at, issueAt, hasThreshold ? threshold : 15, event.source)
             const isHost = String(event.source || '').toUpperCase() === 'HOST'
-            const displayTitle = isHost && host ? `${appLabel(host)} host observed` : event.title
+            const displayTitle = isHost && host ? `${appLabel(host)} server observation` : event.title
             return <div className={`rundeckEvidenceEvent ${String(event.source || '').toUpperCase() === 'SAP SIGNAL' ? 'is-primary-signal' : ''}`} key={`${event.at}-${event.kind}-${index}`} title={event.detail || undefined}>
               <time>{formatWib(event.at, true)} WIB</time>
               <span className={`rundeckEvidenceDot is-${String(event.source || '').toLowerCase().replaceAll(' ', '-')}`} />
