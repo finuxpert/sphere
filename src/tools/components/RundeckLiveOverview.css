@@ -835,3 +835,85 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
   flex:0 1 245px;
   width:min(245px,70%);
 }
+
+
+/* SPHERE v1.34.56 — Review historical search and APP server information density. */
+.appShell:has(.rundeckPanel) .rundeckReviewSearch{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-height:30px;
+  margin:2px 0 4px;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewSearch input{
+  width:100%;
+  min-height:28px;
+  padding:4px 8px;
+  border:1px solid rgba(126,147,158,.16);
+  border-radius:5px;
+  background:rgba(15,21,26,.55);
+  color:var(--sphere-text,#e7edf0);
+  font:inherit;
+  font-size:9px;
+  outline:none;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewSearch input:focus{
+  border-color:rgba(79,198,200,.45);
+}
+.appShell:has(.rundeckPanel) .rundeckReviewSearch>button{
+  min-width:28px;
+  min-height:28px;
+  border:1px solid rgba(126,147,158,.13);
+  border-radius:5px;
+  background:transparent;
+  color:var(--sphere-text-muted,#718089);
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  margin:2px 0 5px;
+  border-top:1px solid rgba(126,147,158,.07);
+  border-bottom:1px solid rgba(126,147,158,.07);
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary>span{
+  display:grid;
+  gap:1px;
+  min-width:0;
+  padding:5px 7px;
+  border-right:1px solid rgba(126,147,158,.06);
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary>span:nth-child(3n){border-right:0}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary b{
+  color:var(--sphere-text-muted,#718089);
+  font-size:7.6px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerSummary strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus{
+  display:inline-flex;
+  align-items:center;
+  min-height:17px;
+  padding:1px 5px;
+  border:1px solid rgba(126,147,158,.12);
+  border-radius:999px;
+  font-size:7.3px;
+  font-weight:800;
+}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-normal{color:var(--sphere-success,#64c99b)}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-attention{color:var(--sphere-attention,#6aa2d8)}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-warning{color:var(--sphere-warning,#d8b35f)}
+.appShell:has(.rundeckPanel) .rundeckAppServerStatus.is-critical{color:var(--sphere-danger,#db7d86)}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(1){width:15%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(2){width:13%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(3){width:16%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(4){width:14%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(5){width:21%!important}
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454 .is-app-servers .rundeckServerTable th:nth-child(6){width:21%!important}
