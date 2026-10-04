@@ -812,3 +812,26 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+
+
+/* SPHERE v1.34.55 — top-row Infrastructure heading and alignment. */
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckEmbeddedInfrastructureTitle{
+  min-height:22px;
+  margin:0 0 3px;
+  color:var(--sphere-text,#e7edf0);
+  font-size:12px;
+  font-weight:780;
+  line-height:22px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveOverviewHead{
+  min-height:27px!important;
+  padding:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveScope{
+  width:100%;
+  justify-content:space-between;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveScope select{
+  flex:0 1 245px;
+  width:min(245px,70%);
+}
