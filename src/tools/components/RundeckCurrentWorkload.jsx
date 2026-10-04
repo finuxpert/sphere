@@ -193,7 +193,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap">
       <table>
-        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th>WP</th></tr></thead>
+        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th></tr></thead>
         <tbody>
           {visible.map((row) => {
             const details = row.details || {}
