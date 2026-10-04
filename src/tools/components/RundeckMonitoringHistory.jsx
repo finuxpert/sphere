@@ -14,7 +14,6 @@ import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
-import RundeckWorkloadExplorer from './RundeckWorkloadExplorer.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
@@ -38,7 +37,6 @@ export default function RundeckMonitoringHistory(props) {
   const { onTrendContext, onSelectJob, refreshToken, selectedJob, systemDataContent = null, systemDataSummary = '' } = props
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
-  const [monitoringMode, setMonitoringMode] = React.useState('live')
   const [activeOverlay, setActiveOverlay] = React.useState(null)
 
   const returnFromOverlay = React.useCallback((target) => {
@@ -127,28 +125,13 @@ export default function RundeckMonitoringHistory(props) {
   />
 
   return <>
-    <div className="rundeckMonitoringModeBar" aria-label="LOG Analysis mode">
-      <div className="rundeckMonitoringModeTabs" role="tablist" aria-label="Monitoring mode">
-        <button type="button" role="tab" aria-selected={monitoringMode === 'live'} className={monitoringMode === 'live' ? 'is-active' : ''} onClick={() => setMonitoringMode('live')}>Live Monitoring</button>
-        <button type="button" role="tab" aria-selected={monitoringMode === 'explorer'} className={monitoringMode === 'explorer' ? 'is-active' : ''} onClick={() => setMonitoringMode('explorer')}>History</button>
+    <div className="rundeckMonitoringModeBar" aria-label="Monitoring mode">
+      <div className="rundeckMonitoringModeTabs">
+        <button type="button" className="is-active" aria-current="page">Live Monitoring</button>
       </div>
     </div>
 
-    {monitoringMode === 'explorer'
-      ? <>
-          <RundeckWorkloadExplorer refreshToken={refreshToken} onOpenLiveJob={openJobFromHistory} />
-          {activeOverlay?.type === 'history-job' && activeOverlay.job?.key && <RundeckWorkspaceDrawer
-            title={activeOverlay.job.key}
-            subtitle="Historical Job / Program Performance"
-            onClose={() => setActiveOverlay(null)}
-            onBack={() => setActiveOverlay(null)}
-            backLabel="Back to History"
-            size="performance"
-          >
-            <RundeckJobHistory job={activeOverlay.job} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
-          </RundeckWorkspaceDrawer>}
-        </>
-      : <>
+    <>
           <RundeckMonitoringHistoryCore
             {...props}
             onSelectJob={inspectJob}
@@ -252,6 +235,11 @@ export default function RundeckMonitoringHistory(props) {
                 })}
               />
             </div>
+            <section className="rundeckPerformanceDrawerActions" aria-label="More analysis">
+              <button type="button" onClick={() => setActiveOverlay({ type: 'history', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" /><span><b>Observation History</b><small>Saved observations</small></span></button>
+              <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" /><span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage</small></span></button>
+              {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="database" /><span><b>System Data</b><small>{systemDataSummary || 'Collections · Services'}</small></span></button>}
+            </section>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
