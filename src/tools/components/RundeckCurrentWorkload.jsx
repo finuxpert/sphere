@@ -108,7 +108,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 50 }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 50, embedded = false }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
@@ -181,8 +181,9 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const showFreshness = freshnessMinutes !== null && freshnessMinutes >= STALE_MINUTES
 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
-    <div className="rundeckCurrentWorkloadHead">
-      <h3><SphereIcon name="workload" /> Current Jobs & Programs <span className="rundeckCurrentWorkloadCount">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed - showing ${rows.length}` : `${workloadMeta.total || rows.length} observed`}</span></h3>
+    <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
+      {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
+      <span className="rundeckCurrentWorkloadCount">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · showing ${rows.length}` : `${workloadMeta.total || rows.length} observed`}</span>
       <div className="rundeckCurrentWorkloadTools">
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>
