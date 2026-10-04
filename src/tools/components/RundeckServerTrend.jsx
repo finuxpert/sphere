@@ -10,7 +10,7 @@ const DEFAULT_RANGE = '6h'
 const TREND_STORAGE_KEY = 'sphere.live.trend'
 const RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H'], ['24h', '24H'], ['7d', '7D'], ['30d', '30D']]
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
-const METRICS = [['cpu', 'CPU'], ['ram', 'Memory'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
+const METRICS = [['cpu', 'CPU'], ['ram', 'RAM'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
 const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
 const BUCKET_INTERVAL_MS = {
@@ -21,7 +21,7 @@ const BUCKET_INTERVAL_MS = {
   '1d': 24 * 60 * 60 * 1000,
 }
 
-const metricLabel = (value) => ({ cpu: 'CPU', ram: 'Memory', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
+const metricLabel = (value) => ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
 const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
 
@@ -745,14 +745,14 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const openTrendInfrastructure = React.useCallback((context) => { closeTrendDetails(); onOpenInfrastructure?.(context) }, [closeTrendDetails, onOpenInfrastructure])
   const openTrendEvidence = React.useCallback((context) => { closeTrendDetails(); onOpenEvidence?.(context) }, [closeTrendDetails, onOpenEvidence])
 
-  const renderTrendState = (trend, loading, error, onSelect) => {
+  const renderTrendState = (trend, loading, error, onSelect, { showGap = true } = {}) => {
     if (!databaseEnabled) return <div className="rundeckHistoryState">Trend data is not available yet.</div>
     if (loading) return <div className="rundeckHistoryState">Loading trend…</div>
     if (error) return <div className="rundeckHistoryState is-error">{error}</div>
     if (trend?.items?.length > 0) return <>
       <TrendFreshness trend={trend} />
       <AvailabilityCoverageBand trend={trend} />
-      <CollectionGapBand trend={trend} />
+      {showGap && <CollectionGapBand trend={trend} />}
       <AvailabilityObservationSummary trend={trend} />
       <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={selectedJob?.host || ''} />
     </>
@@ -767,27 +767,31 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     <div className="rundeckTrendSharedControls">
       <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
       <div className="rundeckTrendSharedGroup"><span>Interval</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
-      <div className="rundeckTrendSharedGroup"><span>View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>
+      <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
     </div>
+
+    {serverTrend1?.items?.length > 0 && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
+      <CollectionGapBand trend={serverTrend1} />
+    </div>}
 
     <div className="rundeckTripleTrendGrid">
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
         <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 1</h3></div>
         <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric1} onChange={setServerMetric1} ariaLabel="Server Trend 1 metric" /></div>
-        {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint)}
+        {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label="Server Trend 2">
         <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 2</h3></div>
         <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric2} onChange={setServerMetric2} ariaLabel="Server Trend 2 metric" /></div>
-        {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint)}
+        {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
         <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend</h3></div>
         <div className="rundeckTrendToolbar">
           <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
-          {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline</span>}
+          {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Server Avg/Peak does not change this chart</span>}
         </div>
         {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint)}
       </section>
