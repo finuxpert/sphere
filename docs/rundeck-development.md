@@ -180,3 +180,8 @@ Do not force-reset PROD to DEV.
 When branches diverge, build a release branch from the current PROD head and overlay only approved DEV changes, preserving PROD-only deploy/routing/service files.
 
 See `ops/rundeck/OPERATIONS.md`.
+
+
+## v1.34.55 cockpit contract
+
+The desktop Live Monitoring workflow is APP/Infrastructure -> full-width Server Trend -> equal-height Current Jobs / Selected Job / Review. Current and Review may scroll internally; the page composition should not grow to expose all rows. Infrastructure Analysis is history-first and Correlated Events keeps timing correlation separate from RCA.
