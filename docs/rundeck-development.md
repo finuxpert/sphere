@@ -182,6 +182,11 @@ When branches diverge, build a release branch from the current PROD head and ove
 See `ops/rundeck/OPERATIONS.md`.
 
 
-## v1.34.55 cockpit contract
+## v1.34.56 cockpit contract
 
 The desktop Live Monitoring workflow is APP/Infrastructure -> full-width Server Trend -> equal-height Current Jobs / Selected Job / Review. Current and Review may scroll internally; the page composition should not grow to expose all rows. Infrastructure Analysis is history-first and Correlated Events keeps timing correlation separate from RCA.
+
+
+## v1.34.56 workflow contract
+
+Do not reintroduce the standalone History tab or the intermediate Selected Job card in Live Monitoring. Historical lookup belongs to Performance Review search. Current and Review rows must open the shared Performance Analysis drawer. The trend row uses separate Server Trend and Technical Trend panels with shared range controls.
