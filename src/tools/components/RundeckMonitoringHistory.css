@@ -2402,3 +2402,63 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important;
   border-color:rgba(126,147,158,.03)!important;
 }
+
+
+/* SPHERE v1.34.60 — concise analysis rail and unified cockpit section titles. */
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{
+  grid-template-columns:1fr 1fr!important;
+  margin:2px 0 2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip{
+  min-height:23px!important;
+  padding:2px 5px!important;
+  gap:6px!important;
+  border-bottom:1px solid rgba(126,147,158,.04)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip strong{
+  font-size:8.7px!important;
+  font-weight:760!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip span{
+  font-size:7.8px!important;
+  border-left-color:rgba(126,147,158,.04)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button{
+  min-height:46px!important;
+  height:46px!important;
+  padding:5px 7px!important;
+  border-right-color:rgba(126,147,158,.028)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCardTitle,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis b{
+  font-size:9px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 small,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>strong{
+  font-size:7.8px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.appShell:has(.rundeckPanel) .rundeckEmbeddedInfrastructureTitle,
+.appShell:has(.rundeckPanel) .rundeckSectionTitle h3,
+.appShell:has(.rundeckPanel) .rundeckMonitoringHead h3{
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  min-height:20px!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+.appShell:has(.rundeckPanel) .rundeckEmbeddedInfrastructureTitle .sphereIcon,
+.appShell:has(.rundeckPanel) .rundeckSectionTitle h3 .sphereIcon,
+.appShell:has(.rundeckPanel) .rundeckMonitoringHead h3 .sphereIcon{
+  width:12px!important;
+  height:12px!important;
+  flex:0 0 12px!important;
+}
