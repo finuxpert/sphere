@@ -696,3 +696,73 @@
     max-height:220px!important;
   }
 }
+
+
+/* SPHERE v1.34.55 — equal-height workload workflow with internal list scrolling. */
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454{
+  align-items:stretch!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454>.rundeckBandPaneV1235{
+  height:244px!important;
+  min-height:244px!important;
+  max-height:244px!important;
+  overflow:hidden!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkload,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckPerformanceReviewV1231,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedStack{
+  display:flex!important;
+  flex-direction:column!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:100%!important;
+  overflow:hidden!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkloadHead,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewHeadV1231{
+  position:relative!important;
+  z-index:2!important;
+  flex:0 0 auto!important;
+  background:var(--sphere-page,#0f151a)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkloadTableWrap,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewTableWrapV1231{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-gutter:stable!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkloadTableWrap::-webkit-scrollbar,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewTableWrapV1231::-webkit-scrollbar{
+  width:6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkloadTableWrap::-webkit-scrollbar-thumb,
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewTableWrapV1231::-webkit-scrollbar-thumb{
+  background:rgba(113,128,137,.34)!important;
+  border-radius:8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 :is(.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231) thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:2!important;
+  background:var(--sphere-surface-0,#10171c)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence{
+  flex:1 1 auto!important;
+  min-height:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewHeadV1231 h3{
+  white-space:nowrap!important;
+  font-size:11.2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewControlsV1231{
+  gap:4px!important;
+  flex-wrap:nowrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewControlsV1231 button{
+  min-height:23px!important;
+  padding:2px 6px!important;
+  font-size:7.8px!important;
+}
