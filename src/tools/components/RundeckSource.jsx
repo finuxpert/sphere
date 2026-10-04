@@ -165,7 +165,7 @@ export default function RundeckSource({ onCollection }) {
   const [pdfPreview, setPdfPreview] = React.useState(null)
   const [selectedJob, setSelectedJob] = React.useState(null)
   const [incidentSummary, setIncidentSummary] = React.useState(null)
-  const [trendContext, setTrendContext] = React.useState({ metricLabel: 'CPU', rangeLabel: '6H', mode: 'max' })
+  const [, setTrendContext] = React.useState({ metricLabel: 'CPU', rangeLabel: '6H', mode: 'max' })
   const loaded = React.useRef('')
   const panelRef = React.useRef(null)
   const onCollectionRef = React.useRef(onCollection)
