@@ -5,7 +5,7 @@ import { evaluationReasonParts } from './rundeckEvaluationExplain.js'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 
 const API = `${import.meta.env.BASE_URL}api`
-const PERIODS = [['1d', '1 Day'], ['7d', '7 Days'], ['30d', '30 Days']]
+const PERIODS = [['1d', '1D'], ['7d', '7D'], ['30d', '30D']]
 const TYPES = [['ALL', 'All'], ['PROGRAM', 'Programs'], ['JOB', 'Jobs']]
 const CPU_HINT = 'CPU Usage is the grouped workload observation and can exceed 100 percent when more than one CPU core is used.'
 
@@ -18,7 +18,7 @@ function Segmented({ options, value, onChange, label, disabled = false }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '' }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false }) {
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
   const [data, setData] = React.useState(null)
@@ -67,7 +67,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     .filter((row) => String(row.status || '').toUpperCase() === 'REVIEW REQUIRED')
     .sort((left, right) => Number(right.avg_cpu_pct || 0) - Number(left.avg_cpu_pct || 0))
   const normalizedSearch = searchQuery.trim().toLowerCase()
-  const searchActive = normalizedSearch.length >= 2
+  const effectiveSearchOpen = forceSearch || searchOpen
+  const searchActive = effectiveSearchOpen && normalizedSearch.length >= 2
   const searchRows = searchActive
     ? allRows.filter((row) => [row.consumer_key, row.program, row.details?.program]
         .filter(Boolean)
@@ -94,21 +95,21 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   }
 
   return <section className="rundeckPerformanceReviewV1231 is-scroll-list" aria-label="Performance review">
-    <header className="rundeckReviewHeadV1231">
+    <header className={`rundeckReviewHeadV1231${embedded ? ' is-embedded' : ''}`}>
       <div>
-        <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>
+        {!embedded && <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>}
         {!loading && !error && data && <span>{searchActive
           ? `${searchRows.length} historical match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
-          : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · sorted by review priority`}</span>}
+          : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · review priority`}</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
-        <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>
+        {!forceSearch && <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>}
         <Segmented options={PERIODS} value={period} onChange={(value) => setPeriod(value)} label="Review period" disabled={loading && !hasLoaded} />
         <Segmented options={TYPES} value={type} onChange={(value) => setType(value)} label="Workload type" disabled={loading && !hasLoaded} />
       </div>
     </header>
 
-    {searchOpen && <div className="rundeckReviewSearch">
+    {effectiveSearchOpen && <div className="rundeckReviewSearch">
       <input
         type="search"
         value={searchQuery}
