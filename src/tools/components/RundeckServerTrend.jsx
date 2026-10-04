@@ -613,14 +613,18 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [])
   const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
-  const [serverMetric, setServerMetric] = React.useState(METRICS.some(([key]) => key === saved.serverMetric) ? saved.serverMetric : (METRICS.some(([key]) => key === saved.metric) ? saved.metric : 'cpu'))
+  const [serverMetric1, setServerMetric1] = React.useState(METRICS.some(([key]) => key === saved.serverMetric1) ? saved.serverMetric1 : (METRICS.some(([key]) => key === saved.serverMetric) ? saved.serverMetric : 'cpu'))
+  const [serverMetric2, setServerMetric2] = React.useState(METRICS.some(([key]) => key === saved.serverMetric2) ? saved.serverMetric2 : 'ram')
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
-  const [serverTrend, setServerTrend] = React.useState(null)
+  const [serverTrend1, setServerTrend1] = React.useState(null)
+  const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
-  const [serverLoading, setServerLoading] = React.useState(false)
+  const [serverLoading1, setServerLoading1] = React.useState(false)
+  const [serverLoading2, setServerLoading2] = React.useState(false)
   const [technicalLoading, setTechnicalLoading] = React.useState(false)
-  const [serverError, setServerError] = React.useState('')
+  const [serverError1, setServerError1] = React.useState('')
+  const [serverError2, setServerError2] = React.useState('')
   const [technicalError, setTechnicalError] = React.useState('')
   const [selected, setSelected] = React.useState(null)
   const [selectedTrend, setSelectedTrend] = React.useState(null)
@@ -645,19 +649,30 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [bucket, range])
 
   React.useEffect(() => {
-    onTrendContext?.({ metric: serverMetric, metricLabel: serverTrend?.metric_label || metricLabel(serverMetric), range, rangeLabel: rangeLabel(range), mode })
-  }, [mode, onTrendContext, range, serverMetric, serverTrend?.metric_label])
+    onTrendContext?.({ metric: serverMetric1, metricLabel: serverTrend1?.metric_label || metricLabel(serverMetric1), range, rangeLabel: rangeLabel(range), mode })
+  }, [mode, onTrendContext, range, serverMetric1, serverTrend1?.metric_label])
 
   React.useEffect(() => {
-    try { window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({ range, bucket, serverMetric, technicalMetric, mode })) } catch { /* best effort */ }
-  }, [bucket, mode, range, serverMetric, technicalMetric])
+    try {
+      window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({
+        range, bucket, serverMetric1, serverMetric2, technicalMetric, mode,
+      }))
+    } catch { /* best effort */ }
+  }, [bucket, mode, range, serverMetric1, serverMetric2, technicalMetric])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
-    loadTrend(serverMetric, setServerTrend, setServerLoading, setServerError, controller.signal)
+    loadTrend(serverMetric1, setServerTrend1, setServerLoading1, setServerError1, controller.signal)
     return () => controller.abort()
-  }, [databaseEnabled, loadTrend, refreshToken, serverMetric])
+  }, [databaseEnabled, loadTrend, refreshToken, serverMetric1])
+
+  React.useEffect(() => {
+    if (!databaseEnabled) return undefined
+    const controller = new AbortController()
+    loadTrend(serverMetric2, setServerTrend2, setServerLoading2, setServerError2, controller.signal)
+    return () => controller.abort()
+  }, [databaseEnabled, loadTrend, refreshToken, serverMetric2])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
@@ -673,7 +688,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     setTimeline(null)
     setTimelineLoading(false)
     setTimelineError('')
-  }, [bucket, mode, range, serverMetric, technicalMetric])
+  }, [bucket, mode, range, serverMetric1, serverMetric2, technicalMetric])
 
   const selectPoint = React.useCallback((point, sourceTrend) => {
     timelineRequestSequence.current += 1
@@ -745,24 +760,27 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }
 
   const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
-  const activeTrend = selectedTrend || serverTrend
-  const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric
+  const activeTrend = selectedTrend || serverTrend1
+  const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
 
-  return <section className="rundeckDualTrendV13456" aria-label="Server and Technical Trend">
+  return <section className="rundeckTripleTrendV13457" aria-label="Server and Technical Trends">
     <div className="rundeckTrendSharedControls">
-      <span>Time Range</span>
-      <Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" />
-      <span>Interval</span>
-      <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />
-      <span>View</span>
-      <Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" />
+      <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
+      <div className="rundeckTrendSharedGroup"><span>Interval</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
+      <div className="rundeckTrendSharedGroup"><span>View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Trend view" /></div>
     </div>
 
-    <div className="rundeckDualTrendGrid">
-      <section className="rundeckServerTrendPanelV1234 is-server-trend" aria-label="Server Trend">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend</h3></div>
-        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric} onChange={setServerMetric} ariaLabel="Server metric" /></div>
-        {renderTrendState(serverTrend, serverLoading, serverError, selectPoint)}
+    <div className="rundeckTripleTrendGrid">
+      <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 1</h3></div>
+        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric1} onChange={setServerMetric1} ariaLabel="Server Trend 1 metric" /></div>
+        {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint)}
+      </section>
+
+      <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label="Server Trend 2">
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 2</h3></div>
+        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric2} onChange={setServerMetric2} ariaLabel="Server Trend 2 metric" /></div>
+        {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint)}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
