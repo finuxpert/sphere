@@ -555,12 +555,10 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(92, 105, 114)
       const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
       pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: workload observation · SM37 not connected`, margin, selectedMetricY + 7.5)
-      if (workloadChart) {
-        const chartTop = selectedMetricY + 10
-        const chartMaxH = 13
-        const ratio = Math.min(leftW / workloadChart.width, chartMaxH / workloadChart.height)
-        pdf.addImage(workloadChart.toDataURL('image/jpeg', .94), 'JPEG', margin, chartTop, workloadChart.width * ratio, workloadChart.height * ratio, undefined, 'FAST')
-      }
+      // Keep the one-page handoff readable: selected workload metrics carry the
+      // evidence here, while the full workload chart remains available in the UI.
+      // Omitting the mini-chart prevents the lower report band from colliding
+      // with Review / Check Summary on dense runs.
 
       const evaluationItems = evaluationResult.items || []
       const sideX = margin + leftW + 7
@@ -578,23 +576,31 @@ export default function RundeckSource({ onCollection }) {
       ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
       pdf.setDrawColor(220, 226, 229)
       pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
-      let sideY = workY + 11
-      ;evaluationItems.slice(0, 3).forEach((row) => {
+      const reviewRows = evaluationItems.slice(0, 3)
+      const reviewBottom = H - 29
+      let sideY = workY + 10.5
+      reviewRows.forEach((row) => {
+        if (sideY + 3.2 >= reviewBottom) return
         const reason = evaluationReasonText(row)
+        const compactReason = reason
+          ? clipped(String(reason).replace(/\s+/g, ' ').replace(/historical baseline/gi, 'baseline'), 38)
+          : ''
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7.4)
-        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 30), sideX + reviewCols[0], sideY)
+        pdf.setFontSize(7.2)
+        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 27), sideX + reviewCols[0], sideY)
         pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY, { align: 'right' })
         pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY, { align: 'right' })
         pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY, { align: 'right' })
-        if (reason) {
+        if (compactReason && sideY + 2.3 < reviewBottom) {
           pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(6.9)
-          pdf.text(clipped(`Reason: ${reason}`, 46), sideX, sideY + 2.5)
+          pdf.setFontSize(6.7)
+          pdf.text(`Reason: ${compactReason}`, sideX, sideY + 2.2)
         }
-        sideY += 5.2
+        sideY += 5
       })
+      pdf.setDrawColor(226, 231, 234)
+      pdf.line(sideX, reviewBottom, W - margin, reviewBottom)
 
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, H - 26, W - margin, H - 26)
@@ -615,10 +621,10 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(71, 87, 97)
       pdf.text('NOTES', margin, H - 14.5)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.2)
+      pdf.setFontSize(7.25)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37 Feed NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation is UNKNOWN, not DOWN.', margin, H - 11)
-      pdf.text('Correlation does not prove causation · Grouped workload CPU may exceed 100% across processes/CPU cores.', margin, H - 8)
+      pdf.text('SM37 Feed NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation = UNKNOWN, not DOWN.', margin, H - 11)
+      pdf.text('Timing correlation does not prove causation · Grouped CPU may exceed 100% across multiple processes/CPU cores.', margin, H - 8)
       pdf.setDrawColor(210, 217, 221)
       pdf.line(margin, H - 6.2, W - margin, H - 6.2)
       pdf.setFontSize(7.3)
