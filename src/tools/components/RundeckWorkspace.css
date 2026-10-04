@@ -871,3 +871,16 @@
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload{
   min-height:0!important;
 }
+
+
+/* SPHERE v1.34.59 — Review scanability. */
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckPerformanceReviewV1231 h3{font-size:11.2px!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckPerformanceReviewV1231 h3 span{font-size:8.2px!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckReviewTableV1231 th{font-size:7.8px!important}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckReviewTableV1231 td{
+  font-size:9px!important;
+  padding-top:6px!important;
+  padding-bottom:6px!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckReviewControlsV1231 button{font-size:8px!important}
