@@ -2356,3 +2356,49 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   font-size:7.6px;
   font-weight:650;
 }
+
+
+/* SPHERE v1.34.59 — cockpit readability and hierarchy freeze candidate. */
+.appShell:has(.rundeckPanel) .rundeckMonitoringHead h3,
+.appShell:has(.rundeckPanel) .rundeckSectionTitle h3{
+  font-size:11.2px!important;
+  font-weight:790!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendSharedGroup>span{
+  font-size:8.2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendSharedGroup .rundeckSegmented button,
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendToolbar .rundeckSegmented button{
+  font-size:8.1px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckMonitoringHead h3 small{
+  font-size:8px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckRcaHint{
+  font-size:8px!important;
+  opacity:.72!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip{
+  min-height:27px!important;
+  font-size:8.2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip b{font-size:7.8px!important}
+.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip strong{font-size:9px!important}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCardTitle,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis b{
+  font-size:9.2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 small,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>strong{
+  font-size:8px!important;
+  opacity:.9!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button{
+  border-right-color:rgba(126,147,158,.03)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .is-active,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 [aria-current="true"]{
+  box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important;
+  border-color:rgba(126,147,158,.03)!important;
+}
