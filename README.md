@@ -171,3 +171,12 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Never commit Rundeck tokens, SAP credentials, passwords, private keys, raw SAP logs, or runtime secrets.
 - Keep missing-data semantics explicit; do not synthesize unavailable evidence as zero.
 - Production changes must be validated on DEV before promotion.
+
+
+### Live cockpit v1.34.56
+
+- Live Monitoring is the single primary workspace; standalone History was removed.
+- Historical Job / Program search is available from Jobs & Programs to Review and opens the shared Performance Analysis drawer.
+- Current Jobs and Review use a direct 50/50 workflow; clicking either side opens Performance Analysis without an intermediate Selected Job card.
+- Trend workspace is split into Server Trend (60%) and Technical Trend (40%) with a shared time range.
+- SAP App Servers includes operational summary/status, and SAP Issues consolidates performance, availability, technical checks, and SM37 feed state.
