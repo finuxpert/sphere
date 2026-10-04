@@ -421,7 +421,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
       pdf.text(`SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin, 57)
-      pdf.text(`HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}`, margin + 48, 57)
+      pdf.text(`HANA Primary ${availabilityStatus(hanaRows, 'PRIMARY')} · Secondary ${availabilityStatus(hanaRows, 'SECONDARY')} · Replication ${availabilityStatus(hanaRows, 'DR')}`, margin + 48, 57)
       pdf.text(`WEB HTTP ${availabilityStatus(webRows, 'HTTP')} · HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 126, 57)
       pdf.line(margin, 61, W - margin, 61)
 
@@ -448,7 +448,7 @@ export default function RundeckSource({ onCollection }) {
       const chartY = y + 6
       const chartGap = 6
       const chartColW = (contentW - chartGap) / 2
-      const chartMaxH = 40
+      const chartMaxH = 36
       const drawTrendChart = (chart, title, x) => {
         if (!chart) return
         pdf.setFont('helvetica', 'bold')
@@ -469,11 +469,29 @@ export default function RundeckSource({ onCollection }) {
       pdf.setTextColor(71, 87, 97)
       pdf.text('TECHNICAL STATUS', margin, technicalY + 4)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.2)
+      pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}   |   COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}   |   DATA ${reportDataAlignment}   |   AVAILABILITY ${availabilityState}   |   SM37 FEED NOT CONNECTED`, margin + 35, technicalY + 4)
+      const technicalParts = [
+        `SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}`,
+        `COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}`,
+        `DATA ${reportDataAlignment}`,
+        `AVAILABILITY ${availabilityState}`,
+        'SM37 FEED NOT CONNECTED',
+      ]
+      let technicalX = margin + 35
+      technicalParts.forEach((part, index) => {
+        if (index === 2 && reportDataAlignment !== 'ALIGNED') {
+          pdf.setFont('helvetica', 'bold')
+          pdf.setTextColor(154, 104, 18)
+        } else {
+          pdf.setFont('helvetica', 'normal')
+          pdf.setTextColor(22, 31, 38)
+        }
+        pdf.text(part, technicalX, technicalY + 4)
+        technicalX += pdf.getTextWidth(part) + 6
+      })
 
-      const workY = 158
+      const workY = 153
       const leftW = contentW * .56
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
@@ -485,7 +503,7 @@ export default function RundeckSource({ onCollection }) {
         ? selectedJob.criticalWp
         : (inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp)
       const selectedCriticalWpText = selectedCriticalWpRaw === null || selectedCriticalWpRaw === undefined
-        ? 'Not observed'
+        ? 'Not observed for selected workload'
         : String(selectedCriticalWpRaw)
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
@@ -522,7 +540,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: workload observation · SM37 not connected`, margin, selectedMetricY + 7.5)
       if (workloadChart) {
         const chartTop = selectedMetricY + 10
-        const chartMaxH = 20
+        const chartMaxH = 13
         const ratio = Math.min(leftW / workloadChart.width, chartMaxH / workloadChart.height)
         pdf.addImage(workloadChart.toDataURL('image/jpeg', .94), 'JPEG', margin, chartTop, workloadChart.width * ratio, workloadChart.height * ratio, undefined, 'FAST')
       }
@@ -537,60 +555,59 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(7)
       pdf.setTextColor(92, 105, 114)
       pdf.text('Observed CPU, PSS Memory and APP Critical WP', sideX, workY + 0.8)
-      const reviewCols = [0, 58, 77, 96]
+      const reviewCols = [0, 57, 77, 97]
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.1)
       ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
       pdf.setDrawColor(220, 226, 229)
       pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
       let sideY = workY + 11
-      ;evaluationItems.slice(0, 4).forEach((row) => {
+      ;evaluationItems.slice(0, 3).forEach((row) => {
         const reason = evaluationReasonText(row)
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7.6)
-        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 34), sideX + reviewCols[0], sideY)
-        pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY)
-        pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY)
-        pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY)
+        pdf.setFontSize(7.4)
+        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 30), sideX + reviewCols[0], sideY)
+        pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY, { align: 'right' })
+        pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY, { align: 'right' })
+        pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY, { align: 'right' })
         if (reason) {
           pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(7)
-          pdf.text(clipped(`Reason: ${reason}`, 55), sideX, sideY + 3)
-          sideY += 7.2
-        } else {
-          sideY += 5.8
+          pdf.setFontSize(6.9)
+          pdf.text(clipped(`Reason: ${reason}`, 46), sideX, sideY + 2.5)
         }
+        sideY += 5.2
       })
 
       pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, H - 31, W - margin, H - 31)
+      pdf.line(margin, H - 26, W - margin, H - 26)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.8)
+      pdf.setFontSize(8)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('CHECK SUMMARY', margin, H - 27)
+      pdf.text('CHECK SUMMARY', margin, H - 22.5)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`Availability: ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · Critical WP: ${selectedCriticalWpText} · Data: ${reportDataAlignment} · Timing: ${reportSkewMinutes == null ? 'unknown' : `${reportSkewMinutes}m`}`, margin, H - 23)
-      pdf.setFontSize(7)
+      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · APP Critical WP ${selectedCriticalWpText} · Data ${reportDataAlignment} · Timing ${reportSkewMinutes == null ? 'unknown' : `${reportSkewMinutes}m`}`, margin, H - 18.8)
+      pdf.setFontSize(7.1)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`Performance ${formatTime(reportPerformanceAt)} WIB · Availability ${formatTime(reportAvailabilityAt)} WIB`, margin + 158, H - 23)
+      pdf.text(`Performance ${formatTime(reportPerformanceAt)} WIB · Availability ${formatTime(reportAvailabilityAt)} WIB`, margin + 165, H - 18.8)
 
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.6)
+      pdf.setFontSize(7.8)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('NOTES', margin, H - 18)
+      pdf.text('NOTES', margin, H - 14.5)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7)
-      pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37 Feed: NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation is UNKNOWN, not DOWN · Correlation does not prove causation.', margin, H - 14)
-      pdf.setDrawColor(210, 217, 221)
-      pdf.line(margin, H - 11, W - margin, H - 11)
       pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 6)
-      pdf.text('Page 1 / 1', W - margin - 18, H - 6)
+      pdf.text('SM37 Feed NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation is UNKNOWN, not DOWN.', margin, H - 11)
+      pdf.text('Correlation does not prove causation · Grouped workload CPU may exceed 100% across processes/CPU cores.', margin, H - 8)
+      pdf.setDrawColor(210, 217, 221)
+      pdf.line(margin, H - 6.2, W - margin, H - 6.2)
+      pdf.setFontSize(7.3)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 3)
+      pdf.text('Page 1 / 1', W - margin - 18, H - 3)
 
       const host = shortHost(incidentSummary?.affected_server || selectedJob?.host || 'SAP') || 'SAP'
       const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
