@@ -381,3 +381,51 @@
 
 /* SPHERE RC — analysis drawer body uses the drawer as its single surface boundary. */
 .rundeckWorkspaceDrawer:is(.is-evidence,.is-availability,.is-issues,.is-system-data,.is-wide) .rundeckWorkspaceDrawerBody{background:transparent}
+
+
+/* SPHERE v1.34.57 — one restrained visual contract for all analysis drawers. */
+.rundeckWorkspaceDrawer>header{
+  padding:11px 14px 9px!important;
+  border-bottom:1px solid rgba(126,147,158,.065)!important;
+  background:var(--sphere-page,#0f151a)!important;
+}
+.rundeckWorkspaceDrawer>header h3{
+  margin:2px 0 1px!important;
+  font-size:13.5px!important;
+}
+.rundeckWorkspaceDrawer>header small{
+  font-size:8.8px!important;
+}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack,
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceClose{
+  border-color:rgba(126,147,158,.11)!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody{
+  padding-left:14px!important;
+  padding-right:14px!important;
+}
+.rundeckWorkspaceDrawer:is(.is-evidence,.is-availability,.is-issues,.is-observation-history,.is-wide,.is-system-data){
+  box-shadow:-6px 8px 24px rgba(0,0,0,.18)!important;
+}
+.rundeckWorkspaceDrawerBody table th,
+.rundeckWorkspaceDrawerBody table td{
+  border-bottom-color:rgba(126,147,158,.05)!important;
+}
+.rundeckWorkspaceDrawerBody table th{
+  background:rgba(126,147,158,.022)!important;
+}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryTableWrap{
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.05)!important;
+  border-bottom:1px solid rgba(126,147,158,.05)!important;
+  border-radius:0!important;
+}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 th,
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 td{
+  padding-top:7px!important;
+  padding-bottom:7px!important;
+}
+.rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 tbody tr:hover{
+  background:rgba(79,198,200,.025)!important;
+}
