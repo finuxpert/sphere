@@ -969,3 +969,92 @@
 @media(max-width:900px){
   .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead{align-items:flex-start;flex-direction:column}
 }
+
+
+/* SPHERE v1.34.61 — final Jobs & Programs merged workspace geometry. */
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace{
+  margin-top:2px!important;
+  padding-top:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead{
+  display:block!important;
+  min-height:34px!important;
+  padding:4px 0 3px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsIdentity{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsIdentity h3{
+  flex:0 0 auto!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsIdentity>span{
+  min-width:0!important;
+  margin-left:2px!important;
+  color:var(--sphere-text-muted,#718089)!important;
+  font-size:8px!important;
+  white-space:nowrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes{
+  order:2!important;
+  margin-left:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button{
+  min-height:22px!important;
+  padding:2px 7px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody{
+  width:100%!important;
+  min-height:0!important;
+  max-height:246px!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody :is(.rundeckCurrentWorkload,.rundeckPerformanceReviewV1231){
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody :is(.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231){
+  width:100%!important;
+  max-width:none!important;
+  max-height:205px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody.is-review .rundeckReviewHeadV1231,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody.is-search .rundeckReviewHeadV1231{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  min-height:27px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody.is-review .rundeckReviewControlsV1231,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody.is-search .rundeckReviewControlsV1231{
+  margin-left:auto!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody.is-search .rundeckReviewSearch{
+  width:100%!important;
+  margin:2px 0 4px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody.is-search .rundeckReviewSearch input{
+  width:100%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231{
+  table-layout:fixed!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 th:nth-child(1),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 td:nth-child(1){width:35%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 th:nth-child(2),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 td:nth-child(2){width:31%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 th:nth-child(3),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 td:nth-child(3){width:11%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 th:nth-child(4),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 td:nth-child(4){width:12%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 th:nth-child(5),
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableV1231 td:nth-child(5){width:11%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableWrapV1231:not(:has(tbody tr:nth-child(6))){
+  overflow-y:visible!important;
+}
