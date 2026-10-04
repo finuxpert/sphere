@@ -76,7 +76,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.55', files.version.includes("APP_VERSION = '1.34.55'") && files.version.includes('monitoring-flow-ui-v1.34.55')],
+  ['monitoring flow version is v1.34.56', files.version.includes("APP_VERSION = '1.34.56'") && files.version.includes('monitoring-flow-ui-v1.34.56')],
   ['Live Monitoring remains available', files.wrapper.includes('Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is consolidated into Jobs and Programs to Review', files.performanceReview.includes('Search job or program (min. 2 characters)') && files.performanceReview.includes('historical match') && files.performanceReview.includes('searchActive ? searchRows : reviewRows')],
@@ -401,4 +401,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.55 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.56 monitoring flow and deep-analysis checks passed.')
