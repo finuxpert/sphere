@@ -54,12 +54,6 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'job' })
   }, [onSelectJob])
 
-  const openJobFromHistory = React.useCallback((job) => {
-    if (!job?.key) return
-    onSelectJob?.(job)
-    setActiveOverlay({ type: 'history-job', job })
-  }, [onSelectJob])
-
   const inspectApp = React.useCallback((context = {}) => {
     if (!context.host) return
     focusSequence.current += 1
