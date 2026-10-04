@@ -21,7 +21,7 @@ import './RundeckInvestigationFlow.css'
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'
-  if (metric === 'ram') return 'Memory'
+  if (metric === 'ram') return 'RAM'
   if (metric === 'iowait') return 'I/O Wait'
   if (metric === 'wp') return 'Critical WP'
   if (metric === 'availability') return 'Availability'
@@ -66,7 +66,9 @@ export default function RundeckMonitoringHistory(props) {
     ? `${formatWib(selectedJob.at, true)} WIB`
     : selectedJob?.reviewPeriod
       ? String(selectedJob.reviewPeriod).toUpperCase()
-      : ''
+      : props.latestCollectionAt
+        ? `${formatWib(props.latestCollectionAt, true)} WIB`
+        : ''
   const operationalEvidenceContent = <>
     {selectedJob?.key && <div className="rundeckAnalysisContextStrip" title="Current workload context used by job-scoped analysis shortcuts">
       <b>Analysis context</b>
@@ -84,12 +86,12 @@ export default function RundeckMonitoringHistory(props) {
     <section className="rundeckSelectedSecondaryAnalysis" aria-label="Additional analysis">
       <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })} disabled={!selectedJob?.key}>
         <SphereIcon name="history" />
-        <span><b>Observation History</b><small>Saved observations</small></span>
+        <span><b>Observation History</b><small>{selectedJob?.host ? `Saved observations · ${shortHost(selectedJob.host)}` : 'Saved observations'}</small></span>
         <em>›</em>
       </button>
       <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}>
         <SphereIcon name="server" />
-        <span><b>Infrastructure Analysis</b><small>FS - Network - Storage</small></span>
+        <span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage I/O</small></span>
         <em>›</em>
       </button>
       {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
