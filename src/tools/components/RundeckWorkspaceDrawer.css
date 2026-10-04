@@ -476,3 +476,10 @@
     box-shadow:none!important;
   }
 }
+
+/* SPHERE DEV finishing — stronger focus without turning the drawer into a modal wall. */
+.rundeckWorkspaceDrawer.is-performance{
+  box-shadow:
+    0 0 0 100vmax rgba(3,7,10,.26),
+    -8px 12px 34px rgba(0,0,0,.34)!important;
+}
