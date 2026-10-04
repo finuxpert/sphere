@@ -429,3 +429,26 @@
 .rundeckWorkspaceDrawerBody .rundeckObservationHistoryV1234 tbody tr:hover{
   background:rgba(79,198,200,.025)!important;
 }
+
+
+/* SPHERE v1.34.59 — consistent analysis drawer typography. */
+.rundeckWorkspaceDrawer>header h3{font-size:14px!important;font-weight:800!important}
+.rundeckWorkspaceDrawer>header>div>span{font-size:7.8px!important;letter-spacing:.06em!important}
+.rundeckWorkspaceDrawer>header small{font-size:9px!important;line-height:1.35!important}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceBack{font-size:9px!important;font-weight:720!important}
+.rundeckWorkspaceDrawer>header .rundeckWorkspaceClose{opacity:.72!important}
+.rundeckWorkspaceDrawerBody{
+  font-size:9.2px!important;
+}
+.rundeckWorkspaceDrawerBody h4{
+  font-size:10.8px!important;
+  font-weight:780!important;
+}
+.rundeckWorkspaceDrawerBody table th{
+  font-size:7.8px!important;
+  letter-spacing:.02em!important;
+}
+.rundeckWorkspaceDrawerBody table td{
+  font-size:9px!important;
+  font-variant-numeric:tabular-nums!important;
+}
