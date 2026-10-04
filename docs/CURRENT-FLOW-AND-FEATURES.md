@@ -376,7 +376,7 @@ Do not claim:
 - SLA availability from retained observation percentages.
 
 
-### v1.34.60 layout refinements
+### v1.34.61 layout refinements
 
 - Current Jobs and Jobs & Programs to Review use equal-height internal scroll areas; the Live page remains the outer one-screen cockpit.
 - Selected Job stays fixed between the two workload lists with six analysis launchers in two rows.
@@ -384,7 +384,7 @@ Do not claim:
 - Correlated Events shows an explicit timing strip, issue-relative event labels, and keeps the RCA boundary visible with `Cause not confirmed`.
 
 
-### v1.34.60 live flow
+### v1.34.61 live flow
 
 1. SAP App Servers + Infrastructure overview.
 2. Server Trend (60%) + Technical Trend (40%) with shared range controls.
@@ -394,7 +394,7 @@ Do not claim:
 6. Performance Analysis exposes Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data.
 
 
-### v1.34.60 cockpit geometry
+### v1.34.61 cockpit geometry
 
 1. SAP App Servers 42% + Infrastructure 58%, both content-driven.
 2. Shared trend controls.
@@ -404,7 +404,7 @@ Do not claim:
 6. Analysis drawers use the same flat header, summary, table, divider, and navigation treatment.
 
 
-### v1.34.60 semantic polish
+### v1.34.61 semantic polish
 
 - Host/server memory = RAM (%); workload memory = PSS Memory (GB).
 - One shared collection coverage strip applies to the two Server Trends; availability observation gaps remain metric-specific in Technical Trend.
@@ -413,12 +413,12 @@ Do not claim:
 - SAP Issues is sorted by severity and uses the drawer as the primary scroll owner.
 
 
-### v1.34.60 consistency pass
+### v1.34.61 consistency pass
 
 The live cockpit, six analysis shortcuts, drawers and PDF now share one terminology and hierarchy: RAM for APP/server memory, PSS Memory for workload memory, WP Context for SAP work-process context, and timing-correlation wording that does not claim causation or an exact Critical WP start unless the source proves it.
 
 
-### v1.34.60 final cockpit flow
+### v1.34.61 final cockpit flow
 
 1. SAP Performance header and operational status.
 2. SAP App Servers + Infrastructure.
@@ -427,3 +427,8 @@ The live cockpit, six analysis shortcuts, drawers and PDF now share one terminol
 5. One Jobs & Programs workspace with Live / Review / Search modes.
 6. All row selections open the shared Performance Analysis flow.
 7. PDF uses the same RAM / PSS Memory / WP Context / APP Critical WP terminology as the web UI.
+
+
+### v1.34.61 workspace behavior
+
+Jobs & Programs has three exclusive modes. Live shows current observations, Review shows Basis review priority, and Search shows no historical rows until at least two characters are entered. All rows continue into the same Performance Analysis drawer.
