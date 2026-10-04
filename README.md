@@ -173,7 +173,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Production changes must be validated on DEV before promotion.
 
 
-### Live cockpit v1.34.58
+### Live cockpit v1.34.59
 
 - Live Monitoring is the single primary workspace; standalone History was removed.
 - Historical Job / Program search is available from Jobs & Programs to Review and opens the shared Performance Analysis drawer.
@@ -182,7 +182,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - SAP App Servers includes operational summary/status, and SAP Issues consolidates performance, availability, technical checks, and SM37 feed state.
 
 
-### Live cockpit v1.34.58
+### Live cockpit v1.34.59
 
 - Top cockpit is content-driven at 42/58 for SAP App Servers and Infrastructure; dead vertical space is removed.
 - Trend workspace now shows Server Trend 1 / Server Trend 2 / Technical Trend at roughly 35/35/30 with one shared Time Range, Interval, and Avg/Peak control rail. Defaults are CPU, Memory, and Load.
@@ -191,7 +191,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Analysis drawers share one restrained visual contract with fewer separators, lighter tables, consistent Back/Close navigation, and no “Back to Selected Job” wording.
 
 
-### Live cockpit v1.34.58
+### Live cockpit v1.34.59
 
 - Host memory wording is now explicit RAM; workload memory remains PSS Memory.
 - Server Trend 1 and Server Trend 2 share one collection-gap strip instead of duplicating the same gap message.
@@ -200,3 +200,13 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - SAP Issues uses drawer-level scrolling and clearer checked-indicator wording.
 - Observation History separates CPU, PSS and Critical WP ranges.
 - Infrastructure history is shorter on desktop so Current Snapshot is visible sooner and Network numeric values are not clipped.
+
+
+### v1.34.59 visual consistency
+
+- Cockpit and drawer typography use one hierarchy for titles, labels, status text and numeric data.
+- Host memory is RAM; workload memory is PSS Memory everywhere including PDF.
+- Trend titles show the active metric with a middle-dot separator.
+- Analysis shortcuts and context text are more readable with less border chrome.
+- Current Jobs and Review tables use larger operational text and tabular numeric alignment.
+- PDF Preview chrome is more compact, while the one-page PDF increases report typography and uses RAM / PSS Memory / WP Context wording.
