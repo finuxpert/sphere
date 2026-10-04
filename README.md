@@ -173,7 +173,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Production changes must be validated on DEV before promotion.
 
 
-### Live cockpit v1.34.59
+### Live cockpit v1.34.60
 
 - Live Monitoring is the single primary workspace; standalone History was removed.
 - Historical Job / Program search is available from Jobs & Programs to Review and opens the shared Performance Analysis drawer.
@@ -182,7 +182,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - SAP App Servers includes operational summary/status, and SAP Issues consolidates performance, availability, technical checks, and SM37 feed state.
 
 
-### Live cockpit v1.34.59
+### Live cockpit v1.34.60
 
 - Top cockpit is content-driven at 42/58 for SAP App Servers and Infrastructure; dead vertical space is removed.
 - Trend workspace now shows Server Trend 1 / Server Trend 2 / Technical Trend at roughly 35/35/30 with one shared Time Range, Interval, and Avg/Peak control rail. Defaults are CPU, Memory, and Load.
@@ -191,7 +191,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Analysis drawers share one restrained visual contract with fewer separators, lighter tables, consistent Back/Close navigation, and no “Back to Selected Job” wording.
 
 
-### Live cockpit v1.34.59
+### Live cockpit v1.34.60
 
 - Host memory wording is now explicit RAM; workload memory remains PSS Memory.
 - Server Trend 1 and Server Trend 2 share one collection-gap strip instead of duplicating the same gap message.
@@ -202,7 +202,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Infrastructure history is shorter on desktop so Current Snapshot is visible sooner and Network numeric values are not clipped.
 
 
-### v1.34.59 visual consistency
+### v1.34.60 visual consistency
 
 - Cockpit and drawer typography use one hierarchy for titles, labels, status text and numeric data.
 - Host memory is RAM; workload memory is PSS Memory everywhere including PDF.
@@ -210,3 +210,13 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Analysis shortcuts and context text are more readable with less border chrome.
 - Current Jobs and Review tables use larger operational text and tabular numeric alignment.
 - PDF Preview chrome is more compact, while the one-page PDF increases report typography and uses RAM / PSS Memory / WP Context wording.
+
+
+### v1.34.60 cockpit consolidation
+
+- The obsolete Live Monitoring tab is removed; SAP Performance is the single cockpit view.
+- Current Jobs, Review and historical Search are merged into one full-width Jobs & Programs workspace with Live / Review / Search modes.
+- The analysis rail removes redundant helper labels and uses one-line shortcut summaries with a concise selected-workload context.
+- Infrastructure now uses the same SphereIcon title treatment as the other cockpit sections.
+- Correlated Events and SAP Availability drawers use the same spacing and hierarchy as the other analysis drawers.
+- PDF preview now mirrors the current cockpit more closely with two Server Trend charts, a Technical Status strip, Analysis Context and Jobs & Programs Review.
