@@ -487,8 +487,55 @@ export default function RundeckSource({ onCollection }) {
       drawTrendChart(serverChart1, trendTitle1, margin)
       drawTrendChart(serverChart2, trendTitle2, margin + chartColW + chartGap)
 
+      const pickThresholdEvent = (trend, metricName) => {
+        const warning = Number(trend?.warning)
+        const critical = Number(trend?.critical)
+        const rows = (trend?.items || [])
+          .map((row) => ({ ...row, peakValue: Number(row?.max_value) }))
+          .filter((row) => Number.isFinite(row.peakValue))
+          .sort((left, right) => right.peakValue - left.peakValue)
+        const peak = rows[0] || null
+        if (!peak || !Number.isFinite(warning) || peak.peakValue < warning) {
+          return { metric: metricName, crossed: false, warning, critical }
+        }
+        const severity = Number.isFinite(critical) && peak.peakValue >= critical ? 'CRITICAL' : 'WARNING'
+        return {
+          metric: metricName,
+          crossed: true,
+          severity,
+          threshold: severity === 'CRITICAL' ? critical : warning,
+          value: peak.peakValue,
+          host: shortHost(peak.host || ''),
+          at: peak.peak_at || peak.bucket,
+          bucket: peak.bucket,
+          collectionId: peak.peak_collection_id || '',
+        }
+      }
+      const loadThresholdTimeline = async (event) => {
+        if (!event?.crossed || !event.at) return null
+        const collection = event.collectionId ? `&collection_id=${encodeURIComponent(event.collectionId)}` : ''
+        return json(`${API}/history/timeline?at=${encodeURIComponent(event.at)}&window_minutes=5${collection}`).catch(() => null)
+      }
+      const ramEvent = pickThresholdEvent(ramTrendResult, 'RAM')
+      const cpuEvent = pickThresholdEvent(cpuTrendResult, 'CPU')
+      const [ramTimeline, cpuTimeline] = await Promise.all([
+        loadThresholdTimeline(ramEvent),
+        loadThresholdTimeline(cpuEvent),
+      ])
+      const thresholdContext = (event, timeline) => {
+        const row = (timeline?.items || []).find((item) => shortHost(item?.host || '') === event?.host)
+          || (timeline?.items || [])[0]
+          || null
+        return {
+          ...event,
+          observedAt: row?.collected_at || event?.at || '',
+          workloads: (row?.top_consumers || []).slice(0, 3),
+        }
+      }
+      const ramContext = thresholdContext(ramEvent, ramTimeline)
+      const cpuContext = thresholdContext(cpuEvent, cpuTimeline)
+
       const workY = chartY + chartMaxH + 8
-      const leftW = contentW * .57
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
       const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
@@ -501,98 +548,107 @@ export default function RundeckSource({ onCollection }) {
       const selectedCriticalWpText = selectedCriticalWpRaw === null || selectedCriticalWpRaw === undefined
         ? 'Not observed for selected workload'
         : String(selectedCriticalWpRaw)
+
       const analysisCardY = workY - 6
-      const analysisCardH = 25
+      const analysisCardH = 18
       pdf.setFillColor(244, 247, 249)
       pdf.setDrawColor(220, 226, 229)
-      pdf.roundedRect(margin, analysisCardY, leftW, analysisCardH, 1.2, 1.2, 'FD')
+      pdf.roundedRect(margin, analysisCardY, contentW, analysisCardH, 1.2, 1.2, 'FD')
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(9.6)
-      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 42)}`, margin + 3, workY - 1)
+      pdf.setFontSize(9.4)
+      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 56)}`, margin + 3, workY - 1)
       if (inspectedProgram) {
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7)
         pdf.setTextColor(92, 105, 114)
-        pdf.text(`Program ${clipped(inspectedProgram, 44)}`, margin + 3, workY + 2)
+        pdf.text(`Program ${clipped(inspectedProgram, 58)}`, margin + 3, workY + 2)
       }
-      const selectedMetricY = inspectedProgram ? workY + 7 : workY + 4
+      const selectedMetricY = inspectedProgram ? workY + 6.5 : workY + 4
+      const analysisCols = [3, 34, 72, 103, 132]
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.6)
-      pdf.setTextColor(71, 87, 97)
-      pdf.text('CPU', margin + 3, selectedMetricY)
-      pdf.text('PSS MEMORY', margin + 31, selectedMetricY)
-      pdf.text('PROCESSES', margin + 67, selectedMetricY)
-      pdf.text('WP CONTEXT', margin + 96, selectedMetricY)
-      pdf.text('APP CRIT WP', margin + 121, selectedMetricY)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(8.8)
-      pdf.setTextColor(22, 31, 38)
-      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin + 3, selectedMetricY + 4)
-      pdf.text(pssText(inspectedSource), margin + 31, selectedMetricY + 4)
-      pdf.text(processText(inspectedSource), margin + 67, selectedMetricY + 4)
-      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 96, selectedMetricY + 4)
-      pdf.text(selectedCriticalWpText, margin + 121, selectedMetricY + 4)
       pdf.setFontSize(7.4)
-      pdf.setTextColor(92, 105, 114)
-      const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
-      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · workload observation · SM37 not connected`, margin + 3, selectedMetricY + 8.5)
-      // Keep the one-page handoff readable: selected workload metrics carry the
-      // evidence here, while the full workload chart remains available in the UI.
-      // Omitting the mini-chart prevents the lower report band from colliding
-      // with Review / Check Summary on dense runs.
-
-      const evaluationItems = evaluationResult.items || []
-      const sideX = margin + leftW + 6
-      const sideW = W - margin - sideX
-      pdf.setFillColor(244, 247, 249)
-      pdf.setDrawColor(220, 226, 229)
-      pdf.roundedRect(sideX, analysisCardY, sideW, analysisCardH, 1.2, 1.2, 'FD')
-      pdf.setTextColor(22, 31, 38)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(9)
-      pdf.text('JOBS & PROGRAMS · REVIEW', sideX + 3, workY - 1)
+      pdf.setTextColor(71, 87, 97)
+      ;['CPU', 'PSS MEMORY', 'PROCESSES', 'WP CONTEXT', 'APP CRIT WP'].forEach((label, index) => pdf.text(label, margin + analysisCols[index], selectedMetricY))
       pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(8.5)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin + analysisCols[0], selectedMetricY + 4)
+      pdf.text(pssText(inspectedSource), margin + analysisCols[1], selectedMetricY + 4)
+      pdf.text(processText(inspectedSource), margin + analysisCols[2], selectedMetricY + 4)
+      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + analysisCols[3], selectedMetricY + 4)
+      pdf.text(selectedCriticalWpText, margin + analysisCols[4], selectedMetricY + 4)
       pdf.setFontSize(7)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('Top review priority · observed CPU, PSS Memory and APP Critical WP', sideX + 3, workY + 2.5)
-      const reviewCols = [3, 57, 77, 97]
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.1)
-      ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 7))
+      const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
+      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · workload observation · SM37 not connected`, margin + 170, selectedMetricY + 4)
+
+      const thresholdY = analysisCardY + analysisCardH + 3
+      const thresholdH = Math.max(22, H - 18 - thresholdY)
+      pdf.setFillColor(244, 247, 249)
       pdf.setDrawColor(220, 226, 229)
-      pdf.line(sideX + 3, workY + 8.5, W - margin - 3, workY + 8.5)
-      const reviewRows = evaluationItems.slice(0, 2)
-      const reviewBottom = analysisCardY + analysisCardH - 2
-      let sideY = workY + 12
-      reviewRows.forEach((row) => {
-        if (sideY + 3.2 >= reviewBottom) return
-        const reason = evaluationReasonText(row)
-        const compactReason = reason
-          ? clipped(
-            String(reason)
-              .replace(/\s+/g, ' ')
-              .replace(/historical baseline/gi, 'baseline')
-              .split(/[.;·]/)[0],
-            28,
-          )
-          : ''
-        pdf.setTextColor(22, 31, 38)
-        pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7.2)
-        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 27), sideX + reviewCols[0], sideY)
-        pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY, { align: 'right' })
-        pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY, { align: 'right' })
-        pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY, { align: 'right' })
-        if (compactReason && sideY + 2.3 < reviewBottom) {
+      pdf.roundedRect(margin, thresholdY, contentW, thresholdH, 1.2, 1.2, 'FD')
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(9.2)
+      pdf.setTextColor(22, 31, 38)
+      pdf.text('WORKLOADS DURING HIGH RAM / CPU', margin + 3, thresholdY + 5)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.9)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text('Time-correlated retained workload evidence near the highest threshold event in the selected trend range.', margin + 3, thresholdY + 8.5)
+
+      const eventGap = 5
+      const eventW = (contentW - 6 - eventGap) / 2
+      const drawThresholdEvent = (context, x) => {
+        const title = context.metric === 'RAM' ? 'HIGH RAM' : 'HIGH CPU'
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(7.8)
+        pdf.setTextColor(71, 87, 97)
+        pdf.text(title, x, thresholdY + 13)
+        if (!context.crossed) {
+          pdf.setFont('helvetica', 'normal')
+          pdf.setFontSize(7.2)
           pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(6.7)
-          pdf.text(`Reason: ${compactReason}`, sideX, sideY + 2.2)
+          pdf.text(`No warning threshold crossing in ${trendRangeLabel}`, x, thresholdY + 17)
+          return
         }
-        sideY += 5
-      })
-      pdf.setDrawColor(226, 231, 234)
-      pdf.line(sideX + 3, reviewBottom, W - margin - 3, reviewBottom)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(7.6)
+        pdf.setTextColor(22, 31, 38)
+        pdf.text(
+          `${context.host || 'APP'} · Peak ${numberText(context.value, 1)}% · ${context.severity} ${numberText(context.threshold, 0)}% · ${formatTime(context.at)} WIB`,
+          x,
+          thresholdY + 17,
+        )
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(6.8)
+        pdf.setTextColor(92, 105, 114)
+        pdf.text('JOB / PROGRAM', x, thresholdY + 21)
+        pdf.text('CPU', x + eventW - 38, thresholdY + 21)
+        pdf.text('PSS', x + eventW - 26, thresholdY + 21)
+        pdf.text('PROC', x + eventW - 14, thresholdY + 21)
+        let rowY = thresholdY + 25
+        if (!context.workloads.length) {
+          pdf.text('No retained workload rows for this threshold event.', x, rowY)
+          return
+        }
+        context.workloads.forEach((row) => {
+          const details = row?.details || {}
+          const pss = details.total_pss_gb ?? details.pss_gb
+          const processes = details.process_count ?? details.pids?.length
+          pdf.setTextColor(22, 31, 38)
+          pdf.setFontSize(7)
+          pdf.text(clipped(row?.consumer_key || '—', 31), x, rowY)
+          pdf.text(metric(row?.cpu_pct, '%'), x + eventW - 38, rowY)
+          pdf.text(pss == null ? '—' : `${numberText(pss, 2)}G`, x + eventW - 26, rowY)
+          pdf.text(processes == null ? '—' : numberText(processes, 0), x + eventW - 14, rowY)
+          rowY += 4
+        })
+      }
+      drawThresholdEvent(ramContext, margin + 3)
+      pdf.setDrawColor(224, 230, 233)
+      pdf.line(margin + 3 + eventW + eventGap / 2, thresholdY + 11, margin + 3 + eventW + eventGap / 2, thresholdY + thresholdH - 3)
+      drawThresholdEvent(cpuContext, margin + 3 + eventW + eventGap)
 
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, H - 15, W - margin, H - 15)
