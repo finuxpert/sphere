@@ -705,12 +705,12 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.6)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('NOTES', margin, H - 11.5)
+      pdf.text('CATATAN', margin, H - 11.5)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.1)
       pdf.setTextColor(92, 105, 114)
       pdf.text(
-        `APP Critical WP = APP-level evidence · Missing observation = UNKNOWN · Correlation does not prove causation · Grouped CPU may exceed 100%`,
+        `APP Critical WP = evidence APP · Data kosong = UNKNOWN · Job/program yang muncul belum otomatis penyebab utama · Grouped CPU bisa >100%`,
         margin,
         H - 8,
       )
