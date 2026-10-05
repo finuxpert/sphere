@@ -472,7 +472,7 @@ export default function RundeckSource({ onCollection }) {
       const chartY = y + 6
       const chartGap = 6
       const chartColW = (contentW - chartGap) / 2
-      const chartMaxH = 44
+      const chartMaxH = 38
       const drawTrendChart = (chart, title, x) => {
         if (!chart) return
         pdf.setFont('helvetica', 'bold')
@@ -486,168 +486,220 @@ export default function RundeckSource({ onCollection }) {
       drawTrendChart(serverChart1, trendTitle1, margin)
       drawTrendChart(serverChart2, trendTitle2, margin + chartColW + chartGap)
 
-      const pickThresholdEvent = (trend, metricName) => {
+      const bucketDurationMs = (label, rows = []) => {
+        const fixed = {
+          '10m': 10 * 60 * 1000,
+          '30m': 30 * 60 * 1000,
+          '1h': 60 * 60 * 1000,
+          '6h': 6 * 60 * 60 * 1000,
+          '1d': 24 * 60 * 60 * 1000,
+        }[String(label || '').toLowerCase()]
+        if (fixed) return fixed
+        const byHost = new Map()
+        rows.forEach((row) => {
+          const host = shortHost(row?.host || '')
+          const at = Date.parse(row?.bucket || '')
+          if (!host || !Number.isFinite(at)) return
+          if (!byHost.has(host)) byHost.set(host, [])
+          byHost.get(host).push(at)
+        })
+        const diffs = []
+        byHost.forEach((times) => {
+          times.sort((a, b) => a - b)
+          for (let index = 1; index < times.length; index += 1) {
+            const diff = times[index] - times[index - 1]
+            if (diff > 0) diffs.push(diff)
+          }
+        })
+        if (!diffs.length) return 10 * 60 * 1000
+        diffs.sort((a, b) => a - b)
+        return diffs[Math.floor(diffs.length / 2)]
+      }
+
+      const thresholdEpisodes = (trend, metricName) => {
         const warning = Number(trend?.warning)
         const critical = Number(trend?.critical)
-        const rows = (trend?.items || [])
-          .map((row) => ({ ...row, peakValue: Number(row?.max_value) }))
-          .filter((row) => Number.isFinite(row.peakValue))
-          .sort((left, right) => right.peakValue - left.peakValue)
-        const peak = rows[0] || null
-        if (!peak || !Number.isFinite(warning) || peak.peakValue < warning) {
-          return { metric: metricName, crossed: false, warning, critical }
+        const sourceRows = (trend?.items || [])
+          .map((row) => ({ ...row, peakValue: Number(row?.max_value), atMs: Date.parse(row?.peak_at || row?.bucket || '') }))
+          .filter((row) => Number.isFinite(row.peakValue) && Number.isFinite(row.atMs))
+        if (!Number.isFinite(warning)) {
+          return { metric: metricName, warning, critical, peak: null, episodes: [] }
         }
-        const severity = Number.isFinite(critical) && peak.peakValue >= critical ? 'CRITICAL' : 'WARNING'
-        return {
-          metric: metricName,
-          crossed: true,
-          severity,
-          threshold: severity === 'CRITICAL' ? critical : warning,
-          value: peak.peakValue,
-          host: shortHost(peak.host || ''),
-          at: peak.peak_at || peak.bucket,
-          bucket: peak.bucket,
-          collectionId: peak.peak_collection_id || '',
-        }
+        const intervalMs = bucketDurationMs(reportBucket, sourceRows)
+        const byHost = new Map()
+        sourceRows
+          .filter((row) => row.peakValue >= warning)
+          .forEach((row) => {
+            const host = shortHost(row?.host || '') || 'APP'
+            if (!byHost.has(host)) byHost.set(host, [])
+            byHost.get(host).push({ ...row, host })
+          })
+        const episodes = []
+        byHost.forEach((rows, host) => {
+          rows.sort((left, right) => left.atMs - right.atMs)
+          let episode = null
+          rows.forEach((row) => {
+            const contiguous = episode && row.atMs - episode.lastAtMs <= intervalMs * 1.6
+            if (!contiguous) {
+              if (episode) episodes.push(episode)
+              episode = {
+                host,
+                startAt: row.bucket || row.peak_at,
+                endAt: row.bucket || row.peak_at,
+                lastAtMs: row.atMs,
+                peakValue: row.peakValue,
+                at: row.peak_at || row.bucket,
+                bucket: row.bucket,
+                collectionId: row.peak_collection_id || '',
+              }
+            } else {
+              episode.endAt = row.bucket || row.peak_at
+              episode.lastAtMs = row.atMs
+              if (row.peakValue > episode.peakValue) {
+                episode.peakValue = row.peakValue
+                episode.at = row.peak_at || row.bucket
+                episode.bucket = row.bucket
+                episode.collectionId = row.peak_collection_id || ''
+              }
+            }
+          })
+          if (episode) episodes.push(episode)
+        })
+        episodes.sort((left, right) => Date.parse(left.at || '') - Date.parse(right.at || ''))
+        const peak = episodes.reduce((best, episode) => (!best || episode.peakValue > best.peakValue ? episode : best), null)
+        return { metric: metricName, warning, critical, peak, episodes }
       }
-      const loadThresholdTimeline = async (event) => {
-        if (!event?.crossed || !event.at) return null
-        const collection = event.collectionId ? `&collection_id=${encodeURIComponent(event.collectionId)}` : ''
-        return json(`${API}/history/timeline?at=${encodeURIComponent(event.at)}&window_minutes=5${collection}`).catch(() => null)
+
+      const loadEpisodeTimeline = async (episode) => {
+        if (!episode?.at) return null
+        const collection = episode.collectionId ? `&collection_id=${encodeURIComponent(episode.collectionId)}` : ''
+        return json(`${API}/history/timeline?at=${encodeURIComponent(episode.at)}&window_minutes=5${collection}`).catch(() => null)
       }
-      const ramEvent = pickThresholdEvent(ramTrendResult, 'RAM')
-      const cpuEvent = pickThresholdEvent(cpuTrendResult, 'CPU')
-      const [ramTimeline, cpuTimeline] = await Promise.all([
-        loadThresholdTimeline(ramEvent),
-        loadThresholdTimeline(cpuEvent),
+
+      const buildThresholdSummary = async (trend, metricName) => {
+        const base = thresholdEpisodes(trend, metricName)
+        if (!base.episodes.length) return { ...base, workloads: [] }
+        const timelines = await Promise.all(base.episodes.map((episode) => loadEpisodeTimeline(episode)))
+        const workloadMap = new Map()
+        base.episodes.forEach((episode, episodeIndex) => {
+          const timeline = timelines[episodeIndex]
+          const row = (timeline?.items || []).find((item) => shortHost(item?.host || '') === episode.host)
+            || (timeline?.items || [])[0]
+            || null
+          const seenInEpisode = new Set()
+          ;(row?.top_consumers || []).slice(0, 5).forEach((workload) => {
+            const key = String(workload?.consumer_key || '').trim()
+            if (!key) return
+            const details = workload?.details || {}
+            const pss = Number(details.total_pss_gb ?? details.pss_gb)
+            const cpu = Number(workload?.cpu_pct)
+            let item = workloadMap.get(key)
+            if (!item) {
+              item = { key, seen: 0, cpuPeak: null, pssPeak: null }
+              workloadMap.set(key, item)
+            }
+            if (!seenInEpisode.has(key)) {
+              item.seen += 1
+              seenInEpisode.add(key)
+            }
+            if (Number.isFinite(cpu)) item.cpuPeak = item.cpuPeak === null ? cpu : Math.max(item.cpuPeak, cpu)
+            if (Number.isFinite(pss)) item.pssPeak = item.pssPeak === null ? pss : Math.max(item.pssPeak, pss)
+          })
+        })
+        const workloads = [...workloadMap.values()]
+          .sort((left, right) => right.seen - left.seen || (right.cpuPeak ?? -1) - (left.cpuPeak ?? -1))
+          .slice(0, 5)
+        return { ...base, workloads }
+      }
+
+      const [ramSummary, cpuSummary] = await Promise.all([
+        buildThresholdSummary(ramTrendResult, 'RAM'),
+        buildThresholdSummary(cpuTrendResult, 'CPU'),
       ])
-      const thresholdContext = (event, timeline) => {
-        const row = (timeline?.items || []).find((item) => shortHost(item?.host || '') === event?.host)
-          || (timeline?.items || [])[0]
-          || null
-        return {
-          ...event,
-          observedAt: row?.collected_at || event?.at || '',
-          workloads: (row?.top_consumers || []).slice(0, 3),
-        }
-      }
-      const ramContext = thresholdContext(ramEvent, ramTimeline)
-      const cpuContext = thresholdContext(cpuEvent, cpuTimeline)
 
-      const workY = chartY + chartMaxH + 8
-      const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
-      const inspectedWorkload = selectedJob?.key || current.consumer_key
-      const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
-        row?.consumer_key === inspectedWorkload && (!selectedJob?.host || !row?.host || row.host === selectedJob.host)
-      )) || {}
-      const inspectedProgram = distinctProgramText(inspectedSource)
-      const selectedCriticalWpRaw = selectedJob && Object.prototype.hasOwnProperty.call(selectedJob, 'criticalWp')
-        ? selectedJob.criticalWp
-        : (inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp)
-      const selectedCriticalWpText = selectedCriticalWpRaw === null || selectedCriticalWpRaw === undefined
-        ? 'Not observed for selected workload'
-        : String(selectedCriticalWpRaw)
-
-      const analysisCardY = workY - 6
-      const analysisCardH = 18
-      pdf.setFillColor(244, 247, 249)
-      pdf.setDrawColor(220, 226, 229)
-      pdf.roundedRect(margin, analysisCardY, contentW, analysisCardH, 1.2, 1.2, 'FD')
-      pdf.setTextColor(22, 31, 38)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(9.4)
-      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 56)}`, margin + 3, workY - 1)
-      if (inspectedProgram) {
-        pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7)
-        pdf.setTextColor(92, 105, 114)
-        pdf.text(`Program ${clipped(inspectedProgram, 58)}`, margin + 3, workY + 2)
-      }
-      const selectedMetricY = inspectedProgram ? workY + 6.5 : workY + 4
-      const analysisCols = [3, 34, 72, 103, 132]
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.4)
-      pdf.setTextColor(71, 87, 97)
-      ;['CPU', 'PSS MEMORY', 'PROCESSES', 'WP CONTEXT', 'APP CRIT WP'].forEach((label, index) => pdf.text(label, margin + analysisCols[index], selectedMetricY))
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(8.5)
-      pdf.setTextColor(22, 31, 38)
-      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin + analysisCols[0], selectedMetricY + 4)
-      pdf.text(pssText(inspectedSource), margin + analysisCols[1], selectedMetricY + 4)
-      pdf.text(processText(inspectedSource), margin + analysisCols[2], selectedMetricY + 4)
-      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + analysisCols[3], selectedMetricY + 4)
-      pdf.text(selectedCriticalWpText, margin + analysisCols[4], selectedMetricY + 4)
-      pdf.setFontSize(7)
-      pdf.setTextColor(92, 105, 114)
-      const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
-      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · workload observation · SM37 not connected`, margin + 170, selectedMetricY + 4)
-
-      const thresholdY = analysisCardY + analysisCardH + 3
-      const thresholdH = Math.max(22, H - 18 - thresholdY)
+      const workY = chartY + chartMaxH + 5
+      const thresholdY = workY
+      const thresholdH = Math.max(38, H - 18 - thresholdY)
       pdf.setFillColor(244, 247, 249)
       pdf.setDrawColor(220, 226, 229)
       pdf.roundedRect(margin, thresholdY, contentW, thresholdH, 1.2, 1.2, 'FD')
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9.2)
       pdf.setTextColor(22, 31, 38)
-      pdf.text('WORKLOADS DURING HIGH RAM / CPU', margin + 3, thresholdY + 5)
+      pdf.text('JOB/PROGRAM SAAT RAM / CPU TINGGI', margin + 3, thresholdY + 5)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.9)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('Time-correlated retained workload evidence near the highest threshold event in the selected trend range.', margin + 3, thresholdY + 8.5)
+      pdf.text('Dirangkum dari job/program yang tercatat aktif pada collection saat RAM atau CPU melewati threshold.', margin + 3, thresholdY + 8.5)
 
-      const eventGap = 5
-      const eventW = (contentW - 6 - eventGap) / 2
-      const drawThresholdEvent = (context, x) => {
-        const title = context.metric === 'RAM' ? 'HIGH RAM' : 'HIGH CPU'
+      const panelGap = 5
+      const panelW = (contentW - 6 - panelGap) / 2
+      const drawThresholdSummary = (summary, x) => {
+        const title = summary.metric === 'RAM' ? 'RAM TINGGI' : 'CPU TINGGI'
+        const episodeCount = summary.episodes.length
+        const peak = summary.peak
         pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(7.8)
+        pdf.setFontSize(8)
         pdf.setTextColor(71, 87, 97)
         pdf.text(title, x, thresholdY + 13)
-        if (!context.crossed) {
-          pdf.setFont('helvetica', 'normal')
-          pdf.setFontSize(7.2)
-          pdf.setTextColor(92, 105, 114)
-          pdf.text(`No warning threshold crossing in ${trendRangeLabel}`, x, thresholdY + 17)
-          return
-        }
-        pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(7.6)
-        pdf.setTextColor(22, 31, 38)
-        pdf.text(
-          `${context.host || 'APP'} · Peak ${numberText(context.value, 1)}% · ${context.severity} ${numberText(context.threshold, 0)}% · ${formatTime(context.at)} WIB`,
-          x,
-          thresholdY + 17,
-        )
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(6.8)
+        pdf.setFontSize(7)
         pdf.setTextColor(92, 105, 114)
-        pdf.text('JOB / PROGRAM', x, thresholdY + 21)
-        pdf.text('CPU', x + eventW - 38, thresholdY + 21)
-        pdf.text('PSS', x + eventW - 26, thresholdY + 21)
-        pdf.text('PROC', x + eventW - 14, thresholdY + 21)
-        let rowY = thresholdY + 25
-        if (!context.workloads.length) {
-          pdf.text('No retained workload rows for this threshold event.', x, rowY)
+        if (!episodeCount) {
+          pdf.text(`Tidak ada kejadian melewati threshold pada periode ${trendRangeLabel}`, x, thresholdY + 17)
           return
         }
-        context.workloads.forEach((row) => {
-          const details = row?.details || {}
-          const pss = details.total_pss_gb ?? details.pss_gb
-          const processes = details.process_count ?? details.pids?.length
-          pdf.setTextColor(22, 31, 38)
+        const peakText = peak
+          ? ` · Peak ${numberText(peak.peakValue, 1)}% · ${peak.host} · ${formatTime(peak.at)} WIB`
+          : ''
+        pdf.text(`${episodeCount} kejadian${peakText}`, x, thresholdY + 17)
+
+        const seenX = x + panelW - 47
+        const cpuX = x + panelW - 31
+        const pssX = x + panelW - 15
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(6.8)
+        pdf.setTextColor(71, 87, 97)
+        pdf.text('JOB / PROGRAM', x, thresholdY + 22)
+        pdf.text('MUNCUL', seenX, thresholdY + 22, { align: 'right' })
+        pdf.text('CPU PEAK', cpuX, thresholdY + 22, { align: 'right' })
+        pdf.text('PSS PEAK', pssX, thresholdY + 22, { align: 'right' })
+        pdf.setDrawColor(220, 226, 229)
+        pdf.line(x, thresholdY + 23.5, x + panelW, thresholdY + 23.5)
+
+        let rowY = thresholdY + 28
+        if (!summary.workloads.length) {
+          pdf.setFont('helvetica', 'normal')
           pdf.setFontSize(7)
-          pdf.text(clipped(row?.consumer_key || '—', 31), x, rowY)
-          pdf.text(metric(row?.cpu_pct, '%'), x + eventW - 38, rowY)
-          pdf.text(pss == null ? '—' : `${numberText(pss, 2)}G`, x + eventW - 26, rowY)
-          pdf.text(processes == null ? '—' : numberText(processes, 0), x + eventW - 14, rowY)
-          rowY += 4
+          pdf.setTextColor(92, 105, 114)
+          pdf.text('Tidak ada data job/program tersimpan untuk kejadian ini.', x, rowY)
+          return
+        }
+        summary.workloads.forEach((row) => {
+          pdf.setFont('helvetica', 'normal')
+          pdf.setFontSize(7)
+          pdf.setTextColor(22, 31, 38)
+          pdf.text(clipped(row.key, 31), x, rowY)
+          pdf.text(`${row.seen} / ${episodeCount}`, seenX, rowY, { align: 'right' })
+          pdf.text(row.cpuPeak == null ? '—' : `${numberText(row.cpuPeak, 1)}%`, cpuX, rowY, { align: 'right' })
+          pdf.text(row.pssPeak == null ? '—' : `${numberText(row.pssPeak, 2)} GB`, pssX, rowY, { align: 'right' })
+          rowY += 4.2
         })
+
+        const leader = summary.workloads[0]
+        if (leader) {
+          const percent = Math.round((leader.seen / episodeCount) * 100)
+          pdf.setFont('helvetica', 'bold')
+          pdf.setFontSize(6.8)
+          pdf.setTextColor(71, 87, 97)
+          pdf.text(`Paling sering muncul: ${clipped(leader.key, 27)} · ${leader.seen}/${episodeCount} kejadian (${percent}%)`, x, thresholdY + thresholdH - 4)
+        }
       }
-      drawThresholdEvent(ramContext, margin + 3)
+
+      drawThresholdSummary(ramSummary, margin + 3)
       pdf.setDrawColor(224, 230, 233)
-      pdf.line(margin + 3 + eventW + eventGap / 2, thresholdY + 11, margin + 3 + eventW + eventGap / 2, thresholdY + thresholdH - 3)
-      drawThresholdEvent(cpuContext, margin + 3 + eventW + eventGap)
+      pdf.line(margin + 3 + panelW + panelGap / 2, thresholdY + 11, margin + 3 + panelW + panelGap / 2, thresholdY + thresholdH - 3)
+      drawThresholdSummary(cpuSummary, margin + 3 + panelW + panelGap)
 
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, H - 15, W - margin, H - 15)
