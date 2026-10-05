@@ -452,21 +452,6 @@ function signedDelta(value, previous, unit = '') {
   return `${delta > 0 ? '+' : ''}${numberText(delta, 1)}${unit}`
 }
 
-function trendAppComparison(trend, selected) {
-  const target = Date.parse(selected?.bucket || selected?.at || '')
-  if (!Number.isFinite(target)) return []
-  return (trend?.items || [])
-    .map((row) => {
-      const bucketAt = Date.parse(row.bucket || '')
-      const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
-      if (!Number.isFinite(bucketAt) || !Number.isFinite(value)) return null
-      return { host: shortHost(row.host || ''), bucketAt, value }
-    })
-    .filter(Boolean)
-    .filter((row) => Math.abs(row.bucketAt - target) <= 1000)
-    .sort((left, right) => left.host.localeCompare(right.host))
-}
-
 function workloadWp(consumer) {
   const details = consumer?.details || {}
   return [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
