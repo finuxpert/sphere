@@ -327,7 +327,7 @@ export default function RundeckSource({ onCollection }) {
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
       const W = pdf.internal.pageSize.getWidth()
       const H = pdf.internal.pageSize.getHeight()
-      const margin = 9
+      const margin = 8
       const contentW = W - margin * 2
       pdf.setFillColor(248, 250, 251)
       pdf.rect(0, 0, W, H, 'F')
@@ -470,11 +470,11 @@ export default function RundeckSource({ onCollection }) {
       const chartY = y + 6
       const chartGap = 6
       const chartColW = (contentW - chartGap) / 2
-      const chartMaxH = 36
+      const chartMaxH = 44
       const drawTrendChart = (chart, title, x) => {
         if (!chart) return
         pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(8.8)
+        pdf.setFontSize(9.4)
         pdf.setTextColor(22, 31, 38)
         const trendContext = [trendRangeLabel, trendIntervalLabel, trendModeLabel].filter(Boolean).join(' · ')
         pdf.text(`${String(title || 'Server Trend').replace(/\s+/g, ' ')}${trendContext ? ` · ${trendContext}` : ''}`, x, chartY - 3)
@@ -485,7 +485,7 @@ export default function RundeckSource({ onCollection }) {
       drawTrendChart(serverChart2, trendTitle2, margin + chartColW + chartGap)
 
       const workY = chartY + chartMaxH + 8
-      const leftW = contentW * .56
+      const leftW = contentW * .57
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
       const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
@@ -498,63 +498,70 @@ export default function RundeckSource({ onCollection }) {
       const selectedCriticalWpText = selectedCriticalWpRaw === null || selectedCriticalWpRaw === undefined
         ? 'Not observed for selected workload'
         : String(selectedCriticalWpRaw)
+      const analysisCardY = workY - 6
+      const analysisCardH = 25
+      pdf.setFillColor(244, 247, 249)
+      pdf.setDrawColor(220, 226, 229)
+      pdf.roundedRect(margin, analysisCardY, leftW, analysisCardH, 1.2, 1.2, 'FD')
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(9.2)
-      pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, workY - 7, W - margin, workY - 7)
-      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
+      pdf.setFontSize(9.6)
+      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 42)}`, margin + 3, workY - 1)
       if (inspectedProgram) {
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7)
         pdf.setTextColor(92, 105, 114)
-        pdf.text(`Program ${clipped(inspectedProgram, 48)}`, margin, workY + 0.8)
+        pdf.text(`Program ${clipped(inspectedProgram, 44)}`, margin + 3, workY + 2)
       }
-      const selectedMetricY = inspectedProgram ? workY + 5.2 : workY + 2
+      const selectedMetricY = inspectedProgram ? workY + 7 : workY + 4
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.3)
+      pdf.setFontSize(7.6)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('CPU', margin, selectedMetricY)
-      pdf.text('PSS MEMORY', margin + 27, selectedMetricY)
-      pdf.text('PROCESSES', margin + 62, selectedMetricY)
-      pdf.text('WP CONTEXT', margin + 91, selectedMetricY)
-      pdf.text('APP CRIT WP', margin + 114, selectedMetricY)
+      pdf.text('CPU', margin + 3, selectedMetricY)
+      pdf.text('PSS MEMORY', margin + 31, selectedMetricY)
+      pdf.text('PROCESSES', margin + 67, selectedMetricY)
+      pdf.text('WP CONTEXT', margin + 96, selectedMetricY)
+      pdf.text('APP CRIT WP', margin + 121, selectedMetricY)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(8)
+      pdf.setFontSize(8.8)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin, selectedMetricY + 3.5)
-      pdf.text(pssText(inspectedSource), margin + 27, selectedMetricY + 3.5)
-      pdf.text(processText(inspectedSource), margin + 62, selectedMetricY + 3.5)
-      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 91, selectedMetricY + 3.5)
-      pdf.text(selectedCriticalWpText, margin + 114, selectedMetricY + 3.5)
-      pdf.setFontSize(7)
+      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin + 3, selectedMetricY + 4)
+      pdf.text(pssText(inspectedSource), margin + 31, selectedMetricY + 4)
+      pdf.text(processText(inspectedSource), margin + 67, selectedMetricY + 4)
+      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 96, selectedMetricY + 4)
+      pdf.text(selectedCriticalWpText, margin + 121, selectedMetricY + 4)
+      pdf.setFontSize(7.4)
       pdf.setTextColor(92, 105, 114)
       const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
-      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: workload observation · SM37 not connected`, margin, selectedMetricY + 7.5)
+      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · workload observation · SM37 not connected`, margin + 3, selectedMetricY + 8.5)
       // Keep the one-page handoff readable: selected workload metrics carry the
       // evidence here, while the full workload chart remains available in the UI.
       // Omitting the mini-chart prevents the lower report band from colliding
       // with Review / Check Summary on dense runs.
 
       const evaluationItems = evaluationResult.items || []
-      const sideX = margin + leftW + 7
+      const sideX = margin + leftW + 6
+      const sideW = W - margin - sideX
+      pdf.setFillColor(244, 247, 249)
+      pdf.setDrawColor(220, 226, 229)
+      pdf.roundedRect(sideX, analysisCardY, sideW, analysisCardH, 1.2, 1.2, 'FD')
       pdf.setTextColor(22, 31, 38)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9)
-      pdf.text('JOBS & PROGRAMS · REVIEW', sideX, workY - 3)
+      pdf.text('JOBS & PROGRAMS · REVIEW', sideX + 3, workY - 1)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('Observed CPU, PSS Memory and APP Critical WP', sideX, workY + 0.8)
-      const reviewCols = [0, 57, 77, 97]
+      pdf.text('Top review priority · observed CPU, PSS Memory and APP Critical WP', sideX + 3, workY + 2.5)
+      const reviewCols = [3, 57, 77, 97]
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.1)
-      ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
+      ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 7))
       pdf.setDrawColor(220, 226, 229)
-      pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
+      pdf.line(sideX + 3, workY + 8.5, W - margin - 3, workY + 8.5)
       const reviewRows = evaluationItems.slice(0, 2)
-      const reviewBottom = H - 29
-      let sideY = workY + 10.5
+      const reviewBottom = analysisCardY + analysisCardH - 2
+      let sideY = workY + 12
       reviewRows.forEach((row) => {
         if (sideY + 3.2 >= reviewBottom) return
         const reason = evaluationReasonText(row)
@@ -582,7 +589,7 @@ export default function RundeckSource({ onCollection }) {
         sideY += 5
       })
       pdf.setDrawColor(226, 231, 234)
-      pdf.line(sideX, reviewBottom, W - margin, reviewBottom)
+      pdf.line(sideX + 3, reviewBottom, W - margin - 3, reviewBottom)
 
       pdf.setDrawColor(220, 226, 229)
       pdf.line(margin, H - 15, W - margin, H - 15)
