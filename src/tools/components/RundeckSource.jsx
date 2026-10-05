@@ -380,51 +380,35 @@ export default function RundeckSource({ onCollection }) {
       }
 
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.8)
+      pdf.setFontSize(7.6)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
-      pdf.setFontSize(6.8)
-      pdf.setTextColor(112, 126, 135)
-      pdf.text(
-        `System ${String(platformState || 'UNKNOWN').toUpperCase()} · Collector ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()} · Data ${reportDataAlignment} · Availability ${availabilityState} · SM37 not connected`,
-        margin,
-        32.3,
-      )
+      pdf.text(`${formatTime(latest?.finished_at)} WIB · Run #${latest?.execution_id || '—'} · ${APP_DISPLAY_VERSION}`, margin, 29)
 
-      const current = incidentSummary?.current_workload || {}
       const affected = shortHost(incidentSummary?.affected_server || '')
       const signal = incidentSummary?.primary_signal || {}
       const signalValue = metric(signal.value, signal.unit || '')
-      const since = incidentSummary?.signal_active_since || incidentSummary?.detected_since
-      pdf.setTextColor(71, 87, 97)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.6)
-      pdf.text('SUMMARY', margin, 35)
       pdf.setTextColor(22, 31, 38)
-      pdf.setFontSize(10.5)
-      pdf.text(`${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 40)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.5)
-      pdf.setTextColor(92, 105, 114)
-      pdf.text(`Since ${formatTime(since)} WIB · Duration ${reportDuration(incidentSummary?.duration_seconds)} · Performance ${formatTime(latest?.finished_at)} WIB`, margin, 44.5)
-      pdf.setFontSize(7)
-      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · ${formatTime(reportAvailabilityAt)} WIB · Selected ${clipped(selectedJob?.key || current.consumer_key || 'No workload selected', 34)}`, margin + 137, 44.5)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(10.2)
+      pdf.text(`${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 35.5)
 
       pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, 48, W - margin, 48)
+      pdf.line(margin, 39, W - margin, 39)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.5)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('AVAILABILITY', margin, 52.5)
+      pdf.text('AVAILABILITY', margin, 43.5)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin, 57)
-      pdf.text(`HANA Primary ${availabilityStatus(hanaRows, 'PRIMARY')} · Secondary ${availabilityStatus(hanaRows, 'SECONDARY')} · Replication ${availabilityStatus(hanaRows, 'DR')}`, margin + 48, 57)
-      pdf.text(`WEB HTTP ${availabilityStatus(webRows, 'HTTP')} · HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 126, 57)
-      pdf.line(margin, 61, W - margin, 61)
+      pdf.text(
+        `SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · HANA Primary ${availabilityStatus(hanaRows, 'PRIMARY')} · Secondary ${availabilityStatus(hanaRows, 'SECONDARY')} · Replication ${availabilityStatus(hanaRows, 'DR')}`,
+        margin,
+        48,
+      )
+      pdf.line(margin, 52, W - margin, 52)
 
-      let y = 68
+      let y = 59
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.8)
       pdf.setTextColor(22, 31, 38)
@@ -432,15 +416,14 @@ export default function RundeckSource({ onCollection }) {
       y += 4
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.4)
-      const columns = [0, 52, 92, 136, 180]
-      ;['APP', 'CPU', 'RAM', 'I/O WAIT', 'APP CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
+      const columns = [0, 58, 103, 158]
+      ;['APP', 'CPU', 'RAM', 'APP CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
       y += 4
       operationalHosts.slice(0, 5).forEach((host) => {
         pdf.text(shortHost(host.host), margin + columns[0], y)
         pdf.text(metric(host.cpu_pct, '%'), margin + columns[1], y)
         pdf.text(metric(host.ram_pct, '%'), margin + columns[2], y)
-        pdf.text(metric(host.io_wait_pct, '%'), margin + columns[3], y)
-        pdf.text(metric(host.wp_critical), margin + columns[4], y)
+        pdf.text(metric(host.wp_critical), margin + columns[3], y)
         y += 4
       })
 
@@ -661,14 +644,6 @@ export default function RundeckSource({ onCollection }) {
           rowY += 4.2
         })
 
-        const leader = summary.workloads[0]
-        if (leader) {
-          const percent = Math.round((leader.seen / episodeCount) * 100)
-          pdf.setFont('helvetica', 'bold')
-          pdf.setFontSize(6.8)
-          pdf.setTextColor(71, 87, 97)
-          pdf.text(`Paling sering muncul: ${clipped(leader.key, 27)} · ${leader.seen}/${episodeCount} kejadian (${percent}%)`, x, thresholdY + thresholdH - 4)
-        }
       }
 
       drawThresholdSummary(ramSummary, margin + 3)
@@ -686,7 +661,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(7.1)
       pdf.setTextColor(92, 105, 114)
       pdf.text(
-        `APP Critical WP = evidence APP · Data kosong = UNKNOWN · Job/program yang muncul belum otomatis penyebab utama · Grouped CPU bisa >100%`,
+        'Job/program tercatat aktif saat RAM/CPU tinggi dan belum otomatis menjadi penyebab utama.',
         margin,
         H - 8,
       )
