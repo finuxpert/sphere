@@ -354,6 +354,77 @@ function processCount(consumer) {
   return value === null || value === undefined ? null : Number(value)
 }
 
+function MiniTrendContext({ trend, selected, range }) {
+  const model = React.useMemo(() => {
+    const host = selected?.host || ''
+    const rows = (trend?.items || [])
+      .filter((row) => shortHost(row.host || '') === shortHost(host))
+      .map((row) => {
+        const at = Date.parse(row.bucket || '')
+        const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
+        return Number.isFinite(at) && Number.isFinite(value) ? { at, value } : null
+      })
+      .filter(Boolean)
+      .sort((a,b)=>a.at-b.at)
+    if (rows.length < 2) return null
+    const minAt = rows[0].at
+    const maxAt = rows.at(-1).at
+    const values = rows.map((row)=>row.value)
+    const minValue = Math.min(...values)
+    const maxValue = Math.max(...values)
+    const spanAt = Math.max(1, maxAt-minAt)
+    const spanValue = Math.max(1e-9, maxValue-minValue)
+    const point = (row) => ({
+      x: 12 + ((row.at-minAt)/spanAt)*496,
+      y: 68 - ((row.value-minValue)/spanValue)*50,
+    })
+    const points = rows.map((row)=>point(row))
+    const selectedActualAt = Date.parse(selected?.at || '')
+    const selectedBucketAt = Date.parse(selected?.bucket || '')
+    const selectedRow = Number.isFinite(selectedBucketAt)
+      ? rows.reduce((best,row)=>!best || Math.abs(row.at-selectedBucketAt)<Math.abs(best.at-selectedBucketAt) ? row : best,null)
+      : rows.at(-1)
+    const marker = selectedRow ? point(selectedRow) : null
+    const selectedValue = Number(selected?.value)
+    return {
+      points: points.map((p)=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),
+      marker,
+      minValue,
+      maxValue,
+      selectedValue:Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value,
+      firstAt:minAt,
+      lastAt:maxAt,
+      selectedActualAt:Number.isFinite(selectedActualAt) ? selectedActualAt : selectedRow?.at,
+      selectedBucketAt:Number.isFinite(selectedBucketAt) ? selectedBucketAt : selectedRow?.at,
+    }
+  },[selected,trend])
+
+  if(!model) return null
+  return <section className="rundeckTrendMiniContext" aria-label="History around selected point">
+    <header>
+      <div><span>History</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
+      <small>{numberText(model.minValue,1)}–{numberText(model.maxValue,1)}{selected?.unit || trend?.unit || ''}</small>
+    </header>
+    <svg viewBox="0 0 520 104" role="img" aria-label="History with selected bucket marker">
+      <line x1="12" y1="18" x2="508" y2="18" className="rundeckTrendMiniGrid" />
+      <line x1="12" y1="43" x2="508" y2="43" className="rundeckTrendMiniGrid" />
+      <line x1="12" y1="68" x2="508" y2="68" className="rundeckTrendMiniGrid" />
+      <polyline points={model.points} className="rundeckTrendMiniLine" />
+      {model.marker && <>
+        <line x1={model.marker.x} y1="10" x2={model.marker.x} y2="72" className="rundeckTrendMiniMarkerLine" />
+        <circle cx={model.marker.x} cy={model.marker.y} r="4" className="rundeckTrendMiniMarker" />
+      </>}
+      <text x="12" y="94" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
+      {model.selectedBucketAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
+      <text x="508" y="94" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
+    </svg>
+    <footer>
+      <span>Actual {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'} · Bucket {model.selectedBucketAt ? `${formatWib(model.selectedBucketAt, true)} WIB` : '—'}</span>
+      <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong>
+    </footer>
+  </section>
+}
+
 function trendPointNeighbors(trend, selected) {
   const host = shortHost(selected?.host || '')
   const rows = (trend?.items || [])
@@ -401,43 +472,34 @@ function workloadWp(consumer) {
   return [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
 }
 
-function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenInfrastructure, onOpenEvidence, trend }) {
+function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenInfrastructure, onOpenEvidence, trend, range }) {
   if (!selected && !loading && !error) return null
   const selectedRow = selectedTimelineRow(selected, timeline)
-  const consumers = selectedRow?.top_consumers || []
+  const consumers = (selectedRow?.top_consumers || []).slice(0, 5)
   const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
   const resourceState = selectedRow ? hostResourceState(selectedRow) : ''
   const neighbors = trendPointNeighbors(trend, selected)
   const selectedUnit = selected?.unit || trend?.unit || ''
   const topContext = consumers[0] ? snapshotContext(selected, selectedRow, consumers[0]) : null
-  const appComparison = trendAppComparison(trend, selected)
   const warning = Number(trend?.warning)
   const critical = Number(trend?.critical)
   const selectedValue = Number(selected?.value)
-  const aboveCritical = Number.isFinite(selectedValue) && Number.isFinite(critical) && selectedValue >= critical
-  const aboveWarning = Number.isFinite(selectedValue) && Number.isFinite(warning) && selectedValue >= warning
   const thresholdText = [
     Number.isFinite(warning) ? `Warn ${numberText(warning, 0)}${selectedUnit}` : '',
     Number.isFinite(critical) ? `Critical ${numberText(critical, 0)}${selectedUnit}` : '',
     neighbors.previous ? `${signedDelta(selectedValue, neighbors.previous.value, selectedUnit)} vs previous` : '',
   ].filter(Boolean).join(' · ')
-  const topConsumer = consumers[0] || null
 
   return <section className="rundeckTrendModalContent" aria-live="polite">
-    <section className="rundeckTrendSpikeSummary" aria-label="Selected trend point">
-      <div>
-        <span>Selected Point</span>
-        <strong>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(trend?.metric)} {aboveCritical || aboveWarning ? 'Spike' : 'Detail'}</strong>
-        <small>{selected?.mode === 'max' ? 'Peak' : 'Observed'} {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selectedUnit}`} at {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}</small>
-      </div>
-      <div className="rundeckTrendSpikeThreshold">
-        {thresholdText && <b>{thresholdText}</b>}
-        <small>{selected?.bucket ? `Bucket ${formatWib(selected.bucket, true)} WIB` : ''}{collectionId ? ` · Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : ''}</small>
-      </div>
-    </section>
-
-        {!loading && !error && selectedRow && <section className="rundeckTrendInvestigationSnapshot" aria-label="APP snapshot at selected time">
-      <header><span>APP Snapshot at Selected Time</span><small>{selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}</small></header>
+    {!loading && !error && selectedRow && <section className="rundeckTrendInvestigationSnapshot" aria-label="APP snapshot at selected time">
+      <header>
+        <span>APP Snapshot</span>
+        <small>
+          {selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}
+          {thresholdText ? ` · ${thresholdText}` : ''}
+          {collectionId ? ` · Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : ''}
+        </small>
+      </header>
       <div className="rundeckTrendSnapshotMetrics">
         <span><b>CPU</b>{selectedRow.cpu_pct == null ? '—' : `${numberText(selectedRow.cpu_pct, 1)}%`}</span>
         <span><b>RAM</b>{selectedRow.ram_pct == null ? '—' : `${numberText(selectedRow.ram_pct, 1)}%`}</span>
@@ -445,21 +507,50 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
         <span className={Number(selectedRow.wp_critical || 0) > 0 ? 'is-attention' : ''}><b>APP Critical WP</b>{selectedRow.wp_critical ?? 'Not observed'}</span>
         <span><b>APP Resource</b>{resourceState || 'UNKNOWN'}</span>
       </div>
-      <p>APP Critical WP is APP-level evidence at the retained observation. It does not prove that a workload caused the spike.</p>
+      <p>APP Critical WP is APP-level evidence at this retained observation; it does not prove workload causation.</p>
     </section>}
 
-    {appComparison.length > 0 && <section className="rundeckTrendAppComparison" aria-label="APP comparison at selected time">
-      <header><span>APP Comparison</span><small>Same trend bucket</small></header>
-      <div>{appComparison.map((item) => <span key={item.host} className={item.host === shortHost(selected?.host || '') ? 'is-selected' : ''}><b>{item.host}</b>{numberText(item.value,1)}{selectedUnit}</span>)}</div>
-    </section>}
-
-    {topConsumer && <section className="rundeckTrendTopWorkload" aria-label="Top workload at selected time">
-      <div><span>Top Workload at Selected Time</span><strong title={topConsumer.consumer_key}>{topConsumer.consumer_key}</strong><small>{workloadTypeLabel(topConsumer.consumer_type)}</small></div>
-      <p>CPU <b>{numberText(topConsumer.cpu_pct,1)}%</b> · PSS <b>{pssValue(topConsumer)==null?'—':`${numberText(pssValue(topConsumer),2)} GB`}</b> · Processes <b>{processCount(topConsumer)==null?'—':numberText(processCount(topConsumer),0)}</b> · WP <b>{workloadWp(topConsumer)}</b></p>
-    </section>}
+    {!loading && !error && selected && <MiniTrendContext trend={trend} selected={selected} range={range} />}
 
     {loading && <div className="rundeckHistoryState rundeckTrendModalLoading"><span className="rundeckTrendModalSpinner" aria-hidden="true" /> Loading saved history…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
+
+    {!loading && !error && selected && <section className="rundeckTrendWorkloadPanel">
+      <header>
+        <div>
+          <span>Top Jobs / Programs at Selected Time</span>
+          <strong>Top {consumers.length} loaded</strong>
+        </div>
+        {selected?.at && <small>{formatWib(selected.at, true)} WIB</small>}
+      </header>
+
+      <div className="rundeckTrendWorkloadHead" aria-hidden="true">
+        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">CPU</span><span>PSS Memory</span><span>Processes</span><span>WP</span><span />
+      </div>
+
+      <div className="rundeckTrendWorkloadRows">
+        {consumers.map((consumer, index) => {
+          const context = snapshotContext(selected, selectedRow, consumer)
+          const pss = pssValue(consumer)
+          const processes = processCount(consumer)
+          return <button
+            key={`${consumer.consumer_type}-${consumer.consumer_key}-${index}`}
+            type="button"
+            className="rundeckTrendWorkloadRow"
+            onClick={() => context && onSelectJob?.(context)}
+            title={`${workloadTypeLabel(consumer.consumer_type)} · open Performance Analysis`}
+          >
+            <span className="rundeckTrendWorkloadIdentity"><b>{index + 1}. {consumer.consumer_key}</b><small>{workloadTypeLabel(consumer.consumer_type)}</small></span>
+            <span>{numberText(consumer.cpu_pct, 1)}%</span>
+            <span>{pss === null || Number.isNaN(pss) ? '—' : `${numberText(pss, 2)} GB`}</span>
+            <span>{processes === null || Number.isNaN(processes) ? '—' : numberText(processes, 0)}</span>
+            <span>{workloadWp(consumer)}</span>
+            <span className="rundeckTrendWorkloadChevron">›</span>
+          </button>
+        })}
+        {!consumers.length && <div className="rundeckSnapshotEmpty">No saved job or program data was found for this APP at this time.</div>}
+      </div>
+    </section>}
 
     {!loading && !error && selected && <div className="rundeckTrendInvestigationActions" aria-label="Trend investigation actions">
       <button type="button" disabled={!topContext} onClick={() => topContext && onSelectJob?.(topContext)}>Analyze Top Workload</button>
@@ -671,7 +762,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
-          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} onOpenInfrastructure={openTrendInfrastructure} onOpenEvidence={openTrendEvidence} trend={activeTrend} />
+          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} onOpenInfrastructure={openTrendInfrastructure} onOpenEvidence={openTrendEvidence} trend={activeTrend} range={range} />
         </div>
       </section>
     </div>}
