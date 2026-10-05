@@ -304,10 +304,9 @@ export default function RundeckSource({ onCollection }) {
       const trendModeLabel = panel.querySelector('[aria-label="Server trend view"] .is-active')?.textContent?.trim() || 'Peak'
       const reportRange = trendRangeLabel.toLowerCase()
       const reportBucket = trendIntervalLabel.toLowerCase()
-      const [{ default: html2canvas }, { jsPDF }, workloadResult, ramTrendResult, cpuTrendResult, availabilityResult, brandLogo] = await Promise.all([
+      const [{ default: html2canvas }, { jsPDF }, ramTrendResult, cpuTrendResult, availabilityResult, brandLogo] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
-        latest?.collection_id ? json(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latest.collection_id)}&limit=4`) : Promise.resolve({ items: [] }),
         json(`${API}/history/trend?range=${encodeURIComponent(reportRange)}&bucket=${encodeURIComponent(reportBucket)}&metric=ram`).catch(() => null),
         json(`${API}/history/trend?range=${encodeURIComponent(reportRange)}&bucket=${encodeURIComponent(reportBucket)}&metric=cpu`).catch(() => null),
         json(`${API}/availability/latest`).catch(() => null),
