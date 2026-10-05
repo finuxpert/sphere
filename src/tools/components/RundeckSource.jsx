@@ -406,6 +406,13 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFontSize(7.8)
       pdf.setTextColor(92, 105, 114)
       pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
+      pdf.setFontSize(6.8)
+      pdf.setTextColor(112, 126, 135)
+      pdf.text(
+        `System ${String(platformState || 'UNKNOWN').toUpperCase()} · Collector ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()} · Data ${reportDataAlignment} · Availability ${availabilityState} · SM37 not connected`,
+        margin,
+        32.3,
+      )
 
       const current = incidentSummary?.current_workload || {}
       const affected = shortHost(incidentSummary?.affected_server || '')
@@ -477,37 +484,7 @@ export default function RundeckSource({ onCollection }) {
       drawTrendChart(serverChart1, trendTitle1, margin)
       drawTrendChart(serverChart2, trendTitle2, margin + chartColW + chartGap)
 
-      const technicalY = chartY + chartMaxH + 4
-      pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, technicalY, W - margin, technicalY)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.7)
-      pdf.setTextColor(71, 87, 97)
-      pdf.text('TECHNICAL STATUS', margin, technicalY + 4)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.5)
-      pdf.setTextColor(22, 31, 38)
-      const technicalParts = [
-        `SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}`,
-        `COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}`,
-        `DATA ${reportDataAlignment}`,
-        `AVAILABILITY ${availabilityState}`,
-        'SM37 FEED NOT CONNECTED',
-      ]
-      let technicalX = margin + 35
-      technicalParts.forEach((part, index) => {
-        if (index === 2 && reportDataAlignment !== 'ALIGNED') {
-          pdf.setFont('helvetica', 'bold')
-          pdf.setTextColor(154, 104, 18)
-        } else {
-          pdf.setFont('helvetica', 'normal')
-          pdf.setTextColor(22, 31, 38)
-        }
-        pdf.text(part, technicalX, technicalY + 4)
-        technicalX += pdf.getTextWidth(part) + 6
-      })
-
-      const workY = 153
+      const workY = chartY + chartMaxH + 8
       const leftW = contentW * .56
       const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
       const inspectedWorkload = selectedJob?.key || current.consumer_key
@@ -575,14 +552,20 @@ export default function RundeckSource({ onCollection }) {
       ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
       pdf.setDrawColor(220, 226, 229)
       pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
-      const reviewRows = evaluationItems.slice(0, 3)
+      const reviewRows = evaluationItems.slice(0, 2)
       const reviewBottom = H - 29
       let sideY = workY + 10.5
       reviewRows.forEach((row) => {
         if (sideY + 3.2 >= reviewBottom) return
         const reason = evaluationReasonText(row)
         const compactReason = reason
-          ? clipped(String(reason).replace(/\s+/g, ' ').replace(/historical baseline/gi, 'baseline'), 38)
+          ? clipped(
+            String(reason)
+              .replace(/\s+/g, ' ')
+              .replace(/historical baseline/gi, 'baseline')
+              .split(/[.;·]/)[0],
+            28,
+          )
           : ''
         pdf.setTextColor(22, 31, 38)
         pdf.setFont('helvetica', 'normal')
@@ -602,34 +585,25 @@ export default function RundeckSource({ onCollection }) {
       pdf.line(sideX, reviewBottom, W - margin, reviewBottom)
 
       pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, H - 26, W - margin, H - 26)
+      pdf.line(margin, H - 15, W - margin, H - 15)
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(8)
+      pdf.setFontSize(7.6)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('CHECK SUMMARY', margin, H - 22.5)
+      pdf.text('NOTES', margin, H - 11.5)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.5)
-      pdf.setTextColor(22, 31, 38)
-      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · APP Critical WP ${selectedCriticalWpText} · Data ${reportDataAlignment} · Timing ${reportSkewMinutes == null ? 'unknown' : `${reportSkewMinutes}m`}`, margin, H - 18.8)
       pdf.setFontSize(7.1)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`Performance ${formatTime(reportPerformanceAt)} WIB · Availability ${formatTime(reportAvailabilityAt)} WIB`, margin + 165, H - 18.8)
-
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.8)
-      pdf.setTextColor(71, 87, 97)
-      pdf.text('NOTES', margin, H - 14.5)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.25)
-      pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37 Feed NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation = UNKNOWN, not DOWN.', margin, H - 11)
-      pdf.text('Timing correlation does not prove causation · Grouped CPU may exceed 100% across multiple processes/CPU cores.', margin, H - 8)
+      pdf.text(
+        `APP Critical WP = APP-level evidence · Missing observation = UNKNOWN · Correlation does not prove causation · Grouped CPU may exceed 100%`,
+        margin,
+        H - 8,
+      )
       pdf.setDrawColor(210, 217, 221)
-      pdf.line(margin, H - 6.2, W - margin, H - 6.2)
-      pdf.setFontSize(7.3)
+      pdf.line(margin, H - 5.7, W - margin, H - 5.7)
+      pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 3)
-      pdf.text('Page 1 / 1', W - margin - 18, H - 3)
+      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 2.7)
+      pdf.text('Page 1 / 1', W - margin - 18, H - 2.7)
 
       const host = shortHost(incidentSummary?.affected_server || selectedJob?.host || 'SAP') || 'SAP'
       const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
