@@ -300,11 +300,17 @@ export default function RundeckSource({ onCollection }) {
     setExporting(true)
     setError('')
     try {
-      const [{ default: html2canvas }, { jsPDF }, workloadResult, evaluationResult, availabilityResult, brandLogo] = await Promise.all([
+      const trendRangeLabel = panel.querySelector('[aria-label="Shared trend period"] .is-active')?.textContent?.trim() || '30D'
+      const trendIntervalLabel = panel.querySelector('[aria-label="Trend interval"] .is-active')?.textContent?.trim() || 'Auto'
+      const trendModeLabel = panel.querySelector('[aria-label="Server trend view"] .is-active')?.textContent?.trim() || 'Peak'
+      const reportRange = trendRangeLabel.toLowerCase()
+      const reportBucket = trendIntervalLabel.toLowerCase()
+      const [{ default: html2canvas }, { jsPDF }, workloadResult, ramTrendResult, cpuTrendResult, availabilityResult, brandLogo] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
         latest?.collection_id ? json(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latest.collection_id)}&limit=4`) : Promise.resolve({ items: [] }),
-        json(`${API}/evaluation/workloads?period=1d&type=ALL&limit=100`).catch(() => ({ items: [] })),
+        json(`${API}/history/trend?range=${encodeURIComponent(reportRange)}&bucket=${encodeURIComponent(reportBucket)}&metric=ram`).catch(() => null),
+        json(`${API}/history/trend?range=${encodeURIComponent(reportRange)}&bucket=${encodeURIComponent(reportBucket)}&metric=cpu`).catch(() => null),
         json(`${API}/availability/latest`).catch(() => null),
         loadImage(BRAND_LOGO),
       ])
@@ -320,9 +326,6 @@ export default function RundeckSource({ onCollection }) {
       ])
       const trendTitle1 = panel.querySelector('.is-server-trend-1 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 1'
       const trendTitle2 = panel.querySelector('.is-server-trend-2 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 2'
-      const trendRangeLabel = panel.querySelector('[aria-label="Shared trend period"] .is-active')?.textContent?.trim() || ''
-      const trendIntervalLabel = panel.querySelector('[aria-label="Trend interval"] .is-active')?.textContent?.trim() || ''
-      const trendModeLabel = panel.querySelector('[aria-label="Server trend view"] .is-active')?.textContent?.trim() || ''
 
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
       const W = pdf.internal.pageSize.getWidth()
