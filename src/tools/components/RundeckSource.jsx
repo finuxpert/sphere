@@ -99,16 +99,6 @@ function clipped(value, length = 44) {
   return text.length > length ? `${text.slice(0, length - 1)}…` : text
 }
 
-function reportDuration(seconds) {
-  const value = Number(seconds)
-  if (!Number.isFinite(value) || value < 0) return '—'
-  const minutes = Math.floor(value / 60)
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-  return rest ? `${hours}h ${rest}m` : `${hours}h`
-}
-
 function availabilityStatus(rows = [], name = '') {
   const key = String(name || '').toUpperCase()
   const row = rows.find((item) => String(item?.name || '').toUpperCase() === key)
@@ -334,7 +324,6 @@ export default function RundeckSource({ onCollection }) {
       const availabilityApps = availabilityResult?.sap_app || []
       const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
       const hanaRows = availabilityResult?.hana_system_db || []
-      const webRows = availabilityResult?.web_dispatcher || []
       const reportPerformanceAt = latest?.collection_time_wib || latest?.finished_at || ''
       const reportAvailabilityAt = availabilityResult?.collected_at || ''
       const reportPerformanceTs = Date.parse(reportPerformanceAt || '')
