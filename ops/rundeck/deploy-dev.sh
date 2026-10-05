@@ -197,7 +197,27 @@ systemctl enable sphere-rundeck-api.service sphere-rundeck-poller.timer sphere-r
 systemctl restart sphere-rundeck-api.service
 systemctl enable --now sphere-rundeck-poller.timer sphere-rundeck-infra-poller.timer sphere-rundeck-infra-aop-prod-test.timer sphere-rundeck-watchdog.timer >/dev/null
 systemctl start sphere-rundeck-poller.service
-systemctl start sphere-rundeck-infra-poller.service
+
+start_oneshot_with_retry() {
+  local service="$1"
+  local attempts="${2:-2}"
+  local delay="${3:-3}"
+  local attempt
+  for attempt in $(seq 1 "$attempts"); do
+    if systemctl start "$service"; then
+      return 0
+    fi
+    echo "SERVICE RETRY ${service} attempt=${attempt}/${attempts}" >&2
+    systemctl reset-failed "$service" >/dev/null 2>&1 || true
+    (( attempt < attempts )) && sleep "$delay"
+  done
+  echo "SERVICE FAILED ${service} after ${attempts} attempts" >&2
+  return 1
+}
+
+# Infrastructure ingestion depends on a read-only Rundeck call. A single network/
+# API stall must not roll the whole DEV release back when an immediate retry is healthy.
+start_oneshot_with_retry sphere-rundeck-infra-poller.service 2 3
 systemctl start sphere-rundeck-infra-aop-prod-test.service
 systemctl start sphere-rundeck-watchdog.service
 systemctl reload nginx
