@@ -45,30 +45,6 @@ const ageLabel = (minutes) => {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
-const pssText = (row = {}) => {
-  const raw = row.details?.total_pss_gb ?? row.details?.pss_gb
-  const value = Number(raw)
-  return Number.isFinite(value) ? `${numberText(value, 2)} GB` : '—'
-}
-
-const processText = (row = {}) => {
-  const value = Number(row.details?.process_count || 0)
-  return Number.isFinite(value) && value > 0 ? numberText(value, 0) : '1'
-}
-
-const programText = (row = {}) => {
-  const program = row.details?.program
-  if (program) return program
-  return String(row.consumer_type || '').toUpperCase() === 'PROGRAM' ? row.consumer_key || '' : ''
-}
-
-const distinctProgramText = (row = {}) => {
-  const program = String(programText(row) || '').trim()
-  const workload = String(row.consumer_key || '').trim()
-  if (!program) return ''
-  return program.toUpperCase() === workload.toUpperCase() ? '' : program
-}
-
 const shortSignal = (label = '') => String(label || 'Performance issue')
   .replace(/Critical Work Process/gi, 'Critical WP')
   .replace(/Work Process/gi, 'WP')
