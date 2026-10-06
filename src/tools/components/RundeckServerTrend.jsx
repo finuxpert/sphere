@@ -129,7 +129,7 @@ function CollectionGapBand({ trend }) {
   const sorted = [...gaps].sort((left, right) => (right[1] - right[0]) - (left[1] - left[0]))
   const [from, to] = sorted[0] || []
   return <>
-    {historyStartedAt && !observed && <div className="rundeckCollectionGapBandV132" role="status" title="Earlier time in this selected range has no retained SPHERE performance collection.">
+    {historyStartedAt && !observed && <div className="rundeckHistoryStartV13471" role="status" title="Earlier time in this selected range has no retained SPHERE performance collection.">
       <span>Data tersimpan mulai</span>
       <strong>{formatWib(historyStartedAt, true)} WIB</strong>
     </div>}
