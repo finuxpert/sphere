@@ -401,12 +401,12 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.8)
       pdf.setTextColor(22, 31, 38)
-      pdf.text('SAP APP SERVER STATUS', margin, y)
+      pdf.text('SAP APP SERVER', margin, y)
       y += 4
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.4)
       const columns = [0, 58, 103, 158]
-      ;['APP', 'CPU', 'RAM', 'APP CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
+      ;['APP', 'CPU', 'RAM', 'CRITICAL WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
       y += 4
       operationalHosts.slice(0, 5).forEach((host) => {
         pdf.text(shortHost(host.host), margin + columns[0], y)
@@ -573,7 +573,7 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(6.9)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('Dirangkum dari job/program yang tercatat aktif pada collection saat RAM atau CPU melewati threshold.', margin + 3, thresholdY + 8.5)
+      pdf.text('Job/program yang tercatat aktif saat RAM atau CPU tinggi.', margin + 3, thresholdY + 8.5)
 
       const panelGap = 5
       const panelW = (contentW - 6 - panelGap) / 2
@@ -732,7 +732,7 @@ export default function RundeckSource({ onCollection }) {
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span>{formatTime(latestCollectionAt, true)} WIB</span>
           <span>{appCount || '—'} APP</span>
-          <span className="rundeckCycleIdentityV132">Performance <b>READY</b> #{latest?.execution_id || '—'}</span>
+          <span className="rundeckCycleIdentityV132">Collection <b>READY</b> #{latest?.execution_id || '—'}</span>
         </div>
       </div>
       <div className="rundeckActions">
@@ -748,7 +748,7 @@ export default function RundeckSource({ onCollection }) {
             className="rundeckCollectButton"
             disabled={actionBusy || !runState.allowed}
             onClick={collectNow}
-            title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Performance READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
+            title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Collection READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
           >
             <SphereIcon name="refresh" /> {actionBusy ? 'Collection starting' : runState.running ? `Collection running #${runState.execution_id || '—'}` : runState.cooldown ? 'Collect cooldown' : 'Collect Now'}
           </button>
