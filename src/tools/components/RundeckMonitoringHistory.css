@@ -2581,3 +2581,26 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     white-space:normal!important;
   }
 }
+
+
+/* SPHERE v1.34.71 — retained history start is coverage information, not a collection failure. */
+.appShell:has(.rundeckPanel) .rundeckHistoryStartV13471{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-height:20px;
+  margin:0 0 3px;
+  padding:2px 6px;
+  border-left:2px solid rgba(113,128,137,.55);
+  color:var(--sphere-text-muted,#718089);
+  font-size:8px;
+}
+.appShell:has(.rundeckPanel) .rundeckHistoryStartV13471 span{
+  font-weight:700;
+  text-transform:none;
+}
+.appShell:has(.rundeckPanel) .rundeckHistoryStartV13471 strong{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:8.6px;
+  font-weight:720;
+}
