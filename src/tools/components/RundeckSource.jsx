@@ -567,9 +567,6 @@ export default function RundeckSource({ onCollection }) {
       const workY = chartY + chartMaxH + 5
       const thresholdY = workY
       const thresholdH = Math.max(38, H - 18 - thresholdY)
-      pdf.setFillColor(244, 247, 249)
-      pdf.setDrawColor(220, 226, 229)
-      pdf.roundedRect(margin, thresholdY, contentW, thresholdH, 1.2, 1.2, 'FD')
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9.2)
       pdf.setTextColor(22, 31, 38)
@@ -611,10 +608,7 @@ export default function RundeckSource({ onCollection }) {
         pdf.text('MUNCUL', seenX, thresholdY + 22, { align: 'right' })
         pdf.text('CPU PEAK', cpuX, thresholdY + 22, { align: 'right' })
         pdf.text('PSS PEAK', pssX, thresholdY + 22, { align: 'right' })
-        pdf.setDrawColor(220, 226, 229)
-        pdf.line(x, thresholdY + 23.5, x + panelW, thresholdY + 23.5)
-
-        let rowY = thresholdY + 28
+        let rowY = thresholdY + 27
         if (!summary.workloads.length) {
           pdf.setFont('helvetica', 'normal')
           pdf.setFontSize(7)
@@ -636,11 +630,9 @@ export default function RundeckSource({ onCollection }) {
       }
 
       drawThresholdSummary(ramSummary, margin + 3)
-      pdf.setDrawColor(224, 230, 233)
-      pdf.line(margin + 3 + panelW + panelGap / 2, thresholdY + 11, margin + 3 + panelW + panelGap / 2, thresholdY + thresholdH - 3)
       drawThresholdSummary(cpuSummary, margin + 3 + panelW + panelGap)
 
-      pdf.setDrawColor(220, 226, 229)
+      pdf.setDrawColor(232, 236, 238)
       pdf.line(margin, H - 15, W - margin, H - 15)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.6)
@@ -654,8 +646,6 @@ export default function RundeckSource({ onCollection }) {
         margin,
         H - 8,
       )
-      pdf.setDrawColor(210, 217, 221)
-      pdf.line(margin, H - 5.7, W - margin, H - 5.7)
       pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
       pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 2.7)
