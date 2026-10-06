@@ -566,7 +566,6 @@ export default function RundeckSource({ onCollection }) {
 
       const workY = chartY + chartMaxH + 5
       const thresholdY = workY
-      const thresholdH = Math.max(38, H - 18 - thresholdY)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9.2)
       pdf.setTextColor(22, 31, 38)
