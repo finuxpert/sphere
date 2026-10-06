@@ -77,7 +77,7 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.69', files.version.includes("APP_VERSION = '1.34.69'") && files.version.includes('monitoring-flow-ui-v1.34.69')],
+  ['monitoring flow version is v1.34.70', files.version.includes("APP_VERSION = '1.34.70'") && files.version.includes('monitoring-flow-ui-v1.34.70')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
