@@ -74,14 +74,14 @@ export default function RundeckAppServers({ refreshToken = '', latestCollectionI
     {!state.error && state.items.length > 0 && <div className="rundeckAppServerSummary">
       <span><b>Observed</b><strong>{state.items.length} APP</strong></span>
       <span><b>Needs attention</b><strong>{warningApps}</strong></span>
-      <span><b>Critical</b><strong>{criticalApps}</strong></span>
+      <span><b>Critical Signal</b><strong>{criticalApps}</strong></span>
       <span><b>Highest CPU</b><strong>{shortHost(highestCpu?.host)} {metric(highestCpu?.cpu_pct,'%')}</strong></span>
       <span><b>Highest RAM</b><strong>{shortHost(highestRam?.host)} {metric(highestRam?.ram_pct,'%')}</strong></span>
-      <span><b>Highest APP Critical WP</b><strong>{shortHost(highestWp?.host)} {metric(highestWp?.wp_critical)}</strong></span>
+      <span><b>Highest Critical WP</b><strong>{shortHost(highestWp?.host)} {metric(highestWp?.wp_critical)}</strong></span>
     </div>}
     {state.error && <div className="rundeckHistoryState is-error">{state.error}</div>}
     {!state.error && <div className="rundeckServerTableWrap"><table className="rundeckServerTable">
-      <thead><tr><th>APP</th><th>CPU</th><th>RAM</th><th>I/O Wait</th><th>APP Critical WP</th><th>Status</th></tr></thead>
+      <thead><tr><th>APP</th><th>CPU</th><th>RAM</th><th>I/O Wait</th><th>APP Critical WP</th><th>Signal</th></tr></thead>
       <tbody>{state.items.map((host) => {
         const wpCount = Number(host.wp_critical || 0)
         const actionable = Boolean(onInspectApp)
