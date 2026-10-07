@@ -19,6 +19,8 @@ if [[ -n "$(git -C "$SOURCE" status --porcelain)" ]]; then
 fi
 
 REVISION=$(git -C "$SOURCE" rev-parse HEAD)
+SHORT_REVISION="${REVISION:0:7}"
+APP_VERSION="$(sed -n "s/^export const APP_VERSION = '\([^']*\)'.*/\1/p" "$SOURCE/src/app/version.js" | head -n 1)"
 RELEASE=/opt/sphere-rundeck-dev/releases/$REVISION
 WEB=/var/www/sphere-dev/releases/$REVISION
 PREVIOUS_API=$(readlink -f "$API_CURRENT" 2>/dev/null || true)
@@ -96,8 +98,16 @@ fetch_json() {
 trap rollback ERR
 trap cleanup EXIT
 
+test -n "$APP_VERSION"
 test -f "$SOURCE/dist/index.html"
 grep -q '/dev/assets/' "$SOURCE/dist/index.html"
+if ! grep -Rqs "$APP_VERSION" "$SOURCE/dist/assets" || ! grep -Rqs "$SHORT_REVISION" "$SOURCE/dist/assets"; then
+  echo "DEPLOY BLOCKED: DEV dist is stale." >&2
+  echo "Expected artifact: v$APP_VERSION · $SHORT_REVISION" >&2
+  echo "Run: bash ops/rundeck/qa-build-dev.sh" >&2
+  exit 2
+fi
+echo "DEV ARTIFACT VERIFIED v$APP_VERSION · $SHORT_REVISION"
 install -d -m 0755 "$RELEASE" "$WEB"
 git -C "$SOURCE" archive HEAD | tar -x -C "$RELEASE"
 cp -a "$SOURCE/dist/." "$WEB/"
