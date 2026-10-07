@@ -6,9 +6,20 @@ LOG="${SPHERE_QA_LOG:-/tmp/sphere-qa.log}"
 
 cd "$ROOT"
 
+CURRENT_BRANCH="$(git branch --show-current)"
+CURRENT_SHA="$(git rev-parse HEAD)"
+if [[ "$CURRENT_BRANCH" != "rundeck-sphere-dev" ]]; then
+  echo "QA BLOCKED: expected branch rundeck-sphere-dev, found ${CURRENT_BRANCH:-unknown}" >&2
+  exit 2
+fi
+export GITHUB_REF_NAME="$CURRENT_BRANCH"
+export GITHUB_SHA="$CURRENT_SHA"
+rm -rf dist
+
 echo "=== SPHERE DEV QA ==="
 echo "Path: $ROOT"
 echo "Log : $LOG"
+echo "HEAD: $CURRENT_SHA"
 echo
 
 set +e
@@ -34,11 +45,15 @@ if [[ $qa_rc -ne 0 || -n "$fails" ]]; then
   exit 1
 fi
 
-echo
-echo "QA PASS - running build..."
-npm run build
+APP_VERSION="$(sed -n "s/^export const APP_VERSION = '\([^']*\)'.*/\1/p" src/app/version.js | head -n 1)"
+SHORT_SHA="${CURRENT_SHA:0:7}"
+test -n "$APP_VERSION"
+test -f dist/index.html
+grep -Rqs "$APP_VERSION" dist/assets
+grep -Rqs "$SHORT_SHA" dist/assets
 
 echo
 echo "=== RESULT ==="
 echo "QA PASS"
 echo "BUILD PASS"
+echo "ARTIFACT VERIFIED v$APP_VERSION · $SHORT_SHA"
