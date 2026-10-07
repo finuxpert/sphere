@@ -106,39 +106,47 @@ function trendGaps(trend) {
     const gaps = trend.observation_gaps
       .map((gap) => [Date.parse(gap?.from || ''), Date.parse(gap?.to || '')])
       .filter(([from, to]) => Number.isFinite(from) && Number.isFinite(to) && to > from)
-    return { gaps, rangeStart, rangeEnd, intervalMs }
+    return { gaps, rangeStart, rangeEnd, intervalMs, historyStartedAt: null }
   }
 
   const gapThresholdMs = intervalMs * 2
   const buckets = Array.from(new Set(rows.map((row) => Date.parse(row.bucket)).filter(Number.isFinite))).sort((a, b) => a - b)
+  const historyStartedAt = Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > gapThresholdMs
+    ? buckets[0]
+    : null
   const gaps = []
-  if (Number.isFinite(rangeStart) && buckets.length && buckets[0] - rangeStart > gapThresholdMs) gaps.push([rangeStart, buckets[0] - intervalMs])
   for (let index = 1; index < buckets.length; index += 1) {
     if (buckets[index] - buckets[index - 1] > gapThresholdMs) gaps.push([buckets[index - 1] + intervalMs, buckets[index] - intervalMs])
   }
   if (buckets.length && rangeEnd - buckets[buckets.length - 1] > gapThresholdMs) gaps.push([buckets[buckets.length - 1] + intervalMs, rangeEnd])
-  return { gaps, rangeStart, rangeEnd, intervalMs }
+  return { gaps, rangeStart, rangeEnd, intervalMs, historyStartedAt }
 }
 
 function CollectionGapBand({ trend }) {
-  const { gaps } = React.useMemo(() => trendGaps(trend), [trend])
-  if (!gaps.length) return null
-  const sorted = [...gaps].sort((left, right) => (right[1] - right[0]) - (left[1] - left[0]))
-  const [from, to] = sorted[0]
+  const { gaps, historyStartedAt } = React.useMemo(() => trendGaps(trend), [trend])
   const observed = trend?.metric === 'availability'
-  return <details className={`rundeckCollectionGapBandV132 ${observed ? 'is-observation-gap' : ''}`} role="status">
-    <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
-      <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
-      <strong>{gapTimeRangeText(from, to)}</strong>
-      <small>{gapDurationText(from, to)}{gaps.length > 1 ? ` · +${gaps.length - 1} more` : ''}</small>
-    </summary>
-    {gaps.length > 1 && <div className="rundeckGapDetailsV133">
-      {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
-        <b>{index + 1}</b><span>{gapTimeRangeText(gapFrom, gapTo)}</span><small>{gapDurationText(gapFrom, gapTo)}</small>
-      </div>)}
-      {gaps.length > 8 && <small>+{gaps.length - 8} more retained-gap interval{gaps.length - 8 === 1 ? '' : 's'}</small>}
+  if (!gaps.length && !historyStartedAt) return null
+  const sorted = [...gaps].sort((left, right) => (right[1] - right[0]) - (left[1] - left[0]))
+  const [from, to] = sorted[0] || []
+  return <>
+    {historyStartedAt && !observed && <div className="rundeckHistoryStartV13471" role="status" title="Earlier time in this selected range has no retained SPHERE performance collection.">
+      <span>Data tersimpan mulai</span>
+      <strong>{formatWib(historyStartedAt, true)} WIB</strong>
     </div>}
-  </details>
+    {gaps.length > 0 && <details className={`rundeckCollectionGapBandV132 ${observed ? 'is-observation-gap' : ''}`} role="status">
+      <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
+        <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
+        <strong>{gapTimeRangeText(from, to)}</strong>
+        <small>{gapDurationText(from, to)}{gaps.length > 1 ? ` · +${gaps.length - 1} more` : ''}</small>
+      </summary>
+      {gaps.length > 1 && <div className="rundeckGapDetailsV133">
+        {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
+          <b>{index + 1}</b><span>{gapTimeRangeText(gapFrom, gapTo)}</span><small>{gapDurationText(gapFrom, gapTo)}</small>
+        </div>)}
+        {gaps.length > 8 && <small>+{gaps.length - 8} more retained-gap interval{gaps.length - 8 === 1 ? '' : 's'}</small>}
+      </div>}
+    </details>}
+  </>
 }
 
 function AvailabilityCoverageBand({ trend }) {
@@ -402,10 +410,10 @@ function MiniTrendContext({ trend, selected, range }) {
   if(!model) return null
   return <section className="rundeckTrendMiniContext" aria-label="History around selected point">
     <header>
-      <div><span>History</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} History · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
+      <div><span>History</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
       <small>{numberText(model.minValue,1)}–{numberText(model.maxValue,1)}{selected?.unit || trend?.unit || ''}</small>
     </header>
-    <svg viewBox="0 0 520 104" role="img" aria-label="History with selected point and time labels">
+    <svg viewBox="0 0 520 104" role="img" aria-label="History with selected bucket marker">
       <line x1="12" y1="18" x2="508" y2="18" className="rundeckTrendMiniGrid" />
       <line x1="12" y1="43" x2="508" y2="43" className="rundeckTrendMiniGrid" />
       <line x1="12" y1="68" x2="508" y2="68" className="rundeckTrendMiniGrid" />
@@ -419,7 +427,7 @@ function MiniTrendContext({ trend, selected, range }) {
       <text x="508" y="94" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
     </svg>
     <footer>
-      <span>{selected?.mode === 'max' ? 'Peak sample' : 'Selected sample'} · {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'}{model.selectedBucketAt ? ` · Bucket ${formatWib(model.selectedBucketAt, true)} WIB` : ''}</span>
+      <span>Actual {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'} · Bucket {model.selectedBucketAt ? `${formatWib(model.selectedBucketAt, true)} WIB` : '—'}</span>
       <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong>
     </footer>
   </section>
@@ -452,21 +460,6 @@ function signedDelta(value, previous, unit = '') {
   return `${delta > 0 ? '+' : ''}${numberText(delta, 1)}${unit}`
 }
 
-function trendAppComparison(trend, selected) {
-  const target = Date.parse(selected?.bucket || selected?.at || '')
-  if (!Number.isFinite(target)) return []
-  return (trend?.items || [])
-    .map((row) => {
-      const bucketAt = Date.parse(row.bucket || '')
-      const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
-      if (!Number.isFinite(bucketAt) || !Number.isFinite(value)) return null
-      return { host: shortHost(row.host || ''), bucketAt, value }
-    })
-    .filter(Boolean)
-    .filter((row) => Math.abs(row.bucketAt - target) <= 1000)
-    .sort((left, right) => left.host.localeCompare(right.host))
-}
-
 function workloadWp(consumer) {
   const details = consumer?.details || {}
   return [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
@@ -475,52 +468,31 @@ function workloadWp(consumer) {
 function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenInfrastructure, onOpenEvidence, trend, range }) {
   if (!selected && !loading && !error) return null
   const selectedRow = selectedTimelineRow(selected, timeline)
-  const consumers = selectedRow?.top_consumers || []
+  const consumers = (selectedRow?.top_consumers || []).slice(0, 5)
   const collectionId = selectedRow?.collection_id || timeline?.collection_id || selected?.collectionId || ''
   const resourceState = selectedRow ? hostResourceState(selectedRow) : ''
   const neighbors = trendPointNeighbors(trend, selected)
   const selectedUnit = selected?.unit || trend?.unit || ''
-  const rowTime = Date.parse(selectedRow?.collected_at || '')
-  const selectedTime = Date.parse(selected?.at || '')
-  const timingMinutes = Number.isFinite(rowTime) && Number.isFinite(selectedTime)
-    ? Math.round(Math.abs(rowTime - selectedTime) / 60000)
-    : null
-  const timingText = timeline?.correlation_mode === 'collection'
-    ? 'Exact saved collection'
-    : timingMinutes === null
-      ? 'Retained timing unavailable'
-      : timingMinutes === 0
-        ? 'Nearest retained observation - same minute'
-        : `Nearest retained observation - ${timingMinutes}m difference`
   const topContext = consumers[0] ? snapshotContext(selected, selectedRow, consumers[0]) : null
-  const appComparison = trendAppComparison(trend, selected)
   const warning = Number(trend?.warning)
   const critical = Number(trend?.critical)
   const selectedValue = Number(selected?.value)
-  const aboveCritical = Number.isFinite(selectedValue) && Number.isFinite(critical) && selectedValue >= critical
-  const aboveWarning = Number.isFinite(selectedValue) && Number.isFinite(warning) && selectedValue >= warning
   const thresholdText = [
     Number.isFinite(warning) ? `Warn ${numberText(warning, 0)}${selectedUnit}` : '',
     Number.isFinite(critical) ? `Critical ${numberText(critical, 0)}${selectedUnit}` : '',
     neighbors.previous ? `${signedDelta(selectedValue, neighbors.previous.value, selectedUnit)} vs previous` : '',
   ].filter(Boolean).join(' · ')
-  const topConsumer = consumers[0] || null
 
   return <section className="rundeckTrendModalContent" aria-live="polite">
-    <section className="rundeckTrendSpikeSummary" aria-label="Selected trend point">
-      <div>
-        <span>Selected Point</span>
-        <strong>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(trend?.metric)} {aboveCritical || aboveWarning ? 'Spike' : 'Detail'}</strong>
-        <small>{selected?.mode === 'max' ? 'Peak' : 'Observed'} {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selectedUnit}`} at {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}</small>
-      </div>
-      <div className="rundeckTrendSpikeThreshold">
-        {thresholdText && <b>{thresholdText}</b>}
-        <small>{selected?.bucket ? `Bucket ${formatWib(selected.bucket, true)} WIB` : ''}{collectionId ? ` · Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : ''}</small>
-      </div>
-    </section>
-
-        {!loading && !error && selectedRow && <section className="rundeckTrendInvestigationSnapshot" aria-label="APP snapshot at selected time">
-      <header><span>APP Snapshot at Selected Time</span><small>{selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}</small></header>
+    {!loading && !error && selectedRow && <section className="rundeckTrendInvestigationSnapshot" aria-label="APP snapshot at selected time">
+      <header>
+        <span>APP Snapshot</span>
+        <small>
+          {selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}
+          {thresholdText ? ` · ${thresholdText}` : ''}
+          {collectionId ? ` · Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : ''}
+        </small>
+      </header>
       <div className="rundeckTrendSnapshotMetrics">
         <span><b>CPU</b>{selectedRow.cpu_pct == null ? '—' : `${numberText(selectedRow.cpu_pct, 1)}%`}</span>
         <span><b>RAM</b>{selectedRow.ram_pct == null ? '—' : `${numberText(selectedRow.ram_pct, 1)}%`}</span>
@@ -528,36 +500,10 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
         <span className={Number(selectedRow.wp_critical || 0) > 0 ? 'is-attention' : ''}><b>APP Critical WP</b>{selectedRow.wp_critical ?? 'Not observed'}</span>
         <span><b>APP Resource</b>{resourceState || 'UNKNOWN'}</span>
       </div>
-      <p>APP Critical WP is APP-level evidence at the retained observation. It does not prove that a workload caused the spike.</p>
+      <p>APP Critical WP is APP-level evidence at this retained observation; it does not prove workload causation.</p>
     </section>}
 
-    {appComparison.length > 0 && <section className="rundeckTrendAppComparison" aria-label="APP comparison at selected time">
-      <header><span>APP Comparison</span><small>Same trend bucket</small></header>
-      <div>{appComparison.map((item) => <span key={item.host} className={item.host === shortHost(selected?.host || '') ? 'is-selected' : ''}><b>{item.host}</b>{numberText(item.value,1)}{selectedUnit}</span>)}</div>
-    </section>}
-
-    {topConsumer && <section className="rundeckTrendTopWorkload" aria-label="Top workload at selected time">
-      <div><span>Top Workload at Selected Time</span><strong title={topConsumer.consumer_key}>{topConsumer.consumer_key}</strong><small>{workloadTypeLabel(topConsumer.consumer_type)}</small></div>
-      <p>CPU <b>{numberText(topConsumer.cpu_pct,1)}%</b> · PSS <b>{pssValue(topConsumer)==null?'—':`${numberText(pssValue(topConsumer),2)} GB`}</b> · Processes <b>{processCount(topConsumer)==null?'—':numberText(processCount(topConsumer),0)}</b> · WP <b>{workloadWp(topConsumer)}</b></p>
-    </section>}
-
-    <section className="rundeckTrendComparison" aria-label="Selected point comparison">
-      <header><span>Point Comparison</span><small>{selected?.mode === 'max' ? 'Peak' : 'Average'} {selected?.metricLabel || metricLabel(trend?.metric)}</small></header>
-      <div>
-        <span><b>Previous</b>{neighbors.previous ? `${numberText(neighbors.previous.value,1)}${selectedUnit}` : '—'}</span>
-        <span className="is-selected"><b>Selected</b>{selected?.value == null ? '—' : `${numberText(selected.value,1)}${selectedUnit}`}<small>{neighbors.previous ? signedDelta(selected.value, neighbors.previous.value, selectedUnit) + ' vs previous' : 'No previous retained bucket'}</small></span>
-        <span><b>Next</b>{neighbors.next ? `${numberText(neighbors.next.value,1)}${selectedUnit}` : '—'}</span>
-      </div>
-    </section>
-
-    <MiniTrendContext trend={trend} selected={selected} range={range} />
-
-    {!loading && !error && selected && <section className="rundeckTrendEvidenceStrip" aria-label="Supporting evidence">
-      <span><b>Critical WP</b>{selectedRow?.wp_critical ?? 'Not observed'}</span>
-      <span><b>Host Resource</b>{resourceState || 'UNKNOWN'}</span>
-      <span><b>Timing</b>{timingText}</span>
-      <span><b>Collection</b>{collectionId ? collectionId.replace(/^rundeck-/, '').slice(0, 18) : '—'}</span>
-    </section>}
+    {!loading && !error && selected && <MiniTrendContext trend={trend} selected={selected} range={range} />}
 
     {loading && <div className="rundeckHistoryState rundeckTrendModalLoading"><span className="rundeckTrendModalSpinner" aria-hidden="true" /> Loading saved history…</div>}
     {error && <div className="rundeckHistoryState is-error">{error}</div>}
@@ -565,14 +511,14 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
     {!loading && !error && selected && <section className="rundeckTrendWorkloadPanel">
       <header>
         <div>
-          <span>Top Workloads at Selected Time</span>
-          <strong>Top {consumers.length} workload{consumers.length === 1 ? '' : 's'} loaded</strong>
+          <span>Top Jobs / Programs at Selected Time</span>
+          <strong>Top {consumers.length} loaded</strong>
         </div>
-        {consumers[0]?.consumer_key && <small>Highest workload CPU · {numberText(consumers[0].cpu_pct, 1)}%</small>}
+        {selected?.at && <small>{formatWib(selected.at, true)} WIB</small>}
       </header>
 
       <div className="rundeckTrendWorkloadHead" aria-hidden="true">
-        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">Workload CPU</span><span>PSS Memory</span><span>Processes</span><span>WP</span><span />
+        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">CPU</span><span>PSS Memory</span><span>Processes</span><span>WP</span><span />
       </div>
 
       <div className="rundeckTrendWorkloadRows">

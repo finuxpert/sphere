@@ -6,7 +6,6 @@ import RundeckSystemData from './RundeckSystemData.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
-import { evaluationReasonText } from './rundeckEvaluationExplain.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
@@ -44,30 +43,6 @@ const ageLabel = (minutes) => {
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
   return rest ? `${hours}h ${rest}m` : `${hours}h`
-}
-
-const pssText = (row = {}) => {
-  const raw = row.details?.total_pss_gb ?? row.details?.pss_gb
-  const value = Number(raw)
-  return Number.isFinite(value) ? `${numberText(value, 2)} GB` : '—'
-}
-
-const processText = (row = {}) => {
-  const value = Number(row.details?.process_count || 0)
-  return Number.isFinite(value) && value > 0 ? numberText(value, 0) : '1'
-}
-
-const programText = (row = {}) => {
-  const program = row.details?.program
-  if (program) return program
-  return String(row.consumer_type || '').toUpperCase() === 'PROGRAM' ? row.consumer_key || '' : ''
-}
-
-const distinctProgramText = (row = {}) => {
-  const program = String(programText(row) || '').trim()
-  const workload = String(row.consumer_key || '').trim()
-  if (!program) return ''
-  return program.toUpperCase() === workload.toUpperCase() ? '' : program
 }
 
 const shortSignal = (label = '') => String(label || 'Performance issue')
@@ -122,16 +97,6 @@ function pdfStatusColor(status) {
 function clipped(value, length = 44) {
   const text = String(value || '—')
   return text.length > length ? `${text.slice(0, length - 1)}…` : text
-}
-
-function reportDuration(seconds) {
-  const value = Number(seconds)
-  if (!Number.isFinite(value) || value < 0) return '—'
-  const minutes = Math.floor(value / 60)
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-  return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
 function availabilityStatus(rows = [], name = '') {
@@ -300,11 +265,16 @@ export default function RundeckSource({ onCollection }) {
     setExporting(true)
     setError('')
     try {
-      const [{ default: html2canvas }, { jsPDF }, workloadResult, evaluationResult, availabilityResult, brandLogo] = await Promise.all([
+      const trendRangeLabel = panel.querySelector('[aria-label="Shared trend period"] .is-active')?.textContent?.trim() || '30D'
+      const trendIntervalLabel = panel.querySelector('[aria-label="Trend interval"] .is-active')?.textContent?.trim() || 'Auto'
+      const trendModeLabel = panel.querySelector('[aria-label="Server trend view"] .is-active')?.textContent?.trim() || 'Peak'
+      const reportRange = trendRangeLabel.toLowerCase()
+      const reportBucket = trendIntervalLabel.toLowerCase()
+      const [{ default: html2canvas }, { jsPDF }, ramTrendResult, cpuTrendResult, availabilityResult, brandLogo] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
-        latest?.collection_id ? json(`${API}/history/jobs/current?collection_id=${encodeURIComponent(latest.collection_id)}&limit=4`) : Promise.resolve({ items: [] }),
-        json(`${API}/evaluation/workloads?period=1d&type=ALL&limit=100`).catch(() => ({ items: [] })),
+        json(`${API}/history/trend?range=${encodeURIComponent(reportRange)}&bucket=${encodeURIComponent(reportBucket)}&metric=ram`).catch(() => null),
+        json(`${API}/history/trend?range=${encodeURIComponent(reportRange)}&bucket=${encodeURIComponent(reportBucket)}&metric=cpu`).catch(() => null),
         json(`${API}/availability/latest`).catch(() => null),
         loadImage(BRAND_LOGO),
       ])
@@ -314,10 +284,9 @@ export default function RundeckSource({ onCollection }) {
         if (!element) return null
         return html2canvas(element, { backgroundColor: '#0f151a', scale: 1.55, useCORS: true, logging: false })
       }
-      const [serverChart1, serverChart2, workloadChart] = await Promise.all([
+      const [serverChart1, serverChart2] = await Promise.all([
         capture('.is-server-trend-1 .rundeckTrendChart'),
         capture('.is-server-trend-2 .rundeckTrendChart'),
-        capture('.rundeckJobPerformanceChart, .rundeckSingleSample'),
       ])
       const trendTitle1 = panel.querySelector('.is-server-trend-1 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 1'
       const trendTitle2 = panel.querySelector('.is-server-trend-2 .rundeckMonitoringHead h3')?.textContent?.trim() || 'Server Trend 2'
@@ -325,7 +294,7 @@ export default function RundeckSource({ onCollection }) {
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
       const W = pdf.internal.pageSize.getWidth()
       const H = pdf.internal.pageSize.getHeight()
-      const margin = 9
+      const margin = 8
       const contentW = W - margin * 2
       pdf.setFillColor(248, 250, 251)
       pdf.rect(0, 0, W, H, 'F')
@@ -355,7 +324,6 @@ export default function RundeckSource({ onCollection }) {
       const availabilityApps = availabilityResult?.sap_app || []
       const availabilityAppUp = availabilityApps.filter((row) => String(row?.status || '').toUpperCase() === 'UP').length
       const hanaRows = availabilityResult?.hana_system_db || []
-      const webRows = availabilityResult?.web_dispatcher || []
       const reportPerformanceAt = latest?.collection_time_wib || latest?.finished_at || ''
       const reportAvailabilityAt = availabilityResult?.collected_at || ''
       const reportPerformanceTs = Date.parse(reportPerformanceAt || '')
@@ -386,211 +354,301 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8)
       pdf.text(status, W - margin - 14.5, 15.7, { align: 'center' })
+      const operationalReason = reportDataAlignment !== 'ALIGNED'
+        ? 'Data partial'
+        : reportAvailabilityStale
+          ? 'Availability data stale'
+          : reportPerformanceStale
+            ? 'Performance data stale'
+            : ''
+      if (operationalReason) {
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(6.6)
+        pdf.setTextColor(192, 203, 209)
+        pdf.text(operationalReason, W - margin - 4, 21, { align: 'right' })
+      }
 
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.8)
+      pdf.setFontSize(7.6)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`${formatTime(latest?.finished_at)} WIB  ·  Run #${latest?.execution_id || '—'}  ·  ${APP_DISPLAY_VERSION}`, margin, 29)
+      pdf.text(`${formatTime(latest?.finished_at)} WIB · Run #${latest?.execution_id || '—'} · ${APP_DISPLAY_VERSION}`, margin, 29)
 
-      const current = incidentSummary?.current_workload || {}
       const affected = shortHost(incidentSummary?.affected_server || '')
       const signal = incidentSummary?.primary_signal || {}
       const signalValue = metric(signal.value, signal.unit || '')
-      const since = incidentSummary?.signal_active_since || incidentSummary?.detected_since
-      pdf.setTextColor(71, 87, 97)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.6)
-      pdf.text('SUMMARY', margin, 35)
       pdf.setTextColor(22, 31, 38)
-      pdf.setFontSize(10.5)
-      pdf.text(`${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 40)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.5)
-      pdf.setTextColor(92, 105, 114)
-      pdf.text(`Since ${formatTime(since)} WIB · Duration ${reportDuration(incidentSummary?.duration_seconds)} · Performance ${formatTime(latest?.finished_at)} WIB`, margin, 44.5)
-      pdf.setFontSize(7)
-      pdf.text(`Availability ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} APP UP` : 'UNKNOWN'} · ${formatTime(reportAvailabilityAt)} WIB · Selected ${clipped(selectedJob?.key || current.consumer_key || 'No workload selected', 34)}`, margin + 137, 44.5)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(10.2)
+      pdf.text(`${affected || 'SAP'}${signal.label ? ` · ${issueSignalText(signal.label, signalValue)}` : ''}`, margin, 35.5)
 
       pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, 48, W - margin, 48)
+      pdf.line(margin, 39, W - margin, 39)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.5)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('AVAILABILITY', margin, 52.5)
+      pdf.text('AVAILABILITY', margin, 43.5)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(`SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'}`, margin, 57)
-      pdf.text(`HANA P ${availabilityStatus(hanaRows, 'PRIMARY')} · S ${availabilityStatus(hanaRows, 'SECONDARY')} · DR ${availabilityStatus(hanaRows, 'DR')}`, margin + 48, 57)
-      pdf.text(`WEB HTTP ${availabilityStatus(webRows, 'HTTP')} · HTTPS ${availabilityStatus(webRows, 'HTTPS')}`, margin + 126, 57)
-      pdf.line(margin, 61, W - margin, 61)
+      pdf.text(
+        `SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · HANA Primary ${availabilityStatus(hanaRows, 'PRIMARY')} · Secondary ${availabilityStatus(hanaRows, 'SECONDARY')} · Replication ${availabilityStatus(hanaRows, 'DR')}`,
+        margin,
+        48,
+      )
+      pdf.line(margin, 52, W - margin, 52)
 
-      let y = 68
+      let y = 59
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(8.8)
       pdf.setTextColor(22, 31, 38)
-      pdf.text('SAP APP SERVER STATUS', margin, y)
+      pdf.text('SAP APP SERVER', margin, y)
       y += 4
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.4)
-      const columns = [0, 52, 92, 136, 180]
-      ;['APP', 'CPU', 'RAM', 'I/O WAIT', 'APP CRIT WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
+      const columns = [0, 58, 103, 158]
+      ;['APP', 'CPU', 'RAM', 'CRITICAL WP'].forEach((label, index) => pdf.text(label, margin + columns[index], y))
       y += 4
       operationalHosts.slice(0, 5).forEach((host) => {
         pdf.text(shortHost(host.host), margin + columns[0], y)
         pdf.text(metric(host.cpu_pct, '%'), margin + columns[1], y)
         pdf.text(metric(host.ram_pct, '%'), margin + columns[2], y)
-        pdf.text(metric(host.io_wait_pct, '%'), margin + columns[3], y)
-        pdf.text(metric(host.wp_critical), margin + columns[4], y)
+        pdf.text(metric(host.wp_critical), margin + columns[3], y)
         y += 4
       })
 
       const chartY = y + 6
       const chartGap = 6
       const chartColW = (contentW - chartGap) / 2
-      const chartMaxH = 40
+      const chartMaxH = 38
       const drawTrendChart = (chart, title, x) => {
         if (!chart) return
         pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(8.8)
+        pdf.setFontSize(9.4)
         pdf.setTextColor(22, 31, 38)
-        pdf.text(String(title || 'Server Trend').replace(/\s+/g, ' '), x, chartY - 3)
+        const trendContext = [trendRangeLabel, trendIntervalLabel, trendModeLabel].filter(Boolean).join(' · ')
+        pdf.text(`${String(title || 'Server Trend').replace(/\s+/g, ' ')}${trendContext ? ` · ${trendContext}` : ''}`, x, chartY - 3)
         const ratio = Math.min(chartColW / chart.width, chartMaxH / chart.height)
         pdf.addImage(chart.toDataURL('image/jpeg', .92), 'JPEG', x, chartY, chart.width * ratio, chart.height * ratio, undefined, 'FAST')
       }
       drawTrendChart(serverChart1, trendTitle1, margin)
       drawTrendChart(serverChart2, trendTitle2, margin + chartColW + chartGap)
 
-      const technicalY = chartY + chartMaxH + 4
-      pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, technicalY, W - margin, technicalY)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.7)
-      pdf.setTextColor(71, 87, 97)
-      pdf.text('TECHNICAL STATUS', margin, technicalY + 4)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.2)
-      pdf.setTextColor(22, 31, 38)
-      pdf.text(`SYSTEM ${String(platformState || 'UNKNOWN').toUpperCase()}   |   COLLECTOR ${String(platform?.collector?.status || 'UNKNOWN').toUpperCase()}   |   DATA ${reportDataAlignment}   |   AVAILABILITY ${availabilityState}   |   SM37 FEED NOT CONNECTED`, margin + 35, technicalY + 4)
+      const bucketDurationMs = (label, rows = []) => {
+        const fixed = {
+          '10m': 10 * 60 * 1000,
+          '30m': 30 * 60 * 1000,
+          '1h': 60 * 60 * 1000,
+          '6h': 6 * 60 * 60 * 1000,
+          '1d': 24 * 60 * 60 * 1000,
+        }[String(label || '').toLowerCase()]
+        if (fixed) return fixed
+        const byHost = new Map()
+        rows.forEach((row) => {
+          const host = shortHost(row?.host || '')
+          const at = Date.parse(row?.bucket || '')
+          if (!host || !Number.isFinite(at)) return
+          if (!byHost.has(host)) byHost.set(host, [])
+          byHost.get(host).push(at)
+        })
+        const diffs = []
+        byHost.forEach((times) => {
+          times.sort((a, b) => a - b)
+          for (let index = 1; index < times.length; index += 1) {
+            const diff = times[index] - times[index - 1]
+            if (diff > 0) diffs.push(diff)
+          }
+        })
+        if (!diffs.length) return 10 * 60 * 1000
+        diffs.sort((a, b) => a - b)
+        return diffs[Math.floor(diffs.length / 2)]
+      }
 
-      const workY = 158
-      const leftW = contentW * .56
-      const inspectedHost = shortHost(selectedJob?.host || incidentSummary?.affected_server || '') || 'SAP'
-      const inspectedWorkload = selectedJob?.key || current.consumer_key
-      const inspectedSource = [current, ...(workloadResult.items || [])].find((row) => (
-        row?.consumer_key === inspectedWorkload && (!selectedJob?.host || !row?.host || row.host === selectedJob.host)
-      )) || {}
-      const inspectedProgram = distinctProgramText(inspectedSource)
-      const selectedCriticalWpRaw = selectedJob && Object.prototype.hasOwnProperty.call(selectedJob, 'criticalWp')
-        ? selectedJob.criticalWp
-        : (inspectedSource.host_wp_critical ?? inspectedSource.host_critical_wp)
-      const selectedCriticalWpText = selectedCriticalWpRaw === null || selectedCriticalWpRaw === undefined
-        ? 'Not observed'
-        : String(selectedCriticalWpRaw)
-      pdf.setTextColor(22, 31, 38)
+      const thresholdEpisodes = (trend, metricName) => {
+        const warning = Number(trend?.warning)
+        const critical = Number(trend?.critical)
+        const sourceRows = (trend?.items || [])
+          .map((row) => ({ ...row, peakValue: Number(row?.max_value), atMs: Date.parse(row?.peak_at || row?.bucket || '') }))
+          .filter((row) => Number.isFinite(row.peakValue) && Number.isFinite(row.atMs))
+        if (!Number.isFinite(warning)) {
+          return { metric: metricName, warning, critical, peak: null, episodes: [] }
+        }
+        const intervalMs = bucketDurationMs(reportBucket, sourceRows)
+        const byHost = new Map()
+        sourceRows
+          .filter((row) => row.peakValue >= warning)
+          .forEach((row) => {
+            const host = shortHost(row?.host || '') || 'APP'
+            if (!byHost.has(host)) byHost.set(host, [])
+            byHost.get(host).push({ ...row, host })
+          })
+        const episodes = []
+        byHost.forEach((rows, host) => {
+          rows.sort((left, right) => left.atMs - right.atMs)
+          let episode = null
+          rows.forEach((row) => {
+            const contiguous = episode && row.atMs - episode.lastAtMs <= intervalMs * 1.6
+            if (!contiguous) {
+              if (episode) episodes.push(episode)
+              episode = {
+                host,
+                startAt: row.bucket || row.peak_at,
+                endAt: row.bucket || row.peak_at,
+                lastAtMs: row.atMs,
+                peakValue: row.peakValue,
+                at: row.peak_at || row.bucket,
+                bucket: row.bucket,
+                collectionId: row.peak_collection_id || '',
+              }
+            } else {
+              episode.endAt = row.bucket || row.peak_at
+              episode.lastAtMs = row.atMs
+              if (row.peakValue > episode.peakValue) {
+                episode.peakValue = row.peakValue
+                episode.at = row.peak_at || row.bucket
+                episode.bucket = row.bucket
+                episode.collectionId = row.peak_collection_id || ''
+              }
+            }
+          })
+          if (episode) episodes.push(episode)
+        })
+        episodes.sort((left, right) => Date.parse(left.at || '') - Date.parse(right.at || ''))
+        const peak = episodes.reduce((best, episode) => (!best || episode.peakValue > best.peakValue ? episode : best), null)
+        return { metric: metricName, warning, critical, peak, episodes }
+      }
+
+      const loadEpisodeTimeline = async (episode) => {
+        if (!episode?.at) return null
+        const collection = episode.collectionId ? `&collection_id=${encodeURIComponent(episode.collectionId)}` : ''
+        return json(`${API}/history/timeline?at=${encodeURIComponent(episode.at)}&window_minutes=5${collection}`).catch(() => null)
+      }
+
+      const buildThresholdSummary = async (trend, metricName) => {
+        const base = thresholdEpisodes(trend, metricName)
+        if (!base.episodes.length) return { ...base, workloads: [] }
+        const timelines = await Promise.all(base.episodes.map((episode) => loadEpisodeTimeline(episode)))
+        const workloadMap = new Map()
+        base.episodes.forEach((episode, episodeIndex) => {
+          const timeline = timelines[episodeIndex]
+          const row = (timeline?.items || []).find((item) => shortHost(item?.host || '') === episode.host)
+            || (timeline?.items || [])[0]
+            || null
+          const seenInEpisode = new Set()
+          ;(row?.top_consumers || []).slice(0, 5).forEach((workload) => {
+            const key = String(workload?.consumer_key || '').trim()
+            if (!key) return
+            const details = workload?.details || {}
+            const pss = Number(details.total_pss_gb ?? details.pss_gb)
+            const cpu = Number(workload?.cpu_pct)
+            let item = workloadMap.get(key)
+            if (!item) {
+              item = { key, seen: 0, cpuPeak: null, pssPeak: null }
+              workloadMap.set(key, item)
+            }
+            if (!seenInEpisode.has(key)) {
+              item.seen += 1
+              seenInEpisode.add(key)
+            }
+            if (Number.isFinite(cpu)) item.cpuPeak = item.cpuPeak === null ? cpu : Math.max(item.cpuPeak, cpu)
+            if (Number.isFinite(pss)) item.pssPeak = item.pssPeak === null ? pss : Math.max(item.pssPeak, pss)
+          })
+        })
+        const workloads = [...workloadMap.values()]
+          .sort((left, right) => right.seen - left.seen || (right.cpuPeak ?? -1) - (left.cpuPeak ?? -1))
+          .slice(0, 5)
+        return { ...base, workloads }
+      }
+
+      const [ramSummary, cpuSummary] = await Promise.all([
+        buildThresholdSummary(ramTrendResult, 'RAM'),
+        buildThresholdSummary(cpuTrendResult, 'CPU'),
+      ])
+
+      const workY = chartY + chartMaxH + 5
+      const thresholdY = workY
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(9.2)
-      pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, workY - 7, W - margin, workY - 7)
-      pdf.text(`Analysis Context · ${inspectedHost} · ${clipped(inspectedWorkload, 48)}`, margin, workY - 2)
-      if (inspectedProgram) {
+      pdf.setTextColor(22, 31, 38)
+      pdf.text('JOB/PROGRAM SAAT RAM / CPU TINGGI', margin + 3, thresholdY + 5)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.9)
+      pdf.setTextColor(92, 105, 114)
+      pdf.text('Job/program yang tercatat aktif saat RAM atau CPU tinggi.', margin + 3, thresholdY + 8.5)
+
+      const panelGap = 5
+      const panelW = (contentW - 6 - panelGap) / 2
+      const drawThresholdSummary = (summary, x) => {
+        const title = summary.metric === 'RAM' ? 'RAM TINGGI' : 'CPU TINGGI'
+        const episodeCount = summary.episodes.length
+        const peak = summary.peak
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(8)
+        pdf.setTextColor(71, 87, 97)
+        pdf.text(title, x, thresholdY + 13)
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(7)
         pdf.setTextColor(92, 105, 114)
-        pdf.text(`Program ${clipped(inspectedProgram, 48)}`, margin, workY + 0.8)
-      }
-      const selectedMetricY = inspectedProgram ? workY + 5.2 : workY + 2
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.3)
-      pdf.setTextColor(71, 87, 97)
-      pdf.text('CPU', margin, selectedMetricY)
-      pdf.text('PSS MEMORY', margin + 27, selectedMetricY)
-      pdf.text('PROCESSES', margin + 62, selectedMetricY)
-      pdf.text('WP CONTEXT', margin + 91, selectedMetricY)
-      pdf.text('APP CRIT WP', margin + 114, selectedMetricY)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(8)
-      pdf.setTextColor(22, 31, 38)
-      pdf.text(metric(inspectedSource.cpu_pct, '%'), margin, selectedMetricY + 3.5)
-      pdf.text(pssText(inspectedSource), margin + 27, selectedMetricY + 3.5)
-      pdf.text(processText(inspectedSource), margin + 62, selectedMetricY + 3.5)
-      pdf.text(clipped(inspectedSource.details?.wp || inspectedSource.details?.wp_type || '—', 15), margin + 91, selectedMetricY + 3.5)
-      pdf.text(selectedCriticalWpText, margin + 114, selectedMetricY + 3.5)
-      pdf.setFontSize(7)
-      pdf.setTextColor(92, 105, 114)
-      const selectedObservedAt = selectedJob?.at || inspectedSource.collected_at || latest?.finished_at
-      pdf.text(`Observed ${formatTime(selectedObservedAt)} WIB · Source: workload observation · SM37 not connected`, margin, selectedMetricY + 7.5)
-      if (workloadChart) {
-        const chartTop = selectedMetricY + 10
-        const chartMaxH = 20
-        const ratio = Math.min(leftW / workloadChart.width, chartMaxH / workloadChart.height)
-        pdf.addImage(workloadChart.toDataURL('image/jpeg', .94), 'JPEG', margin, chartTop, workloadChart.width * ratio, workloadChart.height * ratio, undefined, 'FAST')
-      }
-
-      const evaluationItems = evaluationResult.items || []
-      const sideX = margin + leftW + 7
-      pdf.setTextColor(22, 31, 38)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(9)
-      pdf.text('JOBS & PROGRAMS · REVIEW', sideX, workY - 3)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7)
-      pdf.setTextColor(92, 105, 114)
-      pdf.text('Observed CPU, PSS Memory and APP Critical WP', sideX, workY + 0.8)
-      const reviewCols = [0, 58, 77, 96]
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.1)
-      ;['JOB / PROGRAM', 'AVG CPU', 'PEAK CPU', 'AVG PSS'].forEach((label, index) => pdf.text(label, sideX + reviewCols[index], workY + 5))
-      pdf.setDrawColor(220, 226, 229)
-      pdf.line(sideX, workY + 6.5, W - margin, workY + 6.5)
-      let sideY = workY + 11
-      ;evaluationItems.slice(0, 4).forEach((row) => {
-        const reason = evaluationReasonText(row)
-        pdf.setTextColor(22, 31, 38)
-        pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7.6)
-        pdf.text(clipped(`${shortHost(row.host || row.hosts?.[0] || '')} ${row.consumer_key || '—'}`, 34), sideX + reviewCols[0], sideY)
-        pdf.text(metric(row.avg_cpu_pct, '%'), sideX + reviewCols[1], sideY)
-        pdf.text(metric(row.peak_cpu_pct, '%'), sideX + reviewCols[2], sideY)
-        pdf.text(row.avg_pss_gb == null ? '—' : `${numberText(row.avg_pss_gb, 2)} GB`, sideX + reviewCols[3], sideY)
-        if (reason) {
-          pdf.setTextColor(92, 105, 114)
-          pdf.setFontSize(7)
-          pdf.text(clipped(`Reason: ${reason}`, 55), sideX, sideY + 3)
-          sideY += 7.2
-        } else {
-          sideY += 5.8
+        if (!episodeCount) {
+          pdf.text(`Tidak ada kejadian melewati threshold pada periode ${trendRangeLabel}`, x, thresholdY + 17)
+          return
         }
-      })
+        const peakText = peak
+          ? ` · Peak ${numberText(peak.peakValue, 1)}% · ${peak.host} · ${formatTime(peak.at)} WIB`
+          : ''
+        pdf.text(`${episodeCount} kejadian${peakText}`, x, thresholdY + 17)
 
-      pdf.setDrawColor(220, 226, 229)
-      pdf.line(margin, H - 31, W - margin, H - 31)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7.8)
-      pdf.setTextColor(71, 87, 97)
-      pdf.text('CHECK SUMMARY', margin, H - 27)
-      pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7.5)
-      pdf.setTextColor(22, 31, 38)
-      pdf.text(`Availability: ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · Critical WP: ${selectedCriticalWpText} · Data: ${reportDataAlignment} · Timing: ${reportSkewMinutes == null ? 'unknown' : `${reportSkewMinutes}m`}`, margin, H - 23)
-      pdf.setFontSize(7)
-      pdf.setTextColor(92, 105, 114)
-      pdf.text(`Performance ${formatTime(reportPerformanceAt)} WIB · Availability ${formatTime(reportAvailabilityAt)} WIB`, margin + 158, H - 23)
+        const seenX = x + panelW - 47
+        const cpuX = x + panelW - 31
+        const pssX = x + panelW - 15
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(6.8)
+        pdf.setTextColor(71, 87, 97)
+        pdf.text('JOB / PROGRAM', x, thresholdY + 22)
+        pdf.text('MUNCUL', seenX, thresholdY + 22, { align: 'right' })
+        pdf.text('CPU PEAK', cpuX, thresholdY + 22, { align: 'right' })
+        pdf.text('PSS PEAK', pssX, thresholdY + 22, { align: 'right' })
+        let rowY = thresholdY + 27
+        if (!summary.workloads.length) {
+          pdf.setFont('helvetica', 'normal')
+          pdf.setFontSize(7)
+          pdf.setTextColor(92, 105, 114)
+          pdf.text('Tidak ada data job/program tersimpan untuk kejadian ini.', x, rowY)
+          return
+        }
+        summary.workloads.forEach((row) => {
+          pdf.setFont('helvetica', 'normal')
+          pdf.setFontSize(7)
+          pdf.setTextColor(22, 31, 38)
+          pdf.text(clipped(row.key, 31), x, rowY)
+          pdf.text(`${row.seen} / ${episodeCount}`, seenX, rowY, { align: 'right' })
+          pdf.text(row.cpuPeak == null ? '—' : `${numberText(row.cpuPeak, 1)}%`, cpuX, rowY, { align: 'right' })
+          pdf.text(row.pssPeak == null ? '—' : `${numberText(row.pssPeak, 2)} GB`, pssX, rowY, { align: 'right' })
+          rowY += 4.2
+        })
 
+      }
+
+      drawThresholdSummary(ramSummary, margin + 3)
+      drawThresholdSummary(cpuSummary, margin + 3 + panelW + panelGap)
+
+      pdf.setDrawColor(232, 236, 238)
+      pdf.line(margin, H - 15, W - margin, H - 15)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(7.6)
       pdf.setTextColor(71, 87, 97)
-      pdf.text('NOTES', margin, H - 18)
+      pdf.text('CATATAN', margin, H - 11.5)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7)
+      pdf.setFontSize(7.1)
       pdf.setTextColor(92, 105, 114)
-      pdf.text('SM37 Feed: NOT CONNECTED · APP Critical WP is APP-level evidence · Missing/no observation is UNKNOWN, not DOWN · Correlation does not prove causation.', margin, H - 14)
-      pdf.setDrawColor(210, 217, 221)
-      pdf.line(margin, H - 11, W - margin, H - 11)
+      pdf.text(
+        'Job/program tercatat aktif saat RAM/CPU tinggi dan belum otomatis menjadi penyebab utama.',
+        margin,
+        H - 8,
+      )
       pdf.setFontSize(7.2)
       pdf.setTextColor(92, 105, 114)
-      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 6)
-      pdf.text('Page 1 / 1', W - margin - 18, H - 6)
+      pdf.text(`SPHERE · ${APP_DISPLAY_VERSION} · Rundeck Run #${latest?.execution_id || '—'}`, margin, H - 2.7)
+      pdf.text('Page 1 / 1', W - margin - 18, H - 2.7)
 
       const host = shortHost(incidentSummary?.affected_server || selectedJob?.host || 'SAP') || 'SAP'
       const stamp = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
@@ -674,7 +732,7 @@ export default function RundeckSource({ onCollection }) {
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span>{formatTime(latestCollectionAt, true)} WIB</span>
           <span>{appCount || '—'} APP</span>
-          <span className="rundeckCycleIdentityV132">Performance <b>READY</b> #{latest?.execution_id || '—'}</span>
+          <span className="rundeckCycleIdentityV132">Collection <b>READY</b> #{latest?.execution_id || '—'}</span>
         </div>
       </div>
       <div className="rundeckActions">
@@ -690,7 +748,7 @@ export default function RundeckSource({ onCollection }) {
             className="rundeckCollectButton"
             disabled={actionBusy || !runState.allowed}
             onClick={collectNow}
-            title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Performance READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
+            title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Collection READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
           >
             <SphereIcon name="refresh" /> {actionBusy ? 'Collection starting' : runState.running ? `Collection running #${runState.execution_id || '—'}` : runState.cooldown ? 'Collect cooldown' : 'Collect Now'}
           </button>

@@ -103,14 +103,16 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
   const sortedIndicators=[...indicators].sort((a,b)=>(SEVERITY_RANK[b.status]||0)-(SEVERITY_RANK[a.status]||0))
   const issueIndicators=sortedIndicators.filter((row)=>row.status!=='NORMAL'&&row.status!=='UNKNOWN')
-  const criticalCount=issueIndicators.filter((row)=>row.status==='CRITICAL').length
-  const warningCount=issueIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
-  const mostImpacted=issueIndicators.find((row)=>/^APP\d+$/i.test(row.scope||''))?.scope || '—'
+  const reviewIndicators=issueIndicators.filter((row)=>row.scope!=='SAP Job Source')
+  const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
+  const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
+  const mostImpacted=reviewIndicators.find((row)=>/^APP\d+$/i.test(row.scope||''))?.scope || '—'
 
   if(compact){
+    const reviewText=reviewIndicators.length ? `${reviewIndicators.length} observations need review` : 'No SAP issue observation'
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
-      <strong>{error ? 'Unavailable' : issueIndicators.length ? `${issueIndicators.length} need attention${sm37 === 'READY' ? '' : ' · SM37 warning'}` : 'No active issue indicator'}</strong>
+      <strong>{error ? 'Unavailable' : `${reviewText}${sm37 === 'READY' ? '' : ' · SM37 not connected'}`}</strong>
       <em aria-hidden="true">›</em>
     </button>
   }
@@ -118,7 +120,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const inspect=(row)=>row.host&&onInspectApp?.({host:row.host,source:'sap-issues',issue:row.indicator,severity:row.status})
 
   return <section className="rundeckSapIssuesV1231 is-indicator-console" aria-label="SAP operational issues">
-    <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{issueIndicators.length} need attention</span></header>
+    <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} observations need review{sm37 === 'READY' ? '' : ' · SM37 not connected'}</span></header>
     {error&&<div className="rundeckReviewState is-error">{error}</div>}
     <div className="rundeckSapIssuesSummaryStrip">
       <span><b>Checked indicators</b><strong>{indicators.length}</strong></span>
