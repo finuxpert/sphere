@@ -529,3 +529,82 @@ html[data-theme="light"] .rundeckExplorerHeader p{color:#52666f!important}
 .rundeckTrendMiniSelectedLabel{fill:var(--sphere-text,#e7edf0);font-size:8.5px;font-weight:750}
 .rundeckTrendMiniContext.is-dashboard-like .rundeckTrendMiniLine{stroke-width:2.25}
 .rundeckTrendMiniContext.is-dashboard-like .rundeckTrendMiniGrid{opacity:.55}
+
+
+/* SPHERE v1.34.73 — final flat Trend Details hierarchy. */
+.rundeckTrendPointModalHeader{
+  border-bottom-color:rgba(126,147,158,.055)!important;
+}
+.rundeckTrendPointModalBody{
+  padding-top:8px!important;
+}
+.rundeckTrendInvestigationSnapshot{
+  padding:7px 0 8px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rundeckTrendSnapshotMetrics{
+  gap:18px!important;
+}
+.rundeckTrendMiniContext{
+  margin:0!important;
+  padding:9px 0 8px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rundeckTrendMiniContext.is-dashboard-like .rundeckTrendMiniGrid{
+  opacity:.28!important;
+}
+.rundeckTrendMiniContext.is-dashboard-like .rundeckTrendMiniThreshold{
+  opacity:.68!important;
+}
+.rundeckTrendWorkloadPanel{
+  margin:0!important;
+  padding:9px 0 6px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rundeckTrendWorkloadHead{
+  border-bottom-color:rgba(126,147,158,.035)!important;
+}
+.rundeckTrendWorkloadRow{
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.032)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rundeckTrendWorkloadRow:last-child{
+  border-bottom:0!important;
+}
+.rundeckTrendWorkloadRow:hover,
+.rundeckTrendWorkloadRow:focus-visible{
+  background:rgba(79,198,200,.035)!important;
+  outline:none!important;
+}
+.rundeckTrendInvestigationActions{
+  margin-top:4px!important;
+  padding-top:6px!important;
+  border-top:1px solid rgba(126,147,158,.04)!important;
+  gap:6px!important;
+}
+.rundeckTrendInvestigationActions button{
+  min-height:27px!important;
+  padding:4px 8px!important;
+  border-color:rgba(126,147,158,.11)!important;
+  border-radius:4px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rundeckTrendInvestigationActions button:first-child{
+  border-color:rgba(79,198,200,.26)!important;
+  background:rgba(79,198,200,.025)!important;
+}
