@@ -513,3 +513,19 @@
 .rundeckExplorerEmptyState span{font-size:10px!important}
 html[data-theme="light"] .rundeckExplorerHeader h3{color:#203038!important}
 html[data-theme="light"] .rundeckExplorerHeader p{color:#52666f!important}
+
+
+/* SPHERE v1.34.72 — dashboard-like Trend Details history. */
+.rundeckTrendMiniContext.is-dashboard-like svg{width:100%;height:auto;min-height:154px;display:block}
+.rundeckTrendMiniContext .rundeckTrendMiniSummary{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.rundeckTrendMiniContext .rundeckTrendMiniSummary small{white-space:nowrap}
+.rundeckTrendMiniAxisLabel{fill:var(--sphere-text-muted,#718089);font-size:8px}
+.rundeckTrendMiniThreshold{stroke-width:1;stroke-dasharray:4 3;opacity:.78}
+.rundeckTrendMiniThreshold.is-warning{stroke:var(--sphere-warning,#d8b35f)}
+.rundeckTrendMiniThreshold.is-critical{stroke:var(--sphere-danger,#db7d86)}
+.rundeckTrendMiniThresholdLabel{font-size:8px;font-weight:700}
+.rundeckTrendMiniThresholdLabel.is-warning{fill:var(--sphere-warning,#d8b35f)}
+.rundeckTrendMiniThresholdLabel.is-critical{fill:var(--sphere-danger,#db7d86)}
+.rundeckTrendMiniSelectedLabel{fill:var(--sphere-text,#e7edf0);font-size:8.5px;font-weight:750}
+.rundeckTrendMiniContext.is-dashboard-like .rundeckTrendMiniLine{stroke-width:2.25}
+.rundeckTrendMiniContext.is-dashboard-like .rundeckTrendMiniGrid{opacity:.55}
