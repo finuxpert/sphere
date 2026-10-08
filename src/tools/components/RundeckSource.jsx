@@ -593,9 +593,12 @@ export default function RundeckSource({ onCollection }) {
           return
         }
         const peakText = peak
-          ? ` · Peak ${numberText(peak.peakValue, 1)}% · ${peak.host} · ${formatTime(peak.at)} WIB`
+          ? `Peak ${numberText(peak.peakValue, 1)}% · ${peak.host} · ${formatTime(peak.at)} WIB`
           : ''
-        pdf.text(`${episodeCount} kejadian${peakText}`, x, thresholdY + 17)
+        pdf.setFont('helvetica', 'bold')
+        pdf.setTextColor(71, 87, 97)
+        pdf.text(`${episodeCount} kejadian${peakText ? ` · ${peakText}` : ''}`, x, thresholdY + 17)
+        pdf.setFont('helvetica', 'normal')
 
         const seenX = x + panelW - 47
         const cpuX = x + panelW - 31
@@ -619,7 +622,7 @@ export default function RundeckSource({ onCollection }) {
           pdf.setFont('helvetica', 'normal')
           pdf.setFontSize(7)
           pdf.setTextColor(22, 31, 38)
-          pdf.text(clipped(row.key, 31), x, rowY)
+          pdf.text(clipped(row.key, 29), x, rowY)
           pdf.text(`${row.seen} / ${episodeCount}`, seenX, rowY, { align: 'right' })
           pdf.text(row.cpuPeak == null ? '—' : `${numberText(row.cpuPeak, 1)}%`, cpuX, rowY, { align: 'right' })
           pdf.text(row.pssPeak == null ? '—' : `${numberText(row.pssPeak, 2)} GB`, pssX, rowY, { align: 'right' })
