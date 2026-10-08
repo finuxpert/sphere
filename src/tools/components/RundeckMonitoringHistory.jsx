@@ -141,7 +141,7 @@ export default function RundeckMonitoringHistory(props) {
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
             onTrendContext={forwardTrendContext}
-            infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded />}
+            infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded onOpenMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })} />}
             operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
             appFocusRequest={appFocusRequest}
@@ -350,7 +350,7 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
-            <RundeckInfrastructure incidentStart={props.incidentStart || ''} />
+            <RundeckInfrastructure incidentStart={props.incidentStart || ''} initialContext={activeOverlay.infraContext || activeOverlay.trendContext || null} />
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'review' && activeOverlay.row && <RundeckReviewQuickAnalysis
