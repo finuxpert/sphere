@@ -1137,3 +1137,50 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>small{
   max-width:100%!important;
 }
+
+
+/* SPHERE v1.34.72 — direct Infrastructure Analysis drilldown. */
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink{
+  width:100%;
+  min-width:0;
+  padding:1px 0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 10px;
+  align-items:center;
+  gap:7px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair .rundeckLiveMetricLink{
+  grid-template-columns:minmax(0,1fr) auto 10px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink em,
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary em{
+  color:transparent;
+  font-style:normal;
+  font-size:11px;
+  transition:color 120ms ease,transform 120ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:hover,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:focus-visible{
+  background:rgba(79,198,200,.035);
+  outline:none;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:hover em,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:focus-visible em,
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary.is-clickable:hover em,
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary.is-clickable:focus-visible em{
+  color:var(--sphere-accent,#4fc6c8);
+  transform:translateX(2px);
+}
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary.is-clickable{
+  width:100%;
+  border:0;
+  cursor:pointer;
+  grid-template-columns:auto minmax(0,1fr) 10px;
+  text-align:left;
+}
