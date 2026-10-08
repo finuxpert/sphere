@@ -365,6 +365,7 @@ function processCount(consumer) {
 function MiniTrendContext({ trend, selected, range }) {
   const model = React.useMemo(() => {
     const host = selected?.host || ''
+    const unit = selected?.unit || trend?.unit || ''
     const rows = (trend?.items || [])
       .filter((row) => shortHost(row.host || '') === shortHost(host))
       .map((row) => {
@@ -375,17 +376,25 @@ function MiniTrendContext({ trend, selected, range }) {
       .filter(Boolean)
       .sort((a,b)=>a.at-b.at)
     if (rows.length < 2) return null
+
     const minAt = rows[0].at
     const maxAt = rows.at(-1).at
     const values = rows.map((row)=>row.value)
-    const minValue = Math.min(...values)
-    const maxValue = Math.max(...values)
+    const rawMin = Math.min(...values)
+    const rawMax = Math.max(...values)
+    const warning = Number(trend?.warning)
+    const critical = Number(trend?.critical)
+    const percentScale = unit === '%'
+    const yMin = percentScale ? 0 : Math.min(rawMin, 0)
+    const yMaxBase = Math.max(rawMax, Number.isFinite(critical) ? critical : Number.NEGATIVE_INFINITY, Number.isFinite(warning) ? warning : Number.NEGATIVE_INFINITY)
+    const yMax = percentScale ? 100 : (yMaxBase > yMin ? yMaxBase * 1.08 : yMin + 1)
     const spanAt = Math.max(1, maxAt-minAt)
-    const spanValue = Math.max(1e-9, maxValue-minValue)
+    const spanValue = Math.max(1e-9, yMax-yMin)
     const point = (row) => ({
-      x: 12 + ((row.at-minAt)/spanAt)*496,
-      y: 68 - ((row.value-minValue)/spanValue)*50,
+      x: 52 + ((row.at-minAt)/spanAt)*438,
+      y: 78 - ((row.value-yMin)/spanValue)*58,
     })
+    const y = (value) => 78 - ((value-yMin)/spanValue)*58
     const points = rows.map((row)=>point(row))
     const selectedActualAt = Date.parse(selected?.at || '')
     const selectedBucketAt = Date.parse(selected?.bucket || '')
@@ -394,41 +403,68 @@ function MiniTrendContext({ trend, selected, range }) {
       : rows.at(-1)
     const marker = selectedRow ? point(selectedRow) : null
     const selectedValue = Number(selected?.value)
+    const resolvedSelectedValue = Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value
+    const peakRow = rows.reduce((best,row)=>!best || row.value>best.value ? row : best,null)
     return {
       points: points.map((p)=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),
       marker,
-      minValue,
-      maxValue,
-      selectedValue:Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value,
+      rawMin,
+      rawMax,
+      yMin,
+      yMax,
+      warning:Number.isFinite(warning)?warning:null,
+      critical:Number.isFinite(critical)?critical:null,
+      selectedValue:resolvedSelectedValue,
       firstAt:minAt,
       lastAt:maxAt,
       selectedActualAt:Number.isFinite(selectedActualAt) ? selectedActualAt : selectedRow?.at,
       selectedBucketAt:Number.isFinite(selectedBucketAt) ? selectedBucketAt : selectedRow?.at,
+      peakAt:peakRow?.at || null,
+      peakValue:peakRow?.value ?? null,
+      y,
+      unit,
     }
   },[selected,trend])
 
   if(!model) return null
-  return <section className="rundeckTrendMiniContext" aria-label="History around selected point">
+  const axisValues=[model.yMax,(model.yMax+model.yMin)/2,model.yMin]
+  return <section className="rundeckTrendMiniContext is-dashboard-like" aria-label="History around selected point">
     <header>
       <div><span>History</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
-      <small>{numberText(model.minValue,1)}–{numberText(model.maxValue,1)}{selected?.unit || trend?.unit || ''}</small>
+      <div className="rundeckTrendMiniSummary">
+        <small>Range {numberText(model.rawMin,1)}–{numberText(model.rawMax,1)}{model.unit}</small>
+        <small>Peak {model.peakValue == null ? '—' : `${numberText(model.peakValue,1)}${model.unit}`}{model.peakAt ? ` · ${formatWib(model.peakAt,true)} WIB` : ''}</small>
+      </div>
     </header>
-    <svg viewBox="0 0 520 104" role="img" aria-label="History with selected bucket marker">
-      <line x1="12" y1="18" x2="508" y2="18" className="rundeckTrendMiniGrid" />
-      <line x1="12" y1="43" x2="508" y2="43" className="rundeckTrendMiniGrid" />
-      <line x1="12" y1="68" x2="508" y2="68" className="rundeckTrendMiniGrid" />
+    <svg viewBox="0 0 520 112" role="img" aria-label="History with thresholds and selected point">
+      {axisValues.map((value,index) => {
+        const yPos=20+(index*29)
+        return <g key={index}>
+          <line x1="52" y1={yPos} x2="490" y2={yPos} className="rundeckTrendMiniGrid" />
+          <text x="45" y={yPos+3} textAnchor="end" className="rundeckTrendMiniAxisLabel">{numberText(value,0)}{model.unit}</text>
+        </g>
+      })}
+      {model.warning !== null && model.warning >= model.yMin && model.warning <= model.yMax && <>
+        <line x1="52" y1={model.y(model.warning)} x2="490" y2={model.y(model.warning)} className="rundeckTrendMiniThreshold is-warning" />
+        <text x="488" y={model.y(model.warning)-3} textAnchor="end" className="rundeckTrendMiniThresholdLabel is-warning">Warn {numberText(model.warning,0)}{model.unit}</text>
+      </>}
+      {model.critical !== null && model.critical >= model.yMin && model.critical <= model.yMax && <>
+        <line x1="52" y1={model.y(model.critical)} x2="490" y2={model.y(model.critical)} className="rundeckTrendMiniThreshold is-critical" />
+        <text x="488" y={model.y(model.critical)-3} textAnchor="end" className="rundeckTrendMiniThresholdLabel is-critical">Crit {numberText(model.critical,0)}{model.unit}</text>
+      </>}
       <polyline points={model.points} className="rundeckTrendMiniLine" />
       {model.marker && <>
-        <line x1={model.marker.x} y1="10" x2={model.marker.x} y2="72" className="rundeckTrendMiniMarkerLine" />
-        <circle cx={model.marker.x} cy={model.marker.y} r="4" className="rundeckTrendMiniMarker" />
+        <line x1={model.marker.x} y1="16" x2={model.marker.x} y2="82" className="rundeckTrendMiniMarkerLine" />
+        <circle cx={model.marker.x} cy={model.marker.y} r="4.5" className="rundeckTrendMiniMarker" />
+        <text x={Math.min(480,Math.max(70,model.marker.x+8))} y={Math.max(15,model.marker.y-7)} className="rundeckTrendMiniSelectedLabel">Selected {numberText(model.selectedValue,1)}{model.unit}</text>
       </>}
-      <text x="12" y="94" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
-      {model.selectedBucketAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
-      <text x="508" y="94" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
+      <text x="52" y="105" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
+      {model.selectedBucketAt && <text x={model.marker?.x || 270} y="105" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
+      <text x="490" y="105" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
     </svg>
     <footer>
       <span>Actual {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'} · Bucket {model.selectedBucketAt ? `${formatWib(model.selectedBucketAt, true)} WIB` : '—'}</span>
-      <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong>
+      <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${model.unit}`}</strong>
     </footer>
   </section>
 }
