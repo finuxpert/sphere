@@ -106,6 +106,13 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
   if (fsOverall !== 'NORMAL' && topFsRow) exceptionParts.push(`${topFsRow.mount_point} ${metric(topFsRow.used_pct, '%')}`)
   if (storageOverall !== 'NORMAL') exceptionParts.push(`${storageOverall} · Storage I/O`)
   if (networkOverall !== 'NORMAL') exceptionParts.push('ATTENTION · Network errors/drops')
+  const summaryTarget = fsOverall !== 'NORMAL' && topFsRow
+    ? { metric: 'filesystem', series: topFsRow.mount_point }
+    : storageOverall !== 'NORMAL' && topStorage[0]
+      ? { metric: 'storage', series: topStorage[0].metrics?.mount || topStorage[0].sample_key }
+      : networkOverall !== 'NORMAL'
+        ? { metric: 'network', series: '' }
+        : null
 
   return <section className={`rundeckLiveOverview${embedded ? ' is-embedded' : ''}`} aria-label="Live monitoring overview">
     {embedded && <div className="rundeckEmbeddedInfrastructureTitle"><SphereIcon name="server" /> Infrastructure</div>}
@@ -119,7 +126,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
       {error && <span className="rundeckLiveOverviewError">{error}</span>}
     </header>
 
-    {exceptionParts.length > 0 && <button type="button" className="rundeckLiveExceptionSummary is-clickable" onClick={() => topFsRow && openMetric('filesystem', topFsRow.mount_point)} title={topFsRow ? 'Open filesystem history' : 'Open Infrastructure Analysis'}>
+    {exceptionParts.length > 0 && <button type="button" className="rundeckLiveExceptionSummary is-clickable" onClick={() => summaryTarget && openMetric(summaryTarget.metric, summaryTarget.series)} title="Open Infrastructure Analysis">
       <strong>{exceptionParts.length} needs attention</strong>
       <span>{exceptionParts.join(' · ')}</span>
       <em aria-hidden="true">›</em>
