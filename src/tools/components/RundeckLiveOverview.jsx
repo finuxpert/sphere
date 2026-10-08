@@ -43,7 +43,7 @@ function Status({ value }) {
   return <span className={'rundeckLiveStatus is-' + value.toLowerCase()}>{value}</span>
 }
 
-export default function RundeckLiveOverview({ refreshToken, embedded = false }) {
+export default function RundeckLiveOverview({ refreshToken, embedded = false, onOpenMetric = null }) {
   const [hosts, setHosts] = React.useState([])
   const [selectedHost, setSelectedHost] = React.useState(() => {
     try { return window.localStorage.getItem(HOST_STORAGE_KEY) || '' } catch { return '' }
@@ -98,6 +98,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false }) 
   const tx = infra.network.reduce((sum, row) => sum + Number(row.metrics?.tx_mbps || 0), 0)
   const jobSummary = jobs?.summary || {}
   const authoritativeJobsReady = false
+  const openMetric = (metricType, series = '') => onOpenMetric?.({ host: selectedHost || hostRow?.host || '', metric: metricType, series })
   const snapshotAgeMinutes = hostRow?.snapshot_ts ? Math.max(0, Math.floor((Date.now() - Date.parse(hostRow.snapshot_ts)) / 60000)) : null
   const stale = Number.isFinite(snapshotAgeMinutes) && snapshotAgeMinutes >= 15
   const topFsRow = topFs[0]
@@ -118,30 +119,31 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false }) 
       {error && <span className="rundeckLiveOverviewError">{error}</span>}
     </header>
 
-    {exceptionParts.length > 0 && <div className="rundeckLiveExceptionSummary" role="status">
+    {exceptionParts.length > 0 && <button type="button" className="rundeckLiveExceptionSummary is-clickable" onClick={() => topFsRow && openMetric('filesystem', topFsRow.mount_point)} title={topFsRow ? 'Open filesystem history' : 'Open Infrastructure Analysis'}>
       <strong>{exceptionParts.length} needs attention</strong>
       <span>{exceptionParts.join(' · ')}</span>
-    </div>}
+      <em aria-hidden="true">›</em>
+    </button>}
 
     <div className="rundeckLiveCardGrid">
       <article>
         <header><h4>Filesystem</h4><Status value={fsOverall} /></header>
         <div className="rundeckLiveRows">
-          {topFs.map((row) => <div key={row.mount_point}><span>{row.mount_point}</span><strong className={'is-' + fsState(row.used_pct).toLowerCase()}>{metric(row.used_pct, '%')}</strong></div>)}
+          {topFs.map((row) => <button type="button" key={row.mount_point} className="rundeckLiveMetricLink" onClick={() => openMetric('filesystem', row.mount_point)} title="Open filesystem history"><span>{row.mount_point}</span><strong className={'is-' + fsState(row.used_pct).toLowerCase()}>{metric(row.used_pct, '%')}</strong><em aria-hidden="true">›</em></button>)}
           {!topFs.length && <div><span>No data</span><strong>—</strong></div>}
         </div>
       </article>
 
       <article>
         <header><h4>Network</h4><Status value={networkOverall} /></header>
-        <div className="rundeckLiveMetricPair"><div><span>RX</span><strong>{metric(rx, ' Mbps')}</strong></div><div><span>TX</span><strong>{metric(tx, ' Mbps')}</strong></div></div>
-        <div className="rundeckLiveRows"><div><span>Drop Δ</span><strong className={dropTotal > 0 ? 'is-attention' : ''}>{metric(dropTotal)}</strong></div><div><span>Error Δ</span><strong className={errorTotal > 0 ? 'is-attention' : ''}>{metric(errorTotal)}</strong></div></div>
+        <div className="rundeckLiveMetricPair"><button type="button" className="rundeckLiveMetricLink" onClick={() => openMetric('network')} title="Open network history"><span>RX</span><strong>{metric(rx, ' Mbps')}</strong><em aria-hidden="true">›</em></button><button type="button" className="rundeckLiveMetricLink" onClick={() => openMetric('network')} title="Open network history"><span>TX</span><strong>{metric(tx, ' Mbps')}</strong><em aria-hidden="true">›</em></button></div>
+        <div className="rundeckLiveRows"><button type="button" className="rundeckLiveMetricLink" onClick={() => openMetric('network')} title="Open network drop history"><span>Drop Δ</span><strong className={dropTotal > 0 ? 'is-attention' : ''}>{metric(dropTotal)}</strong><em aria-hidden="true">›</em></button><button type="button" className="rundeckLiveMetricLink" onClick={() => openMetric('network')} title="Open network error history"><span>Error Δ</span><strong className={errorTotal > 0 ? 'is-attention' : ''}>{metric(errorTotal)}</strong><em aria-hidden="true">›</em></button></div>
       </article>
 
       <article>
         <header><h4>Storage I/O</h4><Status value={storageOverall} /></header>
         <div className="rundeckLiveRows">
-          {topStorage.map((row) => <div key={row.sample_key}><span>{row.metrics?.mount || row.sample_key}</span><strong className={'is-' + storageState(row.metrics?.util_pct).toLowerCase()}>{metric(row.metrics?.util_pct, '%')}</strong></div>)}
+          {topStorage.map((row) => <button type="button" key={row.sample_key} className="rundeckLiveMetricLink" onClick={() => openMetric('storage', row.metrics?.mount || row.sample_key)} title="Open storage I/O history"><span>{row.metrics?.mount || row.sample_key}</span><strong className={'is-' + storageState(row.metrics?.util_pct).toLowerCase()}>{metric(row.metrics?.util_pct, '%')}</strong><em aria-hidden="true">›</em></button>)}
           {!topStorage.length && <div><span>No data</span><strong>—</strong></div>}
         </div>
       </article>
