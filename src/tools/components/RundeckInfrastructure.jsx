@@ -109,7 +109,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
   </div>
 }
 
-export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null}){
+export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null,initialContext=null}){
   const [data,setData]=React.useState({hosts:[],fs:[],network:[],storage:[]})
   const [error,setError]=React.useState('')
   const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
@@ -118,6 +118,12 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [trend,setTrend]=React.useState([])
   const [trendMeta,setTrendMeta]=React.useState(null)
   const [selectedSeries,setSelectedSeries]=React.useState('')
+  React.useEffect(()=>{
+    if(!initialContext)return
+    if(initialContext.host)setSelectedHost(initialContext.host)
+    if(['filesystem','network','storage'].includes(initialContext.metric))setTrendMetric(initialContext.metric)
+    if(initialContext.series)setSelectedSeries(initialContext.series)
+  },[initialContext])
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
   const collectedAt=hostRow?.snapshot_ts||data.fs[0]?.collected_at||data.network[0]?.collected_at||data.storage[0]?.collected_at
