@@ -1184,3 +1184,46 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
   grid-template-columns:auto minmax(0,1fr) 10px;
   text-align:left;
 }
+
+
+/* SPHERE v1.34.73 — final flat Infrastructure overview. */
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveExceptionSummary{
+  border:0!important;
+  border-left:2px solid rgba(216,179,95,.48)!important;
+  border-radius:0!important;
+  background:rgba(216,179,95,.012)!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid{
+  border-top:0!important;
+  border-bottom:0!important;
+  column-gap:14px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
+  min-height:72px!important;
+  padding:5px 10px 5px 0!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.035)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article:last-child{
+  border-right:0!important;
+  padding-right:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricLink{
+  min-height:17px!important;
+  padding:1px 2px!important;
+  border-radius:3px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricLink:hover,
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricLink:focus-visible{
+  background:rgba(79,198,200,.025)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource{
+  margin-top:3px!important;
+  padding:4px 1px 2px!important;
+  border-top:1px solid rgba(126,147,158,.045)!important;
+  border-bottom:0!important;
+  background:transparent!important;
+}
