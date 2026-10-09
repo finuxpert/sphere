@@ -884,3 +884,64 @@
   }
   .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{min-height:395px!important}
 }
+
+
+/* SPHERE v1.34.74 — final flat Infrastructure Analysis investigation flow. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCompactHead{
+  margin-bottom:3px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraFreshness{
+  margin:0 0 6px!important;
+  padding:5px 0!important;
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.04)!important;
+  border-bottom:1px solid rgba(126,147,158,.04)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  padding:4px 0 8px!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  margin:2px 0!important;
+  padding:5px 0!important;
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats span{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrentLabel{
+  margin:5px 0 2px!important;
+  padding:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  gap:0!important;
+  border:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  padding:6px 10px 6px 0!important;
+  border-bottom:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:first-child{
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2){
+  padding-right:12px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3){
+  padding-left:12px!important;
+  border-left:1px solid rgba(126,147,158,.035)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid td{
+  border-bottom-color:rgba(126,147,158,.03)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-clickable:hover td,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-clickable:focus-visible td{
+  background:rgba(79,198,200,.025)!important;
+}
