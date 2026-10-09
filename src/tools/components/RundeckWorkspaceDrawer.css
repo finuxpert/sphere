@@ -483,3 +483,39 @@
     0 0 0 100vmax rgba(3,7,10,.26),
     -8px 12px 34px rgba(0,0,0,.34)!important;
 }
+
+
+/* SPHERE v1.34.74 — one restrained visual contract for analysis drawers. */
+.rundeckWorkspaceDrawer>header{
+  border-bottom-color:rgba(126,147,158,.045)!important;
+  background:var(--sphere-page,#0f151a)!important;
+}
+.rundeckWorkspaceDrawer>header button{
+  border-color:rgba(126,147,158,.08)!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+}
+.rundeckWorkspaceDrawerBody{
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-performance,
+.rundeckWorkspaceDrawer.is-app-detail,
+.rundeckWorkspaceDrawer.is-wide{
+  box-shadow:-14px 0 36px rgba(0,0,0,.26)!important;
+}
+.rundeckDrawerAnalysisMenu{
+  gap:0!important;
+}
+.rundeckDrawerAnalysisMenu>button{
+  min-height:42px!important;
+  padding:7px 4px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(126,147,158,.035)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckDrawerAnalysisMenu>button:hover,
+.rundeckDrawerAnalysisMenu>button:focus-visible{
+  background:rgba(79,198,200,.025)!important;
+  outline:none!important;
+}
