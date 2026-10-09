@@ -2604,3 +2604,68 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   font-size:8.6px;
   font-weight:720;
 }
+
+
+/* SPHERE v1.34.74 — Performance drawer related analysis uses compact links, not cards. */
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence{
+  margin-top:5px!important;
+  padding-top:5px!important;
+  border-top:1px solid rgba(126,147,158,.04)!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckOperationalSummaryCards{
+  gap:0!important;
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.03)!important;
+  border-bottom:1px solid rgba(126,147,158,.03)!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard{
+  min-height:36px!important;
+  height:auto!important;
+  padding:5px 7px!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.025)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard:last-child{
+  border-right:0!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard:hover,
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard:focus-visible{
+  background:rgba(79,198,200,.025)!important;
+  outline:none!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCardTitle{
+  font-size:8.2px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard>strong{
+  font-size:8.5px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerEvidence .rundeckEvidenceCard>small{
+  display:none!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerActions{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:0!important;
+  margin-top:0!important;
+  border-top:0!important;
+  border-bottom:1px solid rgba(126,147,158,.03)!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerActions button{
+  min-height:36px!important;
+  padding:5px 7px!important;
+  border-right:1px solid rgba(126,147,158,.025)!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerActions button:hover,
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerActions button:focus-visible{
+  background:rgba(79,198,200,.025)!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerActions b{
+  font-size:8.6px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerActions small{
+  display:none!important;
+}
