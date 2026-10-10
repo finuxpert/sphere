@@ -304,7 +304,7 @@ After fetching the latest `rundeck-sphere-dev` source, run this nonmutating diag
 
 ```bash
 cd /root/rundeck-sphere-dev
-bash -n ops/rundeck/diagnose-watchdog-dev.sh ops/rundeck/smoke-watchdog-dev.sh ops/rundeck/prod-readiness-check.sh
+for script in ops/rundeck/diagnose-watchdog-dev.sh ops/rundeck/smoke-watchdog-dev.sh ops/rundeck/prod-readiness-check.sh; do bash -n "$script" || exit 1; done
 bash ops/rundeck/diagnose-watchdog-dev.sh
 ```
 
