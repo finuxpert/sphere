@@ -23,10 +23,22 @@ health = json.load(open(sys.argv[1]))
 events = json.load(open(sys.argv[2]))
 collector = health.get("collector") or {}
 status = str(collector.get("watchdog_status") or "UNKNOWN").upper()
-if status in {"UNKNOWN", "NOT_CONFIGURED", "ERROR", "RECOVERY_FAILED"}:
-    raise SystemExit(f"watchdog unhealthy: {status}")
 if not isinstance(events.get("items"), list):
     raise SystemExit("watchdog events payload invalid")
+if status in {"UNKNOWN", "NOT_CONFIGURED", "ERROR", "RECOVERY_FAILED"}:
+    last_error_type = next(
+        (item.get("error_type") for item in events["items"]
+         if isinstance(item, dict) and item.get("event") == "WATCHDOG_ERROR" and item.get("error_type")),
+        None,
+    )
+    # Event history may predate the current failure. Label it as historical evidence.
+    context = (
+        f"checked_at={collector.get('watchdog_checked_at') or 'unknown'}; "
+        f"poller={collector.get('poller_status') or 'unknown'}; "
+        f"collection_age_seconds={collector.get('collection_age_seconds')}; "
+        f"last_recorded_exception={last_error_type or 'unknown'} (history, not confirmed cause)"
+    )
+    raise SystemExit(f"watchdog unhealthy: {status}; {context}. See diagnose-watchdog-dev.sh")
 
 print(
     "WATCHDOG",
