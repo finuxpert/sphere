@@ -9,7 +9,7 @@ git -C "$SOURCE" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "READ
 [[ -z "$(git -C "$SOURCE" status --porcelain)" ]] || { echo "READINESS BLOCKED: working tree is not clean" >&2; exit 2; }
 
 cd "$SOURCE"
-"$PYTHON" -m unittest backend.tests.test_rundeck
+"$PYTHON" -m unittest backend.tests.test_rundeck backend.tests.test_rundeck_auth_diagnostic
 npm run qa
 if ! bash ops/rundeck/smoke-watchdog-dev.sh "$BASE_URL"; then
   echo "READINESS BLOCKED: watchdog smoke failed. Showing read-only DEV diagnostics." >&2
