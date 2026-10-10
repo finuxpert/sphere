@@ -1,0 +1,215 @@
+/* SPHERE DEV: viewport-aware cockpit and restrained, evidence-neutral motion.
+   This stylesheet overrides accumulated v1.34 layout experiments without
+   affecting PROD or creating an artificial "live" heartbeat. */
+@keyframes sphereChartArrival {
+  from { opacity: .22; transform: translate3d(0, 5px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes sphereStatusArrival {
+  from { opacity: .65; transform: scale(.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes sphereModalArrival {
+  from { opacity: .4; transform: translate(50%, 8px) scale(.99); }
+  to { opacity: 1; transform: translate(50%, 0) scale(1); }
+}
+
+/* The three graphs are readable but no longer consume most of the viewport.
+   The long Jobs/Programs table keeps its own scroll region. Never hide
+   operational alerts, headings, the six analysis shortcuts or source status. */
+@media screen and (min-width:1281px) and (min-height:780px) and (max-height:1100px) {
+  .appShell:has(.rundeckPanel) .rundeckMonitoring.rundeckCockpitV13456 {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(150px, 1fr);
+    height: calc(100dvh - 210px);
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    margin-top: 6px !important;
+    padding-top: 2px !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTopBandV13454,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTrendBandV13454,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckAnalysisRailV13456 {
+    min-height: 0;
+    min-width: 0;
+  }
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendChart {
+    height: clamp(138px, calc(100dvh - 806px), 174px) !important;
+    min-height: 138px !important;
+    max-height: 174px !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckTrendSharedControls {
+    min-height: 24px !important;
+    margin-bottom: 2px !important;
+    padding-bottom: 2px !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendToolbar {
+    min-height: 23px !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 {
+    margin: 1px 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button {
+    min-height: 39px !important;
+    height: 39px !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace {
+    display: flex !important;
+    flex-direction: column;
+    min-height: 0 !important;
+    height: 100%;
+    overflow: hidden;
+  }
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead {
+    flex: 0 0 auto;
+  }
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: hidden;
+  }
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkload,
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckPerformanceReviewV1231 {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadTableWrap,
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableWrapV1231 {
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Small displays must not clip data to force a false one-screen layout. */
+@media screen and (max-width:1280px), screen and (max-height:779px) {
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace {
+    min-height: 0;
+  }
+}
+
+/* Short one-time reveal on chart data, no infinite waveform or fake telemetry. */
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendChart {
+  animation: sphereChartArrival 480ms cubic-bezier(.2,.8,.2,1) both;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid > :nth-child(2) .rundeckTrendChart {
+  animation-delay: 75ms;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid > :nth-child(3) .rundeckTrendChart {
+  animation-delay: 130ms;
+}
+.appShell:has(.rundeckPanel) .rundeckStatusMotion {
+  animation: sphereStatusArrival 260ms ease-out both;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendSharedControls button,
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckSegmented button,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr {
+  transition: background-color 170ms ease-out, color 170ms ease-out,
+    box-shadow 180ms ease-out, border-color 170ms ease-out,
+    transform 160ms ease-out !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button:not(:disabled):hover {
+    transform: translateY(-2px);
+    background: rgba(79,198,200,.055) !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr:hover {
+    box-shadow: inset 2px 0 0 rgba(79,198,200,.45);
+  }
+}
+.appShell:has(.rundeckPanel) .rundeckSegmented button:focus-visible,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button:focus-visible,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button:focus-visible {
+  outline: 2px solid var(--sphere-accent,#4fc6c8) !important;
+  outline-offset: -2px;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button.is-active {
+  box-shadow: inset 0 -2px 0 var(--sphere-accent,#4fc6c8) !important;
+}
+
+/* System Data is a centered analysis modal with one internal scroll surface.
+   In contrast to the other contextual drawers, outside clicks and keyboard
+   focus are constrained to this explicitly modal workspace. */
+.rundeckWorkspaceModalBackdrop {
+  position: fixed;
+  z-index: 1179;
+  inset: 0;
+  background: rgba(3,9,13,.64);
+}
+.rundeckWorkspaceDrawer.is-system-data {
+  position: fixed !important;
+  z-index: 1180 !important;
+  top: clamp(32px, 9vh, 110px) !important;
+  right: 50% !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: min(840px, calc(100vw - 36px)) !important;
+  max-height: min(650px, calc(100dvh - 70px)) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  transform: translateX(50%);
+  border: 1px solid rgba(126,147,158,.19) !important;
+  border-radius: 11px !important;
+  box-shadow: 0 20px 65px rgba(0,0,0,.52) !important;
+  animation: sphereModalArrival 240ms cubic-bezier(.2,.8,.2,1) both;
+}
+.rundeckWorkspaceDrawer.is-system-data > header {
+  flex: 0 0 auto;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckWorkspaceDrawerBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto !important;
+  padding-bottom: 14px !important;
+  overscroll-behavior: contain;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataTableWrap {
+  max-height: min(390px, 45dvh) !important;
+}
+@media(max-width:640px) {
+  .rundeckWorkspaceDrawer.is-system-data {
+    top: 12px !important;
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100dvh - 24px) !important;
+  }
+  .rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataTabs button {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 6px 4px !important;
+  }
+  .rundeckWorkspaceDrawer.is-system-data .rundeckTokenGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (prefers-reduced-motion: reduce), print {
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendChart,
+  .appShell:has(.rundeckPanel) .rundeckStatusMotion,
+  .rundeckWorkspaceDrawer.is-system-data {
+    animation: none !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckTrendSharedControls button,
+  .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckSegmented button,
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button,
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr {
+    transition: none !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button {
+    transform: none !important;
+  }
+}
