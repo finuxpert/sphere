@@ -312,3 +312,22 @@ It prints only allowlisted watchdog/poller state, service/timer summaries and ex
 
 Once the watchdog's underlying issue is fixed and the current DEV API reports `NORMAL` or `RECOVERED` with fresh collection and auto-healing enabled, rerun the usual guarded readiness check and DEV deployment. Keep PROD untouched.
 
+## Rundeck reader API returns HTTP 403 (DEV)
+
+If both `sphere-rundeck-watchdog.service` and `sphere-rundeck-poller.service` show `HTTPError`, and the watchdog journal records `HTTP Error 403`, do **not** bypass readiness or rotate credentials blindly. Both services use the same `rundeck-reader` systemd credential loaded from `/etc/sphere/rundeck-readonly.token`, but query different read-only API endpoints on `http://10.14.55.205:4440` (Rundeck API v44). A 403 may mean token expiry/revocation, permissions on the project/executions, or an endpoint-specific policy. It does not by itself confirm which.
+
+Run the repository probe **on JAHSVR-SPHERE as root** to read the existing credential without printing it. This is separate from the deployed service, so no backend release or restart is needed:
+
+```bash
+cd /root/rundeck-sphere-dev
+git fetch origin rundeck-sphere-dev
+git merge --ff-only origin/rundeck-sphere-dev
+python3 -m unittest backend.tests.test_rundeck_auth_diagnostic
+PYTHONDONTWRITEBYTECODE=1 python3 ops/rundeck/diagnose-rundeck-auth-dev.py
+```
+
+The probe only calls three GET endpoints, with redirects prohibited: `system/info`, the same filtered `project/.../executions` list the poller uses, and the filtered `project/.../executions/running` endpoint used by the watchdog. It emits only HTTP statuses, credential-present state and whether config is present; never copy actual tokens or the Rundeck environment file into chat, tickets or GitHub.
+
+Interpretation: HTTP 200 for the system endpoint but 403 for both execution endpoints strongly suggests project/execution authorization; HTTP 403 for all endpoints could indicate a revoked/expired token **or** broader access restrictions. If only `executions/running` fails, inspect the scope for listing running executions. Confirm the intended Rundeck service-account identity, token validity and minimum project/job/execution *read* ACL with the Rundeck administrator; do not grant runner/abort/execute privileges to the read-only token. Only after that is corrected and collector data becomes fresh should DEV readiness/deployment be retried.
+
+The `backend.tests.test_rundeck_auth_diagnostic` tests are offline and run as part of DEV readiness. Never run PROD deployment to solve this DEV-only problem.
