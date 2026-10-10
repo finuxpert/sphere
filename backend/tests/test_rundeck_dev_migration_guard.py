@@ -75,7 +75,7 @@ class DevMigrationTargetTests(unittest.TestCase):
         self.assertLess(gate, side_effect)
         self.assertLess(gate, migration)
         self.assertIn('MIGRATION_DECISION" == "apply"', source)
-        self.assertIn('MIGRATION_DECISION" = "skip"', source)
+        self.assertIn('MIGRATION_DECISION="skip"', source)
 
     def test_migration_script_checks_exact_target(self):
         source = (ROOT / "ops/rundeck/migrate-dev.sh").read_text()
