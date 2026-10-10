@@ -945,3 +945,20 @@
 .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-clickable:focus-visible td{
   background:rgba(79,198,200,.025)!important;
 }
+
+/* Infrastructure investigation must never assign live severity to stale snapshots. */
+.rundeckInfra .is-stale,
+.rundeckInfra .is-unknown{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:600;
+}
+.rundeckInfraHistoricalNote{
+  padding:4px 0 6px;
+  color:var(--sphere-warning,#d8b35f);
+  font-size:10px;
+  line-height:1.35;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraHistoricalNote{
+  padding:3px 0 4px!important;
+  font-size:9px!important;
+}
