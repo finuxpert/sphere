@@ -254,7 +254,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       }
       })
     }
-  }, [mode, range, selectedHost, trend])
+  }, [mode, range, reduceMotion, selectedHost, trend])
 
   React.useEffect(() => {
     if (!ref.current) return undefined
