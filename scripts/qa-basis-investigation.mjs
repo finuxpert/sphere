@@ -22,6 +22,7 @@ const files = {
   liveOverview: read('src/tools/components/RundeckLiveOverview.jsx'),
   infraFreshness: read('src/tools/components/infrastructureFreshness.js'),
   liveOverviewCss: read('src/tools/components/RundeckLiveOverview.css'),
+  operatorMotion: read('src/tools/components/RundeckOperatorMotion.css'),
   closingBackend: read('backend/rundeck_closing.py'),
   closingMigration: read('backend/db/migrations/versions/20260929_0007_rundeck_analysis_closures.py'),
   evaluationBackend: read('backend/rundeck_evaluation.py'),
@@ -78,9 +79,10 @@ const files = {
 }
 
 const checks = [
+  ['Operator motion is scoped, accessible, and passive', files.wrapper.includes("import './RundeckOperatorMotion.css'") && files.operatorMotion.includes('@keyframes sphereCockpitEnter') && files.operatorMotion.includes('@keyframes sphereDrawerEnter') && files.operatorMotion.includes('.rundeckInfraChartWrap .series.is-selected') && files.operatorMotion.includes('prefers-reduced-motion: reduce') && !files.operatorMotion.includes(' infinite') && files.serverTrend.includes('animationDurationUpdate: 180') && files.serverTrend.includes('window.matchMedia?.')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
-  ['monitoring flow version is v1.34.75', files.version.includes("APP_VERSION = '1.34.75'") && files.version.includes('monitoring-flow-ui-v1.34.75')],
+  ['monitoring flow version is v1.34.76', files.version.includes("APP_VERSION = '1.34.76'") && files.version.includes('monitoring-flow-ui-v1.34.76')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -440,4 +442,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.61 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.76 monitoring flow, freshness and motion checks passed.')
