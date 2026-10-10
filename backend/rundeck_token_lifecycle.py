@@ -50,17 +50,16 @@ def _observed_record(key: str, record: dict, source: str, now: datetime) -> dict
     return {
         "kind": key,
         "label": OBSERVATIONS[key]["label"] if source == "observation" else
-                 str(record.get("label") or OBSERVATIONS[key]["label"])[:80],
-        "identity": OBSERVATIONS[key]["identity"] if source == "observation" else
-                    str(record.get("identity") or "UNVERIFIED")[:60],
-        "role": OBSERVATIONS[key]["role"] if source == "observation" else
-                str(record.get("role") or "UNVERIFIED")[:60],
+                 ("Monitoring Reader" if key == "reader" else "Job Runner"),
+        "identity": OBSERVATIONS[key]["identity"] if source == "observation" else "UNVERIFIED",
+        "role": OBSERVATIONS[key]["role"] if source == "observation" else "UNVERIFIED",
         "expires_at": expiry.isoformat() if expiry else None,
         "days_remaining": days_remaining,
         "state": state,
         "source": source,
         "last_reported_at": OBSERVED_AT if source == "observation" else
-                            str(record.get("reported_at") or "")[:40] or None,
+                            (_expiry(record.get("reported_at")).isoformat()
+                             if _expiry(record.get("reported_at")) else None),
         "live_verified": False,
         "renewal_allowed": False,
     }
