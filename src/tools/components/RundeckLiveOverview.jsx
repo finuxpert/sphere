@@ -126,9 +126,9 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
   const jobSummary = jobs?.summary || {}
   const authoritativeJobsReady = false
   const openMetric = (metricType, series = '') => onOpenMetric?.({ host: selectedHost || hostRow?.host || '', metric: metricType, series })
-  const fsDisplayState = infrastructureObservationStatus(fsOverall, snapshotFreshness)
-  const storageDisplayState = infrastructureObservationStatus(storageOverall, snapshotFreshness)
-  const networkDisplayState = infrastructureObservationStatus(networkOverall, snapshotFreshness)
+  const fsDisplayState = observedInfra.fs.length ? infrastructureObservationStatus(fsOverall, snapshotFreshness) : 'UNKNOWN'
+  const storageDisplayState = observedInfra.storage.length ? infrastructureObservationStatus(storageOverall, snapshotFreshness) : 'UNKNOWN'
+  const networkDisplayState = observedInfra.network.length ? infrastructureObservationStatus(networkOverall, snapshotFreshness) : 'UNKNOWN'
   const topFsRow = topFs[0]
   const exceptionParts = []
   if (snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL' && topFsRow) exceptionParts.push(`${topFsRow.mount_point} ${metric(topFsRow.used_pct, '%')}`)
