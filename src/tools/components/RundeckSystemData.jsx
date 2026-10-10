@@ -20,7 +20,8 @@ const metric=(value,suffix='')=>value===null||value===undefined||value===''?'—
 
 function State({value='UNKNOWN'}){
   const normalized=String(value||'UNKNOWN').toUpperCase()
-  return <span className={`rundeckSystemDataState is-${normalized.toLowerCase()}`}>{normalized}</span>
+  const name={DUE_SOON:'DUE ≤7D',DUE_3D:'DUE ≤3D',DUE_1D:'DUE ≤1D'}[normalized]||normalized
+  return <span className={`rundeckSystemDataState is-${normalized.toLowerCase()}`}>{name}</span>
 }
 
 export default function RundeckSystemData({history=[],platform=null,platformState='UNKNOWN',serviceSummary='',releaseState='NORMAL'}){
