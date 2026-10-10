@@ -29,7 +29,6 @@ export default defineConfig([
   // The Basis QA contract is .mjs and must not bypass ESLint's sparse-array check.
   {
     files: ['scripts/qa-basis-investigation.mjs'],
-    extends: [js.configs.recommended],
     languageOptions: {
       ecmaVersion: 'latest',
       globals: globals.node,
