@@ -18,6 +18,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, shortHost } from './sapUiFormat.js'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
+import './RundeckOperatorMotion.css'
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'
