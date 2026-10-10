@@ -19,6 +19,7 @@ import { formatWib, shortHost } from './sapUiFormat.js'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
 import './RundeckOperatorMotion.css'
+import './RundeckCockpitPolish.css'
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'
