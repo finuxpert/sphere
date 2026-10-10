@@ -5,10 +5,12 @@ whitelisted SPHERE collectors: performance/work-process and service availability
 """
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import threading
 import time
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote, urlencode
@@ -68,6 +70,26 @@ def _request(path: str, method: str = "GET") -> dict | list:
 
 def _state_file() -> Path:
     return ROOT / "collect-now.json"
+
+
+@contextmanager
+def _launch_guard():
+    """Serialize Collect Now launches across threads AND API worker processes.
+
+    The lock is unrelated to watchdog and does not lock ordinary polling.
+    Open with O_NOFOLLOW so a substituted symlink cannot redirect the lock.
+    """
+    flags = os.O_CREAT | os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW
+    descriptor = os.open(ROOT / "collect-now.launch.lock", flags, 0o600)
+    with os.fdopen(descriptor, "r+b") as stream:
+        try:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise RuntimeError("Collect Now launch already in progress") from None
+        try:
+            yield
+        finally:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
 
 
 def _read_state() -> dict:
@@ -368,6 +390,7 @@ def status() -> dict:
             readiness_reason = type(error).__name__.upper()
 
     sources = dict(state.get("sources") or {})
+    running_checks_verified = True
     if ready:
         for key, spec in specs.items():
             source = _source_template(spec, sources.get(key))
@@ -387,9 +410,17 @@ def status() -> dict:
                     source["external_running_execution"] = True
             except Exception:
                 source["rundeck_job_check"] = "unavailable"
+                running_checks_verified = False
             if key == "performance":
                 source = _refresh_performance_from_store(source)
             sources[key] = source
+
+    if not running_checks_verified:
+        ready = False
+        readiness_reason = "RUNDECK_RUNNING_STATE_UNVERIFIED"
+    if state.get("launch_incomplete") is True or state.get("launch_reconciliation_required") is True:
+        ready = False
+        readiness_reason = "LAUNCH_RECONCILIATION_REQUIRED"
 
     state["sources"] = sources
     bundle_status = _bundle_status(sources)
@@ -431,51 +462,69 @@ def status() -> dict:
 
 
 def collect_now(requested_by: str = "sphere", actor: str | None = None) -> dict:
-    """Start the two approved collectors as one bundle and return immediately."""
+    """Launch the two approved collectors, serializing and persisting the intent.
+
+    This is defense in depth, not authorization: the HTTP route stays locked
+    until an independently verified maintainer gateway is deployed.
+    """
     if actor:
         requested_by = actor
-    current = status()
-    if not current["allowed"]:
-        return current
 
-    specs = _job_specs()
-    state = {
-        "requested_at": datetime.now(timezone.utc).isoformat(),
-        "requested_by": requested_by[:120],
-        "bundle_status": "STARTING",
-        "sources": {},
-    }
     execution_ids: dict[str, str] = {}
+    with _launch_guard():
+        # The permission/running/cooldown decision must be INSIDE the launch lock.
+        current = status()
+        if not current["allowed"]:
+            return current
 
-    for key, spec in specs.items():
-        source = _source_template(spec)
-        source["ingest_status"] = "WAITING_FOR_RUNDECK"
-        try:
-            execution = _request(f"/api/{API_VERSION}/job/{quote(spec['job_id'], safe='')}/run", method="POST")
-            if not isinstance(execution, dict):
-                raise RuntimeError("Unexpected Rundeck execution payload")
-            execution_id = str(execution.get("id") or "").strip()
-            if not execution_id.isdigit():
-                raise RuntimeError("Rundeck did not return a valid execution ID")
-            source.update({
-                "execution_id": execution_id,
-                "status": str(execution.get("status") or "running").lower(),
-                "external_running_execution": False,
-            })
-            execution_ids[key] = execution_id
-        except Exception as error:
-            source.update({
-                "status": "failed",
-                "ingest_status": "NOT_STARTED",
-                "launch_error_type": type(error).__name__,
-                "finished_at": datetime.now(timezone.utc).isoformat(),
-            })
-        state["sources"][key] = source
+        specs = _job_specs()
+        state = {
+            "requested_at": datetime.now(timezone.utc).isoformat(),
+            "requested_by": requested_by[:120],
+            "bundle_status": "STARTING",
+            "launch_incomplete": True,
+            "launch_reconciliation_required": False,
+            "sources": {},
+        }
+        # Persist before any outbound POST. A crash or ambiguous network error
+        # must not allow a subsequent request to silently repeat an execution.
+        write_json(_state_file(), state)
 
-    state["bundle_status"] = _bundle_status(state["sources"])
-    state["source_skew_seconds"] = _source_skew_seconds(state["sources"])
-    write_json(_state_file(), state)
+        for key, spec in specs.items():
+            source = _source_template(spec)
+            source["ingest_status"] = "WAITING_FOR_RUNDECK"
+            try:
+                execution = _request(f"/api/{API_VERSION}/job/{quote(spec['job_id'], safe='')}/run", method="POST")
+                if not isinstance(execution, dict):
+                    raise RuntimeError("Unexpected Rundeck execution payload")
+                execution_id = str(execution.get("id") or "").strip()
+                if not execution_id.isdigit():
+                    raise RuntimeError("Rundeck did not return a valid execution ID")
+                source.update({
+                    "execution_id": execution_id,
+                    "status": str(execution.get("status") or "running").lower(),
+                    "external_running_execution": False,
+                })
+                execution_ids[key] = execution_id
+            except Exception as error:
+                # Network failures may occur AFTER Rundeck accepted a run.
+                # Never classify an unverified submission as NOT_STARTED.
+                source.update({
+                    "status": "unknown",
+                    "ingest_status": "LAUNCH_UNVERIFIED",
+                    "launch_error_type": type(error).__name__,
+                })
+                state["launch_reconciliation_required"] = True
+            state["sources"][key] = source
+            write_json(_state_file(), state)
 
+        state["bundle_status"] = _bundle_status(state["sources"])
+        state["source_skew_seconds"] = _source_skew_seconds(state["sources"])
+        state["launch_incomplete"] = False
+        write_json(_state_file(), state)
+
+    # Watcher may run after release: the persisted intent/cooldown prevents
+    # another launch from slipping through before the watcher starts.
     if execution_ids:
         threading.Thread(
             target=_watch_bundle,
@@ -484,6 +533,6 @@ def collect_now(requested_by: str = "sphere", actor: str | None = None) -> dict:
             name="sphere-rundeck-collect-bundle",
         ).start()
     else:
-        raise RuntimeError("Neither approved Rundeck collector could be started")
+        raise RuntimeError("Neither approved Rundeck collector could be verified as started")
 
     return status()
