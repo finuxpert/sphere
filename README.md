@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated DEV release: **v1.34.61**.
+Current Rundeck-integrated DEV source candidate: **v1.34.75** (server QA/deployment pending).
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -256,3 +256,9 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 - Performance Analysis is slightly narrower, chart-first, and uses a restrained backdrop for focus.
 - Compact Correlated Events copy is shortened to avoid truncation.
 - The duplicate visible SAP Performance title text is suppressed while preserving an accessible heading.
+
+### Infrastructure observation freshness (v1.34.75 DEV)
+
+The embedded Infrastructure overview and Infrastructure Analysis use one 15-minute freshness rule for the selected host's collection timestamp. A missing/invalid/future timestamp is `UNKNOWN`; a late collection is `STALE`. Filesystem, Network, and Storage I/O retain their last observed values for investigation but do **not** show old `CRITICAL`/`ATTENTION`/`NORMAL` as current host conditions. The main overview refreshes the host and telemetry endpoints every 60 seconds without using a mutating collection endpoint. This UI guard does **not** claim a new collector result, synthesize a filesystem percentage, or modify the SAP host.
+
+If `/INTF` shows last-observed 92% but a fresh SAP `df -h /INTF` shows 88%, investigate the Rundeck infrastructure collection/poller. They reflect different observations until a new valid collection is persisted. See `ops/rundeck/OPERATIONS.md` for read-only checks and standard DEV QA/deploy.
