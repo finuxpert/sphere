@@ -3,6 +3,7 @@ import * as echarts from './logEcharts.js'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
+import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
 import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -176,6 +177,7 @@ function TrendFreshness({ trend }) {
 
 function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const ref = React.useRef(null)
+  const reduceMotion = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
   const option = React.useMemo(() => {
     const colors = palette()
     const rows = trend?.items || []
@@ -190,8 +192,11 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     return {
-      animationDuration: 300,
-      animationDurationUpdate: 180,
+      // Reveal observed history once; avoid perpetual "live" motion.
+      // Reduced-motion preference is respected by the chart renderer itself.
+      animationDuration: reduceMotion ? 0 : 560,
+      animationDelay: reduceMotion ? 0 : 75,
+      animationDurationUpdate: reduceMotion ? 0 : 200,
       animationEasing: 'cubicOut',
       animationEasingUpdate: 'cubicOut',
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
@@ -597,10 +602,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
+  const initialServerMetrics = React.useMemo(() => resolveServerTrendMetrics(saved), [saved])
   const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
-  const [serverMetric1, setServerMetric1] = React.useState(METRICS.some(([key]) => key === saved.serverMetric1) ? saved.serverMetric1 : (METRICS.some(([key]) => key === saved.serverMetric) ? saved.serverMetric : 'cpu'))
-  const [serverMetric2, setServerMetric2] = React.useState(METRICS.some(([key]) => key === saved.serverMetric2) ? saved.serverMetric2 : 'ram')
+  const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
+  const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [serverTrend1, setServerTrend1] = React.useState(null)
