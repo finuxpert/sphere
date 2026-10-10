@@ -1109,3 +1109,40 @@
   flex:0 0 auto!important;
   margin-right:4px!important;
 }
+
+
+/* SPHERE v1.34.77 — one-line data trust signal; no extra card or scrolling.
+   The observed READY-to-READY interval stays visible after ingestion recovers. */
+.rundeckDataQualityNotice {
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  gap:2px 10px;
+  padding:5px 0 6px;
+  border-bottom:1px solid var(--sphere-border-subtle,rgba(113,128,137,.13));
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9.3px;
+  line-height:1.35;
+}
+.rundeckDataQualityNotice strong {
+  color:var(--sphere-warning,#d8b35f);
+  font-size:9.5px;
+  white-space:nowrap;
+}
+.rundeckDataQualityNotice.is-fresh strong {
+  color:var(--sphere-accent,#4fc6c8);
+}
+.rundeckDataQualityNotice.is-stale strong,
+.rundeckDataQualityNotice.is-degraded strong,
+.rundeckDataQualityNotice.is-unknown strong {
+  color:var(--sphere-danger,#db7d86);
+}
+.rundeckDataQualityNotice span {min-width:0;}
+.rundeckDataQualityNotice small {
+  color:var(--sphere-warning,#d8b35f);
+  font:inherit;
+}
+@media(max-width:760px){
+  .rundeckDataQualityNotice {font-size:8.7px;gap:2px 6px;}
+  .rundeckDataQualityNotice strong {font-size:8.9px;}
+}
