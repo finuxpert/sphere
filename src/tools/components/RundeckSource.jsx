@@ -797,7 +797,7 @@ export default function RundeckSource({ onCollection }) {
       <span>{quality.state !== 'FRESH'
         ? `Last READY ${latestCollectionAt ? formatTime(latestCollectionAt) + ' WIB' : 'unknown'} · current SAP condition cannot be inferred from old samples.`
         : 'Current performance data is fresh; missing historical samples have not been reconstructed.'}</span>
-      {recentGap && <small>NO OBSERVATION · Between READY ${formatTime(new Date(recentGap.before).toISOString())} WIB and ${formatTime(new Date(recentGap.after).toISOString())} WIB · ${dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
+      {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY ${formatTime(new Date(recentGap.before).toISOString())} WIB and ${formatTime(new Date(recentGap.after).toISOString())} WIB · ${dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
     </div>
 
     <RundeckPerformanceIncident
