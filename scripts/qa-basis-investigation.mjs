@@ -422,7 +422,12 @@ const checks = [
   ['System Health explains old availability data in plain language', files.systemHealth.includes('Availability data old') && files.systemHealth.includes('older than the current performance data')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
   ['APP server summary labels derived state as signal without generic duplicate columns', !files.appServers.includes('OS Resource') && !files.appServers.includes('Jobs / Programs') && files.appServers.includes('<th>RAM</th>') && files.appServers.includes('<th>APP Critical WP</th>') && files.appServers.includes('<th>Signal</th>') && files.appServers.includes('Critical Signal') && files.appServers.includes('Highest CPU') && files.appServers.includes('Highest RAM')],
-  ['Infrastructure filesystem NORMAL state is explicit', read('src/tools/components/RundeckInfrastructure.jsx').includes("is-${statusFs(row.used_pct).toLowerCase()}") && !read('src/tools/components/RundeckInfrastructure.jsx').includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],
+  ['Infrastructure filesystem NORMAL state is explicit for fresh data and stale data is not live',
+    files.infrastructure.includes("is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}") &&
+    files.infrastructure.includes('{observedStatus(statusFs(row.used_pct))}</b>') &&
+    files.infrastructure.includes("const observedStatus=(state)=>infrastructureObservationStatus(state,freshness)") &&
+    files.infraFreshness.includes("return freshness === 'FRESH' ? rawStatus : freshness") &&
+    !files.infrastructure.includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],,
   ['Run identity separates committed Collection, running Collection, and Availability cycles', files.source.includes('Collection <b>READY</b>') && files.source.includes('Collection running #') && files.availability.includes('Availability Run #')],
   ['Long-range trend reduces point clutter while preserving hover emphasis', files.serverTrend.includes("compactPoints = ['30m', '1h', '3h', '6h']") && files.serverTrend.includes("showSymbol: availabilityMode || compactPoints") && files.serverTrend.includes("emphasis: { focus: 'series'")],
   ['watchdog audit route is read-only and available', files.apiCore.includes('@app.get("/watchdog/events")') && files.apiCore.includes('read_watchdog_events')],
