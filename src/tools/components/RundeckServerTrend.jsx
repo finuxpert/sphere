@@ -190,7 +190,10 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     return {
-      animationDuration: 140,
+      animationDuration: 300,
+      animationDurationUpdate: 180,
+      animationEasing: 'cubicOut',
+      animationEasingUpdate: 'cubicOut',
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
       legend: { top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 10.2, fontWeight: 600 } },
       grid: { left: 58, right: 72, top: 38, bottom: compactPoints ? 34 : 48 },
@@ -252,7 +255,8 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     if (!ref.current) return undefined
     echarts.getInstanceByDom?.(ref.current)?.dispose()
     const chart = echarts.init(ref.current, null, { renderer: 'canvas' })
-    chart.setOption(option, true)
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
+    chart.setOption(reduceMotion ? { ...option, animation: false } : option, true)
     let lastExactClickAt = 0
 
     const selectItem = (item, seriesIndex = null, dataIndex = null) => {
