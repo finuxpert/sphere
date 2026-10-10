@@ -60,6 +60,19 @@ except (OSError, ValueError):
 PY
 
 echo
+echo '=== LOCAL DEV API WATCHDOG SNAPSHOT (ALLOWLIST FIELDS) ==='
+if ! curl --noproxy '*' -fsS --max-time 8 http://127.0.0.1:8091/platform/health 2>/dev/null | python3 -c '
+import json, sys
+health = json.load(sys.stdin)
+collector = health.get("collector") or {}
+fields = ("watchdog_status", "watchdog_checked_at", "poller_status",
+          "collector_stale", "collection_age_seconds", "auto_healing_enabled")
+print(json.dumps({name: collector.get(name) for name in fields}, sort_keys=True))
+'; then
+  echo 'DEV API health unavailable; review service status locally'
+fi
+
+echo
 echo '=== LAST SERVICE EXCEPTION CLASSES (NO RAW JOURNAL OR TOKENS) ==='
 journalctl -u sphere-rundeck-watchdog.service -n 120 --no-pager -o cat 2>/dev/null | python3 -c '
 import re, sys
