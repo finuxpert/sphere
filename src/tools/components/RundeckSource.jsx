@@ -342,10 +342,10 @@ export default function RundeckSource({ onCollection }) {
         latest, health, platform, availability: availabilityResult,
         refreshFailed: Boolean(error) || metaRefreshFailed,
       })
-      const reportPerformanceStale = !reportQuality.performanceValid
-      const status = systemHealthState(operationalHosts, {
-        availabilityState,
-        serviceCritical: availabilityServiceImpact(availabilityResult),
+      const reportPerformanceStale = !reportQuality.performanceValid || reportQuality.collectorBad
+      const status = systemHealthState(operationalHosts.filter(() => !reportPerformanceStale), {
+        availabilityState: reportAvailabilityStale ? 'UNKNOWN' : availabilityState,
+        serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult),
         stale: reportPerformanceStale,
         availabilityStale: reportAvailabilityStale,
       })
@@ -818,6 +818,8 @@ export default function RundeckSource({ onCollection }) {
       incidentStart={incidentStart}
       latestCollectionId={latest?.collection_id || ''}
       latestCollectionAt={latestCollectionAt}
+      sourceQuality={quality}
+      sourceCollector={platform?.collector || null}
       onTrendContext={setTrendContext}
       systemDataSummary={`${collectionCount} runs · ${partialCount} partial · ${failedCount} failed · ${serviceSummary}`}
       systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} />}
