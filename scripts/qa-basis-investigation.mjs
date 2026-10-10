@@ -71,6 +71,9 @@ const files = {
   migration: read('backend/db/migrations/versions/20260916_0004_sap_job_executions.py'),
   importer: read('ops/rundeck/import-sm37.py'),
   smoke: read('ops/rundeck/smoke-job-intelligence-dev.sh'),
+  watchdogSmoke: read('ops/rundeck/smoke-watchdog-dev.sh'),
+  watchdogReadiness: read('ops/rundeck/prod-readiness-check.sh'),
+  watchdogDiagnosis: read('ops/rundeck/diagnose-watchdog-dev.sh'),
   envExample: read('ops/rundeck/rundeck-dev.env.example'),
   watchdog: read('backend/rundeck_watchdog.py'),
   metrics: read('backend/rundeck_metrics.py'),
@@ -79,6 +82,17 @@ const files = {
 }
 
 const checks = [
+  ['Watchdog ERROR remains a blocker with actionable safe diagnostics',
+    files.watchdogSmoke.includes('watchdog unhealthy: ${status}') &&
+    files.watchdogSmoke.includes('last_recorded_exception=') &&
+    files.watchdogSmoke.includes('history, not confirmed cause') &&
+    files.watchdogReadiness.includes('if ! bash ops/rundeck/smoke-watchdog-dev.sh') &&
+    files.watchdogReadiness.includes('bash ops/rundeck/diagnose-watchdog-dev.sh || true') &&
+    files.watchdogReadiness.includes('exit 1') &&
+    files.watchdogDiagnosis.includes('READ ONLY') &&
+    files.watchdogDiagnosis.includes('ALLOWLIST FIELDS') &&
+    !files.watchdogDiagnosis.includes('systemctl restart') &&
+    !files.watchdogDiagnosis.includes('systemctl start')],
   ['Operator motion is scoped, accessible, and passive', files.wrapper.includes("import './RundeckOperatorMotion.css'") && files.operatorMotion.includes('@keyframes sphereCockpitEnter') && files.operatorMotion.includes('@keyframes sphereDrawerEnter') && files.operatorMotion.includes('.rundeckInfraChartWrap .series.is-selected') && files.operatorMotion.includes('prefers-reduced-motion: reduce') && !files.operatorMotion.includes(' infinite') && files.serverTrend.includes('animationDurationUpdate: 180') && files.serverTrend.includes('window.matchMedia?.')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
