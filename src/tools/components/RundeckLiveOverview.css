@@ -1227,3 +1227,38 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
   border-bottom:0!important;
   background:transparent!important;
 }
+
+/* Infrastructure freshness: historical capacity is evidence, not live CRITICAL. */
+.appShell:has(.rundeckPanel) .rundeckLiveDataDelayed{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:28px;
+  margin:0 0 4px;
+  padding:3px 7px;
+  border-left:2px solid rgba(216,179,95,.6);
+  background:rgba(216,179,95,.018);
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDataDelayed strong{
+  flex:none;
+  color:var(--sphere-warning,#d8b35f);
+  font-weight:700;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDataDelayed span{
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveStatus.is-stale,
+.appShell:has(.rundeckPanel) .rundeckLiveStatus.is-unknown,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink strong.is-historical{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:600;
+}
+@media(max-width:760px){
+  .appShell:has(.rundeckPanel) .rundeckLiveDataDelayed{flex-wrap:wrap;gap:2px 8px}
+  .appShell:has(.rundeckPanel) .rundeckLiveDataDelayed span{white-space:normal}
+}
