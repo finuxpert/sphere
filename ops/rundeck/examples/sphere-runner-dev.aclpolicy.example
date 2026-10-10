@@ -1,0 +1,37 @@
+# REVIEW TEMPLATE ONLY. DO NOT INSTALL UNTIL PROJECT, IDENTITY, ROLE, ACL
+# precedence, and all non-DEV consumers have been inspected and approved.
+# Replace __APPROVED_PROJECT__ only after confirming both exact job identities.
+# Changes to Rundeck ACL may take effect without restarting the server.
+description: SPHERE DEV runner - allow read access to the approved project only
+context:
+  application: 'rundeck'
+for:
+  project:
+    - equals:
+        name: '__APPROVED_PROJECT__'
+      allow: [read]
+by:
+  group: sphere_runner
+---
+description: SPHERE DEV runner - exact approved job UUIDs only
+context:
+  project: '__APPROVED_PROJECT__'
+for:
+  job:
+    - equals:
+        uuid: '4f129041-956c-4e80-916f-fcde8948db09'
+      allow: [read, view, view_history, run, kill]
+    - equals:
+        uuid: '34821afe-9261-4122-88db-cf6e8fc65545'
+      allow: [read, view, view_history, run, kill]
+  resource:
+    - equals:
+        kind: event
+      allow: [read]
+    - equals:
+        kind: node
+      allow: [read]
+  node:
+    - allow: [read, run]
+by:
+  group: sphere_runner
