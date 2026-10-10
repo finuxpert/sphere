@@ -422,7 +422,7 @@ The observed server UI interprets `0` as the **maximum 30 days**, not unlimited.
 
    On JAHSVR-SPHERE (after clean fast-forward of `rundeck-sphere-dev`), run `PYTHONDONTWRITEBYTECODE=1 python3 ops/rundeck/diagnose-rundeck-runner-dev.py`. The tool prompts for the **new** token without echoing it, tests system/user/job/execution **GET** endpoints only, and prints only HTTP statuses and a summary. It does not replace `/etc/sphere/rundeck-runner.token`. It gets the two whitelisted UUIDs from the effective DEV unit text and environment file and stops if they are missing. Never paste the token in output.
 
-   **Security review required:** Current repository `ops/rundeck/sphere-rundeck-api.service` enables `RUNDECK_COLLECT_NOW_ENABLED=true`, and `backend/rundeck_api_core.py` checks only a caller-supplied `X-SPHERE-Action` header before triggering `/collect-now`. That is not authenticated per-user maintenance authorization. Before relying on 'only the maintainer can run jobs', audit live deployment, reverse proxy restrictions and server-side authentication/authorization; do not claim role isolation from Rundeck token roles alone.
+   **Security review required (historical state):** The 2026-10-10 source enabled `RUNDECK_COLLECT_NOW_ENABLED=true` and accepted only a caller-supplied `X-SPHERE-Action` header. This was not maintainer authentication. The 2026-10-11 source hard-locks both the POST route and its status gate, and sets the DEV unit default to false; see the latest security gate section below. Before relying on 'only the maintainer can run jobs', audit live deployment, reverse proxy restrictions and server-side authentication/authorization; do not claim role isolation from Rundeck token roles alone.
 4. Back up the previous file with root-only mode `0600`; write the new value atomically with the expected runtime file ownership/permissions (DEV deploy sets `root:sphere 0640`). Never display or log the token. Preserve the old token during validation for rollback and revoke it promptly after the new credential is accepted.
 5. systemd `LoadCredential` is copied at service start. A watchdog oneshot gets the new value at its next normal timer run. A long-lived `sphere-rundeck-api.service` keeps its prior credential snapshot until restarted; **do not restart just for a credential rotation** without a separate verified change window and rollback plan. Keep existing watchdog auto-abort settings; do not invoke the watchdog manually merely to test the runner.
 6. Inspect service results and read-only platform health. With `Collect Now` disabled, no run/abort operation can be safely exercised for a complete end-to-end runner permission proof without an approved action; explicitly record that limitation. Validate no unexpected service, source, or PROD changes. Revoke the old Runner token after all identified consumers are reloaded/verified, not while a service still depends on the old snapshot.
@@ -464,7 +464,7 @@ Security caveat: the normal DEV deployment script deliberately restarts `sphere-
 
 ### Current authorization issue to resolve before interactive renewal
 
-`ops/rundeck/nginx-dev.conf` currently allows POST to `/dev/api/collect-now` as an explicit route, but contains no explicit `auth_request`, trusted SSO or maintainer allowlist directive for that route. This is a **source finding**; inspect the complete live Nginx configuration before concluding it is publicly reachable without authentication. Meanwhile `backend/rundeck_api_core.py` requires only caller-defined `X-SPHERE-Action: collect-now` and reads identity from an unverified forwarded header. The renewal API must NOT reuse that model. A maintenance-only backend or gateway requires independently enforced, verifiable identity/authorization plus CSRF defenses, no-store/audit policies and controlled root-confined credential replacement; until then, keep `Renew Now` locked.
+`ops/rundeck/nginx-dev.conf` retains an explicit POST proxy location for `/dev/api/collect-now`, without an `auth_request`/SSO grant. **As of the 2026-10-11 DEV source change, the FastAPI handler always refuses POST with HTTP 403, even if the client supplies X-SPHERE-Action or a forged forwarded identity.** This is a source finding; inspect the complete live Nginx configuration before concluding it is publicly reachable without authentication. Meanwhile `backend/rundeck_api_core.py` requires only caller-defined `X-SPHERE-Action: collect-now` and reads identity from an unverified forwarded header. The renewal API must NOT reuse that model. A maintenance-only backend or gateway requires independently enforced, verifiable identity/authorization plus CSRF defenses, no-store/audit policies and controlled root-confined credential replacement; until then, keep `Renew Now` locked.
 
 
 ### Rundeck host read-only ACL findings (reported 2026-10-11)
@@ -532,3 +532,71 @@ Before changing any live job, review evidence and source of execution IDs: Runde
 - Only if job definition corruption or a confirmed stuck workflow design requires a new version, create a **new disabled/draft job** with separate UUID, schedule OFF, executions OFF, no global grants, then review before an explicitly approved switch of source UUIDs and rollback. Never run it just to test Runner token privileges.
 
 No job was created, deleted, disabled, restarted or executed by this source update. DEV deployment, Runner rotation and interactive Renew Now remain on HOLD until the ACL and maintainer-authorization gates pass.
+
+
+## SPHERE-only security hardening on DEV source (2026-10-11)
+
+Ownership decision: the separate Rundeck host `tbssvr-ssl` (database, log storage,
+retention, JVM/Quartz and ACL administration) is owned by the infrastructure
+team. The SPHERE project does not change, tune, restart, or clean up Rundeck.
+Previously collected `tbssvr-ssl` baseline information is an infra handoff,
+not a prerequisite for continuing isolated source development on SPHERE DEV.
+
+### Implemented on `rundeck-sphere-dev` (source only, NOT deployed)
+
+- `POST /collect-now` **always returns HTTP 403**; no caller-supplied
+  `X-SPHERE-Action`, `X-Forwarded-User`, or environment toggle can unlock it.
+  `GET /collect-now/status` returns `enabled=false, allowed=false` with reason
+  `MAINTAINER_AUTH_NOT_CONFIGURED`. No real principal/SSO/MFA binding currently
+  exists. The route remains registered to preserve API contract compatibility.
+- The DEV API unit **defaults** `RUNDECK_COLLECT_NOW_ENABLED=false`. A live
+  environment file may override this legacy toggle, but cannot bypass the
+  hard-locked backend route. The existing Nginx POST location does NOT grant
+  authorization, because the backend rejects it unconditionally.
+- `backend/rundeck_runner.py` contains defense-in-depth for **future**
+  authenticated use: Linux `flock` serializes the readiness check and POST
+  launch across threads/processes, and the launch-intent JSON is flushed
+  before contacting Rundeck. Incomplete or ambiguous submissions retain a
+  reconciliation flag so a retry cannot silently repeat a possibly accepted
+  job run. A failed GET check for already-running jobs also makes Collect Now
+  unavailable. The lock does **not** touch the watchdog or its auto-abort policy.
+- `backend/tests/test_rundeck_collect_security.py` tests route denial,
+  GET-check failure, durable intent before POST, simultaneous callers, and
+  ambiguous-launch recovery without contacting SAP or Rundeck. The test uses
+  mocks; a successful local test does **not** validate live Runner ACL.
+- `System Data → Token Management → Renew Now` remains LOCKED. Do not add a
+  token input form or create a credential-rotation endpoint on the unauthenticated
+  monitoring API. The reported Reader expiry is not a live validity assertion.
+
+### Required gates before any future interactive activation
+
+1. The infra administrator confirms `sphere_runner` role and exact ACL for
+   Performance and Availability, without broadening the Infrastructure
+   Collector permissions; an authenticated GET-only candidate check must pass.
+   The existing Reader credential remains unchanged.
+2. A separate, trusted HTTPS maintainer gateway must authenticate named users,
+   enforce role authorization and MFA where available, and provide CSRF,
+   origin/session, audit and rate-limit protections. The application must use
+   verified server-side identity, not client-defined proxy headers.
+3. A narrowly scoped privileged rotation helper must validate a new token using
+   GET-only calls, preserve root-only rollback backup, atomically replace the
+   approved DEV path and verify each systemd LoadCredential consumer at an
+   approved maintenance window. Revoke previous token **only after** all
+   consumers are verified. Do not modify PROD or trigger jobs as a token test.
+4. Before re-enabling Collect Now, verify failure recovery for
+   `launch_reconciliation_required`: a named maintainer must reconcile Rundeck
+   executions via GET-only evidence before any locked state can be cleared.
+   A clock-based reset or unauthenticated clear endpoint is prohibited.
+5. Pass focused source tests, full QA/build, existing watchdog readiness, and
+   review deploy impact and rollback. **Do not run `deploy-dev.sh` automatically**:
+   it changes the DEV systemd unit, restarts the DEV API and runs watchdog
+   checks. No PROD deploy or branch promotion is authorized.
+
+New focused regression (on `JAHSVR-SPHERE`, after a clean, reviewed checkout;
+does not access Rundeck):
+```bash
+cd /root/rundeck-sphere-dev
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v backend.tests.test_rundeck_collect_security
+```
+
+Current status: **GITHUB SOURCE CHANGED / SERVER QA NOT RUN / DEV DEPLOY HOLD**.
