@@ -78,7 +78,7 @@ def main() -> None:
     try:
         if realm.is_file() and realm.stat().st_size <= MAX_SIZE:
             realm_found = any(
-                bool(re.match(r"\\s*" + re.escape(USER) + r"\\s*[:=]", line))
+                bool(re.match(r"\s*" + re.escape(USER) + r"\\s*[:=]", line))
                 for line in realm.read_text(errors="replace").splitlines()
             )
     except OSError:
