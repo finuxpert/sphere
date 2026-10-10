@@ -253,3 +253,12 @@ Infrastructure freshness also verifies per-sample `collected_at` and `collection
 The Rundeck cockpit imports `RundeckOperatorMotion.css` once from the monitoring wrapper. Only mounted cockpit bands, analysis drawers, and selected history traces use a one-shot animation; no infinite pulse, moving signal, rolling random counters or background animation work. Host status and chart values remain actual sampled evidence. ECharts animations stop under `prefers-reduced-motion`, as do CSS animations/transitions. Browser clients execute their own brief rendering; the backend and database collection cadence are unchanged.
 
 Basis QA's `Infrastructure filesystem NORMAL state is explicit` assertion now checks the freshness-aware status renderer instead of the removed direct CSS class. It must preserve `NORMAL` for fresh rows and `STALE`/`UNKNOWN` for old or unverified evidence.
+
+
+## Monitoring API credentials and maintainer access
+
+Monitoring API tokens are limited to **30 days**, owned by the designated SPHERE maintainer and scoped to the existing `sphere_api` service account with the `sphere_reader` role. In the observed Rundeck token generator, `Expiration in: 0` selects the configured maximum **30 days** (not indefinite). Configure only the minimum project/job/execution read ACL and verify it; do not generate the monitoring reader token as `admin` or with blank roles.
+
+Credentials must never be committed to this repository or pasted into logs/chats. The maintainer handles rotation through the protected server credential file, checks the token at least seven days before expiration, and verifies both poller and watchdog after normal timer execution. Maintenance exclusivity requires real account/ACL/sudo controls and cannot be guaranteed by documentation alone. The DEV runner is a separate higher-privilege credential requiring its own least-privilege review and expiry rotation.
+
+Full generation fields, DEV incident evidence (2026-10-10), step-by-step operational safeguards and rotation checklist: [OPERATIONS.md](../ops/rundeck/OPERATIONS.md#sphere-monitoring-token-ownership-and-30-day-rotation).
