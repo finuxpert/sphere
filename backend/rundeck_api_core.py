@@ -336,33 +336,23 @@ def history_timeline(
         raise HTTPException(503, str(error)) from None
 
 
+# Collect Now is intentionally fail-closed until a real maintainer authentication
+# boundary (trusted identity, role authorization, MFA/CSRF handling) is installed.
+# A caller-controlled action or forwarded-user header is NOT authentication.
+# Keep the historical route registered so existing UI/QA contracts are stable.
 @app.get("/collect-now/status")
 def collect_now_status():
-    if os.getenv("RUNDECK_COLLECT_NOW_ENABLED", "false").lower() != "true":
-        return {"enabled": False, "allowed": False}
-    from backend.rundeck_runner import status
-    try:
-        return {"enabled": True, **status()}
-    except Exception as error:
-        raise HTTPException(503, f"Collect Now status unavailable: {type(error).__name__}") from None
+    return {
+        "enabled": False,
+        "allowed": False,
+        "ready": False,
+        "readiness_reason": "MAINTAINER_AUTH_NOT_CONFIGURED",
+    }
 
 
 @app.post("/collect-now")
 def trigger_collect_now(request: Request):
-    if os.getenv("RUNDECK_COLLECT_NOW_ENABLED", "false").lower() != "true":
-        raise HTTPException(503, "Collect Now is disabled")
-    if request.headers.get("X-SPHERE-Action") != "collect-now":
-        raise HTTPException(403, "Missing SPHERE action header")
-    from backend.rundeck_runner import collect_now
-    actor = request.headers.get("X-Forwarded-User") or request.headers.get("X-Remote-User") or "sphere"
-    try:
-        return collect_now(actor=actor)
-    except PermissionError as error:
-        raise HTTPException(403, str(error)) from None
-    except RuntimeError as error:
-        raise HTTPException(409, str(error)) from None
-    except Exception as error:
-        raise HTTPException(502, f"Rundeck action failed: {type(error).__name__}") from None
+    raise HTTPException(403, "Collect Now requires verified maintainer authentication")
 
 
 @app.get("/events")
