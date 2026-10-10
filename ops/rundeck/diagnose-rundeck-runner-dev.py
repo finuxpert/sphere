@@ -120,7 +120,10 @@ def main() -> int:
     for label, status in statuses.items():
         print(f"{label}: {status}")
 
-    required = [label for label, _ in targets if label != "Token identity endpoint"]
+    # A narrowly scoped service token may be denied system info while still
+    # having the two required job read scopes. System/user endpoints are advisory.
+    required = [label for label, _ in targets
+                if label.endswith("job read") or label.endswith("execution list")]
     all_ok = all(statuses[label] == "HTTP_200" for label in required)
     print("RUNNER_READ_SCOPE=" + ("PASS" if all_ok else "FAIL"))
     print("RUN_KILL_SCOPE=NOT_TESTED (requires separate ACL inspection; no POST sent)")
