@@ -392,3 +392,36 @@ bash ops/rundeck/qa-build-dev.sh && bash ops/rundeck/prod-readiness-check.sh && 
 ```
 
 Continue to enforce readiness and check both performance and Infrastructure freshness. The frontend can mark old `/INTF` samples stale but cannot recover missing Rundeck executions itself. No PROD promotion is authorized by this change.
+
+
+## SPHERE DEV Runner: separate 30-day rotation
+
+**Owner decision (2026-10-10):** Rotate `SPHERE DEV Runner` before its displayed expiry **2026-10-13 20:52:16 WIB**, with a 30-day token. Unlike the monitoring reader credential, the runner can be used for authenticated job-execution and a watchdog-approved execution abort. Its server-side path is `/etc/sphere/rundeck-runner.token` and must not be confused with `/etc/sphere/rundeck-readonly.token`. The desired maintainer is a single designated operator, while actual exclusivity depends on server sudo permissions, users and Rundeck ACL—not token naming.
+
+### Generate in Rundeck
+
+Preferred future-state identity: a dedicated `sphere_runner` **user** and `sphere_runner` role, with matching ACL policies scoped to exactly the SPHERE performance/work-process and Service Availability jobs plus appropriate project read and execution inspection. These identities and policies **must be confirmed to exist before generating** such a token; writing their names in the UI does not provision them. Minimum job permissions are the required read/view, `run` and `kill` operations, plus the required project read permissions and job node execute permissions according to Rundeck ACL semantics; exclude application administration, job deletion, project configuration and unrelated jobs.
+
+Suggested generator fields once identity/ACL are confirmed:
+
+| Field | Value |
+| --- | --- |
+| Name | `SPHERE DEV Runner v2` |
+| User | `sphere_runner` (only if provisioned and authorized) |
+| Roles | `sphere_runner` (only if provisioned and authorized) |
+| Expiration in | `0` |
+| Unit | `Minutes` |
+
+The observed server UI interprets `0` as the **maximum 30 days**, not unlimited. Verify the new expiry date and effective role. Do not leave Roles blank on an admin account: that normally inherits all user roles. The **existing** Runner token was minted under `admin` with `build,architect,admin,user,deploy` and represents elevated permissions. If no restricted runner identity/ACL exists, **stop and agree on a controlled transition** before generating another admin-level credential: do not assign a fictional `sphere_runner` role and assume it grants rights.
+
+### Safe server rotation sequence
+
+1. Confirm the exact active consumers and any PROD references to `/etc/sphere/rundeck-runner.token` using filtered `systemctl cat`/file-reference checks, without printing secrets. The DEV deployment installs separate `rundeck-runner` systemd credentials via drop-ins on `sphere-rundeck-api.service` and `sphere-rundeck-watchdog.service`; check actual server configuration. `RUNDECK_COLLECT_NOW_ENABLED=false` is the documented default; check runtime values rather than assuming default.
+2. Create the replacement token using the approved restricted identity and 30-day expiry. Handle the one-time value through a secure password manager and a hidden terminal prompt; never save it in a GitHub repository, shell history or chat.
+3. Test the new token with **GET-only** Rundeck API calls against the two exact whitelisted job identities and the execution read endpoints before replacing the token file. HTTP 200 validates token recognition and read access, **not** `POST /job/.../run` or `POST /execution/.../abort` authorization. Validate those additional rights through the Rundeck ACL administrator, without starting/aborting an SAP job as a token test.
+4. Back up the previous file with root-only mode `0600`; write the new value atomically with the expected runtime file ownership/permissions (DEV deploy sets `root:sphere 0640`). Never display or log the token. Preserve the old token during validation for rollback and revoke it promptly after the new credential is accepted.
+5. systemd `LoadCredential` is copied at service start. A watchdog oneshot gets the new value at its next normal timer run. A long-lived `sphere-rundeck-api.service` keeps its prior credential snapshot until restarted; **do not restart just for a credential rotation** without a separate verified change window and rollback plan. Keep existing watchdog auto-abort settings; do not invoke the watchdog manually merely to test the runner.
+6. Inspect service results and read-only platform health. With `Collect Now` disabled, no run/abort operation can be safely exercised for a complete end-to-end runner permission proof without an approved action; explicitly record that limitation. Validate no unexpected service, source, or PROD changes. Revoke the old Runner token after all identified consumers are reloaded/verified, not while a service still depends on the old snapshot.
+7. Record the new expiration in the private rotation register. Alert the maintainer at D-7, D-3 and D-1. Do not store token values in the register.
+
+**Important:** The existing Reader token was successfully rotated and poller/watchdog recovered; Runner rotation is independent. Do not conflate them, and do not claim Runner rotation succeeded until credential replacement plus suitable service verification is observed.
