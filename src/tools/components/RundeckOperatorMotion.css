@@ -1,0 +1,79 @@
+/* SPHERE v1.34.76 — restrained operator motion, scoped to the Rundeck cockpit.
+   No perpetual motion, timers, JS animation loops or artificial telemetry activity. */
+@keyframes sphereCockpitEnter {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes sphereDrawerEnter {
+  from { opacity: .9; transform: translate3d(12px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes sphereTraceEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Enter once on mount. Routine 60-second data polls never remount this hierarchy. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTopBandV13454 {
+  animation: sphereCockpitEnter 340ms cubic-bezier(.2,.8,.2,1) both;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTrendBandV13454 {
+  animation: sphereCockpitEnter 370ms cubic-bezier(.2,.8,.2,1) 55ms both;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckAnalysisRailV13456,
+.appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckJobsProgramsWorkspace {
+  animation: sphereCockpitEnter 380ms cubic-bezier(.2,.8,.2,1) 100ms both;
+}
+/* Read-only analysis opens with a small single-use slide, without moving its fixed layout. */
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer {
+  animation: sphereDrawerEnter 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+/* Capacity and technical history lines stay grounded in retained samples. */
+.appShell:has(.rundeckPanel) .rundeckInfraChartWrap .series.is-selected,
+.appShell:has(.rundeckPanel) .rundeckInfraChartWrap .seriesPoint.is-selected {
+  animation: sphereTraceEnter 370ms ease-out both;
+}
+.appShell:has(.rundeckPanel) .rundeckInfraChartWrap .series,
+.appShell:has(.rundeckPanel) .rundeckInfraChartWrap .seriesPoint {
+  transition: opacity 160ms ease-out, stroke-width 160ms ease-out;
+}
+/* Lightweight interaction cues. Do not animate changing numeric values. */
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button,
+.appShell:has(.rundeckPanel) .rundeckInfraTrend .controls button {
+  transition: background-color 140ms ease-out, color 140ms ease-out, opacity 140ms ease-out;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:active,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button:active,
+.appShell:has(.rundeckPanel) .rundeckInfraTrend .controls button:active {
+  opacity: .78;
+}
+.appShell:has(.rundeckPanel) .rundeckInfraGrid tbody tr.is-clickable td {
+  transition: background-color 150ms ease-out;
+}
+/* Mobile stays responsive on low-power devices. */
+@media (max-width: 760px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTopBandV13454,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTrendBandV13454,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckAnalysisRailV13456,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckJobsProgramsWorkspace {
+    animation-duration: 180ms;
+    animation-delay: 0ms;
+  }
+}
+@media (prefers-reduced-motion: reduce), print {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTopBandV13454,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckTrendBandV13454,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckAnalysisRailV13456,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13456 > .rundeckJobsProgramsWorkspace,
+  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer,
+  .appShell:has(.rundeckPanel) .rundeckInfraChartWrap .series,
+  .appShell:has(.rundeckPanel) .rundeckInfraChartWrap .seriesPoint {
+    animation: none !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckLiveMetricLink,
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button,
+  .appShell:has(.rundeckPanel) .rundeckInfraTrend .controls button,
+  .appShell:has(.rundeckPanel) .rundeckInfraGrid tbody tr.is-clickable td {
+    transition: none !important;
+  }
+}
