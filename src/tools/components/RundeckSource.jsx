@@ -802,7 +802,7 @@ export default function RundeckSource({ onCollection }) {
         : 'Current performance data is fresh; missing historical samples have not been reconstructed. Infrastructure has separate freshness.'}</span>
       {historyRefreshFailed && <small>History fetch failed · known observations remain historical; gap coverage cannot be fully verified.</small>}
       {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY {formatTime(new Date(recentGap.before).toISOString())} WIB and {formatTime(new Date(recentGap.after).toISOString())} WIB · {dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
-    </div>
+    </div>}
 
     <RundeckPerformanceIncident
       refreshToken={latest?.collection_id || ''}
