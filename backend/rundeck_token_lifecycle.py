@@ -43,6 +43,10 @@ def _observed_record(key: str, record: dict, source: str, now: datetime) -> dict
         state = "UNKNOWN"
     elif delta <= 0:
         state = "EXPIRED"
+    elif delta <= 86400:
+        state = "DUE_1D"
+    elif delta <= 86400 * 3:
+        state = "DUE_3D"
     elif delta <= 86400 * 7:
         state = "DUE_SOON"
     else:
