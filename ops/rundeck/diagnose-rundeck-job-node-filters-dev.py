@@ -23,7 +23,7 @@ JOBS = {
     "INFRA_READER_ONLY": "66ffa675-1d77-4fe5-9aec-95ef5e330726",
 }
 MAX_BYTES = 2 * 1024 * 1024
-SAFE_SELECTOR = re.compile(r"^[A-Za-z0-9_.:,*/+?()=\\s-]{1,160}$")
+SAFE_SELECTOR = re.compile(r"^[A-Za-z0-9_.:,*/+?()=\s-]{1,160}$")
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -108,6 +108,14 @@ def compact_timeout(value) -> str:
     return "DYNAMIC_OR_UNVERIFIED"
 
 
+def compact_flag(value) -> str:
+    if value is True or value == "true":
+        return "TRUE"
+    if value is False or value == "false":
+        return "FALSE"
+    return "UNVERIFIED"
+
+
 def describe_job(export: dict) -> None:
     parallel = export.get("multipleExecutions")
     if isinstance(parallel, bool):
@@ -118,10 +126,14 @@ def describe_job(export: dict) -> None:
         status = "UNVERIFIED"
     print("  MULTIPLE_EXECUTIONS=" + status)
     print("  RETRY=" + compact_retry(export.get("retry")))
+    limit = export.get("maxMultipleExecutions")
+    print("  MAX_MULTIPLE_EXECUTIONS=" + (
+        str(limit) if isinstance(limit, int) and 0 <= limit <= 100000 else "UNVERIFIED"
+    ))
     print("  TIMEOUT=" + compact_timeout(export.get("timeout")))
     print("  SCHEDULE_PRESENT=" + str(bool(export.get("schedule"))).upper())
-    print("  SCHEDULE_ENABLED=" + str(export.get("scheduleEnabled", "UNVERIFIED")).upper()[:12])
-    print("  EXECUTION_ENABLED=" + str(export.get("executionEnabled", "UNVERIFIED")).upper()[:12])
+    print("  SCHEDULE_ENABLED=" + compact_flag(export.get("scheduleEnabled")))
+    print("  EXECUTION_ENABLED=" + compact_flag(export.get("executionEnabled")))
     nf = export.get("nodefilters")
     if isinstance(nf, dict):
         print("  NODE_FILTER=" + printable_filter(nf.get("filter")))
@@ -129,7 +141,7 @@ def describe_job(export: dict) -> None:
         print("  NODE_FILTER=UNVERIFIED_FROM_EXPORT")
     dispatch = export.get("dispatch")
     print("  DISPATCH_PRESENT=" + str(isinstance(dispatch, dict)).upper())
-    print("  NODE_FILTER_EDITABLE=" + str(export.get("nodeFilterEditable", "UNVERIFIED")).upper()[:12])
+    print("  NODE_FILTER_EDITABLE=" + compact_flag(export.get("nodeFilterEditable")))
 
 
 def main() -> int:
