@@ -445,26 +445,26 @@ The checked-in `ops/rundeck/examples/sphere-runner-dev.aclpolicy.example` is **n
 
 After the approved administrator applies a scoped policy, rerun `PYTHONDONTWRITEBYTECODE=1 python3 ops/rundeck/diagnose-rundeck-runner-dev.py` **on JAHSVR-SPHERE**, entering the candidate token through the hidden prompt. Proceed only if both job GET and execution-list GET are HTTP 200 (RUNNER_READ_SCOPE=PASS). That test does not prove run/kill. Audit `systemctl cat` / `LoadCredential` consumers and any references outside DEV before file replacement. No automatic restart, activation, old-token revocation or DEV deployment follows an ACL inventory alone.
 
-### Token expiry and renewal through the SPHERE DEV web UI (planned, not yet enabled)
+### Token expiry reporting in SPHERE DEV (read-only UI deployed; renewal locked)
 
 Add a compact **System Data → Token Management** panel with separate Reader and Runner cards. Display token label (nonsecret), service owner, role, last verified date, expiration in WIB, days remaining, consumer readiness, and `ACTIVE / DUE SOON / EXPIRED / UNKNOWN / BLOCKED / PENDING RELOAD`. Always distinguish **known** expiry from inferred 30-day policy; UNKNOWN is mandatory where no verified expiry metadata exists. Alert at D-7, D-3, D-1 and expiry; show warnings without replacing the collector freshness signal. Never export token values to client status JSON, PDF, Prometheus labels, alerts or logs.
 
-`Renew Now` must initially be **disabled/locked** until a verified browser maintenance authentication boundary exists. The existing `POST /collect-now` action checks only a caller-supplied `X-SPHERE-Action` header and `ops/rundeck/nginx-dev.conf` has no explicit maintainer authentication for that route. `X-Forwarded-User` and headers supplied by clients are not authorization. Audit the actual reverse proxy, upstream trusted identity, SSO/MFA, CSRF protections, origin checks and permission policy before allowing any mutating maintenance endpoint. Do not retrofit credential upload into the public `/dev/api/` GET-only proxy. Existing read-only monitoring must remain accessible.
+`Renew Now` remains **disabled/locked** until a verified browser maintenance authentication boundary exists. Historically, the `POST /collect-now` action trusted a caller-supplied `X-SPHERE-Action` header; this was corrected on DEV in the 2026-10-11 hardening, where the backend now unconditionally refuses POST with HTTP 403. `ops/rundeck/nginx-dev.conf` does not independently grant maintainer authentication for that route. `X-Forwarded-User` and headers supplied by clients are not authorization. Audit the actual reverse proxy, upstream trusted identity, SSO/MFA, CSRF protections, origin checks and permission policy before allowing any mutating maintenance endpoint. Do not retrofit credential upload into the public `/dev/api/` GET-only proxy. Existing read-only monitoring must remain accessible.
 
 Desired authorized flow: (1) named maintainer signs into a trusted HTTPS maintenance gateway with MFA and explicit SPHERE DEV credential-rotation role; (2) `Renew Now` opens a nonpersistent password input for a freshly generated Rundeck token (Rundeck itself remains the issuer); (3) privileged server-side, no-log GET-only preflight checks user, approved role, two job reads, executions and expiry metadata; (4) independent ACL review confirms run/kill rights without actions; (5) a root-confined service behind a restricted UNIX socket creates a root-only rollback backup and atomically replaces the **DEV-approved** credential path, never receiving arbitrary paths; (6) a separate approved maintenance window reloads long-running `LoadCredential` consumers and observes periodic oneshots without manually triggering watchdog; (7) health and secret-free audit confirm active consumers, then maintainer explicitly revokes the old token; otherwise rollback and retain old token. Fail closed for ACL 403, unverifiable identity/expiry, unhealthy watchdog, conflicting consumer, incomplete maintainer authorization or missing rollback evidence. No command-line token paste should be needed **after** this complete server-side workflow is delivered and approved.
 
 Security caveat: the normal DEV deployment script deliberately restarts `sphere-rundeck-api.service` and starts the watchdog; it is **not** a harmless dry-run and must not be used to force a credential refresh. Reader credentials are already healthy and must remain untouched. PROD and SAP PROD remain off-limits.
 
 
-### Implemented source-only UI phase (2026-10-10; not deployed)
+### Token lifecycle read-only phase (implemented in source 2026-10-10; subsequently deployed to DEV)
 
 - `backend/rundeck_token_lifecycle.py` exposes a strictly allowlisted, **secret-free** Reader/Runner expiry summary inside the existing `GET /platform/health` response. As a bootstrap, reported expiry observations are 2026-11-09 23:23:13 WIB (Reader) and 2026-10-13 20:52:16 WIB (existing privileged Runner), both last reported 2026-10-10. They are **not live Rundeck token validity checks**; revocation, permissions, and credential replacement are deliberately not inferred. An optional local `/var/lib/sphere/ingestion/credential-lifecycle.json` with `reader` / `runner` expiry metadata may supersede observations, but it is still marked `operator-register` and cannot authorize renewal. Unknown/incomplete or malformed metadata is not treated as verified active.
 - `src/tools/components/RundeckSystemData.jsx` and `RundeckSystemData.css` now contain a compact third tab, **Token Management**, showing last reported expiration (WIB), days remaining, identity, state and D-7 / D-3 / D-1 urgency. Both `Renew Now` controls are visibly **locked**. There is **no POST credential-renewal endpoint**, token upload form or credential write in this phase.
-- `backend/tests/test_rundeck_token_lifecycle.py` adds offline assertions for reported/expired statuses, secret redaction and fail-closed behavior. These tests, main QA/build, and deployment have **not yet run on JAHSVR-SPHERE**; do not mark PASS or start deployment before the ACL gate and runtime readiness are confirmed.
+- `backend/tests/test_rundeck_token_lifecycle.py` adds offline assertions for reported/expired statuses, secret redaction and fail-closed behavior. The following controlled v1.34.77 security QA included this regression and passed 14 focused tests, and v1.34.77 was deployed to DEV with Collect Now locked. This later evidence supersedes the original not-yet-run staging note. None of these checks verifies Runner execute/abort privileges.
 
 ### Current authorization issue to resolve before interactive renewal
 
-`ops/rundeck/nginx-dev.conf` retains an explicit POST proxy location for `/dev/api/collect-now`, without an `auth_request`/SSO grant. **As of the 2026-10-11 DEV source change, the FastAPI handler always refuses POST with HTTP 403, even if the client supplies X-SPHERE-Action or a forged forwarded identity.** This is a source finding; inspect the complete live Nginx configuration before concluding it is publicly reachable without authentication. Meanwhile `backend/rundeck_api_core.py` requires only caller-defined `X-SPHERE-Action: collect-now` and reads identity from an unverified forwarded header. The renewal API must NOT reuse that model. A maintenance-only backend or gateway requires independently enforced, verifiable identity/authorization plus CSRF defenses, no-store/audit policies and controlled root-confined credential replacement; until then, keep `Renew Now` locked.
+`ops/rundeck/nginx-dev.conf` retains an explicit POST proxy location for `/dev/api/collect-now`, without an `auth_request`/SSO grant. **As of the 2026-10-11 DEV source change, the FastAPI handler always refuses POST with HTTP 403, even if the client supplies X-SPHERE-Action or a forged forwarded identity.** This is both an inspected source guarantee and a reported DEV deployment observation (`GET /collect-now/status`: enabled=false, allowed=false); do not infer that the Nginx route provides independent authentication. The **pre-hardening** version of `backend/rundeck_api_core.py` relied on caller-defined `X-SPHERE-Action` / an unverified forwarded identity; the **current** backend does not permit such a request to execute a job. A future renewal API must NOT reuse the historical model. A maintenance-only backend or gateway requires independently enforced, verifiable identity/authorization plus CSRF defenses, no-store/audit policies and controlled root-confined credential replacement; until then, keep `Renew Now` locked.
 
 
 ### Rundeck host read-only ACL findings (reported 2026-10-11)
@@ -487,7 +487,7 @@ The interactive Collect Now runner in `backend/rundeck_runner.py` addresses only
 
 Observed file ACL review: `admin.aclpolicy` and `apitoken.aclpolicy` are broadly privileged; `sphere-reader.aclpolicy` grants reader job read/view/history in project `Linux` with no job UUID restriction; `user.aclpolicy` has other scope. No explicit `sphere_runner` rule was observed in these four local ACL files. This strongly suggests a missing dedicated runner policy but does NOT rule out DB-stored ACLs, token role differences or inherited policy. Do not enroll Runner in `admin` or `api_token_group`; do not grant Run/Kill on the infrastructure collector. Do not edit the Reader ACL during this incident; its broader read scope is a separate planned least-privilege review.
 
-Until identity/UUIDs/project/role are verified and a maintainer approves the exact policy, Runner rotation, interactive Renew Now credential submission, and DEV deploy stay **HOLD**. Neither Rundeck jobs nor SAP PROD should be modified.
+Until identity/UUIDs/project/role are verified and a maintainer approves the exact policy, **Runner rotation and interactive Renew Now credential submission** stay **HOLD**. This was an early operational staging decision; a later DEV-only release with Collect Now locked passed separate QA/readiness and did not require Runner activation. Neither Rundeck jobs nor SAP PROD should be modified.
 
 
 ### Three SPHERE job identity read-only probe (2026-10-11)
@@ -508,12 +508,12 @@ The operator ran `diagnose-performance-job-identity-dev.py` on `JAHSVR-SPHERE` w
 
 Previous Performance name-filter MISS was due to spelling mismatch; do not rename the Rundeck job solely for the probe. **Do not repeat this verified identity diagnostic.**
 
-Draft ACL under `ops/rundeck/examples/sphere-runner-dev.aclpolicy.example` now targets `Linux` and exact performance + availability UUIDs, with `kill` only for the performance watchdog use-case. Infrastructure remains out of Runner ACL. Before installation, confirm (1) token authorization roles include `sphere_runner` and exclude `admin` / `api_token_group`, (2) which node(s) both job definitions dispatch to, replacing `__APPROVED_NODE_NAME__` with a complete reviewed selector, and (3) no broader stored System/Project ACL grants for the effective token principal. Rundeck `rd acl validate` / `rd acl test` may validate a completed proposal offline; it does not by itself prove the entire live effective permission set or the short-lived token's active role mapping. There is no approval yet to install policies, replace credentials, revoke previous tokens, restart services, deploy DEV or enable browser renewal.
+Draft ACL under `ops/rundeck/examples/sphere-runner-dev.aclpolicy.example` now targets `Linux` and exact performance + availability UUIDs, with `kill` only for the performance watchdog use-case. Infrastructure remains out of Runner ACL. Before installation, confirm (1) token authorization roles include `sphere_runner` and exclude `admin` / `api_token_group`, (2) which node(s) both job definitions dispatch to, replacing `__APPROVED_NODE_NAME__` with a complete reviewed selector, and (3) no broader stored System/Project ACL grants for the effective token principal. Rundeck `rd acl validate` / `rd acl test` may validate a completed proposal offline; it does not by itself prove the entire live effective permission set or the short-lived token's active role mapping. There is no approval yet to install policies, replace/revoke Runner credentials, or enable browser renewal. Independent QA/readiness allowed the later security-locked DEV-only application deployment; it was **not** permission to activate Runner actions.
 
 
 ### Runner node authorization discovery, read-only (2026-10-11)
 
-`ops/rundeck/diagnose-rundeck-job-node-filters-dev.py` inspects only the two verified Runner job definitions by GET through the existing Reader, and emits only the exact identifiers, bounded node-filter selectors and presence of dispatch settings. No job steps, options, secrets or full definitions are printed. Run on the DEV host after clean fast-forward. If the node filter is unset, dynamic, complex or unavailable, use the Rundeck job's Nodes configuration in the authorized UI for human review; never infer node permissions from the job label. The example ACL is intentionally noninstallable with a node placeholder pending this check. After node mapping and token role are verified, use Rundeck's read-only ACL validator/test CLI or UI to validate the proposed policy. A successful local ACL test does not establish the effective union of stored ACLs and role assignments. Continue HOLD on Runner credential replacement and DEV deploy until all gates are proven.
+`ops/rundeck/diagnose-rundeck-job-node-filters-dev.py` inspects only the two verified Runner job definitions by GET through the existing Reader, and emits only the exact identifiers, bounded node-filter selectors and presence of dispatch settings. No job steps, options, secrets or full definitions are printed. Run on the DEV host after clean fast-forward. If the node filter is unset, dynamic, complex or unavailable, use the Rundeck job's Nodes configuration in the authorized UI for human review; never infer node permissions from the job label. The example ACL is intentionally noninstallable with a node placeholder pending this check. After node mapping and token role are verified, use Rundeck's read-only ACL validator/test CLI or UI to validate the proposed policy. A successful local ACL test does not establish the effective union of stored ACLs and role assignments. Continue HOLD on Runner credential replacement and interactive activation until all ACL/identity gates are proven. DEV source-only work and an independently gated fail-closed release are separate activities.
 
 
 ### Historical high-frequency executions / stuck Rundeck workflows — safe runbook (2026-10-11)
@@ -527,11 +527,11 @@ Before changing any live job, review evidence and source of execution IDs: Runde
 **Preferred bounded configuration after approval** (adapt limits to measured baseline, not guesses):
 - Set Multiple Executions **No** for each job where overlap is unsafe; if enterprise Job Queue exists, verify it is off or strictly bounded—unlimited queues can accumulate even with single-worker execution.
 - Ensure one schedule owner, no duplicate cron/external webhook trigger, and no recursive Job Reference. Limit retry to zero initially for diagnosis, then an approved small bounded count/backoff only if needed; configure appropriate per-job timeout based on normal runtime and SSH/tool timeouts; define maximum output/log size.
-- Make Collect Now idempotent across simultaneous HTTP requests using a **server-side atomic lock** protecting status check, cooldown and launch state; source `backend/rundeck_runner.py` currently evaluates `status()` before writing launch state with no atomic inter-request protection. Also fix public mutation-route identity authorization before enabling new execution controls; a fixed `X-SPHERE-Action` header is not sufficient.
+- Make Collect Now idempotent across simultaneous HTTP requests using a **server-side atomic lock** protecting status check, cooldown and launch state; this was resolved by a DEV-source `fcntl.flock` guard with durable launch intent and reconciliation flags; retain the guarantee in future changes and do not activate HTTP launch without maintainer authentication. Also fix public mutation-route identity authorization before enabling new execution controls; a fixed `X-SPHERE-Action` header is not sufficient.
 - Keep watchdog guard scoped to Performance job UUID and verified execution status; do not manually start watchdog, broaden its kill rights or change abort thresholds without separate impact review.
 - Only if job definition corruption or a confirmed stuck workflow design requires a new version, create a **new disabled/draft job** with separate UUID, schedule OFF, executions OFF, no global grants, then review before an explicitly approved switch of source UUIDs and rollback. Never run it just to test Runner token privileges.
 
-No job was created, deleted, disabled, restarted or executed by this source update. DEV deployment, Runner rotation and interactive Renew Now remain on HOLD until the ACL and maintainer-authorization gates pass.
+No job was created, deleted, disabled, restarted or executed by this source update. Runner rotation and interactive Renew Now remain on HOLD pending infra ACL and maintainer-authorization gates. Later controlled application-only DEV deployments kept Collect Now locked.
 
 
 ## SPHERE-only security hardening on DEV source (2026-10-11)
@@ -542,7 +542,7 @@ team. The SPHERE project does not change, tune, restart, or clean up Rundeck.
 Previously collected `tbssvr-ssl` baseline information is an infra handoff,
 not a prerequisite for continuing isolated source development on SPHERE DEV.
 
-### Implemented on `rundeck-sphere-dev` (source only, NOT deployed)
+### Implemented on `rundeck-sphere-dev` (subsequently deployed to DEV; interactive actions remain locked)
 
 - `POST /collect-now` **always returns HTTP 403**; no caller-supplied
   `X-SPHERE-Action`, `X-Forwarded-User`, or environment toggle can unlock it.
@@ -599,7 +599,7 @@ cd /root/rundeck-sphere-dev
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v backend.tests.test_rundeck_collect_security
 ```
 
-Current status: **GITHUB SOURCE CHANGED / SERVER QA NOT RUN / DEV DEPLOY HOLD**.
+Historical status when security changes were first committed: **GITHUB SOURCE CHANGED / SERVER QA NOT RUN / DEV DEPLOY HOLD**. Superseded by the later focused QA PASS and v1.34.77 DEV deployment with Collect Now disabled; see the current v1.34.78 checkpoint below.
 
 
 ## SPHERE DEV migration gate, source review 2026-10-11
@@ -664,7 +664,7 @@ out of scope.
 
 ## SPHERE v1.34.78 DEV cockpit and motion
 
-Source-only UI improvement on `rundeck-sphere-dev`; no PROD, Rundeck job,
+UI changes developed on `rundeck-sphere-dev` and subsequently observed as the active DEV frontend revision on 2026-10-11; no PROD, Rundeck job,
 ACL, database schema or credential changes.
 
 - Both server trends remain user-selectable, but initial/restored duplicates
@@ -693,3 +693,92 @@ source head) before this UI-only change. If still verified immediately before
 deployment, use only the revision-bound `SPHERE_DEV_MIGRATION_DECISION=skip`
 gate; never run migration just because the persistent env flag remains true.
 The `deploy-dev.sh` rollback covers the application, not schema changes.
+
+
+## DEV handover checkpoint — 2026-10-11, v1.34.78 (PAUSED)
+
+**Source / visible runtime evidence**
+
+- Branch: `rundeck-sphere-dev`, head of the UI/QA fixes
+  `b878142513b15f70639d75b6b06d79a8fde2ba2d` before this
+  docs-only update. Application version: `v1.34.78-dev`.
+- The 2026-10-11 operator screenshot of
+  `https://sphere.astraotoparts.co.id/dev/` visibly reports
+  `Build v1.34.78-dev · b878142`. This supports a successful browser
+  load of the DEV frontend at that revision. The full stdout from the
+  **final** v1.34.78 deploy is not present in the handover; do not
+  portray the screenshot alone as a complete backend/prod isolation audit.
+- QA originally failed on old static assertions for
+  `animationDurationUpdate: 180` and version `v1.34.77`.
+  The assertions were updated to check the new **reduced-motion**,
+  finite animation and modal contracts, plus `v1.34.78`, at
+  `b878142`; both predicates were re-evaluated against GitHub source
+  and passed. Later source/build/deploy transcript is not preserved
+  here. Do not repeat that known v1.34.77 false version gate.
+- The screenshot shows **Server Trend 1 CPU / Server Trend 2 RAM**,
+  Technical Trend (Swap I/O), six selected-context analysis links and
+  Jobs & Programs with Live/Review/Search. The table is internally
+  scrollable. System Data modal and reduced-motion behaviour are
+  implemented but were **not visibly validated in the final screenshot**.
+
+**Point-in-time observations, not continuously verified health**
+
+- `COLLECTOR HEALTH=NORMAL`. `SYSTEM HEALTH=ATTENTION`;
+  APP3 shows 2 Critical WP observations; APP4 also shows 1 in the
+  server table. These are retained APP-level signals and do not
+  establish workload causation.
+- `SAP DATA=ALIGNED`; the UI reports Performance age approximately
+  3 minutes, Availability approximately 15 minutes.
+- The Infrastructure overview reports `/SAP_ARCH 89%` and
+  `/usr/sap/AOP 86%` for the selected AOP PROD host; the source's
+  freshness must be respected and these values are **not** direct
+  operating-system `df` checks.
+- The retained READY observation-gap banner shows **8h 32m**
+  between samples on 10 October 2026. It must not be converted into
+  an SAP downtime incident or erased merely because the present
+  collector is healthy.
+- Live Jobs & Programs displays `203 observed · showing 50`.
+  SM37 remains **NOT CONNECTED** and is still authoritative for
+  background-job status when integrated.
+
+**Verified release-train safety milestones**
+
+- The v1.34.77 source passed 14 focused Python security/runner/lifecycle
+  tests and QA/build, and was deployed under the guarded
+  `SPHERE_DEV_MIGRATION_DECISION=skip` policy. The operator's v1.34.77
+  deployment output reported `PRODUCTION ROUTING VERIFIED`,
+  `PRODUCTION UNCHANGED`, `COLLECT_NOW=DISABLED` and
+  `FINAL=SPHERE_DEV_DEPLOY_PASS`.
+- The migration hardening passed 6 focused tests. The validated
+  database target is local `sphere_rundeck_dev` and the read-only
+  PostgreSQL `alembic_version` value matched source head
+  `20260929_0007`. No schema change was needed for the UI work.
+  Future deploys must re-verify the current schema, not rely blindly
+  on this dated observation.
+- Collect Now remains **fail-closed** in the DEV backend and Token
+  Management's Renew Now remains **LOCKED**. Runner ACL and token
+  maintenance stay the infra team's responsibility. Do not manually
+  trigger Rundeck jobs, change Runner roles/credentials or reuse a
+  client-supplied identity header. Reader expiry information is
+  reported metadata, not a fresh token validity proof.
+- No PROD promotion, SAP server modification or Rundeck host
+  configuration change is part of this checkpoint.
+
+**Paused state / next session**
+
+- Pause further UI changes. Verify responsive geometry at 1366px and
+  larger desktops and at Android widths; a visible browser scrollbar
+  does not by itself establish that the entire cockpit is scroll-free
+  at every size.
+- Exercise System Data centered modal, keyboard Escape/Tab/focus return,
+  motion reduced setting, chart interaction, and long Jobs & Programs
+  table scroll. Do not claim visual PASS until actually observed.
+- On resumption: recheck source SHA, QA/build, existing read-only
+  watchdog/platform readiness, Alembic revision, and the revision-bound
+  skip/apply migration decision. Do not deploy PROD by default.
+- Maintain separation: SPHERE UI/backend work stays in
+  `finuxpert/sphere` DEV; Rundeck `tbssvr-ssl` infrastructure
+  stays owned by infra.
+
+This is a **documentation-only** checkpoint: it does not change
+application source, services, database or production routing.
