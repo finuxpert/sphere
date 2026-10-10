@@ -124,6 +124,16 @@ const checks = [
     files.source.includes('reportQuality') &&
     files.source.includes('metaRefreshFailed') &&
     files.sourceCss.includes('.rundeckDataQualityNotice')],
+  ['System Health and PDF cannot derive current CRITICAL from old host data',
+    files.wrapper.includes('sourceQuality={props.sourceQuality}') &&
+    files.wrapper.includes('sourceCollector={props.sourceCollector}') &&
+    files.source.includes('sourceQuality={quality}') &&
+    files.source.includes('sourceCollector={platform?.collector || null}') &&
+    files.systemHealth.includes('observedHosts = performanceEvidenceStale || collectorUnreliable ? [] : hosts') &&
+    files.systemHealth.includes("sourceQuality?.state === 'UNKNOWN'") &&
+    files.source.includes('systemHealthState(operationalHosts.filter(() => !reportPerformanceStale)') &&
+    files.source.includes("availabilityState: reportAvailabilityStale ? 'UNKNOWN' : availabilityState") &&
+    files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
   ['monitoring flow version is v1.34.77', files.version.includes("APP_VERSION = '1.34.77'") && files.version.includes('monitoring-flow-ui-v1.34.77')],
