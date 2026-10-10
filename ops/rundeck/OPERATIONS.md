@@ -472,3 +472,19 @@ Security caveat: the normal DEV deployment script deliberately restarts `sphere-
 Operator confirmed that Rundeck is active on `tbssvr-ssl`; the filesystem has exactly four observed policy files: `admin.aclpolicy`, `apitoken.aclpolicy`, `sphere-reader.aclpolicy`, `user.aclpolicy` under `/etc/rundeck`. Simple literal scanning found no `sphere_runner` or either approved UUID in those files; this does **not** establish effective denied permissions because regex/group policies and DB-stored System/Project ACLs must still be reviewed. The local realm/UNIX account probes did not find `sphere_runner`; that is not proof an API token identity is invalid. Two filesystem project directories `sample` and `Linux-Testing` were observed, but the actual projects hosting both jobs remain unverified; never assume a `Linux` project from source defaults alone. A controlled **read-only** job metadata/ACL review is required before changing any policy or credential.
 
 The ACL example requires replacement of the exact approved project **and** approved node identity; its node rule was narrowed to explicit `nodename`, rather than unscoped `node: allow [read,run]`. If the two jobs span different projects or several nodes, prepare separate vetted rules. The template is a review artifact, not an authorization decision and has not been deployed. Keep DEV deployment, Runner token swap, and interactive renewal blocked.
+
+
+### Approved SPHERE job inventory from Rundeck UI (operator screenshot, 2026-10-11)
+
+The operator identified precisely three operational jobs in Rundeck's **SAP / AOP** folder:
+1. `SPHERE Infrastructure Collector - PROD APP1` (AOP PROD infrastructure telemetry).
+2. `[CRITICAL]-[Daily Check] Service Availability Report – SAP App & HANA DB 06.03.2026` (service availability).
+3. `[Critical]-[Daily Check] SPHERE SAP Work Process Check` (performance).
+
+**Important permission separation:** The DEV `sphere-rundeck-infra-aop-prod-test.service` config sets project `Linux`, group `SAP/AOP`, job name `SPHERE Infrastructure Collector - PROD APP1`, and loads only `rundeck-reader`; `backend/rundeck_infra_poller.py` polls prior executions and output via GET. It must **not** be added to Runner `run`/`kill` grants merely because it appears in the UI. Keep the existing healthy Reader credential unchanged pending its own separately approved audit.
+
+The interactive Collect Now runner in `backend/rundeck_runner.py` addresses only the configured **performance** and **availability** job specs, with candidate configured UUIDs `4f129041-956c-4e80-916f-fcde8948db09` and `34821afe-9261-4122-88db-cf6e8fc65545`. The watchdog can abort a matched performance execution only under its existing guard. Before installing any ACL, confirm the job UUID-to-name mapping and project(s) using read-only metadata from the actual Rundeck server, check effective token role and stored ACLs. The folder hierarchy in the UI is NOT proof of the Rundeck project name.
+
+Observed file ACL review: `admin.aclpolicy` and `apitoken.aclpolicy` are broadly privileged; `sphere-reader.aclpolicy` grants reader job read/view/history in project `Linux` with no job UUID restriction; `user.aclpolicy` has other scope. No explicit `sphere_runner` rule was observed in these four local ACL files. This strongly suggests a missing dedicated runner policy but does NOT rule out DB-stored ACLs, token role differences or inherited policy. Do not enroll Runner in `admin` or `api_token_group`; do not grant Run/Kill on the infrastructure collector. Do not edit the Reader ACL during this incident; its broader read scope is a separate planned least-privilege review.
+
+Until identity/UUIDs/project/role are verified and a maintainer approves the exact policy, Runner rotation, interactive Renew Now credential submission, and DEV deploy stay **HOLD**. Neither Rundeck jobs nor SAP PROD should be modified.
