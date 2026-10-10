@@ -369,3 +369,26 @@ Keep the existing `SPHERE DEV Runner` credential **separate** from `sphere_reade
 6. Revoke the replaced token after the new credential is verified. Record only the nonsecret token label, expiry date, owner role, verification date and outcome. Rerun guarded DEV readiness and deploy only after all checks pass.
 
 **Incident record (2026-10-10):** Existing token `SPHERE Read Only`, account `sphere_api`, role `sphere_reader`, expired **2026-10-10 14:50:34 WIB**. The SPHERE DEV watchdog and poller logged `HTTPError`, with watchdog HTTP 403; a GET-only probe returned HTTP 403 for system info, poller executions and watchdog running executions. This is strong corroboration of expired-reader impact, not proof against an additional ACL issue. No new token value, credential update, service recovery or successful deployment is documented at this stage. The screenshot also showed `SPHERE DEV Runner` due **2026-10-13 20:52:16 WIB**; its separate rotation and least-privilege review remain pending.
+
+## DEV v1.34.77 — data reliability during and after an outage
+
+**Observed recovery on 2026-10-10:** The SPHERE Rundeck reader credential was rotated on `JAHSVR-SPHERE` without restarting services. GET-only probes returned HTTP 200 for poller executions and watchdog running executions. Subsequent systemd checks confirmed the poller, watchdog and two infrastructure poller services ended successfully, with poller `OK`, watchdog `NORMAL`, `collector_stale=false`, latest collection age **122 seconds**, `auto_healing_enabled=true` and platform `NORMAL`. This supports successful collection recovery **at that check**, not continuous availability over the preceding outage. PROD deployment was not performed. This recovery update supersedes the earlier incident note's pending-rotation status.
+
+The cockpit data trust contract is separate from SAP health:
+- `FRESH`: recent READY performance evidence, collector source verified and fresh availability.
+- `STALE`: READY data older than the freshness budget; never display as a current measurement.
+- `DEGRADED`: recent READY data exists but poller/watchdog is unhealthy or unverified.
+- `PARTIAL`: performance remains fresh but Service Availability evidence is missing or older.
+- `UNKNOWN`: source metadata cannot be verified or its refresh failed.
+
+A historical gap means **there is no retained complete READY performance observation between two known READY timestamps**. It is not a claim that SAP was down, nor a reconstructed outage start time. The main cockpit shows bounded historical gaps for up to 24h after the next observed READY collection. The Server Trend retains its historical Collection Gap context for selected ranges. A successful new collection restores current freshness but does **not** fabricate missing samples.
+
+Alerts already versioned under `ops/observability/sphere-prometheus-rules.yml` include `SphereCollectionStale` (after 5 minutes) and `SphereIngestionFailure`; ensure Prometheus/Alertmanager routing is operational separately rather than treating a rule file as proof of a delivered notification. The user-visible data status must be prominent even if notifications have not been connected.
+
+DEV build command after GitHub checkout is validated:
+
+```bash
+bash ops/rundeck/qa-build-dev.sh && bash ops/rundeck/prod-readiness-check.sh && bash ops/rundeck/deploy-dev.sh
+```
+
+Continue to enforce readiness and check both performance and Infrastructure freshness. The frontend can mark old `/INTF` samples stale but cannot recover missing Rundeck executions itself. No PROD promotion is authorized by this change.
