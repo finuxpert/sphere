@@ -24,7 +24,9 @@ export function assessRundeckDataQuality({
   const availabilityAgeMs = availabilityAt === null ? null : Math.max(0, nowMs - availabilityAt)
   const poller = sourceStatus(collector.poller_status)
   const watchdog = sourceStatus(collector.watchdog_status)
-  const collectorBad = badSource.has(poller) || badSource.has(watchdog)
+  const collectorBad = badSource.has(poller) || badSource.has(watchdog) ||
+    !['OK', 'WAITING', 'BUSY'].includes(poller) ||
+    !['NORMAL', 'RECOVERED'].includes(watchdog)
   const collectorVerified = Boolean(health && platform && platform.collector)
   const ready = latest?.status === 'READY'
   let state = 'FRESH'
