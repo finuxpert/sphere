@@ -20,6 +20,7 @@ const files = {
   quickAnalysisCss: read('src/tools/components/RundeckReviewQuickAnalysis.css'),
   monitoringCss: read('src/tools/components/RundeckMonitoringHistory.css'),
   liveOverview: read('src/tools/components/RundeckLiveOverview.jsx'),
+  infraFreshness: read('src/tools/components/infrastructureFreshness.js'),
   liveOverviewCss: read('src/tools/components/RundeckLiveOverview.css'),
   closingBackend: read('backend/rundeck_closing.py'),
   closingMigration: read('backend/db/migrations/versions/20260929_0007_rundeck_analysis_closures.py'),
@@ -77,7 +78,9 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.74', files.version.includes("APP_VERSION = '1.34.74'") && files.version.includes('monitoring-flow-ui-v1.34.74')],
+  ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
+  ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:worst")],
+  ['monitoring flow version is v1.34.75', files.version.includes("APP_VERSION = '1.34.75'") && files.version.includes('monitoring-flow-ui-v1.34.75')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -272,7 +275,7 @@ const checks = [
   ['Performance issue marker label is short and horizontal', files.jobHistory.includes("formatter: `Issue · ${formatWib(incidentStart, false)}`") && files.jobHistory.includes('rotate: 0')],
   ['Infrastructure chart uses expanded internal plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=380') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
   ['Infrastructure analysis fixes Network Storage split and prevents clipped metric columns', files.infrastructureCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,60fr)!important') && files.infrastructureCss.includes('table-layout:fixed') && files.infrastructureCss.includes('nth-child(4)')],
-  ['Infrastructure history uses structured current min max change and secondary metric stats', files.infrastructure.includes('rundeckInfraTrendStats') && files.infrastructure.includes('<b>Current</b>') && files.infrastructure.includes('<b>Peak TX</b>') && files.infrastructure.includes('<b>Peak Drop Delta</b>')],
+  ['Infrastructure history uses structured current min max change and secondary metric stats', files.infrastructure.includes('rundeckInfraTrendStats') && files.infrastructure.includes("stale?'Last in range':'Current'") && files.infrastructure.includes('<b>Peak TX</b>') && files.infrastructure.includes('<b>Peak Drop Delta</b>')],
   ['Performance Analysis preserves missing versus observed APP Critical WP semantics', files.jobHistory.includes('APP Critical WP') && files.currentWorkload.includes('criticalWp: row.host_wp_critical')],
   ['Selected Job evidence keeps primary cards stronger than flat secondary launchers', files.monitoringCss.includes('grid-auto-rows:76px!important') && files.monitoringCss.includes('grid-auto-rows:48px!important')],
   ['Performance charts break retained-history gaps instead of drawing missing time as zero', files.jobHistory.includes('current - previous > GAP_MS') && files.jobHistory.includes('data.push([new Date(previous + 1).toISOString(), null])')],
