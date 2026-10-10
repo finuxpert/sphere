@@ -23,7 +23,7 @@ JOBS = {
     "INFRA_READER_ONLY": "66ffa675-1d77-4fe5-9aec-95ef5e330726",
 }
 MAX_BYTES = 2 * 1024 * 1024
-SAFE_SELECTOR = re.compile(r"^[A-Za-z0-9_.:,*/+?()=\s-]{1,160}$")
+SAFE_SELECTOR = re.compile(r"^[A-Za-z0-9_.:,*/+?()= -]{1,160}$")
 
 
 class NoRedirect(HTTPRedirectHandler):
