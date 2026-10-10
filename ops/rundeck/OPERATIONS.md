@@ -660,3 +660,36 @@ then run `bash ops/rundeck/qa-build-dev.sh` for the new release SHA.
 Full readiness and explicit deploy review follow separately; do not execute
 `deploy-dev.sh` as a QA shortcut. Infrastructure-owned Rundeck host is
 out of scope.
+
+
+## SPHERE v1.34.78 DEV cockpit and motion
+
+Source-only UI improvement on `rundeck-sphere-dev`; no PROD, Rundeck job,
+ACL, database schema or credential changes.
+
+- Both server trends remain user-selectable, but initial/restored duplicates
+  from legacy `sphere.live.trend` preferences are normalized to a
+  complementary pair (CPU + RAM by default). A distinct valid saved pair is
+  preserved; the normalization does not change any monitoring observations.
+- The three ECharts series use a short one-time reveal and a bounded update
+  transition. Reduced-motion browser preferences disable chart animation.
+  Color/status/gaps continue to reflect actual retained data, not a synthetic
+  live heartbeat.
+- Desktop width >1280px and viewports 780-1100px tall get a single-viewport
+  cockpit grid; Jobs & Programs remains readable via an internal scrolling
+  table. Smaller/narrower screens use natural scrolling rather than clipping
+  controls or forcing unusably small cells.
+- System Data now uses a centered modal with a scrim, Escape/backdrop close,
+  Tab focus containment and restoration of previous focus/scroll. Other
+  contextual analysis drawers keep their existing geometry and behavior.
+- All motion respects `prefers-reduced-motion`. No animation is looped
+  indefinitely, and loading/health statuses are not fabricated.
+- `npm run qa:cockpit` is included in `npm run qa`. Check
+  `qa-build-dev.sh`, migration guard, read-only DEV readiness and live
+  screenshot UX before further promotion.
+
+The live local DB was already observed at Alembic `20260929_0007` (same
+source head) before this UI-only change. If still verified immediately before
+deployment, use only the revision-bound `SPHERE_DEV_MIGRATION_DECISION=skip`
+gate; never run migration just because the persistent env flag remains true.
+The `deploy-dev.sh` rollback covers the application, not schema changes.
