@@ -7,13 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "qa": "npm run lint && npm run qa:infra-freshness && npm run qa:data-quality && npm run qa:basis-investigation && npm run build",
+    "qa": "npm run lint && npm run qa:infra-freshness && npm run qa:data-quality && npm run qa:cockpit && npm run qa:basis-investigation && npm run build",
     "qa:infra-freshness": "node --test scripts/tests/infrastructure-freshness.test.mjs",
     "qa:data-quality": "node --test scripts/tests/rundeck-data-quality.test.mjs",
     "qa:basis-investigation": "node scripts/qa-basis-investigation.mjs",
     "qa:visual": "playwright test -c playwright.config.mjs",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "qa:cockpit": "node --test scripts/tests/rundeck-cockpit-motion.test.mjs"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "^1.33.1-dev57.0",
