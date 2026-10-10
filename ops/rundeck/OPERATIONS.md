@@ -495,3 +495,17 @@ Until identity/UUIDs/project/role are verified and a maintainer approves the exa
 User executed Reader GET-only list for Rundeck project `Linux`, group `SAP/AOP`. Confirmed one `SPHERE Infrastructure Collector - PROD APP1` (`66ffa675-1d77-4fe5-9aec-95ef5e330726`) and one Service Availability report (`34821afe-9261-4122-88db-cf6e8fc65545`); **Performance name-filtered result was zero**. This does not prove the Performance job is absent, because its name/group, UUID mapping, or list filtering may differ. The configured candidate UUID remains `4f129041-956c-4e80-916f-fcde8948db09` and requires direct metadata verification before an ACL can be applied.
 
 Run `PYTHONDONTWRITEBYTECODE=1 python3 ops/rundeck/diagnose-performance-job-identity-dev.py` on `JAHSVR-SPHERE` as an authorized root operator after clean DEV checkout fast-forward. It GETs the configured UUID directly, then lists project `Linux` jobs and prints only matching nonsecret SPHERE work-process metadata. It reads the healthy Reader credential but never echoes it, never calls Runner, and performs no POST or service action. Do not replace credentials, loosen job filtering or grant Runner ACL until project/group/name/UUID are reconciled. Infrastructure remains Reader-only, and the short-lived Runner rotation stays on HOLD.
+
+
+### Performance identity fully verified (reader GET only, 2026-10-11)
+
+The operator ran `diagnose-performance-job-identity-dev.py` on `JAHSVR-SPHERE` with Reader, receiving HTTP 200 for both the direct performance UUID lookup and `Linux` job list. Configuration and live metadata agree:
+- Project `Linux`; group `SAP/AOP`.
+- Performance UUID `4f129041-956c-4e80-916f-fcde8948db09`.
+- Exact job name `[Critical]-[Daily Check] SPHERE SAP Work Proccess Check` (**Proccess** spelling is authoritative here).
+- Service Availability UUID `34821afe-9261-4122-88db-cf6e8fc65545`, already verified in `Linux` / `SAP/AOP`.
+- Infrastructure Collector PROD APP1 UUID `66ffa675-1d77-4fe5-9aec-95ef5e330726`, already verified in `Linux` / `SAP/AOP`, Reader-only.
+
+Previous Performance name-filter MISS was due to spelling mismatch; do not rename the Rundeck job solely for the probe. **Do not repeat this verified identity diagnostic.**
+
+Draft ACL under `ops/rundeck/examples/sphere-runner-dev.aclpolicy.example` now targets `Linux` and exact performance + availability UUIDs, with `kill` only for the performance watchdog use-case. Infrastructure remains out of Runner ACL. Before installation, confirm (1) token authorization roles include `sphere_runner` and exclude `admin` / `api_token_group`, (2) which node(s) both job definitions dispatch to, replacing `__APPROVED_NODE_NAME__` with a complete reviewed selector, and (3) no broader stored System/Project ACL grants for the effective token principal. Rundeck `rd acl validate` / `rd acl test` may validate a completed proposal offline; it does not by itself prove the entire live effective permission set or the short-lived token's active role mapping. There is no approval yet to install policies, replace credentials, revoke previous tokens, restart services, deploy DEV or enable browser renewal.
