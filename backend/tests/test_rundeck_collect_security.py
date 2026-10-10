@@ -109,13 +109,15 @@ class CollectSecurityTests(unittest.TestCase):
             except Exception as error:
                 errors.append(error)
 
+        # Construct the real client thread before patching the watcher factory,
+        # since runner.threading and this module share the threading module.
+        first = threading.Thread(target=first_call)
         with TemporaryDirectory() as dirname, \
                 patch.object(runner, "ROOT", Path(dirname)), \
                 patch.object(runner, "_job_specs", return_value=SPECS), \
                 patch.object(runner, "status", return_value={"allowed": True}), \
                 patch.object(runner, "_request", side_effect=request), \
                 patch.object(runner.threading, "Thread") as watcher:
-            first = threading.Thread(target=first_call)
             first.start()
             try:
                 self.assertTrue(entered.wait(3), "First request did not reach mocked POST")
