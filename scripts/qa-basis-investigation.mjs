@@ -74,6 +74,8 @@ const files = {
   watchdogSmoke: read('ops/rundeck/smoke-watchdog-dev.sh'),
   watchdogReadiness: read('ops/rundeck/prod-readiness-check.sh'),
   watchdogDiagnosis: read('ops/rundeck/diagnose-watchdog-dev.sh'),
+  rundeckAuthProbe: read('ops/rundeck/diagnose-rundeck-auth-dev.py'),
+  rundeckAuthProbeTests: read('backend/tests/test_rundeck_auth_diagnostic.py'),
   envExample: read('ops/rundeck/rundeck-dev.env.example'),
   watchdog: read('backend/rundeck_watchdog.py'),
   metrics: read('backend/rundeck_metrics.py'),
@@ -82,6 +84,18 @@ const files = {
 }
 
 const checks = [
+  ['Rundeck HTTP 403 diagnostic is GET-only and credential-safe',
+    files.rundeckAuthProbe.includes('method="GET"') &&
+    files.rundeckAuthProbe.includes('NoRedirect') &&
+    files.rundeckAuthProbe.includes('ProxyHandler({})') &&
+    files.rundeckAuthProbe.includes('X-Rundeck-Auth-Token') &&
+    files.rundeckAuthProbe.includes('Poller executions') &&
+    files.rundeckAuthProbe.includes('Watchdog running executions') &&
+    files.rundeckAuthProbe.includes('READER_CREDENTIAL=PRESENT (not displayed)') &&
+    !files.rundeckAuthProbe.includes('method="POST"') &&
+    !files.rundeckAuthProbe.includes('print(token)') &&
+    files.rundeckAuthProbeTests.includes('test_only_get_and_same_reader_token_for_every_request') &&
+    files.rundeckAuthProbeTests.includes('test_403_is_returned_as_code_without_printing_body')],
   ['Watchdog ERROR remains a blocker with actionable safe diagnostics',
     files.watchdogSmoke.includes('watchdog unhealthy: {status}') &&
     files.watchdogSmoke.includes('last_recorded_exception=') &&
