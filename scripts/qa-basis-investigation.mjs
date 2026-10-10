@@ -119,7 +119,7 @@ const checks = [
     files.dataQuality.includes('cadenceMs * 2.2') &&
     files.source.includes('rundeckDataQualityNotice') &&
     files.source.includes('Collector recovered · historical gap retained') &&
-    files.source.includes('NO OBSERVATION') &&
+    files.source.includes('NO COMPLETE READY OBSERVATION') &&
     files.source.includes('Collection <b>LAST READY</b>') &&
     files.source.includes('reportQuality') &&
     files.source.includes('metaRefreshFailed') &&
