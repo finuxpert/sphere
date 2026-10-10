@@ -16,7 +16,7 @@ class TokenLifecycleTests(unittest.TestCase):
         self.assertFalse(snapshot["renewal_enabled"])
         self.assertTrue(snapshot["read_only"])
         self.assertEqual(snapshot["items"][0]["state"], "REPORTED")
-        self.assertEqual(snapshot["items"][1]["state"], "DUE_SOON")
+        self.assertEqual(snapshot["items"][1]["state"], "DUE_3D")
         self.assertTrue(all(not item["live_verified"] and not item["renewal_allowed"] for item in snapshot["items"]))
 
     def test_expired_observations_are_not_called_active(self):
