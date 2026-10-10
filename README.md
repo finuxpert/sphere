@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated DEV source candidate: **v1.34.75** (server QA/deployment pending).
+Current Rundeck-integrated DEV source candidate: **v1.34.76** (server QA/deployment pending).
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -262,3 +262,7 @@ A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validati
 The embedded Infrastructure overview and Infrastructure Analysis use one 15-minute freshness rule for the selected host's collection timestamp. A missing/invalid/future timestamp is `UNKNOWN`; a late collection is `STALE`. Filesystem, Network, and Storage I/O retain their last observed values for investigation but do **not** show old `CRITICAL`/`ATTENTION`/`NORMAL` as current host conditions. The main overview refreshes the host and telemetry endpoints every 60 seconds without using a mutating collection endpoint. This UI guard does **not** claim a new collector result, synthesize a filesystem percentage, or modify the SAP host.
 
 If `/INTF` shows last-observed 92% but a fresh SAP `df -h /INTF` shows 88%, investigate the Rundeck infrastructure collection/poller. They reflect different observations until a new valid collection is persisted. See `ops/rundeck/OPERATIONS.md` for read-only checks and standard DEV QA/deploy.
+
+### SPHERE operator motion (v1.34.76 DEV)
+
+Subtle first-render entrance for cockpit regions and analysis drawers, 300ms chart traces with 180ms updates, and short interaction transitions. Motion runs client-side only: no polling frequency change, no fake live animation or extra API calls. Stale infrastructure samples remain labelled historical. Motion respects the browser's reduced-motion preference and is shortened for mobile devices. QA includes an explicit fresh NORMAL filesystem state assertion and animation accessibility contract.
