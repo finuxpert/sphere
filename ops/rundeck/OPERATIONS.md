@@ -293,3 +293,22 @@ Infrastructure freshness also verifies per-sample `collected_at` and `collection
 If the older DEV checkout prints `FAIL Infrastructure filesystem NORMAL state is explicit`, fetch `rundeck-sphere-dev` again and verify `src/app/version.js` is `1.34.76`. The contract asserts `observedStatus(statusFs(row.used_pct))` and rejects the old hidden-NORMAL placeholder. This is a QA-contract fix, **not** permission to label stale disk readings as current NORMAL. `npm run qa` also validates that the scoped motion CSS supports `prefers-reduced-motion`, avoids perpetual animations and leaves telemetry collection untouched.
 
 Motion CSS affects the client's first-render and hover transitions only. ECharts CPU/RAM and technical graphs animate on mount with a short duration and disable their animation when the user prefers reduced motion. Neither this change nor browser refreshes repair a stalled collector. Continue with the standard guarded DEV-only QA, readiness and transactional deploy sequence above. No PROD deployment is part of this update.
+
+## Watchdog ERROR during DEV readiness (read-only diagnosis)
+
+A successful `npm run qa`/Vite build does **not** imply the currently deployed DEV watchdog is healthy. `ops/rundeck/prod-readiness-check.sh` intentionally blocks on the existing DEV API's `watchdog_status=ERROR` and does not activate the new release. The warning about oversized Rollup chunks is not the blocker.
+
+The watchdog is a periodic oneshot service (normally every 120 seconds). Its `watchdog.json` records a status, timestamp and exception class; the service journal carries the underlying trace. A stale `ERROR` can reflect Rundeck connectivity, authentication, execution API errors, permission problems or timeouts. Do not assume which one without server evidence, and **do not** disable the guard or change auto-abort settings to force a deploy.
+
+After fetching the latest `rundeck-sphere-dev` source, run this nonmutating diagnostic on `JAHSVR-SPHERE`:
+
+```bash
+cd /root/rundeck-sphere-dev
+bash -n ops/rundeck/diagnose-watchdog-dev.sh ops/rundeck/smoke-watchdog-dev.sh ops/rundeck/prod-readiness-check.sh
+bash ops/rundeck/diagnose-watchdog-dev.sh
+```
+
+It prints only allowlisted watchdog/poller state, service/timer summaries and exception **class names**, not raw environment files, tokens or complete journal text. The readiness script now automatically runs the same diagnostics when the watchdog smoke fails, then exits nonzero. It does not start/stop a systemd service, abort executions, modify SAP/Rundeck or claim a recovery. Detailed runtime investigation is required if `ERROR` persists.
+
+Once the watchdog's underlying issue is fixed and the current DEV API reports `NORMAL` or `RECOVERED` with fresh collection and auto-healing enabled, rerun the usual guarded readiness check and DEV deployment. Keep PROD untouched.
+
