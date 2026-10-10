@@ -1,6 +1,9 @@
 # REVIEW TEMPLATE ONLY. DO NOT INSTALL UNTIL PROJECT, IDENTITY, ROLE, ACL
 # precedence, and all non-DEV consumers have been inspected and approved.
-# Replace __APPROVED_PROJECT__ only after confirming both exact job identities.
+# Replace __APPROVED_PROJECT__ only after confirming both job UUIDs belong there.
+# Replace __APPROVED_NODE_NAME__ only after checking the job node filters.
+# If jobs span projects or run on several nodes, split into independently scoped
+# reviewed rules rather than broadening to wildcard project/node access.
 # Changes to Rundeck ACL may take effect without restarting the server.
 description: SPHERE DEV runner - allow read access to the approved project only
 context:
@@ -28,10 +31,12 @@ for:
     - equals:
         kind: event
       allow: [read]
-    - equals:
-        kind: node
-      allow: [read]
+  # Node access is restricted too: job UUID restriction alone is not sufficient.
+  # This placeholder MUST match the approved runtime node(s) before installation.
+  # Revalidate whether reading execution histories requires the event rule above.
   node:
-    - allow: [read, run]
+    - equals:
+        nodename: '__APPROVED_NODE_NAME__'
+      allow: [read, run]
 by:
   group: sphere_runner
