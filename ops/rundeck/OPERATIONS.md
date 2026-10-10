@@ -287,3 +287,9 @@ bash ops/rundeck/qa-build-dev.sh && bash ops/rundeck/prod-readiness-check.sh && 
 Perform the reset only if this checkout has no unpublished local work; otherwise reconcile that work first. No changes to `rundeck-sphere-prod`, `sphere-prod` or the SAP host are part of this update.
 
 Infrastructure freshness also verifies per-sample `collected_at` and `collection_id` against the selected host's latest READY collection. Mixed or missing identities become `UNKNOWN` instead of combining unrelated snapshots. A stale sample remains `STALE` even when a newer host record exists.
+
+## DEV v1.34.76 filesystem QA and motion
+
+If the older DEV checkout prints `FAIL Infrastructure filesystem NORMAL state is explicit`, fetch `rundeck-sphere-dev` again and verify `src/app/version.js` is `1.34.76`. The contract asserts `observedStatus(statusFs(row.used_pct))` and rejects the old hidden-NORMAL placeholder. This is a QA-contract fix, **not** permission to label stale disk readings as current NORMAL. `npm run qa` also validates that the scoped motion CSS supports `prefers-reduced-motion`, avoids perpetual animations and leaves telemetry collection untouched.
+
+Motion CSS affects the client's first-render and hover transitions only. ECharts CPU/RAM and technical graphs animate on mount with a short duration and disable their animation when the user prefers reduced motion. Neither this change nor browser refreshes repair a stalled collector. Continue with the standard guarded DEV-only QA, readiness and transactional deploy sequence above. No PROD deployment is part of this update.
