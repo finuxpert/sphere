@@ -98,7 +98,7 @@ def main():
         print("READER_CREDENTIAL=EMPTY")
         return 2
 
-    status, data = request_json(f"/api/{API}/job/{EXPECTED_UUID}", token)
+    status, data = request_json(f"/api/{API}/job/{EXPECTED_UUID}/info", token)
     print("CONFIGURED_UUID_READ=" + status)
     if status == "HTTP_200" and isinstance(data, dict):
         print("UUID_PROJECT=" + clean(data.get("project")))
