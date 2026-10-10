@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated DEV source candidate: **v1.34.76** (server QA/deployment pending).
+Current Rundeck-integrated DEV source candidate: **v1.34.77** (server QA/deployment pending).
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -266,3 +266,9 @@ If `/INTF` shows last-observed 92% but a fresh SAP `df -h /INTF` shows 88%, inve
 ### SPHERE operator motion (v1.34.76 DEV)
 
 Subtle first-render entrance for cockpit regions and analysis drawers, 300ms chart traces with 180ms updates, and short interaction transitions. Motion runs client-side only: no polling frequency change, no fake live animation or extra API calls. Stale infrastructure samples remain labelled historical. Motion respects the browser's reduced-motion preference and is shortened for mobile devices. QA includes an explicit fresh NORMAL filesystem state assertion and animation accessibility contract.
+
+### Monitoring reliability and retained observation gaps (v1.34.77 DEV)
+
+The cockpit distinguishes current monitoring **data quality** from SAP operational health. `FRESH` indicates a recent READY performance sample and recent availability data; `STALE` indicates old READY evidence (not a live observation); `DEGRADED` indicates a source/watchdog problem despite a recently retained sample; `PARTIAL` means availability evidence is unavailable/old; `UNKNOWN` means required source identity or health verification is missing. The header says **LAST READY** rather than implying a current collection when performance evidence is invalid.
+
+After a recovery, a compact **historical observation gap** remains visible for up to 24 hours when two adjacent retained READY collections exceed the expected cadence; the display quotes the timestamps bounding actual observations and does not invent a start time for SAP downtime. Existing trend gap bands remain available for historical review. The token-expiry incident from 10 October 2026 showed why this separation is required. Regression tests run through `npm run qa:data-quality` in the default QA sequence; PROD is not automatically changed.
