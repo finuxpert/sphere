@@ -67,7 +67,7 @@ function collectorTitle(collector) {
   return parts.join(' · ')
 }
 
-export default function RundeckSystemHealth({ refreshToken = '' }) {
+export default function RundeckSystemHealth({ refreshToken = '', sourceQuality = null, sourceCollector = null }) {
   const [target, setTarget] = React.useState(null)
   const [hosts, setHosts] = React.useState([])
   const [availability, setAvailability] = React.useState('UNKNOWN')
@@ -122,11 +122,32 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
 
   const availabilityAge = availabilityCollectedAt ? Math.max(0, Math.floor((Date.now() - Date.parse(availabilityCollectedAt)) / 60000)) : null
   const availabilityStale = Number.isFinite(availabilityAge) && availabilityAge >= 20
-  const state = systemHealthState(hosts, { availabilityState: availability, serviceCritical, stale, availabilityStale })
-  const collector = platform?.collector || {}
+  const collector = sourceCollector || platform?.collector || {}
+  const performanceEvidenceStale = stale || sourceQuality?.performanceValid === false ||
+    (Number.isFinite(Number(collector.collection_age_seconds)) &&
+      collector.collection_age_seconds !== null && Number(collector.collection_age_seconds) >= 15 * 60)
+  const collectorUnreliable = Boolean(sourceQuality?.collectorBad) ||
+    ['ERROR', 'CRITICAL', 'RECOVERY_FAILED'].includes(String(collector.poller_status || '').toUpperCase()) ||
+    ['ERROR', 'CRITICAL', 'RECOVERY_FAILED'].includes(String(collector.watchdog_status || '').toUpperCase())
+  const availabilityEvidenceStale = availabilityStale || sourceQuality?.availabilityValid === false
+  const observedHosts = performanceEvidenceStale || collectorUnreliable ? [] : hosts
+  const observedAvailability = availabilityEvidenceStale ? 'UNKNOWN' : availability
+  const observedImpact = !availabilityEvidenceStale && serviceCritical
+  const state = sourceQuality?.state === 'UNKNOWN'
+    ? 'UNKNOWN'
+    : systemHealthState(observedHosts, {
+        availabilityState: observedAvailability,
+        serviceCritical: observedImpact,
+        stale: performanceEvidenceStale || collectorUnreliable,
+        availabilityStale: availabilityEvidenceStale,
+      })
   const recovery = collector?.last_recovery || null
-  const primarySignal = primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale, availabilityAge)
-  const title = `System Health reflects service impact and OS resource pressure. Job and program signals can raise ATTENTION without declaring an outage. Availability ${availability}${availabilityStale ? ` · evidence ${availabilityAge}m old` : ''}${stale ? ' · performance data stale' : ''}.`
+  const primarySignal = sourceQuality?.state === 'UNKNOWN'
+    ? { level: 'WARNING', text: 'Monitoring data unverified', detail: 'Check the Data validity indicator; SAP state cannot be inferred from this source.' }
+    : collectorUnreliable && !performanceEvidenceStale
+      ? { level: 'WARNING', text: 'Monitoring source unavailable', detail: 'Recent observations are retained evidence, but the collection source is unhealthy.' }
+      : primaryHealthSignal(observedHosts, observedAvailability, observedImpact, performanceEvidenceStale, availabilityEvidenceStale, availabilityAge)
+  const title = `System Health shows confirmed observations, not a live verdict from stale evidence. Collector ${sourceQuality?.state || collector.status || 'UNKNOWN'}. Availability ${observedAvailability}${availabilityEvidenceStale ? ' · evidence unavailable or old' : ''}${performanceEvidenceStale ? ' · performance data stale' : ''}.`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
