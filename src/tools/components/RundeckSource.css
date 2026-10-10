@@ -1146,3 +1146,16 @@
   .rundeckDataQualityNotice {font-size:8.7px;gap:2px 6px;}
   .rundeckDataQualityNotice strong {font-size:8.9px;}
 }
+
+
+/* Explicit data-trust status colors. These do not represent SAP severity. */
+.appShell:has(.rundeckPanel) .rundeckDataAlignment .rundeckStatus.is-stale,
+.appShell:has(.rundeckPanel) .rundeckDataAlignment .rundeckStatus.is-degraded {
+  color:var(--sphere-warning,#d8b35f);
+}
+.appShell:has(.rundeckPanel) .rundeckDataAlignment .rundeckStatus.is-unknown {
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.appShell:has(.rundeckPanel) .rundeckDataAlignment .rundeckStatus.is-partial {
+  color:var(--sphere-warning,#d8b35f);
+}
