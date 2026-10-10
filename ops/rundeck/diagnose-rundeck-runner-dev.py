@@ -8,6 +8,7 @@ systemctl actions. HTTP 200 is evidence of readable scope, NOT run/kill ACL.
 from __future__ import annotations
 
 import getpass
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -84,6 +85,38 @@ def get_status(path: str, token: str) -> str:
         return "NETWORK_ERROR"
 
 
+
+def get_identity(token: str) -> tuple[str, str]:
+    """Return only non-secret identity labels; discard the full response body."""
+    opener = build_opener(ProxyHandler({}), NoRedirect())
+    request = Request(
+        BASE + f"/api/{API_VERSION}/user/info",
+        headers={"X-Rundeck-Auth-Token": token, "Accept": "application/json"},
+        method="GET",
+    )
+    try:
+        with opener.open(request, timeout=10) as response:
+            payload = json.loads(response.read(32768))
+        if not isinstance(payload, dict):
+            return "UNVERIFIED", "UNVERIFIED"
+        raw_user = next(
+            (payload.get(name) for name in ("login", "username", "userName", "user")
+             if isinstance(payload.get(name), str) and payload.get(name)),
+            None,
+        )
+        raw_roles = payload.get("roles")
+        if isinstance(raw_roles, list):
+            roles = ",".join(str(role) for role in raw_roles if isinstance(role, str))
+        elif isinstance(raw_roles, str):
+            roles = raw_roles
+        else:
+            roles = ""
+        sanitize = lambda value: re.sub(r"[^A-Za-z0-9_.,-]", "", str(value))[:160] or "UNVERIFIED"
+        return sanitize(raw_user), sanitize(roles)
+    except (HTTPError, URLError, OSError, ValueError, TypeError):
+        return "UNVERIFIED", "UNVERIFIED"
+
+
 def main() -> int:
     print("=== SPHERE DEV RUNNER VERIFICATION (GET ONLY) ===")
     print("NO CHANGES: existing reader/runner files and SAP jobs remain untouched")
@@ -119,6 +152,15 @@ def main() -> int:
     statuses = {label: get_status(path, token) for label, path in targets}
     for label, status in statuses.items():
         print(f"{label}: {status}")
+    user, roles = get_identity(token)
+    print(f"TOKEN_USER={user}")
+    print(f"TOKEN_ROLES={roles}")
+    if user == "admin" or "admin" in roles.lower().split(","):
+        print("PRIVILEGE_REVIEW=REQUIRED (admin identity or role)")
+    elif user == "UNVERIFIED" or roles == "UNVERIFIED":
+        print("PRIVILEGE_REVIEW=REQUIRED (identity or roles not verified)")
+    else:
+        print("PRIVILEGE_REVIEW=CHECK_SCOPE_WITH_ACL")
 
     # A narrowly scoped service token may be denied system info while still
     # having the two required job read scopes. System/user endpoints are advisory.
