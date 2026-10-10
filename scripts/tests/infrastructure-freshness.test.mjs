@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   INFRA_FRESHNESS_LIMIT_MS,
   infrastructureFreshness,
+  infrastructureTelemetryFreshness,
   infrastructureObservationStatus,
 } from '../../src/tools/components/infrastructureFreshness.js'
 
@@ -34,4 +35,18 @@ test('missing, invalid and future-dated collection timestamps are unknown', () =
 
 test('historical normal measurements cannot claim live NORMAL', () => {
   assert.equal(infrastructureObservationStatus('NORMAL', 'STALE'), 'STALE')
+})
+
+test('per-host ready collection and telemetry rows must share identity', () => {
+  const host = atAge(30_000)
+  const row = { collection_id: 'infra-rundeck-150', collected_at: host }
+  assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-150', [row], now), 'FRESH')
+  assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-151', [row], now), 'UNKNOWN')
+  assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-150', [], now), 'UNKNOWN')
+})
+
+test('host with fresh timestamp cannot revive a seven-hour-old filesystem row', () => {
+  const host = atAge(30_000)
+  const oldRow = { collection_id: 'infra-rundeck-150', collected_at: atAge(7 * 60 * 60 * 1000) }
+  assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-150', [oldRow], now), 'STALE')
 })
