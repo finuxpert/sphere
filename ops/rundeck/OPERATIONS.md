@@ -253,3 +253,35 @@ Raw evidence and PostgreSQL monitoring history follow configured retention setti
 Do not delete retained raw evidence as a database-repair shortcut.
 
 The deploy/runtime release cleanup retains a bounded rollback window.
+
+
+## Infrastructure freshness / filesystem mismatch (v1.34.75 DEV)
+
+The AOP PROD infrastructure source is read-only to SAP. The SPHERE DEV UI refreshes its Infrastructure host, filesystem, network and storage requests every 60 seconds; it never runs an SAP command directly. Snapshot age exceeds 15 minutes: show `STALE`; timestamp missing/invalid or more than 60 seconds in the future: show `UNKNOWN`. In both cases preserve original values as last-observed evidence, and suppress current capacity/network/I/O severity classifications. The modal and main cockpit must agree.
+
+A mismatch like SPHERE's 7-hour-old `/INTF 92%` versus a manually executed `df -h /INTF` reporting `88%` cannot be resolved by changing CSS/percentage math. Compare host identity, the collector `snapshot_ts`, execution ID, poller status and the time of the SAP command. Do not overwrite saved evidence or substitute the manual 88% as an automated sample.
+
+Read-only diagnosis on `JAHSVR-SPHERE`:
+
+```bash
+systemctl list-timers --all 'sphere-rundeck-infra*' --no-pager
+systemctl show sphere-rundeck-infra-aop-prod-test.service -p ActiveState -p Result -p ExecMainStatus
+journalctl -u sphere-rundeck-infra-aop-prod-test.service -n 40 --no-pager
+cat /var/lib/sphere/infra-ingestion/poller-aop-prod.json
+curl --noproxy '*' -fsS http://127.0.0.1:8091/infra/latest?source=aop-prod
+curl --noproxy '*' -fsS http://127.0.0.1:8091/infra/filesystems?host=AOPH1PAPPDC
+```
+
+Infrastructure collection and ingestion are independent: timer `sphere-rundeck-infra-aop-prod-test.timer` is configured every five minutes; the Rundeck job itself must execute successfully and produce a new timestamp for each expected host. A successful UI build does not restart or repair that external collection pipeline.
+
+DEV source validation now includes `node --test scripts/tests/infrastructure-freshness.test.mjs` via `npm run qa`. Standard transactional DEV build/deploy:
+
+```bash
+cd /root/rundeck-sphere-dev
+git fetch origin rundeck-sphere-dev
+git switch rundeck-sphere-dev
+git reset --hard origin/rundeck-sphere-dev
+bash ops/rundeck/qa-build-dev.sh && bash ops/rundeck/prod-readiness-check.sh && bash ops/rundeck/deploy-dev.sh
+```
+
+Perform the reset only if this checkout has no unpublished local work; otherwise reconcile that work first. No changes to `rundeck-sphere-prod`, `sphere-prod` or the SAP host are part of this update.
