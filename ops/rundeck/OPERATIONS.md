@@ -331,3 +331,41 @@ The probe only calls three GET endpoints, with redirects prohibited: `system/inf
 Interpretation: HTTP 200 for the system endpoint but 403 for both execution endpoints strongly suggests project/execution authorization; HTTP 403 for all endpoints could indicate a revoked/expired token **or** broader access restrictions. If only `executions/running` fails, inspect the scope for listing running executions. Confirm the intended Rundeck service-account identity, token validity and minimum project/job/execution *read* ACL with the Rundeck administrator; do not grant runner/abort/execute privileges to the read-only token. Only after that is corrected and collector data becomes fresh should DEV readiness/deployment be retried.
 
 The `backend.tests.test_rundeck_auth_diagnostic` tests are offline and run as part of DEV readiness. Never run PROD deployment to solve this DEV-only problem.
+
+
+## SPHERE monitoring token ownership and 30-day rotation
+
+**Operator decision (2026-10-10):** Keep the Rundeck monitoring API token short-lived (30 days), separate read-only access from administrative maintenance, and restrict the maintenance role to the designated system owner. This is an access-control requirement, **not** a claim that existing Rundeck users/ACL are already compliant.
+
+### Generate the monitoring reader token
+
+In Rundeck **User API Tokens → + Generate New Token**, use:
+
+| Field | Value |
+| --- | --- |
+| Name | `SPHERE Read Only - Monitoring` |
+| User | `sphere_api` (the existing dedicated service account) |
+| Roles | `sphere_reader` only |
+| Expiration in | `0` |
+| Unit | `Minutes` |
+
+The Rundeck form observed on 2026-10-10 explicitly says **"Set to zero for maximum allowed duration. (30d)"**. Thus `0` here means **the server's configured 30-day maximum**, NOT unlimited. Verify the resulting expiry date after creation. If User remains `admin`, is not editable, or the issued token grants inherited admin roles, **stop**; obtain an appropriately scoped token for `sphere_api` instead. Never generate this reader token with blank roles under an `admin` account.
+
+The monitoring reader must have only the minimum project/job/execution read rights needed by `backend/rundeck_poller.py` and `backend/rundeck_watchdog.py`. It must not be allowed to run jobs, abort executions, administer Rundeck, modify ACL, or change project settings. API-token `Roles` do not grant permissions independently of Rundeck's actual ACL policies; confirm effective `sphere_reader` permissions with a read-only API smoke test.
+
+### Maintenance ownership and separation of privileges
+
+The **designated SPHERE maintainer** is the only person authorized to rotate credentials, administer Rundeck access for SPHERE, change related configuration or run manual recovery/deploy operations. Enforce this with individual named accounts, restricted admin/ACL roles, server sudo/file permissions and auditing; writing a policy here does **not** technically revoke privileges from other administrators. Review actual Rundeck groups/ACLs and server access before asserting exclusivity. Do not expose or share the maintainer's privileged API token.
+
+Keep the existing `SPHERE DEV Runner` credential **separate** from `sphere_reader`. Its screenshot showed admin-level roles; audit whether they exceed the minimum needed for the approved job operations and remove excessive rights via a planned, separately tested change. Watchdog auto-abort may use the runner for a controlled recovery; do not remove or replace that credential blindly. Reader token rotation must not modify the runner credential, watchdog auto-abort setting, PROD services, SAP hosts or job definitions.
+
+### Reader rotation checklist (every 30 days)
+
+1. **D-7**: owner checks the expiring token and prepares a replacement; **D-3**: owner confirms maintenance window and access. Keep an expiry-date reminder; do not rely on a perpetual token.
+2. Issue `sphere_api` / `sphere_reader` token with the fields above. Verify issued account, effective roles and expiry date. Keep the secret in an approved credential vault only; never in GitHub, chat, shell history, command output, CI logs or documentation.
+3. On `JAHSVR-SPHERE`, confirm which services reference `/etc/sphere/rundeck-readonly.token` before updating it. At the 2026-10-10 inspection, `sphere-rundeck-poller.service`, `sphere-rundeck-watchdog.service`, `sphere-rundeck-infra-poller.service` and `sphere-rundeck-infra-aop-prod-test.service` referenced that file; verify live server configuration each time. Do not assume anything named `aop-prod-test` is the SPHERE PROD runtime.
+4. Test the new reader token against the required **GET-only** Rundeck endpoints **before** replacing the old credential. Securely back up the existing credential (mode `0600`), rotate the file atomically (mode `0600`, owner `root:root`), and do not paste the token in a command line. Remember that systemd `LoadCredential` takes a per-service snapshot when a oneshot starts.
+5. Wait for normal systemd timer invocations; verify both poller and watchdog return to healthy state and SPHERE's latest READY collection becomes fresh. **Do not manually start the watchdog while auto-abort is enabled**, unless the designated maintainer has inspected the running execution and explicitly approved it.
+6. Revoke the replaced token after the new credential is verified. Record only the nonsecret token label, expiry date, owner role, verification date and outcome. Rerun guarded DEV readiness and deploy only after all checks pass.
+
+**Incident record (2026-10-10):** Existing token `SPHERE Read Only`, account `sphere_api`, role `sphere_reader`, expired **2026-10-10 14:50:34 WIB**. The SPHERE DEV watchdog and poller logged `HTTPError`, with watchdog HTTP 403; a GET-only probe returned HTTP 403 for system info, poller executions and watchdog running executions. This is strong corroboration of expired-reader impact, not proof against an additional ACL issue. No new token value, credential update, service recovery or successful deployment is documented at this stage. The screenshot also showed `SPHERE DEV Runner` due **2026-10-13 20:52:16 WIB**; its separate rotation and least-privilege review remain pending.
