@@ -11,7 +11,7 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current DEV source candidate: **v1.34.75** (does not imply the server is already deployed).
+- Current DEV source candidate: **v1.34.76** (does not imply the server is already deployed).
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
@@ -247,3 +247,9 @@ The primary Infrastructure strip and its investigation drawer share the same tim
 The per-host collection timestamp and per-mount percentages must agree with a new collector execution before concluding that SAP filesystem usage changed. This rule prevents stale-data misclassification; it is not a replacement for diagnosing a stuck Rundeck job/poller.
 
 Infrastructure freshness also verifies per-sample `collected_at` and `collection_id` against the selected host's latest READY collection. Mixed or missing identities become `UNKNOWN` instead of combining unrelated snapshots. A stale sample remains `STALE` even when a newer host record exists.
+
+## DEV operator motion (v1.34.76)
+
+The Rundeck cockpit imports `RundeckOperatorMotion.css` once from the monitoring wrapper. Only mounted cockpit bands, analysis drawers, and selected history traces use a one-shot animation; no infinite pulse, moving signal, rolling random counters or background animation work. Host status and chart values remain actual sampled evidence. ECharts animations stop under `prefers-reduced-motion`, as do CSS animations/transitions. Browser clients execute their own brief rendering; the backend and database collection cadence are unchanged.
+
+Basis QA's `Infrastructure filesystem NORMAL state is explicit` assertion now checks the freshness-aware status renderer instead of the removed direct CSS class. It must preserve `NORMAL` for fresh rows and `STALE`/`UNKNOWN` for old or unverified evidence.
