@@ -56,3 +56,6 @@
 .rundeckTokenCard dd{margin:3px 0 0;font-size:10px;overflow-wrap:anywhere}
 .rundeckTokenRenew{width:100%;min-height:30px;border:1px solid rgba(126,147,158,.2);border-radius:6px;background:transparent;color:var(--sphere-text-muted,#94a0a7);font-size:10px;font-weight:700;cursor:not-allowed}
 @media(max-width:640px){.rundeckSystemDataTabs{flex-direction:row;flex-wrap:wrap}.rundeckTokenGrid{grid-template-columns:minmax(0,1fr)}.rundeckTokenCard dl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.rundeckTokenManagement .rundeckSystemDataState.is-due_3d{color:var(--sphere-warning,#d8b35f)}
+.rundeckTokenManagement .rundeckSystemDataState.is-due_1d{color:var(--sphere-danger,#db7d86)}
