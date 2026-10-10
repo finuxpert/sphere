@@ -13,6 +13,7 @@ const atAge = (ms) => new Date(now - ms).toISOString()
 test('new snapshot keeps live severity', () => {
   assert.equal(infrastructureFreshness(atAge(30_000), now), 'FRESH')
   assert.equal(infrastructureObservationStatus('CRITICAL', 'FRESH'), 'CRITICAL')
+  assert.equal(infrastructureObservationStatus('NORMAL', 'FRESH'), 'NORMAL')
 })
 
 test('15 minute freshness boundary is inclusive', () => {
