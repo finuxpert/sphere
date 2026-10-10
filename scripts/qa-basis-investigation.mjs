@@ -429,12 +429,22 @@ const checks = [
     files.infrastructure.includes('{observedStatus(statusFs(row.used_pct))}</b>') &&
     files.infrastructure.includes("const observedStatus=(state)=>infrastructureObservationStatus(state,freshness)") &&
     files.infraFreshness.includes("return freshness === 'FRESH' ? rawStatus : freshness") &&
-    !files.infrastructure.includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],,
+    !files.infrastructure.includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],
   ['Run identity separates committed Collection, running Collection, and Availability cycles', files.source.includes('Collection <b>READY</b>') && files.source.includes('Collection running #') && files.availability.includes('Availability Run #')],
   ['Long-range trend reduces point clutter while preserving hover emphasis', files.serverTrend.includes("compactPoints = ['30m', '1h', '3h', '6h']") && files.serverTrend.includes("showSymbol: availabilityMode || compactPoints") && files.serverTrend.includes("emphasis: { focus: 'series'")],
   ['watchdog audit route is read-only and available', files.apiCore.includes('@app.get("/watchdog/events")') && files.apiCore.includes('read_watchdog_events')],
   ['Prometheus scrape and alert rules are versioned', files.promConfig.includes('/dev/api/metrics') && files.promRules.includes('SphereCollectorExecutionStuck') && files.promRules.includes('SphereWatchdogAutoRecovery')],
 ]
+
+// Guard the QA contract itself: a stray comma creates a sparse array item,
+// which previously threw an unhelpful TypeError while printing results.
+for (let index = 0; index < checks.length; index += 1) {
+  if (!Object.hasOwn(checks, index) || !Array.isArray(checks[index]) || checks[index].length !== 2 ||
+      typeof checks[index][0] !== 'string' || typeof checks[index][1] !== 'boolean') {
+    console.error(`INVALID QA CONTRACT: checks[${index}] must be [name, boolean].`)
+    process.exit(1)
+  }
+}
 
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
