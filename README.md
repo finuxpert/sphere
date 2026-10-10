@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current Rundeck-integrated DEV source candidate: **v1.34.77** (server QA/deployment pending).
+Current observed Rundeck-integrated DEV UI: **v1.34.78-dev · b878142** (operator screenshot, 2026-10-11 WIB). This is a DEV-only checkpoint; no PROD promotion is recorded.
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -98,30 +98,15 @@ Main navigation:
 1. **ST03N Analysis**
 2. **Performance Analysis**
 
-Performance Analysis exposes:
+Performance Analysis is a single SAP Performance cockpit (the obsolete Live Monitoring and standalone History tabs were removed). It exposes:
 
-- Live Monitoring
-- History
-- Infrastructure overview and Infrastructure Analysis
-- SAP Application Servers
-- Server Trend
-- Current Jobs & Programs
-- Selected Job / Program context with workload-scoped APP Critical WP wording
-- Jobs & Programs to Review beside Current Jobs & Programs
-- Bottom workflow uses equal-height panels: Current Jobs and Review scroll internally while Selected Job remains fixed.
-- Performance Analysis with Current / 3H / 6H / 24H / 7D / 30D
-- Observation Details
-- Historical Bucket Details
-- SAP WP / Trace Signal Details
-- Observation History
-- Correlated Events
-- SAP Availability
-- SAP Issues
-- System Data
-- System Health
-- Jobs & Programs to Review
-- Workload Explorer / historical analysis
-- One-page PDF quick reporting for Basis/Infrastructure handoff
+- SAP App Servers (CPU, host RAM, I/O Wait, APP Critical WP) and an Infrastructure overview with source/freshness context.
+- Two selectable Server Trends, complementary CPU / RAM by default, plus Technical Trend; shared range, interval and Avg/Peak controls.
+- Six selected-context shortcuts: Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis and System Data.
+- One full-width **Jobs & Programs** workspace with **Live / Review / Search** modes and a bounded internally scrolling table.
+- Historical workload evidence and APP-level investigation through contextual analysis drawers; System Data is a centered accessible dialog.
+- System Health and Collector Health with distinct freshness/observation semantics; absence of a sample is never an SAP outage verdict.
+- PDF preview/quick reporting for Basis and Infrastructure handoff, with host RAM separate from workload PSS Memory.
 
 ## Important evidence semantics
 
@@ -272,3 +257,55 @@ Subtle first-render entrance for cockpit regions and analysis drawers, 300ms cha
 The cockpit distinguishes current monitoring **data quality** from SAP operational health. `FRESH` indicates a recent READY performance sample and recent availability data; `STALE` indicates old READY evidence (not a live observation); `DEGRADED` indicates a source/watchdog problem despite a recently retained sample; `PARTIAL` means availability evidence is unavailable/old; `UNKNOWN` means required source identity or health verification is missing. The header says **LAST READY** rather than implying a current collection when performance evidence is invalid.
 
 After a recovery, a compact **historical observation gap** remains visible for up to 24 hours when two adjacent retained READY collections exceed the expected cadence; the display quotes the timestamps bounding actual observations and does not invent a start time for SAP downtime. Existing trend gap bands remain available for historical review. The token-expiry incident from 10 October 2026 showed why this separation is required. Regression tests run through `npm run qa:data-quality` in the default QA sequence; PROD is not automatically changed.
+
+
+### SPHERE DEV checkpoint — v1.34.78 (11 October 2026)
+
+**Evidence:** Operator screenshot of `https://sphere.astraotoparts.co.id/dev/`
+displays `Build v1.34.78-dev · b878142`, the complementary **CPU** and **RAM**
+Server Trend charts, Technical Trend on Swap I/O, six analysis shortcuts
+and Jobs & Programs (Live mode). The foreground screenshot indicates
+the new frontend is serving on DEV; it is not, by itself, a full
+backend/PROD deployment transcript or browser compatibility test.
+
+**Observed at that screenshot (point-in-time only):**
+
+- Collector Health: **NORMAL**. System Health: **ATTENTION**, with APP3
+  Critical WP evidence; this is not an automatic service-down judgment.
+- SAP Data: **ALIGNED**; displayed Performance age ~3 minutes and
+  Availability age ~15 minutes. Infrastructure host shown as refreshed
+  ~1 minute ago; `/SAP_ARCH` and `/usr/sap/AOP` show filesystem
+  attention (89% and 86%) on that observation, not a fabricated current
+  measurement.
+- A retained **8h 32m observation gap** between READY samples on
+  10 October is explicitly preserved. That interval is **not** labelled
+  SAP downtime.
+- Jobs & Programs showed **203 observed, showing 50** in Live mode;
+  further entries are available in the table scroll region.
+- The screenshot provides no proof that every viewport is page-scroll-free,
+  that System Data keyboard focus works in all browsers, or that animations
+  meet performance targets. Treat these as follow-up visual checks, not
+  blockers retrospectively claimed as passed.
+
+**Validated earlier in this release train:** migration-target regression
+6/6 PASS; target `sphere_rundeck_dev` was locally classified and
+Alembic `20260929_0007` matched the live DEV schema. The earlier
+v1.34.77 deploy explicitly skipped migrations, verified PROD routing
+unchanged and confirmed `Collect Now=DISABLED`. The v1.34.78 operator
+screenshot confirms the displayed frontend revision; the final complete
+v1.34.78 deploy stdout has not been pasted into this handover.
+
+**Security and ownership:** Collect Now stays fail-closed (HTTP 403
+backend), Renew Now stays locked, SM37 remains not connected, and Runner
+ACL/rotation and Rundeck host/service ownership remain with the infra
+team. UI animation is finite and supports reduced-motion preference.
+No SAP/Rundeck execution, credential rotation, migration, or PROD
+promotion was authorized by this documentation update.
+
+**Paused / next session:** keep PROD on hold; if development resumes,
+validate System Data modal focus and backdrop close, desktop (including
+short laptop screens) and Android scroll/overflow, chart animation
+with reduced-motion, and freshness/availability labels. Run ordinary
+DEV QA/readiness before any future deployment; do not modify Rundeck
+host policies or force a production promotion. Full operational
+evidence and rollback gates are in `ops/rundeck/OPERATIONS.md`.
