@@ -1,6 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { infrastructureFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
+import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
 import './RundeckInfrastructure.css'
 
 const API=`${import.meta.env.BASE_URL}api/infra`
@@ -111,7 +111,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
 }
 
 export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null,initialContext=null}){
-  const [data,setData]=React.useState({hosts:[],fs:[],network:[],storage:[]})
+  const [data,setData]=React.useState({host:'',hosts:[],fs:[],network:[],storage:[]})
   const [error,setError]=React.useState('')
   const [clockNow,setClockNow]=React.useState(()=>Date.now())
   const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
@@ -128,8 +128,14 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   },[initialContext])
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
-  const collectedAt=hostRow?.snapshot_ts||data.fs[0]?.collected_at||data.network[0]?.collected_at||data.storage[0]?.collected_at
-  const freshness=infrastructureFreshness(collectedAt,clockNow)
+  const observedData=data.host===host?data:{fs:[],network:[],storage:[]}
+  const telemetryRows=[...observedData.fs,...observedData.network,...observedData.storage]
+  const collectedAt=hostRow?.snapshot_ts||telemetryRows[0]?.collected_at
+  const freshness=infrastructureTelemetryFreshness(collectedAt,hostRow?.collection_id,telemetryRows,clockNow)
+  const observedAt=telemetryRows
+    .map(row=>row.collected_at)
+    .filter(value=>Number.isFinite(Date.parse(value||'')))
+    .sort((a,b)=>Date.parse(a)-Date.parse(b))[0]||collectedAt
   const stale=freshness!=='FRESH'
   const observedStatus=(state)=>infrastructureObservationStatus(state,freshness)
 
@@ -141,10 +147,10 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       const hosts=(await hr.json()).items||[]
       const available=hosts.map(row=>row.host)
       const target=selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||'')
-      if(target&&!selectedHost)setSelectedHost(target)
+      if(target!==selectedHost)setSelectedHost(target)
       const q=target?`?host=${encodeURIComponent(target)}`:''
       const values=await Promise.all(['filesystems','network','storage'].map(async p=>{const r=await fetch(`${API}/${p}${q}`,{cache:'no-store'});if(!r.ok)throw new Error(`Infrastructure API ${p} unavailable`);return r.json()}))
-      setData({hosts,fs:values[0].items||[],network:values[1].items||[],storage:values[2].items||[]})
+      setData({host:target,hosts,fs:values[0].items||[],network:values[1].items||[],storage:values[2].items||[]})
       setError('')
     }catch(e){setError(e.message)}
   },[selectedHost])
@@ -153,17 +159,17 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   React.useEffect(()=>{if(!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[selectedHost])
   React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrend(body.items||[]);setTrendMeta(body)}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
-  const fsState=observedStatus(data.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL'))
-  const netState=observedStatus(data.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL'))
-  const storageState=observedStatus(data.storage.reduce((state,row)=>worst(state,signalStorage(row.metrics)),'NORMAL'))
+  const fsState=observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL'))
+  const netState=observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL'))
+  const storageState=observedStatus(observedData.storage.reduce((state,row)=>worst(state,signalStorage(row.metrics)),'NORMAL'))
   const overall=stale?freshness:worst(fsState,netState,storageState)
-  const topFilesystem=[...data.fs].sort((a,b)=>Number(b.used_pct||0)-Number(a.used_pct||0))[0]
+  const topFilesystem=[...observedData.fs].sort((a,b)=>Number(b.used_pct||0)-Number(a.used_pct||0))[0]
   const compactSignal=topFilesystem
     ? `${stale?'Last ':''}${topFilesystem.mount_point||'Filesystem'} ${metric(topFilesystem.used_pct,'%')}`
-    : data.storage[0]
-      ? `${data.storage[0].metrics?.mount||data.storage[0].sample_key||'Storage'} ${metric(data.storage[0].metrics?.util_pct,'%')}`
-      : data.network[0]
-        ? `${data.network[0].sample_key||'Network'}`
+    : observedData.storage[0]
+      ? `${observedData.storage[0].metrics?.mount||observedData.storage[0].sample_key||'Storage'} ${metric(observedData.storage[0].metrics?.util_pct,'%')}`
+      : observedData.network[0]
+        ? `${observedData.network[0].sample_key||'Network'}`
         : 'No current infrastructure sample'
   const selectedTrendRows=selectedSeries?trend.filter(row=>(row.series_key||'series')===selectedSeries):[]
   const selectedValues=selectedTrendRows.map(row=>Number(row.value)).filter(Number.isFinite)
@@ -209,26 +215,26 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     </header>
 
     <div className="rundeckInfraFreshness">
-      <span><b>Last collected</b> {formatTime(collectedAt)} WIB</span>
-      <span><b>Freshness</b> {freshness==='UNKNOWN'?'UNKNOWN':`${ageText(collectedAt)} · ${freshness}`}</span>
+      <span><b>Last collected</b> {formatTime(observedAt)} WIB</span>
+      <span><b>Freshness</b> {freshness==='UNKNOWN'?'UNKNOWN':`${ageText(observedAt)} · ${freshness}`}</span>
       <span><b>Sampling</b> {metric(hostRow?.sample_seconds,'s')}</span>
       <span><b>State</b> <strong className={`is-${overall.toLowerCase()}`}>{overall}</strong></span>
       <span><b>Source</b> Infrastructure</span>
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
-    {stale&&<div className="rundeckInfraHistoricalNote" role="status">Snapshot {freshness.toLowerCase()}; capacity, network and I/O values below are last observed measurements, not current alerts.</div>}
+    {stale&&<div className="rundeckInfraHistoricalNote" role="status">Snapshot {freshness.toLowerCase()} or source collection mismatch; capacity, network and I/O values are last observed evidence, not current alerts.</div>}
     <div className="rundeckInfraWorkspace">
       <div className="rundeckInfraCurrent">
         <div className="rundeckInfraCurrentLabel">{stale?'Last Observed Snapshot':'Current Snapshot'}</div>
         <div className="rundeckInfraGrid">
-      <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity</small></div><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{data.fs.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!data.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity</small></div><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{observedData.fs.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!observedData.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article>
         <div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div>
         <table>
           <thead><tr><th>Interface</th><th>RX</th><th>TX</th><th>Drop Δ</th></tr></thead>
           <tbody>
-            {data.network.map((row) => {
+            {observedData.network.map((row) => {
               const m = row.metrics || {}
               const open = () => openTrend('network', row.sample_key)
               return <tr
@@ -248,7 +254,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
                 <td className={`is-${observedStatus(signalNetwork(m)).toLowerCase()}`}>{metric(Number(m.rx_dropped_delta || 0) + Number(m.tx_dropped_delta || 0))}</td>
               </tr>
             })}
-            {!data.network.length && <tr><td colSpan="4">No network sample.</td></tr>}
+            {!observedData.network.length && <tr><td colSpan="4">No network sample.</td></tr>}
           </tbody>
         </table>
       </article>
@@ -257,7 +263,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         <table>
           <thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead>
           <tbody>
-            {data.storage.map((row) => {
+            {observedData.storage.map((row) => {
               const m = row.metrics || {}
               const series = m.mount || row.sample_key
               const open = () => openTrend('storage', series)
@@ -278,7 +284,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
                 <td>{metric(m.write_mbps, ' MB/s')}</td>
               </tr>
             })}
-            {!data.storage.length && <tr><td colSpan="4">No storage sample.</td></tr>}
+            {!observedData.storage.length && <tr><td colSpan="4">No storage sample.</td></tr>}
           </tbody>
         </table>
       </article>
