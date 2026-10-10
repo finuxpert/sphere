@@ -159,10 +159,10 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   React.useEffect(()=>{if(!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[selectedHost])
   React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrend(body.items||[]);setTrendMeta(body)}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
-  const fsState=observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL'))
-  const netState=observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL'))
-  const storageState=observedStatus(observedData.storage.reduce((state,row)=>worst(state,signalStorage(row.metrics)),'NORMAL'))
-  const overall=stale?freshness:worst(fsState,netState,storageState)
+  const fsState=observedData.fs.length?observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')):'UNKNOWN'
+  const netState=observedData.network.length?observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')):'UNKNOWN'
+  const storageState=observedData.storage.length?observedStatus(observedData.storage.reduce((state,row)=>worst(state,signalStorage(row.metrics)),'NORMAL')):'UNKNOWN'
+  const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst(fsState,netState,storageState)
   const topFilesystem=[...observedData.fs].sort((a,b)=>Number(b.used_pct||0)-Number(a.used_pct||0))[0]
   const compactSignal=topFilesystem
     ? `${stale?'Last ':''}${topFilesystem.mount_point||'Filesystem'} ${metric(topFilesystem.used_pct,'%')}`
