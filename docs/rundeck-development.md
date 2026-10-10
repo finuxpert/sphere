@@ -11,7 +11,7 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current application version: **v1.34.53**
+- Current DEV source candidate: **v1.34.75** (does not imply the server is already deployed).
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
@@ -238,3 +238,10 @@ Do not reintroduce the standalone Live Monitoring tab or split Current/Review lo
 ## v1.34.61 merged workspace contract
 
 Keep Search as an exclusive Jobs & Programs mode, not a button inside Review. A Search query shorter than two characters must never fall back to Review rows. Keep the Performance Analysis drawer as the single destination for Live, Review and Search selections.
+
+
+## Infrastructure snapshot freshness (v1.34.75)
+
+The primary Infrastructure strip and its investigation drawer share the same timestamp-driven freshness contract: 15 minutes maximum age for a `FRESH` host observation; `STALE` if older; `UNKNOWN` if missing, unparsable or significantly future dated. Severity badges apply only to fresh measurements. Stale capacity percentages, network counters and storage activity stay visible as last-observed **historical evidence**, never as a current host alert. The overview refreshes read-only REST telemetry every 60 seconds, but it cannot cause a Rundeck collection to run.
+
+The per-host collection timestamp and per-mount percentages must agree with a new collector execution before concluding that SAP filesystem usage changed. This rule prevents stale-data misclassification; it is not a replacement for diagnosing a stuck Rundeck job/poller.
