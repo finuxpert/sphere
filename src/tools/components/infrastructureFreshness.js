@@ -8,6 +8,19 @@ export function infrastructureFreshness(timestamp, nowMs = Date.now()) {
   return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'
 }
 
+/** Never combine a host's latest READY identity with older sample rows. */
+export function infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows, nowMs = Date.now()) {
+  const hostState = infrastructureFreshness(hostTimestamp, nowMs)
+  if (hostState !== 'FRESH') return hostState
+  if (!Array.isArray(rows) || rows.length === 0) return 'UNKNOWN'
+  for (const row of rows) {
+    const rowState = infrastructureFreshness(row?.collected_at, nowMs)
+    if (rowState !== 'FRESH') return rowState
+    if (collectionId && row.collection_id !== collectionId) return 'UNKNOWN'
+  }
+  return 'FRESH'
+}
+
 export function infrastructureObservationStatus(rawStatus, freshness) {
   return freshness === 'FRESH' ? rawStatus : freshness
 }
