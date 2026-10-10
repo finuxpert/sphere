@@ -600,3 +600,63 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v backend.tests.test_rundeck_coll
 ```
 
 Current status: **GITHUB SOURCE CHANGED / SERVER QA NOT RUN / DEV DEPLOY HOLD**.
+
+
+## SPHERE DEV migration gate, source review 2026-10-11
+
+Read-only server preflight on `JAHSVR-SPHERE` reported:
+
+- DEV runtime: platform NORMAL, poller OK, watchdog NORMAL, auto-healing
+  enabled, collector not stale; watchdog smoke PASS.
+- Local database configuration: `DB_MODE=hybrid`,
+  `SPHERE_RUN_DEV_MIGRATIONS=true`, exact DB name `sphere_rundeck_dev`,
+  local host classification. These do **not** prove Alembic's current revision.
+- Existing DEV release: `d51664d34a3e103503b132a122446b0214917773`;
+  prior candidate: `8d54cfb863a589bcdfd52a459e98ea8d53cf0d96`.
+  GitHub compare reported no changes under `backend/db/migrations/`
+  between these releases, but schema state still needs a live read-only check.
+- `RUNDECK_COLLECT_NOW_ENABLED` was `UNVERIFIED` in a secret-safe
+  classifier (neither exact `true` nor exact `false`). Do not infer actual
+  runtime authorization from this value. The new DEV backend routes remain
+  fail-closed irrespective of the toggle after deployment.
+
+**Hardening (source only):** `validate-dev-migration-target.py` checks the
+whole parsed PostgreSQL URL (exact database name, `sphere` role, local
+Unix socket or loopback, no hidden remote override), without printing it.
+`migrate-dev.sh` uses this validator before any Alembic action. The old
+substring-based URL check was unsafe and is no longer sufficient.
+`deploy-dev.sh` now refuses to enter its side-effect stage whenever
+`SPHERE_RUN_DEV_MIGRATIONS=true` without **both**:
+
+1. `SPHERE_DEV_MIGRATION_APPROVED_SHA` exactly matching the release SHA;
+2. `SPHERE_DEV_MIGRATION_DECISION` explicitly `skip` or `apply`.
+
+These shell environment arguments are change-control safety gates, not a
+replacement for named maintainer authentication or OS access controls.
+
+- `skip` suppresses Alembic for that deployment even if the old environment
+  file says `true`; use **only if a read-only check proves the DEV database
+  is already at the matching Alembic head**. Never skip a needed migration.
+- `apply` runs the existing migration helper only for the exact local DEV
+  database. It requires a separately checked backup and approved maintenance
+  window; the deploy rollback reverts API/web links and Nginx, **not the DB
+  schema**. No backup is automatically created by the gate.
+- Omitted/mismatched revision or an invalid decision means **DEPLOY HOLD**.
+  The script fails before creating releases, altering credentials, Nginx, or
+  systemd. Do not clear safety gates merely to complete a release.
+
+**Read-only evidence required from `JAHSVR-SPHERE`:** retrieve the deployed
+database's `alembic_version.version_num` using `psql` as local OS user
+`sphere`, and retrieve the candidate's head using `alembic heads`
+(without `upgrade`). Compare exactly. If credentials, peer authentication,
+version table, or lineage differ, stop and investigate without DDL.
+Confirm config `DB_MODE` and target via the secret-safe validator.
+Avoid printing `DATABASE_URL`, SQL connection strings or credentials.
+
+Offline regression:
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v backend.tests.test_rundeck_dev_migration_guard`.
+Validate `bash -n ops/rundeck/deploy-dev.sh ops/rundeck/migrate-dev.sh`,
+then run `bash ops/rundeck/qa-build-dev.sh` for the new release SHA.
+Full readiness and explicit deploy review follow separately; do not execute
+`deploy-dev.sh` as a QA shortcut. Infrastructure-owned Rundeck host is
+out of scope.
