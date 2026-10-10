@@ -26,7 +26,9 @@ for:
       allow: [read, view, view_history, run, kill]
     - equals:
         uuid: '34821afe-9261-4122-88db-cf6e8fc65545'
-      allow: [read, view, view_history, run, kill]
+      # The current DEV runner starts this job; watchdog abort is scoped to
+      # performance only. Grant kill here only after an explicit separate need.
+      allow: [read, view, view_history, run]
   resource:
     - equals:
         kind: event
