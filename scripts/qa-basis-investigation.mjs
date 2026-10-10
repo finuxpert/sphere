@@ -83,7 +83,7 @@ const files = {
 
 const checks = [
   ['Watchdog ERROR remains a blocker with actionable safe diagnostics',
-    files.watchdogSmoke.includes('watchdog unhealthy: ${status}') &&
+    files.watchdogSmoke.includes('watchdog unhealthy: {status}') &&
     files.watchdogSmoke.includes('last_recorded_exception=') &&
     files.watchdogSmoke.includes('history, not confirmed cause') &&
     files.watchdogReadiness.includes('if ! bash ops/rundeck/smoke-watchdog-dev.sh') &&
