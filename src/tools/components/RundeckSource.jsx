@@ -775,11 +775,11 @@ export default function RundeckSource({ onCollection }) {
         <div className="rundeckStateCluster">
           <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
             <summary title={dataAlignmentTitle}>
-              <span>Data</span><StatusPill value={qualityDisplay} />
+              <span>SAP Data</span><StatusPill value={qualityDisplay} />
               <small className="rundeckSourceFreshness">{freshnessSummary}</small>
             </summary>
             <div className="rundeckDataAlignmentPopover">
-              <div><span>Validity</span><strong>{quality.state}</strong></div>
+              <div><span>Performance / Availability</span><strong>{quality.state}</strong></div>
               <div><span>Collector</span><strong>{quality.poller} · Watchdog {quality.watchdog}</strong></div>
               <div><span>Performance data</span><strong>{ageLabel(performanceAgeMinutes)} old</strong></div>
               <div><span>Availability data</span><strong>{ageLabel(availabilityAgeMinutes)} old</strong></div>
@@ -796,10 +796,10 @@ export default function RundeckSource({ onCollection }) {
     {error && <div className={`rundeckMessage ${latest ? 'is-reconnecting' : ''}`} role="status">{latest ? `Refresh delayed. Showing last good run #${latest.execution_id || '—'}.` : error}</div>}
     {!collectionAligned && <div className="rundeckMessage" role="status">Waiting for one complete aligned Rundeck run.</div>}
     {(quality.state !== 'FRESH' || recentGap || historyRefreshFailed) && <div className={`rundeckDataQualityNotice is-${quality.state.toLowerCase()}`} role="status" aria-label="Data quality and retained observation gap">
-      <strong>{quality.state !== 'FRESH' ? `Data ${quality.state}` : historyRefreshFailed ? 'History coverage unverified' : 'Collector recovered · historical gap retained'}</strong>
+      <strong>{quality.state !== 'FRESH' ? `Data ${quality.state}` : historyRefreshFailed ? 'History coverage unverified' : 'Data current · historical gap retained'}</strong>
       <span>{quality.state !== 'FRESH'
         ? `Last READY ${latestCollectionAt ? formatTime(latestCollectionAt) + ' WIB' : 'unknown'} · current SAP condition cannot be inferred from old samples.`
-        : 'Current performance data is fresh; missing historical samples have not been reconstructed.'}</span>
+        : 'Current performance data is fresh; missing historical samples have not been reconstructed. Infrastructure has separate freshness.'}</span>
       {historyRefreshFailed && <small>History fetch failed · known observations remain historical; gap coverage cannot be fully verified.</small>}
       {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY {formatTime(new Date(recentGap.before).toISOString())} WIB and {formatTime(new Date(recentGap.after).toISOString())} WIB · {dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
     </div>
