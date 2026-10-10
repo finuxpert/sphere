@@ -10,6 +10,7 @@ from pathlib import Path
 from sqlalchemy import text
 
 from backend.db.session import check_database, db_enabled, get_engine
+from backend.rundeck_token_lifecycle import token_lifecycle
 
 INODE_WARNING_PCT = float(os.getenv("SPHERE_INODE_WARNING_PCT", "75"))
 INODE_CRITICAL_PCT = float(os.getenv("SPHERE_INODE_CRITICAL_PCT", "90"))
@@ -314,6 +315,7 @@ def platform_health(root: Path) -> dict:
         "archive": archive,
         "rejected": rejected,
         "collector": collector,
+        "token_management": token_lifecycle(root),
         "maintenance": maintenance,
         "backup": backup,
         "database": database,
