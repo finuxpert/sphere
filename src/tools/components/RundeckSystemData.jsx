@@ -72,7 +72,7 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
     </div>}
 
     {tab==='tokens'&&<div className="rundeckSystemDataPane rundeckTokenManagement" aria-label="Rundeck credential expiry">
-      <header><div><strong>Token Management</strong><small>Rundeck credential expiry · DEV only · WIB</small></div><State value="UNKNOWN"/></header>
+      <header><div><strong>Token Management</strong><small>Rundeck credential expiry · DEV only · WIB</small></div><State value={tokenStatus?.read_only ? "REPORTED" : "UNKNOWN"}/></header>
       <p className="rundeckTokenNotice">Last reported expiry information — not a live token validity check. Reader and Runner are separate credentials.</p>
       <div className="rundeckTokenGrid">
         {tokenRows.map((item)=><article className="rundeckTokenCard" key={item.kind}>
@@ -86,7 +86,7 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
           <button type="button" className="rundeckTokenRenew" disabled title="Locked until maintainer authentication, Runner ACL and safe server-side rotation are verified">Renew Now · Locked</button>
         </article>)}
       </div>
-      <p className="rundeckTokenFootnote">Renewal reminders: D-7, D-3, D-1 and expiry. Renew Now requires an authenticated maintainer gateway, GET-only verification, approval, atomic rollback and systemd consumer checks. No token is accepted on this monitoring page yet.</p>
+      <p className="rundeckTokenFootnote">Expiry warnings appear within 7, 3 and 1 days and after the reported expiry. Renew Now requires an authenticated maintainer gateway, GET-only verification, approval, atomic rollback and systemd consumer checks. No token is accepted on this monitoring page yet.</p>
     </div>}
   </section>
 }
