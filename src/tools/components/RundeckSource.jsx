@@ -716,7 +716,7 @@ export default function RundeckSource({ onCollection }) {
     : 'PARTIAL'
   const quality = assessRundeckDataQuality({
     latest, health, platform, availability: availabilitySnapshot,
-    refreshFailed: Boolean(error) || metaRefreshFailed,
+    refreshFailed: Boolean(error) || metaRefreshFailed || !collectionAligned,
   })
   const recentGap = retainedReadyCollectionGaps(history)[0] || null
   const qualityDisplay = quality.state === 'FRESH' ? dataAlignment : quality.state
@@ -727,7 +727,7 @@ export default function RundeckSource({ onCollection }) {
     `Performance #${latest?.execution_id || '—'} · age ${ageLabel(performanceAgeMinutes)}`,
     `Availability #${availabilitySnapshot?.execution_id || '—'} · age ${ageLabel(availabilityAgeMinutes)}`,
     sourceSkewMinutes === null ? 'time difference unknown' : `time difference ${sourceSkewMinutes}m`,
-    freshnessWarning ? 'data was collected at different times' : 'data times are aligned',
+    freshnessWarning ? 'some source evidence is stale, missing or not comparable' : 'data times are aligned',
     `Data quality ${quality.state} · poller ${quality.poller} · watchdog ${quality.watchdog}`,
     recentGap ? `Retained READY gap ${dataGapDuration(recentGap.observedSpacingMs)} between observations` : 'no recent retained READY gap in fetched history',
     runState.running ? `collection running #${runState.execution_id || '—'} (not committed)` : 'no collection currently running',
@@ -782,7 +782,7 @@ export default function RundeckSource({ onCollection }) {
               <div><span>Performance data</span><strong>{ageLabel(performanceAgeMinutes)} old</strong></div>
               <div><span>Availability data</span><strong>{ageLabel(availabilityAgeMinutes)} old</strong></div>
               <div><span>Time difference</span><strong>{sourceSkewMinutes === null ? 'Unknown' : `${sourceSkewMinutes}m`}</strong></div>
-              {recentGap && <div><span>Retained gap</span><strong>{dataGapDuration(recentGap.observedSpacingMs)} · No Observation</strong></div>}
+              {recentGap && <div><span>Retained gap</span><strong>{dataGapDuration(recentGap.observedSpacingMs)} · No complete READY</strong></div>}
               <p>{quality.state !== 'FRESH' ? 'Last observed values are not verified current conditions. Missing observation is not SAP downtime.' : 'Current samples are fresh. Any retained gap still represents unobserved history.'}</p>
             </div>
           </details>
@@ -797,7 +797,7 @@ export default function RundeckSource({ onCollection }) {
       <span>{quality.state !== 'FRESH'
         ? `Last READY ${latestCollectionAt ? formatTime(latestCollectionAt) + ' WIB' : 'unknown'} · current SAP condition cannot be inferred from old samples.`
         : 'Current performance data is fresh; missing historical samples have not been reconstructed.'}</span>
-      {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY ${formatTime(new Date(recentGap.before).toISOString())} WIB and ${formatTime(new Date(recentGap.after).toISOString())} WIB · ${dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
+      {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY {formatTime(new Date(recentGap.before).toISOString())} WIB and {formatTime(new Date(recentGap.after).toISOString())} WIB · {dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
     </div>
 
     <RundeckPerformanceIncident
