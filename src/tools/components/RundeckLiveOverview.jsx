@@ -1,6 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { infrastructureFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
+import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
 import './RundeckLiveOverview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
@@ -107,8 +107,13 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
   }, [selectedHost, refreshToken, refreshCycle])
 
   const hostRow = hosts.find((row) => row.host === selectedHost)
-  const snapshotFreshness = infrastructureFreshness(hostRow?.snapshot_ts, clockNow)
   const observedInfra = infra.host === selectedHost ? infra : { fs: [], network: [], storage: [] }
+  const telemetryRows = [...observedInfra.fs, ...observedInfra.network, ...observedInfra.storage]
+  const snapshotFreshness = infrastructureTelemetryFreshness(hostRow?.snapshot_ts, hostRow?.collection_id, telemetryRows, clockNow)
+  const observedAt = telemetryRows
+    .map((row) => row.collected_at)
+    .filter((stamp) => Number.isFinite(Date.parse(stamp || '')))
+    .sort((a, b) => Date.parse(a) - Date.parse(b))[0] || hostRow?.snapshot_ts
   const topFs = [...observedInfra.fs].sort((a, b) => severity[fsState(b.used_pct)] - severity[fsState(a.used_pct)] || Number(b.used_pct || 0) - Number(a.used_pct || 0)).slice(0, 4)
   const topStorage = [...observedInfra.storage].sort((a, b) => severity[storageState(b.metrics?.util_pct)] - severity[storageState(a.metrics?.util_pct)] || Number(b.metrics?.util_pct || 0) - Number(a.metrics?.util_pct || 0)).slice(0, 3)
   const fsOverall = worst(observedInfra.fs.map((row) => fsState(row.used_pct)))
@@ -144,16 +149,16 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
         <select value={selectedHost} onChange={(event) => setSelectedHost(event.target.value)} aria-label="Monitoring host">
           {hosts.map((row) => <option key={row.host} value={row.host}>{(row.source ? row.source + ' · ' : '') + row.host}</option>)}
         </select>
-        <span className={snapshotFreshness === 'FRESH' ? '' : 'is-stale'}>{snapshotFreshness === 'UNKNOWN' ? 'UNKNOWN · no valid snapshot' : `${snapshotFreshness === 'STALE' ? 'STALE' : 'Updated'} · ${ageText(hostRow?.snapshot_ts)} ago`}</span>
+        <span className={snapshotFreshness === 'FRESH' ? '' : 'is-stale'}>{snapshotFreshness === 'UNKNOWN' ? 'UNKNOWN · unverified telemetry' : `${snapshotFreshness === 'STALE' ? 'STALE' : 'Updated'} · ${ageText(observedAt)} ago`}</span>
       </div>
       {error && <span className="rundeckLiveOverviewError">{error}</span>}
     </header>
 
     {snapshotFreshness !== 'FRESH' && <div className="rundeckLiveDataDelayed" role="status">
-      <strong>{snapshotFreshness === 'STALE' ? 'Collection delayed' : 'Infrastructure snapshot unavailable'}</strong>
+      <strong>{snapshotFreshness === 'STALE' ? 'Collection delayed' : 'Infrastructure data unverified'}</strong>
       <span>{snapshotFreshness === 'STALE'
-        ? `Last collected ${formatObservedAt(hostRow?.snapshot_ts)} WIB · figures below are historical`
-        : 'Awaiting a valid collector timestamp; no live capacity state'}</span>
+        ? `Sampled ${formatObservedAt(observedAt)} WIB · figures below are historical`
+        : 'Host or metric collection missing/mismatched; figures below are historical'}</span>
     </div>}
     {exceptionParts.length > 0 && <button type="button" className="rundeckLiveExceptionSummary is-clickable" onClick={() => summaryTarget && openMetric(summaryTarget.metric, summaryTarget.series)} title="Open Infrastructure Analysis">
       <strong>{exceptionParts.length} needs attention</strong>
