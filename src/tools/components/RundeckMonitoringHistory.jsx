@@ -46,7 +46,7 @@ export default function RundeckMonitoringHistory(props) {
   const [activeOverlay, setActiveOverlay] = React.useState(null)
 
   const returnFromOverlay = React.useCallback((target) => {
-    setActiveOverlay(!target || target.type === 'selected' || target.type === 'menu' ? null : target)
+    setActiveOverlay(!target || target.type === 'selected' ? null : target)
   }, [])
 
   const forwardTrendContext = React.useCallback((context = {}) => {
@@ -249,7 +249,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle={systemDataSummary || 'Collection History · SPHERE Services'}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
             {systemDataContent}
           </RundeckWorkspaceDrawer>}
@@ -261,7 +261,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle={selectedJob?.key ? `${selectedJob.key} · ${selectedJob.host ? shortHost(selectedJob.host) + ' · ' : ''}${selectedContextTime}` : 'Operational evidence and timing correlation'}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
             <RundeckEvidenceTimeline
               refreshToken={refreshToken}
@@ -277,7 +277,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="SAP App · HANA · Web · Technical Checks"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
             <RundeckAvailability refreshToken={refreshToken} />
           </RundeckWorkspaceDrawer>}
@@ -289,7 +289,7 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Active SAP issues"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back to Analysis Menu'}
+            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
             <RundeckSapIssues
               refreshToken={refreshToken}
