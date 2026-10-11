@@ -8,7 +8,9 @@ export function appSignalState(host = {}, verified = true) {
   const cpu = numeric(host.cpu_pct)
   const ram = numeric(host.ram_pct)
   const io = numeric(host.io_wait_pct)
-  const wp = numeric(host.wp_critical) || 0
+  const wpValue = numeric(host.wp_critical)
+  if ([cpu, ram, io, wpValue].every(value => value === null)) return 'UNKNOWN'
+  const wp = wpValue || 0
   if ((cpu !== null && cpu >= 90) || (ram !== null && ram >= 90) || (io !== null && io >= 10) || wp >= 3) return 'CRITICAL'
   if ((cpu !== null && cpu >= 75) || (ram !== null && ram >= 75) || (io !== null && io >= 5)) return 'WARNING'
   return wp > 0 ? 'ATTENTION' : 'NORMAL'
