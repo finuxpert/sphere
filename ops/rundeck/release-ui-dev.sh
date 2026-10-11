@@ -50,6 +50,12 @@ PROD_HASH="$(sha256sum "$PROD_WEB/index.html" | cut -d' ' -f1)"
 DB_REV="$(runuser -u sphere -- psql -XAt -d sphere_rundeck_dev -c 'SELECT version_num FROM alembic_version LIMIT 1;' | tr -d '\r\n')"
 [[ "$DB_REV" == "20260929_0007" ]]
 echo "SOURCE=VERIFIED DB_REV=$DB_REV MIGRATION=SKIP"
+# Diagnostic only; equal filesystem percentages are not proof of duplicated data.
+if bash "$SOURCE/ops/rundeck/audit-infra-fs-dev.sh"; then
+  echo "INFRA_FS_AUDIT=READ_ONLY_RECORDED"
+else
+  echo "INFRA_FS_AUDIT=NOT_VERIFIED_NO_DATA_CHANGE"
+fi
 
 # Runtime changes demand one fresh SHA-bound QA/build. No stale artifact reuse.
 ARTIFACT_SHA="$EXPECTED"
