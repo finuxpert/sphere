@@ -956,15 +956,21 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckServerTable tbody 
 }
 
 .sphereThemeControl select{
-  width:90px;
-  min-width:90px;
-  min-height:31px;
-  padding:4px 26px 4px 9px;
+  width:94px;
+  min-width:94px;
+  min-height:34px;
+  padding:5px 25px 5px 10px;
   border-radius:6px;
-  line-height:1.2;
-  font-size:10px;
+  line-height:1.25;
+  font-size:11px;
   font-weight:700;
   box-shadow:none;
+  cursor:pointer;
+  accent-color:var(--sphere-accent,#4fc6c8);
+}
+.sphereThemeControl select option{
+  color:var(--sphere-text,#e7edf0);
+  background:var(--sphere-page,#0f151a);
 }
 .sphereThemeControl select:hover{
   border-color:rgba(79,198,200,.30);
@@ -979,6 +985,10 @@ html[data-theme="light"] .sphereThemeControl select{
   background:#fff!important;
   color:#2b4049!important;
   border-color:rgba(45,63,72,.22)!important;
+}
+html[data-theme="light"] .sphereThemeControl select option{
+  color:#26363e;
+  background:#fff;
 }
 html[data-theme="light"] .sphereThemeControl select:hover{
   border-color:rgba(20,116,123,.34)!important;
