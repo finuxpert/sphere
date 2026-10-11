@@ -156,7 +156,7 @@ const checks = [
     files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
-  ['monitoring flow version is v1.34.82', files.version.includes("APP_VERSION = '1.34.82'") && files.version.includes('monitoring-flow-ui-v1.34.82')],
+  ['monitoring flow version is v1.34.83', files.version.includes("APP_VERSION = '1.34.83'") && files.version.includes("APP_PREVIOUS_VERSION = '1.34.82'") && files.version.includes('monitoring-flow-v1.34.83') && files.version.includes('monitoring-flow-ui-v1.34.83')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -280,7 +280,11 @@ const checks = [
     files.wrapper.includes('size="unified-app"') &&
     files.wrapper.includes('RundeckUnifiedAppAnalysis') &&
     files.workspaceDrawer.includes("size === 'unified-app'") &&
-    files.unifiedAnalysis.includes('Infrastructure: independent host collection and freshness')],
+    files.unifiedAnalysis.includes('<strong>SAP Performance</strong>') &&
+    files.unifiedAnalysis.includes('<strong>Infrastructure</strong>') &&
+    files.unifiedAnalysis.includes("shortHost(infraKey) === shortHost(appKey)") &&
+    files.unifiedAnalysis.includes("'UNKNOWN · APP identity mismatch'") &&
+    files.unifiedAnalysis.includes('lockedHost')],
   ['Performance Review exposes loaded review rows and historical search matches through the cockpit scroll list', files.performanceReview.includes('const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)') && files.performanceReview.includes('is-scroll-list') && !files.performanceReview.includes("is-top4")],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.performanceReview.includes("' is-updating'")],
     ['Performance Review controls preserve long-range loading state in the scroll-list layout', files.performanceReview.includes('Updating {periodLabel}') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.workspace.includes('.rundeckReviewControlsV1231')],
@@ -364,8 +368,9 @@ const checks = [
   ['History empty states use stronger intentional visual hierarchy', files.workloadExplorerCss.includes('min-height:235px') && files.workloadExplorerCss.includes('.rundeckExplorerEmptyState strong')],
   ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
   ['Unified APP analysis names SAP and Infrastructure while preserving selected job/program context',
-    files.wrapper.includes("shortHost(activeOverlay.app.host) + ' · APP Analysis'") &&
-    files.wrapper.includes('subtitle="SAP Performance · Filesystem · Network · Storage I/O"') &&
+    files.wrapper.includes("shortHost(activeOverlay.app.host) + ' Analysis'") &&
+    files.wrapper.includes("props.latestCollectionAt ? formatWib(props.latestCollectionAt, true)") &&
+    files.wrapper.includes("performanceCollectedAt={props.latestCollectionAt || ''}") &&
     files.wrapper.includes('size="unified-app"') &&
     files.unifiedAnalysis.includes('aria-label="SAP performance evidence"') &&
     files.unifiedAnalysis.includes('aria-label="Infrastructure evidence"') &&
@@ -591,4 +596,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.82 monitoring flow, data trust, gap evidence and motion checks passed.')
+console.log('\nSPHERE v1.34.83 monitoring flow, data trust, gap evidence and motion checks passed.')

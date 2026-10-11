@@ -10,7 +10,7 @@
 - Scroll through all loaded workload rows, inspect Live/Review/Search, retained trends, historical sample/bucket times and collection gaps.
 - Keep SAP, collector and Infrastructure freshness independent. No synthetic heartbeat.
 - Run lint, unit regression, Basis QA, Vite build and Playwright geometry. Never claim visual PASS from source-only checks.
-- Migration is SKIP and deployment is DEV-only; use guarded rollback if deployment fails.
+- For UI-only v1.34.83, run `ops/rundeck/release-ui-dev.sh <verified-sha>` from the server after updating the checkout. It performs exactly one source QA/build, 4-viewport Playwright geometry against a local preview using the existing DEV API, a read-only DEV DB revision guard, and an atomic static web-only switch. Failure rolls back the static symlink. Neither the backend, collector, SAP jobs, migrations, credentials, Nginx config nor PROD is changed.
 
 ---
 
