@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence } from '../../src/tools/components/rundeckUnifiedHost.js'
+import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from '../../src/tools/components/rundeckUnifiedHost.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
 const sap = [{host: 'AOPH1PAPPDC',cpu_pct: 12,ram_pct: 42,wp_critical: 2}, {host: 'AOPH2PAPPDC',cpu_pct: 15,ram_pct: 44,wp_critical: 0}]
@@ -38,4 +38,23 @@ test('unified infrastructure summary and popup use the same independent freshnes
   assert.equal(evidence.state,'ATTENTION')
   assert.equal(evidence.freshness,'FRESH')
   assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...fs,collection_id:'old'}],now).state,'UNKNOWN')
+})
+
+test('identical APP aliases from AOQ and AOP sources never cross-map Infrastructure samples', () => {
+  const aoq = {host:'AOQH1PAPPDC',source:'AOQ',collection_id:'aoq-1',snapshot_ts:'2026-10-11T05:59:00Z'}
+  const aop = {...ready,source:'AOP PROD'}
+  const hosts = [aoq, aop]
+  assert.equal(matchedInfrastructureHost(sap[0], hosts).host, aop.host)
+  const record = hostInfrastructureEvidence(sap[0],hosts,[{...fs,host:aoq.host,collection_id:'aoq-1',used_pct:42},fs],now)
+  assert.equal(record.topFs.mount_point,'/SAP_ARCH')
+  assert.equal(record.topFs.used_pct,89)
+  assert.equal(record.state,'ATTENTION')
+  assert.equal(matchedInfrastructureHost({host:'APP1'},[{...aoq},{...aoq,host:'NONSTANDARD1'}]), aoq)
+})
+test('ambiguous aliases never arbitrarily select the first infrastructure host', () => {
+  const candidates = [{host:'AOQH1PAPPDC'},{host:'ABC-H1PAPP01'}]
+  // Different aliases do not imply an exact AOP source.
+  assert.equal(matchedInfrastructureHost({host:'APP1'},candidates)?.host,'AOQH1PAPPDC')
+  const sameAlias = [{host:'AOQH1PAPPDC'},{host:'AQH1PAPPDC'}]
+  assert.equal(matchedInfrastructureHost({host:'APP1'},sameAlias),null)
 })

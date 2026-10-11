@@ -14,9 +14,19 @@ export function appSignalState(host = {}, verified = true) {
   return wp > 0 ? 'ATTENTION' : 'NORMAL'
 }
 
+export function matchedInfrastructureHost(sapHost, infraHosts = []) {
+  const raw = String(sapHost?.host || '').trim().toUpperCase()
+  const exact = infraHosts.find(row => String(row.host || '').trim().toUpperCase() === raw)
+  if (exact) return exact
+  const key = shortHost(raw)
+  const candidates = infraHosts.filter(row => shortHost(row.host) === key)
+  if (candidates.length === 1) return candidates[0]
+  const aopCandidates = candidates.filter(row => /^AOPH[1-9]\\d*PAPPDC$/i.test(String(row.host || '')))
+  return aopCandidates.length === 1 ? aopCandidates[0] : null
+}
+
 export function hostInfrastructureEvidence(sapHost, infraHosts = [], filesystems = [], nowMs = Date.now()) {
-  const key = shortHost(sapHost?.host || '')
-  const infra = infraHosts.find(item => shortHost(item.host) === key)
+  const infra = matchedInfrastructureHost(sapHost, infraHosts)
   const rows = infra ? filesystems.filter(item => item.host === infra.host) : []
   const freshness = infrastructureTelemetryFreshness(infra?.snapshot_ts, infra?.collection_id, rows, nowMs)
   const topFs = rows.filter(row => numeric(row.used_pct) !== null)

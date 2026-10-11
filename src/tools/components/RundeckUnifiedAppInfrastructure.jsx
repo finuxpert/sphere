@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import { shortHost } from './sapUiFormat.js'
-import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence } from './rundeckUnifiedHost.js'
+import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const KEY = 'sphere.live.host'
@@ -51,11 +51,12 @@ export default function RundeckUnifiedAppInfrastructure({
   const contextToken = String(focusRequest?.token || '') + ':' + String(focusHost)
   const appKey = chooseUnifiedApp(hosts, focusHost, manualSelection, contextToken, preferredHost)
   const selectedApp = hosts.find(host => shortHost(host.host) === appKey)
-  const selectedInfra = infraSnapshot.hosts.find(host => shortHost(host.host) === appKey)
+  const selectedInfra = selectedApp ? matchedInfrastructureHost(selectedApp, infraSnapshot.hosts) : null
   const performanceVerified = sourceQuality?.performanceValid === true && !sourceQuality?.collectorBad
   const selectApp = key => {
     setManualSelection({ host: key, contextToken })
-    const target = infraSnapshot.hosts.find(host => shortHost(host.host) === key)
+    const sapTarget = hosts.find(host => shortHost(host.host) === key)
+    const target = sapTarget ? matchedInfrastructureHost(sapTarget, infraSnapshot.hosts) : null
     if (target?.host) {
       setPreferredHost(target.host)
       try { window.localStorage.setItem(KEY, target.host) } catch { /* optional preference */ }

@@ -225,7 +225,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
           className={'rundeckInfraHostCard'+(selected?' is-active':'')}
           aria-pressed={selected} onClick={()=>setSelectedHost(row.host)}>
           <b>{shortHost(row.host)}</b>
-          <small className={'is-'+evidence.freshness.toLowerCase()}>{evidence.freshness}</small>
+          <small title={row.source || row.host} className={'is-'+evidence.freshness.toLowerCase()}>{row.source || evidence.freshness}</small>
           <span>FS <strong className={'is-'+evidence.state.toLowerCase()}>
             {evidence.topFs ? (evidence.freshness==='FRESH'?'':'Last ')+metric(evidence.topFs.used_pct,'%') : '—'}
           </strong></span>

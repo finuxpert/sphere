@@ -799,3 +799,7 @@ Source-only work; **not deployment evidence**. Last browser-observed DEV release
 - Jobs & Programs retains Live / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
 - Reduced motion disables entrance/transition effects; no blinking health, infinite pulses, synthetic number counters, polling changes, backend migrations or SAP job execution.
 - Run DEV regression, lint, build and manual visual QA (1366×768, 1536×864, 1920×1080, Android) before authorizing the revision-bound deployment. PROD remains unchanged.
+
+### v1.34.81 merged APP identity guard
+
+SAP and Infrastructure share a *selection*, not one source of truth. Resolve the exact SAP host first, then an unambiguous AOP host match; ambiguous aliases remain UNKNOWN rather than borrowing another host's filesystem sample. The Infrastructure analysis card additionally displays the source label to distinguish AOQ/AOP host names that share APP1 shorthand. Use regression `npm run qa:unified-host` alongside full QA before deploying. PROD remains unchanged.
