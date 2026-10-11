@@ -489,9 +489,24 @@ const checks = [
   ['HANA and technical availability preserve category-specific labels', files.availabilityBackend.includes('HANA System DB Availability') && files.availabilityBackend.includes('HANA Replication Availability') && files.availabilityBackend.includes('Web Dispatcher Availability')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
-  ['System Health exposes collector watchdog and auto-healing context', files.systemHealth.includes('/platform/health') && files.systemHealth.includes('Auto-healing') && files.systemHealth.includes('Last Recovery')],
+  ['System Health exposes collector watchdog and auto-healing context',
+    files.source.includes('json(`${API}/platform/health`)') &&
+    files.source.includes('sourceCollector={platform?.collector || null}') &&
+    files.wrapper.includes('sourceCollector={props.sourceCollector}') &&
+    files.systemHealth.includes('sourceCollector = null') &&
+    files.systemHealth.includes('<span>Watchdog</span>') &&
+    files.systemHealth.includes('<span>Auto-healing</span>') &&
+    files.systemHealth.includes('<span>Last Recovery</span>') &&
+    !files.systemHealth.includes('fetch(')],
   ['System Health exposes concrete Critical WP signal instead of generic workload status', files.systemHealth.includes('Critical WP ${top.wp}') && !files.systemHealth.includes('Jobs / Programs CRITICAL') && !files.systemHealth.includes('Jobs / Programs ATTENTION')],
-  ['System Health explains old availability data in plain language', files.systemHealth.includes('Availability data old') && files.systemHealth.includes('older than the current performance data')],
+  ['System Health explains old or missing Availability without inferring SAP DOWN',
+    files.systemHealth.includes('availabilityFreshnessSignal(availabilityAge)') &&
+    files.systemHealthState.includes("text: 'Availability observation missing'") &&
+    files.systemHealthState.includes('Availability data old') &&
+    files.systemHealthState.includes('outside the freshness window') &&
+    files.systemHealthState.includes('This does not mean SAP DOWN.') &&
+    files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
+    files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
   ['APP server summary labels derived state as signal without generic duplicate columns', !files.appServers.includes('OS Resource') && !files.appServers.includes('Jobs / Programs') && files.appServers.includes('<th>RAM</th>') && files.appServers.includes('<th>APP Critical WP</th>') && files.appServers.includes('<th>Signal</th>') && files.appServers.includes('Critical Signal') && files.appServers.includes('Highest CPU') && files.appServers.includes('Highest RAM')],
   ['Infrastructure filesystem NORMAL state is explicit for fresh data and stale data is not live',

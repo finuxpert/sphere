@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { deriveSystemHealthEvidence } from '../../src/tools/components/rundeckSystemHealth.js'
+import { availabilityFreshnessSignal, deriveSystemHealthEvidence } from '../../src/tools/components/rundeckSystemHealth.js'
 
 const host = { host: 'APP1', cpu_pct: 20, ram_pct: 30, iowait_pct: 1, wp_critical: 0 }
 const valid = { state: 'FRESH', performanceValid: true, availabilityValid: true, collectorBad: false }
@@ -36,4 +36,22 @@ test('bad collector gates historical host telemetry without mutating it', () => 
 })
 test('unverified quality never means normal SAP', () => {
   assert.equal(deriveSystemHealthEvidence({ hosts: [host], availability: up }).state, 'UNKNOWN')
+})
+
+test('old Availability evidence is explained without asserting current SAP DOWN', () => {
+  const warning = availabilityFreshnessSignal(25.9)
+  assert.equal(warning.level, 'WARNING')
+  assert.equal(warning.text, 'Availability data old · 25m')
+  assert.match(warning.detail, /25 minutes ago/)
+  assert.match(warning.detail, /outside the freshness window/)
+  assert.match(warning.detail, /does not mean SAP DOWN/)
+})
+
+test('missing Availability observation is distinct from stale timed evidence', () => {
+  const unknown = availabilityFreshnessSignal(null)
+  assert.equal(unknown.level, 'WARNING')
+  assert.equal(unknown.text, 'Availability observation missing')
+  assert.match(unknown.detail, /No recent Availability observation was verified/)
+  assert.match(unknown.detail, /does not mean SAP DOWN/)
+  assert.equal(availabilityFreshnessSignal(Number.NaN).text, unknown.text)
 })

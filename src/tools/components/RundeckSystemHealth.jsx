@@ -1,6 +1,6 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { deriveSystemHealthEvidence } from './rundeckSystemHealth.js'
+import { availabilityFreshnessSignal, deriveSystemHealthEvidence } from './rundeckSystemHealth.js'
 import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
 import { formatWib, shortHost } from './sapUiFormat.js'
 
@@ -21,7 +21,7 @@ function ageText(seconds) {
 function primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale = false, availabilityAge = null) {
   if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service impact observed', detail: `Availability state ${availability}.` }
   if (stale) return { level: 'WARNING', text: 'Performance data is old', detail: 'The latest performance collection is older than expected.' }
-  if (availabilityStale) return { level: 'WARNING', text: availabilityAge === null ? 'Availability observation missing' : `Availability data old · ${availabilityAge}m`, detail: 'Evidence old or missing is not a SAP DOWN verdict.' }
+  if (availabilityStale) return availabilityFreshnessSignal(availabilityAge)
 
   const ranked = hosts.map((host) => {
     const resource = hostResourceState(host)
