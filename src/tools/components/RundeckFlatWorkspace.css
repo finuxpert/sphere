@@ -122,3 +122,123 @@
     transition:none!important;
   }
 }
+
+/* Shared surfaces: section boundaries are typographic, with a single
+   understated top rule only where a view changes meaning. */
+.appShell:has(.rundeckPanel) .rundeckLandscapeHeader{
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckActionCluster,
+.appShell:has(.rundeckPanel) .rundeckStateCluster{
+  column-gap:12px!important;row-gap:4px!important;
+  border-color:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckDataAlignment{
+  border-color:var(--sphere-flat-edge)!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace,
+.appShell:has(.rundeckPanel) .rundeckTrendBandV13454{
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead{
+  border-bottom-color:var(--sphere-flat-edge)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap,
+.appShell:has(.rundeckPanel) .rundeckReviewTableWrapV1231{
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap tbody tr.is-selected{
+  background:rgba(79,198,200,.06)!important;
+  box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important;
+}
+/* Performance drawer: identity then evidence. No second grid of action cards. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryHead,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisSidebar,
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalPanel{
+  box-shadow:none!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{
+  gap:12px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobMetricLegend{
+  color:var(--sphere-flat-text,#a9b5bb)!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedAnalysis{
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks button{
+  border-radius:4px!important;min-height:31px!important;font-size:10.5px!important;
+}
+/* Infrastructure analysis: host switcher is a selector, not five summary panels. */
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraHostCards{
+  gap:4px!important;box-shadow:none!important;
+}
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraHostCard{
+  border:1px solid transparent!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraHostCard:hover{
+  background:var(--sphere-flat-hover)!important;
+}
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraHostCard.is-active{
+  border-color:var(--sphere-accent,#4fc6c8)!important;
+}
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraTrendWorkspace,
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraGrid article{
+  border-color:var(--sphere-flat-edge)!important;
+  box-shadow:none!important;
+}
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  background:transparent!important;
+}
+/* SAP issues, availability and historical evidence remain separate sources. */
+.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip,
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorSection,
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilitySummaryStrip,
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDetailSections,
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary,
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip{
+  box-shadow:none!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorSection,
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityDetailSections,
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimeline{
+  border-color:var(--sphere-flat-edge)!important;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTableWrap,
+.rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityMatrix,
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvents,
+.rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryTableWrap{
+  box-shadow:none!important;border-radius:0!important;
+}
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceEvent{
+  border-bottom-color:var(--sphere-flat-edge)!important;
+}
+/* Review uses an editable pane; input boundaries must remain visible. */
+.rundeckQuickAnalysisDrawer .rundeckQuickMetrics,
+.rundeckQuickAnalysisDrawer .rundeckQuickSection,
+.rundeckQuickAnalysisDrawer .rundeckQuickReviewContext,
+.rundeckQuickAnalysisDrawer .rundeckClosingPreview,
+.rundeckWorkspaceDrawer.is-system-data .rundeckTokenCard{
+  box-shadow:none!important;
+  border-color:var(--sphere-flat-edge)!important;
+}
+.rundeckQuickAnalysisDrawer .rundeckClosingForm input:focus-visible,
+.rundeckQuickAnalysisDrawer .rundeckClosingForm textarea:focus-visible,
+.rundeckWorkspaceDrawer .rundeckSystemData button:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8)!important;outline-offset:1px;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel){
+  --sphere-flat-edge:rgba(71,85,105,.15);
+  --sphere-flat-hover:rgba(13,148,160,.07);
+}
+@media(prefers-reduced-motion:reduce),print{
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisActions>button{
+    transition:none!important;
+  }
+}
