@@ -559,15 +559,40 @@ test('v1.34.87 theme selector updates the palette in place without page reload',
   await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.theme)).toBe('dark')
 })
 
+// Only a retained Job/Program identity is actionable. Do not click the
+// placeholder tbody row while the DEV collection and workload API are loading.
+async function openActionableLiveJob(page){
+  const table=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap')
+  await expect(table).toBeVisible({timeout:30000})
+  const row=table.locator('tbody tr[role="button"]').first()
+  try {
+    await expect(row).toBeVisible({timeout:30000})
+  } catch (error) {
+    const evidence=await page.evaluate(()=>{
+      const tbody=document.querySelector('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap tbody')
+      return {
+        visibleRows:tbody?.querySelectorAll('tr').length || 0,
+        actionableRows:tbody?.querySelectorAll('tr[role="button"]').length || 0,
+        rowText:tbody?.textContent?.trim().slice(0,200) || '',
+        stateText:document.querySelector('.rundeckCurrentWorkloadState')?.textContent?.trim() || '',
+        countText:document.querySelector('.rundeckCurrentWorkloadCount')?.textContent?.trim() || ''
+      }
+    })
+    throw new Error('No actionable Live Job row after API readiness window: '+JSON.stringify(evidence)+'; '+error.message)
+  }
+  const jobButton=row.locator('.rundeckCurrentWorkloadName button')
+  await expect(jobButton).toBeEnabled()
+  const rawKey=await jobButton.getAttribute('title')
+  await jobButton.click()
+  const modal=page.locator('.rundeckWorkspaceDrawer.is-performance')
+  await expect(modal).toBeVisible({timeout:15000})
+  if(rawKey) await expect(modal).toHaveAttribute('aria-label',rawKey)
+  return modal
+}
+
 test('v1.34.88 desktop Job drawer has one working related-analysis rail and Back stack',async ({page})=>{
   await openCockpit(page)
-  const table=page.locator('.rundeckJobsProgramsWorkspace .rundeckCurrentWorkload')
-  await expect(table).toBeVisible({timeout:30000})
-  const row=table.locator('tbody tr').first()
-  await expect(row).toBeVisible({timeout:30000})
-  await row.click()
-  await expect(page.locator('.rundeckWorkspaceDrawer.is-performance')).toBeVisible({timeout:30000})
-  const modal=page.locator('.rundeckWorkspaceDrawer.is-performance')
+  const modal=await openActionableLiveJob(page)
   const related=modal.getByRole('group',{name:'Related analysis'})
   await expect(related).toHaveCount(1)
   await expect(modal.locator('.rundeckPerformanceDrawerEvidence')).toHaveCount(0)
@@ -587,13 +612,7 @@ test('v1.34.88 desktop Job drawer has one working related-analysis rail and Back
 
 test('v1.34.88 desktop Job and Infrastructure drawers remain inside viewport',async ({page})=>{
   await openCockpit(page)
-  const openJob=async()=>{
-    const row=page.locator('.rundeckJobsProgramsWorkspace .rundeckCurrentWorkload tbody tr').first()
-    await expect(row).toBeVisible({timeout:30000});await row.click()
-    await expect(page.locator('.rundeckWorkspaceDrawer.is-performance')).toBeVisible()
-  }
-  await openJob()
-  const modal=page.locator('.rundeckWorkspaceDrawer.is-performance')
+  const modal=await openActionableLiveJob(page)
   const bounds=await modal.evaluate(el=>{const b=el.getBoundingClientRect();return {x:b.x,y:b.y,right:b.right,bottom:b.bottom,vw:innerWidth,vh:innerHeight}})
   expect(bounds.x).toBeGreaterThanOrEqual(0)
   expect(bounds.y).toBeGreaterThanOrEqual(0)
