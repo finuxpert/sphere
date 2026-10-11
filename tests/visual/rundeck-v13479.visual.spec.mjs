@@ -512,6 +512,8 @@ test('v1.34.87 selected APP focus is shared by all three saved trend plots',asyn
   await expect(app).toBeVisible({timeout:30000})
   await app.click()
   await expect(app).toHaveAttribute('aria-pressed','true')
+  const key=(await app.textContent()).trim().match(/APP[1-5]/)?.[0]
+  if(key) await expect(page.locator('.rundeckUnifiedAppCard').filter({hasText:key}).first()).toHaveAttribute('aria-pressed','true')
   await expect(page.locator('.rundeckTrendPlot')).toHaveCount(3)
   await expect(page.locator('.rundeckTrendPlot .rundeckTrendHostLegend')).toHaveCount(0)
   await selector.getByRole('button',{name:'All'}).click()
@@ -524,4 +526,34 @@ test('v1.34.87 System Data is a utility, not a fourth analysis card',async ({pag
   await expect(rail.locator('.rundeckAnalysisGroup')).toHaveCount(3)
   await expect(rail.getByRole('button',{name:/System Data/})).toHaveCount(1)
   await expect(rail.locator('.rundeckAnalysisGroup').filter({hasText:'SAP Checks'}).getByRole('button',{name:/SAP Issues/})).toBeVisible()
+})
+
+test('v1.34.87 Android analysis groups fit the viewport without horizontal overflow',async ({page},info)=>{
+  if(info.project.name!=='laptop-1366') test.skip()
+  await page.setViewportSize({width:393,height:852})
+  await openCockpit(page)
+  const groups=page.locator('.rundeckAnalysisGroups .rundeckAnalysisGroup')
+  await expect(groups).toHaveCount(3,{timeout:30000})
+  const layout=await page.evaluate(()=>({
+    overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+    groups:[...document.querySelectorAll('.rundeckAnalysisGroup')].map(n=>{
+      const r=n.getBoundingClientRect();return {l:r.left,r:r.right}
+    })
+  }))
+  expect(layout.overflow).toBeLessThanOrEqual(2)
+  for(const card of layout.groups){
+    expect(card.l).toBeGreaterThanOrEqual(-1)
+    expect(card.r).toBeLessThanOrEqual(394)
+  }
+})
+
+test('v1.34.87 theme selector updates the palette in place without page reload',async ({page},info)=>{
+  if(info.project.name!=='desktop-1536') test.skip()
+  await openCockpit(page)
+  const selector=page.getByRole('combobox',{name:'Display theme'})
+  await expect(selector).toBeVisible()
+  await selector.selectOption('light')
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.theme)).toBe('light')
+  await selector.selectOption('dark')
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.dataset.theme)).toBe('dark')
 })
