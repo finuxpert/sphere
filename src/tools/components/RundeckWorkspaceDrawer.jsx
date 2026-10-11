@@ -4,7 +4,32 @@ import './RundeckWorkspaceDrawer.css'
 
 export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, actions = null, navigation = null, size = 'default' }) {
   const drawerRef = React.useRef(null)
+  const portalRef = React.useRef(null)
   const isModal = true // All analysis overlays now share one accessible modal/focus contract.
+
+  React.useLayoutEffect(() => {
+    // Use the visible viewport, not an expanded mobile layout viewport.
+    const updateViewport = () => {
+      const root = portalRef.current
+      if (!root) return
+      const vp = window.visualViewport
+      const width = vp?.width || document.documentElement.clientWidth
+      const height = vp?.height || document.documentElement.clientHeight
+      if (!(width > 0 && height > 0)) return
+      root.style.setProperty('--sphere-dialog-center-x', `${(vp?.offsetLeft || 0) + width / 2}px`)
+      root.style.setProperty('--sphere-dialog-center-y', `${(vp?.offsetTop || 0) + height / 2}px`)
+      root.style.setProperty('--sphere-dialog-viewport-h', `${height}px`)
+    }
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    window.visualViewport?.addEventListener('resize', updateViewport)
+    window.visualViewport?.addEventListener('scroll', updateViewport)
+    return () => {
+      window.removeEventListener('resize', updateViewport)
+      window.visualViewport?.removeEventListener('resize', updateViewport)
+      window.visualViewport?.removeEventListener('scroll', updateViewport)
+    }
+  }, [])
 
   React.useEffect(() => {
     const onKey = (event) => {
@@ -53,7 +78,7 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
     }
   }, [isModal])
 
-  return createPortal(<div className="rundeckWorkspacePortal">
+  return createPortal(<div ref={portalRef} className="rundeckWorkspacePortal">
     {isModal && <div className="rundeckWorkspaceModalBackdrop" aria-hidden="true" onClick={(event) => { if (event.target === event.currentTarget) onClose?.() }} />}
     <aside ref={drawerRef} className={`rundeckWorkspaceDrawer is-${size}`} role="dialog" aria-modal={isModal} aria-label={title}>
       <header>

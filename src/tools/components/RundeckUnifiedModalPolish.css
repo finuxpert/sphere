@@ -203,6 +203,35 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
     max-width:100%;
     overflow-wrap:anywhere;
   }
+  /* Legacy infrastructure grids can demand 360px + 430px even on phones.
+     Stack their tracks and retain horizontal scroll within data regions. */
+  .appShell:has(.rundeckPanel) .rundeckInfraWorkspace,
+  .rundeckWorkspacePortal .rundeckInfraWorkspace{
+    grid-template-columns:minmax(0,1fr)!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckInfraWorkspace>*,
+  .rundeckWorkspacePortal .rundeckInfraWorkspace>*{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckInfraWorkspace :is(
+    .rundeckInfraGrid,.rundeckInfraCurrent,.rundeckInfraTrendWorkspace
+  ){
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckInfraWorkspace :is(
+    .rundeckInfraTableWrap,.rundeckInfraChartWrap
+  ),
+  .rundeckWorkspacePortal .rundeckInfraWorkspace :is(
+    .rundeckInfraTableWrap,.rundeckInfraChartWrap
+  ){
+    max-width:100%!important;
+    overflow-x:auto;
+  }
   /* The backdrop and dialog are anchored to the visual viewport itself.
      A wider layout viewport must never shift their click targets. */
   .rundeckWorkspacePortal{
@@ -222,10 +251,10 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
     width:calc(100vw - 12px)!important;
     /* Mobile analysis is a stable-height dialog: asynchronous evidence must
        scroll inside it, never recenter the tab target during a tap. */
-    height:calc(100dvh - 16px)!important;
-    max-height:calc(100dvh - 16px)!important;
-    left:50vw!important;
-    top:50dvh!important;
+    height:min(calc(100dvh - 16px),calc(var(--sphere-dialog-viewport-h,100dvh) - 16px))!important;
+    max-height:min(calc(100dvh - 16px),calc(var(--sphere-dialog-viewport-h,100dvh) - 16px))!important;
+    left:var(--sphere-dialog-center-x,50vw)!important;
+    top:var(--sphere-dialog-center-y,50dvh)!important;
     border-radius:10px!important;
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{

@@ -211,14 +211,17 @@ test('v1.34.83 APP5 modal respects viewport bounds after 220ms motion, Escape re
  const box=await modal.evaluate(el=>{
   const r=el.getBoundingClientRect(),h=el.querySelector(':scope > header').getBoundingClientRect()
   const c=el.querySelector('.rundeckWorkspaceClose').getBoundingClientRect()
+  const v=window.visualViewport
   return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,center:(r.left+r.right)/2,
-   vw:innerWidth,vh:innerHeight,headerL:h.left,headerR:h.right,closeL:c.left,closeR:c.right}
+   vx:v?.offsetLeft||0,vy:v?.offsetTop||0,
+   vw:v?.width||innerWidth,vh:v?.height||innerHeight,
+   headerL:h.left,headerR:h.right,closeL:c.left,closeR:c.right}
  })
- expect(box.left).toBeGreaterThanOrEqual(0)
- expect(box.right).toBeLessThanOrEqual(box.vw+1)
- expect(box.top).toBeGreaterThanOrEqual(0)
- expect(box.bottom).toBeLessThanOrEqual(box.vh+1)
- expect(Math.abs(box.center-box.vw/2)).toBeLessThan(2)
+ expect(box.left).toBeGreaterThanOrEqual(box.vx-1)
+ expect(box.right).toBeLessThanOrEqual(box.vx+box.vw+1)
+ expect(box.top).toBeGreaterThanOrEqual(box.vy-1)
+ expect(box.bottom).toBeLessThanOrEqual(box.vy+box.vh+1)
+ expect(Math.abs(box.center-(box.vx+box.vw/2))).toBeLessThan(2)
  expect(box.headerL).toBeGreaterThanOrEqual(box.left)
  expect(box.headerR).toBeLessThanOrEqual(box.right+1)
  expect(box.closeL).toBeGreaterThanOrEqual(box.left)
@@ -437,13 +440,17 @@ test('v1.34.86 every analysis destination is centered and focus-trapped',async (
     await expect(modal).toBeVisible()
     await expect(modal).toHaveAttribute('aria-modal','true')
     const box=await modal.boundingBox()
-    const vp=page.viewportSize()
-    expect(Math.abs((box.x+box.width/2)-vp.width/2)).toBeLessThan(3)
-    expect(Math.abs((box.y+box.height/2)-vp.height/2)).toBeLessThan(3)
-    expect(box.x).toBeGreaterThanOrEqual(-2)
-    expect(box.y).toBeGreaterThanOrEqual(-2)
-    expect(box.x+box.width).toBeLessThanOrEqual(vp.width+2)
-    expect(box.y+box.height).toBeLessThanOrEqual(vp.height+2)
+    const vp=await page.evaluate(()=>{
+      const v=window.visualViewport
+      return {x:v?.offsetLeft||0,y:v?.offsetTop||0,
+        width:v?.width||innerWidth,height:v?.height||innerHeight}
+    })
+    expect(Math.abs((box.x+box.width/2)-(vp.x+vp.width/2))).toBeLessThan(3)
+    expect(Math.abs((box.y+box.height/2)-(vp.y+vp.height/2))).toBeLessThan(3)
+    expect(box.x).toBeGreaterThanOrEqual(vp.x-2)
+    expect(box.y).toBeGreaterThanOrEqual(vp.y-2)
+    expect(box.x+box.width).toBeLessThanOrEqual(vp.x+vp.width+2)
+    expect(box.y+box.height).toBeLessThanOrEqual(vp.y+vp.height+2)
     await expect(page.locator('.rundeckWorkspaceModalBackdrop')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(modal).toHaveCount(0)
