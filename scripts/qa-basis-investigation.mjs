@@ -235,6 +235,8 @@ const checks = [
     files.infrastructure.includes('initialContext=null') &&
     files.infrastructure.includes('rundeckInfraHostCards') &&
     files.infrastructure.includes('rundeckInfraOtherHosts') &&
+    files.infrastructure.includes('controller.abort()') &&
+    files.infrastructure.includes('trendData.scope===trendScope?trendData.items:[]') &&
     files.unifiedState.includes('splitInfrastructureHosts') &&
     files.liveOverview.includes('sourceInfraHost = null') &&
     !files.infrastructure.includes('aria-label="Infrastructure host"')],

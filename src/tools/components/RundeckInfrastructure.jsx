@@ -120,8 +120,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
-  const [trend,setTrend]=React.useState([])
-  const [trendMeta,setTrendMeta]=React.useState(null)
+  const [trendData,setTrendData]=React.useState({scope:'',items:[],meta:null})
   const [selectedSeries,setSelectedSeries]=React.useState('')
   React.useEffect(()=>{
     if(!initialContext)return
@@ -132,6 +131,9 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const { primary: primaryHosts, others: otherHosts }=splitInfrastructureHosts(data.hosts)
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
+  const trendScope=[host,range,trendMetric].join(':')
+  const trend=trendData.scope===trendScope?trendData.items:[]
+  const trendMeta=trendData.scope===trendScope?trendData.meta:null
   const observedData=data.host===host?data:{fs:[],network:[],storage:[]}
   const telemetryRows=[...observedData.fs,...observedData.network,...observedData.storage]
   const collectedAt=hostRow?.snapshot_ts||telemetryRows[0]?.collected_at
@@ -143,26 +145,39 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const stale=freshness!=='FRESH'
   const observedStatus=(state)=>infrastructureObservationStatus(state,freshness)
 
-  const refresh=React.useCallback(async()=>{
+  const refresh=React.useCallback(async(signal)=>{
+    if(signal.aborted)return
     setClockNow(Date.now())
     try{
-      const hr=await fetch(`${API}/hosts`,{cache:'no-store'})
+      const hr=await fetch(`${API}/hosts`,{cache:'no-store',signal})
       if(!hr.ok)throw new Error('Infrastructure API hosts unavailable')
       const hosts=(await hr.json()).items||[]
+      if(signal.aborted)return
       const available=hosts.map(row=>row.host)
       const target=selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||'')
       if(target!==selectedHost)setSelectedHost(target)
       const q=target?`?host=${encodeURIComponent(target)}`:''
-      const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (p,index)=>{const scope=index===3?'':q;const r=await fetch(`${API}/${p}${scope}`,{cache:'no-store'});if(!r.ok)throw new Error(`Infrastructure API ${p} unavailable`);return r.json()}))
+      const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (path,index)=>{
+        const scope=index===3?'':q
+        const response=await fetch(`${API}/${path}${scope}`,{cache:'no-store',signal})
+        if(!response.ok)throw new Error(`Infrastructure API ${path} unavailable`)
+        return response.json()
+      }))
+      if(signal.aborted)return
       setData({host:target,hosts,fs:values[0].items||[],network:values[1].items||[],storage:values[2].items||[]})
       setAllHostFilesystems(values[3].items||[])
       setError('')
-    }catch(e){setError(e.message)}
+    }catch(e){if(!signal.aborted&&e.name!=='AbortError')setError(e.message)}
   },[selectedHost])
 
-  React.useEffect(()=>{refresh();const t=setInterval(refresh,60000);return()=>clearInterval(t)},[refresh,refreshToken])
+  React.useEffect(()=>{
+    const controller=new AbortController()
+    refresh(controller.signal)
+    const timer=window.setInterval(()=>refresh(controller.signal),60000)
+    return()=>{window.clearInterval(timer);controller.abort()}
+  },[refresh,refreshToken])
   React.useEffect(()=>{if(!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[selectedHost])
-  React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrend(body.items||[]);setTrendMeta(body)}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
+  React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
   const fsState=observedData.fs.length?observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')):'UNKNOWN'
   const netState=observedData.network.length?observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')):'UNKNOWN'
