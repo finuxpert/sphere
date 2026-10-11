@@ -45,5 +45,5 @@ SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
   ./node_modules/.bin/playwright test -c playwright.config.mjs \
   tests/visual/rundeck-v13479.visual.spec.mjs \
   --project=desktop-1536 --project=laptop-1366 \
-  --grep 'v1\\.34\\.88 desktop Job' --workers=2 --reporter=line
+  --grep 'desktop Job' --workers=2 --reporter=line
 echo "FAST_DESKTOP_JOB_QA=PASS scope=2tests_x_2viewports source_build=${BASE:0:7}"
