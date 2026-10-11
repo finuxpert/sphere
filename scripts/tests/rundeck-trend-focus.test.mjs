@@ -22,9 +22,12 @@ test('focused trace is readable and other traces remain available', () => {
 })
 
 test('availability trace uses lower default opacity with unchanged high-contrast focus', () => {
-  assert.equal(trendFocusStyle('APP1', '', true).opacity, 0.72)
-  assert.equal(trendFocusStyle('APP1', 'APP1', true).opacity, 1)
-  assert.equal(trendFocusStyle('APP1', 'APP2', true).opacity, 0.26)
+  assert.deepEqual(trendFocusStyle('APP1', '', true),
+    { width: 1.5, opacity: 0.72, itemOpacity: 1 })
+  assert.deepEqual(trendFocusStyle('APP1', 'APP1', true),
+    { width: 2.8, opacity: 1, itemOpacity: 1 })
+  assert.deepEqual(trendFocusStyle('APP1', 'APP2', true),
+    { width: 1.5, opacity: 0.26, itemOpacity: 0.36 })
 })
 
 test('focus rules do not mutate retained samples, observation gaps or operator host list', () => {
@@ -36,8 +39,6 @@ test('focus rules do not mutate retained samples, observation gaps or operator h
   assert.equal(JSON.stringify(data), before)
   assert.deepEqual(data[1], { bucket: '2026-10-11T10:10:00+07:00', max_value: null })
 })
-
-
 
 test('APP1–APP5 keep stable palette slots when a source APP is missing', () => {
   assert.equal(trendHostColorIndex('APP1'), 0)

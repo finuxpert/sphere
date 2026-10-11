@@ -9,7 +9,7 @@ export function trendFocusStyle(host, focused = '', availability = false) {
   const isDimmed = Boolean(focused) && !isFocused
   return {
     width: isFocused ? 2.8 : availability ? 1.5 : 1.8,
-    opacity: isDimmed ? 0.26 : availability ? 0.72 : 1,
+    opacity: isFocused ? 1 : isDimmed ? 0.26 : availability ? 0.72 : 1,
     itemOpacity: isDimmed ? 0.36 : 1,
   }
 }
