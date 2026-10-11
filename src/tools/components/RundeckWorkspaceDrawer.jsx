@@ -50,7 +50,7 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
-    const frame = window.requestAnimationFrame(() => drawerRef.current?.querySelector('.rundeckWorkspaceClose')?.focus())
+    const frame = window.requestAnimationFrame(() => drawerRef.current?.querySelector('.rundeckWorkspaceClose')?.focus({ preventScroll: true }))
 
     const trapFocus = (event) => {
       if (event.key !== 'Tab' || !drawerRef.current) return
@@ -75,7 +75,7 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
       window.cancelAnimationFrame(frame)
       window.removeEventListener('keydown', trapFocus)
       document.body.style.overflow = previousOverflow
-      previousFocus?.focus?.()
+      previousFocus?.focus?.({ preventScroll: true })
     }
   }, [isModal])
 
