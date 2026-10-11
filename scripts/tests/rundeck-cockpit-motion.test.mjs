@@ -31,17 +31,25 @@ test('cockpit layout only constrains large short desktop windows; long tables sc
   assert.match(source('RundeckMonitoringHistory.jsx'), /import '\.\/RundeckCockpitPolish\.css'/)
 })
 
-test('System Data modal has scrim, focus trap, Escape close and restores prior scroll and focus', () => {
+test('System Data shares centered modal with scrim, keyboard trap, Escape and scroll/focus restoration', () => {
   const jsx = source('RundeckWorkspaceDrawer.jsx')
+  const wrapper = source('RundeckMonitoringHistory.jsx')
   const css = source('RundeckCockpitPolish.css')
-  assert.match(jsx, /size === 'system-data'/)
+  const unified = source('RundeckUnifiedModalPolish.css')
+  assert.match(wrapper, /activeOverlay\?\.type === 'system-data'/)
+  assert.match(wrapper, /size="system-data"/)
+  assert.match(jsx, /const isModal = true/)
   assert.match(jsx, /aria-modal=\{isModal\}/)
+  assert.match(jsx, /isModal && <div className="rundeckWorkspaceModalBackdrop"/)
   assert.match(jsx, /event\.key === 'Escape'/)
   assert.match(jsx, /event\.key !== 'Tab'/)
+  assert.match(jsx, /first\.focus\(\)/)
+  assert.match(jsx, /last\.focus\(\)/)
   assert.match(jsx, /document\.body\.style\.overflow = previousOverflow/)
   assert.match(jsx, /previousFocus\?\.focus\?\.\(\)/)
-  assert.match(jsx, /rundeckWorkspaceModalBackdrop/)
   assert.match(css, /\.rundeckWorkspaceDrawer\.is-system-data/)
+  assert.match(unified, /\.is-observation-history,\.is-system-data/)
+  assert.match(unified, /transform:translate\(-50%,-50%\)!important/)
 })
 
 test('motion is short, non-looping and honors reduced-motion preferences', () => {
