@@ -110,3 +110,21 @@ test('v1.34.85 light operator palette corrects shadowed vars and preserves data 
   assert.match(chart, /themeRevision\]/)
   assert.doesNotMatch(light, /animation-iteration-count\s*:\s*infinite/i)
 })
+
+
+test('v1.34.86 unifies analysis modal geometry and preserves unresolved SAP identity keys', async () => {
+  const modal=source('RundeckUnifiedModalPolish.css')
+  const history=source('RundeckMonitoringHistory.jsx')
+  const drawer=source('RundeckWorkspaceDrawer.jsx')
+  const workload=source('RundeckCurrentWorkload.jsx')
+  const identity=source('sapUiFormat.js')
+  assert.match(modal, /top:50%!important/)
+  assert.match(modal, /left:50%!important/)
+  assert.match(modal, /translate\(-50%,-50%\)/)
+  assert.match(modal, /prefers-reduced-motion:reduce/)
+  assert.match(drawer, /const isModal = true/)
+  assert.match(history, /rundeckAnalysisRelatedNav/)
+  assert.doesNotMatch(history, /className="rundeckAnalysisContextStrip"/)
+  assert.match(workload, /observedWorkloadName\(row.consumer_key, details\)/)
+  assert.match(identity, /export const observedWorkloadName/)
+})

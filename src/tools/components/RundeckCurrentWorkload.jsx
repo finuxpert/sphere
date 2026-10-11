@@ -1,6 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
+import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName } from './sapUiFormat.js'
 import './RundeckCurrentWorkload.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -221,7 +221,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             >
               <td title={row.host}>{shortHost(row.host)}</td>
               <td className="rundeckCurrentWorkloadName">
-                <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }}>{row.consumer_key}</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }} title={row.consumer_key}>{observedWorkloadName(row.consumer_key, details)}</button>
                 <small title={fullIdentity || identity}>{identity}</small>
               </td>
               <td title={CPU_HINT} className={Number.isFinite(cpu) && cpuNeedsAttention ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>

@@ -1,0 +1,162 @@
+/* SPHERE DEV v1.34.86 — one geometry authority for operator analysis modals.
+   Center every existing drawer and preserve its content; no endpoint changes. */
+@keyframes sphereAnalysisModalFade{
+ from{opacity:0}
+ to{opacity:1}
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:is(
+ .is-menu,.is-performance,.is-observation-history,.is-system-data,
+ .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
+){
+  position:fixed!important;
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:translate(-50%,-50%)!important;
+  width:min(1080px,calc(100vw - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;
+  min-height:0!important;
+  height:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+  border-radius:12px!important;
+  border:1px solid rgba(126,147,158,.23)!important;
+  box-shadow:0 20px 65px rgba(0,0,0,.36)!important;
+  animation:sphereAnalysisModalFade 190ms ease-out both!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-unified-app{
+  width:min(1380px,calc(100vw - 32px))!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-performance,
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-wide{
+  width:min(1180px,calc(100vw - 32px))!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-menu,
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-availability{
+  width:min(950px,calc(100vw - 32px))!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer>header{
+  flex:0 0 auto!important;
+  padding:12px 16px!important;
+  min-width:0;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawerIdentity{
+  min-width:0!important;
+  overflow:hidden;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawerIdentity small{
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
+  min-height:0!important;
+  flex:1 1 auto!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain;
+  padding:12px 16px 16px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody>*{
+  min-width:0;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody table{
+  max-width:100%;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerHeaderActions{
+  flex:0 0 auto;
+  align-items:center;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer :is(.rundeckWorkspaceBack,.rundeckWorkspaceClose):focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+  outline-offset:2px;
+}
+.rundeckAnalysisRelatedNav{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
+  margin:0 0 12px;
+  padding:4px;
+  width:fit-content;
+  max-width:100%;
+  background:rgba(126,147,158,.045);
+  border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.15));
+  border-radius:8px;
+}
+.rundeckAnalysisRelatedNav button{
+  cursor:pointer;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  background:transparent;
+  border:0;
+  border-radius:6px;
+  padding:7px 12px;
+  min-height:30px;
+}
+.rundeckAnalysisRelatedNav button[aria-pressed="true"]{
+  color:var(--sphere-text,#e7edf0);
+  background:var(--sphere-accent-soft,rgba(79,198,200,.09));
+  box-shadow:inset 0 -2px var(--sphere-accent,#4fc6c8);
+}
+.rundeckAnalysisRelatedNav button:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);
+  outline-offset:1px;
+}
+.rundeckAnalysisRelatedNav button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:is(
+ .is-menu,.is-performance,.is-observation-history,.is-system-data,
+ .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
+){
+  background:#fff!important;
+  border-color:#d5dee7!important;
+  box-shadow:0 20px 65px rgba(15,23,42,.22)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer>header{
+  background:#fff!important;
+  color:#111827!important;
+  border-bottom:1px solid #dde3ea!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
+  background:#fff!important;
+  color:#243347!important;
+}
+html[data-theme="light"] .rundeckAnalysisRelatedNav{
+  background:#f1f5f9;
+  border-color:#dde3ea;
+}
+html[data-theme="light"] .rundeckAnalysisRelatedNav button{color:#475569}
+html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
+  color:#075f67;
+  background:#e2f2f2;
+}
+@media(max-width:640px){
+  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:is(
+    .is-menu,.is-performance,.is-observation-history,.is-system-data,
+    .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
+  ){
+    width:calc(100vw - 12px)!important;
+    max-height:calc(100dvh - 16px)!important;
+    border-radius:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
+    padding:9px 10px 12px!important;
+  }
+  .rundeckAnalysisRelatedNav{width:100%}
+  .rundeckAnalysisRelatedNav button{flex:1 1 auto}
+}
+@media(prefers-reduced-motion:reduce),print{
+  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer{
+    animation:none!important;
+  }
+  .rundeckAnalysisRelatedNav button{transition:none!important}
+}

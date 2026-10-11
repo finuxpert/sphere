@@ -35,3 +35,18 @@ export const numberText = (value, digits = 1) => {
     ? parsed.toLocaleString('en-US', { maximumFractionDigits: digits })
     : '—'
 }
+
+// SAP connector may return question-mark-only identity values when the original
+// code page cannot represent the name. Preserve the raw key for data requests.
+export const isUnresolvedSapIdentity = (value = '') => {
+  const text = String(value || '').trim()
+  return text.includes('?') && /^[?.\s]+$/.test(text)
+}
+export const observedWorkloadName = (key = '', details = {}) => {
+  if (!isUnresolvedSapIdentity(key)) return String(key || '')
+  for (const candidate of [details.job_name, details.program]) {
+    const value = String(candidate || '').trim()
+    if (value && !isUnresolvedSapIdentity(value)) return value
+  }
+  return 'SAP name unresolved'
+}

@@ -19,6 +19,7 @@ import './RundeckOperatorMotion.css'
 import './RundeckCockpitPolish.css'
 import './RundeckCloudflareMotion.css'
 import './RundeckCloudflareLight.css'
+import './RundeckUnifiedModalPolish.css'
 
 const RundeckInfrastructure = React.lazy(() => import('./RundeckInfrastructure.jsx'))
 const RundeckUnifiedAppAnalysis = React.lazy(() => import('./RundeckUnifiedAppAnalysis.jsx'))
@@ -81,12 +82,21 @@ export default function RundeckMonitoringHistory(props) {
       : props.latestCollectionAt
         ? `${formatWib(props.latestCollectionAt, true)} WIB`
         : ''
+  // Preserve six launchers, but pair related evidence in two switchable modals.
+  // Other analysis destinations remain independent.
+  const relatedAnalysisNav = (current) => {
+    const pairs = current === 'evidence' || current === 'history'
+      ? [['evidence', 'Correlated Events'], ['history', 'Observation History']]
+      : [['availability', 'SAP Availability'], ['issues', 'SAP Issues']]
+    return <nav className="rundeckAnalysisRelatedNav" role="group" aria-label="Related analysis">
+      {pairs.map(([type, label]) => <button key={type} type="button"
+        aria-pressed={current === type}
+        disabled={type === 'history' && !selectedJob?.key}
+        onClick={() => setActiveOverlay({ ...activeOverlay, type })}>{label}</button>)}
+    </nav>
+  }
+
   const operationalEvidenceContent = <>
-    {selectedJob?.key && <div className="rundeckAnalysisContextStrip" title="Current workload used by the analysis shortcuts">
-      <strong>{selectedJob.key}</strong>
-      {selectedJob.host && <span>{shortHost(selectedJob.host)}</span>}
-      {selectedContextTime && <span>{selectedContextTime}</span>}
-    </div>}
     <RundeckOperationalEvidence
       refreshToken={refreshToken}
       selectedJob={selectedJob}
@@ -267,6 +277,7 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
+            {relatedAnalysisNav('history')}
             <RundeckObservationHistory
               job={selectedJob}
               refreshToken={refreshToken}
@@ -293,11 +304,12 @@ export default function RundeckMonitoringHistory(props) {
           {activeOverlay?.type === 'evidence' && <RundeckWorkspaceDrawer
             title="Correlated Events"
             size="evidence"
-            subtitle="Operational evidence and timing correlation"
+            subtitle={selectedJob?.key ? `${selectedJob.key} · ${selectedJob.host ? shortHost(selectedJob.host) + ' · ' : ''}${selectedContextTime}` : 'Operational evidence and timing correlation'}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back to Analysis Menu'}
           >
+            {relatedAnalysisNav('evidence')}
             <RundeckEvidenceTimeline
               refreshToken={refreshToken}
               job={activeOverlay.job || selectedJob}
@@ -313,6 +325,7 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back to Analysis Menu'}
           >
+            {relatedAnalysisNav('availability')}
             <RundeckAvailability refreshToken={refreshToken} />
           </RundeckWorkspaceDrawer>}
 
@@ -324,6 +337,7 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back to Analysis Menu'}
           >
+            {relatedAnalysisNav('issues')}
             <RundeckSapIssues
               refreshToken={refreshToken}
               onInspectApp={(context) => {

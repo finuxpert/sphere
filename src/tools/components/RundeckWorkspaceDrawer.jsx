@@ -3,7 +3,7 @@ import './RundeckWorkspaceDrawer.css'
 
 export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, actions = null, size = 'default' }) {
   const drawerRef = React.useRef(null)
-  const isModal = size === 'system-data' || size === 'unified-app'
+  const isModal = true // All analysis overlays now share one accessible modal/focus contract.
 
   React.useEffect(() => {
     const onKey = (event) => {

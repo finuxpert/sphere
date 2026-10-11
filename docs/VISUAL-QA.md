@@ -198,3 +198,13 @@ Only update screenshot baselines after manual review. Do not update snapshots me
 - ECharts palette recomputes on the html `data-theme` attribute event; no data polling, root-cause inference, or fabricated metrics.
 - Browser regression covers light/dark four project viewports and APP2 modal geometry. Screenshots and manual light/dark inspection still needed after guarded DEV deploy.
 - This version only targets `rundeck-sphere-dev`; PROD and PR #49 are not promoted.
+
+
+## v1.34.86 — centered operator modal contract, paired analysis, honest SAP identity
+
+- Six visible launchers are retained; Correlated Events + Observation History share related nav, SAP Availability + SAP Issues share related nav. Infrastructure and System Data remain standalone.
+- All legacy right drawers use the centered viewport-capped modal with one focus trap, Escape close, scrim, body scrolling, and focus return. The APP detail width remains content-aware.
+- Duplicate dashboard selected-context strip removed; selected workload / host / time remains available in Correlated Events modal subtitle and selected row state.
+- SAP source identity consisting only of question marks/punctuation is displayed as 'SAP name unresolved'; raw keys are preserved in title and API contexts. Inspect SAP collection encoding separately.
+- v1.34.85 visual tests now use document.documentElement tokens instead of an ungrounded nested selector and wait for real APP cards before computed styles. Additional geometry tests cover every analysis destination and related nav.
+- Server QA/Playwright must PASS before any DEV deploy; PROD and PR #49 unchanged.

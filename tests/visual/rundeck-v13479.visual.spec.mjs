@@ -290,9 +290,9 @@ test('v1.34.84 reduced-motion keeps APP interaction and modal accessible with ze
 test('v1.34.85 Cloudflare-inspired light tokens, table contrast and six cards are bounded',async ({page})=>{
   await openCockpit(page)
   await page.evaluate(()=>document.documentElement.setAttribute('data-theme','light'))
+  await expect(page.locator('.rundeckUnifiedAppCard').first()).toBeVisible({timeout:30000})
   const metrics=await page.evaluate(()=>{
-    const root=document.querySelector('.logV2Inner:has(.rundeckPanel)')
-    const style=getComputedStyle(root)
+    const style=getComputedStyle(document.documentElement)
     const cards=[...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckEvidenceCard,.rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')]
     const rows=[...document.querySelectorAll('.rundeckCurrentWorkloadTableWrap tbody tr')]
     return {
@@ -321,8 +321,9 @@ test('v1.34.85 Cloudflare-inspired light tokens, table contrast and six cards ar
 test('v1.34.85 dark theme retains dark tokens and independent status labels',async ({page})=>{
   await openCockpit(page)
   await page.evaluate(()=>document.documentElement.setAttribute('data-theme','dark'))
+  await expect(page.locator('.rundeckUnifiedAppCard').first()).toBeVisible({timeout:30000})
   const metrics=await page.evaluate(()=>{
-    const style=getComputedStyle(document.querySelector('.logV2Inner:has(.rundeckPanel)'))
+    const style=getComputedStyle(document.documentElement)
     return {page:style.getPropertyValue('--sphere-page').trim(),
       card:getComputedStyle(document.querySelector('.rundeckUnifiedAppCard')).backgroundColor,
       label:document.querySelector('.rundeckUnifiedAppCardTop em')?.textContent||'',
@@ -361,4 +362,49 @@ test('v1.34.85 APP modal infrastructure snapshot and history fit panel width',as
   if(boxes.chart) expect(boxes.chart.right).toBeLessThanOrEqual(boxes.pane.right+2)
   await modal.getByRole('button',{name:'Close analysis'}).click()
   await expect(modal).toHaveCount(0)
+})
+
+
+test('v1.34.86 every analysis destination is centered and focus-trapped',async ({page})=>{
+  await openCockpit(page)
+  await expect(page.locator('.rundeckAnalysisRailV13456')).toBeVisible()
+  const labels=['Correlated Events','SAP Availability','SAP Issues','Infrastructure Analysis','System Data']
+  for(const label of labels){
+    await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:new RegExp(label)}).first().click()
+    const modal=page.getByRole('dialog')
+    await expect(modal).toBeVisible()
+    await expect(modal).toHaveAttribute('aria-modal','true')
+    const box=await modal.boundingBox()
+    const vp=page.viewportSize()
+    expect(Math.abs((box.x+box.width/2)-vp.width/2)).toBeLessThan(3)
+    expect(Math.abs((box.y+box.height/2)-vp.height/2)).toBeLessThan(3)
+    expect(box.x).toBeGreaterThanOrEqual(-2)
+    expect(box.x+box.width).toBeLessThanOrEqual(vp.width+2)
+    await expect(page.locator('.rundeckWorkspaceModalBackdrop')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(modal).toHaveCount(0)
+  }
+})
+test('v1.34.86 paired evidence and SAP Health links change content in the same centered modal',async ({page})=>{
+  await openCockpit(page)
+  await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:/Correlated Events/}).click()
+  let modal=page.getByRole('dialog',{name:'Correlated Events'})
+  await expect(modal).toBeVisible()
+  const nav=modal.getByRole('group',{name:'Related analysis'})
+  await expect(nav.getByRole('button',{name:'Correlated Events'})).toHaveAttribute('aria-pressed','true')
+  // History is only enabled for selected workload identities, never for anonymous data.
+  const history=nav.getByRole('button',{name:'Observation History'})
+  if(await history.isEnabled()){
+    await history.click()
+    modal=page.getByRole('dialog',{name:'Observation History'})
+    await expect(modal).toBeVisible()
+  }
+  await page.keyboard.press('Escape')
+  await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:/SAP Availability/}).click()
+  modal=page.getByRole('dialog',{name:'SAP Availability'})
+  await expect(modal).toBeVisible()
+  await modal.getByRole('group',{name:'Related analysis'}).getByRole('button',{name:'SAP Issues'}).click()
+  modal=page.getByRole('dialog',{name:'SAP Issues'})
+  await expect(modal).toBeVisible()
+  await page.keyboard.press('Escape')
 })
