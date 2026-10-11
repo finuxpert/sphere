@@ -10,7 +10,7 @@ export default function RundeckMonitoringHistoryCore(props) {
         sourceQuality={props.sourceQuality}
         refreshToken={props.refreshToken}
         selectedJob={props.selectedJob}
-        focusRequest={props.appFocusRequest || (props.selectedJob?.host ? { host: props.selectedJob.host, token: props.selectedJob.key || props.selectedJob.at || 'selected-workload', highlightOnly: true } : null)}
+        focusRequest={props.focusedAppHost ? { host: props.focusedAppHost, token: 'shared-app-' + props.focusedAppHost, highlightOnly: true } : (props.selectedJob?.host ? { host: props.selectedJob.host, token: props.selectedJob.key || props.selectedJob.at || 'selected-workload', highlightOnly: true } : props.appFocusRequest || null)}
         onInspectApp={props.onInspectApp}
         onOpenMetric={props.onOpenInfrastructureMetric}
       />

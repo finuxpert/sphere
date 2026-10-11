@@ -102,7 +102,6 @@ export default function Navbar() {
               const next = event.target.value
               try { window.localStorage.setItem('sphere.theme', next) } catch {/* preference storage is best effort */}
               setThemeMode(next)
-              window.setTimeout(() => window.location.reload(), 0)
             }}>
               <option value="dark">Dark</option>
               <option value="light">Light</option>
