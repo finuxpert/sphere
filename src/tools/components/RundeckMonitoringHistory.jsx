@@ -1,6 +1,5 @@
 import React from 'react'
 import RundeckInfrastructure from './RundeckInfrastructure.jsx'
-import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
@@ -143,7 +142,7 @@ export default function RundeckMonitoringHistory(props) {
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
             onTrendContext={forwardTrendContext}
-            infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded onOpenMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })} />}
+            onOpenInfrastructureMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })}
             operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
             appFocusRequest={appFocusRequest}

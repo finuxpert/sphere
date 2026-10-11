@@ -53,10 +53,10 @@ function Status({ value }) {
   return <span className={'rundeckLiveStatus is-' + value.toLowerCase()}>{value}</span>
 }
 
-export default function RundeckLiveOverview({ refreshToken, embedded = false, onOpenMetric = null }) {
+export default function RundeckLiveOverview({ refreshToken, embedded = false, onOpenMetric = null, initialHost = '' }) {
   const [hosts, setHosts] = React.useState([])
   const [selectedHost, setSelectedHost] = React.useState(() => {
-    try { return window.localStorage.getItem(HOST_STORAGE_KEY) || '' } catch { return '' }
+    try { return initialHost || window.localStorage.getItem(HOST_STORAGE_KEY) || '' } catch { return initialHost }
   })
   const [infra, setInfra] = React.useState({ host: '', fs: [], network: [], storage: [] })
   const [clockNow, setClockNow] = React.useState(() => Date.now())
@@ -78,11 +78,11 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
       .then((body) => {
         const items = body.items || []
         setHosts(items)
-        setSelectedHost((current) => items.some((row) => row.host === current) ? current : (items[0]?.host || ''))
+        setSelectedHost((current) => initialHost && items.some((row) => row.host === initialHost) ? initialHost : items.some((row) => row.host === current) ? current : (initialHost ? '' : (items[0]?.host || '')))
       })
       .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message) })
     return () => controller.abort()
-  }, [refreshToken, refreshCycle])
+  }, [refreshToken, refreshCycle, initialHost])
 
   React.useEffect(() => {
     if (!selectedHost) return
@@ -146,9 +146,11 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
     {embedded && <div className="rundeckEmbeddedInfrastructureTitle"><SphereIcon name="server" /> Infrastructure</div>}
     <header className="rundeckLiveOverviewHead">
       <div className="rundeckLiveScope">
-        <select value={selectedHost} onChange={(event) => setSelectedHost(event.target.value)} aria-label="Monitoring host">
-          {hosts.map((row) => <option key={row.host} value={row.host}>{(row.source ? row.source + ' · ' : '') + row.host}</option>)}
-        </select>
+        {initialHost
+          ? <strong className="rundeckUnifiedInfraHostLabel">{(hostRow?.source ? hostRow.source + ' · ' : '') + (hostRow?.host || initialHost)}</strong>
+          : <select value={selectedHost} onChange={(event) => setSelectedHost(event.target.value)} aria-label="Monitoring host">
+              {hosts.map((row) => <option key={row.host} value={row.host}>{(row.source ? row.source + ' · ' : '') + row.host}</option>)}
+            </select>}
         <span className={snapshotFreshness === 'FRESH' ? '' : 'is-stale'}>{snapshotFreshness === 'UNKNOWN' ? 'UNKNOWN · unverified telemetry' : `${snapshotFreshness === 'STALE' ? 'STALE' : 'Updated'} · ${ageText(observedAt)} ago`}</span>
       </div>
       {error && <span className="rundeckLiveOverviewError">{error}</span>}

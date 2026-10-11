@@ -300,3 +300,110 @@
   .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody { animation: none !important; }
   .appShell:has(.rundeckPanel) .rundeckTrendHostLegend button { transition: none !important; }
 }
+
+/* v1.34.81 — unified APP selection: one top-row cockpit, no duplicate host controls. */
+.appShell:has(.rundeckPanel) .rundeckTopBandV13454.is-unified-app-infra {
+  display: block !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead,
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraDetailHead {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead h3 {
+  margin: 0; font-size: 12px; font-weight: 780;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead > div {
+  display: flex; gap: 12px; color: var(--sphere-text-muted, #718089); font-size: 10px;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard {
+  display: grid; gap: 4px; min-width: 0; min-height: 68px;
+  padding: 7px 9px; text-align: left; font: inherit;
+  color: var(--sphere-text, #e7edf0);
+  background: rgba(126,147,158,.025);
+  border: 1px solid rgba(126,147,158,.14);
+  border-radius: 6px; cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard.is-active {
+  border-color: var(--sphere-accent, #4fc6c8);
+  background: rgba(79,198,200,.08);
+  box-shadow: inset 3px 0 0 var(--sphere-accent, #4fc6c8);
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard:focus-visible,
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppActions button:focus-visible {
+  outline: 2px solid var(--sphere-accent, #4fc6c8);
+  outline-offset: 2px;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardTop,
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra,
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardMetrics {
+  display: flex; align-items: center; justify-content: space-between; gap: 3px;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardTop b { font-size: 12px; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardTop em {
+  font-style: normal; font-size: 9px; font-weight: 750;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardMetrics { color: var(--sphere-text-muted, #718089); font-size: 9px; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardMetrics strong {
+  color: var(--sphere-text-secondary, #a9b5bb); font-size: 10px;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra {
+  padding-top: 3px; border-top: 1px solid rgba(126,147,158,.10); font-size: 10px;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra small { color: var(--sphere-text-muted, #718089); font-size: 9px; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-normal { color: var(--sphere-success, #64c99b); }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-attention,
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-warning { color: var(--sphere-warning, #d8b35f); }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-critical { color: var(--sphere-danger, #db7d86); }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-unknown,
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-stale { color: var(--sphere-text-muted, #718089); }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraDetail {
+  min-width: 0; border-top: 1px solid rgba(126,147,158,.11); margin-top: 3px; padding-top: 3px;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraDetailHead { font-size: 10px; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppActions { display: flex; gap: 5px; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppActions button {
+  border: 1px solid rgba(126,147,158,.17);
+  background: transparent; border-radius: 4px; padding: 3px 7px;
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font: inherit; font-size: 10px; cursor: pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppActions button:disabled { opacity: .4; cursor: not-allowed; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedInfraHostLabel { color: var(--sphere-text-secondary, #a9b5bb); font-size: 10px; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedInfraMissing { margin: 4px; color: var(--sphere-text-muted, #718089); font-size: 10px; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra .rundeckLiveOverview.is-embedded {
+  margin: 2px 0 0 !important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra .rundeckEmbeddedInfrastructureTitle { display: none; }
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra .rundeckLiveCardGrid article {
+  min-height: 55px !important;
+}
+@media (max-width: 1100px) {
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead,
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraDetailHead { align-items: flex-start; flex-direction: column; gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce), print {
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard { transition: none !important; }
+}

@@ -20,6 +20,8 @@ const files = {
   quickAnalysisCss: read('src/tools/components/RundeckReviewQuickAnalysis.css'),
   monitoringCss: read('src/tools/components/RundeckMonitoringHistory.css'),
   liveOverview: read('src/tools/components/RundeckLiveOverview.jsx'),
+  unifiedApp: read('src/tools/components/RundeckUnifiedAppInfrastructure.jsx'),
+  unifiedState: read('src/tools/components/rundeckUnifiedHost.js'),
   infraFreshness: read('src/tools/components/infrastructureFreshness.js'),
   dataQuality: read('src/tools/components/rundeckDataQuality.js'),
   liveOverviewCss: read('src/tools/components/RundeckLiveOverview.css'),
@@ -152,7 +154,7 @@ const checks = [
     files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
-  ['monitoring flow version is v1.34.80', files.version.includes("APP_VERSION = '1.34.80'") && files.version.includes('monitoring-flow-ui-v1.34.80')],
+  ['monitoring flow version is v1.34.81', files.version.includes("APP_VERSION = '1.34.81'") && files.version.includes('monitoring-flow-ui-v1.34.81')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -216,8 +218,21 @@ const checks = [
 
   ['SAP Job Source renders as a visible neutral integrity strip', files.accessibilityThemeFinal.includes('.rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
-  ['Top cockpit row uses compact 42/58 APP and Infrastructure geometry', files.monitoringCore.includes('rundeckTopBandV13454') && files.monitoringCore.includes('is-infrastructure-overview') && files.workspace.includes('grid-template-columns:minmax(0,42fr) minmax(0,58fr)!important') && files.workspace.includes('height:auto!important')],
-  ['Infrastructure overview is embedded and can drill directly into existing Infrastructure Analysis', files.wrapper.includes('infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded onOpenMetric=') && files.liveOverview.includes("onOpenMetric = null") && files.liveOverview.includes('rundeckLiveMetricLink') && files.wrapper.includes('infraContext: context') && files.infrastructure.includes('initialContext=null')],
+  ['Top cockpit merges SAP APP and Infrastructure into one host-card workspace',
+    files.monitoringCore.includes('rundeckTopBandV13454 is-unified-app-infra') &&
+    files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure') &&
+    !files.monitoringCore.includes('<RundeckAppServers') &&
+    files.unifiedApp.includes('Select APP server') &&
+    files.unifiedApp.includes('Inspect SAP') &&
+    files.unifiedApp.includes('initialHost={selectedInfra.host}') &&
+    files.unifiedState.includes('infrastructureTelemetryFreshness') &&
+    files.cockpitPolish.includes('.rundeckUnifiedAppCards')],
+  ['Shared APP context drills into Infrastructure Analysis without another host selector',
+    files.wrapper.includes('onOpenInfrastructureMetric=') &&
+    files.liveOverview.includes("initialHost = ''") &&
+    files.liveOverview.includes('rundeckLiveMetricLink') &&
+    files.wrapper.includes('infraContext: context') &&
+    files.infrastructure.includes('initialContext=null')],
   ['Merged Jobs and Programs workspace uses one bounded scroll area per active mode', files.monitoringCore.includes('RundeckJobsProgramsWorkspace') && files.jobsPrograms.includes("mode === 'live'") && files.jobsPrograms.includes("mode === 'review'") && files.jobsPrograms.includes("mode === 'search'") && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadTableWrap') && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckReviewTableWrapV1231') && files.monitoringCss.includes('overflow-y:auto!important')],
   ['Compact Review table keeps Job Reason and Peak CPU visible', files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(3)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(5)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(4){width:18%!important}')],
   ['Middle trend row provides two Server Trends plus Technical Trend with shared controls', files.monitoringCore.includes('rundeckTrendBandV13454') && files.serverTrend.includes('rundeckTripleTrendV13457') && files.serverTrend.includes('Server Trend 1') && files.serverTrend.includes('Server Trend 2') && files.serverTrend.includes('Technical Trend') && files.serverTrend.includes('Shared trend period') && files.monitoringCss.includes('grid-template-columns:minmax(0,35fr) minmax(0,35fr) minmax(0,30fr)')],
@@ -244,7 +259,7 @@ const checks = [
   ['Compact Correlated Events summary avoids long timing text truncation', files.evidenceTimeline.includes('No overlap · ${Math.round(workloadGapMinutes)}m gap') && files.evidenceTimeline.includes('${Math.round(Number(skew))}m difference')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
-  ['APP server detail moved from inline expansion to workspace drawer', !files.appServers.includes('rundeckWpInlinePanel') && files.core.includes('onInspectApp={props.onInspectApp}') && files.wrapper.includes("activeOverlay?.type === 'app'")],
+  ['APP server detail stays accessible from unified host workspace', files.unifiedApp.includes('onInspectApp?.(selectedApp)') && files.core.includes('onInspectApp={props.onInspectApp}') && files.wrapper.includes("activeOverlay?.type === 'app'")],
   ['Performance Review exposes loaded review rows and historical search matches through the cockpit scroll list', files.performanceReview.includes('const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)') && files.performanceReview.includes('is-scroll-list') && !files.performanceReview.includes("is-top4")],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.performanceReview.includes("' is-updating'")],
     ['Performance Review controls preserve long-range loading state in the scroll-list layout', files.performanceReview.includes('Updating {periodLabel}') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.workspace.includes('.rundeckReviewControlsV1231')],
@@ -537,4 +552,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.80 monitoring flow, data trust, gap evidence and motion checks passed.')
+console.log('\nSPHERE v1.34.81 monitoring flow, data trust, gap evidence and motion checks passed.')

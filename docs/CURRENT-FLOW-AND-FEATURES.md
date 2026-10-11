@@ -449,3 +449,9 @@ Source-only work; **not deployment evidence**. Last browser-observed DEV release
 - Jobs & Programs retains Live / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
 - Reduced motion disables entrance/transition effects; no blinking health, infinite pulses, synthetic number counters, polling changes, backend migrations or SAP job execution.
 - Run DEV regression, lint, build and manual visual QA (1366×768, 1536×864, 1920×1080, Android) before authorizing the revision-bound deployment. PROD remains unchanged.
+
+## v1.34.81 DEV candidate — unified APP + Infrastructure (11 October 2026)
+
+Top cockpit SAP APP Servers and Infrastructure are one host-oriented workspace: five APP cards combine SAP CPU/RAM/Critical WP evidence and separately qualified filesystem evidence. There is one APP selector (the cards), one detail section for the active host, with Inspect SAP and Infrastructure Analysis actions. No top dashboard host dropdown or second SAP APP table. Independent freshness/status is never conflated: missing/mismatched infrastructure remains UNKNOWN/STALE; stale SAP performance is not marked current NORMAL. The selected job remains a default focus; an operator may override it by selecting an APP card. Modal Infrastructure Analysis remains available for filesystem/network/storage history.
+
+Source-only candidate; QA/build and runtime screenshot validation required before DEV deploy. No PROD/backend/migrations/collector/SAP jobs changed.
