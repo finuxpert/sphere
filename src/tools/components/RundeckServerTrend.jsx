@@ -362,8 +362,6 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       aria-label={`Saved ${trend?.metric_label || metricLabel(trend?.metric)} trend; select an APP to highlight its existing observations`} />
   </div>
 }
-  return <div ref={ref} className="rundeckTrendChart" role="img" aria-label="Server trend" />
-}
 
 function selectedTimelineRow(selected, timeline) {
   if (!selected?.host) return null
