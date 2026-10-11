@@ -1,6 +1,6 @@
 # SPHERE Current Flow and Features
 
-This document records the operating flow through the **v1.34.80 DEV source candidate** on `rundeck-sphere-dev`. The last operator-observed DEV browser build is **v1.34.78-dev · b878142**; v1.34.79 is **not a verified deployment** until DEV QA, release guards, and screenshot inspection pass.
+This document records the **v1.34.86 DEV SAP Performance operator flow**. The 2026-10-11 server release report attested DEV source/artifact `5e2aed9cac67330da63044edfbe343d9b4e8f202` with QA/build and Playwright geometry PASS; this is not independent manual screenshot confirmation. PROD v1.34.86 was previously deployed from `77c4022…` and has **not yet received the finishing SHA**. See the [canonical release record](releases/SPHERE-v1.34.86.md). Earlier version-specific candidate notes further below are historical, not current deployment statuses.
 
 It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 
@@ -29,7 +29,7 @@ SPHERE FastAPI ingestion/validation
         ↓
 PostgreSQL + retained raw evidence
         ↓
-Live Monitoring / History
+SAP Performance cockpit — Jobs & Programs Live / Review / Search
         ↓
 Detect operational signals
         ↓
@@ -63,22 +63,21 @@ SPHERE:
 
 SPHERE must not SSH/SCP directly to SAP Application Servers.
 
-## 2. Live Monitoring layout
+## 2. SAP Performance cockpit layout
 
-The active Live Monitoring hierarchy is:
+The current SAP Performance hierarchy is:
 
 ```text
-System / Collector / Data status
-
-Infrastructure summary
-
-SAP App Servers              Server Trend
-Selected Job / Program
+System / Collector / Data Quality status
+SAP App Servers (APP1–APP5) + independently sourced Infrastructure
+Server CPU Trend | Server RAM Trend | Technical Trend
+Selected Job / Program + six direct analysis launchers
 Correlated Events | SAP Availability | SAP Issues
 Observation History | Infrastructure Analysis | System Data
-
-Current Jobs & Programs      Selected Job / Program      Jobs & Programs to Review
+Jobs & Programs: Live | Review | Search
 ```
+
+There is no intermediate Analysis Menu. Server Trend metric labels stay in their headings, avoiding collisions with the APP1–APP5 selector. SAP Issues defaults to `Needs review`; `All indicators` and separately sourced SM37 evidence remain available. Back navigation must preserve APP/Job context.
 
 The UI uses progressive disclosure. Deep evidence is opened in drawers/modals instead of expanding the live page indefinitely.
 
