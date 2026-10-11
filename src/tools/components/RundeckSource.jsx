@@ -31,12 +31,6 @@ const metric = (value, suffix = '') => (
     : `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}${suffix}`
 )
 
-const ageMinutes = (value) => {
-  const timestamp = Date.parse(value || '')
-  if (!Number.isFinite(timestamp)) return null
-  return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
-}
-
 const ageLabel = (minutes) => {
   if (!Number.isFinite(minutes)) return 'age unknown'
   if (minutes < 1) return '<1m'

@@ -49,6 +49,6 @@ test('motion is short, non-looping and honors reduced-motion preferences', () =>
   const chart = source('RundeckServerTrend.jsx')
   assert.match(css, /prefers-reduced-motion: reduce/)
   assert.doesNotMatch(css, /animation-iteration-count:\s*infinite|animation:[^;]*infinite/)
-  assert.match(chart, /animationDuration: reduceMotion \? 0 : 560/)
+  assert.match(chart, /animationDuration: reduceMotion \? 0 : 300/)
   assert.match(chart, /animationDurationUpdate: reduceMotion \? 0 : 200/)
 })

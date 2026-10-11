@@ -145,14 +145,14 @@ const checks = [
     files.wrapper.includes('sourceCollector={props.sourceCollector}') &&
     files.source.includes('sourceQuality={quality}') &&
     files.source.includes('sourceCollector={platform?.collector || null}') &&
-    files.systemHealth.includes('observedHosts = performanceEvidenceStale || collectorUnreliable ? [] : hosts') &&
-    files.systemHealth.includes("sourceQuality?.state === 'UNKNOWN'") &&
+    files.systemHealthState.includes('observedHosts = performanceEvidenceStale || collectorUnreliable ? [] : hosts') &&
+    files.systemHealth.includes("sourceQuality.state === 'UNKNOWN'") &&
     files.source.includes('systemHealthState(operationalHosts.filter(() => !reportPerformanceStale)') &&
     files.source.includes("availabilityState: reportAvailabilityStale ? 'UNKNOWN' : availabilityState") &&
     files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
-  ['monitoring flow version is v1.34.78', files.version.includes("APP_VERSION = '1.34.78'") && files.version.includes('monitoring-flow-ui-v1.34.78')],
+  ['monitoring flow version is v1.34.79', files.version.includes("APP_VERSION = '1.34.79'") && files.version.includes('monitoring-flow-ui-v1.34.79')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -170,7 +170,7 @@ const checks = [
   ['PDF follows the current Basis workflow with compact APP trends and recurring high-resource workloads', files.source.includes('SAP APP SERVER') && files.source.includes('AVAILABILITY') && files.source.includes('JOB/PROGRAM SAAT RAM / CPU TINGGI') && files.source.includes('thresholdEpisodes') && files.source.includes('buildThresholdSummary') && files.source.includes('history/timeline?at=')],
 
   ['Selected workload identity is carried by Current Jobs row highlight and shared Performance Analysis', files.currentWorkload.includes("className={active ? 'is-selected' : ''}") && files.wrapper.includes('React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })') && files.wrapper.includes('Job / Program Performance Analysis')],
-  ['Server Trend distinguishes retained-history start from real collection gaps', files.serverTrend.includes("fontSize: 10.2") && files.serverTrend.includes('gapDurationText(from, to)') && files.serverTrend.includes("'Collection Gap'") && files.serverTrend.includes('Data tersimpan mulai') && files.serverTrend.includes('historyStartedAt')],
+  ['Server Trend distinguishes retained-history start from real collection gaps', files.serverTrend.includes("fontSize: 11.2") && files.serverTrend.includes('gapDurationText(from, to)') && files.serverTrend.includes("'Collection Gap'") && files.serverTrend.includes('Data tersimpan mulai') && files.serverTrend.includes('historyStartedAt')],
   ['PDF one-page report ranks top five workloads across high RAM and CPU events', files.source.includes("pdf.text('CATATAN'") && files.source.includes('JOB/PROGRAM SAAT RAM / CPU TINGGI') && files.source.includes('slice(0, 5)') && files.source.includes("'MUNCUL'") && !files.source.includes("pdf.text('CHECK SUMMARY'")],  ['Trend Details exposes APP CPU Memory IO Wait Critical WP and workload WP evidence without causal verdicts', files.serverTrend.includes('<b>CPU</b>') && files.serverTrend.includes('<b>RAM</b>') && files.serverTrend.includes('<b>I/O Wait</b>') && files.serverTrend.includes('<b>APP Critical WP</b>') && files.serverTrend.includes('does not prove workload causation') && files.serverTrend.includes('workloadWp(consumer)')],
   ['Availability running refresh is informational rather than warning-styled', files.availability.includes("is-running-info") && files.availabilityCss.includes('SPHERE v1.34.49 — running availability refresh is informational')],
   ['Performance Analysis v1.34.49 keeps controls compact without changing range semantics', files.jobHistoryCss.includes('SPHERE v1.34.49 — final compact Performance Analysis control rail') && files.jobHistoryCss.includes('min-height:36px!important')],
@@ -522,4 +522,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.78 monitoring flow, data trust, gap evidence and motion checks passed.')
+console.log('\nSPHERE v1.34.79 monitoring flow, data trust, gap evidence and motion checks passed.')

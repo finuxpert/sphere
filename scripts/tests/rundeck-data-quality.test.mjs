@@ -73,3 +73,12 @@ test('no history onset means no fabricated gap; out-of-window gaps stay in trend
   const old = [row(1440), row(1800)]
   assert.deepEqual(retainedReadyCollectionGaps(old, { nowMs: now, maxRecentHours: 12 }), [])
 })
+
+// A transient /availability/latest failure invalidates availability, not valid performance.
+test('failed availability refresh never shows stale availability as aligned', () => {
+  const q = assessRundeckDataQuality(base({ availabilityFetchFailed: true }))
+  assert.equal(q.state, 'PARTIAL')
+  assert.equal(q.performanceValid, true)
+  assert.equal(q.availabilityValid, false)
+  assert.equal(q.availabilityAt, null)
+})

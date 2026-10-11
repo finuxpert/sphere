@@ -782,3 +782,12 @@ The `deploy-dev.sh` rollback covers the application, not schema changes.
 
 This is a **documentation-only** checkpoint: it does not change
 application source, services, database or production routing.
+
+### v1.34.79 DEV source candidate — 11 October 2026
+
+Source-only work; **not deployment evidence**. Last browser-observed DEV release remains v1.34.78-dev · b878142 until new operator QA/screenshot.
+
+- System Health now shares the SAP Data freshness decision, host snapshot and availability payload; separate collector status and historical gaps remain independent.
+- The performance age and alignment decision share the exact data-quality timestamp; a failed availability refresh is classified as partial/unverified rather than SAP DOWN.
+- Trend entry transitions are shortened to 300ms, ECharts labels are larger, selected Jobs have a restrained identity cue, and infrastructure labels can wrap. Small viewports retain accessible scrolling.
+- No backend API/schema, migration, SAP job, Rundeck authorization, or PROD changes. Server QA/build, 1366×768 / 1536×864 / 1920×1080 + Android visual checks, guarded DEV deployment and PROD readiness are **pending**.
