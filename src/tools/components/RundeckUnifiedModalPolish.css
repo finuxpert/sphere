@@ -376,3 +376,22 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-issues .rundeckIssueViewSwitch{width:100%}
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-issues .rundeckIssueViewSwitch button{flex:1}
 }
+
+
+/* DEV finishing: the modal heading is authoritative. Keep state and evidence. */
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer>header .rundeckWorkspaceDrawerIdentity>span{
+  display:none!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTitle,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesV1231>header h3{
+  display:none!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceSummary{
+  min-height:0!important;
+  padding:3px 0 4px!important;
+  gap:4px 10px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesV1231>header{
+  min-height:0;
+  padding:0!important;
+}

@@ -220,7 +220,9 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       animationEasingUpdate: 'cubicOut',
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
       legend: { show: false, top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hostLabels, textStyle: { color: colors.secondary, fontSize: 11.2, fontWeight: 600 } },
-      grid: { left: 58, right: 72, top: 38, bottom: compactPoints ? 34 : 48 },
+      // The panel heading carries the metric. Reserve the upper plot rail
+      // for the accessible APP trace selector, not a duplicate axis name.
+      grid: { left: 58, right: 72, top: 32, bottom: compactPoints ? 34 : 48 },
       tooltip: {
         trigger: 'axis',
         confine: true,
@@ -243,7 +245,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         },
       },
       xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 10, hideOverlap: true, showMinLabel: true, showMaxLabel: true, margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
+      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
