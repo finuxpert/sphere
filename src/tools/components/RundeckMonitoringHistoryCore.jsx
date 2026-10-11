@@ -21,6 +21,9 @@ export default function RundeckMonitoringHistoryCore(props) {
         refreshToken={props.refreshToken}
         databaseEnabled={props.databaseEnabled}
         selectedJob={props.selectedJob}
+        focusedHost={props.focusedAppHost}
+        onFocusHost={props.onFocusAppHost}
+        sourceHosts={props.sourceHosts || []}
         onSelectJob={props.onSelectJob}
         onTrendContext={props.onTrendContext}
         onOpenInfrastructure={props.onOpenTrendInfrastructure}

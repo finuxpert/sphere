@@ -44,6 +44,9 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [activeOverlay, setActiveOverlay] = React.useState(null)
+  const [manualAppFocus, setManualAppFocus] = React.useState(null)
+  React.useEffect(() => setManualAppFocus(null), [selectedJob?.host])
+  const trendFocusedHost = manualAppFocus === null ? (selectedJob?.host || '') : manualAppFocus
 
   const returnFromOverlay = React.useCallback((target) => {
     setActiveOverlay(!target || target.type === 'selected' ? null : target)
@@ -57,12 +60,14 @@ export default function RundeckMonitoringHistory(props) {
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
     onSelectJob?.(job)
+    setManualAppFocus(null)
     setActiveOverlay({ type: 'job' })
   }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
     if (!context.host) return
     focusSequence.current += 1
+    setManualAppFocus(shortHost(context.host))
     setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
     setActiveOverlay({ type: 'app', app: context })
   }, [])
@@ -82,8 +87,6 @@ export default function RundeckMonitoringHistory(props) {
       : props.latestCollectionAt
         ? `${formatWib(props.latestCollectionAt, true)} WIB`
         : ''
-  // Preserve six launchers, but pair related evidence in two switchable modals.
-  // Other analysis destinations remain independent.
   const relatedAnalysisNav = (current) => {
     const pairs = current === 'evidence' || current === 'history'
       ? [['evidence', 'Correlated Events'], ['history', 'Observation History']]
@@ -96,33 +99,18 @@ export default function RundeckMonitoringHistory(props) {
     </nav>
   }
 
-  const operationalEvidenceContent = <>
-    <RundeckOperationalEvidence
-      refreshToken={refreshToken}
-      selectedJob={selectedJob}
-      onOpenEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
-      onOpenAvailability={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'selected' } })}
-      onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
-    />
-    <section className="rundeckSelectedSecondaryAnalysis" aria-label="Additional analysis">
-      <button type="button" onClick={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })} disabled={!selectedJob?.key}>
-        <SphereIcon name="history" />
-        <span><b>Observation History</b><small>{selectedJob?.host ? `${selectedJob?.reviewMetrics?.observations ?? 'Saved'} observations · ${shortHost(selectedJob.host)}` : 'Select a workload first'}</small></span>
-        <em>›</em>
-      </button>
-      <button type="button" className="rundeckInfrastructureCard" onClick={openSelectedAppAnalysis}>
-        <SphereIcon name="server" />
-        <span><b>Infrastructure Analysis</b><small>{focusedOperationalHost ? `Open ${shortHost(focusedOperationalHost.host)} · SAP + Infrastructure` : 'Infrastructure source · separate freshness'}</small></span>
-        <em aria-hidden="true">›</em>
-      </button>
-      {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
-        <SphereIcon name="database" />
-        <span><b>System Data</b><small>{systemDataSummary ? systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2') : 'Collections · Services'}</small></span>
-        <em>›</em>
-      </button>}
-    </section>
-  </>
-
+  const operationalEvidenceContent = <RundeckOperationalEvidence
+    refreshToken={refreshToken}
+    selectedJob={selectedJob}
+    onOpenEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
+    onOpenAvailability={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'selected' } })}
+    onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
+    onOpenHistory={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })}
+    onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}
+    onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
+    systemDataSummary={systemDataSummary.replace(/(\\d+ runs).*?(\\d+ failed).*/, '$1 · $2')}
+    infrastructureLabel={focusedOperationalHost ? `Selected SAP ${shortHost(focusedOperationalHost.host)} · Infra source separate` : 'Select a host in Infrastructure'}
+  />
 
   const currentWorkloadContent = React.isValidElement(props.currentWorkloadContent)
     ? React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })
@@ -162,6 +150,8 @@ export default function RundeckMonitoringHistory(props) {
             {...props}
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
+            focusedAppHost={trendFocusedHost}
+            onFocusAppHost={setManualAppFocus}
             onTrendContext={forwardTrendContext}
             onOpenInfrastructureMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })}
             operationalEvidenceContent={operationalEvidenceContent}

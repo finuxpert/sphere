@@ -19,46 +19,62 @@ function jobContext(workload, host, source) {
   }
 }
 
-export default function RundeckOperationalEvidence({ refreshToken = '', selectedJob = null, onOpenEvidence = null, onOpenAvailability = null, onOpenIssues = null }) {
+export default function RundeckOperationalEvidence({
+  refreshToken = '', selectedJob = null, onOpenEvidence, onOpenAvailability, onOpenIssues,
+  onOpenHistory, onOpenInfrastructure, onOpenSystemData, systemDataSummary = '', infrastructureLabel = '',
+}) {
   const [summary, setSummary] = React.useState(null)
   const [error, setError] = React.useState('')
-
   React.useEffect(() => {
     const controller = new AbortController()
     fetch(`${API}/analysis/performance`, { cache: 'no-store', signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Performance analysis unavailable (${response.status})`)
-        return response.json()
-      })
-      .then((result) => {
-        setSummary(result)
-        setError('')
-      })
-      .catch((failure) => {
-        if (failure.name !== 'AbortError') setError(failure.message || 'Performance analysis unavailable')
-      })
+      .then(async response => { if (!response.ok) throw new Error('Evidence unavailable (' + response.status + ')'); return response.json() })
+      .then(result => { setSummary(result); setError('') })
+      .catch(failure => { if (failure.name !== 'AbortError') setError(failure.message || 'Evidence unavailable') })
     return () => controller.abort()
   }, [refreshToken])
-
   const current = summary?.current_workload
-  const currentContext = summary?.active ? jobContext(current, summary?.affected_server, 'current') : null
-  const evidenceJob = selectedJob || currentContext
-
-  if (!summary && !error) return null
-  if (error || !summary?.active) {
-    return <section className="rundeckOperationalSummaryCards" aria-label="Operational evidence, SAP availability and active issues">
-      <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={() => onOpenEvidence?.(evidenceJob)} aria-label="Open Correlated Events">
-        <span className="rundeckEvidenceCardTitle"><span aria-hidden="true">◷</span> Correlated Events</span>
-        <strong>{error ? 'Evidence unverified' : 'No active correlation'}</strong><em aria-hidden="true">›</em>
+  const evidenceJob = selectedJob || (summary?.active ? jobContext(current, summary?.affected_server, 'current') : null)
+  const evidence = summary?.active && !error
+    ? <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive compact onOpen={() => onOpenEvidence?.(evidenceJob)} />
+    : <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard"
+        onClick={() => onOpenEvidence?.(evidenceJob)} aria-label="Open Correlated Events">
+        <span className="rundeckEvidenceCardTitle">Correlated Events</span>
+        <strong>{error ? 'Evidence unverified' : !summary ? 'Loading evidence' : 'No active correlation'}</strong>
       </button>
-      <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
-      <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
-    </section>
-  }
-
-  return <section className="rundeckOperationalSummaryCards" aria-label="Operational evidence, SAP availability and active issues">
-    <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive={summary.active} compact onOpen={() => onOpenEvidence?.(evidenceJob)} />
-    <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
-    <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
+  return <section className="rundeckAnalysisLaunchers" aria-label="Operational analysis">
+    <header className="rundeckAnalysisLaunchersHead">
+      <h3>Operational Analysis</h3>
+      {onOpenSystemData && <button type="button" className="rundeckSystemDataUtility" onClick={onOpenSystemData}>
+        System Data <span>{systemDataSummary || 'Collections · Services'}</span><span aria-hidden="true">›</span>
+      </button>}
+    </header>
+    <div className="rundeckOperationalSummaryCards rundeckAnalysisGroups">
+      <section className="rundeckAnalysisGroup" aria-label="Events and observation history">
+        <h4>Events &amp; History</h4>
+        <div className="rundeckAnalysisGroupActions">
+          {evidence}
+          <button type="button" className="rundeckAnalysisSecondary" disabled={!selectedJob?.key}
+            onClick={onOpenHistory} aria-label="Open Observation History">
+            <span>Observation History</span><small>{selectedJob?.host ? selectedJob.host.split('.')[0] : 'Select a Job / Program'}</small>
+          </button>
+        </div>
+      </section>
+      <section className="rundeckAnalysisGroup" aria-label="SAP service and issue checks">
+        <h4>SAP Checks</h4>
+        <div className="rundeckAnalysisGroupActions">
+          <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
+          <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
+        </div>
+      </section>
+      <section className="rundeckAnalysisGroup" aria-label="Infrastructure investigation">
+        <h4>Infrastructure</h4>
+        <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure}>
+          <span>Filesystem · Network · Storage I/O</span>
+          <small>{infrastructureLabel || 'Independent host evidence'}</small>
+          <span className="rundeckAnalysisChevron" aria-hidden="true">›</span>
+        </button>
+      </section>
+    </div>
   </section>
 }
