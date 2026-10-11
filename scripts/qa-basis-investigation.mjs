@@ -279,7 +279,11 @@ const checks = [
     files.wrapper.includes("activeOverlay?.type === 'app'") &&
     files.wrapper.includes('size="unified-app"') &&
     files.wrapper.includes('RundeckUnifiedAppAnalysis') &&
-    files.workspaceDrawer.includes("size === 'unified-app'") &&
+    files.workspaceDrawer.includes('const isModal = true') &&
+    files.workspaceDrawer.includes('aria-modal={isModal}') &&
+    files.workspaceDrawer.includes('event.key !== \'Tab\'') &&
+    files.workspaceDrawer.includes('document.body.style.overflow = previousOverflow') &&
+    read('src/tools/components/RundeckUnifiedModalPolish.css').includes('.is-unified-app,.is-wide') &&
     files.unifiedAnalysis.includes('<strong>SAP Performance</strong>') &&
     files.unifiedAnalysis.includes('<strong>Infrastructure</strong>') &&
     files.unifiedAnalysis.includes("shortHost(infraKey) === shortHost(appKey)") &&
