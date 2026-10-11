@@ -41,9 +41,21 @@ done
 curl --noproxy '*' -fsS --max-time 10 \
   http://127.0.0.1:4173/dev/api/collections/latest \
   | python3 -c 'import json,sys; assert isinstance(json.load(sys.stdin),dict)'
+# Scope narrow reruns to the one failing desktop assertion; no source rebuild.
+SCOPE="${SPHERE_FAST_VERIFY_SCOPE:-all}"
+case "$SCOPE" in
+  wp-1536)
+    FILTER=(--project=desktop-1536 --grep 'desktop Job and Infrastructure drawers remain inside viewport' --workers=1)
+    ;;
+  all)
+    FILTER=(--project=desktop-1536 --project=laptop-1366 --grep 'desktop Job' --workers=2)
+    ;;
+  *)
+    echo "FAST_PREVIEW=BLOCKED_UNKNOWN_SCOPE"; exit 2
+    ;;
+esac
 SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
   ./node_modules/.bin/playwright test -c playwright.config.mjs \
   tests/visual/rundeck-v13479.visual.spec.mjs \
-  --project=desktop-1536 --project=laptop-1366 \
-  --grep 'desktop Job' --workers=2 --reporter=line
-echo "FAST_DESKTOP_JOB_QA=PASS scope=2tests_x_2viewports source_build=${BASE:0:7}"
+  "${FILTER[@]}" --reporter=line
+echo "FAST_DESKTOP_JOB_QA=PASS scope=$SCOPE source_build=${BASE:0:7}"
