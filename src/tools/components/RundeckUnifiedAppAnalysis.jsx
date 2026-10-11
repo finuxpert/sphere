@@ -1,4 +1,3 @@
-import React from 'react'
 import RundeckAppServerAnalysis from './RundeckAppServerAnalysis.jsx'
 import RundeckInfrastructure from './RundeckInfrastructure.jsx'
 import { shortHost } from './sapUiFormat.js'

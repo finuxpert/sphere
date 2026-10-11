@@ -127,6 +127,7 @@ test('v1.34.82 loaded Jobs & Programs rows remain scrollable, not single-row cli
   await openCockpit(page)
   const table=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap')
   await expect(table).toBeVisible({timeout:30_000})
+  await expect.poll(()=>table.locator('tbody tr').count(),{timeout:30_000}).toBeGreaterThan(1)
   const data=await table.evaluate(el=>({
     height:el.clientHeight,
     rowCount:el.querySelectorAll('tbody tr').length,

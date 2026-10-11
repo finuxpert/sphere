@@ -232,6 +232,7 @@ const checks = [
     files.unifiedAnalysis.includes('RundeckAppServerAnalysis') &&
     files.unifiedAnalysis.includes('RundeckInfrastructure') &&
     files.unifiedAnalysis.includes('lockedHost') && files.unifiedAnalysis.includes('hideHostCards') &&
+    files.infrastructure.includes('const target=lockedHost ? selectedHost') &&
     files.unifiedState.includes('infrastructureTelemetryFreshness') &&
     files.cockpitPolish.includes('.rundeckUnifiedAppCards')],
   ['Shared APP context drills into Infrastructure Analysis without another host selector',

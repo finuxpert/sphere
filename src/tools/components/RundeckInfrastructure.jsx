@@ -154,7 +154,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       const hosts=(await hr.json()).items||[]
       if(signal.aborted)return
       const available=hosts.map(row=>row.host)
-      const target=selectedHost&&available.includes(selectedHost)?selectedHost:(lockedHost?'':(available[0]||''))
+      const target=lockedHost ? selectedHost : (selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||''))
       if(target!==selectedHost)setSelectedHost(target)
       const q=target?`?host=${encodeURIComponent(target)}`:''
       const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (path,index)=>{
