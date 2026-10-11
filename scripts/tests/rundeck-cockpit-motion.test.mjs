@@ -46,7 +46,7 @@ test('System Data shares centered modal with scrim, keyboard trap, Escape and sc
   assert.match(jsx, /first\.focus\(\)/)
   assert.match(jsx, /last\.focus\(\)/)
   assert.match(jsx, /document\.body\.style\.overflow = previousOverflow/)
-  assert.match(jsx, /previousFocus\?\.focus\?\.\(\)/)
+  assert.match(jsx,/previousFocus\?\.focus\?\.\(\{\s*preventScroll:\s*true\s*\}\)/)
   assert.match(css, /\.rundeckWorkspaceDrawer\.is-system-data/)
   assert.match(unified, /\.is-observation-history,\.is-system-data/)
   assert.match(unified, /transform:translate\(-50%,-50%\)!important/)
