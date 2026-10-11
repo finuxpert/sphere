@@ -267,7 +267,7 @@ test('v1.34.84 desktop hover lights APP and shortcut cards without shifting grid
  const review=page.getByRole('tab',{name:'Review'})
  await review.click()
  await expect(review).toHaveAttribute('aria-selected','true')
- expect(await review.evaluate(el=>Number(getComputedStyle(el,'::after').opacity))).toBeGreaterThan(.9)
+ await expect.poll(()=>review.evaluate(el=>Number(getComputedStyle(el,'::after').opacity))).toBeGreaterThan(.9)
 })
 test('v1.34.84 reduced-motion keeps APP interaction and modal accessible with zero animation',async ({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'})
