@@ -242,3 +242,28 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
     transition:none!important;
   }
 }
+/* PDF preview retains actual generated document bytes; only chrome is quieter. */
+.appShell:has(.rundeckPanel) .rundeckPdfPreview{
+  border-color:var(--sphere-flat-edge)!important;
+  box-shadow:0 18px 55px rgba(0,0,0,.25)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckPdfPreview>header,
+.appShell:has(.rundeckPanel) .rundeckPdfPreview>footer{
+  box-shadow:none!important;
+  border-color:var(--sphere-flat-edge)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckPdfPreview iframe{
+  border:0!important;background:#fff;
+}
+/* Review and Search are table modes, not competing mini dashboards. */
+.appShell:has(.rundeckPanel) .rundeckReviewControlsV1231,
+.appShell:has(.rundeckPanel) .rundeckReviewHeadV1231{
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableWrapV1231,
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231{
+  border-radius:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr:hover{
+  background:var(--sphere-flat-hover)!important;
+}
