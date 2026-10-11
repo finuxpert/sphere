@@ -41,15 +41,28 @@ test('every analysis overlay is modal, traps focus, handles Escape and restores 
   assert.match(geometry,/transform:translate\(-50%,-50%\)!important/)
 })
 
-test('six tiles are independent bounded cells, not two competing three-column rails',()=>{
+test('three grouped launchers retain six analysis routes and System Data utility',()=>{
   const css=read('RundeckCockpitPolish.css')
-  assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/)
-  assert.match(css,/display:contents!important/)
-  assert.match(css,/overflow:hidden!important/)
-  assert.doesNotMatch(read('RundeckMonitoringHistory.css'), /overflow:visible!important/)
-  assert.match(read('RundeckMonitoringHistory.jsx'), /rundeckInfrastructureCard/)
-  assert.match(css,/repeat\(3,minmax\(0,1fr\)\)/)
-  assert.match(css,/prefers-reduced-motion:reduce/)
+  const layout=read('RundeckMonitoringHistoryCore.jsx')
+  const evidence=read('RundeckOperationalEvidence.jsx')
+  const wrapper=read('RundeckMonitoringHistory.jsx')
+  assert.match(layout,/rundeckAnalysisRailV13456/)
+  assert.match(evidence,/className="rundeckOperationalSummaryCards rundeckAnalysisGroups"/)
+  assert.equal((evidence.match(/className="rundeckAnalysisGroup"/g)||[]).length,3)
+  for(const heading of ['Events &amp; History','SAP Checks','Infrastructure']){
+    assert.ok(evidence.includes(heading),'Missing grouped launcher: '+heading)
+  }
+  for(const name of ['onOpenEvidence','onOpenHistory','onOpenAvailability','onOpenIssues','onOpenInfrastructure','onOpenSystemData']){
+    assert.ok(evidence.includes(name),'Missing source route: '+name)
+    assert.ok(wrapper.includes(name+'='),'Missing connected modal destination: '+name)
+  }
+  assert.match(evidence,/disabled=\{!selectedJob\?\.key\}/)
+  assert.match(evidence,/className="rundeckSystemDataUtility"/)
+  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/)
+  assert.match(css,/@media\(max-width:1000px\)/)
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\),print/)
+  assert.doesNotMatch(wrapper,/rundeckSelectedSecondaryAnalysis|rundeckDrawerAnalysisMenu/)
+  assert.doesNotMatch(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/)
 })
 
 test('historical Trend details are not mislabeled as current server state',()=>{
