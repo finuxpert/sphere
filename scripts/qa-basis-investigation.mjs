@@ -224,6 +224,7 @@ const checks = [
     !files.monitoringCore.includes('<RundeckAppServers') &&
     files.unifiedApp.includes('Select APP server') &&
     files.unifiedApp.includes('Inspect SAP') &&
+    files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Critical WP') &&
     files.unifiedApp.includes('initialHost={selectedInfra.host}') &&
     files.unifiedState.includes('infrastructureTelemetryFreshness') &&
     files.cockpitPolish.includes('.rundeckUnifiedAppCards')],

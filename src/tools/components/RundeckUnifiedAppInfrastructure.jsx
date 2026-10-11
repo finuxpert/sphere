@@ -53,6 +53,14 @@ export default function RundeckUnifiedAppInfrastructure({
   const selectedApp = hosts.find(host => shortHost(host.host) === appKey)
   const selectedInfra = selectedApp ? matchedInfrastructureHost(selectedApp, infraSnapshot.hosts) : null
   const performanceVerified = sourceQuality?.performanceValid === true && !sourceQuality?.collectorBad
+  const visibleStates = hosts.map(host => appSignalState(host, performanceVerified))
+  const attentionCount = visibleStates.filter(value => value === 'ATTENTION' || value === 'WARNING').length
+  const criticalCount = visibleStates.filter(value => value === 'CRITICAL').length
+  const highest = field => [...hosts].filter(host => host[field] != null && Number.isFinite(Number(host[field])))
+    .sort((a, b) => Number(b[field]) - Number(a[field]))[0] || null
+  const highCpu = highest('cpu_pct')
+  const highRam = highest('ram_pct')
+  const highWp = highest('wp_critical')
   const selectApp = key => {
     setManualSelection({ host: key, contextToken })
     const sapTarget = hosts.find(host => shortHost(host.host) === key)
@@ -67,8 +75,9 @@ export default function RundeckUnifiedAppInfrastructure({
     <header className="rundeckUnifiedAppInfraHead">
       <h3><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
-        <span>SAP: {performanceVerified ? 'Verified snapshot' : 'Unverified snapshot'}</span>
-        <span>Infrastructure: independent freshness</span>
+        <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
+        {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {shortHost(highWp?.host)} {metric(highWp?.wp_critical)}</span>}
+        <span>Infrastructure freshness independent</span>
         {infraSnapshot.error && <span role="status" className="is-error">Infrastructure summary unavailable</span>}
       </div>
     </header>

@@ -415,3 +415,12 @@
 .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-wide {
   animation-duration: 220ms;
 }
+
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead > div {
+  min-width: 0; flex-wrap: wrap; justify-content: flex-end; row-gap: 2px;
+}
+@media (max-width: 780px) {
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead > div {
+    justify-content: flex-start;
+  }
+}
