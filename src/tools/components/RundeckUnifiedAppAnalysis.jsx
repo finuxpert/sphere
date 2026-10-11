@@ -1,24 +1,23 @@
 import RundeckAppServerAnalysis from './RundeckAppServerAnalysis.jsx'
 import RundeckInfrastructure from './RundeckInfrastructure.jsx'
-import { shortHost } from './sapUiFormat.js'
+import { shortHost, formatWib } from './sapUiFormat.js'
 import './RundeckUnifiedAppAnalysis.css'
 
 /** Two independent sources in one operator workspace: never merge their timestamps. */
 export default function RundeckUnifiedAppAnalysis({
   app, latestCollectionId = '', refreshToken = '', onSelectJob,
-  incidentStart = '', performanceVerified = false,
+  incidentStart = '', performanceVerified = false, performanceCollectedAt = '',
 }) {
   if (!app?.host) return null
   const host = app.infraHost || app.host
   const label = shortHost(app.host)
   const infraKey = String(host).trim().toUpperCase()
   const appKey = String(app.host).trim().toUpperCase()
-  const allowedHost = infraKey === appKey || (Boolean(app.infraHost) && /^AOPH[1-9]\d*PAPPDC$/i.test(infraKey))
+  const allowedHost = infraKey === appKey || (Boolean(app.infraHost) && shortHost(infraKey) === shortHost(appKey))
   return <section className="rundeckUnifiedAnalysis" aria-label={`${label} SAP and Infrastructure analysis`}>
     <div className="rundeckUnifiedAnalysisProvenance">
-      <strong>{label} · {app.host}</strong>
-      <span>Performance: {performanceVerified ? 'verified current collection' : 'UNVERIFIED — inspect retained data only'}</span>
-      <span>Infrastructure: independent host collection and freshness</span>
+      <span><strong>SAP Performance</strong> · {performanceVerified ? 'VERIFIED' : 'UNVERIFIED'} · {performanceVerified && performanceCollectedAt ? `${formatWib(performanceCollectedAt,true)} WIB` : 'sample time UNKNOWN'}</span>
+      <span><strong>Infrastructure</strong> · {allowedHost ? `${host} · freshness below` : 'UNKNOWN · APP identity mismatch'}</span>
     </div>
     <div className="rundeckUnifiedAnalysisGrid">
       <section aria-label="SAP performance evidence" className="rundeckUnifiedAnalysisPane">

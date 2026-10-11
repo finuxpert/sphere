@@ -94,7 +94,7 @@ test('v1.34.82 one APP click opens the merged SAP and Infrastructure modal', asy
   await expect(cards).toHaveCount(5, { timeout: 30_000 })
   await expect(merged.locator('.rundeckUnifiedAppInfraDetail')).toHaveCount(0)
   await cards.nth(4).click()
-  const modal = page.getByRole('dialog', { name: /APP5.*APP Analysis/ })
+  const modal = page.getByRole('dialog', { name: /APP5 Analysis/ })
   await expect(modal).toBeVisible({ timeout: 30_000 })
   await expect(modal.getByRole('region', { name: 'SAP performance evidence' })).toBeVisible()
   await expect(modal.getByRole('region', { name: 'Infrastructure evidence' })).toBeVisible()
@@ -138,4 +138,70 @@ test('v1.34.82 loaded Jobs & Programs rows remain scrollable, not single-row cli
   expect(data.rowCount).toBeGreaterThan(1)
   expect(data.overflowY).toMatch(/auto|scroll/)
   expect(data.scrollHeight).toBeGreaterThanOrEqual(data.height)
+})
+
+test('v1.34.83 APP5 modal respects viewport bounds after 220ms motion, Escape restores focus', async ({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'})
+ await openCockpit(page)
+ const card=page.locator('.rundeckUnifiedAppInfra').getByRole('group',{name:'Select APP server'}).getByRole('button').nth(4)
+ await card.click()
+ const modal=page.getByRole('dialog',{name:/APP5 Analysis/})
+ await expect(modal).toBeVisible()
+ await page.waitForTimeout(260)
+ const box=await modal.evaluate(el=>{
+  const r=el.getBoundingClientRect(),h=el.querySelector(':scope > header').getBoundingClientRect()
+  const c=el.querySelector('.rundeckWorkspaceClose').getBoundingClientRect()
+  return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,center:(r.left+r.right)/2,
+   vw:innerWidth,vh:innerHeight,headerL:h.left,headerR:h.right,closeL:c.left,closeR:c.right}
+ })
+ expect(box.left).toBeGreaterThanOrEqual(0)
+ expect(box.right).toBeLessThanOrEqual(box.vw+1)
+ expect(box.top).toBeGreaterThanOrEqual(0)
+ expect(box.bottom).toBeLessThanOrEqual(box.vh+1)
+ expect(Math.abs(box.center-box.vw/2)).toBeLessThan(2)
+ expect(box.headerL).toBeGreaterThanOrEqual(box.left)
+ expect(box.headerR).toBeLessThanOrEqual(box.right+1)
+ expect(box.closeL).toBeGreaterThanOrEqual(box.left)
+ expect(box.closeR).toBeLessThanOrEqual(box.right+1)
+ await page.keyboard.press('Escape')
+ await expect(modal).toHaveCount(0)
+ await expect(card).toBeFocused()
+})
+test('v1.34.83 all 6 shortcut titles and summaries stay within their own tiles',async ({page})=>{
+ await openCockpit(page)
+ const tiles=page.locator('.rundeckAnalysisRailV13456 .rundeckEvidenceCard, .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button')
+ await expect(tiles).toHaveCount(6,{timeout:30000})
+ const g=await tiles.evaluateAll(nodes=>nodes.map(n=>{
+  const r=n.getBoundingClientRect(),t=n.querySelector('.rundeckEvidenceCardTitle,b')?.getBoundingClientRect()
+  const s=n.querySelector('strong,small')?.getBoundingClientRect()
+  const em=n.querySelector(':scope > em')?.getBoundingClientRect()
+  return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,tl:t?.left,tr:t?.right,
+   sr:s?.right,arrow:em?.left,vw:innerWidth}
+ }))
+ for(const x of g){
+  expect(x.left).toBeGreaterThanOrEqual(-1)
+  expect(x.right).toBeLessThanOrEqual(x.vw+1)
+  expect(x.tl).toBeGreaterThanOrEqual(x.left-1)
+  expect(x.tr).toBeLessThanOrEqual(x.arrow+1)
+  expect(x.sr).toBeLessThanOrEqual(x.arrow+1)
+ }
+ for(let i=0;i<g.length;i++)for(let j=i+1;j<g.length;j++){
+  const overlapX=Math.min(g[i].right,g[j].right)-Math.max(g[i].left,g[j].left)
+  const overlapY=Math.min(g[i].bottom,g[j].bottom)-Math.max(g[i].top,g[j].top)
+  expect(overlapX>2&&overlapY>2).toBe(false)
+ }
+})
+test('v1.34.83 loaded workloads scroll to the last accessible row',async ({page})=>{
+ await openCockpit(page)
+ const table=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap')
+ await expect(table).toBeVisible()
+ const data=await table.evaluate(el=>{
+  el.scrollTop=el.scrollHeight
+  const last=el.querySelector('tbody tr:last-child')?.getBoundingClientRect()
+  return {count:el.querySelectorAll('tbody tr').length,scrollTop:el.scrollTop,
+    max:el.scrollHeight-el.clientHeight,lastBottom:last?.bottom,containerBottom:el.getBoundingClientRect().bottom}
+ })
+ expect(data.count).toBeGreaterThan(1)
+ expect(data.scrollTop).toBeGreaterThanOrEqual(data.max-2)
+ expect(data.lastBottom).toBeLessThanOrEqual(data.containerBottom+2)
 })

@@ -33,5 +33,9 @@ export default defineConfig({
       name: 'laptop-1366',
       use: { viewport: { width: 1366, height: 768 } },
     },
+    {
+      name: 'android-393',
+      use: { viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true },
+    },
   ],
 })

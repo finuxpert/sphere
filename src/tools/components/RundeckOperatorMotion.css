@@ -24,7 +24,7 @@
   animation: sphereCockpitEnter 380ms cubic-bezier(.2,.8,.2,1) 100ms both;
 }
 /* Read-only analysis opens with a small single-use slide, without moving its fixed layout. */
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer {
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:not(.is-unified-app):not(.is-system-data) {
   animation: sphereDrawerEnter 220ms cubic-bezier(.2,.8,.2,1) both;
 }
 /* Capacity and technical history lines stay grounded in retained samples. */

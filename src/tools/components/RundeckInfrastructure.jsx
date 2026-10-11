@@ -176,7 +176,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     const timer=window.setInterval(()=>refresh(controller.signal),60000)
     return()=>{window.clearInterval(timer);controller.abort()}
   },[refresh,refreshToken])
-  React.useEffect(()=>{if(!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[selectedHost])
+  React.useEffect(()=>{if(lockedHost||!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[lockedHost,selectedHost])
   React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
   const fsState=observedData.fs.length?observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')):'UNKNOWN'

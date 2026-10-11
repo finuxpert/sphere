@@ -2556,19 +2556,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody.is-search .rundeckReviewSearch{
   margin:1px 0 3px!important;
 }
-.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
-.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button{
-  overflow:visible!important;
-  outline:none!important;
-}
-.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 small,
-.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>strong{
-  white-space:nowrap!important;
-  overflow:visible!important;
-  text-overflow:clip!important;
-  font-size:9.5px!important;
-  line-height:1.15!important;
-}
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .is-active,
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 [aria-current="true"]{
   outline:none!important;
@@ -2576,10 +2563,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 }
 @media(max-width:1180px){
   .appShell:has(.rundeckPanel) .rundeckJobsProgramsIdentity{flex-wrap:wrap!important}
-  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 small,
-  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>strong{
-    white-space:normal!important;
-  }
 }
 
 

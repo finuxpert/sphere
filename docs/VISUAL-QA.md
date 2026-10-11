@@ -1,3 +1,19 @@
+# v1.34.83 Modal Recovery & Cockpit Visual QA (DEV only)
+
+**Runtime status: NOT VERIFIED until Playwright runs against the patched build.**
+
+- Viewports: 1366×768, 1536×864, 1920×1080, Android 393×852.
+- Unified APP dialog: after motion all four edges inside viewport, title/close in bounds; keyboard Tab, Escape, backdrop, focus restore and reduced-motion.
+- Six analysis tiles: consistent bounded text, keyboard focus and correct destinations. No legacy visible overflow.
+- APP5 click must retain APP5 SAP identity; Infrastructure uses an independently verified matching host or UNKNOWN, never APP1 fallback.
+- Verify repeated /SAP_ARCH 89% with hostname, collection ID and raw host filesystem readings; identical values alone are not proof of duplication.
+- Scroll through all loaded workload rows, inspect Live/Review/Search, retained trends, historical sample/bucket times and collection gaps.
+- Keep SAP, collector and Infrastructure freshness independent. No synthetic heartbeat.
+- Run lint, unit regression, Basis QA, Vite build and Playwright geometry. Never claim visual PASS from source-only checks.
+- Migration is SKIP and deployment is DEV-only; use guarded rollback if deployment fails.
+
+---
+
 # SPHERE Visual QA
 
 This checklist covers the current v1.34.53 operator UI.

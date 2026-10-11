@@ -64,7 +64,9 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'app', app: context })
   }, [])
 
-  const focusedOperationalHost = props.sourceHosts?.find(row => shortHost(row.host) === shortHost(selectedJob?.host)) || props.sourceHosts?.[0] || null
+  const focusedOperationalHost = selectedJob?.host
+    ? (props.sourceHosts?.find(row => shortHost(row.host) === shortHost(selectedJob.host)) || null)
+    : (props.sourceHosts?.[0] || null)
   const openSelectedAppAnalysis = () => {
     if (focusedOperationalHost) inspectApp(focusedOperationalHost)
     else setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })
@@ -96,9 +98,9 @@ export default function RundeckMonitoringHistory(props) {
         <span><b>Observation History</b><small>{selectedJob?.host ? `${selectedJob?.reviewMetrics?.observations ?? 'Saved'} observations · ${shortHost(selectedJob.host)}` : 'Select a workload first'}</small></span>
         <em>›</em>
       </button>
-      <button type="button" className="rundeckEvidenceCard rundeckInfrastructureCard" onClick={openSelectedAppAnalysis}>
-        <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> Infrastructure Analysis</span>
-        <strong>{focusedOperationalHost ? `Open ${shortHost(focusedOperationalHost.host)} · SAP + Infrastructure` : 'Infrastructure source · separate freshness'}</strong>
+      <button type="button" className="rundeckInfrastructureCard" onClick={openSelectedAppAnalysis}>
+        <SphereIcon name="server" />
+        <span><b>Infrastructure Analysis</b><small>{focusedOperationalHost ? `Open ${shortHost(focusedOperationalHost.host)} · SAP + Infrastructure` : 'Infrastructure source · separate freshness'}</small></span>
         <em aria-hidden="true">›</em>
       </button>
       {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
@@ -332,8 +334,8 @@ export default function RundeckMonitoringHistory(props) {
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
-            title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' · APP Analysis' : 'APP Analysis'}
-            subtitle="SAP Performance · Filesystem · Network · Storage I/O"
+            title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}
+            subtitle={`${activeOverlay.app.host || 'UNKNOWN host'} · SAP ${props.sourceQuality?.performanceValid && !props.sourceQuality?.collectorBad ? (props.latestCollectionAt ? formatWib(props.latestCollectionAt, true) + ' WIB' : 'sample time UNKNOWN') : 'UNVERIFIED'} · Infrastructure checked separately`}
             size="unified-app"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
@@ -343,7 +345,8 @@ export default function RundeckMonitoringHistory(props) {
             <RundeckUnifiedAppAnalysis
               app={activeOverlay.app}
               latestCollectionId={props.latestCollectionId}
-              performanceVerified={props.sourceQuality?.performanceValid === true}
+              performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+              performanceCollectedAt={props.latestCollectionAt || ''}
               incidentStart={props.incidentStart || ''}
               refreshToken={refreshToken}
               onSelectJob={(job) => {
