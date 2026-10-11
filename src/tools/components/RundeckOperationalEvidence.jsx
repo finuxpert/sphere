@@ -69,7 +69,7 @@ export default function RundeckOperationalEvidence({
       </section>
       <section className="rundeckAnalysisGroup" aria-label="Infrastructure investigation">
         <h4>Infrastructure</h4>
-        <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure}>
+        <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure} aria-label="Open Infrastructure Analysis">
           <span>Filesystem · Network · Storage I/O</span>
           <small>{infrastructureLabel || 'Independent host evidence'}</small>
           <span className="rundeckAnalysisChevron" aria-hidden="true">›</span>
