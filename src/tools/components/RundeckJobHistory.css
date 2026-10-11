@@ -1681,7 +1681,7 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 
 /* v1.34.88: one accessible outer Performance drawer scroller; saved WP data remains intact. */
 .rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTableWrap{
-  max-height:none!important;overflow-y:visible!important;overflow-x:auto!important;
+  max-height:none!important;overflow-y:visible!important;overflow-x:visible!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobMetricLegend{
   display:flex;flex-wrap:wrap;gap:5px 14px;
@@ -1690,4 +1690,16 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobMetricLegend span::before{
   content:'·';padding-right:5px;color:var(--sphere-accent,#4fc6c8);
+}
+
+/* Readable desktop evidence: preserve table units and the retained WP source details. */
+@media(min-width:1181px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody{font-size:10.5px!important}
+  .rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable td{font-size:10px!important}
+  .rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTable th{font-size:9px!important}
+}
+@media(max-width:1180px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTableWrap{
+    overflow-x:auto!important;overflow-y:visible!important;
+  }
 }
