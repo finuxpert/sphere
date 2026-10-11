@@ -232,7 +232,9 @@ const checks = [
     files.liveOverview.includes("initialHost = ''") &&
     files.liveOverview.includes('rundeckLiveMetricLink') &&
     files.wrapper.includes('infraContext: context') &&
-    files.infrastructure.includes('initialContext=null')],
+    files.infrastructure.includes('initialContext=null') &&
+    files.infrastructure.includes('rundeckInfraHostCards') &&
+    !files.infrastructure.includes('aria-label="Infrastructure host"')],
   ['Merged Jobs and Programs workspace uses one bounded scroll area per active mode', files.monitoringCore.includes('RundeckJobsProgramsWorkspace') && files.jobsPrograms.includes("mode === 'live'") && files.jobsPrograms.includes("mode === 'review'") && files.jobsPrograms.includes("mode === 'search'") && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadTableWrap') && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckReviewTableWrapV1231') && files.monitoringCss.includes('overflow-y:auto!important')],
   ['Compact Review table keeps Job Reason and Peak CPU visible', files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(3)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(5)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(4){width:18%!important}')],
   ['Middle trend row provides two Server Trends plus Technical Trend with shared controls', files.monitoringCore.includes('rundeckTrendBandV13454') && files.serverTrend.includes('rundeckTripleTrendV13457') && files.serverTrend.includes('Server Trend 1') && files.serverTrend.includes('Server Trend 2') && files.serverTrend.includes('Technical Trend') && files.serverTrend.includes('Shared trend period') && files.monitoringCss.includes('grid-template-columns:minmax(0,35fr) minmax(0,35fr) minmax(0,30fr)')],

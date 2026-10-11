@@ -85,10 +85,11 @@ export default function RundeckUnifiedAppInfrastructure({
           <span className="rundeckUnifiedAppCardMetrics">
             <span>CPU <strong>{metric(host.cpu_pct, '%')}</strong></span>
             <span>RAM <strong>{metric(host.ram_pct, '%')}</strong></span>
+            <span>IO <strong>{metric(host.io_wait_pct, '%')}</strong></span>
             <span>WP <strong>{metric(host.wp_critical)}</strong></span>
           </span>
           <span className="rundeckUnifiedAppCardInfra">
-            <small>FS · {infra.freshness === 'FRESH' ? 'Fresh' : infra.freshness}</small>
+            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>FS {infra.topFs?.mount_point || '—'} · {infra.freshness}</small>
             <strong className={'is-' + infra.state.toLowerCase()}>
               {infra.topFs ? (infra.freshness === 'FRESH' ? '' : 'Last ') + metric(infra.topFs.used_pct, '%') : '—'}
             </strong>
@@ -110,7 +111,7 @@ export default function RundeckUnifiedAppInfrastructure({
       {selectedInfra && <RundeckLiveOverview key={selectedInfra.host} initialHost={selectedInfra.host}
         refreshToken={refreshToken} embedded onOpenMetric={onOpenMetric} />}
       {!selectedInfra && <p className="rundeckUnifiedInfraMissing" role="status">
-        No matching Infrastructure source for {appKey || 'this APP'}. Values are UNKNOWN, not NORMAL.
+        {infraSnapshot.error ? 'Infrastructure summary unavailable' : 'No matching Infrastructure source for ' + (appKey || 'this APP')}. Values are UNKNOWN, not NORMAL.
       </p>}
     </div>
   </section>

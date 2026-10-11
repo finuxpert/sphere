@@ -407,3 +407,11 @@
 @media (prefers-reduced-motion: reduce), print {
   .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard { transition: none !important; }
 }
+
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra small {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 76%;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardMetrics { flex-wrap: wrap; }
+.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-wide {
+  animation-duration: 220ms;
+}

@@ -1,6 +1,8 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
+import { hostInfrastructureEvidence } from './rundeckUnifiedHost.js'
+import { shortHost } from './sapUiFormat.js'
 import './RundeckInfrastructure.css'
 
 const API=`${import.meta.env.BASE_URL}api/infra`
@@ -112,6 +114,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
 
 export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null,initialContext=null}){
   const [data,setData]=React.useState({host:'',hosts:[],fs:[],network:[],storage:[]})
+  const [allHostFilesystems,setAllHostFilesystems]=React.useState([])
   const [error,setError]=React.useState('')
   const [clockNow,setClockNow]=React.useState(()=>Date.now())
   const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
@@ -149,8 +152,9 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       const target=selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||'')
       if(target!==selectedHost)setSelectedHost(target)
       const q=target?`?host=${encodeURIComponent(target)}`:''
-      const values=await Promise.all(['filesystems','network','storage'].map(async p=>{const r=await fetch(`${API}/${p}${q}`,{cache:'no-store'});if(!r.ok)throw new Error(`Infrastructure API ${p} unavailable`);return r.json()}))
+      const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (p,index)=>{const scope=index===3?'':q;const r=await fetch(`${API}/${p}${scope}`,{cache:'no-store'});if(!r.ok)throw new Error(`Infrastructure API ${p} unavailable`);return r.json()}))
       setData({host:target,hosts,fs:values[0].items||[],network:values[1].items||[],storage:values[2].items||[]})
+      setAllHostFilesystems(values[3].items||[])
       setError('')
     }catch(e){setError(e.message)}
   },[selectedHost])
@@ -211,8 +215,24 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
       <div><p>{stale?'Last observed infrastructure measurements; live state unavailable.':'Current infrastructure state and retained history for this APP server.'}</p></div>
-      <div className="rundeckInfraIdentity"><select aria-label="Infrastructure host" value={host==='AOQ'?'':host} onChange={e=>setSelectedHost(e.target.value)}>{data.hosts.map(row=><option key={row.host} value={row.host}>{row.source?`${row.source} · `:''}{row.host}</option>)}</select><span className={`state is-${overall.toLowerCase()}`}>{overall}</span></div>
+      <div className="rundeckInfraIdentity"><span className={`state is-${overall.toLowerCase()}`}>{shortHost(host)} · {overall}</span></div>
     </header>
+    <div className="rundeckInfraHostCards" role="group" aria-label="Select Infrastructure APP">
+      {data.hosts.map(row=>{
+        const evidence=hostInfrastructureEvidence({host:row.host},data.hosts,allHostFilesystems,clockNow)
+        const selected=host===row.host
+        return <button key={row.host} type="button"
+          className={'rundeckInfraHostCard'+(selected?' is-active':'')}
+          aria-pressed={selected} onClick={()=>setSelectedHost(row.host)}>
+          <b>{shortHost(row.host)}</b>
+          <small className={'is-'+evidence.freshness.toLowerCase()}>{evidence.freshness}</small>
+          <span>FS <strong className={'is-'+evidence.state.toLowerCase()}>
+            {evidence.topFs ? (evidence.freshness==='FRESH'?'':'Last ')+metric(evidence.topFs.used_pct,'%') : '—'}
+          </strong></span>
+        </button>
+      })}
+      {!data.hosts.length&&<span className="rundeckInfraHostMissing">No verified infrastructure hosts.</span>}
+    </div>
 
     <div className="rundeckInfraFreshness">
       <span><b>Last collected</b> {formatTime(observedAt)} WIB</span>

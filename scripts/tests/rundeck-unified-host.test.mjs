@@ -32,3 +32,10 @@ test('selected job context takes priority until operator chooses another APP',()
 test('no aligned APP rows produces no fabricated host selection',()=>{
   assert.equal(chooseUnifiedApp([],'APP1',null,'','APP1'),'')
 })
+
+test('unified infrastructure summary and popup use the same independent freshness semantics', () => {
+  const evidence = hostInfrastructureEvidence(sap[0],[ready],[fs],now)
+  assert.equal(evidence.state,'ATTENTION')
+  assert.equal(evidence.freshness,'FRESH')
+  assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...fs,collection_id:'old'}],now).state,'UNKNOWN')
+})
