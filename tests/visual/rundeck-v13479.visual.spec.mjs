@@ -15,7 +15,7 @@ test.afterEach(async ({ page }, info) => {
       }
       const dialog = document.querySelector('.rundeckWorkspaceDrawer')
       const nav = dialog?.querySelector('.rundeckAnalysisRelatedNav')
-      const cards = [...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckEvidenceCard, .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')]
+      const cards = [...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckAnalysisGroup')]
       const hit = (el) => {
         if (!el) return null
         const r = el.getBoundingClientRect()
@@ -132,7 +132,7 @@ test('APP trace focus is selectable with All reset without hiding saved charts',
   await openCockpit(page)
   const plots = page.locator('.rundeckTrendPlot')
   await expect(plots.first()).toBeVisible({ timeout: 20_000 })
-  const focus = plots.first().getByRole('group', { name: 'Highlight APP trace' })
+  const focus = page.locator('.rundeckTrendSharedControls').getByRole('group', { name: 'Highlight APP trace' })
   const app = focus.getByRole('button', { name: /APP[1-5]/ }).first()
   await expect(app).toBeVisible()
   await app.click()
@@ -178,12 +178,12 @@ test('v1.34.82 one APP click opens the merged SAP and Infrastructure modal', asy
   await expect(modal).toHaveCount(0)
 })
 
-test('v1.34.82 analysis shortcuts never paint outside their six independent cells', async ({ page }, testInfo) => {
+test('v1.34.87 analysis groups have independent bounded surfaces', async ({ page }, testInfo) => {
   if (testInfo.project.name !== 'desktop-1536') test.skip()
   await openCockpit(page)
   const rail = page.locator('.rundeckAnalysisRailV13456')
-  const cards = rail.locator('.rundeckEvidenceCard, .rundeckSelectedSecondaryAnalysis > button')
-  await expect(cards).toHaveCount(6, { timeout: 30_000 })
+  const cards = rail.locator('.rundeckAnalysisGroup')
+  await expect(cards).toHaveCount(3, { timeout: 30_000 })
   const geometry = await cards.evaluateAll(nodes=>nodes.map(node=>{
     const rect=node.getBoundingClientRect()
     const text=node.querySelector('strong,small')
@@ -193,7 +193,7 @@ test('v1.34.82 analysis shortcuts never paint outside their six independent cell
   for (let i=0;i<geometry.length;i++){
     expect(geometry[i].textRight).toBeLessThanOrEqual(geometry[i].right+1)
   }
-  await test.info().attach('six-analysis-tiles',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
+  await test.info().attach('three-analysis-groups',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
 })
 
 test('v1.34.82 loaded Jobs & Programs rows remain scrollable, not single-row clipped', async ({ page }, testInfo) => {
@@ -244,30 +244,26 @@ test('v1.34.83 APP5 modal respects viewport bounds after 220ms motion, Escape re
  await expect(modal).toHaveCount(0)
  await expect(card).toBeFocused()
 })
-test('v1.34.83 all 6 shortcut titles and summaries stay within their own tiles',async ({page})=>{
- await openCockpit(page)
- const tiles=page.locator('.rundeckAnalysisRailV13456 .rundeckEvidenceCard, .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button')
- await expect(tiles).toHaveCount(6,{timeout:30000})
- const g=await tiles.evaluateAll(nodes=>nodes.map(n=>{
-  const r=n.getBoundingClientRect(),t=n.querySelector('.rundeckEvidenceCardTitle,b')?.getBoundingClientRect()
-  const s=n.querySelector('strong,small')?.getBoundingClientRect()
-  const em=n.querySelector(':scope > em')?.getBoundingClientRect()
-  return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,tl:t?.left,tr:t?.right,
-   sr:s?.right,arrow:em?.left,vw:innerWidth}
- }))
- for(const x of g){
-  expect(x.left).toBeGreaterThanOrEqual(-1)
-  expect(x.right).toBeLessThanOrEqual(x.vw+1)
-  expect(x.tl).toBeGreaterThanOrEqual(x.left-1)
-  expect(x.tr).toBeLessThanOrEqual(x.arrow+1)
-  expect(x.sr).toBeLessThanOrEqual(x.arrow+1)
- }
- for(let i=0;i<g.length;i++)for(let j=i+1;j<g.length;j++){
-  const overlapX=Math.min(g[i].right,g[j].right)-Math.max(g[i].left,g[j].left)
-  const overlapY=Math.min(g[i].bottom,g[j].bottom)-Math.max(g[i].top,g[j].top)
-  expect(overlapX>2&&overlapY>2).toBe(false)
- }
+test('v1.34.87 three grouped launchers preserve bounded headings and links',async ({page})=>{
+  await openCockpit(page)
+  const groups=page.locator('.rundeckAnalysisGroups .rundeckAnalysisGroup')
+  await expect(groups).toHaveCount(3,{timeout:30000})
+  const positions=await groups.evaluateAll(nodes=>nodes.map(el=>{
+    const r=el.getBoundingClientRect(), h=el.querySelector('h4')?.getBoundingClientRect()
+    return {l:r.left,r:r.right,t:r.top,b:r.bottom,hl:h?.left,hr:h?.right,vw:innerWidth}
+  }))
+  for(const x of positions){
+    expect(x.l).toBeGreaterThanOrEqual(-1)
+    expect(x.r).toBeLessThanOrEqual(x.vw+1)
+    expect(x.hl).toBeGreaterThanOrEqual(x.l-1)
+    expect(x.hr).toBeLessThanOrEqual(x.r+1)
+  }
+  for(let i=0;i<positions.length;i++)for(let j=i+1;j<positions.length;j++){
+    const x=positions[i], y=positions[j]
+    expect(Math.min(x.r,y.r)-Math.max(x.l,y.l)>2&&Math.min(x.b,y.b)-Math.max(x.t,y.t)>2).toBe(false)
+  }
 })
+
 test('v1.34.83 Live workload scroll geometry with actual rows or DOM-only empty-source fixture',async ({page})=>{
  await openCockpit(page)
  const table=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap')
@@ -364,15 +360,15 @@ test('v1.34.84 reduced-motion keeps APP interaction and modal accessible with ze
 })
 
 // v1.34.85 Theme-specific visual contracts: real browser layout, no fabricated SAP data.
-test('v1.34.85 Cloudflare-inspired light tokens, table contrast and six cards are bounded',async ({page})=>{
+test('v1.34.87 light theme, table contrast and three analysis groups are bounded',async ({page})=>{
   await openCockpit(page)
   await page.evaluate(()=>document.documentElement.setAttribute('data-theme','light'))
   await expect(page.locator('.rundeckUnifiedAppCard').first()).toBeVisible({timeout:30000})
-  // Operational evidence is asynchronous. Assert settled six-card DOM, not a half-loaded rail.
-  await expect(page.locator('.rundeckAnalysisRailV13456 .rundeckEvidenceCard, .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')).toHaveCount(6,{timeout:30000})
+  // The three group shells exist while independent evidence requests settle.
+  await expect(page.locator('.rundeckAnalysisRailV13456 .rundeckAnalysisGroup')).toHaveCount(3,{timeout:30000})
   const metrics=await page.evaluate(()=>{
     const style=getComputedStyle(document.documentElement)
-    const cards=[...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckEvidenceCard,.rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')]
+    const cards=[...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckAnalysisGroup')]
     const rows=[...document.querySelectorAll('.rundeckCurrentWorkloadTableWrap tbody tr')]
     return {
       page:style.getPropertyValue('--sphere-page').trim(),text:style.getPropertyValue('--sphere-text').trim(),
@@ -385,7 +381,7 @@ test('v1.34.85 Cloudflare-inspired light tokens, table contrast and six cards ar
   expect(metrics.page).toBe('#f8fafc')
   expect(metrics.text).toBe('#111827')
   expect(metrics.surface).toBe('rgb(255, 255, 255)')
-  expect(metrics.count).toBe(6)
+  expect(metrics.count).toBe(3)
   expect(metrics.widthOverflow).toBeLessThanOrEqual(2)
   for(let i=0;i<metrics.count;i++){
     const a=metrics.cards[i]
@@ -506,4 +502,26 @@ test('v1.34.86 paired evidence and SAP Health links change content in the same c
   modal=page.getByRole('dialog',{name:'SAP Issues'})
   await expect(modal).toBeVisible()
   await page.keyboard.press('Escape')
+})
+
+test('v1.34.87 selected APP focus is shared by all three saved trend plots',async ({page})=>{
+  await openCockpit(page)
+  const selector=page.locator('.rundeckTrendSharedControls').getByRole('group',{name:'Highlight APP trace'})
+  await expect(selector).toHaveCount(1)
+  const app=selector.getByRole('button',{name:/APP[1-5]/}).first()
+  await expect(app).toBeVisible({timeout:30000})
+  await app.click()
+  await expect(app).toHaveAttribute('aria-pressed','true')
+  await expect(page.locator('.rundeckTrendPlot')).toHaveCount(3)
+  await expect(page.locator('.rundeckTrendPlot .rundeckTrendHostLegend')).toHaveCount(0)
+  await selector.getByRole('button',{name:'All'}).click()
+  await expect(selector.getByRole('button',{name:'All'})).toHaveAttribute('aria-pressed','true')
+})
+
+test('v1.34.87 System Data is a utility, not a fourth analysis card',async ({page})=>{
+  await openCockpit(page)
+  const rail=page.locator('.rundeckAnalysisRailV13456')
+  await expect(rail.locator('.rundeckAnalysisGroup')).toHaveCount(3)
+  await expect(rail.getByRole('button',{name:/System Data/})).toHaveCount(1)
+  await expect(rail.locator('.rundeckAnalysisGroup').filter({hasText:'SAP Checks'}).getByRole('button',{name:/SAP Issues/})).toBeVisible()
 })
