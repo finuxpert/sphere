@@ -379,7 +379,9 @@ test('v1.34.86 every analysis destination is centered and focus-trapped',async (
     expect(Math.abs((box.x+box.width/2)-vp.width/2)).toBeLessThan(3)
     expect(Math.abs((box.y+box.height/2)-vp.height/2)).toBeLessThan(3)
     expect(box.x).toBeGreaterThanOrEqual(-2)
+    expect(box.y).toBeGreaterThanOrEqual(-2)
     expect(box.x+box.width).toBeLessThanOrEqual(vp.width+2)
+    expect(box.y+box.height).toBeLessThanOrEqual(vp.height+2)
     await expect(page.locator('.rundeckWorkspaceModalBackdrop')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(modal).toHaveCount(0)
@@ -395,6 +397,12 @@ test('v1.34.86 paired evidence and SAP Health links change content in the same c
   // History is only enabled for selected workload identities, never for anonymous data.
   const history=nav.getByRole('button',{name:'Observation History'})
   if(await history.isEnabled()){
+    const hittable=await history.evaluate(el=>{
+      const rect=el.getBoundingClientRect()
+      const target=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)
+      return target===el||el.contains(target)
+    })
+    expect(hittable).toBe(true)
     await history.click()
     modal=page.getByRole('dialog',{name:'Observation History'})
     await expect(modal).toBeVisible()
@@ -403,7 +411,13 @@ test('v1.34.86 paired evidence and SAP Health links change content in the same c
   await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:/SAP Availability/}).click()
   modal=page.getByRole('dialog',{name:'SAP Availability'})
   await expect(modal).toBeVisible()
-  await modal.getByRole('group',{name:'Related analysis'}).getByRole('button',{name:'SAP Issues'}).click()
+  const issues=modal.getByRole('group',{name:'Related analysis'}).getByRole('button',{name:'SAP Issues'})
+  expect(await issues.evaluate(el=>{
+    const rect=el.getBoundingClientRect()
+    const target=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)
+    return target===el||el.contains(target)
+  })).toBe(true)
+  await issues.click()
   modal=page.getByRole('dialog',{name:'SAP Issues'})
   await expect(modal).toBeVisible()
   await page.keyboard.press('Escape')

@@ -1,10 +1,28 @@
+/* A body-level portal escapes transformed/scroll-clipped cockpit ancestors.
+   Keep the live backdrop interactive and the dialog above it on every viewport. */
+.rundeckWorkspacePortal{
+  position:fixed;
+  inset:0;
+  z-index:1180;
+  pointer-events:none;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceModalBackdrop{
+  z-index:0;
+  pointer-events:auto;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer{
+  z-index:1!important;
+  pointer-events:auto;
+  box-sizing:border-box!important;
+}
+
 /* SPHERE DEV v1.34.86 — one geometry authority for operator analysis modals.
    Center every existing drawer and preserve its content; no endpoint changes. */
 @keyframes sphereAnalysisModalFade{
  from{opacity:0}
  to{opacity:1}
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:is(
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(
  .is-menu,.is-performance,.is-observation-history,.is-system-data,
  .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
 ){
@@ -26,34 +44,34 @@
   box-shadow:0 20px 65px rgba(0,0,0,.36)!important;
   animation:sphereAnalysisModalFade 190ms ease-out both!important;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-unified-app{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app{
   width:min(1380px,calc(100vw - 32px))!important;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-performance,
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-wide{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-wide{
   width:min(1180px,calc(100vw - 32px))!important;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-menu,
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-availability{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-menu,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-availability{
   width:min(950px,calc(100vw - 32px))!important;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer>header{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer>header{
   flex:0 0 auto!important;
   padding:12px 16px!important;
   min-width:0;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawerIdentity{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawerIdentity{
   min-width:0!important;
   overflow:hidden;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawerIdentity small{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawerIdentity small{
   display:block;
   max-width:100%;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
   min-height:0!important;
   flex:1 1 auto!important;
   overflow-y:auto!important;
@@ -61,17 +79,17 @@
   overscroll-behavior:contain;
   padding:12px 16px 16px!important;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody>*{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody>*{
   min-width:0;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody table{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody table{
   max-width:100%;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerHeaderActions{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerHeaderActions{
   flex:0 0 auto;
   align-items:center;
 }
-.appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer :is(.rundeckWorkspaceBack,.rundeckWorkspaceClose):focus-visible{
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer :is(.rundeckWorkspaceBack,.rundeckWorkspaceClose):focus-visible{
   outline:2px solid var(--sphere-accent,#4fc6c8)!important;
   outline-offset:2px;
 }
@@ -113,7 +131,7 @@
   opacity:.45;
   cursor:not-allowed;
 }
-html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:is(
+html[data-theme="light"] .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(
  .is-menu,.is-performance,.is-observation-history,.is-system-data,
  .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
 ){
@@ -121,12 +139,12 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:is
   border-color:#d5dee7!important;
   box-shadow:0 20px 65px rgba(15,23,42,.22)!important;
 }
-html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer>header{
+html[data-theme="light"] .rundeckWorkspacePortal .rundeckWorkspaceDrawer>header{
   background:#fff!important;
   color:#111827!important;
   border-bottom:1px solid #dde3ea!important;
 }
-html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
+html[data-theme="light"] .rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
   background:#fff!important;
   color:#243347!important;
 }
@@ -140,7 +158,7 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
   background:#e2f2f2;
 }
 @media(max-width:640px){
-  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer:is(
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(
     .is-menu,.is-performance,.is-observation-history,.is-system-data,
     .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
   ){
@@ -148,14 +166,38 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
     max-height:calc(100dvh - 16px)!important;
     border-radius:10px!important;
   }
-  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
     padding:9px 10px 12px!important;
   }
-  .rundeckAnalysisRelatedNav{width:100%}
-  .rundeckAnalysisRelatedNav button{flex:1 1 auto}
+  .rundeckAnalysisRelatedNav{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    width:100%;
+    box-sizing:border-box;
+  }
+  .rundeckAnalysisRelatedNav button{
+    width:100%;
+    min-width:0;
+    white-space:normal;
+    touch-action:manipulation;
+  }
+  /* Keep all six launcher surfaces in distinct grid tracks even on touch. */
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{
+    width:100%!important;
+    min-width:0!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 :is(
+    .rundeckEvidenceCard,.rundeckSelectedSecondaryAnalysis>button
+  ){
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    transform:none!important;
+  }
 }
 @media(prefers-reduced-motion:reduce),print{
-  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer{
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer{
     animation:none!important;
   }
   .rundeckAnalysisRelatedNav button{transition:none!important}

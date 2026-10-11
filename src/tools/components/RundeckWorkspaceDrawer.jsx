@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import './RundeckWorkspaceDrawer.css'
 
 export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, actions = null, size = 'default' }) {
@@ -52,8 +53,8 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
     }
   }, [isModal])
 
-  return <>
-    {isModal && <div className="rundeckWorkspaceModalBackdrop" aria-hidden="true" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.() }} />}
+  return createPortal(<div className="rundeckWorkspacePortal">
+    {isModal && <div className="rundeckWorkspaceModalBackdrop" aria-hidden="true" onClick={(event) => { if (event.target === event.currentTarget) onClose?.() }} />}
     <aside ref={drawerRef} className={`rundeckWorkspaceDrawer is-${size}`} role="dialog" aria-modal={isModal} aria-label={title}>
       <header>
         <div className="rundeckWorkspaceDrawerIdentity">
@@ -69,5 +70,5 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
       <div className="rundeckWorkspaceDrawerBody">{children}</div>
       {actions && <footer>{actions}</footer>}
     </aside>
-  </>
+  </div>, document.body)
 }
