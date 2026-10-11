@@ -93,6 +93,14 @@
   outline:2px solid var(--sphere-accent,#4fc6c8)!important;
   outline-offset:2px;
 }
+.rundeckWorkspacePortal .rundeckWorkspaceDrawerNavigation{
+  flex:0 0 auto;
+  min-width:0;
+  padding:8px 16px 0;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawerNavigation .rundeckAnalysisRelatedNav{
+  margin:0;
+}
 .rundeckAnalysisRelatedNav{
   display:flex;
   align-items:center;
@@ -168,6 +176,9 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
     padding:9px 10px 12px!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawerNavigation{
+    padding:8px 10px 0;
   }
   .rundeckAnalysisRelatedNav{
     display:grid;

@@ -291,6 +291,8 @@ test('v1.34.85 Cloudflare-inspired light tokens, table contrast and six cards ar
   await openCockpit(page)
   await page.evaluate(()=>document.documentElement.setAttribute('data-theme','light'))
   await expect(page.locator('.rundeckUnifiedAppCard').first()).toBeVisible({timeout:30000})
+  // Operational evidence is asynchronous. Assert settled six-card DOM, not a half-loaded rail.
+  await expect(page.locator('.rundeckAnalysisRailV13456 .rundeckEvidenceCard, .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')).toHaveCount(6,{timeout:30000})
   const metrics=await page.evaluate(()=>{
     const style=getComputedStyle(document.documentElement)
     const cards=[...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckEvidenceCard,.rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')]
@@ -397,6 +399,7 @@ test('v1.34.86 paired evidence and SAP Health links change content in the same c
   // History is only enabled for selected workload identities, never for anonymous data.
   const history=nav.getByRole('button',{name:'Observation History'})
   if(await history.isEnabled()){
+    await history.scrollIntoViewIfNeeded()
     const hittable=await history.evaluate(el=>{
       const rect=el.getBoundingClientRect()
       const target=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)
@@ -412,6 +415,7 @@ test('v1.34.86 paired evidence and SAP Health links change content in the same c
   modal=page.getByRole('dialog',{name:'SAP Availability'})
   await expect(modal).toBeVisible()
   const issues=modal.getByRole('group',{name:'Related analysis'}).getByRole('button',{name:'SAP Issues'})
+  await issues.scrollIntoViewIfNeeded()
   expect(await issues.evaluate(el=>{
     const rect=el.getBoundingClientRect()
     const target=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)
