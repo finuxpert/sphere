@@ -38,7 +38,22 @@ test.afterEach(async ({ page }, info) => {
         navigation: rect(nav),
         tabs: [...(nav?.querySelectorAll('button') || [])].map(el => ({
           text: el.textContent, pressed: el.getAttribute('aria-pressed'), ...hit(el) })),
-        cards: cards.map(el => ({ text: el.textContent?.trim().slice(0, 45), ...hit(el) }))
+        cards: cards.map(el => ({ text: el.textContent?.trim().slice(0, 45), ...hit(el) })),
+        overflowOffenders: [...document.querySelectorAll('body *')]
+          .filter(el => {
+            const r = el.getBoundingClientRect()
+            const style = getComputedStyle(el)
+            return r.width > 0 && r.right > document.documentElement.clientWidth + 2
+              && style.display !== 'none' && style.position !== 'fixed'
+          })
+          .sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right)
+          .slice(0, 18)
+          .map(el => {
+            const r = el.getBoundingClientRect()
+            return { tag: el.tagName.toLowerCase(), className: String(el.className?.baseVal || el.className || '').slice(0, 100),
+              right: Math.round(r.right), width: Math.round(r.width),
+              minWidth: getComputedStyle(el).minWidth, overflowX: getComputedStyle(el).overflowX }
+          })
       }
     })
     console.log('VISUAL_GEOMETRY_DEBUG=' + JSON.stringify({ test: info.title, ...geometry }))

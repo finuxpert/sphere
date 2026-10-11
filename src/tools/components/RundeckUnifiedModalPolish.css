@@ -166,6 +166,55 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
   background:#e2f2f2;
 }
 @media(max-width:640px){
+  /* The log shell must be sized to the physical CSS viewport, not the
+     expanded mobile layout viewport caused by intrinsic child widths. */
+  .appShell.isTool:has(.rundeckPanel){
+    width:100vw;
+    max-width:100vw;
+    min-width:0;
+  }
+  .appShell.isTool:has(.rundeckPanel) main{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+  .logV2Shell:has(.rundeckPanel) .logV2Inner{
+    width:calc(100vw - 20px)!important;
+    max-width:calc(100vw - 20px)!important;
+    min-width:0!important;
+  }
+  .appShell:has(.rundeckPanel) :is(
+    .rundeckPanel,.rundeckMonitoring,.rundeckTopBandV13454,
+    .rundeckTrendBandV13454,.rundeckTripleTrendGrid,
+    .rundeckJobsProgramsWorkspace,.rundeckUnifiedAppInfra
+  ){
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead>div{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+  }
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppInfraHead>div>span{
+    min-width:0;
+    max-width:100%;
+    overflow-wrap:anywhere;
+  }
+  /* The backdrop and dialog are anchored to the visual viewport itself.
+     A wider layout viewport must never shift their click targets. */
+  .rundeckWorkspacePortal{
+    width:100vw;
+    height:100dvh;
+    right:auto;
+    bottom:auto;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceModalBackdrop{
+    width:100vw;
+    height:100dvh;
+  }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(
     .is-menu,.is-performance,.is-observation-history,.is-system-data,
     .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
@@ -175,6 +224,8 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
        scroll inside it, never recenter the tab target during a tap. */
     height:calc(100dvh - 16px)!important;
     max-height:calc(100dvh - 16px)!important;
+    left:50vw!important;
+    top:50dvh!important;
     border-radius:10px!important;
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
