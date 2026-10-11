@@ -45,16 +45,17 @@ test('identical APP aliases from AOQ and AOP sources never cross-map Infrastruct
   const aop = {...ready,source:'AOP PROD'}
   const hosts = [aoq, aop]
   assert.equal(matchedInfrastructureHost(sap[0], hosts).host, aop.host)
+  assert.equal(matchedInfrastructureHost({host:'APP1'}, hosts).host, aop.host)
   const record = hostInfrastructureEvidence(sap[0],hosts,[{...fs,host:aoq.host,collection_id:'aoq-1',used_pct:42},fs],now)
   assert.equal(record.topFs.mount_point,'/SAP_ARCH')
   assert.equal(record.topFs.used_pct,89)
   assert.equal(record.state,'ATTENTION')
-  assert.equal(matchedInfrastructureHost({host:'APP1'},[{...aoq},{...aoq,host:'NONSTANDARD1'}]), aoq)
+  assert.equal(matchedInfrastructureHost({host:'APP1'},[{...aoq},{...aoq,host:'NONSTANDARD1'}])?.host, aoq.host)
 })
 test('ambiguous aliases never arbitrarily select the first infrastructure host', () => {
   const candidates = [{host:'AOQH1PAPPDC'},{host:'ABC-H1PAPP01'}]
   // Different aliases do not imply an exact AOP source.
-  assert.equal(matchedInfrastructureHost({host:'APP1'},candidates)?.host,'AOQH1PAPPDC')
+  assert.equal(matchedInfrastructureHost({host:'APP1'},candidates),null)
   const sameAlias = [{host:'AOQH1PAPPDC'},{host:'AQH1PAPPDC'}]
   assert.equal(matchedInfrastructureHost({host:'APP1'},sameAlias),null)
 })

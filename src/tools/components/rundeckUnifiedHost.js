@@ -21,7 +21,7 @@ export function matchedInfrastructureHost(sapHost, infraHosts = []) {
   const key = shortHost(raw)
   const candidates = infraHosts.filter(row => shortHost(row.host) === key)
   if (candidates.length === 1) return candidates[0]
-  const aopCandidates = candidates.filter(row => /^AOPH[1-9]\\d*PAPPDC$/i.test(String(row.host || '')))
+  const aopCandidates = candidates.filter(row => /^AOPH[1-9]\d*PAPPDC$/i.test(String(row.host || '')))
   return aopCandidates.length === 1 ? aopCandidates[0] : null
 }
 
