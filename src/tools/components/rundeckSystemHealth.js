@@ -20,3 +20,25 @@ export function systemHealthState(hosts = [], {
   if (availability === 'UNKNOWN') return 'ATTENTION'
   return 'NORMAL'
 }
+
+/** Interpret only verified observations already displayed by the parent SAP Data panel. */
+export function deriveSystemHealthEvidence({ hosts = [], availability = null, quality = null, collector = {} } = {}) {
+  const performanceEvidenceStale = quality?.performanceValid !== true
+  const availabilityEvidenceStale = quality?.availabilityValid !== true
+  const collectorUnreliable = Boolean(quality?.collectorBad) ||
+    ['ERROR','CRITICAL','RECOVERY_FAILED'].includes(normalize(collector.poller_status)) ||
+    ['ERROR','CRITICAL','RECOVERY_FAILED'].includes(normalize(collector.watchdog_status))
+  const observedHosts = performanceEvidenceStale || collectorUnreliable ? [] : hosts
+  const savedAvailability = normalize(availability?.summary?.service_state || availability?.summary?.sap_state)
+  const observedAvailability = availabilityEvidenceStale ? 'UNKNOWN' : savedAvailability
+  const appDown = (availability?.sap_app || []).some(row => normalize(row?.status) === 'DOWN')
+  const hanaDown = (availability?.hana_system_db || []).some(row => normalize(row?.name) === 'PRIMARY' && normalize(row?.status) === 'DOWN')
+  const web = availability?.web_dispatcher || []
+  const webDown = web.length > 0 && web.every(row => normalize(row?.status) === 'DOWN')
+  const observedImpact = !availabilityEvidenceStale && (appDown || hanaDown || webDown)
+  const state = !quality || quality.state === 'UNKNOWN' ? 'UNKNOWN' : systemHealthState(observedHosts, {
+    availabilityState: observedAvailability, serviceCritical: observedImpact,
+    stale: performanceEvidenceStale || collectorUnreliable, availabilityStale: availabilityEvidenceStale,
+  })
+  return { state, observedHosts, observedAvailability, observedImpact, performanceEvidenceStale, availabilityEvidenceStale, collectorUnreliable }
+}
