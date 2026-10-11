@@ -1,5 +1,4 @@
 import React from 'react'
-import RundeckInfrastructure from './RundeckInfrastructure.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
@@ -8,7 +7,6 @@ import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
-import RundeckUnifiedAppAnalysis from './RundeckUnifiedAppAnalysis.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -19,6 +17,9 @@ import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
 import './RundeckOperatorMotion.css'
 import './RundeckCockpitPolish.css'
+
+const RundeckInfrastructure = React.lazy(() => import('./RundeckInfrastructure.jsx'))
+const RundeckUnifiedAppAnalysis = React.lazy(() => import('./RundeckUnifiedAppAnalysis.jsx'))
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'
@@ -338,6 +339,7 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'issues' ? 'Back to SAP Issues' : 'Back'}
           >
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading APP analysis…</div>}>
             <RundeckUnifiedAppAnalysis
               app={activeOverlay.app}
               latestCollectionId={props.latestCollectionId}
@@ -349,6 +351,7 @@ export default function RundeckMonitoringHistory(props) {
                 setActiveOverlay({ type: 'job', returnTo: { type: 'app', app: activeOverlay.app, returnTo: activeOverlay.returnTo || null } })
               }}
             />
+            </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'infrastructure' && <RundeckWorkspaceDrawer
@@ -359,7 +362,9 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
-            <RundeckInfrastructure incidentStart={props.incidentStart || ''} initialContext={activeOverlay.infraContext || activeOverlay.trendContext || null} />
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading Infrastructure Analysis…</div>}>
+              <RundeckInfrastructure incidentStart={props.incidentStart || ''} initialContext={activeOverlay.infraContext || activeOverlay.trendContext || null} />
+            </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'review' && activeOverlay.row && <RundeckReviewQuickAnalysis

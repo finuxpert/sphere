@@ -46,7 +46,11 @@ export default function RundeckOperationalEvidence({ refreshToken = '', selected
 
   if (!summary && !error) return null
   if (error || !summary?.active) {
-    return <section className="rundeckOperationalSummaryCards is-two" aria-label="SAP Availability and active issues">
+    return <section className="rundeckOperationalSummaryCards" aria-label="Operational evidence, SAP availability and active issues">
+      <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={() => onOpenEvidence?.(evidenceJob)} aria-label="Open Correlated Events">
+        <span className="rundeckEvidenceCardTitle"><span aria-hidden="true">◷</span> Correlated Events</span>
+        <strong>{error ? 'Evidence unverified' : 'No active correlation'}</strong><em aria-hidden="true">›</em>
+      </button>
       <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
       <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
     </section>

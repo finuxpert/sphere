@@ -14,7 +14,7 @@ export default function RundeckUnifiedAppAnalysis({
   const label = shortHost(app.host)
   const infraKey = String(host).trim().toUpperCase()
   const appKey = String(app.host).trim().toUpperCase()
-  const allowedHost = infraKey === appKey || /^AOPH[1-9]\d*PAPPDC$/i.test(infraKey)
+  const allowedHost = infraKey === appKey || (Boolean(app.infraHost) && /^AOPH[1-9]\d*PAPPDC$/i.test(infraKey))
   return <section className="rundeckUnifiedAnalysis" aria-label={`${label} SAP and Infrastructure analysis`}>
     <div className="rundeckUnifiedAnalysisProvenance">
       <strong>{label} · {app.host}</strong>
