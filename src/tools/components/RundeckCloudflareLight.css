@@ -1,0 +1,313 @@
+/* SPHERE v1.34.85 — Cloudflare-inspired LIGHT operator palette and shared modal legibility.
+   Scope light colors to the monitoring workspace; preserve dark theme & status semantics.
+   Do not infer health from visual effects. */
+
+/* The child .logV2Inner previously shadowed html's light tokens with dark
+   overrides. Make the resolved variables correct at their actual consumer. */
+html[data-theme="light"] .logV2Inner:has(.rundeckPanel) {
+  --sphere-page:#f8fafc;
+  --sphere-surface-1:#ffffff;
+  --sphere-surface-2:#f1f5f9;
+  --sphere-text:#111827;
+  --sphere-text-secondary:#334155;
+  --sphere-text-muted:#526277;
+  --sphere-border-subtle:#dde3ea;
+  --sphere-chart-grid:rgba(71,85,105,.16);
+  --sphere-accent:#0d7979;
+  --sphere-accent-soft:rgba(13,121,121,.08);
+  --sphere-positive:#087f55;
+  --sphere-attention:#1d65a2;
+  --sphere-warning:#976111;
+  --sphere-danger:#b42336;
+  --sphere-chart-1:#1668b5;
+  --sphere-chart-2:#148056;
+  --sphere-chart-3:#7451b3;
+  --sphere-chart-4:#b65e24;
+  --sphere-chart-5:#087e87;
+  --sphere-font-micro:10px;
+  --sphere-font-body:11px;
+}
+html[data-theme="light"] .logV2Shell:has(.rundeckPanel),
+html[data-theme="light"] .appShell:has(.rundeckPanel),
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(main,.toolWorkspace,.toolWorkspaceBody,.rundeckPanel) {
+  background:#f8fafc!important;
+  color:#111827!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCockpitV13456 {
+  color:#111827;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckUnifiedAppInfraHead h3,.rundeckMonitoringHead h3,
+  .rundeckJobsProgramsIdentity h3,.rundeckLandscapeHeader,
+  .rundeckEvidenceCardTitle,.rundeckUnifiedAppCardTop b,
+  .rundeckTrendSharedGroup,.rundeckCurrentWorkloadName button) {
+  color:#172336!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckUnifiedAppInfraHead>div,.rundeckUnifiedAppCardMetrics,
+  .rundeckUnifiedAppCardInfra small,.rundeckCurrentWorkloadCount,
+  .rundeckAnalysisContextStrip,.rundeckTrendHostLegend,
+  .rundeckTrendSharedGroup>span,.rundeckLandscapeMeta,
+  .rundeckCurrentWorkloadName small,.rundeckEvidenceCard>strong,
+  .rundeckSelectedSecondaryAnalysis button small){
+  color:#475569!important;
+}
+
+/* Flat white cards + unobtrusive borders. Existing status classes retain
+   their role; the border/glow never encodes NORMAL or CRITICAL. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button {
+  background:#fff!important;
+  color:#172336!important;
+  border:1px solid #dde3ea!important;
+  box-shadow:0 1px 2px rgba(15,23,42,.035)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard.is-active {
+  border-color:#0d7979!important;
+  box-shadow:inset 3px 0 0 #0d7979,0 1px 3px rgba(15,23,42,.055)!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard::before,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button::before {
+  background:radial-gradient(ellipse at 18% -22%,rgba(13,121,121,.105),transparent 72%);
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard :is(.is-normal,.is-attention,.is-warning,.is-critical,.is-unknown,.is-stale) {
+  font-weight:760!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-normal{color:#087f55!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard :is(.is-warning,.is-attention){color:#976111!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-critical{color:#b42336!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard :is(.is-unknown,.is-stale){color:#526277!important}
+
+/* Readable operator controls and workload rows. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes {
+  border-color:#d8e0e8!important;background:#f1f5f9!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button {
+  color:#475569!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button.is-active {
+  background:#fff!important;color:#111827!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{
+  background:#fff!important;border-color:#dde3ea!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCurrentWorkload th{
+  background:#eef2f7!important;color:#334155!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCurrentWorkload :is(td,td button){
+  color:#243347!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr.is-selected{
+  background:#e6f3f3!important;
+}
+
+/* Chart legends and axis labels gain contrast without shifting plot geometry. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckTrendHostLegend button,.rundeckTrendToolbar button,
+  .rundeckTripleTrendV13457 .rundeckSegmented button){
+  color:#405269!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) :is(
+  .rundeckTrendHostLegend button.is-focused,
+  .rundeckTrendToolbar button.is-active,
+  .rundeckTripleTrendV13457 .rundeckSegmented button.is-active){
+  color:#075f67!important;
+  background:#e4f2f2!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckTrendHostLegend{
+  gap:3px 6px;flex-wrap:wrap;
+}
+
+/* Balanced modal 45:55 instead of forcing a second two-column UI inside
+   the right half. Never let text or SVG overflow into a neighboring pane. */
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisGrid{
+  grid-template-columns:minmax(0,45fr) minmax(0,55fr);
+  align-items:stretch;
+  gap:12px;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane{
+  min-width:0;
+  overflow:hidden;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraWorkspace{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-areas:"snapshot" "history"!important;
+  gap:7px!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraCurrent{
+  grid-area:snapshot!important;
+  padding:0!important;
+  width:100%!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendWorkspace{
+  grid-area:history!important;
+  padding:6px 0 0!important;
+  border-left:0!important;
+  border-top:1px solid var(--sphere-border-subtle)!important;
+  min-height:0!important;
+  width:100%!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:5px 10px!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article{
+  min-width:0!important;
+  padding:5px!important;
+  border:1px solid var(--sphere-border-subtle)!important;
+  border-radius:6px!important;
+  overflow:auto!important;
+  scrollbar-width:thin;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article:first-child{
+  grid-column:1/-1!important;
+  max-height:172px!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article:nth-child(2),
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article:nth-child(3){
+  grid-column:auto!important;
+  max-height:126px!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid table{
+  width:100%!important;
+  table-layout:fixed!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid th,
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid td{
+  box-sizing:border-box!important;
+  padding:4px 3px!important;
+  font-size:9.4px!important;
+  line-height:1.25!important;
+  overflow-wrap:anywhere!important;
+  white-space:normal!important;
+  text-overflow:clip!important;
+  font-variant-numeric:tabular-nums;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid th{
+  font-size:8.8px!important;
+  letter-spacing:0!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article:nth-child(2) :is(th,td):first-child{
+  width:31%!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article:nth-child(2) :is(th,td):nth-child(2),
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article:nth-child(2) :is(th,td):nth-child(3){
+  width:25%!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article:nth-child(2) :is(th,td):last-child{
+  width:19%!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendWorkspace>header{
+  min-height:0!important;
+  justify-content:flex-start!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendWorkspace .controls{
+  flex-wrap:wrap;justify-content:flex-start;gap:3px 7px;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendSummary{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:5px!important;
+  padding:5px 0!important;
+  min-height:0!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendStats{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:3px 8px!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendStats span{
+  font-size:9.8px!important;
+  overflow-wrap:anywhere!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+  height:170px!important;
+  min-height:170px!important;
+  width:100%!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraLegend{
+  opacity:1!important;
+  gap:4px 10px!important;
+  flex-wrap:wrap!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraLegend span{
+  opacity:.78!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraLegend .is-selected{
+  opacity:1!important;
+}
+.rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisProvenance{
+  font-size:10.5px;line-height:1.35;
+}
+
+/* Light modal must be white, not the gray or dark base style. */
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app>header,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckWorkspaceDrawerBody,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfra{
+  background:#fff!important;
+  color:#111827!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app{
+  border-color:#cbd5e1!important;
+  box-shadow:0 20px 65px rgba(15,23,42,.22)!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app :is(
+  .rundeckWorkspaceDrawerIdentity h3,.rundeckUnifiedAnalysisPane>h4,
+  .rundeckInfraTrendWorkspaceHead b,.rundeckInfraGrid h4){
+  color:#152235!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app :is(
+  .rundeckWorkspaceDrawerIdentity small,.rundeckInfraTrendWorkspaceHead small,
+  .rundeckInfraFreshness,.rundeckUnifiedAnalysisProvenance span,
+  .rundeckInfraTrendStats span,.rundeckInfraLegend){
+  color:#475569!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid article{
+  background:#fff!important;border-color:#dde3ea!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid th{
+  background:#eef2f7!important;color:#475569!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid td{
+  color:#243347!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraChartWrap svg{
+  background:#f8fafc!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfra .is-normal{
+  color:#087f55!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfra .is-attention{
+  color:#976111!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-unified-app .rundeckInfra .is-critical{
+  color:#b42336!important;
+}
+
+/* Adaptive sizes: no horizontal spillover and a usable nested scroll region. */
+@media(max-width:1100px){
+  .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisGrid{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+@media(max-width:640px){
+  .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraGrid article{
+    grid-column:1!important;
+    max-height:190px!important;
+  }
+  .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane .rundeckInfraTrendStats{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(prefers-reduced-motion:reduce),print{
+  html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
+  html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button{
+    transition:none!important;
+  }
+}

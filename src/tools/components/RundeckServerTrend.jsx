@@ -183,6 +183,15 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const optionSchemaRef = React.useRef('')
   const [manualFocus, setManualFocus] = React.useState({ scope: '', host: null })
   const reduceMotion = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
+  // Recompute ECharts color tokens on a theme toggle. No network fetch or timer.
+  const [themeRevision, setThemeRevision] = React.useState(0)
+  React.useEffect(() => {
+    const observer = new MutationObserver((records) => {
+      if (records.some(record => record.attributeName === 'data-theme')) setThemeRevision(value => value + 1)
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
   const hosts = React.useMemo(() => Array.from(new Set((trend?.items || []).map(row => row.host))).sort(), [trend])
   const hostLabels = React.useMemo(() => hosts.map(shortHost), [hosts])
   const hostColors = palette().series
@@ -265,7 +274,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       }
       })
     }
-  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, trend])
+  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, trend, themeRevision])
 
   // ECharts stays mounted while focus and stored samples update. No chart loop.
   // The latest handler is read at click-time, not captured by the mount effect.

@@ -188,3 +188,13 @@ Only update screenshot baselines after manual review. Do not update snapshots me
 - Coarse pointers receive no hover translation, `prefers-reduced-motion: reduce` and print disable transitions and backdrop animations. Keyboard focus continues to expose the action.
 - Production release candidate PR #49 is pinned to v1.34.83; this v1.34.84 DEV-only change does not mutate that PR or PROD.
 - QA must pass before the optional gated DEV web-only rollout; run `bash ops/rundeck/release-ui-dev.sh <exact-v1.34.84-source-sha>` on JAHSVR-SPHERE. Run full QA/build because frontend files changed, not artifact reuse.
+
+
+## v1.34.85 — Cloudflare-inspired LIGHT theme, analysis geometry and status evidence
+
+- Light palette resolved at `.logV2Inner`, which previously shadowed root light tokens with dark values. Neutral white/f8fafc surfaces, dark text, accessible green/amber/red status semantics; Dark theme remains unchanged.
+- APP cards explicitly distinguish `SAP · STATE` and `Infra FS ...` with independent source timestamps. These labels do not merge health evidence.
+- Unified modal uses 45/55 SAP/Infrastructure grid on desktop; Infrastructure pane has independent full-width snapshot and history bands and wrapped Network/Storage numeric columns. Mobile stacks the bands.
+- ECharts palette recomputes on the html `data-theme` attribute event; no data polling, root-cause inference, or fabricated metrics.
+- Browser regression covers light/dark four project viewports and APP2 modal geometry. Screenshots and manual light/dark inspection still needed after guarded DEV deploy.
+- This version only targets `rundeck-sphere-dev`; PROD and PR #49 are not promoted.

@@ -285,3 +285,80 @@ test('v1.34.84 reduced-motion keeps APP interaction and modal accessible with ze
  await page.keyboard.press('Escape')
  await expect(modal).toHaveCount(0)
 })
+
+// v1.34.85 Theme-specific visual contracts: real browser layout, no fabricated SAP data.
+test('v1.34.85 Cloudflare-inspired light tokens, table contrast and six cards are bounded',async ({page})=>{
+  await openCockpit(page)
+  await page.evaluate(()=>document.documentElement.setAttribute('data-theme','light'))
+  const metrics=await page.evaluate(()=>{
+    const root=document.querySelector('.logV2Inner:has(.rundeckPanel)')
+    const style=getComputedStyle(root)
+    const cards=[...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckEvidenceCard,.rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')]
+    const rows=[...document.querySelectorAll('.rundeckCurrentWorkloadTableWrap tbody tr')]
+    return {
+      page:style.getPropertyValue('--sphere-page').trim(),text:style.getPropertyValue('--sphere-text').trim(),
+      surface:getComputedStyle(document.querySelector('.rundeckUnifiedAppCard')).backgroundColor,
+      count:cards.length,rows:rows.length,
+      widthOverflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+      cards:cards.map(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom}})
+    }
+  })
+  expect(metrics.page).toBe('#f8fafc')
+  expect(metrics.text).toBe('#111827')
+  expect(metrics.surface).toBe('rgb(255, 255, 255)')
+  expect(metrics.count).toBe(6)
+  expect(metrics.widthOverflow).toBeLessThanOrEqual(2)
+  for(let i=0;i<metrics.count;i++){
+    const a=metrics.cards[i]
+    expect(a.left).toBeGreaterThanOrEqual(-1)
+    expect(a.right).toBeLessThanOrEqual(page.viewportSize().width+1)
+    for(let j=i+1;j<metrics.count;j++){
+      const b=metrics.cards[j]
+      expect(Math.min(a.right,b.right)-Math.max(a.left,b.left)>2&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2).toBe(false)
+    }
+  }
+})
+test('v1.34.85 dark theme retains dark tokens and independent status labels',async ({page})=>{
+  await openCockpit(page)
+  await page.evaluate(()=>document.documentElement.setAttribute('data-theme','dark'))
+  const metrics=await page.evaluate(()=>{
+    const style=getComputedStyle(document.querySelector('.logV2Inner:has(.rundeckPanel)'))
+    return {page:style.getPropertyValue('--sphere-page').trim(),
+      card:getComputedStyle(document.querySelector('.rundeckUnifiedAppCard')).backgroundColor,
+      label:document.querySelector('.rundeckUnifiedAppCardTop em')?.textContent||'',
+      infra:document.querySelector('.rundeckUnifiedAppCardInfra small')?.textContent||''}
+  })
+  expect(metrics.page).not.toBe('#f8fafc')
+  expect(metrics.card).not.toBe('rgb(255, 255, 255)')
+  expect(metrics.label).toMatch(/SAP · /)
+  expect(metrics.infra).toMatch(/Infra FS /)
+})
+test('v1.34.85 APP modal infrastructure snapshot and history fit panel width',async ({page},testInfo)=>{
+  if(testInfo.project.name!=='desktop-1536') test.skip()
+  await openCockpit(page)
+  await page.evaluate(()=>document.documentElement.setAttribute('data-theme','light'))
+  const app=page.locator('.rundeckUnifiedAppCard').nth(1)
+  await app.click()
+  const modal=page.getByRole('dialog',{name:/APP2 Analysis/})
+  await expect(modal).toBeVisible()
+  const pane=modal.locator('.rundeckUnifiedAnalysisPane').nth(1)
+  await expect(pane.locator('.rundeckInfraGrid')).toBeVisible({timeout:30000})
+  await expect(pane.locator('.rundeckInfraTrendWorkspace')).toBeVisible()
+  const boxes=await pane.evaluate(el=>{
+    const snap=el.querySelector('.rundeckInfraCurrent')?.getBoundingClientRect()
+    const history=el.querySelector('.rundeckInfraTrendWorkspace')?.getBoundingClientRect()
+    const grid=el.querySelector('.rundeckInfraGrid')?.getBoundingClientRect()
+    const chart=el.querySelector('.rundeckInfraChartWrap svg')?.getBoundingClientRect()
+    const pane=el.getBoundingClientRect()
+    return {pane:{left:pane.left,right:pane.right},snap:{top:snap.top,bottom:snap.bottom,left:snap.left,right:snap.right},
+      history:{top:history.top,left:history.left,right:history.right},grid:{left:grid.left,right:grid.right},
+      chart:chart&&{left:chart.left,right:chart.right}}
+  })
+  expect(boxes.history.top).toBeGreaterThanOrEqual(boxes.snap.bottom-2)
+  expect(boxes.snap.left).toBeGreaterThanOrEqual(boxes.pane.left-2)
+  expect(boxes.grid.right).toBeLessThanOrEqual(boxes.pane.right+2)
+  expect(boxes.history.right).toBeLessThanOrEqual(boxes.pane.right+2)
+  if(boxes.chart) expect(boxes.chart.right).toBeLessThanOrEqual(boxes.pane.right+2)
+  await modal.getByRole('button',{name:'Close analysis'}).click()
+  await expect(modal).toHaveCount(0)
+})

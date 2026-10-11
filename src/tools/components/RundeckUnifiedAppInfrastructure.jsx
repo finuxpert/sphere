@@ -90,7 +90,7 @@ export default function RundeckUnifiedAppInfrastructure({
             ...host, infraHost: infra.infra?.host || '',
           }) }}
           title={'Open ' + key + ' SAP and Infrastructure analysis · SAP ' + sapState + ' · Infrastructure ' + infra.state}>
-          <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
+          <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>SAP · {sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
             <span>CPU <strong>{metric(host.cpu_pct, '%')}</strong></span>
             <span>RAM <strong>{metric(host.ram_pct, '%')}</strong></span>
@@ -98,7 +98,7 @@ export default function RundeckUnifiedAppInfrastructure({
             <span>WP <strong>{metric(host.wp_critical)}</strong></span>
           </span>
           <span className="rundeckUnifiedAppCardInfra">
-            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>FS {infra.topFs?.mount_point || '—'} · {infra.freshness}</small>
+            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>Infra FS {infra.topFs?.mount_point || '—'} · {infra.freshness}</small>
             <strong className={'is-' + infra.state.toLowerCase()}>
               {infra.topFs ? (infra.freshness === 'FRESH' ? '' : 'Last ') + metric(infra.topFs.used_pct, '%') : '—'}
             </strong>
