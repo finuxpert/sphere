@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts } from '../../src/tools/components/rundeckUnifiedHost.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
@@ -72,4 +73,11 @@ test('missing SAP metrics cannot be labelled NORMAL',()=>{
   assert.equal(appSignalState({},true),'UNKNOWN')
   assert.equal(appSignalState({cpu_pct:null,ram_pct:null,io_wait_pct:null,wp_critical:null},true),'UNKNOWN')
   assert.equal(appSignalState({cpu_pct:12},true),'NORMAL')
+})
+
+test('Infrastructure trend controls use scoped memoized history without an obsolete setTrend setter',()=>{
+  const source = readFileSync(new URL('../../src/tools/components/RundeckInfrastructure.jsx',import.meta.url),'utf8')
+  assert.match(source,/const trend=React\.useMemo\(\(\)=>trendData\.scope===trendScope\?trendData\.items:\[\],\[trendData,trendScope\]\)/)
+  assert.doesNotMatch(source,/\bsetTrend\s*\(/)
+  assert.match(source,/onClick=\{\(\)=>\{setTrendMetric\(v\);setSelectedSeries\(''\)\}\}/)
 })
