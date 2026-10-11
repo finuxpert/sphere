@@ -26,6 +26,10 @@ export default defineConfig({
       use: { viewport: { width: 1920, height: 1080 } },
     },
     {
+      name: 'desktop-1536',
+      use: { viewport: { width: 1536, height: 864 } },
+    },
+    {
       name: 'laptop-1366',
       use: { viewport: { width: 1366, height: 768 } },
     },
