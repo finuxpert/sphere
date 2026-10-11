@@ -120,7 +120,7 @@ const checks = [
     files.cockpitPolish.includes('.rundeckTripleTrendGrid .rundeckTrendChart') &&
     files.cockpitPolish.includes('.rundeckWorkspaceDrawer.is-system-data') &&
     !/animation(?:-iteration-count)?:[^;\n]*\binfinite\b/.test(files.operatorMotion + '\n' + files.cockpitPolish) &&
-    files.serverTrend.includes('animationDuration: reduceMotion ? 0 : 560') &&
+    files.serverTrend.includes('animationDuration: reduceMotion ? 0 : 300') &&
     files.serverTrend.includes('animationDurationUpdate: reduceMotion ? 0 : 200') &&
     files.serverTrend.includes('window.matchMedia?.') &&
     files.workspaceDrawer.includes('aria-modal={isModal}') &&
