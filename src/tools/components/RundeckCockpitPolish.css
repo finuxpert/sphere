@@ -51,11 +51,6 @@
   .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 {
     margin: 1px 0 !important;
   }
-  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
-  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button {
-    min-height: 39px !important;
-    height: 39px !important;
-  }
   .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace {
     display: flex !important;
     flex-direction: column;
@@ -124,10 +119,6 @@
     transform 160ms ease-out !important;
 }
 @media (hover: hover) and (pointer: fine) {
-  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 button:not(:disabled):hover {
-    transform: translateY(-2px);
-    background: rgba(79,198,200,.055) !important;
-  }
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr:hover {
     box-shadow: inset 2px 0 0 rgba(79,198,200,.45);
   }
