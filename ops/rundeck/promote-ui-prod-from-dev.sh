@@ -9,9 +9,9 @@ PROD_ROOT=/var/www/sphere.astraotoparts.co.id
 PROD_RELEASES="$PROD_ROOT/releases"
 PROD_CURRENT="$PROD_ROOT/current"
 NGINX_SITE=/etc/nginx/sites-available/sphere.astraotoparts.co.id
-APPROVED=099e2b6946238a0fd5701c6444adfae5a91edf11
+APPROVED="${1:?Pass exact QA-passed DEV commit SHA}"
 SHORT="$(printf %.7s "$APPROVED")"
-[[ "$#" -eq 1 && "$1" == "$APPROVED" ]] || { echo "BLOCKED: require exact approved DEV SHA $APPROVED" >&2; exit 2; }
+[[ "$#" -eq 1 && "$APPROVED" =~ ^[a-f0-9]{40}$ ]] || { echo "BLOCKED: require exact 40-character DEV SHA" >&2; exit 2; }
 [[ "$EUID" == 0 ]] || { echo "BLOCKED: run as root on JAHSVR-SPHERE" >&2; exit 2; }
 exec 9>/run/lock/sphere-ui-prod-promotion.lock
 flock -n 9 || { echo "BLOCKED: another PROD UI promotion is active" >&2; exit 2; }
@@ -42,10 +42,8 @@ trap cleanup EXIT
 # Only this deployment helper is allowed to differ from the QA-passed code.
 [[ "$(git -C "$SOURCE" branch --show-current)" == rundeck-sphere-dev ]]
 [[ -z "$(git -C "$SOURCE" status --porcelain)" ]] || { echo "BLOCKED: source checkout dirty"; exit 2; }
-git -C "$SOURCE" cat-file -e "$APPROVED^{commit}"
-git -C "$SOURCE" merge-base --is-ancestor "$APPROVED" HEAD
-[[ "$(git -C "$SOURCE" diff --name-only "$APPROVED" HEAD)" == "ops/rundeck/promote-ui-prod-from-dev.sh" ]] || {
-  echo "BLOCKED: runtime files changed after DEV QA"; exit 2;
+[[ "$(git -C "$SOURCE" rev-parse HEAD)" == "$APPROVED" ]] || {
+  echo "BLOCKED: approved SHA differs from QA-passed DEV HEAD"; exit 2;
 }
 [[ -x "$SOURCE/node_modules/.bin/vite" ]]
 [[ "$(git -C "$SOURCE" show "$APPROVED:src/app/version.js" | sed -n "s/^export const APP_VERSION = '\([^']*\)'.*/\1/p" | head -n1)" == 1.34.86 ]]

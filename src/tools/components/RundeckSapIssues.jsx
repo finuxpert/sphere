@@ -40,6 +40,7 @@ function Status({ value }) {
 export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null }) {
   const [data, setData] = React.useState({ incidents:null, hosts:null, availability:null, readiness:null })
   const [error, setError] = React.useState('')
+  const [indicatorView, setIndicatorView] = React.useState('review')
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -107,6 +108,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
   const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
   const mostImpacted=reviewIndicators.find((row)=>/^APP\d+$/i.test(row.scope||''))?.scope || '—'
+  const visibleIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
 
   if(compact){
     const reviewText=reviewIndicators.length ? `${reviewIndicators.length} observations need review` : 'No SAP issue observation'
@@ -132,17 +134,26 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     </div>
 
     <section className="rundeckIssueIndicatorSection">
-      <div className="rundeckIssueSectionTitle"><h4>Current Indicator Status</h4><small>CPU · RAM · I/O Wait · Critical WP · Availability · HANA · Web · SSH · SM37</small></div>
-      <div className="rundeckIssueIndicatorTableWrap">
+      <div className="rundeckIssueSectionTitle">
+        <h4>Current Indicator Status</h4>
+        <div className="rundeckIssueViewSwitch" role="group" aria-label="Indicator view">
+          <button type="button" aria-pressed={indicatorView==='review'} onClick={()=>setIndicatorView('review')}>Needs review ({reviewIndicators.length})</button>
+          <button type="button" aria-pressed={indicatorView==='all'} onClick={()=>setIndicatorView('all')}>All indicators ({indicators.length})</button>
+        </div>
+      </div>
+      {sm37!=='READY'&&<p className="rundeckIssueSourceNote">SM37 feed not connected. Verify job execution status directly in SAP (SM37).</p>}
+      {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">No abnormal indicators in the latest available checks. Verify freshness before treating this as current status.</p>}
+      {visibleIndicators.length>0&&<div className="rundeckIssueIndicatorTableWrap">
         <table className="rundeckIssueIndicatorTable">
           <thead><tr><th>Scope</th><th>Indicator</th><th>Status</th><th>Current</th><th>Basis Check</th></tr></thead>
           <tbody>
-            {sortedIndicators.map((row,index)=><tr key={`${row.scope}-${row.indicator}-${index}`} className={row.host?'is-investigable':''} onClick={row.host?()=>inspect(row):undefined}>
-              <td><strong>{row.scope}</strong></td><td>{row.indicator}</td><td><Status value={row.status}/></td><td>{row.current}</td><td>{row.reason}</td>
+            {visibleIndicators.map((row,index)=><tr key={`${row.scope}-${row.indicator}-${index}`} className={row.host?'is-investigable':''}>
+              <td>{row.host ? <button type="button" className="rundeckIssueInspect" onClick={()=>inspect(row)} aria-label={`Inspect ${row.scope} ${row.indicator}`}>{row.scope} <span aria-hidden="true">↗</span></button> : <strong>{row.scope}</strong>}</td>
+              <td>{row.indicator}</td><td><Status value={row.status}/></td><td>{row.current}</td><td>{row.reason}</td>
             </tr>)}
           </tbody>
         </table>
-      </div>
+      </div>}
     </section>
 
     {incidentItems.length>0&&<section className="rundeckIssueIndicatorSection is-history">
