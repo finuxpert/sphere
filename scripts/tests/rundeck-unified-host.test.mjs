@@ -67,3 +67,9 @@ test('AOP APP1–APP5 are primary while AOQ remains accessible as another source
   assert.deepEqual(groups.others.map(row=>row.host),['AOQH1PAPPDC'])
   assert.equal(splitInfrastructureHosts([{host:'OTHER'}]).primary.length,1)
 })
+
+test('missing SAP metrics cannot be labelled NORMAL',()=>{
+  assert.equal(appSignalState({},true),'UNKNOWN')
+  assert.equal(appSignalState({cpu_pct:null,ram_pct:null,io_wait_pct:null,wp_critical:null},true),'UNKNOWN')
+  assert.equal(appSignalState({cpu_pct:12},true),'NORMAL')
+})
