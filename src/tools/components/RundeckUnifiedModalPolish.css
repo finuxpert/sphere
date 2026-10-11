@@ -314,19 +314,12 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
     white-space:normal;
     touch-action:manipulation;
   }
-  /* Keep all six launcher surfaces in distinct grid tracks even on touch. */
-  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{
-    width:100%!important;
-    min-width:0!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  /* A single column preserves all three groups on touch devices. */
+  .appShell:has(.rundeckPanel) .rundeckAnalysisGroups{
+    grid-template-columns:1fr!important;width:100%;min-width:0;
   }
-  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 :is(
-    .rundeckEvidenceCard,.rundeckSelectedSecondaryAnalysis>button
-  ){
-    width:100%!important;
-    min-width:0!important;
-    max-width:100%!important;
-    transform:none!important;
+  .appShell:has(.rundeckPanel) .rundeckAnalysisGroup{
+    width:100%;min-width:0;
   }
 }
 @media(prefers-reduced-motion:reduce),print{
