@@ -171,6 +171,9 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
     .is-evidence,.is-availability,.is-issues,.is-unified-app,.is-wide
   ){
     width:calc(100vw - 12px)!important;
+    /* Mobile analysis is a stable-height dialog: asynchronous evidence must
+       scroll inside it, never recenter the tab target during a tap. */
+    height:calc(100dvh - 16px)!important;
     max-height:calc(100dvh - 16px)!important;
     border-radius:10px!important;
   }

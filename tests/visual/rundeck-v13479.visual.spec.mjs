@@ -2,6 +2,51 @@ import { test, expect } from '@playwright/test'
 
 const TARGET = process.env.SPHERE_VISUAL_BASE_URL || 'https://sphere.astraotoparts.co.id/dev/#/tool/logs'
 
+// Emit actionable actual-DOM geometry only when Playwright has a failed test.
+test.afterEach(async ({ page }, info) => {
+  if (info.status === info.expectedStatus) return
+  try {
+    const geometry = await page.evaluate(() => {
+      const rect = (el) => {
+        if (!el) return null
+        const r = el.getBoundingClientRect()
+        return { x: Math.round(r.x), y: Math.round(r.y),
+          w: Math.round(r.width), h: Math.round(r.height) }
+      }
+      const dialog = document.querySelector('.rundeckWorkspaceDrawer')
+      const nav = dialog?.querySelector('.rundeckAnalysisRelatedNav')
+      const cards = [...document.querySelectorAll('.rundeckAnalysisRailV13456 .rundeckEvidenceCard, .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button')]
+      const hit = (el) => {
+        if (!el) return null
+        const r = el.getBoundingClientRect()
+        const x = r.left + r.width / 2, y = r.top + r.height / 2
+        const found = document.elementFromPoint(x, y)
+        return { rect: rect(el), hit: found?.outerHTML?.slice(0, 150) || null }
+      }
+      return {
+        viewport: { innerW: innerWidth, innerH: innerHeight,
+          visualW: visualViewport?.width, visualH: visualViewport?.height,
+          scrollY, clientW: document.documentElement.clientWidth,
+          scrollW: document.documentElement.scrollWidth },
+        dialog: rect(dialog),
+        dialogStyle: dialog ? { height: getComputedStyle(dialog).height,
+          top: getComputedStyle(dialog).top,
+          transform: getComputedStyle(dialog).transform,
+          overflow: getComputedStyle(dialog).overflow } : null,
+        backdrop: rect(document.querySelector('.rundeckWorkspaceModalBackdrop')),
+        header: rect(dialog?.querySelector('header')),
+        navigation: rect(nav),
+        tabs: [...(nav?.querySelectorAll('button') || [])].map(el => ({
+          text: el.textContent, pressed: el.getAttribute('aria-pressed'), ...hit(el) })),
+        cards: cards.map(el => ({ text: el.textContent?.trim().slice(0, 45), ...hit(el) }))
+      }
+    })
+    console.log('VISUAL_GEOMETRY_DEBUG=' + JSON.stringify({ test: info.title, ...geometry }))
+  } catch (err) {
+    console.log('VISUAL_GEOMETRY_DEBUG_ERROR=' + String(err))
+  }
+})
+
 async function openCockpit(page) {
   await page.goto(TARGET, { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.rundeckPanel')).toBeVisible({ timeout: 30_000 })
