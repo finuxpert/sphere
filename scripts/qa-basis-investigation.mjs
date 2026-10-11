@@ -293,7 +293,13 @@ const checks = [
   ['Correlated events use APP Server and Job Program terms', read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'Job / Program'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'APP Server'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes('SAME TIME WINDOW')],
   ['Correlated events can anchor timing to the selected observation', files.evidenceTimeline.includes("params.set('at', anchorAt)") && files.api.includes('anchor_at: str | None = Query(None, alias="at"') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot')],
   ['Issue correlation compares nearest retained observations instead of unrelated latest snapshots', files.evidenceBackend.includes('correlation_anchor') && files.evidenceBackend.includes('Issue Start') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot') && files.evidenceBackend.includes('Timing alignment uses retained timestamps')],
-  ['Current workload count distinguishes observed total from loaded rows while list scrolls', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('observed · showing ${rows.length}') && files.source.includes('compactLimit={50}') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('slice(0, visibleLimit)')],
+  ['Current workload count distinguishes total observations and loaded rows while preserving table scroll',
+    files.currentWorkload.includes('observed · ${rows.length} loaded') &&
+    files.currentWorkload.includes('workloadMeta.total > rows.length') &&
+    files.currentWorkload.includes('const visible = sortedRows.slice(0, visibleLimit)') &&
+    files.currentWorkload.includes('rundeckCurrentWorkloadTableWrap') &&
+    files.source.includes('compactLimit={50}') &&
+    files.cockpitPolish.includes('overflow-y:auto!important')],
   ['Performance summary labels averaged process count and observations precisely', files.jobHistory.includes('Avg Processes') && files.jobHistory.includes('<b>Observations</b>') && files.jobHistory.includes('<b>Checks</b>')],
   ['Closing workflow stores finding recommendation owner and follow-up', files.quickAnalysis.includes('closing_status') && files.quickAnalysis.includes('Analysis Summary') && files.quickAnalysis.includes('Suggested Check') && files.quickAnalysis.includes('Validation / Follow-up')],
   ['Closing API supports get save and history', files.api.includes('@app.get("/analysis/closing")') && files.api.includes('@app.post("/analysis/closing")') && files.api.includes('@app.get("/analysis/closings")')],
@@ -319,7 +325,12 @@ const checks = [
   ['Trend mini history anchors marker to clicked bucket while preserving exact selected value', files.serverTrend.includes("const selectedBucketAt = Date.parse(selected?.bucket || '')") && files.serverTrend.includes('Math.abs(row.at-selectedBucketAt)') && files.serverTrend.includes('const resolvedSelectedValue = Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value') && files.serverTrend.includes('selectedValue:resolvedSelectedValue') && files.serverTrend.includes('<MiniTrendContext')],
   ['Peak tooltip separates aggregation bucket from exact peak timestamp', files.serverTrend.includes('Bucket: ${formatWib(bucketAt, true)} WIB') && files.serverTrend.includes('Peak at ${formatWib(point.data.peakAt, true)} WIB')],
   ['Trend point selection prefers exact ECharts data before nearest-point fallback', files.serverTrend.includes("chart.on('click', exactClick)") && files.serverTrend.includes("chart.getZr().on('click', fallbackClick)") && files.serverTrend.includes('Date.now() - lastExactClickAt < 80')],
-  ['Trend Details header exposes selected value exact sample time and bucket separately', files.serverTrend.includes("selected?.mode === 'max' ? 'Peak at' : 'Observed at'") && files.serverTrend.includes('selected?.bucket ? ` · Bucket')],
+  ['Trend Details header distinguishes historical value, exact observation time and bucket',
+    files.serverTrend.includes('SPHERE ANALYSIS · HISTORICAL OBSERVATION') &&
+    files.serverTrend.includes("selected?.mode === 'max' ? 'Historical peak at' : 'Historical observation at'") &&
+    files.serverTrend.includes("selected?.value == null ? '—'") &&
+    files.serverTrend.includes("formatWib(selected.at, true)") &&
+    files.serverTrend.includes('selected?.bucket ? ` · Bucket')],
   ['Trend Details history mirrors dashboard context with axes thresholds selected marker and peak summary', files.serverTrend.includes('rundeckTrendMiniAxisLabel') && files.serverTrend.includes('Warn ') && files.serverTrend.includes('Crit ') && files.serverTrend.includes('Selected ') && files.serverTrend.includes('Peak ') && files.serverTrend.includes('Actual ') && files.serverTrend.includes('Bucket ')],
   ['Technical Trend points reuse the same Trend Details drilldown', files.serverTrend.includes('renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint)') && files.serverTrend.includes('SelectedTime selected={selected}')],
   ['Infrastructure summary metrics open the existing analysis at requested host metric and series', files.liveOverview.includes("openMetric('filesystem'") && files.liveOverview.includes("openMetric('network'") && files.liveOverview.includes("openMetric('storage'") && files.infrastructure.includes('initialContext.metric') && files.infrastructure.includes('initialContext.series')],
@@ -352,7 +363,14 @@ const checks = [
 
   ['History empty states use stronger intentional visual hierarchy', files.workloadExplorerCss.includes('min-height:235px') && files.workloadExplorerCss.includes('.rundeckExplorerEmptyState strong')],
   ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
-  ['APP analysis and selected job/program contexts are explicitly named', files.wrapper.includes('SAP App Server Analysis') && files.appServerAnalysis.includes('Jobs & Programs on') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
+  ['Unified APP analysis names SAP and Infrastructure while preserving selected job/program context',
+    files.wrapper.includes("shortHost(activeOverlay.app.host) + ' · APP Analysis'") &&
+    files.wrapper.includes('subtitle="SAP Performance · Filesystem · Network · Storage I/O"') &&
+    files.wrapper.includes('size="unified-app"') &&
+    files.unifiedAnalysis.includes('aria-label="SAP performance evidence"') &&
+    files.unifiedAnalysis.includes('aria-label="Infrastructure evidence"') &&
+    files.appServerAnalysis.includes('Jobs & Programs on') &&
+    files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
   ['Observation History defaults to eight rows with explicit expansion', files.observationHistory.includes('rows.slice(0, 8)') && files.observationHistory.includes('View all ${rows.length}')],
   ['Observation History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
   ['Selected job performance opens directly without nested disclosure', files.jobHistory.includes('rundeckJobPerformanceDisclosure is-direct') && !files.jobHistory.includes('className="rundeckJobPerformanceDisclosure" open')],
