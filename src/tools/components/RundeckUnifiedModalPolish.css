@@ -232,17 +232,55 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
     max-width:100%!important;
     overflow-x:auto;
   }
-  /* The backdrop and dialog are anchored to the visual viewport itself.
-     A wider layout viewport must never shift their click targets. */
+  /* The cockpit, trend and workload rows are one-column at phone widths.
+     Intrinsically wide tables/chart data remain scrollable within their pane. */
+  .appShell:has(.rundeckPanel) :is(
+    .rundeckTopBandV13454,.rundeckTrendBandV13454,
+    .rundeckBottomBandV13454,.rundeckTripleTrendGrid,
+    .rundeckJobsProgramsWorkspaceBody
+  ){
+    grid-template-columns:minmax(0,1fr)!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .appShell:has(.rundeckPanel) :is(
+    .rundeckTopBandV13454,.rundeckTrendBandV13454,
+    .rundeckBottomBandV13454,.rundeckTripleTrendGrid,
+    .rundeckJobsProgramsWorkspaceBody
+  )>*{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .appShell:has(.rundeckPanel) :is(
+    .rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231,
+    .rundeckServerTableWrap,.rundeckTrendChart
+  ){
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .appShell:has(.rundeckPanel) :is(
+    .rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231,
+    .rundeckServerTableWrap
+  ){
+    overflow-x:auto!important;
+  }
+  /* A single positioned visual-viewport surface is the shared containing
+     block for both the backdrop and the dialog. Nested FIXED positioning
+     previously shifted vertically on mobile when viewport/layout differed. */
   .rundeckWorkspacePortal{
-    width:100vw;
-    height:100dvh;
-    right:auto;
-    bottom:auto;
+    inset:auto!important;
+    top:var(--sphere-dialog-viewport-y,0px)!important;
+    left:var(--sphere-dialog-viewport-x,0px)!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:var(--sphere-dialog-viewport-w,100vw)!important;
+    height:var(--sphere-dialog-viewport-h,100dvh)!important;
   }
   .rundeckWorkspacePortal>.rundeckWorkspaceModalBackdrop{
-    width:100vw;
-    height:100dvh;
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(
     .is-menu,.is-performance,.is-observation-history,.is-system-data,
@@ -251,10 +289,11 @@ html[data-theme="light"] .rundeckAnalysisRelatedNav button[aria-pressed="true"]{
     width:calc(100vw - 12px)!important;
     /* Mobile analysis is a stable-height dialog: asynchronous evidence must
        scroll inside it, never recenter the tab target during a tap. */
-    height:min(calc(100dvh - 16px),calc(var(--sphere-dialog-viewport-h,100dvh) - 16px))!important;
-    max-height:min(calc(100dvh - 16px),calc(var(--sphere-dialog-viewport-h,100dvh) - 16px))!important;
-    left:var(--sphere-dialog-center-x,50vw)!important;
-    top:var(--sphere-dialog-center-y,50dvh)!important;
+    position:absolute!important;
+    height:calc(100% - 16px)!important;
+    max-height:calc(100% - 16px)!important;
+    left:50%!important;
+    top:50%!important;
     border-radius:10px!important;
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{

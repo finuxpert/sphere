@@ -16,8 +16,9 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
       const width = vp?.width || document.documentElement.clientWidth
       const height = vp?.height || document.documentElement.clientHeight
       if (!(width > 0 && height > 0)) return
-      root.style.setProperty('--sphere-dialog-center-x', `${(vp?.offsetLeft || 0) + width / 2}px`)
-      root.style.setProperty('--sphere-dialog-center-y', `${(vp?.offsetTop || 0) + height / 2}px`)
+      root.style.setProperty('--sphere-dialog-viewport-x', `${vp?.offsetLeft || 0}px`)
+      root.style.setProperty('--sphere-dialog-viewport-y', `${vp?.offsetTop || 0}px`)
+      root.style.setProperty('--sphere-dialog-viewport-w', `${width}px`)
       root.style.setProperty('--sphere-dialog-viewport-h', `${height}px`)
     }
     updateViewport()

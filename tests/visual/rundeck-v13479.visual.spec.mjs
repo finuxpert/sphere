@@ -29,6 +29,12 @@ test.afterEach(async ({ page }, info) => {
           scrollY, clientW: document.documentElement.clientWidth,
           scrollW: document.documentElement.scrollWidth },
         dialog: rect(dialog),
+        portal: rect(document.querySelector('.rundeckWorkspacePortal')),
+        viewportVars: document.querySelector('.rundeckWorkspacePortal') ? {
+          x:getComputedStyle(document.querySelector('.rundeckWorkspacePortal')).getPropertyValue('--sphere-dialog-viewport-x').trim(),
+          y:getComputedStyle(document.querySelector('.rundeckWorkspacePortal')).getPropertyValue('--sphere-dialog-viewport-y').trim(),
+          h:getComputedStyle(document.querySelector('.rundeckWorkspacePortal')).getPropertyValue('--sphere-dialog-viewport-h').trim()
+        } : null,
         dialogStyle: dialog ? { height: getComputedStyle(dialog).height,
           top: getComputedStyle(dialog).top,
           transform: getComputedStyle(dialog).transform,
