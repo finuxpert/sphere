@@ -15,11 +15,11 @@ const sourceStatus = (value) => String(value || 'UNKNOWN').toUpperCase()
 
 export function assessRundeckDataQuality({
   latest = null, health = null, platform = null, availability = null,
-  refreshFailed = false, nowMs = Date.now(),
+  refreshFailed = false, availabilityFetchFailed = false, nowMs = Date.now(),
 } = {}) {
   const collector = platform?.collector || {}
   const performanceAt = observedMs(latest?.finished_at || latest?.collection_time_wib, nowMs)
-  const availabilityAt = observedMs(availability?.collected_at, nowMs)
+  const availabilityAt = availabilityFetchFailed ? null : observedMs(availability?.collected_at, nowMs)
   const performanceAgeMs = performanceAt === null ? null : Math.max(0, nowMs - performanceAt)
   const availabilityAgeMs = availabilityAt === null ? null : Math.max(0, nowMs - availabilityAt)
   const poller = sourceStatus(collector.poller_status)

@@ -153,7 +153,7 @@ export default function RundeckMonitoringHistory(props) {
             onInspectApp={inspectApp}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
-          <RundeckSystemHealth refreshToken={refreshToken} sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} />
+          <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
 
           {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
             title="Analysis Menu"

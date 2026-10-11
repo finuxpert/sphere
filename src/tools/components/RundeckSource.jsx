@@ -125,6 +125,7 @@ export default function RundeckSource({ onCollection }) {
   const [hostSnapshot, setHostSnapshot] = React.useState(null)
   const [history, setHistory] = React.useState([])
   const [metaRefreshFailed, setMetaRefreshFailed] = React.useState(false)
+  const [availabilityRefreshFailed, setAvailabilityRefreshFailed] = React.useState(false)
   const [historyRefreshFailed, setHistoryRefreshFailed] = React.useState(false)
   const [runState, setRunState] = React.useState({ enabled: false, allowed: false })
   const [error, setError] = React.useState('')
@@ -207,7 +208,7 @@ export default function RundeckSource({ onCollection }) {
       json(`${API}/availability/latest`),
     ])
 
-    setMetaRefreshFailed(healthResult.status !== 'fulfilled' || platformResult.status !== 'fulfilled')
+    setMetaRefreshFailed(healthResult.status !== 'fulfilled' || platformResult.status !== 'fulfilled' || hostsResult.status !== 'fulfilled')
     if (healthResult.status === 'fulfilled') setHealth(healthResult.value)
     if (hostsResult.status === 'fulfilled') {
       setHosts(hostsResult.value.items || [])
@@ -217,7 +218,8 @@ export default function RundeckSource({ onCollection }) {
     if (historyResult.status === 'fulfilled') setHistory(historyResult.value.items || [])
     if (runResult.status === 'fulfilled') setRunState(runResult.value)
     if (platformResult.status === 'fulfilled') setPlatform(platformResult.value)
-    if (availabilityResult.status === 'fulfilled') setAvailabilitySnapshot(availabilityResult.value)
+    setAvailabilityRefreshFailed(availabilityResult.status !== 'fulfilled')
+    setAvailabilitySnapshot(availabilityResult.status === 'fulfilled' ? availabilityResult.value : null)
   }, [])
 
   const refreshAll = React.useCallback(async () => {
@@ -703,23 +705,24 @@ export default function RundeckSource({ onCollection }) {
   ].filter(Boolean).join(' · ')
   const appCount = latest?.received_hosts?.length || operationalHosts.length || 0
   const incidentStart = incidentSummary?.signal_active_since || incidentSummary?.detected_since || ''
-  const latestCollectionAt = latest?.collection_time_wib || latest?.finished_at || ''
-  const performanceTs = Date.parse(latestCollectionAt || '')
-  const availabilityTs = Date.parse(availabilitySnapshot?.collected_at || '')
-  const sourceSkewMinutes = Number.isFinite(performanceTs) && Number.isFinite(availabilityTs)
-    ? Math.round(Math.abs(performanceTs - availabilityTs) / 60000)
-    : null
-  const performanceAgeMinutes = ageMinutes(latestCollectionAt)
-  const availabilityAgeMinutes = ageMinutes(availabilitySnapshot?.collected_at)
-  const availabilityStale = availabilityAgeMinutes !== null && availabilityAgeMinutes >= 20
-  const performanceStale = Boolean(health?.rundeck_stale) || (performanceAgeMinutes !== null && performanceAgeMinutes >= 15)
-  const dataAlignment = collectionAligned && sourceSkewMinutes !== null && sourceSkewMinutes <= 15 && !performanceStale && !availabilityStale
-    ? 'ALIGNED'
-    : 'PARTIAL'
+  const latestCollectionAt = latest?.finished_at || latest?.collection_time_wib || ''
   const quality = assessRundeckDataQuality({
     latest, health, platform, availability: availabilitySnapshot,
     refreshFailed: Boolean(error) || metaRefreshFailed || !collectionAligned,
+    availabilityFetchFailed: availabilityRefreshFailed,
   })
+  const performanceTs = quality.performanceAt
+  const availabilityTs = quality.availabilityAt
+  const sourceSkewMinutes = Number.isFinite(performanceTs) && Number.isFinite(availabilityTs)
+    ? Math.round(Math.abs(performanceTs - availabilityTs) / 60000)
+    : null
+  const performanceAgeMinutes = quality.performanceAgeMs == null ? null : Math.floor(quality.performanceAgeMs / 60000)
+  const availabilityAgeMinutes = quality.availabilityAgeMs == null ? null : Math.floor(quality.availabilityAgeMs / 60000)
+  const availabilityStale = !quality.availabilityValid
+  const performanceStale = !quality.performanceValid
+  const dataAlignment = collectionAligned && sourceSkewMinutes !== null && sourceSkewMinutes <= 15 && !performanceStale && !availabilityStale
+    ? 'ALIGNED'
+    : 'PARTIAL'
   const recentGap = retainedReadyCollectionGaps(history)[0] || null
   const qualityDisplay = quality.state === 'FRESH' ? (historyRefreshFailed ? 'PARTIAL' : dataAlignment) : quality.state
   const freshnessSummary = `Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}`
@@ -731,6 +734,7 @@ export default function RundeckSource({ onCollection }) {
     sourceSkewMinutes === null ? 'time difference unknown' : `time difference ${sourceSkewMinutes}m`,
     freshnessWarning ? 'some source evidence is stale, missing or not comparable' : 'data times are aligned',
     `Data quality ${quality.state} · poller ${quality.poller} · watchdog ${quality.watchdog}`,
+    availabilityRefreshFailed ? 'Availability refresh failed (unverified)' : 'Availability response received',
     historyRefreshFailed ? 'retained history unverified' : recentGap ? `Retained READY gap ${dataGapDuration(recentGap.observedSpacingMs)} between observations` : 'no recent retained READY gap in fetched history',
     runState.running ? `collection running #${runState.execution_id || '—'} (not committed)` : 'no collection currently running',
   ].join(' · ')
@@ -824,6 +828,8 @@ export default function RundeckSource({ onCollection }) {
       latestCollectionAt={latestCollectionAt}
       sourceQuality={quality}
       sourceCollector={platform?.collector || null}
+      sourceHosts={operationalHosts}
+      sourceAvailability={availabilitySnapshot}
       onTrendContext={setTrendContext}
       systemDataSummary={`${collectionCount} runs · ${partialCount} partial · ${failedCount} failed · ${serviceSummary}`}
       systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} />}
