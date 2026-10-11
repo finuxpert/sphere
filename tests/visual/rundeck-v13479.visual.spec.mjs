@@ -62,6 +62,14 @@ test.afterEach(async ({ page }, info) => {
           })
       }
     })
+    console.log('VISUAL_FAIL_BRIEF=' + JSON.stringify({
+      test: info.title,
+      viewport: geometry.viewport,
+      dialog: geometry.dialog,
+      portal: geometry.portal,
+      viewportVars: geometry.viewportVars,
+      overflowOffenders: geometry.overflowOffenders.slice(0, 8)
+    }))
     console.log('VISUAL_GEOMETRY_DEBUG=' + JSON.stringify({ test: info.title, ...geometry }))
   } catch (err) {
     console.log('VISUAL_GEOMETRY_DEBUG_ERROR=' + String(err))

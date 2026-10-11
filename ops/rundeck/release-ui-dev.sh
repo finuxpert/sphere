@@ -101,7 +101,7 @@ SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
   --grep 'v1\.34\.(83|84|85|86)' --workers=2 --reporter=line \
   > /tmp/sphere-ui-v13486-visual.log 2>&1 || {
   echo "VISUAL=FAIL"
-  grep -E 'VISUAL_GEOMETRY_DEBUG=|VISUAL_GEOMETRY_DEBUG_ERROR=|Error:|Expected:|Received:|[0-9]+ failed' /tmp/sphere-ui-v13486-visual.log | tail -n 45 || true
+  grep -E 'VISUAL_FAIL_BRIEF=|VISUAL_GEOMETRY_DEBUG_ERROR=|Error:|Expected:|Received:|[0-9]+ failed' /tmp/sphere-ui-v13486-visual.log | tail -n 45 || true
   tail -n 55 /tmp/sphere-ui-v13486-visual.log
   exit 1;
 }
