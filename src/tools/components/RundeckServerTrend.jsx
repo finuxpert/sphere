@@ -818,7 +818,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
         <span>APP Focus</span>
-        {selectedJob?.host && shortHost(selectedJob.host) !== (shortHost(focusedHost) || '') && <small className="rundeckTrendFocusIdentity">Job host {shortHost(selectedJob.host)} · Chart focus {shortHost(focusedHost) || 'All'}</small>}
+        {selectedJob?.host && shortHost(selectedJob.host) !== (shortHost(focusedHost) || '') && <small className="rundeckTrendFocusIdentity">Job {shortHost(selectedJob.host)} · Focus {shortHost(focusedHost) || 'All'}</small>}
         <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
           <button type="button" aria-pressed={!activeFocus} className={!activeFocus ? 'is-focused' : ''} onClick={() => onFocusHost?.('')}>All</button>
           {focusOptions.map((label, index) => <button key={label} type="button"

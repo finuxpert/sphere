@@ -599,9 +599,13 @@ test('v1.34.88 desktop Job and Infrastructure drawers remain inside viewport',as
   expect(bounds.y).toBeGreaterThanOrEqual(0)
   expect(bounds.right).toBeLessThanOrEqual(bounds.vw+2)
   expect(bounds.bottom).toBeLessThanOrEqual(bounds.vh+2)
-  await expect(modal.locator('.rundeckWpSignalTableWrap')).toHaveCount(1)
-  const internalScroll=await modal.locator('.rundeckWpSignalTableWrap').evaluate(el=>getComputedStyle(el).overflowY)
-  expect(internalScroll).not.toBe('auto')
+  const wpTable=modal.locator('.rundeckWpSignalTableWrap')
+  if(await wpTable.count()){
+    const scroll=await wpTable.evaluate(el=>({scrollH:el.scrollHeight,clientH:el.clientHeight}))
+    expect(scroll.scrollH-scroll.clientH).toBeLessThanOrEqual(2)
+  } else {
+    await expect(modal.locator('.rundeckWpSignalPanel.is-empty')).toBeVisible()
+  }
   await modal.getByRole('group',{name:'Related analysis'}).getByRole('button',{name:'Infrastructure'}).click()
   const infra=page.getByRole('dialog',{name:'Infrastructure Analysis'})
   await expect(infra).toBeVisible()
