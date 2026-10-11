@@ -181,13 +181,14 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const chartRef = React.useRef(null)
   const activeCallbackRef = React.useRef(null)
   const optionSchemaRef = React.useRef('')
-  const [manualHost, setManualHost] = React.useState(null)
+  const [manualFocus, setManualFocus] = React.useState({ scope: '', host: null })
   const reduceMotion = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
   const hosts = React.useMemo(() => Array.from(new Set((trend?.items || []).map(row => row.host))).sort(), [trend])
   const hostLabels = React.useMemo(() => hosts.map(shortHost), [hosts])
   const hostColors = palette().series
+  const focusScope = `${trend?.display_metric || trend?.metric || ''}:${range}`
+  const manualHost = manualFocus.scope === focusScope ? manualFocus.host : null
   const focusedHost = resolveTrendFocus(manualHost, shortHost(selectedHost || ''), hostLabels)
-  React.useEffect(() => { setManualHost(null) }, [trend?.metric, range])
   const option = React.useMemo(() => {
     const colors = palette()
     const rows = trend?.items || []
@@ -267,7 +268,9 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
 
   // ECharts stays mounted while focus and stored samples update. No chart loop.
   // The latest handler is read at click-time, not captured by the mount effect.
-  activeCallbackRef.current = { onSelect, trend, mode, option }
+  React.useEffect(() => {
+    activeCallbackRef.current = { onSelect, trend, mode, option }
+  }, [onSelect, trend, mode, option])
 
   React.useEffect(() => {
     if (!ref.current) return undefined
@@ -348,13 +351,13 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
 
   return <div className="rundeckTrendPlot">
     <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
-      <button type="button" aria-pressed={!focusedHost} className={!focusedHost ? 'is-focused' : ''} onClick={() => setManualHost('')}>All</button>
+      <button type="button" aria-pressed={!focusedHost} className={!focusedHost ? 'is-focused' : ''} onClick={() => setManualFocus({ scope: focusScope, host: '' })}>All</button>
       {hosts.map((host, index) => {
         const label = shortHost(host)
         return <button key={host} type="button" aria-pressed={focusedHost === label}
           className={focusedHost === label ? 'is-focused' : ''}
           style={{ '--trend-host-color': hostColors[index % hostColors.length] }}
-          onClick={() => setManualHost(focusedHost === label ? '' : label)}>
+          onClick={() => setManualFocus({ scope: focusScope, host: focusedHost === label ? '' : label })}>
           <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
         </button>
       })}
