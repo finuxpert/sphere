@@ -791,3 +791,11 @@ Source-only work; **not deployment evidence**. Last browser-observed DEV release
 - The performance age and alignment decision share the exact data-quality timestamp; a failed availability refresh is classified as partial/unverified rather than SAP DOWN.
 - Trend entry transitions are shortened to 300ms, ECharts labels are larger, selected Jobs have a restrained identity cue, and infrastructure labels can wrap. Small viewports retain accessible scrolling.
 - No backend API/schema, migration, SAP job, Rundeck authorization, or PROD changes. Server QA/build, 1366×768 / 1536×864 / 1920×1080 + Android visual checks, guarded DEV deployment and PROD readiness are **pending**.
+
+### SPHERE v1.34.80 DEV candidate — operator motion and active trace focus (11 October 2026)
+
+- **Source-only GitHub change**, not evidence of an active DEV deployment. v1.34.79 QA and deployment remain unverified until the operator completes the DEV gate.
+- Existing Server Trend CPU/RAM/Technical evidence is unchanged. Chart instances persist for focus/option updates; APP1–APP5 + All form a keyboard-accessible color-coded highlight control. The selected APP trace changes emphasis; it never fabricates points, bridges null collection gaps, or alters threshold interpretation.
+- Jobs & Programs retains Live / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
+- Reduced motion disables entrance/transition effects; no blinking health, infinite pulses, synthetic number counters, polling changes, backend migrations or SAP job execution.
+- Run DEV regression, lint, build and manual visual QA (1366×768, 1536×864, 1920×1080, Android) before authorizing the revision-bound deployment. PROD remains unchanged.

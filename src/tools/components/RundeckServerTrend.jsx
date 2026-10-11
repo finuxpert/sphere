@@ -4,6 +4,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
 import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
+import { resolveTrendFocus, trendFocusStyle } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -177,13 +178,20 @@ function TrendFreshness({ trend }) {
 
 function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const ref = React.useRef(null)
+  const chartRef = React.useRef(null)
+  const activeCallbackRef = React.useRef(null)
+  const optionSchemaRef = React.useRef('')
+  const [manualHost, setManualHost] = React.useState(null)
   const reduceMotion = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
+  const hosts = React.useMemo(() => Array.from(new Set((trend?.items || []).map(row => row.host))).sort(), [trend])
+  const hostLabels = React.useMemo(() => hosts.map(shortHost), [hosts])
+  const focusedHost = resolveTrendFocus(manualHost, shortHost(selectedHost || ''), hostLabels)
+  React.useEffect(() => { setManualHost(null) }, [trend?.metric, range])
   const option = React.useMemo(() => {
     const colors = palette()
     const rows = trend?.items || []
-    const hosts = Array.from(new Set(rows.map((row) => row.host))).sort()
     const availabilityMode = trend?.metric === 'availability'
-    const selectedKey = shortHost(selectedHost || '')
+    const selectedKey = focusedHost
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
     const compactPoints = ['30m', '1h', '3h', '6h'].includes(range)
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
@@ -200,7 +208,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       animationEasing: 'cubicOut',
       animationEasingUpdate: 'cubicOut',
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
-      legend: { top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 11.2, fontWeight: 600 } },
+      legend: { show: false, top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hostLabels, textStyle: { color: colors.secondary, fontSize: 11.2, fontWeight: 600 } },
       grid: { left: 58, right: 72, top: 38, bottom: compactPoints ? 34 : 48 },
       tooltip: {
         trigger: 'axis',
@@ -227,18 +235,18 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
+        const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
         const focused = selectedKey && shortHost(host) === selectedKey
-        const dimmed = selectedKey && !focused
         return {
-        name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
+        id: host, name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
         showSymbol: availabilityMode || compactPoints,
         symbolSize: availabilityMode
           ? ((value, params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? 8 : 3.5)
           : (focused ? 5 : (compactPoints ? 3.5 : 2.5)),
-        lineStyle: { width: focused ? 2.8 : availabilityMode ? 1.5 : 1.8, opacity: dimmed ? .26 : availabilityMode ? .72 : 1 },
+        lineStyle: { width: traceStyle.width, opacity: traceStyle.opacity },
         itemStyle: availabilityMode
-          ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: dimmed ? .28 : 1 }
-          : { opacity: dimmed ? .36 : 1 },
+          ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: traceStyle.itemOpacity }
+          : { opacity: traceStyle.itemOpacity },
         emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.8, opacity: 1 } },
         data: [
           ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
@@ -254,33 +262,31 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       }
       })
     }
-  }, [mode, range, reduceMotion, selectedHost, trend])
+  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, trend])
+
+  // ECharts stays mounted while focus and stored samples update. No chart loop.
+  // The latest handler is read at click-time, not captured by the mount effect.
+  activeCallbackRef.current = { onSelect, trend, mode, option }
 
   React.useEffect(() => {
     if (!ref.current) return undefined
-    echarts.getInstanceByDom?.(ref.current)?.dispose()
-    const chart = echarts.init(ref.current, null, { renderer: 'canvas' })
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
-    chart.setOption(reduceMotion ? { ...option, animation: false } : option, true)
+    const chart = echarts.getInstanceByDom?.(ref.current) || echarts.init(ref.current, null, { renderer: 'canvas' })
+    chartRef.current = chart
     let lastExactClickAt = 0
 
     const selectItem = (item, seriesIndex = null, dataIndex = null) => {
       if (!item || item.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
       if (seriesIndex !== null && dataIndex !== null) chart.dispatchAction({ type: 'showTip', seriesIndex, dataIndex })
-      const availability = trend?.metric === 'availability'
-      const selectedAt = availability ? item.bucket : (mode === 'max' ? (item.peakAt || item.bucket) : item.bucket)
-      const selectedCollectionId = availability ? '' : (mode === 'max' ? (item.peakCollectionId || '') : '')
-      onSelect?.({
-        host: item.host,
-        at: selectedAt,
-        collectionId: selectedCollectionId,
-        bucket: item.bucket,
-        value: availability ? item.status : (mode === 'max' ? item.max : item.avg),
-        status: item.status,
-        availability,
-        mode,
-        metricLabel: trend?.metric_label || metricLabel(trend?.metric),
-        unit: availability ? '' : (trend?.unit || ''),
+      const { onSelect: currentSelect, trend: currentTrend, mode: currentMode } = activeCallbackRef.current
+      const availability = currentTrend?.metric === 'availability'
+      const selectedAt = availability ? item.bucket : (currentMode === 'max' ? (item.peakAt || item.bucket) : item.bucket)
+      const selectedCollectionId = availability ? '' : (currentMode === 'max' ? (item.peakCollectionId || '') : '')
+      currentSelect?.({
+        host: item.host, at: selectedAt, collectionId: selectedCollectionId,
+        bucket: item.bucket, value: availability ? item.status : (currentMode === 'max' ? item.max : item.avg),
+        status: item.status, availability, mode: currentMode,
+        metricLabel: currentTrend?.metric_label || metricLabel(currentTrend?.metric),
+        unit: availability ? '' : (currentTrend?.unit || ''),
       })
     }
 
@@ -295,9 +301,10 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       if (Date.now() - lastExactClickAt < 80) return
       const pixel = [event?.offsetX, event?.offsetY]
       if (!chart.containPixel({ gridIndex: 0 }, pixel)) return
+      const activeOption = activeCallbackRef.current.option
       let nearest = null
       let distance = Number.POSITIVE_INFINITY
-      ;(option.series || []).forEach((series, seriesIndex) => (series.data || []).forEach((item, dataIndex) => {
+      ;(activeOption.series || []).forEach((series, seriesIndex) => (series.data || []).forEach((item, dataIndex) => {
         if (item?.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
         const point = chart.convertToPixel({ seriesIndex }, item.value)
         if (!Array.isArray(point)) return
@@ -320,9 +327,41 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       chart.off('click', exactClick)
       chart.getZr().off('click', fallbackClick)
       chart.dispose()
+      chartRef.current = null
+      optionSchemaRef.current = ''
     }
-  }, [mode, onSelect, option, trend])
+  }, [])
 
+  React.useEffect(() => {
+    const chart = chartRef.current
+    if (!chart) return
+    const schema = `${trend?.metric || ''}:${range}:${mode}`
+    const schemaChanged = optionSchemaRef.current !== schema
+    optionSchemaRef.current = schema
+    chart.setOption(reduceMotion ? { ...option, animation: false } : option, {
+      notMerge: schemaChanged,
+      replaceMerge: schemaChanged ? undefined : ['series'],
+      lazyUpdate: false,
+    })
+  }, [mode, option, range, reduceMotion, trend?.metric])
+
+  return <div className="rundeckTrendPlot">
+    <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
+      <button type="button" aria-pressed={!focusedHost} className={!focusedHost ? 'is-focused' : ''} onClick={() => setManualHost('')}>All</button>
+      {hosts.map((host, index) => {
+        const label = shortHost(host)
+        return <button key={host} type="button" aria-pressed={focusedHost === label}
+          className={focusedHost === label ? 'is-focused' : ''}
+          style={{ '--trend-host-color': palette().series[index % palette().series.length] }}
+          onClick={() => setManualHost(focusedHost === label ? '' : label)}>
+          <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
+        </button>
+      })}
+    </div>
+    <div ref={ref} className="rundeckTrendChart" role="img"
+      aria-label={`Saved ${trend?.metric_label || metricLabel(trend?.metric)} trend; select an APP to highlight its existing observations`} />
+  </div>
+}
   return <div ref={ref} className="rundeckTrendChart" role="img" aria-label="Server trend" />
 }
 

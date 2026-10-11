@@ -5,7 +5,7 @@ import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js
 import { formatWib, shortHost } from './sapUiFormat.js'
 
 function StatusPill({ value = 'UNKNOWN', title = '' }) {
-  return <span className={`rundeckStatus is-${String(value).toLowerCase()}`} title={title || undefined}>{value}</span>
+  return <span key={value} className={`rundeckStatus rundeckStatusMotion is-${String(value).toLowerCase()}`} title={title || undefined}>{value}</span>
 }
 
 function ageText(seconds) {
