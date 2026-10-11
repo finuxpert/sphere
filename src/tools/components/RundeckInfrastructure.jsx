@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
-import { hostInfrastructureEvidence } from './rundeckUnifiedHost.js'
+import { hostInfrastructureEvidence, splitInfrastructureHosts } from './rundeckUnifiedHost.js'
 import { shortHost } from './sapUiFormat.js'
 import './RundeckInfrastructure.css'
 
@@ -129,6 +129,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     if(['filesystem','network','storage'].includes(initialContext.metric))setTrendMetric(initialContext.metric)
     if(initialContext.series)setSelectedSeries(initialContext.series)
   },[initialContext])
+  const { primary: primaryHosts, others: otherHosts }=splitInfrastructureHosts(data.hosts)
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
   const observedData=data.host===host?data:{fs:[],network:[],storage:[]}
@@ -218,7 +219,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       <div className="rundeckInfraIdentity"><span className={`state is-${overall.toLowerCase()}`}>{shortHost(host)} · {overall}</span></div>
     </header>
     <div className="rundeckInfraHostCards" role="group" aria-label="Select Infrastructure APP">
-      {data.hosts.map(row=>{
+      {primaryHosts.map(row=>{
         const evidence=hostInfrastructureEvidence({host:row.host},data.hosts,allHostFilesystems,clockNow)
         const selected=host===row.host
         return <button key={row.host} type="button"
@@ -233,6 +234,20 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       })}
       {!data.hosts.length&&<span className="rundeckInfraHostMissing">No verified infrastructure hosts.</span>}
     </div>
+    {otherHosts.length>0&&<details className="rundeckInfraOtherHosts" defaultOpen={otherHosts.some(row=>row.host===host)}>
+      <summary>Other Infrastructure Sources ({otherHosts.length})</summary>
+      <div className="rundeckInfraHostCards">
+        {otherHosts.map(row=>{
+          const evidence=hostInfrastructureEvidence({host:row.host},data.hosts,allHostFilesystems,clockNow)
+          return <button key={row.host} type="button"
+            className={'rundeckInfraHostCard'+(host===row.host?' is-active':'')}
+            aria-pressed={host===row.host} onClick={()=>setSelectedHost(row.host)}>
+            <b>{shortHost(row.host)}</b><small>{row.source||'Other source'}</small>
+            <span>FS <strong className={'is-'+evidence.state.toLowerCase()}>{evidence.topFs?metric(evidence.topFs.used_pct,'%'):'—'}</strong></span>
+          </button>
+        })}
+      </div>
+    </details>}
 
     <div className="rundeckInfraFreshness">
       <span><b>Last collected</b> {formatTime(observedAt)} WIB</span>

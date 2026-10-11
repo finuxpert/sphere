@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from '../../src/tools/components/rundeckUnifiedHost.js'
+import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts } from '../../src/tools/components/rundeckUnifiedHost.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
 const sap = [{host: 'AOPH1PAPPDC',cpu_pct: 12,ram_pct: 42,wp_critical: 2}, {host: 'AOPH2PAPPDC',cpu_pct: 15,ram_pct: 44,wp_critical: 0}]
@@ -58,4 +58,12 @@ test('ambiguous aliases never arbitrarily select the first infrastructure host',
   assert.equal(matchedInfrastructureHost({host:'APP1'},candidates),null)
   const sameAlias = [{host:'AOQH1PAPPDC'},{host:'AQH1PAPPDC'}]
   assert.equal(matchedInfrastructureHost({host:'APP1'},sameAlias),null)
+})
+
+test('AOP APP1–APP5 are primary while AOQ remains accessible as another source',()=>{
+  const h=[{host:'AOQH1PAPPDC'},{host:'AOPH3PAPPDC'},{host:'AOPH1PAPPDC'}]
+  const groups=splitInfrastructureHosts(h)
+  assert.deepEqual(groups.primary.map(row=>row.host),['AOPH3PAPPDC','AOPH1PAPPDC'])
+  assert.deepEqual(groups.others.map(row=>row.host),['AOQH1PAPPDC'])
+  assert.equal(splitInfrastructureHosts([{host:'OTHER'}]).primary.length,1)
 })

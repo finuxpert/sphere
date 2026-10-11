@@ -234,6 +234,9 @@ const checks = [
     files.wrapper.includes('infraContext: context') &&
     files.infrastructure.includes('initialContext=null') &&
     files.infrastructure.includes('rundeckInfraHostCards') &&
+    files.infrastructure.includes('rundeckInfraOtherHosts') &&
+    files.unifiedState.includes('splitInfrastructureHosts') &&
+    files.liveOverview.includes('sourceInfraHost = null') &&
     !files.infrastructure.includes('aria-label="Infrastructure host"')],
   ['Merged Jobs and Programs workspace uses one bounded scroll area per active mode', files.monitoringCore.includes('RundeckJobsProgramsWorkspace') && files.jobsPrograms.includes("mode === 'live'") && files.jobsPrograms.includes("mode === 'review'") && files.jobsPrograms.includes("mode === 'search'") && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadTableWrap') && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckReviewTableWrapV1231') && files.monitoringCss.includes('overflow-y:auto!important')],
   ['Compact Review table keeps Job Reason and Peak CPU visible', files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(3)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(5)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(4){width:18%!important}')],

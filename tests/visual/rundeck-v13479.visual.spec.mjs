@@ -84,3 +84,36 @@ test('Jobs and Programs mode tabs work with keyboard arrows and Home', async ({ 
   await expect(live).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('.rundeckJobsProgramsWorkspaceBody')).toHaveAttribute('role', 'tabpanel')
 })
+
+test('v1.34.81 unified APP cards replace duplicate top selector and retain SAP/infra drilldowns', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const merged = page.locator('.rundeckUnifiedAppInfra')
+  await expect(merged).toBeVisible({ timeout: 30_000 })
+  const cards = merged.getByRole('group', { name: 'Select APP server' }).getByRole('button')
+  await expect(cards).toHaveCount(5)
+  await expect(merged.locator('select[aria-label="Monitoring host"]')).toHaveCount(0)
+  await cards.nth(1).click()
+  await expect(cards.nth(1)).toHaveAttribute('aria-pressed', 'true')
+  await expect(merged.getByRole('button', { name: 'Inspect SAP' })).toBeVisible()
+  await expect(merged.getByRole('button', { name: 'Infrastructure Analysis' })).toBeVisible()
+  await test.info().attach('unified-app-infrastructure', {
+    body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
+  })
+})
+
+test('v1.34.81 Infrastructure Analysis uses host cards with source-aware freshness', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const merged = page.locator('.rundeckUnifiedAppInfra')
+  await expect(merged.getByRole('button', { name: 'Infrastructure Analysis' })).toBeEnabled({ timeout: 30_000 })
+  await merged.getByRole('button', { name: 'Infrastructure Analysis' }).click()
+  const drawer = page.getByRole('dialog', { name: 'Infrastructure Analysis' })
+  await expect(drawer).toBeVisible()
+  const chooser = drawer.getByRole('group', { name: 'Select Infrastructure APP' })
+  await expect(chooser.getByRole('button').first()).toBeVisible()
+  await expect(drawer.locator('select[aria-label="Infrastructure host"]')).toHaveCount(0)
+  await test.info().attach('infra-host-cards', {
+    body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
+  })
+})

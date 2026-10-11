@@ -53,7 +53,7 @@ function Status({ value }) {
   return <span className={'rundeckLiveStatus is-' + value.toLowerCase()}>{value}</span>
 }
 
-export default function RundeckLiveOverview({ refreshToken, embedded = false, onOpenMetric = null, initialHost = '' }) {
+export default function RundeckLiveOverview({ refreshToken, embedded = false, onOpenMetric = null, initialHost = '', sourceInfraHost = null }) {
   const [hosts, setHosts] = React.useState([])
   const [selectedHost, setSelectedHost] = React.useState(() => {
     try { return initialHost || window.localStorage.getItem(HOST_STORAGE_KEY) || '' } catch { return initialHost }
@@ -73,6 +73,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
   }, [])
 
   React.useEffect(() => {
+    if (initialHost && sourceInfraHost?.host === initialHost) return undefined
     const controller = new AbortController()
     loadJson(API + '/infra/hosts', controller.signal)
       .then((body) => {
@@ -82,7 +83,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
       })
       .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message) })
     return () => controller.abort()
-  }, [refreshToken, refreshCycle, initialHost])
+  }, [refreshToken, refreshCycle, initialHost, sourceInfraHost])
 
   React.useEffect(() => {
     if (!selectedHost) return
@@ -106,7 +107,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
     return () => controller.abort()
   }, [selectedHost, refreshToken, refreshCycle])
 
-  const hostRow = hosts.find((row) => row.host === selectedHost)
+  const hostRow = sourceInfraHost?.host === selectedHost ? sourceInfraHost : hosts.find((row) => row.host === selectedHost)
   const observedInfra = infra.host === selectedHost ? infra : { fs: [], network: [], storage: [] }
   const telemetryRows = [...observedInfra.fs, ...observedInfra.network, ...observedInfra.storage]
   const snapshotFreshness = infrastructureTelemetryFreshness(hostRow?.snapshot_ts, hostRow?.collection_id, telemetryRows, clockNow)

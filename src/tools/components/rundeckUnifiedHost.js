@@ -43,3 +43,14 @@ export function chooseUnifiedApp(appHosts, contextHost, manualSelection, context
   const preferred = shortHost(preferredHost)
   return [manual, focused, preferred, ...keys].find(key => key && keys.includes(key)) || ''
 }
+
+/** Operational APP AOP hosts are the primary view; other sources stay reachable. */
+export function splitInfrastructureHosts(hosts = []) {
+  const primary = []
+  const others = []
+  for (const row of hosts) {
+    if (/^AOPH[1-9]\d*PAPPDC$/i.test(String(row?.host || ''))) primary.push(row)
+    else others.push(row)
+  }
+  return { primary: primary.length ? primary : hosts, others: primary.length ? others : [] }
+}

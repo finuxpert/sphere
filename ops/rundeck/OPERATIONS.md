@@ -803,3 +803,5 @@ Source-only work; **not deployment evidence**. Last browser-observed DEV release
 ### v1.34.81 merged APP identity guard
 
 SAP and Infrastructure share a *selection*, not one source of truth. Resolve the exact SAP host first, then an unambiguous AOP host match; ambiguous aliases remain UNKNOWN rather than borrowing another host's filesystem sample. The Infrastructure analysis card additionally displays the source label to distinguish AOQ/AOP host names that share APP1 shorthand. Use regression `npm run qa:unified-host` alongside full QA before deploying. PROD remains unchanged.
+
+AOP APP1–APP5 are shown as primary Infrastructure Analysis cards; AOQ/other inventory remains accessible under Other Infrastructure Sources. The unified overview reuses parent infra host metadata in its controlled detail to avoid fetching the same host list twice. Visual regression covers desktop 1536×864 host-card selection and popup, separate from ordinary npm QA.

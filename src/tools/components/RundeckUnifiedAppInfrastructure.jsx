@@ -110,7 +110,7 @@ export default function RundeckUnifiedAppInfrastructure({
         </div>
       </div>
       {selectedInfra && <RundeckLiveOverview key={selectedInfra.host} initialHost={selectedInfra.host}
-        refreshToken={refreshToken} embedded onOpenMetric={onOpenMetric} />}
+        sourceInfraHost={selectedInfra} refreshToken={refreshToken} embedded onOpenMetric={onOpenMetric} />}
       {!selectedInfra && <p className="rundeckUnifiedInfraMissing" role="status">
         {infraSnapshot.error ? 'Infrastructure summary unavailable' : 'No matching Infrastructure source for ' + (appKey || 'this APP')}. Values are UNKNOWN, not NORMAL.
       </p>}

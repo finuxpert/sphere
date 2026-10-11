@@ -993,3 +993,12 @@
 @media(max-width:740px) { .rundeckInfraHostCards { grid-template-columns: repeat(3,minmax(0,1fr)); } }
 @media(max-width:480px) { .rundeckInfraHostCards { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media(prefers-reduced-motion:reduce),print { .rundeckInfraHostCard { transition: none !important; } }
+
+.rundeckInfraOtherHosts { margin: 1px 0 9px; }
+.rundeckInfraOtherHosts>summary {
+  list-style: none; cursor: pointer; color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 10px; padding: 5px 2px;
+}
+.rundeckInfraOtherHosts>summary::-webkit-details-marker { display: none; }
+.rundeckInfraOtherHosts>summary::before { content: '▸ '; }
+.rundeckInfraOtherHosts[open]>summary::before { content: '▾ '; }
