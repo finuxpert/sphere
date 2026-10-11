@@ -22,12 +22,20 @@ test('SAP+Infrastructure modal preserves host provenance, freshness and workload
   assert.match(infrastructure,/trendData\.scope===trendScope/)
 })
 
-test('one modal traps focus, handles escape, and restores body scroll',()=>{
+test('every analysis overlay is modal, traps focus, handles Escape and restores body scroll',()=>{
   const drawer=read('RundeckWorkspaceDrawer.jsx')
-  assert.match(drawer,/size === 'system-data' \|\| size === 'unified-app'/)
+  const geometry=read('RundeckUnifiedModalPolish.css')
+  assert.match(drawer,/const isModal = true/)
+  assert.match(drawer,/aria-modal=\{isModal\}/)
+  assert.match(drawer,/isModal && <div className="rundeckWorkspaceModalBackdrop"/)
   assert.match(drawer,/event\.key === 'Escape'/)
+  assert.match(drawer,/event\.key !== 'Tab'/)
+  assert.match(drawer,/first\.focus\(\)/)
+  assert.match(drawer,/last\.focus\(\)/)
   assert.match(drawer,/document\.body\.style\.overflow = previousOverflow/)
   assert.match(drawer,/previousFocus\?\.focus\?\.\(\)/)
+  assert.match(geometry,/\.is-evidence,\.is-availability,\.is-issues,\.is-unified-app,\.is-wide/)
+  assert.match(geometry,/transform:translate\(-50%,-50%\)!important/)
 })
 
 test('six tiles are independent bounded cells, not two competing three-column rails',()=>{
