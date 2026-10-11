@@ -648,7 +648,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
   </section>
 }
 
-export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, focusedHost = '', onFocusHost, sourceHosts = [], onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence }) {
+export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, focusedHost = '', onFocusHost, sourceHosts = [], onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence }) {
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
@@ -818,6 +818,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
         <span>APP Focus</span>
+        {selectedJob?.host && shortHost(selectedJob.host) !== (shortHost(focusedHost) || '') && <small className="rundeckTrendFocusIdentity">Job host {shortHost(selectedJob.host)} · Chart focus {shortHost(focusedHost) || 'All'}</small>}
         <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
           <button type="button" aria-pressed={!activeFocus} className={!activeFocus ? 'is-focused' : ''} onClick={() => onFocusHost?.('')}>All</button>
           {focusOptions.map((label, index) => <button key={label} type="button"

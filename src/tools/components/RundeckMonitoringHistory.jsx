@@ -186,30 +186,18 @@ export default function RundeckMonitoringHistory(props) {
                   : 'Back'}
           >
             <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
-            <div className="rundeckPerformanceDrawerEvidence" aria-label="Related operational analysis">
-              <RundeckOperationalEvidence
-                refreshToken={refreshToken}
-                selectedJob={selectedJob}
-                onOpenEvidence={(job) => setActiveOverlay({
-                  type: 'evidence',
-                  job,
-                  returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null },
-                })}
-                onOpenAvailability={() => setActiveOverlay({
-                  type: 'availability',
-                  returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null },
-                })}
-                onOpenIssues={() => setActiveOverlay({
-                  type: 'issues',
-                  returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null },
-                })}
-              />
-            </div>
-            <section className="rundeckPerformanceDrawerActions" aria-label="More analysis">
-              <button type="button" onClick={() => setActiveOverlay({ type: 'history', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" /><span><b>Observation History</b><small>Saved observations</small></span></button>
-              <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" /><span><b>Infrastructure Analysis</b><small>Filesystem · Network · Storage</small></span></button>
-              {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="database" /><span><b>System Data</b><small>{systemDataSummary || 'Collections · Services'}</small></span></button>}
-            </section>
+
+            <nav className="rundeckJobRelatedAnalysis" role="group" aria-label="Related analysis">
+              <strong>Related Analysis</strong>
+              <div className="rundeckJobRelatedLinks">
+                <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Correlated Events</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'history', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Observation History</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />Infrastructure</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="activity" />SAP Issues</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />SAP Availability</button>
+                {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="database" />System Data</button>}
+              </div>
+            </nav>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer

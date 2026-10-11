@@ -1,7 +1,7 @@
 import React from 'react'
 import * as echarts from './logEcharts.js'
 import SphereIcon from './SphereIcon.jsx'
-import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
+import { formatWib, numberText, shortHost, workloadTypeLabel, isUnresolvedSapIdentity } from './sapUiFormat.js'
 import './RundeckJobHistory.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -852,7 +852,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         </summary>
         <div className="rundeckSm37VerificationGrid">
           <span><b>Job Name</b>{jobName || '—'}</span>
-          <span><b>Program</b>{program || '—'}</span>
+          <span><b>Program</b>{isUnresolvedSapIdentity(program) ? 'SAP name unresolved' : (program || '—')}</span>
           <span><b>APP</b>{appName || '—'}</span>
           <span><b>Observed</b>{observedAt ? `${formatWib(observedAt, true)} WIB` : '—'}</span>
           <span><b>WP</b>{wpContext}</span>
@@ -900,6 +900,9 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <section className="rundeckJobAnalysisCanvas" aria-label="Performance chart">
           {range === 'current'
             ? <div key={`performance-${contentKey}`} className="rundeckJobPerformanceDisclosure is-direct">
+                 <div className="rundeckJobMetricLegend" aria-label="Performance metric units">
+                   <span>CPU total · % multicore</span><span>PSS · GB</span><span>I/O · MiB/s</span><span>WP · count</span>
+                 </div>
                 {episodeItems.length === 1
                   ? <SingleSamplePerformance row={episodeItems[0]} />
                   : episodeItems.length > 1
@@ -951,7 +954,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 const recency = String(item?.error_recency || '').trim()
                 return <tr key={`${pid}-${wp}-${index}`} className="is-actionable" tabIndex={0} role="button" onClick={() => setDetailView({ type: 'wp', item, observedAt: wpSignalObservedAt })} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setDetailView({ type: 'wp', item, observedAt: wpSignalObservedAt }) } }}>
                   <td><b>{pid}</b><small>{wp}</small></td>
-                  <td title={item?.program || 'Program was not captured for this WP row'}>{item?.program || 'Not captured'}</td>
+                  <td title={item?.program || 'Program was not captured for this WP row'}>{isUnresolvedSapIdentity(item?.program) ? 'SAP name unresolved' : (item?.program || 'Not captured')}</td>
                   <td>{item?.cpu_class || '—'}</td>
                   <td className={currentError ? 'is-attention' : ''}>{currentError || '—'}</td>
                   <td>{latestError || '—'}{latestError && <small>{recency === 'AT_SNAPSHOT' ? 'AT SNAPSHOT' : 'HISTORICAL'}</small>}</td>

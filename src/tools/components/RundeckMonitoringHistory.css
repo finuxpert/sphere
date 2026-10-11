@@ -2652,3 +2652,44 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 .rundeckWorkspaceDrawer.is-performance .rundeckPerformanceDrawerActions small{
   display:none!important;
 }
+
+/* v1.34.88: a single functional related-analysis rail in the Job drawer.
+   Main cockpit keeps its independent three analysis groups. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedAnalysis{
+  margin:9px 0 5px;padding:9px 0 4px;
+  border-top:1px solid rgba(126,147,158,.16);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedAnalysis>strong{
+  display:block;margin-bottom:7px;font-size:11px;
+  font-weight:750;color:var(--sphere-text,#e7edf0);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks button{
+  display:flex;align-items:center;gap:6px;min-width:0;
+  min-height:30px;padding:6px 9px;border-radius:5px;
+  border:1px solid rgba(126,147,158,.17);
+  background:rgba(126,147,158,.035);
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font:inherit;font-size:10.5px;font-weight:650;
+  text-align:left;cursor:pointer;white-space:normal;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks button:hover{
+  border-color:rgba(79,198,200,.5);
+  background:rgba(79,198,200,.06);
+  color:var(--sphere-text,#e7edf0);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks button:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);outline-offset:2px;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks .sphereIcon{
+  flex:0 0 13px;
+}
+.appShell:has(.rundeckPanel) .rundeckTrendFocusIdentity{
+  font-size:10px;color:var(--sphere-text-secondary,#a9b5bb);
+  font-weight:550;white-space:nowrap;
+}
+@media(max-width:760px){
+  .rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

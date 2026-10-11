@@ -1002,3 +1002,17 @@
 .rundeckInfraOtherHosts>summary::-webkit-details-marker { display: none; }
 .rundeckInfraOtherHosts>summary::before { content: '▸ '; }
 .rundeckInfraOtherHosts[open]>summary::before { content: '▾ '; }
+
+/* v1.34.88: desktop compact host picker + history-first chart with snapshot in view. */
+@media(min-width:1181px){
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraHostCard{
+    padding:5px 8px;gap:2px;min-height:40px;
+  }
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraHostCard span{font-size:10px}
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+    min-height:335px!important;
+  }
+  .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
+    height:235px!important;min-height:235px!important;
+  }
+}
