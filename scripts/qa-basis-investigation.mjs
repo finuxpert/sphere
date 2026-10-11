@@ -21,6 +21,8 @@ const files = {
   monitoringCss: read('src/tools/components/RundeckMonitoringHistory.css'),
   liveOverview: read('src/tools/components/RundeckLiveOverview.jsx'),
   unifiedApp: read('src/tools/components/RundeckUnifiedAppInfrastructure.jsx'),
+  unifiedAnalysis: read('src/tools/components/RundeckUnifiedAppAnalysis.jsx'),
+  unifiedAnalysisCss: read('src/tools/components/RundeckUnifiedAppAnalysis.css'),
   unifiedState: read('src/tools/components/rundeckUnifiedHost.js'),
   infraFreshness: read('src/tools/components/infrastructureFreshness.js'),
   dataQuality: read('src/tools/components/rundeckDataQuality.js'),
@@ -154,7 +156,7 @@ const checks = [
     files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
-  ['monitoring flow version is v1.34.81', files.version.includes("APP_VERSION = '1.34.81'") && files.version.includes('monitoring-flow-ui-v1.34.81')],
+  ['monitoring flow version is v1.34.82', files.version.includes("APP_VERSION = '1.34.82'") && files.version.includes('monitoring-flow-ui-v1.34.82')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -223,9 +225,13 @@ const checks = [
     files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure') &&
     !files.monitoringCore.includes('<RundeckAppServers') &&
     files.unifiedApp.includes('Select APP server') &&
-    files.unifiedApp.includes('Inspect SAP') &&
+    !files.unifiedApp.includes('Inspect SAP') &&
+    !files.unifiedApp.includes('rundeckUnifiedAppInfraDetail') &&
+    files.unifiedApp.includes('onInspectApp?.({') &&
     files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Critical WP') &&
-    files.unifiedApp.includes('initialHost={selectedInfra.host}') &&
+    files.unifiedAnalysis.includes('RundeckAppServerAnalysis') &&
+    files.unifiedAnalysis.includes('RundeckInfrastructure') &&
+    files.unifiedAnalysis.includes('lockedHost') && files.unifiedAnalysis.includes('hideHostCards') &&
     files.unifiedState.includes('infrastructureTelemetryFreshness') &&
     files.cockpitPolish.includes('.rundeckUnifiedAppCards')],
   ['Shared APP context drills into Infrastructure Analysis without another host selector',
@@ -267,7 +273,13 @@ const checks = [
   ['Compact Correlated Events summary avoids long timing text truncation', files.evidenceTimeline.includes('No overlap · ${Math.round(workloadGapMinutes)}m gap') && files.evidenceTimeline.includes('${Math.round(Number(skew))}m difference')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
-  ['APP server detail stays accessible from unified host workspace', files.unifiedApp.includes('onInspectApp?.(selectedApp)') && files.core.includes('onInspectApp={props.onInspectApp}') && files.wrapper.includes("activeOverlay?.type === 'app'")],
+  ['APP card opens one modal with SAP and independent Infrastructure evidence', files.unifiedApp.includes('onInspectApp?.({') &&
+    files.core.includes('onInspectApp={props.onInspectApp}') &&
+    files.wrapper.includes("activeOverlay?.type === 'app'") &&
+    files.wrapper.includes('size="unified-app"') &&
+    files.wrapper.includes('RundeckUnifiedAppAnalysis') &&
+    files.workspaceDrawer.includes("size === 'unified-app'") &&
+    files.unifiedAnalysis.includes('Infrastructure: independent host collection and freshness')],
   ['Performance Review exposes loaded review rows and historical search matches through the cockpit scroll list', files.performanceReview.includes('const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)') && files.performanceReview.includes('is-scroll-list') && !files.performanceReview.includes("is-top4")],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.performanceReview.includes("' is-updating'")],
     ['Performance Review controls preserve long-range loading state in the scroll-list layout', files.performanceReview.includes('Updating {periodLabel}') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.workspace.includes('.rundeckReviewControlsV1231')],
@@ -560,4 +572,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.81 monitoring flow, data trust, gap evidence and motion checks passed.')
+console.log('\nSPHERE v1.34.82 monitoring flow, data trust, gap evidence and motion checks passed.')

@@ -457,3 +457,13 @@ Top cockpit SAP APP Servers and Infrastructure are one host-oriented workspace: 
 Source-only candidate; QA/build and runtime screenshot validation required before DEV deploy. No PROD/backend/migrations/collector/SAP jobs changed.
 
 Infrastructure Analysis popup also uses the five APP cards instead of a host dropdown. Each card labels filesystem-only evidence and source freshness, while Network/Storage states remain confined to the selected host's detail view. All host detail selection uses existing initialContext so the dashboard can pass the active APP into the popup; overlay animation is finite and reduced-motion safe.
+
+### SPHERE DEV v1.34.82 release candidate — one-click APP analysis and density recovery (11 October 2026)
+
+- The five APP cards are **direct actions**: click APPn -> one centered analysis modal containing independent SAP Performance (current collection evidence) and Infrastructure (host-specific filesystem, network and storage I/O, independently qualified by freshness).
+- The redundant Inspect SAP / Infrastructure Analysis toolbar and long inline Infrastructure summary were removed from the dashboard. The existing source-specific analysis components remain intact inside the modal; no collector, SAP job, schema or threshold changed. If the host mapping is missing, no other host's source is substituted in the locked Infrastructure view.
+- Six analysis shortcuts use six bounded tiles with internal metadata truncation; Correlated Events shows an honest no-active-correlation shortcut even without an incident. Selected job identity is shown once before them.
+- Desktop cockpit recovers row height for the internally scrollable Jobs & Programs table. Counter distinguishes all observed vs loaded in this response. Screen-height limitations on laptops still allow page scroll rather than clipping evidence.
+- Trend Details explicitly declares *historical observation* and retains actual vs bucket times. Modal uses finite 220 ms reveal, Escape/keyboard focus trap and reduced-motion fallback.
+- APP and Infrastructure analysis modules are lazy-loaded via explicit dynamic imports. No claim of reduced bundle size without post-build artifact measurements.
+- Visual tests: six tiles, five APP cards, one-click modal, tall viewport scroll geometry, keyboard, Android. DEV source-only until verified QA/build and revision-bound deploy. PROD unchanged.

@@ -85,35 +85,56 @@ test('Jobs and Programs mode tabs work with keyboard arrows and Home', async ({ 
   await expect(page.locator('.rundeckJobsProgramsWorkspaceBody')).toHaveAttribute('role', 'tabpanel')
 })
 
-test('v1.34.81 unified APP cards replace duplicate top selector and retain SAP/infra drilldowns', async ({ page }, testInfo) => {
+
+test('v1.34.82 one APP click opens the merged SAP and Infrastructure modal', async ({ page }, testInfo) => {
   if (testInfo.project.name !== 'desktop-1536') test.skip()
   await openCockpit(page)
   const merged = page.locator('.rundeckUnifiedAppInfra')
-  await expect(merged).toBeVisible({ timeout: 30_000 })
   const cards = merged.getByRole('group', { name: 'Select APP server' }).getByRole('button')
-  await expect(cards).toHaveCount(5)
-  await expect(merged.locator('select[aria-label="Monitoring host"]')).toHaveCount(0)
-  await cards.nth(1).click()
-  await expect(cards.nth(1)).toHaveAttribute('aria-pressed', 'true')
-  await expect(merged.getByRole('button', { name: 'Inspect SAP' })).toBeVisible()
-  await expect(merged.getByRole('button', { name: 'Infrastructure Analysis' })).toBeVisible()
-  await test.info().attach('unified-app-infrastructure', {
-    body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
-  })
+  await expect(cards).toHaveCount(5, { timeout: 30_000 })
+  await expect(merged.locator('.rundeckUnifiedAppInfraDetail')).toHaveCount(0)
+  await cards.nth(4).click()
+  const modal = page.getByRole('dialog', { name: /APP5.*APP Analysis/ })
+  await expect(modal).toBeVisible({ timeout: 30_000 })
+  await expect(modal.getByRole('region', { name: 'SAP performance evidence' })).toBeVisible()
+  await expect(modal.getByRole('region', { name: 'Infrastructure evidence' })).toBeVisible()
+  await expect(modal.getByRole('group', { name: 'Select Infrastructure APP' })).toHaveCount(0)
+  await expect(modal.getByRole('button', { name: 'Close analysis' })).toBeVisible()
+  await modal.getByRole('button', { name: 'Close analysis' }).click()
+  await expect(modal).toHaveCount(0)
 })
 
-test('v1.34.81 Infrastructure Analysis uses host cards with source-aware freshness', async ({ page }, testInfo) => {
+test('v1.34.82 analysis shortcuts never paint outside their six independent cells', async ({ page }, testInfo) => {
   if (testInfo.project.name !== 'desktop-1536') test.skip()
   await openCockpit(page)
-  const merged = page.locator('.rundeckUnifiedAppInfra')
-  await expect(merged.getByRole('button', { name: 'Infrastructure Analysis' })).toBeEnabled({ timeout: 30_000 })
-  await merged.getByRole('button', { name: 'Infrastructure Analysis' }).click()
-  const drawer = page.getByRole('dialog', { name: 'Infrastructure Analysis' })
-  await expect(drawer).toBeVisible()
-  const chooser = drawer.getByRole('group', { name: 'Select Infrastructure APP' })
-  await expect(chooser.getByRole('button').first()).toBeVisible()
-  await expect(drawer.locator('select[aria-label="Infrastructure host"]')).toHaveCount(0)
-  await test.info().attach('infra-host-cards', {
-    body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
-  })
+  const rail = page.locator('.rundeckAnalysisRailV13456')
+  const cards = rail.locator('.rundeckEvidenceCard, .rundeckSelectedSecondaryAnalysis > button')
+  await expect(cards).toHaveCount(6, { timeout: 30_000 })
+  const geometry = await cards.evaluateAll(nodes=>nodes.map(node=>{
+    const rect=node.getBoundingClientRect()
+    const text=node.querySelector('strong,small')
+    const childRect=text?.getBoundingClientRect()
+    return { x:rect.x,right:rect.right,textRight:childRect?.right || rect.x }
+  }))
+  for (let i=0;i<geometry.length;i++){
+    expect(geometry[i].textRight).toBeLessThanOrEqual(geometry[i].right+1)
+  }
+  await test.info().attach('six-analysis-tiles',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
+})
+
+test('v1.34.82 loaded Jobs & Programs rows remain scrollable, not single-row clipped', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const table=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap')
+  await expect(table).toBeVisible({timeout:30_000})
+  const data=await table.evaluate(el=>({
+    height:el.clientHeight,
+    rowCount:el.querySelectorAll('tbody tr').length,
+    overflowY:getComputedStyle(el).overflowY,
+    scrollHeight:el.scrollHeight,
+  }))
+  expect(data.height).toBeGreaterThan(130)
+  expect(data.rowCount).toBeGreaterThan(1)
+  expect(data.overflowY).toMatch(/auto|scroll/)
+  expect(data.scrollHeight).toBeGreaterThanOrEqual(data.height)
 })
