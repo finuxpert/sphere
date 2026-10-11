@@ -179,3 +179,12 @@ Only update screenshot baselines after manual review. Do not update snapshots me
 - Correlated Events relies on the vertical timeline instead of repeated horizontal rules;
 - SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data use lighter separators and consistent drawer chrome;
 - Back labels read Live Monitoring or Performance Analysis, never Selected Job.
+
+
+## v1.34.84 — restrained Cloudflare-inspired operator interactions (DEV)
+
+- CSS-only focus/hover APP and six shortcut tile soft glow, 2px composited hover lift; selected and UNKNOWN/STALE indicators are unchanged and never animated.
+- Jobs & Programs tab ink eases on state change; modal backdrop fades once over 190ms. APP dialog keeps the established fixed-center 220ms geometry.
+- Coarse pointers receive no hover translation, `prefers-reduced-motion: reduce` and print disable transitions and backdrop animations. Keyboard focus continues to expose the action.
+- Production release candidate PR #49 is pinned to v1.34.83; this v1.34.84 DEV-only change does not mutate that PR or PROD.
+- QA must pass before the optional gated DEV web-only rollout; run `bash ops/rundeck/release-ui-dev.sh <exact-v1.34.84-source-sha>` on JAHSVR-SPHERE. Run full QA/build because frontend files changed, not artifact reuse.

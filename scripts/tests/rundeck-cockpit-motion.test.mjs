@@ -73,3 +73,18 @@ test('Jobs & Programs modes expose keyboard-accessible tabs and finite transitio
   assert.match(css, /sphereWorkModeArrival 180ms/)
   assert.match(css, /prefers-reduced-motion: reduce/)
 })
+
+
+test('v1.34.84 Cloudflare-inspired motion stays finite, non-causal and opt-out accessible', () => {
+  const css = source('RundeckCloudflareMotion.css')
+  const sourceJsx = source('RundeckMonitoringHistory.jsx')
+  assert.match(sourceJsx, /import '\.\/RundeckCloudflareMotion\.css'/)
+  assert.match(css, /radial-gradient\(ellipse at 18% -22%/)
+  assert.match(css, /translate3d\(0,-2px,0\)/)
+  assert.match(css, /sphereSoftScrimEnter 190ms/)
+  assert.match(css, /\.rundeckJobsProgramsModes button::after/)
+  assert.match(css, /pointer:fine/)
+  assert.match(css, /prefers-reduced-motion:reduce/)
+  assert.doesNotMatch(css, /animation-iteration-count\s*:\s*infinite|animation:[^;]*infinite/i)
+  assert.doesNotMatch(css, /setInterval|requestAnimationFrame|innerText|textContent|cpu_pct|ram_pct/)
+})

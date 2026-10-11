@@ -1,0 +1,133 @@
+/* SPHERE DEV v1.34.84 — Cloudflare-inspired interaction finesse.
+   Operator-first: no perpetual motion, status pulse, moving metrics, layout
+   displacement or synthetic telemetry. Compositor-only hover/entry motion. */
+.appShell:has(.rundeckPanel){
+  --sphere-motion-smooth: cubic-bezier(.22,1,.36,1);
+  --sphere-motion-tint: rgba(79,198,200,.09);
+}
+
+/* APP and analysis shortcuts share a calm, internal surface light. The
+   pseudoelement is absolute; no extra grid cell is ever created. */
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button{
+  position:relative!important;
+  isolation:isolate;
+  transition:transform 220ms var(--sphere-motion-smooth),
+    border-color 180ms ease-out, background-color 180ms ease-out,
+    box-shadow 220ms var(--sphere-motion-smooth)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard::before,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard::before,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  border-radius:inherit;
+  background:radial-gradient(ellipse at 18% -22%,
+    rgba(79,198,200,.14) 0%,rgba(79,198,200,.045) 35%,transparent 75%);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 230ms var(--sphere-motion-smooth);
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard > *,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard > *,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button > *{
+  position:relative;
+  z-index:1;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard:focus-visible::before,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard:focus-visible::before,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button:focus-visible::before{
+  opacity:1;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard > em,
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button > em{
+  transition:transform 200ms var(--sphere-motion-smooth),opacity 180ms ease-out;
+}
+/* Tab ink slides inside its own button; the tab layout does not reflow. */
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button{
+  position:relative;
+  transition:color 180ms ease-out,background-color 180ms ease-out!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button::after{
+  content:"";
+  position:absolute;
+  inset:auto 15% 1px;
+  height:2px;
+  border-radius:2px;
+  background:var(--sphere-accent,#4fc6c8);
+  transform:scaleX(.35);
+  opacity:0;
+  pointer-events:none;
+  transition:transform 210ms var(--sphere-motion-smooth),opacity 180ms ease-out;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button.is-active::after{
+  transform:scaleX(1);
+  opacity:1;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button.is-active{
+  box-shadow:none!important;
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard:hover,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard:hover,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button:hover{
+    transform:translate3d(0,-2px,0);
+    border-color:rgba(79,198,200,.44)!important;
+    box-shadow:0 5px 16px rgba(0,0,0,.12)!important;
+  }
+  /* Preserve the selected APP's left accent and selection semantics. */
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard.is-active:hover{
+    box-shadow:inset 3px 0 0 var(--sphere-accent,#4fc6c8),
+      0 5px 16px rgba(0,0,0,.12)!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard:hover::before,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard:hover::before,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button:hover::before{
+    opacity:1;
+  }
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard:hover > em,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button:hover > em{
+    transform:translateX(2px);
+  }
+}
+
+/* Open-once backdrop fade follows the existing 220ms modal transform.
+   The dialog's translate(-50%,-50%) geometry remains untouched. */
+@keyframes sphereSoftScrimEnter{
+  from{opacity:0}
+  to{opacity:1}
+}
+@media(prefers-reduced-motion:no-preference){
+  .appShell:has(.rundeckPanel) .rundeckWorkspaceModalBackdrop{
+    animation:sphereSoftScrimEnter 190ms ease-out both;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkspaceDrawer.is-unified-app{
+    animation-timing-function:var(--sphere-motion-smooth)!important;
+  }
+}
+/* Media query is authoritative: reduced motion and print never transition. */
+@media(prefers-reduced-motion:reduce),print{
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard > em,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button > em,
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button,
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button::after,
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard::before,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard::before,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button::before{
+    transition:none!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button{
+    transform:none!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkspaceModalBackdrop{
+    animation:none!important;
+  }
+}

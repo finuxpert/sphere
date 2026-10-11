@@ -235,3 +235,53 @@ test('v1.34.83 Live workload scroll geometry with actual rows or DOM-only empty-
  expect(data.lastTop).toBeGreaterThanOrEqual(data.containerTop-2)
  expect(data.lastBottom).toBeLessThanOrEqual(data.containerBottom+2)
 })
+
+// Cloudflare-inspired accents are purely decorative: verify interaction
+// without nudging neighboring tiles, and honor accessibility preferences.
+test('v1.34.84 desktop hover lights APP and shortcut cards without shifting grid neighbors',async ({page},testInfo)=>{
+ if(testInfo.project.name!=='desktop-1536') test.skip()
+ await page.emulateMedia({reducedMotion:'no-preference'})
+ await openCockpit(page)
+ const cards=page.locator('.rundeckUnifiedAppInfra .rundeckUnifiedAppCard')
+ await expect(cards).toHaveCount(5,{timeout:30000})
+ const first=cards.first(), second=cards.nth(1)
+ const neighborBefore=await second.boundingBox()
+ await first.hover()
+ await page.waitForTimeout(270)
+ const style=await first.evaluate(el=>({
+  transform:getComputedStyle(el).transform,
+  light:Number(getComputedStyle(el,'::before').opacity),
+  duration:getComputedStyle(el).transitionDuration,
+ }))
+ expect(style.transform).not.toBe('none')
+ expect(style.light).toBeGreaterThan(.9)
+ expect(style.duration).toContain('0.22s')
+ const neighborAfter=await second.boundingBox()
+ expect(Math.abs(neighborBefore.x-neighborAfter.x)).toBeLessThan(1)
+ expect(Math.abs(neighborBefore.y-neighborAfter.y)).toBeLessThan(1)
+ const tile=page.locator('.rundeckAnalysisRailV13456 .rundeckEvidenceCard').first()
+ await tile.hover()
+ await page.waitForTimeout(260)
+ const tileLight=await tile.evaluate(el=>Number(getComputedStyle(el,'::before').opacity))
+ expect(tileLight).toBeGreaterThan(.9)
+ const review=page.getByRole('tab',{name:'Review'})
+ await review.click()
+ await expect(review).toHaveAttribute('aria-selected','true')
+ expect(await review.evaluate(el=>Number(getComputedStyle(el,'::after').opacity))).toBeGreaterThan(.9)
+})
+test('v1.34.84 reduced-motion keeps APP interaction and modal accessible with zero animation',async ({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'})
+ await openCockpit(page)
+ const app=page.locator('.rundeckUnifiedAppInfra .rundeckUnifiedAppCard').first()
+ await expect(app).toBeVisible()
+ const duration=await app.evaluate(el=>getComputedStyle(el).transitionDuration)
+ expect(duration).toBe('0s')
+ await app.click()
+ const modal=page.getByRole('dialog',{name:/APP[1-5] Analysis/})
+ await expect(modal).toBeVisible()
+ const scrim=page.locator('.rundeckWorkspaceModalBackdrop')
+ await expect(scrim).toBeVisible()
+ expect(await scrim.evaluate(el=>getComputedStyle(el).animationName)).toBe('none')
+ await page.keyboard.press('Escape')
+ await expect(modal).toHaveCount(0)
+})
