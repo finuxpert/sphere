@@ -618,12 +618,20 @@ test('v1.34.88 desktop Job and Infrastructure drawers remain inside viewport',as
   expect(bounds.y).toBeGreaterThanOrEqual(0)
   expect(bounds.right).toBeLessThanOrEqual(bounds.vw+2)
   expect(bounds.bottom).toBeLessThanOrEqual(bounds.vh+2)
-  const wpTable=modal.locator('.rundeckWpSignalTableWrap')
+  // The outer drawer opens immediately, but the retained Job history and
+  // WP projection are asynchronous. Wait for actual history content before
+  // asserting whether retained WP rows exist or are explicitly unavailable.
+  const historyContent=modal.locator('.rundeckJobHistoryContent')
+  await expect(historyContent).toBeVisible({timeout:30000})
+  const wpPanel=historyContent.locator('.rundeckWpSignalPanel')
+  await expect(wpPanel).toHaveCount(1)
+  const wpTable=wpPanel.locator('.rundeckWpSignalTableWrap')
   if(await wpTable.count()){
     const scroll=await wpTable.evaluate(el=>({scrollH:el.scrollHeight,clientH:el.clientHeight}))
     expect(scroll.scrollH-scroll.clientH).toBeLessThanOrEqual(2)
   } else {
-    await expect(modal.locator('.rundeckWpSignalPanel.is-empty')).toBeVisible()
+    await expect(wpPanel).toHaveClass(/is-empty/)
+    await expect(wpPanel).toContainText('WP/Trace signal was not retained')
   }
   await modal.getByRole('group',{name:'Related analysis'}).getByRole('button',{name:'Infrastructure'}).click()
   const infra=page.getByRole('dialog',{name:'Infrastructure Analysis'})
