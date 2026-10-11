@@ -1,6 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName } from './sapUiFormat.js'
+import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName, isUnresolvedSapIdentity } from './sapUiFormat.js'
 import './RundeckCurrentWorkload.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -70,7 +70,7 @@ function identitySummary(row = {}) {
     : type === 'PROGRAM'
       ? jobName
       : program || jobName
-  if (related && related.toUpperCase() !== workload.toUpperCase()) parts.push(related)
+  if (related && !isUnresolvedSapIdentity(related) && related.toUpperCase() !== workload.toUpperCase()) parts.push(related)
   if (wp !== '—') parts.push(wp)
   if (pid) parts.push(`PID ${pid}`)
   if (processes > 1) parts.push(`${processes} proc`)

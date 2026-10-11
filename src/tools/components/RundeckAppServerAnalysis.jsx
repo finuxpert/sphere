@@ -82,7 +82,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
           {rows.map((row,index)=><tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}-${index}`} tabIndex={0} role="button"
             onClick={()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}
             onKeyDown={(event)=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}}>
-            <td><strong title={row.consumer_key}>{observedWorkloadName(row.consumer_key, row.details)}</strong><small>{row.details?.program || row.details?.job_name || ''}</small></td>
+            <td><strong title={row.consumer_key}>{observedWorkloadName(row.consumer_key, row.details)}</strong><small>{observedWorkloadName(row.details?.program || row.details?.job_name || '', row.details) || ''}</small></td>
             <td><span title={`Observation classification from ${row.details?.identity_source || 'RCA-WP metadata'}; not SM37 execution status`} className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{String(row.consumer_type||'—').toUpperCase()}</span></td>
             <td>{metric(row.cpu_pct,'%')}</td>
             <td>{pssText(row)}</td>
