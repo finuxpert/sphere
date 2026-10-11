@@ -89,6 +89,19 @@ const files = {
   promConfig: read('ops/observability/prometheus-sphere-dev.yml'),
 }
 
+// Validate the six-column Live layout from source instead of pinning an obsolete 46% width.
+const liveColumnAllocation = [...files.currentWorkloadCss.matchAll(/\.rundeckJobsProgramsWorkspace \.rundeckCurrentWorkload td:nth-child\((\d+)\)\{width:(\d+)%!important\}/g)]
+  .map(([, column, width]) => ({ column: Number(column), width: Number(width) }))
+const liveColumnLayoutValid = liveColumnAllocation.length === 6
+  && liveColumnAllocation.every((item, index) => item.column === index + 1 && item.width > 0)
+  && liveColumnAllocation.reduce((sum, item) => sum + item.width, 0) === 100
+  && liveColumnAllocation[1].width >= 40 && liveColumnAllocation[1].width <= 50
+
+// Extract the base native-select rule, not one of its light-theme overrides.
+const themeSelectStyle = files.accessibilityThemeFinal.match(/(?:^|\n)\.sphereThemeControl select\{([^}]*)\}/)?.[1] || ''
+const themeWidthPx = Number(themeSelectStyle.match(/\bwidth:(\d+)px/)?.[1] || 0)
+const themeMinHeightPx = Number(themeSelectStyle.match(/min-height:(\d+)px/)?.[1] || 0)
+
 const checks = [
   ['Rundeck HTTP 403 diagnostic is GET-only and credential-safe',
     files.rundeckAuthProbe.includes('method="GET"') &&
@@ -270,7 +283,14 @@ const checks = [
   ['Trend helper microcopy is removed from the cockpit', !files.serverTrend.includes('Click a chart point to inspect saved job and program data without expanding the page.')],
   ['Duplicate SAP Performance title text is visually suppressed while preserving the accessible heading', files.source.includes('<h2 aria-label="SAP Performance"><SphereIcon name="activity" /></h2>') && !files.source.includes('rundeckPrimaryTitleText') && files.sourceCss.includes('parent page owns the visible SAP Performance title')],
   ['Review mode has no redundant Search button because Search is a workspace mode', files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('!forceSearch && !hideSearchButton')],
-  ['Live Jobs table fills the merged workspace and keeps selected-row emphasis restrained', files.currentWorkloadCss.includes('SPHERE v1.34.61 — full-width Live table') && files.currentWorkloadCss.includes('width:46%!important') && files.currentWorkloadCss.includes('background:rgba(79,198,200,.045)!important')],
+  ['Live Jobs table fills the merged workspace and keeps selected-row emphasis restrained',
+    files.currentWorkloadCss.includes('SPHERE v1.34.61 — full-width Live table')
+    && files.currentWorkloadCss.includes('.rundeckJobsProgramsWorkspace .rundeckCurrentWorkload table{')
+    && files.currentWorkloadCss.includes('table-layout:fixed!important')
+    && liveColumnLayoutValid
+    && files.currentWorkloadCss.includes('text-align:right;font-variant-numeric:tabular-nums;')
+    && files.currentWorkloadCss.includes('background:rgba(79,198,200,.045)!important')
+    && files.currentWorkloadCss.includes('box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important')],
   ['Compact Correlated Events summary avoids long timing text truncation', files.evidenceTimeline.includes('No overlap · ${Math.round(workloadGapMinutes)}m gap') && files.evidenceTimeline.includes('${Math.round(Number(skew))}m difference')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
@@ -494,7 +514,17 @@ const checks = [
   ['Final light hierarchy strengthens healthy states and source integrity text', files.accessibilityThemeFinal.includes('.rundeckSm37VerificationHead strong') && files.accessibilityThemeFinal.includes('.rundeckStatus.is-normal') && files.accessibilityThemeFinal.includes('.rundeckReviewWorkloadV1231 button')],
   ['Final APP rows remain readable in light mode with a distinct selected focus state', files.accessibilityThemeFinal.includes('.rundeckServerTable tbody tr:not(.is-cross-panel-focus) td') && files.accessibilityThemeFinal.includes('box-shadow:inset 2px 0 0 rgba(20,125,134,.55)')],
   ['Selected workload gives evidence more height than secondary launchers', files.monitoringCss.includes('grid-auto-rows:70px!important') && files.monitoringCss.includes('height:70px!important') && files.monitoringCss.includes('grid-auto-rows:58px!important')],
-  ['Theme selector keeps native behavior with SPHERE-sized closed state and focus ring', files.accessibilityThemeFinal.includes('.sphereThemeControl select{') && files.accessibilityThemeFinal.includes('width:90px') && files.accessibilityThemeFinal.includes('outline:2px solid rgba(79,198,200,.26)')],
+  ['Theme selector keeps native behavior with readable size and keyboard focus',
+    themeWidthPx >= 90 && themeWidthPx <= 110
+    && themeMinHeightPx >= 31
+    && themeSelectStyle.includes('cursor:pointer')
+    && files.accessibilityThemeFinal.includes('outline:2px solid rgba(79,198,200,.26)')
+    && files.accessibilityThemeFinal.includes('html[data-theme="light"] .sphereThemeControl select')
+    && files.navbar.includes('<select aria-label="Display theme"')
+    && files.navbar.includes('<option value="dark">Dark</option>')
+    && files.navbar.includes('<option value="light">Light</option>')
+    && files.navbar.includes('<option value="system">System</option>')
+    && !files.navbar.includes('window.location.reload()')],
   ['Current Jobs uses compact content-driven scan depth without artificial fixed height', files.currentWorkloadCss.includes('max-height:260px!important') && files.currentWorkloadCss.includes('height:auto!important') && files.currentWorkloadCss.includes('max-height:235px!important') && files.currentWorkloadCss.includes('max-height:290px!important')],
   ['Light mode closes host selector dark island and preserves active range contrast', files.accessibilityThemeFinal.includes('.rundeckLiveOverviewHead') && files.accessibilityThemeFinal.includes('#dff2f2') && files.accessibilityThemeFinal.includes('#0f5960')],
   ['Light mode keeps workload review and operational cards readable', files.accessibilityThemeFinal.includes('.rundeckCurrentWorkloadName button') && files.accessibilityThemeFinal.includes('.rundeckReviewReasonChips span') && files.accessibilityThemeFinal.includes('.rundeckCompactDetailRow>button')],
