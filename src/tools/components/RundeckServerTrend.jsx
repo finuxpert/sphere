@@ -181,7 +181,6 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const chartRef = React.useRef(null)
   const activeCallbackRef = React.useRef(null)
   const optionSchemaRef = React.useRef('')
-  const [manualFocus, setManualFocus] = React.useState({ scope: '', host: null })
   const reduceMotion = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
   // Recompute ECharts color tokens on a theme toggle. No network fetch or timer.
   const [themeRevision, setThemeRevision] = React.useState(0)
@@ -194,10 +193,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   }, [])
   const hosts = React.useMemo(() => Array.from(new Set((trend?.items || []).map(row => row.host))).sort(), [trend])
   const hostLabels = React.useMemo(() => hosts.map(shortHost), [hosts])
-  const hostColors = palette().series
-  const focusScope = `${trend?.display_metric || trend?.metric || ''}:${range}`
-  const manualHost = manualFocus.scope === focusScope ? manualFocus.host : null
-  const focusedHost = resolveTrendFocus(manualHost, shortHost(selectedHost || ''), hostLabels)
+  const focusedHost = resolveTrendFocus(null, shortHost(selectedHost || ''), hostLabels)
   const option = React.useMemo(() => {
     const colors = palette()
     const rows = trend?.items || []
@@ -226,6 +222,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       tooltip: {
         trigger: 'axis',
         confine: true,
+        position: (pos, params, dom, rect, size) => {
+          const x = Math.max(6, Math.min(pos[0] + 12, size.viewSize[0] - size.contentSize[0] - 6))
+          const y = Math.max(6, Math.min(pos[1] - size.contentSize[1] - 12, size.viewSize[1] - size.contentSize[1] - 6))
+          return [x, y]
+        },
+        extraCssText: 'max-width:320px;white-space:normal;line-height:1.4;',
         backgroundColor: colors.panel,
         borderWidth: 0,
         textStyle: { color: colors.text, fontSize: 11 },
@@ -233,7 +235,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           if (!points.length) return ''
           const bucketAt = points[0]?.axisValue
           const lines = [`<b>Bucket: ${formatWib(bucketAt, true)} WIB</b>`]
-          points.filter((point) => point?.data?.value?.[1] !== null && point?.data?.value?.[1] !== undefined).forEach((point) => {
+          const valid = points.filter(point => point?.data?.value?.[1] !== null && point?.data?.value?.[1] !== undefined)
+          const zeros = valid.filter(point => Number(point.data.value[1]) === 0)
+          const measured = valid.filter(point => Number(point.data.value[1]) !== 0)
+          const focusedZero = zeros.find(point => point.seriesName === focusedHost) || zeros[0]
+          const visible = [...measured, ...(focusedZero ? [focusedZero] : [])]
+          visible.forEach((point) => {
             const value = point.data.value[1]
             if (mode === 'max' && point.data?.peakAt) {
               lines.push(`${point.marker || ''}${point.seriesName} Peak <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b> · Peak at ${formatWib(point.data.peakAt, true)} WIB`)
@@ -241,6 +248,8 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
               lines.push(`${point.marker || ''}${point.seriesName} ${mode === 'max' ? 'Peak' : 'Avg'} <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b>`)
             }
           })
+          if (zeros.length > 1) lines.push(`${zeros.length} APP traces measured 0 · other zero traces grouped`)
+          if (!valid.length) lines.push('No retained sample at this bucket')
           return lines.join('<br/>')
         },
       },
@@ -362,18 +371,6 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   }, [mode, option, range, reduceMotion, trend?.metric])
 
   return <div className="rundeckTrendPlot">
-    <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
-      <button type="button" aria-pressed={!focusedHost} className={!focusedHost ? 'is-focused' : ''} onClick={() => setManualFocus({ scope: focusScope, host: '' })}>All</button>
-      {hosts.map((host, index) => {
-        const label = shortHost(host)
-        return <button key={host} type="button" aria-pressed={focusedHost === label}
-          className={focusedHost === label ? 'is-focused' : ''}
-          style={{ '--trend-host-color': hostColors[trendHostColorIndex(label, index, hostColors.length)] }}
-          onClick={() => setManualFocus({ scope: focusScope, host: focusedHost === label ? '' : label })}>
-          <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
-        </button>
-      })}
-    </div>
     <div ref={ref} className="rundeckTrendChart" role="img"
       aria-label={`Saved ${trend?.metric_label || metricLabel(trend?.metric)} trend; select an APP to highlight its existing observations`} />
   </div>
@@ -651,7 +648,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
   </section>
 }
 
-export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence }) {
+export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, focusedHost = '', onFocusHost, sourceHosts = [], onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence }) {
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
@@ -799,11 +796,18 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityCoverageBand trend={trend} />
       {showGap && <CollectionGapBand trend={trend} />}
       <AvailabilityObservationSummary trend={trend} />
-      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={selectedJob?.host || ''} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} />
     </>
     return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
   }
 
+  const focusOptions = Array.from(new Set([
+    ...sourceHosts.map(host => shortHost(host.host || '')),
+    ...(serverTrend1?.items || []).map(row => shortHost(row.host || '')),
+    ...(serverTrend2?.items || []).map(row => shortHost(row.host || '')),
+    ...(technicalTrend?.items || []).map(row => shortHost(row.host || '')),
+  ].filter(name => /^APP\\d+$/i.test(name)))).sort((a, b) => Number(a.slice(3)) - Number(b.slice(3)))
+  const activeFocus = shortHost(focusedHost || '')
   const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
   const activeTrend = selectedTrend || serverTrend1
   const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
@@ -813,6 +817,19 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
       <div className="rundeckTrendSharedGroup"><span>Interval</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
       <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
+      <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
+        <span>APP Focus</span>
+        <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
+          <button type="button" aria-pressed={!activeFocus} className={!activeFocus ? 'is-focused' : ''} onClick={() => onFocusHost?.('')}>All</button>
+          {focusOptions.map((label, index) => <button key={label} type="button"
+            aria-pressed={activeFocus === label}
+            className={activeFocus === label ? 'is-focused' : ''}
+            style={{ '--trend-host-color': palette().series[trendHostColorIndex(label, index, palette().series.length)] }}
+            onClick={() => onFocusHost?.(activeFocus === label ? '' : label)}>
+            <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
+          </button>)}
+        </div>
+      </div>
     </div>
 
     {serverTrend1?.items?.length > 0 && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
@@ -821,13 +838,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
 
     <div className="rundeckTripleTrendGrid">
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 1 <small>· {metricLabel(serverMetric1)}</small></h3></div>
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend</h3></div>
         <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric1} onChange={setServerMetric1} ariaLabel="Server Trend 1 metric" /></div>
         {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label="Server Trend 2">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> Server Trend 2 <small>· {metricLabel(serverMetric2)}</small></h3></div>
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> {metricLabel(serverMetric2)} Trend</h3></div>
         <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric2} onChange={setServerMetric2} ariaLabel="Server Trend 2 metric" /></div>
         {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
       </section>
