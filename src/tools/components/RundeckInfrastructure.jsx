@@ -132,7 +132,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
   const host=hostRow?.host||selectedHost||'AOQ'
   const trendScope=[host,range,trendMetric].join(':')
-  const trend=trendData.scope===trendScope?trendData.items:[]
+  const trend=React.useMemo(()=>trendData.scope===trendScope?trendData.items:[],[trendData,trendScope])
   const trendMeta=trendData.scope===trendScope?trendData.meta:null
   const observedData=data.host===host?data:{fs:[],network:[],storage:[]}
   const telemetryRows=[...observedData.fs,...observedData.network,...observedData.storage]
@@ -347,7 +347,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         </div>
         <header><div/><div className="controls">
         <div>{['1h','6h','24h','7d','30d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
-        <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>{setTrend([]);setTrendMetric(v);setSelectedSeries('')}}>{label}</button>)}</div>
+        <div>{[['filesystem','Filesystem'],['network','Network'],['storage','Storage I/O']].map(([v,label])=><button key={v} type="button" className={trendMetric===v?'is-active':''} onClick={()=>{setTrendMetric(v);setSelectedSeries('')}}>{label}</button>)}</div>
       </div></header>
       {selectedSeries&&selectedValues.length>0&&<div className="rundeckInfraTrendSummary">
         <strong>Selected: {selectedSeries}</strong>
