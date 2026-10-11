@@ -16,6 +16,8 @@ https://sphere.astraotoparts.co.id
 
 Never force-reset PROD to DEV.
 
+> **Current frontend-only exception (SPHERE v1.34.86, 2026-10-11):** PROD already runs an earlier v1.34.86 frontend but needs finishing source `5e2aed9cac67330da63044edfbe343d9b4e8f202`. Use the guarded static-web helper `ops/rundeck/promote-ui-prod-from-dev.sh` on JAHSVR-SPHERE, **not** a full branch merge or backend deploy. Keep DEV at its QA-attested HEAD until cutover is verified. Read the canonical [v1.34.86 release record](../../docs/releases/SPHERE-v1.34.86.md). Prior production rollback directory is obtained from the script's live `BACKUP=...` output; do not infer it from GitHub. Historical 1.34.7x–1.34.8x candidate sections below are retained incident/release history and do not override this current status.
+
 When branches diverge, preserve PROD-only deployment/routing/service files.
 
 ## Runtime topology: DEV and PROD share one host

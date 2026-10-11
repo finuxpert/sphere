@@ -1,6 +1,6 @@
-# v1.34.83 Modal Recovery & Cockpit Visual QA (DEV only)
+# SPHERE v1.34.86 — cockpit and modal visual QA
 
-**Runtime status: NOT VERIFIED until Playwright runs against the patched build.**
+**Latest supplied server evidence (2026-10-11):** `QA_BUILD=PASS`, `VISUAL_GEOMETRY=PASS`, `SOURCE_SHA=ARTIFACT_SHA=5e2aed9cac67330da63044edfbe343d9b4e8f202`. GitHub commit/branch confirms the SHA; the browser screenshots were not independently re-inspected in this review. Older v1.34.83–v1.34.85 checks below remain historical regression guidance. See [release record](releases/SPHERE-v1.34.86.md).
 
 - Viewports: 1366×768, 1536×864, 1920×1080, Android 393×852.
 - Unified APP dialog: after motion all four edges inside viewport, title/close in bounds; keyboard Tab, Escape, backdrop, focus restore and reduced-motion.
@@ -16,7 +16,7 @@
 
 # SPHERE Visual QA
 
-This checklist covers the current v1.34.53 operator UI.
+This checklist preserves historical regression expectations and supplements the current v1.34.86 operator UI.
 
 Visual QA is separate from the default `npm run qa` release gate.
 
@@ -208,3 +208,13 @@ Only update screenshot baselines after manual review. Do not update snapshots me
 - SAP source identity consisting only of question marks/punctuation is displayed as 'SAP name unresolved'; raw keys are preserved in title and API contexts. Inspect SAP collection encoding separately.
 - v1.34.85 visual tests now use document.documentElement tokens instead of an ungrounded nested selector and wait for real APP cards before computed styles. Additional geometry tests cover every analysis destination and related nav.
 - Server QA/Playwright must PASS before any DEV deploy; PROD and PR #49 unchanged.
+
+
+## v1.34.86 finishing — regression scope (2026-10-11)
+
+- Three trend panels keep APP1–APP5 selector unobstructed; the Y-axis metric title is no longer duplicated against the panel heading.
+- Correlated Events and SAP Issues modals have one primary title; status/evidence text and separately qualified SM37 source remain readable.
+- Six direct launchers and paired modal navigation remain reachable from APP/Job selection without the removed Analysis Menu.
+- Back returns to the recorded selected, Job, APP or related-analysis context. The inactive Analysis Menu label must never appear.
+- Desktop 1366×768, 1536×864, 1920×1080 and Android 393×852 are covered by the existing Playwright geometry gate; one internal modal scroller is acceptable. Manual screenshot inspection is separate from automated geometry PASS.
+- No new CSS override or runtime patch was applied during the GitHub source/documentation review. PROD finishing cutover remains separately gated by server evidence.

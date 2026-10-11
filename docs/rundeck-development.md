@@ -11,7 +11,7 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current DEV source candidate: **v1.34.76** (does not imply the server is already deployed).
+- Current DEV finishing release: **v1.34.86** at immutable source `5e2aed9cac67330da63044edfbe343d9b4e8f202`; QA/build and visual geometry PASS are based on the supplied JAHSVR-SPHERE release evidence (2026-10-11). Frontend-only PROD finishing promotion is pending. See [v1.34.86 release record](releases/SPHERE-v1.34.86.md).
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
@@ -77,31 +77,13 @@ Latest operational data must come from one aligned READY collection cycle.
 
 The UI must not construct a fake current landscape by combining independent “latest” host timestamps.
 
-## Current UI contract
+## Current UI contract — v1.34.86
 
-Main navigation:
+Main tool navigation still includes ST03N Analysis and SAP Performance investigation.
 
-- ST03N Analysis
-- Performance Analysis
+The SAP Performance cockpit uses a dense SAP App Servers + Infrastructure selection, three server/technical trend charts, a selected Job/Program context and **six direct analysis launchers**: Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data. Do not reintroduce the removed Analysis Menu or duplicate headings in SAP Issues/Correlated Events modals. Paired modal navigation preserves selected Job/APP context.
 
-Performance Analysis modes:
-
-- Live Monitoring
-- History
-
-### Live Monitoring primary layout
-
-- Infrastructure summary
-- SAP App Servers
-- Server Trend
-- Selected Job / Program under the selected APP context
-- Correlated Events
-- SAP Availability
-- SAP Issues
-- Observation History
-- Infrastructure Analysis
-- System Data
-- Current Jobs & Programs beside Jobs & Programs to Review
+Jobs & Programs has three exclusive modes: **Live / Review / Search**. Search historical records only when a meaningful query is present. There is no separate standalone Live Monitoring / History tab for these flows. The APP1–APP5 trace selector must not collide with chart axes. Historical bucket time and exact sample time remain distinct.
 
 ### Shared investigation surfaces
 
@@ -167,40 +149,23 @@ Do not use nearest-bucket recomputation to replace the value the operator clicke
 - PDF report alignment uses the report's Performance and Availability source timestamps; mismatched timing remains PARTIAL rather than being silently normalized.
 - System Health and PDF status use the same resource/service/freshness semantics; stale performance or availability data raises WARNING, while Critical WP without service/resource impact remains ATTENTION.
 
-## Validation
+## Validation and current UI-only promotion
 
-DEV refresh, release gate, and deploy:
+For the already QA-attested **v1.34.86** source, avoid a needless second full build/QA. The existing `ops/rundeck/promote-ui-prod-from-dev.sh` reads immutable on-server QA and visual logs, validates the current DEV web release and production API, and makes a separate production-base (`/`) frontend build. Its exact HEAD guard means the DEV checkout **must remain at `5e2aed9cac67330da63044edfbe343d9b4e8f202`** (do not merge documentation to DEV beforehand).
 
-```bash
-cd /root/rundeck-sphere-dev && \
-git fetch origin && \
-git reset --hard origin/rundeck-sphere-dev && \
-bash ops/rundeck/qa-build-dev.sh && \
-bash ops/rundeck/prod-readiness-check.sh && \
-bash ops/rundeck/deploy-dev.sh
-```
-
-Production after approved promotion to `rundeck-sphere-prod`:
+Run on JAHSVR-SPHERE as root only after the operator reviews release evidence:
 
 ```bash
-cd /root/rundeck-sphere-prod && \
-git fetch origin && \
-git reset --hard origin/rundeck-sphere-prod && \
-npm ci && \
-npm run qa && \
-npm run build && \
-bash ops/rundeck/deploy-prod.sh
+cd /root/rundeck-sphere-dev && bash ops/rundeck/promote-ui-prod-from-dev.sh 5e2aed9cac67330da63044edfbe343d9b4e8f202
 ```
 
-Do not merge DEV inside `/root/rundeck-sphere-prod` as part of deployment. Promotion happens before deployment; the server-side PROD checkout only consumes the approved `origin/rundeck-sphere-prod` state.
-
-Chunk-size warnings are informational. QA/readiness/build/deploy failures are blockers.
+This is frontend-only: no API service restart, database migration, Nginx reload, SAP/Rundeck job or PROD Git branch mutation. Script preflight failure is HOLD; successful server post-cutover checks are required for PASS. Previous web release is retained for automatic rollback. For full application/backend and separate branch promotion procedures, see `ops/rundeck/OPERATIONS.md`; they are **not** the workflow for this UI-only release. Chunk-size warnings are informational; failed gates are blockers.
 
 ## Promotion rule
 
 Do not force-reset PROD to DEV.
 
-When branches diverge, build a release branch from the current PROD head and overlay only approved DEV changes, preserving PROD-only deploy/routing/service files.
+When branches diverge, a full branch-based application promotion requires a release branch from the current PROD head with only approved changes; preserve PROD-specific deploy/routing/service files. **Exception: v1.34.86 finishing is frontend-only and does not update `rundeck-sphere-prod`**. See the canonical release record for the guarded static-web cutover.
 
 See `ops/rundeck/OPERATIONS.md`.
 
