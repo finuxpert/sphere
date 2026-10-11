@@ -1,0 +1,237 @@
+import { test, expect } from '@playwright/test'
+
+const TARGET = process.env.SPHERE_VISUAL_BASE_URL || 'https://sphere.astraotoparts.co.id/dev/#/tool/logs'
+
+async function openCockpit(page) {
+  await page.goto(TARGET, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.rundeckPanel')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.rundeckCockpitV13456')).toBeVisible()
+}
+
+test('v1.34.79 cockpit keeps operational sections reachable at desktop target sizes', async ({ page }) => {
+  await openCockpit(page)
+  const monitoring = page.locator('.rundeckCockpitV13456')
+  const top = monitoring.locator('.rundeckTopBandV13454')
+  const trends = monitoring.locator('.rundeckTripleTrendGrid')
+  const shortcuts = monitoring.locator('.rundeckAnalysisRailV13456')
+  const jobs = monitoring.locator('.rundeckJobsProgramsWorkspace')
+  for (const section of [top, trends, shortcuts, jobs]) await expect(section).toBeVisible()
+  await expect(monitoring.locator('.rundeckJobsProgramsModes').getByRole('tab', { name: 'Live' })).toBeVisible()
+  await expect(monitoring.locator('.rundeckJobsProgramsModes').getByRole('tab', { name: 'Review' })).toBeVisible()
+  await expect(monitoring.locator('.rundeckJobsProgramsModes').getByRole('tab', { name: 'Search' })).toBeVisible()
+  const metrics = await page.evaluate(() => {
+    const get = (selector) => document.querySelector(selector)
+    const table = get('.rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadTableWrap')
+    const jobsPanel = get('.rundeckJobsProgramsWorkspace')
+    const fonts = [...document.querySelectorAll('.rundeckJobsProgramsModes button')].map(el => Number.parseFloat(getComputedStyle(el).fontSize))
+    return {
+      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      jobsBottom: jobsPanel?.getBoundingClientRect().bottom ?? null,
+      viewportHeight: window.innerHeight,
+      tableOverflowY: table ? getComputedStyle(table).overflowY : 'missing',
+      fonts,
+    }
+  })
+  expect(metrics.overflowX).toBeLessThanOrEqual(2)
+  expect(metrics.fonts.every(n => Number.isFinite(n) && n >= 10)).toBe(true)
+  expect(metrics.tableOverflowY).toMatch(/auto|scroll/)
+  // 1366x768 deliberately permits page scroll rather than clipping the workload.
+  if (page.viewportSize().height >= 864) {
+    expect(metrics.jobsBottom).toBeLessThanOrEqual(metrics.viewportHeight + 30)
+  }
+  await test.info().attach('cockpit-viewport', { body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png' })
+})
+
+test('Android-sized viewport does not introduce horizontal page overflow', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'laptop-1366') test.skip()
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openCockpit(page)
+  const widthOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(widthOverflow).toBeLessThanOrEqual(2)
+  await expect(page.locator('.rundeckJobsProgramsWorkspace')).toBeVisible()
+  await expect(page.locator('.rundeckAnalysisRailV13456')).toBeVisible()
+  await test.info().attach('cockpit-android-393', { body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png' })
+})
+
+test('APP trace focus is selectable with All reset without hiding saved charts', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const plots = page.locator('.rundeckTrendPlot')
+  await expect(plots.first()).toBeVisible({ timeout: 20_000 })
+  const focus = plots.first().getByRole('group', { name: 'Highlight APP trace' })
+  const app = focus.getByRole('button', { name: /APP[1-5]/ }).first()
+  await expect(app).toBeVisible()
+  await app.click()
+  await expect(app).toHaveAttribute('aria-pressed', 'true')
+  await focus.getByRole('button', { name: 'All' }).click()
+  await expect(focus.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(plots.first().locator('canvas')).toBeVisible()
+})
+
+test('Jobs and Programs mode tabs work with keyboard arrows and Home', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const tabs = page.locator('.rundeckJobsProgramsModes')
+  const live = tabs.getByRole('tab', { name: 'Live' })
+  const review = tabs.getByRole('tab', { name: 'Review' })
+  const search = tabs.getByRole('tab', { name: 'Search' })
+  await live.focus()
+  await live.press('ArrowRight')
+  await expect(review).toHaveAttribute('aria-selected', 'true')
+  await review.press('ArrowRight')
+  await expect(search).toHaveAttribute('aria-selected', 'true')
+  await search.press('Home')
+  await expect(live).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator('.rundeckJobsProgramsWorkspaceBody')).toHaveAttribute('role', 'tabpanel')
+})
+
+
+test('v1.34.82 one APP click opens the merged SAP and Infrastructure modal', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const merged = page.locator('.rundeckUnifiedAppInfra')
+  const cards = merged.getByRole('group', { name: 'Select APP server' }).getByRole('button')
+  await expect(cards).toHaveCount(5, { timeout: 30_000 })
+  await expect(merged.locator('.rundeckUnifiedAppInfraDetail')).toHaveCount(0)
+  await cards.nth(4).click()
+  const modal = page.getByRole('dialog', { name: /APP5 Analysis/ })
+  await expect(modal).toBeVisible({ timeout: 30_000 })
+  await expect(modal.getByRole('region', { name: 'SAP performance evidence' })).toBeVisible()
+  await expect(modal.getByRole('region', { name: 'Infrastructure evidence' })).toBeVisible()
+  await expect(modal.getByRole('group', { name: 'Select Infrastructure APP' })).toHaveCount(0)
+  await expect(modal.getByRole('button', { name: 'Close analysis' })).toBeVisible()
+  await modal.getByRole('button', { name: 'Close analysis' }).click()
+  await expect(modal).toHaveCount(0)
+})
+
+test('v1.34.82 analysis shortcuts never paint outside their six independent cells', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const rail = page.locator('.rundeckAnalysisRailV13456')
+  const cards = rail.locator('.rundeckEvidenceCard, .rundeckSelectedSecondaryAnalysis > button')
+  await expect(cards).toHaveCount(6, { timeout: 30_000 })
+  const geometry = await cards.evaluateAll(nodes=>nodes.map(node=>{
+    const rect=node.getBoundingClientRect()
+    const text=node.querySelector('strong,small')
+    const childRect=text?.getBoundingClientRect()
+    return { x:rect.x,right:rect.right,textRight:childRect?.right || rect.x }
+  }))
+  for (let i=0;i<geometry.length;i++){
+    expect(geometry[i].textRight).toBeLessThanOrEqual(geometry[i].right+1)
+  }
+  await test.info().attach('six-analysis-tiles',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
+})
+
+test('v1.34.82 loaded Jobs & Programs rows remain scrollable, not single-row clipped', async ({ page }, testInfo) => {
+  if (testInfo.project.name !== 'desktop-1536') test.skip()
+  await openCockpit(page)
+  const table=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap')
+  await expect(table).toBeVisible({timeout:30_000})
+  await expect.poll(()=>table.locator('tbody tr').count(),{timeout:30_000}).toBeGreaterThan(1)
+  const data=await table.evaluate(el=>({
+    height:el.clientHeight,
+    rowCount:el.querySelectorAll('tbody tr').length,
+    overflowY:getComputedStyle(el).overflowY,
+    scrollHeight:el.scrollHeight,
+  }))
+  expect(data.height).toBeGreaterThan(130)
+  expect(data.rowCount).toBeGreaterThan(1)
+  expect(data.overflowY).toMatch(/auto|scroll/)
+  expect(data.scrollHeight).toBeGreaterThanOrEqual(data.height)
+})
+
+test('v1.34.83 APP5 modal respects viewport bounds after 220ms motion, Escape restores focus', async ({page})=>{
+ await page.emulateMedia({reducedMotion:'no-preference'})
+ await openCockpit(page)
+ const card=page.locator('.rundeckUnifiedAppInfra').getByRole('group',{name:'Select APP server'}).getByRole('button').nth(4)
+ await card.click()
+ const modal=page.getByRole('dialog',{name:/APP5 Analysis/})
+ await expect(modal).toBeVisible()
+ await page.waitForTimeout(260)
+ const box=await modal.evaluate(el=>{
+  const r=el.getBoundingClientRect(),h=el.querySelector(':scope > header').getBoundingClientRect()
+  const c=el.querySelector('.rundeckWorkspaceClose').getBoundingClientRect()
+  return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,center:(r.left+r.right)/2,
+   vw:innerWidth,vh:innerHeight,headerL:h.left,headerR:h.right,closeL:c.left,closeR:c.right}
+ })
+ expect(box.left).toBeGreaterThanOrEqual(0)
+ expect(box.right).toBeLessThanOrEqual(box.vw+1)
+ expect(box.top).toBeGreaterThanOrEqual(0)
+ expect(box.bottom).toBeLessThanOrEqual(box.vh+1)
+ expect(Math.abs(box.center-box.vw/2)).toBeLessThan(2)
+ expect(box.headerL).toBeGreaterThanOrEqual(box.left)
+ expect(box.headerR).toBeLessThanOrEqual(box.right+1)
+ expect(box.closeL).toBeGreaterThanOrEqual(box.left)
+ expect(box.closeR).toBeLessThanOrEqual(box.right+1)
+ await page.keyboard.press('Escape')
+ await expect(modal).toHaveCount(0)
+ await expect(card).toBeFocused()
+})
+test('v1.34.83 all 6 shortcut titles and summaries stay within their own tiles',async ({page})=>{
+ await openCockpit(page)
+ const tiles=page.locator('.rundeckAnalysisRailV13456 .rundeckEvidenceCard, .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis > button')
+ await expect(tiles).toHaveCount(6,{timeout:30000})
+ const g=await tiles.evaluateAll(nodes=>nodes.map(n=>{
+  const r=n.getBoundingClientRect(),t=n.querySelector('.rundeckEvidenceCardTitle,b')?.getBoundingClientRect()
+  const s=n.querySelector('strong,small')?.getBoundingClientRect()
+  const em=n.querySelector(':scope > em')?.getBoundingClientRect()
+  return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,tl:t?.left,tr:t?.right,
+   sr:s?.right,arrow:em?.left,vw:innerWidth}
+ }))
+ for(const x of g){
+  expect(x.left).toBeGreaterThanOrEqual(-1)
+  expect(x.right).toBeLessThanOrEqual(x.vw+1)
+  expect(x.tl).toBeGreaterThanOrEqual(x.left-1)
+  expect(x.tr).toBeLessThanOrEqual(x.arrow+1)
+  expect(x.sr).toBeLessThanOrEqual(x.arrow+1)
+ }
+ for(let i=0;i<g.length;i++)for(let j=i+1;j<g.length;j++){
+  const overlapX=Math.min(g[i].right,g[j].right)-Math.max(g[i].left,g[j].left)
+  const overlapY=Math.min(g[i].bottom,g[j].bottom)-Math.max(g[i].top,g[j].top)
+  expect(overlapX>2&&overlapY>2).toBe(false)
+ }
+})
+test('v1.34.83 Live workload scroll geometry with actual rows or DOM-only empty-source fixture',async ({page})=>{
+ await openCockpit(page)
+ const table=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap')
+ await expect(table).toBeVisible({timeout:30000})
+ const data=await table.evaluate(el=>{
+  const tbody=el.querySelector('tbody')
+  const emptyText='No job or program observed in this collection.'
+  const currentRows=[...tbody.querySelectorAll('tr')].filter(row=>!row.textContent.includes(emptyText))
+  const observed=currentRows.length
+  const hadEmptyPlaceholder=observed===0 && tbody.textContent.includes(emptyText)
+  // No SAP observations is a valid empty state, not a scroll bug.
+  // Still validate the real table's overflow CSS with browser-only layout rows.
+  // This does NOT assert that API records exist.
+  if(observed<30){
+   if(hadEmptyPlaceholder) tbody.replaceChildren()
+   for(let i=observed;i<40;i++){
+    const tr=document.createElement('tr')
+    for(const content of ['APP5','Visual fixture '+String(i+1),'3.2%','0.1 GB','1','DIA 1']){
+     const td=document.createElement('td')
+     td.textContent=content
+     tr.appendChild(td)
+    }
+    tbody.appendChild(tr)
+   }
+  }
+  el.scrollTop=el.scrollHeight
+  const last=tbody.querySelector('tr:last-child')?.getBoundingClientRect()
+  const bounds=el.getBoundingClientRect()
+  return {actualRows:observed,emptyState:hadEmptyPlaceholder,usedDomFixture:observed<30,
+   renderedRows:tbody.querySelectorAll('tr').length,overflowY:getComputedStyle(el).overflowY,
+   scrollTop:el.scrollTop,max:el.scrollHeight-el.clientHeight,
+   lastBottom:last?.bottom,lastTop:last?.top,containerBottom:bounds.bottom,containerTop:bounds.top}
+ })
+ if(data.usedDomFixture){
+  console.log(`WORKLOAD_DATA_EVIDENCE=ONLY_${data.actualRows}_REAL_ROWS; SCROLL_LAYOUT=DOM_FIXTURE_ONLY`)
+  if(data.actualRows===0) expect(data.emptyState).toBe(true)
+ }
+ expect(data.renderedRows).toBeGreaterThan(1)
+ expect(data.overflowY).toMatch(/auto|scroll/)
+ expect(data.max).toBeGreaterThan(0)
+ expect(data.scrollTop).toBeGreaterThanOrEqual(data.max-2)
+ expect(data.lastTop).toBeGreaterThanOrEqual(data.containerTop-2)
+ expect(data.lastBottom).toBeLessThanOrEqual(data.containerBottom+2)
+})

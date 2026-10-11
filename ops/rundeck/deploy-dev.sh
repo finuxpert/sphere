@@ -19,6 +19,36 @@ if [[ -n "$(git -C "$SOURCE" status --porcelain)" ]]; then
 fi
 
 REVISION=$(git -C "$SOURCE" rev-parse HEAD)
+
+# Fail BEFORE changing credentials, Nginx, releases, services or the DB.
+# A live env file may retain migrations=true for historical reasons.
+# An explicit, revision-bound operator decision is mandatory for this run.
+RUN_DEV_MIGRATIONS="$(sed -n 's/^SPHERE_RUN_DEV_MIGRATIONS=//p' /etc/sphere/rundeck-dev.env 2>/dev/null | tail -n 1 | tr -d '\r' || true)"
+MIGRATION_DECISION="${SPHERE_DEV_MIGRATION_DECISION:-}"
+if [[ "$RUN_DEV_MIGRATIONS" == "true" ]]; then
+  if [[ "${SPHERE_DEV_MIGRATION_APPROVED_SHA:-}" != "$REVISION" ]]; then
+    echo "DEPLOY BLOCKED: migrations enabled; revision-bound approval missing" >&2
+    exit 42
+  fi
+  case "$MIGRATION_DECISION" in
+    skip)
+      echo "DEV MIGRATION DECISION=SKIP (explicit approved release)"
+      ;;
+    apply)
+      echo "DEV MIGRATION DECISION=APPLY (requires exact DEV DB target and separate backup proof)"
+      ;;
+    *)
+      echo "DEPLOY BLOCKED: choose explicit skip/apply after DB revision review" >&2
+      exit 42
+      ;;
+  esac
+elif [[ "$RUN_DEV_MIGRATIONS" != "false" && -n "$RUN_DEV_MIGRATIONS" ]]; then
+  echo "DEPLOY BLOCKED: migration setting is not an exact boolean" >&2
+  exit 42
+else
+  MIGRATION_DECISION="skip"
+fi
+
 SHORT_REVISION="${REVISION:0:7}"
 APP_VERSION="$(sed -n "s/^export const APP_VERSION = '\([^']*\)'.*/\1/p" "$SOURCE/src/app/version.js" | head -n 1)"
 RELEASE=/opt/sphere-rundeck-dev/releases/$REVISION
@@ -140,9 +170,10 @@ if test -s /etc/sphere/rundeck-runner.token; then
   chmod 0640 /etc/sphere/rundeck-runner.token
 fi
 
-# Database migration is opt-in and guarded by migrate-dev.sh against any non-dev DB.
-RUN_DEV_MIGRATIONS="$(sed -n 's/^SPHERE_RUN_DEV_MIGRATIONS=//p' /etc/sphere/rundeck-dev.env 2>/dev/null | tail -n 1 | tr -d '\r' || true)"
-if [[ "$RUN_DEV_MIGRATIONS" == "true" ]]; then
+# Never execute Alembic implicitly merely because an old env flag is true.
+# APPLY is possible only after separate revision/backup review and the exact
+# target check inside migrate-dev.sh. SKIP makes no DB schema changes.
+if [[ "$RUN_DEV_MIGRATIONS" == "true" && "$MIGRATION_DECISION" == "apply" ]]; then
   "$RELEASE/ops/rundeck/migrate-dev.sh" "$RELEASE"
 fi
 

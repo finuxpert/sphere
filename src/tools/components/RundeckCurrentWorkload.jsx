@@ -183,7 +183,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · showing ${rows.length}` : `${workloadMeta.total || rows.length} observed`}</span>
+      <span className="rundeckCurrentWorkloadCount" title="Observed count from API; loaded is the current response; use the internal table scroll for other loaded rows">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · ${rows.length} loaded` : `${workloadMeta.total || rows.length} observed · ${rows.length} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>

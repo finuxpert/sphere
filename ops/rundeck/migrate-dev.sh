@@ -30,15 +30,14 @@ if [[ -z "$DATABASE_URL" ]]; then
   exit 40
 fi
 
-# Hard guard against accidentally running Rundeck-development migrations on the
-# production SPHERE database. The dev database name must be explicit.
-case "$DATABASE_URL" in
-  *"/sphere_rundeck_dev"*|*"/sphere-rundeck-dev"*) ;;
-  *)
-    echo "Refusing migration: DATABASE_URL is not the isolated Rundeck dev database" >&2
-    exit 41
-    ;;
-esac
+# Validate the exact PostgreSQL database path, role and LOCAL connection.
+# A substring in a query/hostname must never pass as a DEV database target.
+# Pipe the URL through stdin, not argv/logs. This script does not print secrets.
+if ! printf '%s' "$DATABASE_URL" | "$PYTHON" \
+    "$ROOT/ops/rundeck/validate-dev-migration-target.py"; then
+  echo "Refusing migration: exact local DEV database target not verified" >&2
+  exit 41
+fi
 
 # Local PostgreSQL uses peer authentication. The DB role is "sphere", so Alembic
 # must connect as the matching OS user instead of root. A checkout under /root is

@@ -3,6 +3,8 @@ import * as echarts from './logEcharts.js'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
+import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
+import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -176,12 +178,22 @@ function TrendFreshness({ trend }) {
 
 function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const ref = React.useRef(null)
+  const chartRef = React.useRef(null)
+  const activeCallbackRef = React.useRef(null)
+  const optionSchemaRef = React.useRef('')
+  const [manualFocus, setManualFocus] = React.useState({ scope: '', host: null })
+  const reduceMotion = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
+  const hosts = React.useMemo(() => Array.from(new Set((trend?.items || []).map(row => row.host))).sort(), [trend])
+  const hostLabels = React.useMemo(() => hosts.map(shortHost), [hosts])
+  const hostColors = palette().series
+  const focusScope = `${trend?.display_metric || trend?.metric || ''}:${range}`
+  const manualHost = manualFocus.scope === focusScope ? manualFocus.host : null
+  const focusedHost = resolveTrendFocus(manualHost, shortHost(selectedHost || ''), hostLabels)
   const option = React.useMemo(() => {
     const colors = palette()
     const rows = trend?.items || []
-    const hosts = Array.from(new Set(rows.map((row) => row.host))).sort()
     const availabilityMode = trend?.metric === 'availability'
-    const selectedKey = shortHost(selectedHost || '')
+    const selectedKey = focusedHost
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
     const compactPoints = ['30m', '1h', '3h', '6h'].includes(range)
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
@@ -190,16 +202,22 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     return {
-      animationDuration: 140,
+      // Reveal observed history once; avoid perpetual "live" motion.
+      // Reduced-motion preference is respected by the chart renderer itself.
+      animationDuration: reduceMotion ? 0 : 300,
+      animationDelay: 0,
+      animationDurationUpdate: reduceMotion ? 0 : 200,
+      animationEasing: 'cubicOut',
+      animationEasingUpdate: 'cubicOut',
       backgroundColor: 'transparent', color: colors.series, textStyle: { color: colors.text },
-      legend: { top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hosts.map(shortHost), textStyle: { color: colors.secondary, fontSize: 10.2, fontWeight: 600 } },
+      legend: { show: false, top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hostLabels, textStyle: { color: colors.secondary, fontSize: 11.2, fontWeight: 600 } },
       grid: { left: 58, right: 72, top: 38, bottom: compactPoints ? 34 : 48 },
       tooltip: {
         trigger: 'axis',
         confine: true,
         backgroundColor: colors.panel,
         borderWidth: 0,
-        textStyle: { color: colors.text, fontSize: 10 },
+        textStyle: { color: colors.text, fontSize: 11 },
         formatter: (points = []) => {
           if (!points.length) return ''
           const bucketAt = points[0]?.axisValue
@@ -215,22 +233,23 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           return lines.join('<br/>')
         },
       },
-      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 9, hideOverlap: true, showMinLabel: true, showMaxLabel: true, margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 9 }, axisLabel: { color: colors.muted, fontSize: 9, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
+      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 10, hideOverlap: true, showMinLabel: true, showMaxLabel: true, margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      yAxis: { type: 'value', name: availabilityMode ? (trend?.metric_label || 'Availability') : `${trend?.metric_label || ''}${trend?.unit ? ` (${trend.unit})` : ''}`, nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
+        const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
+        const traceColor = colors.series[trendHostColorIndex(shortHost(host), index, colors.series.length)]
         const focused = selectedKey && shortHost(host) === selectedKey
-        const dimmed = selectedKey && !focused
         return {
-        name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
+        id: host, name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
         showSymbol: availabilityMode || compactPoints,
         symbolSize: availabilityMode
           ? ((value, params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? 8 : 3.5)
           : (focused ? 5 : (compactPoints ? 3.5 : 2.5)),
-        lineStyle: { width: focused ? 2.8 : availabilityMode ? 1.5 : 1.8, opacity: dimmed ? .26 : availabilityMode ? .72 : 1 },
+        lineStyle: { color: traceColor, width: traceStyle.width, opacity: traceStyle.opacity },
         itemStyle: availabilityMode
-          ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: dimmed ? .28 : 1 }
-          : { opacity: dimmed ? .36 : 1 },
+          ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: traceStyle.itemOpacity }
+          : { color: traceColor, opacity: traceStyle.itemOpacity },
         emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.8, opacity: 1 } },
         data: [
           ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
@@ -246,32 +265,33 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       }
       })
     }
-  }, [mode, range, selectedHost, trend])
+  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, trend])
+
+  // ECharts stays mounted while focus and stored samples update. No chart loop.
+  // The latest handler is read at click-time, not captured by the mount effect.
+  React.useEffect(() => {
+    activeCallbackRef.current = { onSelect, trend, mode, option }
+  }, [onSelect, trend, mode, option])
 
   React.useEffect(() => {
     if (!ref.current) return undefined
-    echarts.getInstanceByDom?.(ref.current)?.dispose()
-    const chart = echarts.init(ref.current, null, { renderer: 'canvas' })
-    chart.setOption(option, true)
+    const chart = echarts.getInstanceByDom?.(ref.current) || echarts.init(ref.current, null, { renderer: 'canvas' })
+    chartRef.current = chart
     let lastExactClickAt = 0
 
     const selectItem = (item, seriesIndex = null, dataIndex = null) => {
       if (!item || item.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
       if (seriesIndex !== null && dataIndex !== null) chart.dispatchAction({ type: 'showTip', seriesIndex, dataIndex })
-      const availability = trend?.metric === 'availability'
-      const selectedAt = availability ? item.bucket : (mode === 'max' ? (item.peakAt || item.bucket) : item.bucket)
-      const selectedCollectionId = availability ? '' : (mode === 'max' ? (item.peakCollectionId || '') : '')
-      onSelect?.({
-        host: item.host,
-        at: selectedAt,
-        collectionId: selectedCollectionId,
-        bucket: item.bucket,
-        value: availability ? item.status : (mode === 'max' ? item.max : item.avg),
-        status: item.status,
-        availability,
-        mode,
-        metricLabel: trend?.metric_label || metricLabel(trend?.metric),
-        unit: availability ? '' : (trend?.unit || ''),
+      const { onSelect: currentSelect, trend: currentTrend, mode: currentMode } = activeCallbackRef.current
+      const availability = currentTrend?.metric === 'availability'
+      const selectedAt = availability ? item.bucket : (currentMode === 'max' ? (item.peakAt || item.bucket) : item.bucket)
+      const selectedCollectionId = availability ? '' : (currentMode === 'max' ? (item.peakCollectionId || '') : '')
+      currentSelect?.({
+        host: item.host, at: selectedAt, collectionId: selectedCollectionId,
+        bucket: item.bucket, value: availability ? item.status : (currentMode === 'max' ? item.max : item.avg),
+        status: item.status, availability, mode: currentMode,
+        metricLabel: currentTrend?.metric_label || metricLabel(currentTrend?.metric),
+        unit: availability ? '' : (currentTrend?.unit || ''),
       })
     }
 
@@ -286,9 +306,10 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       if (Date.now() - lastExactClickAt < 80) return
       const pixel = [event?.offsetX, event?.offsetY]
       if (!chart.containPixel({ gridIndex: 0 }, pixel)) return
+      const activeOption = activeCallbackRef.current.option
       let nearest = null
       let distance = Number.POSITIVE_INFINITY
-      ;(option.series || []).forEach((series, seriesIndex) => (series.data || []).forEach((item, dataIndex) => {
+      ;(activeOption.series || []).forEach((series, seriesIndex) => (series.data || []).forEach((item, dataIndex) => {
         if (item?.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
         const point = chart.convertToPixel({ seriesIndex }, item.value)
         if (!Array.isArray(point)) return
@@ -311,10 +332,40 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       chart.off('click', exactClick)
       chart.getZr().off('click', fallbackClick)
       chart.dispose()
+      chartRef.current = null
+      optionSchemaRef.current = ''
     }
-  }, [mode, onSelect, option, trend])
+  }, [])
 
-  return <div ref={ref} className="rundeckTrendChart" role="img" aria-label="Server trend" />
+  React.useEffect(() => {
+    const chart = chartRef.current
+    if (!chart) return
+    const schema = `${trend?.metric || ''}:${range}:${mode}`
+    const schemaChanged = optionSchemaRef.current !== schema
+    optionSchemaRef.current = schema
+    chart.setOption(reduceMotion ? { ...option, animation: false } : option, {
+      notMerge: schemaChanged,
+      replaceMerge: schemaChanged ? undefined : ['series'],
+      lazyUpdate: false,
+    })
+  }, [mode, option, range, reduceMotion, trend?.metric])
+
+  return <div className="rundeckTrendPlot">
+    <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
+      <button type="button" aria-pressed={!focusedHost} className={!focusedHost ? 'is-focused' : ''} onClick={() => setManualFocus({ scope: focusScope, host: '' })}>All</button>
+      {hosts.map((host, index) => {
+        const label = shortHost(host)
+        return <button key={host} type="button" aria-pressed={focusedHost === label}
+          className={focusedHost === label ? 'is-focused' : ''}
+          style={{ '--trend-host-color': hostColors[trendHostColorIndex(label, index, hostColors.length)] }}
+          onClick={() => setManualFocus({ scope: focusScope, host: focusedHost === label ? '' : label })}>
+          <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
+        </button>
+      })}
+    </div>
+    <div ref={ref} className="rundeckTrendChart" role="img"
+      aria-label={`Saved ${trend?.metric_label || metricLabel(trend?.metric)} trend; select an APP to highlight its existing observations`} />
+  </div>
 }
 
 function selectedTimelineRow(selected, timeline) {
@@ -365,6 +416,7 @@ function processCount(consumer) {
 function MiniTrendContext({ trend, selected, range }) {
   const model = React.useMemo(() => {
     const host = selected?.host || ''
+    const unit = selected?.unit || trend?.unit || ''
     const rows = (trend?.items || [])
       .filter((row) => shortHost(row.host || '') === shortHost(host))
       .map((row) => {
@@ -375,17 +427,25 @@ function MiniTrendContext({ trend, selected, range }) {
       .filter(Boolean)
       .sort((a,b)=>a.at-b.at)
     if (rows.length < 2) return null
+
     const minAt = rows[0].at
     const maxAt = rows.at(-1).at
     const values = rows.map((row)=>row.value)
-    const minValue = Math.min(...values)
-    const maxValue = Math.max(...values)
+    const rawMin = Math.min(...values)
+    const rawMax = Math.max(...values)
+    const warning = Number(trend?.warning)
+    const critical = Number(trend?.critical)
+    const percentScale = unit === '%'
+    const yMin = percentScale ? 0 : Math.min(rawMin, 0)
+    const yMaxBase = Math.max(rawMax, Number.isFinite(critical) ? critical : Number.NEGATIVE_INFINITY, Number.isFinite(warning) ? warning : Number.NEGATIVE_INFINITY)
+    const yMax = percentScale ? 100 : (yMaxBase > yMin ? yMaxBase * 1.08 : yMin + 1)
     const spanAt = Math.max(1, maxAt-minAt)
-    const spanValue = Math.max(1e-9, maxValue-minValue)
+    const spanValue = Math.max(1e-9, yMax-yMin)
     const point = (row) => ({
-      x: 12 + ((row.at-minAt)/spanAt)*496,
-      y: 68 - ((row.value-minValue)/spanValue)*50,
+      x: 52 + ((row.at-minAt)/spanAt)*438,
+      y: 78 - ((row.value-yMin)/spanValue)*58,
     })
+    const y = (value) => 78 - ((value-yMin)/spanValue)*58
     const points = rows.map((row)=>point(row))
     const selectedActualAt = Date.parse(selected?.at || '')
     const selectedBucketAt = Date.parse(selected?.bucket || '')
@@ -394,41 +454,68 @@ function MiniTrendContext({ trend, selected, range }) {
       : rows.at(-1)
     const marker = selectedRow ? point(selectedRow) : null
     const selectedValue = Number(selected?.value)
+    const resolvedSelectedValue = Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value
+    const peakRow = rows.reduce((best,row)=>!best || row.value>best.value ? row : best,null)
     return {
       points: points.map((p)=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),
       marker,
-      minValue,
-      maxValue,
-      selectedValue:Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value,
+      rawMin,
+      rawMax,
+      yMin,
+      yMax,
+      warning:Number.isFinite(warning)?warning:null,
+      critical:Number.isFinite(critical)?critical:null,
+      selectedValue:resolvedSelectedValue,
       firstAt:minAt,
       lastAt:maxAt,
       selectedActualAt:Number.isFinite(selectedActualAt) ? selectedActualAt : selectedRow?.at,
       selectedBucketAt:Number.isFinite(selectedBucketAt) ? selectedBucketAt : selectedRow?.at,
+      peakAt:peakRow?.at || null,
+      peakValue:peakRow?.value ?? null,
+      y,
+      unit,
     }
   },[selected,trend])
 
   if(!model) return null
-  return <section className="rundeckTrendMiniContext" aria-label="History around selected point">
+  const axisValues=[model.yMax,(model.yMax+model.yMin)/2,model.yMin]
+  return <section className="rundeckTrendMiniContext is-dashboard-like" aria-label="History around selected point">
     <header>
       <div><span>History</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
-      <small>{numberText(model.minValue,1)}–{numberText(model.maxValue,1)}{selected?.unit || trend?.unit || ''}</small>
+      <div className="rundeckTrendMiniSummary">
+        <small>Range {numberText(model.rawMin,1)}–{numberText(model.rawMax,1)}{model.unit}</small>
+        <small>Peak {model.peakValue == null ? '—' : `${numberText(model.peakValue,1)}${model.unit}`}{model.peakAt ? ` · ${formatWib(model.peakAt,true)} WIB` : ''}</small>
+      </div>
     </header>
-    <svg viewBox="0 0 520 104" role="img" aria-label="History with selected bucket marker">
-      <line x1="12" y1="18" x2="508" y2="18" className="rundeckTrendMiniGrid" />
-      <line x1="12" y1="43" x2="508" y2="43" className="rundeckTrendMiniGrid" />
-      <line x1="12" y1="68" x2="508" y2="68" className="rundeckTrendMiniGrid" />
+    <svg viewBox="0 0 520 112" role="img" aria-label="History with thresholds and selected point">
+      {axisValues.map((value,index) => {
+        const yPos=20+(index*29)
+        return <g key={index}>
+          <line x1="52" y1={yPos} x2="490" y2={yPos} className="rundeckTrendMiniGrid" />
+          <text x="45" y={yPos+3} textAnchor="end" className="rundeckTrendMiniAxisLabel">{numberText(value,0)}{model.unit}</text>
+        </g>
+      })}
+      {model.warning !== null && model.warning >= model.yMin && model.warning <= model.yMax && <>
+        <line x1="52" y1={model.y(model.warning)} x2="490" y2={model.y(model.warning)} className="rundeckTrendMiniThreshold is-warning" />
+        <text x="488" y={model.y(model.warning)-3} textAnchor="end" className="rundeckTrendMiniThresholdLabel is-warning">Warn {numberText(model.warning,0)}{model.unit}</text>
+      </>}
+      {model.critical !== null && model.critical >= model.yMin && model.critical <= model.yMax && <>
+        <line x1="52" y1={model.y(model.critical)} x2="490" y2={model.y(model.critical)} className="rundeckTrendMiniThreshold is-critical" />
+        <text x="488" y={model.y(model.critical)-3} textAnchor="end" className="rundeckTrendMiniThresholdLabel is-critical">Crit {numberText(model.critical,0)}{model.unit}</text>
+      </>}
       <polyline points={model.points} className="rundeckTrendMiniLine" />
       {model.marker && <>
-        <line x1={model.marker.x} y1="10" x2={model.marker.x} y2="72" className="rundeckTrendMiniMarkerLine" />
-        <circle cx={model.marker.x} cy={model.marker.y} r="4" className="rundeckTrendMiniMarker" />
+        <line x1={model.marker.x} y1="16" x2={model.marker.x} y2="82" className="rundeckTrendMiniMarkerLine" />
+        <circle cx={model.marker.x} cy={model.marker.y} r="4.5" className="rundeckTrendMiniMarker" />
+        <text x={Math.min(480,Math.max(70,model.marker.x+8))} y={Math.max(15,model.marker.y-7)} className="rundeckTrendMiniSelectedLabel">Selected {numberText(model.selectedValue,1)}{model.unit}</text>
       </>}
-      <text x="12" y="94" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
-      {model.selectedBucketAt && <text x={model.marker?.x || 260} y="94" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
-      <text x="508" y="94" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
+      <text x="52" y="105" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
+      {model.selectedBucketAt && <text x={model.marker?.x || 270} y="105" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
+      <text x="490" y="105" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
     </svg>
     <footer>
       <span>Actual {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'} · Bucket {model.selectedBucketAt ? `${formatWib(model.selectedBucketAt, true)} WIB` : '—'}</span>
-      <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${selected?.unit || trend?.unit || ''}`}</strong>
+      <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${model.unit}`}</strong>
     </footer>
   </section>
 }
@@ -557,10 +644,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
+  const initialServerMetrics = React.useMemo(() => resolveServerTrendMetrics(saved), [saved])
   const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
-  const [serverMetric1, setServerMetric1] = React.useState(METRICS.some(([key]) => key === saved.serverMetric1) ? saved.serverMetric1 : (METRICS.some(([key]) => key === saved.serverMetric) ? saved.serverMetric : 'cpu'))
-  const [serverMetric2, setServerMetric2] = React.useState(METRICS.some(([key]) => key === saved.serverMetric2) ? saved.serverMetric2 : 'ram')
+  const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
+  const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [serverTrend1, setServerTrend1] = React.useState(null)
@@ -747,10 +835,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
           <div>
-            <span>SPHERE ANALYSIS</span>
+            <span>SPHERE ANALYSIS · HISTORICAL OBSERVATION</span>
             <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(activeMetric)} {activeTrend?.warning !== null && activeTrend?.warning !== undefined && Number.isFinite(Number(activeTrend.warning)) && Number(selected?.value) >= Number(activeTrend.warning) ? 'Spike' : 'Detail'}</h4>
             <small>{selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || activeTrend?.unit || ''}`}</small>
-            <small>{selected?.mode === 'max' ? 'Peak at' : 'Observed at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
+            <small>{selected?.mode === 'max' ? 'Historical peak at' : 'Historical observation at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
           </div>
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>

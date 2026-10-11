@@ -287,17 +287,17 @@
 
 /* SPHERE v1.34.59 — operational table readability. */
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkload h3{font-size:11.2px!important}
-.appShell:has(.rundeckPanel) .rundeckCurrentWorkload h3 span{font-size:8.2px!important}
-.appShell:has(.rundeckPanel) .rundeckCurrentWorkload th{font-size:7.8px!important}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload h3 span{font-size:10px!important}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload th{font-size:10px!important}
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkload td{
-  font-size:9.2px!important;
+  font-size:11px!important;
   padding-top:6px!important;
   padding-bottom:6px!important;
   font-variant-numeric:tabular-nums!important;
 }
-.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button{font-size:9.5px!important}
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button{font-size:11px!important}
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName small{
-  font-size:7.8px!important;
+  font-size:10px!important;
   opacity:.82!important;
 }
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTableWrap{

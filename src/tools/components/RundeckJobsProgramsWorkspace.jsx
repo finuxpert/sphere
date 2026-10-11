@@ -3,6 +3,19 @@ import SphereIcon from './SphereIcon.jsx'
 
 export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null }) {
   const [mode, setMode] = React.useState('live')
+  const tabId = React.useId()
+  const tabs = ['live', 'review', 'search']
+  const tabRefs = React.useRef({})
+  const handleTabKeyDown = (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const currentIndex = tabs.indexOf(mode)
+    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
+      (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length
+    const next = tabs[nextIndex]
+    setMode(next)
+    tabRefs.current[next]?.focus()
+  }
   const live = React.isValidElement(currentContent)
     ? React.cloneElement(currentContent, { embedded: true })
     : currentContent
@@ -19,13 +32,13 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
       <div className="rundeckJobsProgramsIdentity">
         <h3><SphereIcon name="workload" /> Jobs & Programs</h3>
         <div className="rundeckJobsProgramsModes" role="tablist" aria-label="Jobs and Programs mode">
-        <button type="button" role="tab" aria-selected={mode === 'live'} className={mode === 'live' ? 'is-active' : ''} onClick={() => setMode('live')}>Live</button>
-        <button type="button" role="tab" aria-selected={mode === 'review'} className={mode === 'review' ? 'is-active' : ''} onClick={() => setMode('review')}>Review</button>
-        <button type="button" role="tab" aria-selected={mode === 'search'} className={mode === 'search' ? 'is-active' : ''} onClick={() => setMode('search')}>Search</button>
+        <button type="button" ref={(node) => { tabRefs.current.live = node }} id={`${tabId}-live`} role="tab" aria-controls={`${tabId}-panel`} aria-selected={mode === 'live'} tabIndex={mode === 'live' ? 0 : -1} className={mode === 'live' ? 'is-active' : ''} onKeyDown={handleTabKeyDown} onClick={() => setMode('live')}>Live</button>
+        <button type="button" ref={(node) => { tabRefs.current.review = node }} id={`${tabId}-review`} role="tab" aria-controls={`${tabId}-panel`} aria-selected={mode === 'review'} tabIndex={mode === 'review' ? 0 : -1} className={mode === 'review' ? 'is-active' : ''} onKeyDown={handleTabKeyDown} onClick={() => setMode('review')}>Review</button>
+        <button type="button" ref={(node) => { tabRefs.current.search = node }} id={`${tabId}-search`} role="tab" aria-controls={`${tabId}-panel`} aria-selected={mode === 'search'} tabIndex={mode === 'search' ? 0 : -1} className={mode === 'search' ? 'is-active' : ''} onKeyDown={handleTabKeyDown} onClick={() => setMode('search')}>Search</button>
         </div>
       </div>
     </header>
-    <div className={`rundeckJobsProgramsWorkspaceBody is-${mode}`}>
+    <div key={mode} role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${mode}`} className={`rundeckJobsProgramsWorkspaceBody is-${mode}`}>
       {mode === 'live' ? live : review}
     </div>
   </section>
