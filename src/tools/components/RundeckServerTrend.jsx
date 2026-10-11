@@ -4,7 +4,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
 import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
-import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex } from './rundeckTrendFocus.js'
+import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -801,12 +801,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
   }
 
-  const focusOptions = Array.from(new Set([
-    ...sourceHosts.map(host => shortHost(host.host || '')),
-    ...(serverTrend1?.items || []).map(row => shortHost(row.host || '')),
-    ...(serverTrend2?.items || []).map(row => shortHost(row.host || '')),
-    ...(technicalTrend?.items || []).map(row => shortHost(row.host || '')),
-  ].filter(name => /^APP\\d+$/i.test(name)))).sort((a, b) => Number(a.slice(3)) - Number(b.slice(3)))
+  const focusOptions = trendFocusHosts(sourceHosts, [
+    ...(serverTrend1?.items || []),
+    ...(serverTrend2?.items || []),
+    ...(technicalTrend?.items || []),
+  ])
   const activeFocus = shortHost(focusedHost || '')
   const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
   const activeTrend = selectedTrend || serverTrend1

@@ -544,6 +544,7 @@ test('v1.34.87 Android analysis groups fit the viewport without horizontal overf
   for(const card of layout.groups){
     expect(card.l).toBeGreaterThanOrEqual(-1)
     expect(card.r).toBeLessThanOrEqual(394)
+    expect(card.r-card.l).toBeGreaterThan(280)
   }
 })
 

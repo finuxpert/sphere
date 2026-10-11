@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex } from '../../src/tools/components/rundeckTrendFocus.js'
+import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from '../../src/tools/components/rundeckTrendFocus.js'
 
 const hosts = ['APP1', 'APP2', 'APP3', 'APP4', 'APP5']
 
@@ -46,4 +46,21 @@ test('APP1–APP5 keep stable palette slots when a source APP is missing', () =>
   assert.equal(trendHostColorIndex('APP5'), 4)
   assert.equal(trendHostColorIndex('APP5', 0), 4)
   assert.equal(trendHostColorIndex('OTHER', 3), 3)
+})
+
+
+test('shared APP focus includes actual AOP hosts before chart samples arrive', () => {
+  assert.deepEqual(trendFocusHosts([
+    { host: 'AOPH3PAPPDC' }, { host: 'AOPH1PAPPDC' },
+    { host: 'AOPH2PAPPDC' }, { host: 'AOPH4PAPPDC' },
+    { host: 'AOPH5PAPPDC' },
+  ]), ['APP1','APP2','APP3','APP4','APP5'])
+})
+
+test('shared APP focus deduplicates inventory and historical hosts without creating synthetic data', () => {
+  const live = Object.freeze([{ host: 'APP2' }, { host: 'UNKNOWN' }])
+  const saved = Object.freeze([{ host: 'AOPH1PAPPDC' }, { host: 'APP2' }, { host: 'OTHER' }])
+  assert.deepEqual(trendFocusHosts(live, saved), ['APP1','APP2'])
+  assert.deepEqual(trendFocusHosts([], []), [])
+  assert.equal(live[0].host, 'APP2')
 })

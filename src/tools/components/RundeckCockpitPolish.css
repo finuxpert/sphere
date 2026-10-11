@@ -456,7 +456,7 @@
 .appShell:has(.rundeckPanel) .rundeckSystemDataUtility span{
   min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;
 }
-.appShell:has(.rundeckPanel) .rundeckAnalysisGroups{
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards.rundeckAnalysisGroups{
   display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;width:100%;margin:0!important;min-width:0;
 }
@@ -521,7 +521,7 @@
   outline:2px solid var(--sphere-accent,#4fc6c8)!important;outline-offset:1px!important;
 }
 @media(max-width:1000px){
-  .appShell:has(.rundeckPanel) .rundeckAnalysisGroups{
+  .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckOperationalSummaryCards.rundeckAnalysisGroups{
     grid-template-columns:1fr!important;
   }
   .appShell:has(.rundeckPanel) .rundeckAnalysisGroup{min-height:0}
