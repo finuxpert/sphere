@@ -217,8 +217,7 @@
 // v1.34.79: improve operator legibility without adding a new layout override layer.
 .appShell:has(.rundeckPanel) .rundeckLiveScope select { font-size: 11px; min-height: 28px; max-width: 100%; }
 .appShell:has(.rundeckPanel) .rundeckLiveScope > span,
-.appShell:has(.rundeckPanel) .rundeckSourceFreshness,
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button { font-size: 10.5px; }
+.appShell:has(.rundeckPanel) .rundeckSourceFreshness { font-size: 10.5px; }
 .appShell:has(.rundeckPanel) .rundeckLiveCardGrid h4,
 .appShell:has(.rundeckPanel) .rundeckLiveRows strong,
 .appShell:has(.rundeckPanel) .rundeckLiveMetricPair strong {
@@ -227,9 +226,6 @@
 .appShell:has(.rundeckPanel) .rundeckLiveRows span,
 .appShell:has(.rundeckPanel) .rundeckLiveMetricPair span,
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkload th { font-size: 10px; }
-.appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody td,
-.appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button,
-.appShell:has(.rundeckPanel) .rundeckAnalysisContextStrip { font-size: 11px; }
 .appShell:has(.rundeckPanel) .rundeckCurrentWorkload tbody tr.is-selected {
   box-shadow: inset 2px 0 0 var(--sphere-accent, #4fc6c8);
 }
