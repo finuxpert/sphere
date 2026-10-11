@@ -2,6 +2,27 @@
    Scope light colors to the monitoring workspace; preserve dark theme & status semantics.
    Do not infer health from visual effects. */
 
+/* ECharts deliberately resolves series colors from document.documentElement.
+   Mirror the palette there so switching theme repaints the actual canvas. */
+html[data-theme="light"]{
+  --sphere-page:#f8fafc;
+  --sphere-surface-1:#ffffff;
+  --sphere-surface-2:#f1f5f9;
+  --sphere-text:#111827;
+  --sphere-text-secondary:#334155;
+  --sphere-text-muted:#526277;
+  --sphere-chart-grid:rgba(71,85,105,.16);
+  --sphere-accent:#0d7979;
+  --sphere-attention:#1d65a2;
+  --sphere-warning:#976111;
+  --sphere-danger:#b42336;
+  --sphere-chart-1:#1668b5;
+  --sphere-chart-2:#148056;
+  --sphere-chart-3:#7451b3;
+  --sphere-chart-4:#b65e24;
+  --sphere-chart-5:#087e87;
+}
+
 /* The child .logV2Inner previously shadowed html's light tokens with dark
    overrides. Make the resolved variables correct at their actual consumer. */
 html[data-theme="light"] .logV2Inner:has(.rundeckPanel) {
@@ -79,6 +100,12 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard :is
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard .is-critical{color:#b42336!important}
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard :is(.is-unknown,.is-stale){color:#526277!important}
 
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckUnifiedAppCardTop em{
+  font-size:10px!important;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 :is(.rundeckEvidenceCardTitle,.rundeckSelectedSecondaryAnalysis b){
+  font-size:10.6px!important;
+}
 /* Readable operator controls and workload rows. */
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes {
   border-color:#d8e0e8!important;background:#f1f5f9!important;
