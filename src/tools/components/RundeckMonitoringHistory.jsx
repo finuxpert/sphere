@@ -75,10 +75,6 @@ export default function RundeckMonitoringHistory(props) {
   const focusedOperationalHost = selectedJob?.host
     ? (props.sourceHosts?.find(row => shortHost(row.host) === shortHost(selectedJob.host)) || null)
     : (props.sourceHosts?.[0] || null)
-  const openSelectedAppAnalysis = () => {
-    if (focusedOperationalHost) inspectApp(focusedOperationalHost)
-    else setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })
-  }
 
   const selectedContextTime = selectedJob?.at
     ? `${formatWib(selectedJob.at, true)} WIB`
@@ -108,7 +104,7 @@ export default function RundeckMonitoringHistory(props) {
     onOpenHistory={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })}
     onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
-    systemDataSummary={systemDataSummary.replace(/(\\d+ runs).*?(\\d+ failed).*/, '$1 · $2')}
+    systemDataSummary={systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2')}
     infrastructureLabel={focusedOperationalHost ? `Selected SAP ${shortHost(focusedOperationalHost.host)} · Infra source separate` : 'Select a host in Infrastructure'}
   />
 

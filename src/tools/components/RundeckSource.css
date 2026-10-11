@@ -676,12 +676,14 @@
 .rundeckStateCluster{
   display:inline-flex;
   align-items:center;
-  gap:9px;
+  flex-wrap:wrap;
+  gap:6px 10px;
   min-width:0;
 }
 .rundeckStateCluster{
-  padding-left:14px;
-  border-left:1px solid rgba(126,147,158,.09);
+  padding-left:10px;
+  border-left:1px solid rgba(126,147,158,.14);
+  flex:0 1 auto;
 }
 .rundeckDataAlignment,
 .rundeckOperationalState{
