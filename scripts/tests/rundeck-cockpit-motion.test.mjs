@@ -52,3 +52,24 @@ test('motion is short, non-looping and honors reduced-motion preferences', () =>
   assert.match(chart, /animationDuration: reduceMotion \? 0 : 300/)
   assert.match(chart, /animationDurationUpdate: reduceMotion \? 0 : 200/)
 })
+
+test('v1.34.80 chart updates reuse the same ECharts instance and preserve null gaps', () => {
+  const chart = source('RundeckServerTrend.jsx')
+  assert.match(chart, /chartRef\.current = chart/)
+  assert.match(chart, /replaceMerge: schemaChanged \? undefined : \['series'\]/)
+  assert.match(chart, /connectNulls: false/)
+  assert.match(chart, /value: \[at, null\], gap: true/)
+  assert.match(chart, /aria-label="Highlight APP trace"/)
+  assert.match(chart, /prefers-reduced-motion: reduce/)
+})
+
+test('Jobs & Programs modes expose keyboard-accessible tabs and finite transitions', () => {
+  const tabs = source('RundeckJobsProgramsWorkspace.jsx')
+  const css = source('RundeckCockpitPolish.css')
+  assert.match(tabs, /role="tabpanel"/)
+  assert.match(tabs, /ArrowLeft/)
+  assert.match(tabs, /ArrowRight/)
+  assert.match(tabs, /aria-selected=\{mode === 'search'\}/)
+  assert.match(css, /sphereWorkModeArrival 180ms/)
+  assert.match(css, /prefers-reduced-motion: reduce/)
+})

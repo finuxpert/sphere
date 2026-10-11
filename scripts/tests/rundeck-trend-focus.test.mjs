@@ -1,0 +1,38 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { resolveTrendFocus, trendFocusStyle } from '../../src/tools/components/rundeckTrendFocus.js'
+
+const hosts = ['APP1', 'APP2', 'APP3', 'APP4', 'APP5']
+
+test('selected workload APP is highlighted by default when available', () => {
+  assert.equal(resolveTrendFocus(null, 'APP2', hosts), 'APP2')
+  assert.equal(resolveTrendFocus(null, 'MISSING', hosts), '')
+})
+
+test('operator APP focus overrides the selected workload without changing source identity', () => {
+  assert.equal(resolveTrendFocus('APP4', 'APP2', hosts), 'APP4')
+  assert.equal(resolveTrendFocus('', 'APP2', hosts), '')
+  assert.equal(resolveTrendFocus('BAD', 'APP2', hosts), '')
+})
+
+test('focused trace is readable and other traces remain available', () => {
+  assert.deepEqual(trendFocusStyle('APP2', 'APP2'), { width: 2.8, opacity: 1, itemOpacity: 1 })
+  assert.deepEqual(trendFocusStyle('APP1', 'APP2'), { width: 1.8, opacity: 0.26, itemOpacity: 0.36 })
+  assert.deepEqual(trendFocusStyle('APP1', ''), { width: 1.8, opacity: 1, itemOpacity: 1 })
+})
+
+test('availability trace uses lower default opacity with unchanged high-contrast focus', () => {
+  assert.equal(trendFocusStyle('APP1', '', true).opacity, 0.72)
+  assert.equal(trendFocusStyle('APP1', 'APP1', true).opacity, 1)
+  assert.equal(trendFocusStyle('APP1', 'APP2', true).opacity, 0.26)
+})
+
+test('focus rules do not mutate retained samples, observation gaps or operator host list', () => {
+  const data = Object.freeze([{ bucket: '2026-10-11T10:00:00+07:00', max_value: 72 }, { bucket: '2026-10-11T10:10:00+07:00', max_value: null }])
+  const frozenHosts = Object.freeze([...hosts])
+  const before = JSON.stringify(data)
+  assert.equal(resolveTrendFocus('APP3', '', frozenHosts), 'APP3')
+  assert.equal(trendFocusStyle('APP3', 'APP3').width, 2.8)
+  assert.equal(JSON.stringify(data), before)
+  assert.deepEqual(data[1], { bucket: '2026-10-11T10:10:00+07:00', max_value: null })
+})

@@ -1,6 +1,6 @@
 # SPHERE Current Flow and Features
 
-This document records the operating flow through the **v1.34.79 DEV source candidate** on `rundeck-sphere-dev`. The last operator-observed DEV browser build is **v1.34.78-dev · b878142**; v1.34.79 is **not a verified deployment** until DEV QA, release guards, and screenshot inspection pass.
+This document records the operating flow through the **v1.34.80 DEV source candidate** on `rundeck-sphere-dev`. The last operator-observed DEV browser build is **v1.34.78-dev · b878142**; v1.34.79 is **not a verified deployment** until DEV QA, release guards, and screenshot inspection pass.
 
 It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 

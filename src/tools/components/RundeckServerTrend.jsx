@@ -185,6 +185,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const reduceMotion = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, [])
   const hosts = React.useMemo(() => Array.from(new Set((trend?.items || []).map(row => row.host))).sort(), [trend])
   const hostLabels = React.useMemo(() => hosts.map(shortHost), [hosts])
+  const hostColors = palette().series
   const focusedHost = resolveTrendFocus(manualHost, shortHost(selectedHost || ''), hostLabels)
   React.useEffect(() => { setManualHost(null) }, [trend?.metric, range])
   const option = React.useMemo(() => {
@@ -352,7 +353,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         const label = shortHost(host)
         return <button key={host} type="button" aria-pressed={focusedHost === label}
           className={focusedHost === label ? 'is-focused' : ''}
-          style={{ '--trend-host-color': palette().series[index % palette().series.length] }}
+          style={{ '--trend-host-color': hostColors[index % hostColors.length] }}
           onClick={() => setManualHost(focusedHost === label ? '' : label)}>
           <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
         </button>
