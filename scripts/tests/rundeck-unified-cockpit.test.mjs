@@ -33,7 +33,10 @@ test('every analysis overlay is modal, traps focus, handles Escape and restores 
   assert.match(drawer,/first\.focus\(\)/)
   assert.match(drawer,/last\.focus\(\)/)
   assert.match(drawer,/document\.body\.style\.overflow = previousOverflow/)
-  assert.match(drawer,/previousFocus\?\.focus\?\.\(\)/)
+  // Restoring focus must not scroll the mobile visual viewport: this guard
+  // complements the actual Android Playwright centering/overflow tests.
+  assert.match(drawer,/previousFocus\\?\\.focus\\?\\.\\(\\{\\s*preventScroll:\\s*true\\s*\\}\\)/)
+  assert.match(drawer,/\\.rundeckWorkspaceClose'\\)\\?\\.focus\\(\\{\\s*preventScroll:\\s*true\\s*\\}\\)/)
   assert.match(geometry,/\.is-evidence,\.is-availability,\.is-issues,\.is-unified-app,\.is-wide/)
   assert.match(geometry,/transform:translate\(-50%,-50%\)!important/)
 })
