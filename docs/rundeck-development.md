@@ -11,7 +11,7 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current application version: **v1.34.53**
+- Current DEV source candidate: **v1.34.76** (does not imply the server is already deployed).
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
@@ -238,3 +238,35 @@ Do not reintroduce the standalone Live Monitoring tab or split Current/Review lo
 ## v1.34.61 merged workspace contract
 
 Keep Search as an exclusive Jobs & Programs mode, not a button inside Review. A Search query shorter than two characters must never fall back to Review rows. Keep the Performance Analysis drawer as the single destination for Live, Review and Search selections.
+
+
+## Infrastructure snapshot freshness (v1.34.75)
+
+The primary Infrastructure strip and its investigation drawer share the same timestamp-driven freshness contract: 15 minutes maximum age for a `FRESH` host observation; `STALE` if older; `UNKNOWN` if missing, unparsable or significantly future dated. Severity badges apply only to fresh measurements. Stale capacity percentages, network counters and storage activity stay visible as last-observed **historical evidence**, never as a current host alert. The overview refreshes read-only REST telemetry every 60 seconds, but it cannot cause a Rundeck collection to run.
+
+The per-host collection timestamp and per-mount percentages must agree with a new collector execution before concluding that SAP filesystem usage changed. This rule prevents stale-data misclassification; it is not a replacement for diagnosing a stuck Rundeck job/poller.
+
+Infrastructure freshness also verifies per-sample `collected_at` and `collection_id` against the selected host's latest READY collection. Mixed or missing identities become `UNKNOWN` instead of combining unrelated snapshots. A stale sample remains `STALE` even when a newer host record exists.
+
+## DEV operator motion (v1.34.76)
+
+The Rundeck cockpit imports `RundeckOperatorMotion.css` once from the monitoring wrapper. Only mounted cockpit bands, analysis drawers, and selected history traces use a one-shot animation; no infinite pulse, moving signal, rolling random counters or background animation work. Host status and chart values remain actual sampled evidence. ECharts animations stop under `prefers-reduced-motion`, as do CSS animations/transitions. Browser clients execute their own brief rendering; the backend and database collection cadence are unchanged.
+
+Basis QA's `Infrastructure filesystem NORMAL state is explicit` assertion now checks the freshness-aware status renderer instead of the removed direct CSS class. It must preserve `NORMAL` for fresh rows and `STALE`/`UNKNOWN` for old or unverified evidence.
+
+
+## Monitoring API credentials and maintainer access
+
+Monitoring API tokens are limited to **30 days**, owned by the designated SPHERE maintainer and scoped to the existing `sphere_api` service account with the `sphere_reader` role. In the observed Rundeck token generator, `Expiration in: 0` selects the configured maximum **30 days** (not indefinite). Configure only the minimum project/job/execution read ACL and verify it; do not generate the monitoring reader token as `admin` or with blank roles.
+
+Credentials must never be committed to this repository or pasted into logs/chats. The maintainer handles rotation through the protected server credential file, checks the token at least seven days before expiration, and verifies both poller and watchdog after normal timer execution. Maintenance exclusivity requires real account/ACL/sudo controls and cannot be guaranteed by documentation alone. The DEV runner is a separate higher-privilege credential requiring its own least-privilege review and expiry rotation.
+
+Full generation fields, DEV incident evidence (2026-10-10), step-by-step operational safeguards and rotation checklist: [OPERATIONS.md](../ops/rundeck/OPERATIONS.md#sphere-monitoring-token-ownership-and-30-day-rotation).
+
+## Data trust after source interruption (v1.34.77)
+
+A collector recovery must not erase the fact that preceding samples were missing. The cockpit uses `rundeckDataQuality.js` for independently testable freshness and source-health classification. The Quality state is not a SAP service-status verdict. Data observed in a READY collection is not current beyond 15 minutes. The existing availability threshold remains 20 minutes; an absent/stale availability sample yields PARTIAL without claiming failed SAP service. When the poller/watchdog is unhealthy, a recent performance observation may be shown as DEGRADED but should not be assumed to represent uninterrupted live monitoring.
+
+The frontend fetches up to 80 **retained** manifests, compares adjacent READY `finished_at` timestamps against the 10-minute collection cadence, and shows only recent (within 24h of the later observation) gaps in a compact status line. The displayed span is explicitly **between observations**; it is not an exact failure start/stop time, and PARTIAL/FAILED collections cannot be promoted to READY. Longer history remains on the existing server trend Collection Gap view, which uses bucketing and has separate detection semantics. No missing metrics are interpolated, copied forward as live data or treated as SAP downtime.
+
+The source-health and history-gap logic are client-side. It does not change collector frequency, write to SAP/Rundeck, rotate credentials, auto-abort behavior, or backend evidence retention. `npm run qa:data-quality` covers expired-token-like source errors, stale eight-hour-old samples, missing/invalid timestamps, post-recovery gaps and sparse history.

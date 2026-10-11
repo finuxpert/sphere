@@ -1,21 +1,19 @@
-import RundeckAppServers from './RundeckAppServers.jsx'
+import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckJobsProgramsWorkspace from './RundeckJobsProgramsWorkspace.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   return <section className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456">
-    <section className="rundeckTopBandV13454">
-      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-app-servers">
-        <RundeckAppServers
-          refreshToken={props.refreshToken}
-          latestCollectionId={props.latestCollectionId}
-          onInspectApp={props.onInspectApp}
-          focusRequest={props.appFocusRequest || (props.selectedJob?.host ? { host: props.selectedJob.host, token: props.selectedJob.key || props.selectedJob.at || 'selected-workload', highlightOnly: true } : null)}
-        />
-      </div>
-      <div className="rundeckBandPaneV1234 rundeckBandPaneV1235 is-infrastructure-overview">
-        {props.infrastructureContent}
-      </div>
+    <section className="rundeckTopBandV13454 is-unified-app-infra">
+      <RundeckUnifiedAppInfrastructure
+        hosts={props.sourceHosts || []}
+        sourceQuality={props.sourceQuality}
+        refreshToken={props.refreshToken}
+        selectedJob={props.selectedJob}
+        focusRequest={props.appFocusRequest || (props.selectedJob?.host ? { host: props.selectedJob.host, token: props.selectedJob.key || props.selectedJob.at || 'selected-workload', highlightOnly: true } : null)}
+        onInspectApp={props.onInspectApp}
+        onOpenMetric={props.onOpenInfrastructureMetric}
+      />
     </section>
 
     <section className="rundeckTrendBandV13454">

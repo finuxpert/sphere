@@ -55,3 +55,49 @@ html[data-theme="light"] .rundeckAppServerTableWrap td:first-child small{color:#
   line-height:1.35;
 }
 html[data-theme="light"] .rundeckAppServerSource{color:#5d6e77!important}
+
+
+/* SPHERE v1.34.74 — APP Server Analysis uses one metric strip, not four cards. */
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerAnalysis{
+  padding-top:4px!important;
+}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerSummary{
+  gap:0!important;
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.045)!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  overflow:visible!important;
+}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerSummary span{
+  min-height:43px!important;
+  padding:7px 12px!important;
+  border-right:1px solid rgba(126,147,158,.035)!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerSummary span:first-child{padding-left:0!important}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerSummary span:last-child{
+  border-right:0!important;
+  padding-right:0!important;
+}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerIssue{
+  margin-top:6px!important;
+  padding:5px 0 5px 8px!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerWorkloads{
+  margin-top:9px!important;
+}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerTableWrap th,
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerTableWrap td{
+  border-bottom-color:rgba(126,147,158,.035)!important;
+}
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerTableWrap tbody tr[role="button"]:hover,
+.rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerTableWrap tbody tr[role="button"]:focus-visible{
+  background:rgba(79,198,200,.03)!important;
+}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerSummary,
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-app-detail .rundeckAppServerSummary span{
+  background:transparent!important;
+}

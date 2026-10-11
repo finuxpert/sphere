@@ -1,6 +1,4 @@
 import React from 'react'
-import RundeckInfrastructure from './RundeckInfrastructure.jsx'
-import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
@@ -9,7 +7,6 @@ import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
-import RundeckAppServerAnalysis from './RundeckAppServerAnalysis.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -18,6 +15,11 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, shortHost } from './sapUiFormat.js'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
+import './RundeckOperatorMotion.css'
+import './RundeckCockpitPolish.css'
+
+const RundeckInfrastructure = React.lazy(() => import('./RundeckInfrastructure.jsx'))
+const RundeckUnifiedAppAnalysis = React.lazy(() => import('./RundeckUnifiedAppAnalysis.jsx'))
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'
@@ -62,6 +64,14 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'app', app: context })
   }, [])
 
+  const focusedOperationalHost = selectedJob?.host
+    ? (props.sourceHosts?.find(row => shortHost(row.host) === shortHost(selectedJob.host)) || null)
+    : (props.sourceHosts?.[0] || null)
+  const openSelectedAppAnalysis = () => {
+    if (focusedOperationalHost) inspectApp(focusedOperationalHost)
+    else setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })
+  }
+
   const selectedContextTime = selectedJob?.at
     ? `${formatWib(selectedJob.at, true)} WIB`
     : selectedJob?.reviewPeriod
@@ -88,11 +98,11 @@ export default function RundeckMonitoringHistory(props) {
         <span><b>Observation History</b><small>{selectedJob?.host ? `${selectedJob?.reviewMetrics?.observations ?? 'Saved'} observations · ${shortHost(selectedJob.host)}` : 'Select a workload first'}</small></span>
         <em>›</em>
       </button>
-      <RundeckInfrastructure
-        refreshToken={refreshToken}
-        compact
-        onOpen={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}
-      />
+      <button type="button" className="rundeckInfrastructureCard" onClick={openSelectedAppAnalysis}>
+        <SphereIcon name="server" />
+        <span><b>Infrastructure Analysis</b><small>{focusedOperationalHost ? `Open ${shortHost(focusedOperationalHost.host)} · SAP + Infrastructure` : 'Infrastructure source · separate freshness'}</small></span>
+        <em aria-hidden="true">›</em>
+      </button>
       {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
         <SphereIcon name="database" />
         <span><b>System Data</b><small>{systemDataSummary ? systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2') : 'Collections · Services'}</small></span>
@@ -141,7 +151,7 @@ export default function RundeckMonitoringHistory(props) {
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
             onTrendContext={forwardTrendContext}
-            infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded />}
+            onOpenInfrastructureMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })}
             operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
             appFocusRequest={appFocusRequest}
@@ -151,7 +161,7 @@ export default function RundeckMonitoringHistory(props) {
             onInspectApp={inspectApp}
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
-          <RundeckSystemHealth refreshToken={refreshToken} />
+          <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
 
           {activeOverlay?.type === 'menu' && <RundeckWorkspaceDrawer
             title="Analysis Menu"
@@ -324,22 +334,27 @@ export default function RundeckMonitoringHistory(props) {
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
-            title={activeOverlay.app.host ? activeOverlay.app.host.split('.').shift() : 'APP Server'}
-            subtitle="SAP App Server Analysis"
-            size="app-detail"
+            title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}
+            subtitle={`${activeOverlay.app.host || 'UNKNOWN host'} · SAP ${props.sourceQuality?.performanceValid && !props.sourceQuality?.collectorBad ? (props.latestCollectionAt ? formatWib(props.latestCollectionAt, true) + ' WIB' : 'sample time UNKNOWN') : 'UNVERIFIED'} · Infrastructure checked separately`}
+            size="unified-app"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'issues' ? 'Back to SAP Issues' : 'Back'}
           >
-            <RundeckAppServerAnalysis
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading APP analysis…</div>}>
+            <RundeckUnifiedAppAnalysis
               app={activeOverlay.app}
               latestCollectionId={props.latestCollectionId}
+              performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+              performanceCollectedAt={props.latestCollectionAt || ''}
+              incidentStart={props.incidentStart || ''}
               refreshToken={refreshToken}
               onSelectJob={(job) => {
                 onSelectJob?.(job)
                 setActiveOverlay({ type: 'job', returnTo: { type: 'app', app: activeOverlay.app, returnTo: activeOverlay.returnTo || null } })
               }}
             />
+            </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'infrastructure' && <RundeckWorkspaceDrawer
@@ -350,7 +365,9 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : activeOverlay.returnTo?.type === 'menu' ? 'Back to Analysis Menu' : 'Back'}
           >
-            <RundeckInfrastructure incidentStart={props.incidentStart || ''} />
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading Infrastructure Analysis…</div>}>
+              <RundeckInfrastructure incidentStart={props.incidentStart || ''} initialContext={activeOverlay.infraContext || activeOverlay.trendContext || null} />
+            </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'review' && activeOverlay.row && <RundeckReviewQuickAnalysis

@@ -1,6 +1,6 @@
 # SPHERE Current Flow and Features
 
-This document is the source of truth for the implemented SPHERE operating flow on **v1.34.53**.
+This document records the operating flow through the **v1.34.80 DEV source candidate** on `rundeck-sphere-dev`. The last operator-observed DEV browser build is **v1.34.78-dev · b878142**; v1.34.79 is **not a verified deployment** until DEV QA, release guards, and screenshot inspection pass.
 
 It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
 
@@ -432,3 +432,38 @@ The live cockpit, six analysis shortcuts, drawers and PDF now share one terminol
 ### v1.34.61 workspace behavior
 
 Jobs & Programs has three exclusive modes. Live shows current observations, Review shows Basis review priority, and Search shows no historical rows until at least two characters are entered. All rows continue into the same Performance Analysis drawer.
+
+### v1.34.79 DEV source candidate — 11 October 2026
+
+Source-only work; **not deployment evidence**. Last browser-observed DEV release remains v1.34.78-dev · b878142 until new operator QA/screenshot.
+
+- System Health now shares the SAP Data freshness decision, host snapshot and availability payload; separate collector status and historical gaps remain independent.
+- The performance age and alignment decision share the exact data-quality timestamp; a failed availability refresh is classified as partial/unverified rather than SAP DOWN.
+- Trend entry transitions are shortened to 300ms, ECharts labels are larger, selected Jobs have a restrained identity cue, and infrastructure labels can wrap. Small viewports retain accessible scrolling.
+- No backend API/schema, migration, SAP job, Rundeck authorization, or PROD changes. Server QA/build, 1366×768 / 1536×864 / 1920×1080 + Android visual checks, guarded DEV deployment and PROD readiness are **pending**.
+
+### SPHERE v1.34.80 DEV candidate — operator motion and active trace focus (11 October 2026)
+
+- **Source-only GitHub change**, not evidence of an active DEV deployment. v1.34.79 QA and deployment remain unverified until the operator completes the DEV gate.
+- Existing Server Trend CPU/RAM/Technical evidence is unchanged. Chart instances persist for focus/option updates; APP1–APP5 + All form a keyboard-accessible color-coded highlight control. The selected APP trace changes emphasis; it never fabricates points, bridges null collection gaps, or alters threshold interpretation.
+- Jobs & Programs retains Live / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
+- Reduced motion disables entrance/transition effects; no blinking health, infinite pulses, synthetic number counters, polling changes, backend migrations or SAP job execution.
+- Run DEV regression, lint, build and manual visual QA (1366×768, 1536×864, 1920×1080, Android) before authorizing the revision-bound deployment. PROD remains unchanged.
+
+## v1.34.81 DEV candidate — unified APP + Infrastructure (11 October 2026)
+
+Top cockpit SAP APP Servers and Infrastructure are one host-oriented workspace: five APP cards combine SAP CPU/RAM/Critical WP evidence and separately qualified filesystem evidence. There is one APP selector (the cards), one detail section for the active host, with Inspect SAP and Infrastructure Analysis actions. No top dashboard host dropdown or second SAP APP table. Independent freshness/status is never conflated: missing/mismatched infrastructure remains UNKNOWN/STALE; stale SAP performance is not marked current NORMAL. The selected job remains a default focus; an operator may override it by selecting an APP card. Modal Infrastructure Analysis remains available for filesystem/network/storage history.
+
+Source-only candidate; QA/build and runtime screenshot validation required before DEV deploy. No PROD/backend/migrations/collector/SAP jobs changed.
+
+Infrastructure Analysis popup also uses the five APP cards instead of a host dropdown. Each card labels filesystem-only evidence and source freshness, while Network/Storage states remain confined to the selected host's detail view. All host detail selection uses existing initialContext so the dashboard can pass the active APP into the popup; overlay animation is finite and reduced-motion safe.
+
+### SPHERE DEV v1.34.82 release candidate — one-click APP analysis and density recovery (11 October 2026)
+
+- The five APP cards are **direct actions**: click APPn -> one centered analysis modal containing independent SAP Performance (current collection evidence) and Infrastructure (host-specific filesystem, network and storage I/O, independently qualified by freshness).
+- The redundant Inspect SAP / Infrastructure Analysis toolbar and long inline Infrastructure summary were removed from the dashboard. The existing source-specific analysis components remain intact inside the modal; no collector, SAP job, schema or threshold changed. If the host mapping is missing, no other host's source is substituted in the locked Infrastructure view.
+- Six analysis shortcuts use six bounded tiles with internal metadata truncation; Correlated Events shows an honest no-active-correlation shortcut even without an incident. Selected job identity is shown once before them.
+- Desktop cockpit recovers row height for the internally scrollable Jobs & Programs table. Counter distinguishes all observed vs loaded in this response. Screen-height limitations on laptops still allow page scroll rather than clipping evidence.
+- Trend Details explicitly declares *historical observation* and retains actual vs bucket times. Modal uses finite 220 ms reveal, Escape/keyboard focus trap and reduced-motion fallback.
+- APP and Infrastructure analysis modules are lazy-loaded via explicit dynamic imports. No claim of reduced bundle size without post-build artifact measurements.
+- Visual tests: six tiles, five APP cards, one-click modal, tall viewport scroll geometry, keyboard, Android. DEV source-only until verified QA/build and revision-bound deploy. PROD unchanged.
