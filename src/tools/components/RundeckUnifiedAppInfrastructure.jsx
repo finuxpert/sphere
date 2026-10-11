@@ -16,7 +16,7 @@ async function readJson(path, signal) {
 
 export default function RundeckUnifiedAppInfrastructure({
   hosts = [], sourceQuality = null, refreshToken = '', selectedJob = null,
-  focusRequest = null, onInspectApp = null, onOpenMetric = null,
+  focusRequest = null, onInspectApp = null,
 }) {
   const [preferredHost, setPreferredHost] = React.useState(() => {
     try { return window.localStorage.getItem(KEY) || '' } catch { return '' }
@@ -107,7 +107,5 @@ export default function RundeckUnifiedAppInfrastructure({
       })}
       {!hosts.length && <span className="rundeckHistoryState">No aligned APP performance snapshot. Infrastructure state is not inferred.</span>}
     </div>
-  </section>
-}
   </section>
 }
