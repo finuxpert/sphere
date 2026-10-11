@@ -8,7 +8,7 @@ import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
-import RundeckAppServerAnalysis from './RundeckAppServerAnalysis.jsx'
+import RundeckUnifiedAppAnalysis from './RundeckUnifiedAppAnalysis.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -63,6 +63,12 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'app', app: context })
   }, [])
 
+  const focusedOperationalHost = props.sourceHosts?.find(row => shortHost(row.host) === shortHost(selectedJob?.host)) || props.sourceHosts?.[0] || null
+  const openSelectedAppAnalysis = () => {
+    if (focusedOperationalHost) inspectApp(focusedOperationalHost)
+    else setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })
+  }
+
   const selectedContextTime = selectedJob?.at
     ? `${formatWib(selectedJob.at, true)} WIB`
     : selectedJob?.reviewPeriod
@@ -89,11 +95,11 @@ export default function RundeckMonitoringHistory(props) {
         <span><b>Observation History</b><small>{selectedJob?.host ? `${selectedJob?.reviewMetrics?.observations ?? 'Saved'} observations · ${shortHost(selectedJob.host)}` : 'Select a workload first'}</small></span>
         <em>›</em>
       </button>
-      <RundeckInfrastructure
-        refreshToken={refreshToken}
-        compact
-        onOpen={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}
-      />
+      <button type="button" className="rundeckEvidenceCard rundeckInfrastructureCard" onClick={openSelectedAppAnalysis}>
+        <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> Infrastructure Analysis</span>
+        <strong>{focusedOperationalHost ? `Open ${shortHost(focusedOperationalHost.host)} · SAP + Infrastructure` : 'Infrastructure source · separate freshness'}</strong>
+        <em aria-hidden="true">›</em>
+      </button>
       {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } })}>
         <SphereIcon name="database" />
         <span><b>System Data</b><small>{systemDataSummary ? systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2') : 'Collections · Services'}</small></span>
@@ -325,16 +331,18 @@ export default function RundeckMonitoringHistory(props) {
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
-            title={activeOverlay.app.host ? activeOverlay.app.host.split('.').shift() : 'APP Server'}
-            subtitle="SAP App Server Analysis"
-            size="app-detail"
+            title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' · APP Analysis' : 'APP Analysis'}
+            subtitle="SAP Performance · Filesystem · Network · Storage I/O"
+            size="unified-app"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'issues' ? 'Back to SAP Issues' : 'Back'}
           >
-            <RundeckAppServerAnalysis
+            <RundeckUnifiedAppAnalysis
               app={activeOverlay.app}
               latestCollectionId={props.latestCollectionId}
+              performanceVerified={props.sourceQuality?.performanceValid === true}
+              incidentStart={props.incidentStart || ''}
               refreshToken={refreshToken}
               onSelectJob={(job) => {
                 onSelectJob?.(job)

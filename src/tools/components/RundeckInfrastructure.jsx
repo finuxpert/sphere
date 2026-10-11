@@ -112,12 +112,12 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
   </div>
 }
 
-export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null,initialContext=null}){
+export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null,initialContext=null,lockedHost=false,hideHostCards=false}){
   const [data,setData]=React.useState({host:'',hosts:[],fs:[],network:[],storage:[]})
   const [allHostFilesystems,setAllHostFilesystems]=React.useState([])
   const [error,setError]=React.useState('')
   const [clockNow,setClockNow]=React.useState(()=>Date.now())
-  const [selectedHost,setSelectedHost]=React.useState(()=>{try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
+  const [selectedHost,setSelectedHost]=React.useState(()=>{if(lockedHost)return initialContext?.host||'';try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trendData,setTrendData]=React.useState({scope:'',items:[],meta:null})
@@ -129,7 +129,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     if(initialContext.series)setSelectedSeries(initialContext.series)
   },[initialContext])
   const { primary: primaryHosts, others: otherHosts }=splitInfrastructureHosts(data.hosts)
-  const hostRow=data.hosts.find(row=>row.host===selectedHost)||data.hosts[0]
+  const hostRow=data.hosts.find(row=>row.host===selectedHost)||(lockedHost?null:data.hosts[0])
   const host=hostRow?.host||selectedHost||'AOQ'
   const trendScope=[host,range,trendMetric].join(':')
   const trend=React.useMemo(()=>trendData.scope===trendScope?trendData.items:[],[trendData,trendScope])
@@ -154,7 +154,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       const hosts=(await hr.json()).items||[]
       if(signal.aborted)return
       const available=hosts.map(row=>row.host)
-      const target=selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||'')
+      const target=selectedHost&&available.includes(selectedHost)?selectedHost:(lockedHost?'':(available[0]||''))
       if(target!==selectedHost)setSelectedHost(target)
       const q=target?`?host=${encodeURIComponent(target)}`:''
       const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (path,index)=>{
@@ -233,7 +233,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       <div><p>{stale?'Last observed infrastructure measurements; live state unavailable.':'Current infrastructure state and retained history for this APP server.'}</p></div>
       <div className="rundeckInfraIdentity"><span className={`state is-${overall.toLowerCase()}`}>{shortHost(host)} · {overall}</span></div>
     </header>
-    <div className="rundeckInfraHostCards" role="group" aria-label="Select Infrastructure APP">
+    {!hideHostCards && <div className="rundeckInfraHostCards" role="group" aria-label="Select Infrastructure APP">
       {primaryHosts.map(row=>{
         const evidence=hostInfrastructureEvidence({host:row.host},data.hosts,allHostFilesystems,clockNow)
         const selected=host===row.host
@@ -248,8 +248,8 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         </button>
       })}
       {!data.hosts.length&&<span className="rundeckInfraHostMissing">No verified infrastructure hosts.</span>}
-    </div>
-    {otherHosts.length>0&&<details className="rundeckInfraOtherHosts" defaultOpen={otherHosts.some(row=>row.host===host)}>
+    </div>}
+    {!hideHostCards&&otherHosts.length>0&&<details className="rundeckInfraOtherHosts" defaultOpen={otherHosts.some(row=>row.host===host)}>
       <summary>Other Infrastructure Sources ({otherHosts.length})</summary>
       <div className="rundeckInfraHostCards">
         {otherHosts.map(row=>{

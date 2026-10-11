@@ -1,6 +1,5 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import RundeckLiveOverview from './RundeckLiveOverview.jsx'
 import { shortHost } from './sapUiFormat.js'
 import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
 
@@ -50,8 +49,6 @@ export default function RundeckUnifiedAppInfrastructure({
   const focusHost = focusRequest?.host || selectedJob?.host || ''
   const contextToken = String(focusRequest?.token || '') + ':' + String(focusHost)
   const appKey = chooseUnifiedApp(hosts, focusHost, manualSelection, contextToken, preferredHost)
-  const selectedApp = hosts.find(host => shortHost(host.host) === appKey)
-  const selectedInfra = selectedApp ? matchedInfrastructureHost(selectedApp, infraSnapshot.hosts) : null
   const performanceVerified = sourceQuality?.performanceValid === true && !sourceQuality?.collectorBad
   const visibleStates = hosts.map(host => appSignalState(host, performanceVerified))
   const attentionCount = visibleStates.filter(value => value === 'ATTENTION' || value === 'WARNING').length
@@ -89,8 +86,10 @@ export default function RundeckUnifiedAppInfrastructure({
         const selected = key === appKey
         return <button key={host.host} type="button"
           className={'rundeckUnifiedAppCard is-sap-' + sapState.toLowerCase() + (selected ? ' is-active' : '')}
-          aria-pressed={selected} onClick={() => selectApp(key)}
-          title={'SAP ' + sapState + ' · Infrastructure ' + infra.state + ' · ' + host.host}>
+          aria-pressed={selected} onClick={() => { selectApp(key); onInspectApp?.({
+            ...host, infraHost: infra.infra?.host || '',
+          }) }}
+          title={'Open ' + key + ' SAP and Infrastructure analysis · SAP ' + sapState + ' · Infrastructure ' + infra.state}>
           <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
             <span>CPU <strong>{metric(host.cpu_pct, '%')}</strong></span>
@@ -108,21 +107,7 @@ export default function RundeckUnifiedAppInfrastructure({
       })}
       {!hosts.length && <span className="rundeckHistoryState">No aligned APP performance snapshot. Infrastructure state is not inferred.</span>}
     </div>
-    <div className="rundeckUnifiedAppInfraDetail">
-      <div className="rundeckUnifiedAppInfraDetailHead">
-        <span><strong>{appKey || 'APP'}</strong> · Infrastructure details</span>
-        <div className="rundeckUnifiedAppActions">
-          <button type="button" disabled={!performanceVerified || !selectedApp || !onInspectApp}
-            onClick={() => onInspectApp?.(selectedApp)}>Inspect SAP</button>
-          <button type="button" disabled={!selectedInfra || !onOpenMetric}
-            onClick={() => onOpenMetric?.({ host: selectedInfra.host, metric: 'filesystem' })}>Infrastructure Analysis</button>
-        </div>
-      </div>
-      {selectedInfra && <RundeckLiveOverview key={selectedInfra.host} initialHost={selectedInfra.host}
-        sourceInfraHost={selectedInfra} refreshToken={refreshToken} embedded onOpenMetric={onOpenMetric} />}
-      {!selectedInfra && <p className="rundeckUnifiedInfraMissing" role="status">
-        {infraSnapshot.error ? 'Infrastructure summary unavailable' : 'No matching Infrastructure source for ' + (appKey || 'this APP')}. Values are UNKNOWN, not NORMAL.
-      </p>}
-    </div>
+  </section>
+}
   </section>
 }
