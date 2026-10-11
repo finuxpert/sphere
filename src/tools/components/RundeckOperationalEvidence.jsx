@@ -42,39 +42,27 @@ export default function RundeckOperationalEvidence({
         <span className="rundeckEvidenceCardTitle">Correlated Events</span>
         <strong>{error ? 'Evidence unverified' : !summary ? 'Loading evidence' : 'No active correlation'}</strong>
       </button>
-  return <section className="rundeckAnalysisLaunchers" aria-label="Operational analysis">
-    <header className="rundeckAnalysisLaunchersHead">
-      <h3>Operational Analysis</h3>
-      {onOpenSystemData && <button type="button" className="rundeckSystemDataUtility" onClick={onOpenSystemData}>
-        System Data <span>{systemDataSummary || 'Collections · Services'}</span><span aria-hidden="true">›</span>
+  // Six live evidence destinations, one flat navigation surface.
+  // Each compact source continues to own its freshness/status text.
+  return <nav className="rundeckAnalysisLaunchers" aria-label="Operational analysis">
+    <div className="rundeckAnalysisLaunchersHead"><h3>Operational Analysis</h3></div>
+    <div className="rundeckAnalysisActions" role="group" aria-label="Investigation shortcuts">
+      {evidence}
+      <button type="button" className="rundeckAnalysisSecondary" disabled={!selectedJob?.key}
+        title={selectedJob?.key ? 'Open saved observations for selected Job / Program' : 'Select a Job / Program to see observation history'}
+        aria-label="Open Observation History" onClick={onOpenHistory}>
+        <span>Observation History</span>
+        <small>{selectedJob?.key ? 'Selected Job' : 'Select Job'}</small>
+      </button>
+      <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
+      <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
+      <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure} aria-label="Open Infrastructure Analysis">
+        <span>Infrastructure</span><small>{infrastructureLabel || 'Independent host data'}</small>
+      </button>
+      {onOpenSystemData && <button type="button" className="rundeckSystemDataUtility"
+        onClick={onOpenSystemData} aria-label="Open System Data">
+        <span>System Data</span><small title={systemDataSummary}>{systemDataSummary || 'Collections and services'}</small>
       </button>}
-    </header>
-    <div className="rundeckOperationalSummaryCards rundeckAnalysisGroups">
-      <section className="rundeckAnalysisGroup" aria-label="Events and observation history">
-        <h4>Events &amp; History</h4>
-        <div className="rundeckAnalysisGroupActions">
-          {evidence}
-          <button type="button" className="rundeckAnalysisSecondary" disabled={!selectedJob?.key}
-            onClick={onOpenHistory} aria-label="Open Observation History">
-            <span>Observation History</span><small>{selectedJob?.host ? selectedJob.host.split('.')[0] : 'Select a Job / Program'}</small>
-          </button>
-        </div>
-      </section>
-      <section className="rundeckAnalysisGroup" aria-label="SAP service and issue checks">
-        <h4>SAP Checks</h4>
-        <div className="rundeckAnalysisGroupActions">
-          <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
-          <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
-        </div>
-      </section>
-      <section className="rundeckAnalysisGroup" aria-label="Infrastructure investigation">
-        <h4>Infrastructure</h4>
-        <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure} aria-label="Open Infrastructure Analysis">
-          <span>Filesystem · Network · Storage I/O</span>
-          <small>{infrastructureLabel || 'Independent host evidence'}</small>
-          <span className="rundeckAnalysisChevron" aria-hidden="true">›</span>
-        </button>
-      </section>
     </div>
-  </section>
+  </nav>
 }

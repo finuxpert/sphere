@@ -1,0 +1,124 @@
+/* SPHERE v1.34.89 — flat, evidence-first design. One shared design layer.
+   Never restyle severity values, source freshness or derive SAP truth from visual state. */
+.appShell:has(.rundeckPanel) {
+  --sphere-flat-edge:rgba(126,147,158,.13);
+  --sphere-flat-hover:rgba(79,198,200,.045);
+  --sphere-flat-text:var(--sphere-text-secondary,#a9b5bb);
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456{
+  display:block!important;min-width:0;min-height:0;
+  margin:4px 0!important;padding:0!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisLaunchers{
+  display:grid!important;grid-template-columns:145px minmax(0,1fr);
+  gap:14px;align-items:center;min-height:56px;padding:5px 0;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisLaunchersHead h3{
+  margin:0;font-size:12px;font-weight:730;color:var(--sphere-text,#e7edf0);
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions{
+  display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:4px;min-width:0;align-items:center;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:center!important;gap:2px!important;
+  min-width:0!important;width:100%!important;max-width:none!important;
+  min-height:42px!important;height:auto!important;max-height:none!important;
+  margin:0!important;padding:5px 9px!important;
+  border:0!important;border-radius:5px!important;
+  outline-offset:1px!important;background:transparent!important;
+  color:var(--sphere-text,#e7edf0)!important;
+  font:inherit!important;text-align:left!important;cursor:pointer;
+  box-shadow:none!important;transform:none!important;
+  transition:background-color 160ms ease,color 160ms ease!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions>button:hover:not(:disabled){
+  background:var(--sphere-flat-hover)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions>button:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions>button:disabled{
+  cursor:not-allowed!important;opacity:.55!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions .rundeckEvidenceCardTitle,
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions .rundeckAnalysisSecondary>span,
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions .rundeckAnalysisInfrastructure>span,
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions .rundeckSystemDataUtility>span{
+  display:block!important;min-width:0;flex:0 1 auto;
+  font-size:10.7px!important;line-height:1.35;font-style:normal;
+  font-weight:700!important;color:inherit!important;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions .rundeckEvidenceCard strong,
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions small{
+  display:block!important;min-width:0;width:100%;max-width:100%;
+  font-size:9.5px!important;font-weight:500!important;
+  line-height:1.35;color:var(--sphere-flat-text)!important;
+  white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+.appShell:has(.rundeckPanel) .rundeckAnalysisActions .rundeckEvidenceCard em{
+  display:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard{
+  border-color:var(--sphere-flat-edge)!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCard.is-active{
+  border-color:var(--sphere-accent,#4fc6c8)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardMetrics strong,
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload td{
+  font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .rundeckTripleTrendGrid>div,
+.appShell:has(.rundeckPanel) .rundeckTrendPlot{
+  box-shadow:none!important;
+}
+/* Inside existing modal: content separation by rhythm, not nested cards. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedAnalysis{
+  border-top:1px solid var(--sphere-flat-edge)!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks{
+  display:flex!important;flex-wrap:wrap;gap:4px 14px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks button{
+  display:inline-flex;min-height:30px;
+  padding:4px 7px!important;border:0!important;
+  background:transparent!important;box-shadow:none!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedLinks button:hover{
+  background:var(--sphere-flat-hover)!important;
+}
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraFreshness,
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraCurrent,
+.rundeckWorkspaceDrawer.is-wide .rundeckInfraTrendWorkspace,
+.rundeckWorkspaceDrawer.is-evidence .rundeckEvidenceTimingStrip,
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataDetail{
+  box-shadow:none!important;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataTabs,
+.rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedAnalysis{
+  border-radius:0!important;
+}
+@media(max-width:1200px){
+  .appShell:has(.rundeckPanel) .rundeckAnalysisLaunchers{
+    grid-template-columns:1fr;gap:3px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckAnalysisActions{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:640px){
+  .appShell:has(.rundeckPanel) .rundeckAnalysisActions{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(prefers-reduced-motion:reduce),print{
+  .appShell:has(.rundeckPanel) .rundeckAnalysisActions>button{
+    transition:none!important;
+  }
+}
