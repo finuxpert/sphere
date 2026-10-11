@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { resolveTrendFocus, trendFocusStyle } from '../../src/tools/components/rundeckTrendFocus.js'
+import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex } from '../../src/tools/components/rundeckTrendFocus.js'
 
 const hosts = ['APP1', 'APP2', 'APP3', 'APP4', 'APP5']
 
@@ -35,4 +35,14 @@ test('focus rules do not mutate retained samples, observation gaps or operator h
   assert.equal(trendFocusStyle('APP3', 'APP3').width, 2.8)
   assert.equal(JSON.stringify(data), before)
   assert.deepEqual(data[1], { bucket: '2026-10-11T10:10:00+07:00', max_value: null })
+})
+
+
+
+test('APP1–APP5 keep stable palette slots when a source APP is missing', () => {
+  assert.equal(trendHostColorIndex('APP1'), 0)
+  assert.equal(trendHostColorIndex('APP2'), 1)
+  assert.equal(trendHostColorIndex('APP5'), 4)
+  assert.equal(trendHostColorIndex('APP5', 0), 4)
+  assert.equal(trendHostColorIndex('OTHER', 3), 3)
 })

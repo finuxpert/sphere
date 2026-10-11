@@ -4,7 +4,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
 import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
-import { resolveTrendFocus, trendFocusStyle } from './rundeckTrendFocus.js'
+import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -238,6 +238,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
+        const traceColor = colors.series[trendHostColorIndex(shortHost(host), index, colors.series.length)]
         const focused = selectedKey && shortHost(host) === selectedKey
         return {
         id: host, name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
@@ -245,10 +246,10 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         symbolSize: availabilityMode
           ? ((value, params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? 8 : 3.5)
           : (focused ? 5 : (compactPoints ? 3.5 : 2.5)),
-        lineStyle: { width: traceStyle.width, opacity: traceStyle.opacity },
+        lineStyle: { color: traceColor, width: traceStyle.width, opacity: traceStyle.opacity },
         itemStyle: availabilityMode
           ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: traceStyle.itemOpacity }
-          : { opacity: traceStyle.itemOpacity },
+          : { color: traceColor, opacity: traceStyle.itemOpacity },
         emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.8, opacity: 1 } },
         data: [
           ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
@@ -356,7 +357,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         const label = shortHost(host)
         return <button key={host} type="button" aria-pressed={focusedHost === label}
           className={focusedHost === label ? 'is-focused' : ''}
-          style={{ '--trend-host-color': hostColors[index % hostColors.length] }}
+          style={{ '--trend-host-color': hostColors[trendHostColorIndex(label, index, hostColors.length)] }}
           onClick={() => setManualFocus({ scope: focusScope, host: focusedHost === label ? '' : label })}>
           <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
         </button>
