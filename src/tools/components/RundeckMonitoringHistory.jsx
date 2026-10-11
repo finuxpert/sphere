@@ -44,9 +44,13 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [activeOverlay, setActiveOverlay] = React.useState(null)
-  const [manualAppFocus, setManualAppFocus] = React.useState(null)
-  React.useEffect(() => setManualAppFocus(null), [selectedJob?.host])
-  const trendFocusedHost = manualAppFocus === null ? (selectedJob?.host || '') : manualAppFocus
+  const [manualAppFocus, setManualAppFocus] = React.useState({ contextHost: '', host: null })
+  const selectedHostKey = selectedJob?.host || ''
+  const trendFocusedHost = manualAppFocus.contextHost === selectedHostKey && manualAppFocus.host !== null
+    ? manualAppFocus.host : selectedHostKey
+  const chooseAppFocus = React.useCallback((host) => {
+    setManualAppFocus({ contextHost: selectedHostKey, host })
+  }, [selectedHostKey])
 
   const returnFromOverlay = React.useCallback((target) => {
     setActiveOverlay(!target || target.type === 'selected' ? null : target)
@@ -60,17 +64,17 @@ export default function RundeckMonitoringHistory(props) {
   const inspectJob = React.useCallback((job) => {
     if (!job?.key) return
     onSelectJob?.(job)
-    setManualAppFocus(null)
+    setManualAppFocus({ contextHost: '', host: null })
     setActiveOverlay({ type: 'job' })
   }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
     if (!context.host) return
     focusSequence.current += 1
-    setManualAppFocus(shortHost(context.host))
+    chooseAppFocus(shortHost(context.host))
     setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
     setActiveOverlay({ type: 'app', app: context })
-  }, [])
+  }, [chooseAppFocus])
 
   const focusedOperationalHost = selectedJob?.host
     ? (props.sourceHosts?.find(row => shortHost(row.host) === shortHost(selectedJob.host)) || null)
@@ -147,7 +151,7 @@ export default function RundeckMonitoringHistory(props) {
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
             focusedAppHost={trendFocusedHost}
-            onFocusAppHost={setManualAppFocus}
+            onFocusAppHost={chooseAppFocus}
             onTrendContext={forwardTrendContext}
             onOpenInfrastructureMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })}
             operationalEvidenceContent={operationalEvidenceContent}
