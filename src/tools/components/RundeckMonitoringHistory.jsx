@@ -3,7 +3,6 @@ import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
-import SphereOperatorTabs from './SphereOperatorTabs.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -92,19 +91,6 @@ export default function RundeckMonitoringHistory(props) {
       : props.latestCollectionAt
         ? `${formatWib(props.latestCollectionAt, true)} WIB`
         : ''
-  const relatedAnalysisNav = (current) => {
-    const pairs = current === 'evidence' || current === 'history'
-      ? [['evidence', 'Correlated Events'], ['history', 'Observation History']]
-      : [['availability', 'SAP Availability'], ['issues', 'SAP Issues']]
-    return <SphereOperatorTabs
-      className="rundeckAnalysisRelatedNav"
-      label="Related analysis"
-      value={current}
-      options={pairs.map(([type, label]) => ({ value: type, label, disabled: type === 'history' && !selectedJob?.key }))}
-      onChange={(type) => setActiveOverlay({ ...activeOverlay, type })}
-    />
-  }
-
   const operationalEvidenceContent = <RundeckOperationalEvidence
     refreshToken={refreshToken}
     selectedJob={selectedJob}
@@ -176,13 +162,11 @@ export default function RundeckMonitoringHistory(props) {
             subtitle="Job / Program Performance Analysis"
             size="performance"
             footer={<nav className="rundeckJobRelatedAnalysis" role="group" aria-label="Related analysis">
-              <strong>Related Analysis</strong>
+              <strong>More checks</strong>
               <div className="rundeckJobRelatedLinks">
-                <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Correlated Events</button>
-                <button type="button" onClick={() => setActiveOverlay({ type: 'history', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Observation History</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Related Events</button>
                 <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />Infrastructure</button>
-                <button type="button" onClick={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="activity" />SAP Issues</button>
-                <button type="button" onClick={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />SAP Availability</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="activity" />SAP Checks</button>
                 {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="database" />System Data</button>}
               </div>
             </nav>}
@@ -207,27 +191,6 @@ export default function RundeckMonitoringHistory(props) {
 
           </RundeckWorkspaceDrawer>}
 
-          {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
-            title="Observation History"
-            size="observation-history"
-            navigation={relatedAnalysisNav('history')}
-            subtitle={selectedJob.key}
-            onClose={() => setActiveOverlay(null)}
-            onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
-          >
-            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading observations…</div>}><RundeckObservationHistory
-              job={selectedJob}
-              refreshToken={refreshToken}
-              onSelectJob={(job) => {
-                if (!job?.key) return
-                onSelectJob?.(job)
-                setActiveOverlay({ type: 'job', returnTo: activeOverlay })
-              }}
-              embedded
-            /></React.Suspense>
-          </RundeckWorkspaceDrawer>}
-
           {activeOverlay?.type === 'system-data' && systemDataContent && <RundeckWorkspaceDrawer
             title="System Data"
             size="system-data"
@@ -245,52 +208,73 @@ export default function RundeckMonitoringHistory(props) {
               : systemDataContent}
           </RundeckWorkspaceDrawer>}
 
-          {activeOverlay?.type === 'evidence' && <RundeckWorkspaceDrawer
-            title="Correlated Events"
+          {['evidence', 'history'].includes(activeOverlay?.type) && <RundeckWorkspaceDrawer
+            title="Related Events & Run History"
             size="evidence"
-            navigation={relatedAnalysisNav('evidence')}
-            subtitle={selectedJob?.key ? `${selectedJob.key} · ${selectedJob.host ? shortHost(selectedJob.host) + ' · ' : ''}${selectedContextTime}` : 'Operational evidence and timing correlation'}
+            subtitle={(activeOverlay.job || selectedJob)?.key
+              ? `${(activeOverlay.job || selectedJob).key} · ${(activeOverlay.job || selectedJob).host ? shortHost((activeOverlay.job || selectedJob).host) + ' · ' : ''}${selectedContextTime}`
+              : 'Events and saved observations'}
             onClose={() => setActiveOverlay(null)}
-            onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
+            onBack={activeOverlay.returnTo && activeOverlay.returnTo.type !== 'selected'
+              ? () => returnFromOverlay(activeOverlay.returnTo) : null}
           >
-            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading correlated events…</div>}><RundeckEvidenceTimeline
-              refreshToken={refreshToken}
-              job={activeOverlay.job || selectedJob}
-              incidentActive
-            /></React.Suspense>
+            <div className="rundeckOperatorPairedWorkspace is-events">
+              <section className="rundeckOperatorPairedPane" aria-label="Related events timeline">
+                <h3>Related Events</h3>
+                <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading events…</div>}>
+                  <RundeckEvidenceTimeline
+                    refreshToken={refreshToken}
+                    job={activeOverlay.job || selectedJob}
+                    incidentActive
+                  />
+                </React.Suspense>
+              </section>
+              <section className="rundeckOperatorPairedPane" aria-label="Run history">
+                <h3>Run History</h3>
+                {(activeOverlay.job || selectedJob)?.key
+                  ? <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading saved runs…</div>}>
+                    <RundeckObservationHistory
+                      job={activeOverlay.job || selectedJob}
+                      refreshToken={refreshToken}
+                      embedded
+                      onSelectJob={(job) => {
+                        if (!job?.key) return
+                        onSelectJob?.(job)
+                        setActiveOverlay({ type: 'job', returnTo: activeOverlay })
+                      }}
+                    />
+                  </React.Suspense>
+                  : <p className="rundeckOperatorPairedEmpty">Select a job or program to view saved runs.</p>}
+              </section>
+            </div>
           </RundeckWorkspaceDrawer>}
 
-          {activeOverlay?.type === 'availability' && <RundeckWorkspaceDrawer
-            title="SAP Availability"
-            size="availability"
-            navigation={relatedAnalysisNav('availability')}
-            subtitle="SAP App · HANA · Web · Technical Checks"
-            onClose={() => setActiveOverlay(null)}
-            onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
-          >
-            <RundeckAvailability refreshToken={refreshToken} />
-          </RundeckWorkspaceDrawer>}
-
-          {activeOverlay?.type === 'issues' && <RundeckWorkspaceDrawer
-            title="SAP Issues"
+          {['availability', 'issues'].includes(activeOverlay?.type) && <RundeckWorkspaceDrawer
+            title="SAP Checks"
             size="issues"
-            navigation={relatedAnalysisNav('issues')}
-            subtitle="Active SAP issues"
+            subtitle="Service availability and current SAP issues"
             onClose={() => setActiveOverlay(null)}
-            onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
+            onBack={activeOverlay.returnTo && activeOverlay.returnTo.type !== 'selected'
+              ? () => returnFromOverlay(activeOverlay.returnTo) : null}
           >
-            <RundeckSapIssues
-              refreshToken={refreshToken}
-              onInspectApp={(context) => {
-                if (!context?.host) return
-                focusSequence.current += 1
-                setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
-                setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
-              }}
-            />
+            <div className="rundeckOperatorPairedWorkspace is-sap-checks">
+              <section className="rundeckOperatorPairedPane" aria-label="SAP availability">
+                <h3>Availability</h3>
+                <RundeckAvailability refreshToken={refreshToken} />
+              </section>
+              <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
+                <h3>Current Issues</h3>
+                <RundeckSapIssues
+                  refreshToken={refreshToken}
+                  onInspectApp={(context) => {
+                    if (!context?.host) return
+                    focusSequence.current += 1
+                    setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
+                    setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
+                  }}
+                />
+              </section>
+            </div>
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
