@@ -830,6 +830,19 @@ test('v1.34.91 desktop drilldowns fit without scrolling or duplicate navigation'
     expect(fit.right).toBeLessThanOrEqual(fit.w+1)
     expect(fit.bottom).toBeLessThanOrEqual(fit.h+1)
     expect(fit.extraX).toBeLessThanOrEqual(2)
+    if(fit.extraY>2){
+      const sections=await dialog.evaluate(el=>{
+        const body=el.querySelector('.rundeckWorkspaceDrawerBody')
+        const names=['.rundeckJobEpisodeMatrix','.rundeckJobTimeline','.rundeckJobAnalysisWorkspace',
+          '.rundeckJobPerformanceChart','.rundeckWpSignalPanel','.rundeckWpSignalTableWrap',
+          '.rundeckJobRelatedAnalysis','.rundeckInfraTrendWorkspace','.rundeckInfraGrid']
+        return {body:body?{height:body.clientHeight,contentHeight:body.scrollHeight}:null,
+          sections:names.map(sel=>{const node=el.querySelector(sel);const box=node?.getBoundingClientRect();
+            return {selector:sel,display:node?getComputedStyle(node).display:null,height:box?Math.round(box.height):null,top:box?Math.round(box.top):null}
+          })}
+      })
+      console.log('SPHERE_MODAL_HEIGHT_DEBUG='+JSON.stringify(sections))
+    }
     expect(fit.extraY).toBeLessThanOrEqual(2)
   }
   await assertFits(job)
