@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { OPERATOR_THRESHOLDS, metricResourceState, hostResourceState, sapWorkloadState, filesystemResourceState } from '../../src/tools/components/rundeckStatusSemantics.js'
-import { settleSapIssueSources, unavailableSapIssueIndicators, sapIssueSampleFreshness } from '../../src/tools/components/rundeckIssueSources.js'
+import { settleSapIssueSources, unavailableSapIssueIndicators, sapIssueSampleFreshness, sapIssueTimestampFreshness } from '../../src/tools/components/rundeckIssueSources.js'
 import { issueWorkloadTimePair } from '../../src/tools/components/rundeckEvidenceTiming.js'
 import { observationIdentityCounts } from '../../src/tools/components/rundeckObservationIdentity.js'
 import { hostInfrastructureEvidence, filesystemSamplesForHost } from '../../src/tools/components/rundeckUnifiedHost.js'
@@ -62,6 +62,9 @@ test('APP issue freshness is collection-bound and never assumes an old snapshot 
   assert.equal(sapIssueSampleFreshness(payload,{...sample,collected_at:'2026-10-12T16:39:00Z'},now),'STALE')
   assert.equal(sapIssueSampleFreshness(payload,{...sample,collected_at:null},now),'UNKNOWN')
   assert.equal(sapIssueSampleFreshness(payload,{...sample,collection_id:'rundeck-999'},now),'UNKNOWN')
+  assert.equal(sapIssueTimestampFreshness('2026-10-12T16:50:00Z',now),'FRESH')
+  assert.equal(sapIssueTimestampFreshness('2026-10-12T16:39:00Z',now),'STALE')
+  assert.equal(sapIssueTimestampFreshness(null,now),'UNKNOWN')
 })
 
 test('time check uses explicit issue signal and nearest selected workload sample, not first-observed or global skew',()=>{
