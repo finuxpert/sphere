@@ -19,6 +19,7 @@ import './RundeckCloudflareLight.css'
 import './RundeckUnifiedModalPolish.css'
 import './RundeckFlatWorkspace.css'
 import './RundeckMockupParity.css'
+import './SphereAnalysisWorkspace.css'
 
 const RundeckJobHistory = React.lazy(() => import('./RundeckJobHistory.jsx'))
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
