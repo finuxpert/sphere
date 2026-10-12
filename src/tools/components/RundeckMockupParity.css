@@ -1060,3 +1060,13 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
    row-gap:2px!important;
  }
 }
+
+/* v1.34.91 shell-level overflow fix: legacy LOG V2 applied min-height:100vh
+   *below* the navbar, resulting in page scroll ~= navbar height (65px).
+   Automatic mode should size to actual SPHERE content; appShell owns the
+   viewport minimum. Manual LOG Analysis remains unchanged. */
+.appShell.isTool:has(.rundeckPanel) .logV2Shell{
+  min-height:0!important;
+  height:auto!important;
+  padding-bottom:0!important;
+}

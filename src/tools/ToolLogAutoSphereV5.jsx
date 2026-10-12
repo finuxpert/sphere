@@ -420,9 +420,9 @@ export default function ToolLogAutoSphereV5() {
   return <section className="logV2Shell"><div className="logV2Inner">
     <header className="logV2Header"><div><span className="logV141Kicker">SAP APPLICATION SERVER ANALYSIS</span><h1>LOG Analysis</h1></div><label>Source <select value={source} disabled={busy} onChange={(event) => { setSource(event.target.value); setAnalysis(null); setRca(null); setStatus(''); setShowAllCurrentWorkload(false) }}><option value="automatic">Automatic — Rundeck</option><option value="manual">Manual — Upload Logs</option></select></label>{source === 'manual' && <label className="logV2Upload"><input type="file" multiple accept=".zip,.log,.txt,.csv" disabled={busy} onChange={(event) => upload(event.target.files)} />{busy ? 'Analyzing…' : 'Upload Logs'}</label>}</header>
     {source === 'automatic' && <RundeckSource onCollection={upload} />}
-    {status ? <div className="logV2StatusBar">{status}</div> : null}
+    {source === 'manual' && status ? <div className="logV2StatusBar">{status}</div> : null}
 
-    {!rca ? <div className="logV2EmptyState"><b>Upload log files</b><p>WP-SCOUT or Daily Check logs. Additional Linux telemetry is optional.</p></div> : <>
+    {source === 'manual' && (!rca ? <div className="logV2EmptyState"><b>Upload log files</b><p>WP-SCOUT or Daily Check logs. Additional Linux telemetry is optional.</p></div> : <>
       <section className="logV2Stats logV2StatsCompact">
         <Stat label="Analysis" value={pointInTime ? 'POINT IN TIME' : 'TREND ANALYSIS'} meta={`${rca.collections.length} ${rca.collections.length === 1 ? 'collection' : 'collections'}`} />
         <Stat label="Period" value={`${shortTime(rca.evidenceWindow.start)} → ${shortTime(rca.evidenceWindow.end)}`} meta={pointInTime ? `${collectionSkew(rca.collections[0])} min collection window` : `${rca.cadence.nominalMinutes || '—'} min interval`} />
@@ -447,6 +447,6 @@ export default function ToolLogAutoSphereV5() {
       {!pointInTime && <ServerDetails rca={rca} collection={selectedCollection} selectedHost={selectedHostPeak?.host} onSelectHost={selectHost} />}
       <AnalyticsDiagnostics diagnostics={diagnostics} capabilities={capabilities} mapping={mapping} verdict={verdict} rca={rca} analysis={analysis} />
       <SourceAudit collections={rca.collections} />
-    </>}
+    </>)}
   </div></section>
 }

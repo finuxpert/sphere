@@ -789,7 +789,13 @@ test('v1.34.91 desktop review measures actual visual hierarchy, not just DOM exi
   expect(geometry.horizontalOverflow).toBeLessThanOrEqual(2)
   // The overview must not acquire a second top-level navigation or a page scrollbar.
   await expect(page.locator('.rundeckProductNavigation')).toHaveCount(0)
+  await expect(page.locator('.logV2EmptyState')).toHaveCount(0)
   await expect(page.getByRole('navigation',{name:'Loaded job pages'})).toBeVisible()
+  const legacyShell=await page.locator('.logV2Shell').evaluate(el=>({
+    minHeight:getComputedStyle(el).minHeight,
+    height:Math.round(el.getBoundingClientRect().height)
+  }))
+  expect(legacyShell.minHeight).toBe('0px')
   const verticalOverflow=await page.evaluate(()=>document.documentElement.scrollHeight-document.documentElement.clientHeight)
   let overviewDiagnostic='Overview must fit one viewport'
   if(verticalOverflow>2 || geometry.horizontalOverflow>2){
