@@ -791,6 +791,7 @@ test('v1.34.91 desktop review measures actual visual hierarchy, not just DOM exi
   await expect(page.locator('.rundeckProductNavigation')).toHaveCount(0)
   await expect(page.getByRole('navigation',{name:'Loaded job pages'})).toBeVisible()
   const verticalOverflow=await page.evaluate(()=>document.documentElement.scrollHeight-document.documentElement.clientHeight)
+  let overviewDiagnostic='Overview must fit one viewport'
   if(verticalOverflow>2 || geometry.horizontalOverflow>2){
     const sections=await page.evaluate(()=>{
       const names=['.rundeckPanel','.rundeckLandscapeHeader','.rundeckDataQualityNotice',
@@ -805,9 +806,9 @@ test('v1.34.91 desktop review measures actual visual hierarchy, not just DOM exi
             bottom:r?Math.round(r.bottom):null,scrollHeight:el?.scrollHeight||null}
         })}
     })
-    console.log('SPHERE_OVERVIEW_HEIGHT_DEBUG='+JSON.stringify(sections))
+    overviewDiagnostic='SPHERE_OVERVIEW_HEIGHT_DEBUG='+JSON.stringify(sections)
   }
-  expect(verticalOverflow).toBeLessThanOrEqual(2)
+  expect(verticalOverflow,overviewDiagnostic).toBeLessThanOrEqual(2)
   await page.screenshot({path:'test-results/sphere-v13491-overview-'+(page.viewportSize()?.width||'desktop')+'.png',fullPage:false})
 })
 test('v1.34.91 desktop Live search filters only loaded real observations',async ({page})=>{
