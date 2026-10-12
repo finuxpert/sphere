@@ -633,7 +633,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const [detailView, setDetailView] = React.useState(null)
   const [wpSearch,setWpSearch] = React.useState('')
   const [wpErrorsOnly,setWpErrorsOnly] = React.useState(false)
-  const [showAllWp,setShowAllWp] = React.useState(false)
+  const [wpPage,setWpPage] = React.useState(0)
   const jobKey = job?.key || ''
   const jobHost = job?.host || ''
   const jobConsumerType = job?.consumerType || ''
@@ -803,7 +803,10 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     return [item?.pid,item?.wp,item?.wp_type,item?.program,item?.cpu_class,
       snapshotError,traceError].some(value=>String(value||'').toLowerCase().includes(normalizedWpSearch))
   })
-  const visibleWpSignals=showAllWp || normalizedWpSearch || wpErrorsOnly ? filteredWpSignals : filteredWpSignals.slice(0,8)
+  const wpPageSize=4
+  const wpPageCount=Math.max(1,Math.ceil(filteredWpSignals.length/wpPageSize))
+  const safeWpPage=Math.min(wpPage,wpPageCount-1)
+  const visibleWpSignals=filteredWpSignals.slice(safeWpPage*wpPageSize,(safeWpPage+1)*wpPageSize)
   const snapshotErrorCount = wpSignals.filter((item) => String(item?.error_at_snapshot || '').trim()).length
   const retainedTraceErrorCount = wpSignals.filter((item) => String(item?.latest_trace_error || '').trim()).length
   const wpSignalObservedAt = signalObservation?.collected_at || observedAt
@@ -947,10 +950,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           </div>
         </div>
         <div className="rundeckWpSignalFilters" role="group" aria-label="Filter WP trace signals">
-          <label><span>Find WP / Trace</span><input type="search" value={wpSearch} onChange={event=>setWpSearch(event.target.value)} placeholder="PID, program or error" /></label>
-          <label className="is-checkbox"><input type="checkbox" checked={wpErrorsOnly} onChange={event=>setWpErrorsOnly(event.target.checked)} /> Errors only</label>
-          <button type="button" onClick={()=>setShowAllWp(value=>!value)} aria-pressed={showAllWp}>{showAllWp ? 'Top 8' : 'All rows'}</button>
-          <small>{visibleWpSignals.length} of {wpSignals.length} retained rows</small>
+          <label><span>Find WP / Trace</span><input type="search" value={wpSearch} onChange={event=>{setWpSearch(event.target.value);setWpPage(0)}} placeholder="PID, program or error" /></label>
+          <label className="is-checkbox"><input type="checkbox" checked={wpErrorsOnly} onChange={event=>{setWpErrorsOnly(event.target.checked);setWpPage(0)}} /> Errors only</label>
+          <small>{filteredWpSignals.length} of {wpSignals.length} retained rows · Page {safeWpPage+1}/{wpPageCount}</small>
+          <button type="button" disabled={safeWpPage===0} onClick={()=>setWpPage(n=>Math.max(0,n-1))}>Previous</button>
+          <button type="button" disabled={safeWpPage>=wpPageCount-1} onClick={()=>setWpPage(n=>Math.min(wpPageCount-1,n+1))}>Next</button>
         </div>
         <div className="rundeckWpSignalTableWrap">
           <table className="rundeckWpSignalTable">
@@ -984,7 +988,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             </tbody>
           </table>
         </div>
-        {wpSignals.length > visibleWpSignals.length && !normalizedWpSearch && !wpErrorsOnly && !showAllWp && <small className="rundeckWpSignalMore">Showing {visibleWpSignals.length} of {wpSignals.length} process rows, prioritized by snapshot error, retained trace error and RABAX count.</small>}
+        {wpSignals.length > wpPageSize && !normalizedWpSearch && !wpErrorsOnly && <small className="rundeckWpSignalMore">Showing saved WP/Trace observations by page, prioritized by snapshot error, retained trace error and RABAX count.</small>}
         <p className="rundeckWpSignalNote">Source: retained WP-SCOUT observation. “Error at Snapshot” is shown only when the collector marks the error AT_SNAPSHOT. “Latest Trace Error” can be historical and does not mean the SAP job failed. CPU Signal is only the collector CPU classification. Counters are observation values from the WP trace sample. SM37 remains the authority for SAP job execution status.</p>
       </section> : <section className="rundeckWpSignalPanel is-empty" aria-label="WP trace signal coverage">
         <div className="rundeckWpSignalHead"><div><strong>Observed SAP WP / Trace Signals</strong><small>{wpSignalObservedAt ? `${formatWib(wpSignalObservedAt, true)} WIB` : 'Selected observation'}</small></div></div>
