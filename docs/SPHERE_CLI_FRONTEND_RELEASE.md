@@ -24,3 +24,9 @@ Important: PROD path/checkout assumptions require manual verification before its
 - Jobs/Programs column labels and trend controls remain small on wide desktop; improve typography selectively, without losing operational density.
 - Partial SAP data is explicitly visible; don't replace with a normal/healthy inference.
 - Do not change SAP metrics, threshold semantics or SM37 authoritative execution status during UI cleanup.
+
+## Idempotent deploy fix and analysis-rail regression (2026-10-12)
+
+The CLI now checks the desired GitHub SHA against the active release *before* building. If the same SHA is already active and the public HTTPS index matches, it exits successfully with `DEPLOY=ALREADY_CURRENT BUILD=SKIPPED`. An existing inactive release still blocks overwriting, preserving rollback history. New SHAs build and deploy normally.
+
+The 1536px Overview has a roughly 460px-wide right-side analysis rail. A 6-column override compressed each link to an unreadable width. CSS restores a 3×2 layout with six unchanged actions and no new data/API behavior. Manual screenshot review remains the visual acceptance process.
