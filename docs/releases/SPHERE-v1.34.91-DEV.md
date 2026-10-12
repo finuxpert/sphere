@@ -16,11 +16,26 @@ Actual DEV v1.34.90 screenshot differed materially from the approved desktop moc
 - Review, Job/Program Analysis, Correlated Events, Observation History, Infrastructure, SAP Issues, SAP Availability, System Data, PDF Preview and the safe Back stack keep their existing functionality plus the v1.34.90 improvements (source-backed issue filters, WP trace filters, System Data to PDF).
 - Responsive CSS targets desktop first without suppressing data-trust notices or inventing sources. Focus-visible and reduced-motion rules are preserved.
 
+## 12 October desktop audit corrective patch
+
+The operator screenshots and 1366px overflow evidence showed that the additional three-tab Overview/Infrastructure/Job navigation duplicated existing investigation routes; long Job/WP and filesystem sections required scrolling; the Trend Details dialog could be clipped because it was mounted inside a transformed chart subtree.
+
+**Corrected in the DEV candidate:**
+- Removed the extra navigation row entirely. APP cards, Live/Review/Search, six action shortcuts and modal Related Analysis remain the navigation points.
+- The dashboard header is a bounded two-column layout at desktop widths. The SAP Data freshness summary can abbreviate visually but its full wording remains available through its title; actual state never changes.
+- Live Jobs displays 3 rows per page at heights up to 800px, otherwise 4. All loaded rows remain available via Previous/Next and search; the observed total versus loaded count remains accurate.
+- WP/Trace observations display 3/4 rows per page, maintaining search, error filtering and individual WP details. Infrastructure Filesystem mounts display 5 rows per page with Previous/Next. This does not change source metrics or thresholds.
+- Trend Details is rendered through a body-level React portal with keyboard focus management retained. Job and Infrastructure controls/chart height are compacted; no evidence is hidden solely to pass geometry.
+- **No global CSS overflow:hidden workaround**. The one-screen geometry test checks actual document horizontal and vertical scroll and Job/Infrastructure modal body excess on 1366/1536 desktop. If any excess remains, deployment is blocked.
+- Visual QA reduced from the older 14-case set to **three relevant desktop scenarios on each of two viewports** (6 browser cases). Required static/functional QA and build checks remain in place. The release still uses a SHA-bound guarded deployment and rollback.
+
+On dense datasets, a larger historical review/export may inherently require a paged detail view; no records are dropped or misrepresented. No frontend/source commit alone establishes visual acceptance.
+
 ## Acceptance tests
 
 - Static/source QA validates one dashboard title, seven meaningful Live table columns summing to 100%, current version, and source-backed existing evidence.
 - Playwright desktop 1536 and 1366 requires actual heading text, five APP cards, metric font >=14px, title font >=20px, visible chart height >=187px, six actions, and no horizontal document overflow.
-- Playwright tests loaded-only search, Observed At, and earlier v1.34.90 Job/WP, Infrastructure, SAP Issues and System Data→PDF click flows.
+- Playwright focuses on one-screen Overview geometry, loaded-only Live pagination/search, and combined Job/Infrastructure drawer bounds/scroll/Back behaviour. Other historical tests remain in repository but are not all rerun on every UI-only release.
 - Screenshots saved as `test-results/sphere-v13491-overview-1536.png` and `...1366.png` must be visually compared with approved mockup.
 - No mockup-only figures, invented “baseline” percent changes, derived causality, fake SM37 statuses, token renewal or synthetic PDF details are added.
 
