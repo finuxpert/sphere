@@ -787,6 +787,11 @@ test('v1.34.91 desktop review measures actual visual hierarchy, not just DOM exi
   expect(geometry.trend?.height).toBeGreaterThanOrEqual(187)
   expect(geometry.operational?.height).toBeGreaterThanOrEqual(44)
   expect(geometry.horizontalOverflow).toBeLessThanOrEqual(2)
+  // The overview must not acquire a second top-level navigation or a page scrollbar.
+  await expect(page.locator('.rundeckProductNavigation')).toHaveCount(0)
+  await expect(page.getByRole('navigation',{name:'Loaded job pages'})).toBeVisible()
+  const verticalOverflow=await page.evaluate(()=>document.documentElement.scrollHeight-document.documentElement.clientHeight)
+  expect(verticalOverflow).toBeLessThanOrEqual(2)
   await page.screenshot({path:'test-results/sphere-v13491-overview-'+(page.viewportSize()?.width||'desktop')+'.png',fullPage:false})
 })
 test('v1.34.91 desktop Live search filters only loaded real observations',async ({page})=>{
@@ -800,4 +805,9 @@ test('v1.34.91 desktop Live search filters only loaded real observations',async 
   await expect(section.getByText(/No matching job or program in the .*loaded rows/)).toBeVisible()
   await search.clear()
   await expect(section.locator('tbody tr').first()).toBeVisible()
+  const pager=page.getByRole('navigation',{name:'Loaded job pages'})
+  await expect(pager).toBeVisible()
+  await expect(pager.getByRole('button',{name:'Next'})).toBeEnabled()
+  await pager.getByRole('button',{name:'Next'}).click()
+  await expect(pager).toContainText('Page 2/')
 })

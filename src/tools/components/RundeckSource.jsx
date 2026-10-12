@@ -774,7 +774,7 @@ export default function RundeckSource({ onCollection }) {
           <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
             <summary title={dataAlignmentTitle}>
               <span>SAP Data</span><StatusPill value={qualityDisplay} />
-              <small className="rundeckSourceFreshness">{freshnessSummary}</small>
+              <small className="rundeckSourceFreshness" title={freshnessSummary}>{freshnessSummary}</small>
             </summary>
             <div className="rundeckDataAlignmentPopover">
               <div><span>Performance / Availability</span><strong>{quality.state}</strong></div>

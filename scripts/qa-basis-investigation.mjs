@@ -117,7 +117,7 @@ const checks = [
 
   ['Mockup-scale UI source transforms actual cockpit and investigation structure',
     files.wrapper.includes("import './RundeckMockupParity.css'")
-    && files.wrapper.includes('rundeckProductNavigation')
+    && !files.wrapper.includes('rundeckProductNavigation') && files.operationalEvidence.includes('rundeckAnalysisActions')
     && files.monitoringCore.includes('rundeckCockpitV13491')
     && files.source.includes('SAP Performance Dashboard')
     && mockupStyle.includes('.rundeckCockpitV13491 .rundeckTripleTrendGrid .rundeckTrendChart')
@@ -311,7 +311,7 @@ const checks = [
   ['Correlated Events drawer uses roomier timeline rows and three-column timing details', files.evidenceTimelineCss.includes('min-height:46px!important') && files.evidenceTimelineCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important') && files.evidenceTimeline.includes('Critical Work Process first observed')],
   ['SAP Availability drawer distinguishes stale data from service failure', files.availability.includes('last reliable:') && files.availability.includes('using last reliable data') && files.availability.includes("const displayState = stale ? 'STALE' : serviceState")],
   ['Trend helper microcopy is removed from the cockpit', !files.serverTrend.includes('Click a chart point to inspect saved job and program data without expanding the page.')],
-  ['Real dashboard heading replaces hidden duplicate title and keeps page identity', files.source.includes('className="rundeckDashboardTitle">SAP Performance Dashboard</span>') && !files.source.includes('<h2 aria-label="SAP Performance">') && files.wrapper.includes('rundeckProductNavigation') && files.monitoringCore.includes('rundeckCockpitV13490')],
+  ['Real dashboard heading replaces hidden duplicate title and keeps page identity', files.source.includes('className="rundeckDashboardTitle">SAP Performance Dashboard</span>') && !files.source.includes('<h2 aria-label="SAP Performance">') && !files.wrapper.includes('rundeckProductNavigation') && files.operationalEvidence.includes('rundeckAnalysisActions') && files.monitoringCore.includes('rundeckCockpitV13490')],
   ['Review mode has no redundant Search button because Search is a workspace mode', files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('!forceSearch && !hideSearchButton')],
   ['Live Jobs table fills the merged workspace and keeps selected-row emphasis restrained',
     files.currentWorkloadCss.includes('SPHERE v1.34.61 — full-width Live table')
