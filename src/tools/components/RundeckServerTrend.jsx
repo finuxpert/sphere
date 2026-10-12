@@ -304,7 +304,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     chartRef.current = chart
     let lastExactClickAt = 0
 
-    const selectItem = (item, seriesIndex = null, dataIndex = null) => {
+    const selectItem = (item) => {
       if (!item || item.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
       // A click opens exact-sample analysis; do not leave a hover bubble over the plot.
       chart.dispatchAction({ type: 'hideTip' })
@@ -325,7 +325,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       const item = params?.data
       if (!item || item.gap) return
       lastExactClickAt = Date.now()
-      selectItem(item, params.seriesIndex, params.dataIndex)
+      selectItem(item)
     }
 
     const fallbackClick = (event) => {
@@ -343,7 +343,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         if (current < distance) { distance = current; nearest = { seriesIndex, dataIndex, item } }
       }))
       if (!nearest || distance > 900) return
-      selectItem(nearest.item, nearest.seriesIndex, nearest.dataIndex)
+      selectItem(nearest.item)
     }
 
     chart.on('click', exactClick)
