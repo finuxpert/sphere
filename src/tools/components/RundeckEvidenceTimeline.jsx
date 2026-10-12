@@ -2,6 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib } from './sapUiFormat.js'
 import './RundeckEvidenceTimeline.css'
+import { issueWorkloadTimePair } from './rundeckEvidenceTiming.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 
@@ -34,12 +35,12 @@ function evidenceEventTitle(event = {}) {
 }
 
 function eventRelation(eventAt = '', issueAt = '', thresholdMinutes = 15, source = '') {
-  if (String(source || '').toUpperCase() === 'ISSUE START') return 'ISSUE START'
+  if (String(source || '').toUpperCase() === 'ISSUE START' || String(source || '').toUpperCase() === 'SAP SIGNAL') return ''
   const eventTs = Date.parse(eventAt || '')
   const issueTs = Date.parse(issueAt || '')
   if (!Number.isFinite(eventTs) || !Number.isFinite(issueTs)) return ''
   const deltaMinutes = Math.round((eventTs - issueTs) / 60000)
-  if (Math.abs(deltaMinutes) <= Math.max(1, Number(thresholdMinutes || 15))) return 'SAME WINDOW'
+  if (Math.abs(deltaMinutes) <= Number(thresholdMinutes)) return 'WITHIN WINDOW'
   return deltaMinutes < 0 ? 'BEFORE ISSUE' : 'AFTER ISSUE'
 }
 
@@ -66,6 +67,8 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     if (consumerType) params.set('type', consumerType)
     if (anchorAt) params.set('at', anchorAt)
     setLoading(true)
+    setData(null)
+    setError('')
     fetch(`${API}/analysis/evidence?${params.toString()}`, { cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) {
@@ -93,35 +96,28 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const coverage = data?.coverage || {}
   const events = data?.events || []
   const interpretation = data?.interpretation || []
-  const state = alignment.state || (loading ? 'LOADING' : error ? 'UNAVAILABLE' : 'UNKNOWN')
-  const skew = alignment.max_skew_minutes
-  const hasSkew = skew !== null && skew !== undefined && Number.isFinite(Number(skew))
-  const threshold = Number(alignment.threshold_minutes)
-  const hasThreshold = Number.isFinite(threshold)
-  const issueSource = (alignment.sources || []).find((source) => String(source?.name || '').toUpperCase() === 'ISSUE START')
-  const issueEvent = events.find((event) => String(event?.source || '').toUpperCase() === 'ISSUE START')
-  const issueAt = issueSource?.observed_at || issueEvent?.at || ''
-  const timingLabel = state === 'ALIGNED' ? 'Same period' : state
-  const timingSummary = `${timingLabel}${hasSkew ? ` · ${Math.round(Number(skew))}m difference` : ''} · Root cause not confirmed`
-  const workloadGapMinutes = Number(alignment.workload_gap_minutes)
-  const hasWorkloadGap = Number.isFinite(workloadGapMinutes)
-  const alignmentHint = state === 'ALIGNED'
-    ? `Source timestamps are within the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Timing alignment supports correlation only; it does not establish causation.`
+  // Compare the nearest retained workload sample with the issue timestamp;
+  // the API's cross-source max skew may instead describe Selected Time/Availability.
+  const pair = issueWorkloadTimePair(data || {})
+  const state = loading && !data ? 'LOADING' : error && !data ? 'UNAVAILABLE' : pair.state
+  const issueAt = pair.issueAt || ''
+  const hasThreshold = pair.thresholdMinutes !== null
+  const threshold = pair.thresholdMinutes
+  const timingSummary = pair.deltaMinutes === null
+    ? 'Job/program ↔ issue: timestamps not verified'
+    : `Job/program sample ↔ issue first observed · ${pair.deltaMinutes}m apart`
+  const alignmentHint = state === 'WITHIN WINDOW'
+    ? 'Two retained observations are within the configured time window. This does not identify job start or cause.'
     : state === 'NO OVERLAP'
-      ? 'The selected workload episode ended before the current issue window beyond the configured correlation tolerance.'
-      : state === 'LIMITED'
-        ? `Source timestamps exceed the ${hasThreshold ? `${threshold} minute` : 'configured'} alignment window. Cross-source conclusions are limited.`
-      : state === 'INSUFFICIENT DATA'
-        ? 'Fewer than two timestamped evidence sources are available.'
-        : 'Cross-source timing status.'
+      ? 'The retained workload episode does not overlap the issue window.'
+      : 'The selected workload and issue timestamps do not establish timing alignment.'
+  const workloadGapMinutes = Number(alignment.workload_gap_minutes)
+  const hasWorkloadGap = alignment.workload_gap_minutes != null && Number.isFinite(workloadGapMinutes)
 
   if (compact) {
-    const timingState = state === 'ALIGNED' ? 'Same period' : state
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
       ? `No overlap · ${Math.round(workloadGapMinutes)}m gap`
-      : hasSkew
-        ? `${Math.round(Number(skew))}m difference`
-        : timingState
+      : pair.deltaMinutes !== null ? `${pair.deltaMinutes}m between samples` : 'Timing unverified'
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Related Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events</span>
       <strong>{events.length ? `${events.length} events · ${timingDetail}` : 'No related events'}</strong>
@@ -133,14 +129,15 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Related Events</span>
       {!paired && <span className="rundeckEvidenceScope">Selected job</span>}
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME PERIOD' : state}</span>
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state}</span>
       <small>{events.length ? `${events.length} event${events.length === 1 ? '' : 's'}` : 'No events'}</small>
     </div>
 
     <div className={`rundeckEvidenceTimingStrip ${alignmentClass(state)}`}>
       <strong>Time check</strong>
-      <span>{timingSummary}</span>
-      {issueAt && <small>Issue time {formatWib(issueAt, true)} WIB</small>}
+      <span title={alignmentHint}>{timingSummary}</span>
+      {issueAt && <small>Issue first observed: {formatWib(issueAt, true)} WIB</small>}
+      {pair.workloadAt && <small>Nearest workload sample: {formatWib(pair.workloadAt, true)} WIB</small>}
     </div>
 
     <div className="rundeckEvidenceBody">
@@ -150,7 +147,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
       {data && <>
         <div className="rundeckEvidenceEvents" aria-label="Operational events">
           {events.map((event, index) => {
-            const relation = eventRelation(event.at, issueAt, hasThreshold ? threshold : 15, event.source)
+            const relation = hasThreshold ? eventRelation(event.at, issueAt, threshold, event.source) : ''
             const isHost = String(event.source || '').toUpperCase() === 'HOST'
             const displayTitle = isHost && host ? `${appLabel(host)} server observation` : evidenceEventTitle(event)
             return <div className={`rundeckEvidenceEvent ${String(event.source || '').toUpperCase() === 'SAP SIGNAL' ? 'is-primary-signal' : ''}`} key={`${event.at}-${event.kind}-${index}`} title={event.detail || undefined}>
@@ -160,27 +157,30 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
                 <strong>{displayTitle}</strong>
                 <small>{isHost && host ? `${appLabel(host)} · ` : ''}{sourceLabel(event.source)}{event.state && <span className={`rundeckEvidenceStateChip is-${String(event.state).toLowerCase().replaceAll(' ','-')}`}>{event.state}</span>}</small>
               </div>
-              {relation && <em className={`rundeckEvidenceRelation ${relation === 'ISSUE START' ? 'is-issue' : relation === 'SAME WINDOW' ? 'is-same' : ''}`}>{relation === "SAME WINDOW" ? "SAME PERIOD" : relation}</em>}
+              {relation && <em className={`rundeckEvidenceRelation ${relation === 'WITHIN WINDOW' ? 'is-same' : ''}`}>{relation}</em>}
             </div>
           })}
           {!events.length && <div className="rundeckEvidenceState">No event found in this time window.</div>}
         </div>
 
         <details className="rundeckEvidenceTechnical">
-          <summary>Time check details</summary>
+          <summary>Timestamp sources</summary>
           <div className="rundeckEvidenceSources" aria-label="Source alignment">
+            {pair.firstSeen && <span><b>Job/program first observed</b><strong>{formatWib(pair.firstSeen, true)} WIB</strong></span>}
+            {pair.lastSeen && <span><b>Job/program last observed</b><strong>{formatWib(pair.lastSeen, true)} WIB</strong></span>}
             {alignment.sources?.map((source) => <span key={source.name}>
               <b>{sourceLabel(source.name)}</b>
               <strong>{formatWib(source.observed_at, true)} WIB</strong>
-              <em className={source.within_window ? 'is-aligned' : 'is-limited'}>{source.delta_minutes}m</em>
+              <em className={source.within_window ? 'is-aligned' : 'is-limited'}>{source.delta_minutes == null ? '—' : `${source.delta_minutes}m`}</em>
             </span>)}
             <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} records</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no saved history'}</em></span>
-            <span><b>Correlation Window</b><strong>{hasThreshold ? `${threshold} min` : 'configured'}</strong><em>maximum timestamp difference used for correlation</em></span>
+            <span><b>Source alignment (API)</b><strong>{alignment.state || 'UNKNOWN'}</strong><em>API compares Selected Time/Issue, nearest Workload and Availability; not job start</em></span>
+            <span><b>Comparison window</b><strong>{hasThreshold ? `${threshold} min` : '—'}</strong><em>issue first observed ↔ nearest retained job/program observation</em></span>
           </div>
           {interpretation.length > 0 && <div className="rundeckEvidenceInterpretation">
             <ul>{interpretation.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
           </div>}
-          <p className="rundeckEvidenceNote">Timing alignment is supporting evidence only. Correlation does not prove causation. Verify job status in SAP and infrastructure sources.</p>
+          <p className="rundeckEvidenceNote">First observed is not a job start time. Timestamp proximity does not prove that a job caused the SAP issue. Verify executions in SM37.</p>
         </details>
       </>}
     </div>
