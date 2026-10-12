@@ -1,0 +1,195 @@
+/* SPHERE v1.35 — fullscreen investigation canvas. Unlike the compact
+   APP quick-detail dialog, an analysis workspace owns the viewport.
+   Data, source labels, timestamps and navigation remain React-driven. */
+.rundeckWorkspacePortal:has(.rundeckWorkspaceDrawer.is-workspace){
+  position:fixed!important;
+  inset:0!important;
+  z-index:1200!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace{
+  position:fixed!important;
+  inset:0!important;
+  top:0!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  transform:none!important;
+  width:100vw!important;
+  max-width:100vw!important;
+  height:100dvh!important;
+  min-height:0!important;
+  max-height:100dvh!important;
+  border:0!important;
+  border-radius:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+  background:var(--sphere-page,#0d151c)!important;
+  animation:none!important;
+  box-shadow:none!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace>header{
+  flex:0 0 auto!important;
+  min-height:58px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:16px!important;
+  padding:10px clamp(12px,2.1vw,30px)!important;
+  background:rgba(11,29,42,.94)!important;
+  border-bottom:1px solid rgba(91,159,183,.17)!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerIdentity{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:4px 14px!important;
+  min-width:0!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerIdentity>span{
+  font-size:10px!important;
+  letter-spacing:.075em!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerIdentity h3{
+  font-size:clamp(19px,1.7vw,26px)!important;
+  line-height:1.2!important;
+  margin:0!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerIdentity small{
+  flex-basis:100%;
+  font-size:11px!important;
+  line-height:1.3!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerHeaderActions button{
+  min-height:32px!important;
+  border-radius:5px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerNavigation{
+  flex:0 0 auto!important;
+  min-width:0;
+  padding:0 clamp(12px,2.1vw,30px)!important;
+  background:rgba(10,29,41,.68);
+  border-bottom:1px solid rgba(91,159,183,.16);
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation{
+  display:flex;
+  align-items:stretch;
+  flex-wrap:wrap;
+  gap:2px 12px;
+  min-height:38px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation>button{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:7px 11px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--sphere-text-secondary,#a5bdc9);
+  font-size:12px;
+  font-weight:650;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation>button.is-active{
+  color:var(--sphere-accent,#4fc6c8);
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation>button.is-active:after{
+  content:"";position:absolute;bottom:0;left:10px;right:10px;height:2px;
+  border-radius:2px;background:var(--sphere-accent,#4fc6c8);
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation>button:hover:not(:disabled){
+  background:rgba(79,198,200,.05);
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation>button:disabled{
+  opacity:.42;cursor:not-allowed;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation>button:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);
+  outline-offset:-2px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckAnalysisRelatedNav{
+  display:flex;
+  justify-content:flex-start;
+  gap:7px;
+  padding:5px 0 8px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceContext{
+  display:block;
+  color:var(--sphere-text-muted,#9db3bf);
+  font-size:10px;
+  padding:0 0 6px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerBody{
+  width:100%!important;
+  max-width:100%!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow:auto!important;
+  overscroll-behavior:contain;
+  padding:12px clamp(12px,2.1vw,30px) 18px!important;
+  scrollbar-gutter:stable;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerBody>:first-child{
+  margin-top:0!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerBody :is(table,button,input,select){
+  font-variant-numeric:tabular-nums;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerBody :is(th,td){
+  line-height:1.35;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace>footer{
+  flex:0 0 auto!important;
+  padding:7px clamp(12px,2.1vw,30px)!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckJobHistory,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckInfra{
+  width:100%!important;
+  max-width:none!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckJobRelatedLinks{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:center;
+  gap:4px 12px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckJobRelatedLinks button{
+  min-height:32px!important;
+  padding:5px 8px!important;
+}
+@media (max-width:780px){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace>header{
+    align-items:flex-start!important;
+    min-height:48px!important;
+    padding:8px 10px!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerIdentity h3{
+    font-size:16px!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerIdentity small{
+    font-size:10px!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerNavigation{
+    padding:0 8px!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    scrollbar-width:thin;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereWorkspaceNavigation>button{
+    flex:0 0 auto;min-height:35px;font-size:11px;padding:6px 8px;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckWorkspaceDrawerBody{
+    padding:10px 8px 14px!important;
+    scrollbar-gutter:auto;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace *{
+    scroll-behavior:auto!important;
+  }
+}
