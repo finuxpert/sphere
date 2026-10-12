@@ -13,10 +13,17 @@ NGINX_SITE=/etc/nginx/sites-available/sphere.astraotoparts.co.id
 # This one-off approval must not automatically follow future DEV branch changes.
 REVIEWED_SHA=2bf89c756fb66b985875492c31d7c78057e37302
 REVIEWED_VERSION=1.35.0
+# Approval for the previous Overview screenshot is NOT approval of the newly
+# standardized popups. Explicitly unlock only after DEV popup screenshots pass.
+POPUP_ACCEPTED_SHA=PENDING_DEV_POPUP_REVIEW
 APPROVED="${1:?Pass exact reviewed DEV commit SHA}"
 SHORT="$(printf %.7s "$APPROVED")"
 [[ "$#" -eq 1 && "$APPROVED" =~ ^[a-f0-9]{40}$ ]] || { echo "BLOCKED: require exact 40-character DEV SHA" >&2; exit 2; }
 [[ "$APPROVED" == "$REVIEWED_SHA" ]] || { echo "BLOCKED: only screenshot-approved DEV SHA $REVIEWED_SHA may be promoted" >&2; exit 2; }
+[[ "$APPROVED" == "$POPUP_ACCEPTED_SHA" ]] || {
+  echo "PROD=HOLD: popup format changes require new DEV screenshot approval before promotion" >&2
+  exit 2
+}
 [[ "$EUID" == 0 ]] || { echo "BLOCKED: run as root on JAHSVR-SPHERE" >&2; exit 2; }
 exec 9>/run/lock/sphere-ui-prod-promotion.lock
 flock -n 9 || { echo "BLOCKED: another PROD UI promotion is active" >&2; exit 2; }
