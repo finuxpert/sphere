@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { OPERATOR_THRESHOLDS, metricResourceState, hostResourceState, sapWorkloadState, filesystemResourceState } from '../../src/tools/components/rundeckStatusSemantics.js'
 import { settleSapIssueSources, unavailableSapIssueIndicators, sapIssueSampleFreshness, sapIssueTimestampFreshness } from '../../src/tools/components/rundeckIssueSources.js'
+import { systemHealthState } from '../../src/tools/components/rundeckSystemHealth.js'
 import { issueWorkloadTimePair } from '../../src/tools/components/rundeckEvidenceTiming.js'
 import { observationIdentityCounts } from '../../src/tools/components/rundeckObservationIdentity.js'
 import { hostInfrastructureEvidence, filesystemSamplesForHost } from '../../src/tools/components/rundeckUnifiedHost.js'
@@ -36,6 +37,12 @@ test('invalid and incomplete telemetry is UNKNOWN, not silently zero or NORMAL',
   assert.equal(hostResourceState({cpu_pct:22,ram_pct:null,io_wait_pct:1}),'UNKNOWN')
   assert.equal(hostResourceState({cpu_pct:99,ram_pct:null,io_wait_pct:null}),'CRITICAL')
   assert.equal(hostResourceState({cpu_pct:11,ram_pct:70,iowait_pct:11}),'WARNING')
+})
+
+test('SAP Availability alone cannot establish healthy OS resources',()=>{
+  assert.equal(systemHealthState([],{availabilityState:'NORMAL'}),'UNKNOWN')
+  assert.equal(systemHealthState([{host:'APP1',cpu_pct:null,ram_pct:null,io_wait_pct:null,wp_critical:0}],{availabilityState:'NORMAL'}),'UNKNOWN')
+  assert.equal(systemHealthState([{host:'APP1',cpu_pct:12,ram_pct:39,io_wait_pct:1,wp_critical:0}],{availabilityState:'UNKNOWN'}),'UNKNOWN')
 })
 
 test('one failed API source remains explicitly unavailable even when other sources succeed', () => {
