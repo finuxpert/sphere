@@ -55,3 +55,18 @@ Regression coverage added to `scripts/tests/rundeck-integrity-v1356.test.mjs` an
 Recursive GitHub DEV tree scan: **391 tracked files** and no checked-in `dist/`, `node_modules/`, `coverage/`, `test-results/`, `.bak`, `.orig`, `.tmp` or `.log` artifacts. No independently proven orphan file was identified, so **no tracked file was deleted**. Versioned CSS override blocks remain as known technical debt: preserve them until the active import graph, cascade and desktop/Android regression tests can establish which rules are unreachable. Do not confuse retained release docs, migration files or operational shell scripts with disposable junk.
 
 No database migration, backend, Rundeck job, credential, production branch, or production deployment changes were part of this audit.
+
+
+## 13 October 2026 — 12 screenshot follow-up: status clarity and code cleanup
+
+Screenshot findings reviewed against DEV source:
+- `APP1 ATTENTION / Critical WP 2` and `Collector NORMAL` measure **different signals**. They are not an inconsistency: host SAP workload state and collection runtime health must not be conflated.
+- `FS 89%` is ATTENTION under the shared 75/90 filesystem thresholds. Equal values on different hosts alone do not prove duplicate telemetry; preserve host/collection provenance.
+- Incident peak 4, latest WP 2 and incident duration refer to different times. The `Active issues` status column now requires a matching **fresh verified APP sample**; when missing/stale the UI reports UNKNOWN, not historic incident severity as live.
+- The 190-minute issue/workload gap shown in Related Events is observation timing, not job execution or causation. The summary now explicitly says **after/before issue observation**.
+- Server Trend axis tooltips were overly long and covered other lines. Hover displays at most two APP traces and the hidden count, escapes source labels and dismisses the tooltip when opening a selected-sample drilldown; exact/bucket timestamps remain in the detailed analysis.
+- SAP Checks `UP` and observed availability are service observations; they do not certify host resources. SM37 remains authoritative for execution status and not connected in this environment.
+
+**Cleanup verified:** `src/tools/components/RundeckAppServers.jsx` was an unimported legacy component. All other 102 `src` JavaScript/JSX modules were checked for references; none imported or used it. It contained obsolete RAM/I/O thresholds and was removed from **DEV**. `scripts/qa-basis-investigation.mjs` had two stale static assertions and an unconditional read of the unused file; these were replaced with equivalent checks for the live `RundeckUnifiedAppInfrastructure` component. Related regression assertions now enforce that the dead file stays absent. No bulk stylesheet deletion: versioned CSS remains loaded, and blind removal could regress Android/desktop modal geometry.
+
+**Validation:** 7/7 isolated source/logic checks PASS. Real `npm run qa`, build, Playwright desktop/Android, and public DEV deployment are **not verified in this session**. The fast `sphere deploy dev` command may skip QA; do not report full QA PASS from `BUILD PASS` alone. Production checkout, backend, schema, Rundeck collectors/jobs, nginx, credentials and environment remain untouched.
