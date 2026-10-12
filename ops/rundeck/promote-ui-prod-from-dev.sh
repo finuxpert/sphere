@@ -116,11 +116,15 @@ echo "BACKUP=RETAINED_PREVIOUS_PROD_WEB PATH=$PREVIOUS"
 
 # Existing production read-only API contract must remain healthy.
 check_api() {
-  local label="$1" url="$2"
-  curl --noproxy '*' --retry 2 --retry-delay 1 --retry-connrefused -fsS --max-time 15 "$url" \
-    | python3 -c 'import json,sys; assert isinstance(json.load(sys.stdin),dict)' || {
-      echo "BLOCKED: production API $label failed" >&2; return 1;
-    }
+  local label="$1" url="$2" response
+  response="$(curl --noproxy '*' --retry 2 --retry-delay 1 --retry-connrefused -fsS --max-time 15 "$url")" || {
+    echo "BLOCKED: production API $label unavailable or returned HTTP error" >&2
+    return 1
+  }
+  if ! python3 -c 'import json,sys; assert isinstance(json.load(sys.stdin),dict)' <<<"$response" 2>/dev/null; then
+    echo "BLOCKED: production API $label did not return a JSON object" >&2
+    return 1
+  fi
   echo "API_$label=PASS"
 }
 check_api COLLECTIONS "https://sphere.astraotoparts.co.id/api/collections/latest"
@@ -131,7 +135,9 @@ check_api PLATFORM "https://sphere.astraotoparts.co.id/api/platform/readiness"
 check_api AVAILABILITY "https://sphere.astraotoparts.co.id/api/availability/latest"
 check_api INCIDENT_HISTORY "https://sphere.astraotoparts.co.id/api/history/incidents?days=1&limit=1"
 check_api HOST_HISTORY "https://sphere.astraotoparts.co.id/api/history/hosts/latest"
-check_api RUNDECK_READINESS "https://sphere.astraotoparts.co.id/api/readiness"
+# The frontend uses /api/platform/readiness (verified above).
+# /api/readiness is not implemented by this PROD API and returned HTTP 404.
+# Do not treat an absent duplicate route as evidence of a broken platform.
 
 echo "TARGET_PROD_VERSION=$VERSION SOURCE_SHA=$APPROVED"
 echo "SCOPE=FRONTEND_ONLY PROD_BACKEND=UNCHANGED DB=UNCHANGED NGINX=UNCHANGED"
@@ -144,7 +150,7 @@ git -C "$SOURCE" archive --format=tar "$APPROVED" | tar -xf - -C "$BUILD_DIR"
 ln -s "$SOURCE/node_modules" "$BUILD_DIR/node_modules"
 if ! (cd "$BUILD_DIR" && GITHUB_REF_NAME=rundeck-sphere-prod GITHUB_SHA="$APPROVED" npm run build) \
   > /tmp/sphere-prod-ui-build-v1350.log 2>&1; then
-  echo "PROD_BUILD=FAIL"; tail -n 40 /tmp/sphere-prod-ui-build-v13486.log; exit 1;
+  echo "PROD_BUILD=FAIL"; tail -n 40 /tmp/sphere-prod-ui-build-v1350.log; exit 1;
 fi
 test -s "$BUILD_DIR/dist/index.html"
 grep -q /assets/ "$BUILD_DIR/dist/index.html"
