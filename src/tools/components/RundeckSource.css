@@ -1022,11 +1022,12 @@
 }
 
 
-/* SPHERE v1.34.59 — typography, control and PDF-preview consistency pass. */
+/* SPHERE v1.34.91 — keep the original header stylesheet consistent with
+   the mockup-scale dashboard rule; do not override it with the legacy 17px. */
 .appShell:has(.rundeckPanel) .rundeckLandscapeHeader h2{
-  font-size:17px!important;
-  font-weight:800!important;
-  letter-spacing:-.015em!important;
+  font-size:clamp(21px,1.75vw,27px)!important;
+  font-weight:750!important;
+  letter-spacing:-.025em!important;
 }
 .appShell:has(.rundeckPanel) .rundeckLandscapeMeta>span{
   font-size:9.8px!important;
