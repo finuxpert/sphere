@@ -55,3 +55,17 @@ The operator supplied two popup screenshots (APP1 Analysis and CPU Trend Detail)
 **Promotion hold:** previous DEV-to-PROD promotion stopped before cutover because PROD does not serve the redundant `/api/readiness` URL (HTTP 404). It already passed the supported `/api/platform/readiness` endpoint and other critical checks. The redundant URL was removed from the promotion preflight, but the promotion itself remains **HOLD** until the user approves the new popup screenshot. The pin must be explicitly refreshed to the newly reviewed DEV SHA at that time; do not promote older `2bf89c7` by accident.
 
 Use `sphere deploy dev` only after reviewing the changes. The operator sends manual screenshots instead of running Playwright.
+
+## Operational Analysis popup consistency — implementation (2026-10-12)
+
+This revision continues the **popup-only** UX approved by the operator. It is a presentation release, not a new route or API feature.
+
+- Shared `RundeckWorkspaceDrawer.jsx` accepts an optional `footer` slot while preserving `actions` in the header. Modal size, title, subtitle, Back/Close, keyboard focus and Escape behavior stay unified.
+- Job / Program Performance moves the six existing Related Analysis links from the scrollable job evidence body to the actual modal footer. They retain their existing handlers/return context. Summary and timing evidence stay above a two-column chart/WP analysis, with WP table internal scrolling and without grow-to-fill whitespace.
+- Infrastructure Analysis stays a centered popup and keeps the APP selector, provenance and freshness. The existing history chart is placed before the existing Filesystem, Network and Storage I/O snapshot grid, scaled to available width; no collected values or filesystem threshold changes.
+- SAP Availability retains its APP/HANA/Web/Technical source-based counts. The four values are larger, while landscape checks and SSH sections share spacing, hairline separators and readable section titles.
+- The shared `RundeckPopupConsistencyV135.css` is the last cockpit dialog style import. Dialogs with little content shrink to their content; long content scrolls inside the modal. APP Analysis remains a high-density two-column popup. Responsive fallback and reduced motion remain.
+
+**Acceptance status:** Source changes committed on GitHub DEV, not server-build-verified in this chat. No Playwright or visual QA is run automatically. Operator should use `sphere deploy dev` and send screenshots of Job Performance, Infrastructure, SAP Availability and APP CPU/RAM Detail before promoting to PROD.
+
+**Production hold remains** in `ops/rundeck/promote-ui-prod-from-dev.sh`; the last attempted promotion did not cut over and its unsupported duplicate readiness endpoint is removed. Do not unlock promotion before explicit acceptance of popup screenshots.
