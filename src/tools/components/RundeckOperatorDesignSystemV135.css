@@ -20,6 +20,28 @@
   --op-ease:cubic-bezier(.2,.75,.25,1);
   color:var(--op-ink);
 }
+/* Theme-aware surfaces for the actual light-mode theme switch.
+   The status semantics remain sourced from the existing SAP classifications. */
+html[data-theme="light"] .appShell:has(.rundeckPanel),
+html[data-theme="light"] .rundeckWorkspacePortal,
+html[data-theme="light"] .rundeckTrendPointModalBackdrop {
+  --op-border:rgba(71,85,105,.23);
+  --op-divider:rgba(71,85,105,.15);
+  --op-surface:#ffffff;
+  --op-hover:rgba(13,121,121,.065);
+  --op-selected:rgba(13,121,121,.105);
+  --op-ink:#172336;
+  --op-muted:#475569;
+}
+/* Respect light background on the first-party quick analysis cards and
+   table surfaces; avoid a forced dark panel when toggling appearance. */
+html[data-theme="light"] .rundeckWorkspacePortal .sphereOperatorTabs {
+  background:#f1f5f9!important;
+}
+html[data-theme="light"] .rundeckWorkspacePortal .rundeckWorkspaceDrawerBody table thead th {
+  background:#f1f5f9!important;
+}
+
 /* Six operational shortcuts: a single compact card family instead of
    alternating plain-text links and oversized glowing tiles. */
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions {
