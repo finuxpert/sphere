@@ -9,7 +9,7 @@
   gap: 5px;
   color: var(--sphere-text-secondary, #a9b5bb);
   cursor: pointer;
-  font-size: var(--sphere-font-body, 9.4px);
+  font-size: max(11px, var(--sphere-font-body, 9.4px));
   font-weight: 700;
 }
 
@@ -33,11 +33,11 @@
 
 .rundeckObservationHistoryV1234 table {
   width: 100%;
-  min-width: 820px;
+  min-width: 620px;
   border-collapse: collapse;
   table-layout: auto;
   color: var(--sphere-text-secondary, #a9b5bb);
-  font-size: var(--sphere-font-body, 9.4px);
+  font-size: max(11px, var(--sphere-font-body, 9.4px));
 }
 
 .rundeckObservationHistoryV1234 th,
@@ -55,7 +55,7 @@
   z-index: 2;
   background: var(--sphere-page, #0f151a);
   color: var(--sphere-text-muted, #718089);
-  font-size: var(--sphere-font-micro, 8.5px);
+  font-size: 10px;
   font-weight: 760;
   letter-spacing: .045em;
   text-transform: uppercase;
@@ -68,7 +68,7 @@
 .rundeckObservationHistoryState {
   padding: 8px 0;
   color: var(--sphere-text-secondary, #a9b5bb);
-  font-size: var(--sphere-font-body, 9.4px);
+  font-size: max(11px, var(--sphere-font-body, 9.4px));
 }
 
 .rundeckObservationHistoryState.is-error {
@@ -177,3 +177,7 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeck
 }
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckObservationHistoryV1234 td{color:#2d414a!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-observation-history .rundeckHistoryRunButton{color:#0f6970!important}
+
+/* Table headings stay legible in paired Run History, without an 820px minimum. */
+.rundeckObservationHistoryV1234 th { white-space:normal; letter-spacing:0; text-transform:none; }
+.rundeckObservationHistoryV1234 td { font-size:11px; }
