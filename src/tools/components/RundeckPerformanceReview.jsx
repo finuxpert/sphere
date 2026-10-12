@@ -2,8 +2,8 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { numberText, workloadTypeLabel } from './sapUiFormat.js'
 import { evaluationReasonParts } from './rundeckEvaluationExplain.js'
-import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 
+const RundeckReviewQuickAnalysis = React.lazy(() => import('./RundeckReviewQuickAnalysis.jsx'))
 const API = `${import.meta.env.BASE_URL}api`
 const PERIODS = [['1d', '1D'], ['7d', '7D'], ['30d', '30D']]
 const TYPES = [['ALL', 'All'], ['PROGRAM', 'Programs'], ['JOB', 'Jobs']]
@@ -218,13 +218,13 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         </button>
       </> : <p className="sphereReviewSidecarEmpty">No workloads match the selected period and filter.</p>}
     </aside>}
-    {!onOpenQuickAnalysis && quickRow && <RundeckReviewQuickAnalysis
+    {!onOpenQuickAnalysis && quickRow && <React.Suspense fallback={<div className="rundeckReviewState" role="status">Loading quick analysis…</div>}><RundeckReviewQuickAnalysis
       row={quickRow}
       reviewContext={{ period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' }}
       refreshToken={refreshToken}
       incidentStart={incidentStart}
       onClose={() => setQuickRow(null)}
       onOpenFull={openFull}
-    />}
+    /></React.Suspense>}
   </section>
 }
