@@ -178,7 +178,9 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         return response.json()
       }))
       if(signal.aborted)return
-      setData({host:target,hosts,fs:values[0].items||[],network:values[1].items||[],storage:values[2].items||[]})
+      const collection = hosts.find(row=>row.host===target)?.collection_id
+      const belongsToSnapshot = row => row?.host === target && collection != null && String(row.collection_id || '') === String(collection)
+      setData({host:target,hosts,fs:(values[0].items||[]).filter(belongsToSnapshot),network:(values[1].items||[]).filter(belongsToSnapshot),storage:(values[2].items||[]).filter(belongsToSnapshot)})
       setAllHostFilesystems(values[3].items||[])
       setError('')
     }catch(e){if(!signal.aborted&&e.name!=='AbortError')setError(e.message)}
@@ -198,7 +200,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const netState=observedData.network.length?observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')):'UNKNOWN'
   const storageState=observedData.storage.length?observedStatus(observedData.storage.reduce((state,row)=>worst(state,signalStorage(row.metrics)),'NORMAL')):'UNKNOWN'
   const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst(fsState,netState,storageState)
-  const topFilesystem=[...observedData.fs].sort((a,b)=>Number(b.used_pct||0)-Number(a.used_pct||0))[0]
+  const topFilesystem=[...observedData.fs].filter(row=>row.used_pct != null && String(row.used_pct).trim() !== '' && Number.isFinite(Number(row.used_pct))).sort((a,b)=>Number(b.used_pct)-Number(a.used_pct))[0]
   const compactSignal=topFilesystem
     ? `${stale?'Last ':''}${topFilesystem.mount_point||'Filesystem'} ${metric(topFilesystem.used_pct,'%')}`
     : observedData.storage[0]
@@ -254,6 +256,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         const selected=host===row.host
         return <button key={row.host} type="button"
           className={'rundeckInfraHostCard'+(selected?' is-active':'')}
+          title={`${row.host} · ${evidence.topFs?.mount_point || 'No matched mount'} · collection ${row.collection_id || 'unknown'} · sample ${evidence.topFs?.collected_at || 'unavailable'}`}
           aria-pressed={selected} onClick={()=>setSelectedHost(row.host)}>
           <b>{shortHost(row.host)}</b>
           <small title={row.source || row.host} className={'is-'+evidence.freshness.toLowerCase()}>{row.source || evidence.freshness}</small>
@@ -284,7 +287,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       <span><b>Freshness</b> {freshness==='UNKNOWN'?'UNKNOWN':`${ageText(observedAt)} · ${freshness}`}</span>
       <span><b>Sampling</b> {metric(hostRow?.sample_seconds,'s')}</span>
       <span><b>State</b> <strong className={`is-${overall.toLowerCase()}`}>{overall}</strong></span>
-      <span><b>Source</b> Infrastructure</span>
+      <span title={`${host} · snapshot ${hostRow?.snapshot_ts || 'unknown'}`}><b>Collection</b> {hostRow?.collection_id || '—'}</span>
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
@@ -293,7 +296,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       <div className="rundeckInfraCurrent">
         <div className="rundeckInfraCurrentLabel">{stale?'Last collected readings':'Current readings'}</div>
         <div className="rundeckInfraGrid">
-      <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity · {observedData.fs.length} mount(s)</small></div><div className="rundeckInfraFsPager"><button type="button" aria-label="Previous filesystem mounts" disabled={effectiveFsPage===0} onClick={()=>setFsPage(n=>Math.max(0,n-1))}>‹</button><small>{effectiveFsPage+1}/{fsPageCount}</small><button type="button" aria-label="Next filesystem mounts" disabled={effectiveFsPage>=fsPageCount-1} onClick={()=>setFsPage(n=>Math.min(fsPageCount-1,n+1))}>›</button><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{fsRows.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!observedData.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity · {observedData.fs.length} mount(s)</small></div><div className="rundeckInfraFsPager"><button type="button" aria-label="Previous filesystem mounts" disabled={effectiveFsPage===0} onClick={()=>setFsPage(n=>Math.max(0,n-1))}>‹</button><small>{effectiveFsPage+1}/{fsPageCount}</small><button type="button" aria-label="Next filesystem mounts" disabled={effectiveFsPage>=fsPageCount-1} onClick={()=>setFsPage(n=>Math.min(fsPageCount-1,n+1))}>›</button><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{fsRows.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td title={`${row.host} · ${row.device || 'device unknown'} · collection ${row.collection_id || 'unknown'} · ${row.collected_at || 'time unknown'}`}>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!observedData.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article>
         <div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div>
         <table>
