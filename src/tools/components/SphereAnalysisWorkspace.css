@@ -320,3 +320,43 @@
     min-height:0;overflow:visible;
   }
 }
+
+
+/* Source-aware analysis surfaces: allow fullscreen tables/timelines to grow
+   beyond old modal caps, without changing row counts or API requests. */
+@media(min-width:1000px){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-issues .rundeckSapIssuesSummaryStrip,
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-availability .rundeckAvailabilitySummaryStrip{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-issues :is(.rundeckIssueIndicatorTableWrap,.rundeckSapIssuesTableWrap){
+    max-height:clamp(290px,48dvh,680px)!important;
+    overflow:auto!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-evidence .rundeckEvidenceEvents{
+    max-height:clamp(330px,58dvh,710px)!important;
+    overflow:auto!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-observation-history .rundeckObservationHistoryTableWrap{
+    max-height:clamp(360px,64dvh,760px)!important;
+    overflow:auto!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-wide .rundeckInfra{
+    min-width:0!important;
+    width:100%!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-wide .rundeckInfraTrendWorkspace{
+    width:100%!important;
+    min-width:0!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace.is-performance .rundeckWpSignalTableWrap{
+    max-height:clamp(230px,43dvh,540px)!important;
+    overflow:auto!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace :is(.rundeckEvidenceEvent,.rundeckObservationHistoryTableWrap td,.rundeckIssueIndicatorTable td){
+    font-size:11px!important;
+    line-height:1.4!important;
+  }
+}
