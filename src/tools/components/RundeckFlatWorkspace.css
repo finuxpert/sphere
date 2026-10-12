@@ -267,3 +267,15 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
 .appShell:has(.rundeckPanel) .rundeckReviewTableV1231 tbody tr:hover{
   background:var(--sphere-flat-hover)!important;
 }
+
+
+/* v1.34.92: the desktop cockpit is intrinsically shorter than the viewport.
+   Do not reserve a second viewport for the surrounding app shell: in 768px
+   Playwright runs the shell's extra minimum height caused 65px page overflow,
+   even though the cockpit itself ended at y=700. Keep charts, data tables,
+   keyboard navigation and drilldowns at their natural sizes. */
+@media screen and (min-width:1281px) and (min-height:700px) and (max-height:780px){
+  .appShell:has(.rundeckMonitoring.rundeckCockpitV13491){
+    min-height:0!important;
+  }
+}
