@@ -2,13 +2,14 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
 import { hostInfrastructureEvidence, splitInfrastructureHosts } from './rundeckUnifiedHost.js'
+import { filesystemResourceState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 import { shortHost } from './sapUiFormat.js'
 import './RundeckInfrastructure.css'
 
 const API=`${import.meta.env.BASE_URL}api/infra`
 const HOST_STORAGE_KEY='sphere.live.host'
 const metric=(value,suffix='')=>value===null||value===undefined||value===''?'—':`${Number(value).toLocaleString('en-US',{maximumFractionDigits:1})}${suffix}`
-const statusFs=(value)=>Number(value)>=90?'CRITICAL':Number(value)>=80?'ATTENTION':'NORMAL'
+const statusFs = filesystemResourceState
 const severityRank={NORMAL:0,ATTENTION:1,CRITICAL:2}
 const worst=(...states)=>states.reduce((a,b)=>(severityRank[b]||0)>(severityRank[a]||0)?b:a,'NORMAL')
 const normalizeClock=(value)=>String(value||'').replace(/(\d{1,2})\.(\d{2})/g,'$1:$2')
@@ -63,7 +64,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
   const min=0
   const max=metricType==='filesystem'?100:Math.max(1,rawMax*1.12)
   const ticks=metricType==='filesystem'
-    ? [0,50,75,90,100]
+    ? [0,50,OPERATOR_THRESHOLDS.filesystem.warning,OPERATOR_THRESHOLDS.filesystem.critical,100]
     : [0,max/2,max]
   const times=items.map(row=>new Date(row.collected_at).getTime()).filter(Number.isFinite)
   const t0=Math.min(...times),t1=Math.max(...times)
@@ -83,8 +84,8 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
         <text x={pad.left-6} y={y(tick)+3}>{metricType==='filesystem'?Math.round(tick):Number(tick.toFixed(1))}{metricType==='filesystem'?'%':''}</text>
       </g>)}
       {metricType==='filesystem'&&<>
-        <g className="threshold is-warning"><line x1={pad.left} y1={y(75)} x2={width-pad.right} y2={y(75)}/><text x={width-pad.right-4} y={y(75)-4}>Warn 75%</text></g>
-        <g className="threshold is-critical"><line x1={pad.left} y1={y(90)} x2={width-pad.right} y2={y(90)}/><text x={width-pad.right-4} y={y(90)-4}>Crit 90%</text></g>
+        <g className="threshold is-warning"><line x1={pad.left} y1={y(OPERATOR_THRESHOLDS.filesystem.warning)} x2={width-pad.right} y2={y(OPERATOR_THRESHOLDS.filesystem.warning)}/><text x={width-pad.right-4} y={y(OPERATOR_THRESHOLDS.filesystem.warning)-4}>Warn {OPERATOR_THRESHOLDS.filesystem.warning}%</text></g>
+        <g className="threshold is-critical"><line x1={pad.left} y1={y(OPERATOR_THRESHOLDS.filesystem.critical)} x2={width-pad.right} y2={y(OPERATOR_THRESHOLDS.filesystem.critical)}/><text x={width-pad.right-4} y={y(OPERATOR_THRESHOLDS.filesystem.critical)-4}>Crit {OPERATOR_THRESHOLDS.filesystem.critical}%</text></g>
       </>}
       {issueInRange&&<g className="issueMarker"><line x1={x(incidentStart)} y1={pad.top} x2={x(incidentStart)} y2={height-pad.bottom}/><text x={x(incidentStart)+4} y={pad.top+10}>Critical WP first observed · {formatTime(incidentStart)} WIB</text></g>}
       {xTicks.map((tick,index)=><g key={tick} className="xTick">
