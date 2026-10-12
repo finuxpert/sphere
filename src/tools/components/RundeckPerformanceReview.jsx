@@ -96,8 +96,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     onSelectJob?.(job)
   }
 
-  return <section className={`rundeckPerformanceReviewV1231 is-scroll-list${sidecar ? ' has-sidecar' : ''}`} aria-label="Performance review">
-    <div className="sphereReviewWorkspaceMain">
+  const mainContent = <>
     <header className={`rundeckReviewHeadV1231${embedded ? ' is-embedded' : ''}`}>
       <div>
         {!embedded && <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>}
@@ -185,7 +184,10 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         </table>
       </div>
     </>}
-    </div>
+  </>
+
+  return <section className={`rundeckPerformanceReviewV1231 is-scroll-list${sidecar ? ' has-sidecar' : ''}`} aria-label="Performance review">
+    {sidecar ? <div className="sphereReviewWorkspaceMain">{mainContent}</div> : mainContent}
     {sidecar && <aside className="sphereReviewSidecar" aria-label="Selected workload quick analysis">
       <header>
         <h3>Quick Analysis</h3>
