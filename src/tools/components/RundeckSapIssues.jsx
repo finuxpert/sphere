@@ -3,7 +3,7 @@ import SphereIcon from './SphereIcon.jsx'
 import SphereOperatorTabs from './SphereOperatorTabs.jsx'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { metricResourceState, sapWorkloadState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
-import { settleSapIssueSources, unavailableSapIssueIndicators, SAP_ISSUE_SOURCE_LABELS, sapIssueSampleFreshness } from './rundeckIssueSources.js'
+import { settleSapIssueSources, unavailableSapIssueIndicators, SAP_ISSUE_SOURCE_LABELS, sapIssueSampleFreshness, sapIssueTimestampFreshness } from './rundeckIssueSources.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const SEVERITY_RANK = { CRITICAL: 4, WARNING: 3, ATTENTION: 2, NORMAL: 1, UNKNOWN: 0 }
@@ -70,6 +70,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
   const hosts=data.hosts?.items||[]
   const availability=data.availability||{}
+  const availabilityFreshness=sapIssueTimestampFreshness(data.availability?.collected_at)
+  const loading=Object.values(data).every(value=>value===null) && failedSources.length===0
   const indicators=unavailableSapIssueIndicators(failedSources)
 
   const nowMs = Date.now()
@@ -94,9 +96,11 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     rows.forEach((row)=>indicators.push({
     scope:row.name||label,
     indicator:label,
-    status:serviceState(row.status),
-    current:String(row.status||'UNKNOWN').toUpperCase(),
-    reason:['UP','PASS','ACTIVE','OK','NORMAL'].includes(String(row.status||'').toUpperCase())?'Service check passed':'Check service state',
+    status:availabilityFreshness==='FRESH'?serviceState(row.status):'UNKNOWN',
+    current:`${availabilityFreshness==='FRESH'?'':'Last '}${String(row.status||'UNKNOWN').toUpperCase()}`,
+    reason:availabilityFreshness==='FRESH'
+      ? (['UP','PASS','ACTIVE','OK','NORMAL'].includes(String(row.status||'').toUpperCase())?'Service check passed':'Check service state')
+      : availabilityFreshness==='STALE'?'Availability sample is old':'Availability sample time not verified',
   }))
   }
   addServices('SAP App Availability',availability.sap_app)
@@ -125,7 +129,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     const reviewText=reviewIndicators.length ? `${reviewIndicators.length} indicators need review` : 'No reported issue'
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
-      <strong>{failedSources.length ? `${failedSources.length} source(s) unavailable · ${reviewText}` : `${reviewText}${sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}`}</strong>
+      <strong>{loading ? 'Checking source data…' : failedSources.length ? `${failedSources.length} source(s) unavailable · ${reviewText}` : `${reviewText}${sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}`}</strong>
       <em aria-hidden="true">›</em>
     </button>
   }
@@ -134,6 +138,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
   return <section className="rundeckSapIssuesV1231 is-indicator-console" aria-label="SAP operational issues">
     {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} need review{sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}</span></header>}
+    {loading && <div className="rundeckReviewState" role="status">Checking SAP source data…</div>}
     {failedSources.length>0 && <div className="rundeckReviewState is-error" role="status">Unavailable: {failedSources.map(name=>SAP_ISSUE_SOURCE_LABELS[name]).join(', ')}. Successful checks remain visible; failed sources are UNKNOWN.</div>}
     <div className="rundeckSapIssuesSummaryStrip">
       <span><b>Needs review</b><strong>{reviewIndicators.length}</strong></span>
