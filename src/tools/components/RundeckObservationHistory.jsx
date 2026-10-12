@@ -42,7 +42,7 @@ function latestEpisode(items = [], targetAt = '') {
   }, episodes[0])
 }
 
-export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob, embedded = false }) {
+export default function RundeckObservationHistory({ job = null, refreshToken = '', onSelectJob, embedded = false, paired = false }) {
   const [rows, setRows] = React.useState([])
   const [error, setError] = React.useState('')
   const [showAll, setShowAll] = React.useState(false)
@@ -108,15 +108,15 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
     {!error && embedded && <div className="rundeckObservationHistoryContext">
-      <span><b>Observations</b><strong>{rows.length}</strong></span>
-      <span><b>APP</b><strong>{shortHost(job.host || rows[0]?.host || '—')}</strong></span>
-      <span><b>Time span</b><strong>{timeSpan}</strong></span>
+      <span><b>Saved runs</b><strong>{rows.length}</strong></span>
+      {!paired && <span><b>APP</b><strong>{shortHost(job.host || rows[0]?.host || '—')}</strong></span>}
+      <span><b>Period</b><strong>{timeSpan}</strong></span>
       {cpuValues.length > 0 && <span><b>CPU Range</b><strong>{numberText(Math.min(...cpuValues),1)}–{numberText(Math.max(...cpuValues),1)}%</strong></span>}
       {pssValues.length > 0 && <span><b>PSS Memory Range</b><strong>{numberText(Math.min(...pssValues),2)}–{numberText(Math.max(...pssValues),2)} GB</strong></span>}
       {criticalValues.length > 0 && <span><b>Critical WP Range</b><strong>{Math.min(...criticalValues)}–{Math.max(...criticalValues)}</strong></span>}
     </div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
-      <thead><tr><th>Time WIB</th><th>Run</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>Time (WIB)</th><th>Run</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
       <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
@@ -147,7 +147,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
     </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
-  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Observation History">{content}</section>
+  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Run history">{content}</section>
 
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
     <summary>
