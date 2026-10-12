@@ -248,8 +248,9 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
                <td title="Last saved workload observation, not job end time">{row.collected_at ? `${formatWib(row.collected_at,true)} WIB` : '—'}</td>
             </tr>
           })}
-          {!rows.length && <tr><td colSpan="7">No job or program observed in this collection.</td></tr>}
-          {rows.length > 0 && !visible.length && <tr><td colSpan="7">No matching job or program in the {loaded.length} loaded rows. Use Search for retained history.</td></tr>}
+          {!visible.length && <tr><td colSpan="7">{query
+            ? <>No matching job or program in the {loaded.length} loaded rows. {rows.length ? 'Use Search for retained history.' : 'No workload observations loaded for this collection.'}</>
+            : 'No job or program observed in this collection.'}</td></tr>}
         </tbody>
       </table>
     </div>}
