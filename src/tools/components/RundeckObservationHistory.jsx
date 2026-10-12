@@ -119,7 +119,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
       {criticalValues.length > 0 && <span><b>Critical WP Range</b><strong>{Math.min(...criticalValues)}–{Math.max(...criticalValues)}</strong></span>}
     </div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
-      <thead><tr><th>Time (WIB)</th><th>Rundeck collection</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>Time (WIB)</th><th>Rundeck run ref</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
       <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
