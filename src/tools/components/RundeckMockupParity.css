@@ -1196,8 +1196,10 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
    line-height:1.25;
  }
 }
-/* Desktop operator canvas: an equal-width 5 APP card row with one flat action rail.
-   Keep the original 5 card and 6 action counts and native click handlers. */
+/* Desktop operator canvas: keep five APP cards aligned. The Operational
+   Analysis rail occupies only the right-hand cockpit column (~460px at 1536).
+   Six columns forced 50px buttons and broke words. Preserve the original
+   readable 3 x 2 actions, with no additional navigation or empty cards. */
 @media screen and (min-width:1281px){
  .appShell:has(.rundeckPanel) .rundeckCockpitV13491{
    --sphere-compact-gap:8px;
@@ -1208,24 +1210,42 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
  }
  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisLaunchers{
    display:grid!important;
-   grid-template-columns:minmax(132px,170px) minmax(0,1fr)!important;
-   gap:8px!important;
-   min-height:47px!important;
+   grid-template-columns:minmax(0,1fr)!important;
+   gap:4px!important;
+   padding:0!important;
+   min-height:0!important;
  }
  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions{
    display:grid!important;
-   grid-template-columns:repeat(6,minmax(0,1fr))!important;
+   grid-template-columns:repeat(3,minmax(0,1fr))!important;
+   grid-template-rows:repeat(2,minmax(38px,auto))!important;
    align-items:stretch!important;
-   gap:0!important;
- }
- .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>button{
-   border-radius:0!important;
-   border-left:1px solid var(--sphere-design-edge)!important;
-   padding:5px 10px!important;
+   gap:4px!important;
    min-width:0!important;
  }
- .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>button:first-child{border-left:0!important}
- .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>button:focus-visible{
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button{
+   box-sizing:border-box!important;
+   min-width:0!important;
+   min-height:38px!important;
+   height:auto!important;
+   padding:4px 6px!important;
+   border:1px solid var(--sphere-design-edge)!important;
+   border-radius:4px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions :is(.rundeckEvidenceCardTitle,.rundeckAnalysisSecondary>span,.rundeckAnalysisInfrastructure>span,.rundeckSystemDataUtility>span){
+   font-size:10.5px!important;
+   line-height:1.2!important;
+   overflow-wrap:normal!important;
+   word-break:normal!important;
+   white-space:normal!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions :is(small,strong){
+   font-size:9px!important;
+   overflow:hidden!important;
+   white-space:nowrap!important;
+   text-overflow:ellipsis!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button:focus-visible{
    outline:2px solid var(--sphere-accent,#4fc6c8)!important;
    outline-offset:-2px!important;
  }
