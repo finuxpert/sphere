@@ -87,7 +87,7 @@ SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
   ./node_modules/.bin/playwright test -c playwright.config.mjs \
   tests/visual/rundeck-v13479.visual.spec.mjs \
   --project=desktop-1536 --project=laptop-1366 \
-  --grep 'v1\\.34\\.90' --workers=2 --reporter=line \\
+  --grep 'v1\.34\.90' --workers=2 --reporter=line \
   > /tmp/sphere-ui-v13490-visual.log 2>&1 || {
   echo "VISUAL=FAIL"
   grep -E 'VISUAL_FAIL_BRIEF=|VISUAL_GEOMETRY_DEBUG_ERROR=|Error:|Expected:|Received:|[0-9]+ failed' /tmp/sphere-ui-v13490-visual.log | tail -n 45 || true

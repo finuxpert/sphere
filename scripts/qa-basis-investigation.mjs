@@ -115,7 +115,7 @@ const checks = [
     && mockupStyle.includes('order:-1!important')
     && mockupStyle.includes('.rundeckJobAnalysisWorkspace')
     && mockupStyle.includes('flex-direction:column!important')
-    && files.unifiedAppInfrastructure.includes('rundeckUnifiedMetricTrack')],
+    && files.unifiedApp.includes('rundeckUnifiedMetricTrack')],
 
   ['Rundeck HTTP 403 diagnostic is GET-only and credential-safe',
     files.rundeckAuthProbe.includes('method="GET"') &&
