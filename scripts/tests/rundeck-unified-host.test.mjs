@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts } from '../../src/tools/components/rundeckUnifiedHost.js'
+import { OPERATOR_THRESHOLDS, hostResourceState, filesystemResourceState, sapWorkloadState } from '../../src/tools/components/rundeckStatusSemantics.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
 const sap = [{host: 'AOPH1PAPPDC',cpu_pct: 12,ram_pct: 42,wp_critical: 2}, {host: 'AOPH2PAPPDC',cpu_pct: 15,ram_pct: 44,wp_critical: 0}]
@@ -72,7 +73,7 @@ test('AOP APP1–APP5 are primary while AOQ remains accessible as another source
 test('missing SAP metrics cannot be labelled NORMAL',()=>{
   assert.equal(appSignalState({},true),'UNKNOWN')
   assert.equal(appSignalState({cpu_pct:null,ram_pct:null,io_wait_pct:null,wp_critical:null},true),'UNKNOWN')
-  assert.equal(appSignalState({cpu_pct:12},true),'NORMAL')
+  assert.equal(appSignalState({cpu_pct:12},true),'UNKNOWN') // missing WP is not verified NORMAL
 })
 
 test('Infrastructure trend controls use scoped memoized history without an obsolete setTrend setter',()=>{
@@ -80,4 +81,30 @@ test('Infrastructure trend controls use scoped memoized history without an obsol
   assert.match(source,/const trend=React\.useMemo\(\(\)=>trendData\.scope===trendScope\?trendData\.items:\[\],\[trendData,trendScope\]\)/)
   assert.doesNotMatch(source,/\bsetTrend\s*\(/)
   assert.match(source,/onClick=\{\(\)=>\{setTrendMetric\(v\);setSelectedSeries\(''\)\}\}/)
+})
+
+test('APP card and System Health share CPU/RAM/I/O thresholds', () => {
+  const base={ cpu_pct:20, ram_pct:40, io_wait_pct:1, wp_critical:0 }
+  for (const [metric,threshold] of [
+    ['cpu_pct',OPERATOR_THRESHOLDS.cpu],
+    ['ram_pct',OPERATOR_THRESHOLDS.ram],
+    ['io_wait_pct',OPERATOR_THRESHOLDS.ioWait],
+  ]) {
+    assert.equal(appSignalState({...base,[metric]:threshold.warning},true),'WARNING')
+    assert.equal(hostResourceState({...base,[metric]:threshold.warning}),'WARNING')
+    assert.equal(appSignalState({...base,[metric]:threshold.critical},true),'CRITICAL')
+    assert.equal(hostResourceState({...base,[metric]:threshold.critical}),'CRITICAL')
+  }
+  assert.equal(sapWorkloadState({...base,wp_critical:2}),'ATTENTION')
+  assert.equal(appSignalState({...base,wp_critical:3},true),'CRITICAL')
+})
+test('Filesystem color/threshold and host summary match exactly',()=>{
+  assert.equal(filesystemResourceState(null),'UNKNOWN')
+  assert.equal(filesystemResourceState(undefined),'UNKNOWN')
+  assert.equal(filesystemResourceState(74.99),'NORMAL')
+  assert.equal(filesystemResourceState(OPERATOR_THRESHOLDS.filesystem.warning),'ATTENTION')
+  assert.equal(filesystemResourceState(89),'ATTENTION')
+  assert.equal(filesystemResourceState(90),'CRITICAL')
+  assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...fs,used_pct:75}],now).state,'ATTENTION')
+  assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...fs,used_pct:90}],now).state,'CRITICAL')
 })
