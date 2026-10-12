@@ -181,7 +181,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       ...(Array.isArray(d.pids) ? d.pids : []),d.wp,d.wp_type]
       .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
   }) : loaded
-  const pageSize=4
+  const pageSize=typeof window!=='undefined' && window.innerHeight<=800 ? 3 : 4
   const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
   const currentPage=Math.min(listPage,totalPages-1)
   const pageRows=visible.slice(currentPage*pageSize,(currentPage+1)*pageSize)
