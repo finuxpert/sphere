@@ -55,3 +55,14 @@ test('missing Availability observation is distinct from stale timed evidence', (
   assert.match(unknown.detail, /does not mean SAP DOWN/)
   assert.equal(availabilityFreshnessSignal(Number.NaN).text, unknown.text)
 })
+
+test('fresh availability does not turn missing host or critical-WP readings into NORMAL', () => {
+  const missingWp = deriveSystemHealthEvidence({
+    hosts: [{...host,wp_critical:null}], availability:up,quality:valid,
+  })
+  const missingResource = deriveSystemHealthEvidence({
+    hosts: [{host:'APP1',wp_critical:0}], availability:up,quality:valid,
+  })
+  assert.equal(missingWp.state,'UNKNOWN')
+  assert.equal(missingResource.state,'UNKNOWN')
+})
