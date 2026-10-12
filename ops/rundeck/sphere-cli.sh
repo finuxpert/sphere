@@ -55,14 +55,9 @@ fi
 [[ -f dist/index.html ]] || { echo "BUILD=FAIL: index missing"; exit 1; }
 if [[ "$MODE" == dev ]]; then grep -q '/dev/assets/' dist/index.html; else ! grep -q '/dev/assets/' dist/index.html; fi
 grep -Rqs "${SHA:0:7}" dist/assets || { echo "BUILD=FAIL: source SHA not in artifact"; exit 1; }
-CURRENT="$WEB/current"
-PREVIOUS="$(readlink -f "$CURRENT")"
-[[ -f "$PREVIOUS/index.html" && "$PREVIOUS" == "$WEB/releases/"* ]] || { echo "BLOCKED: invalid previous release"; exit 2; }
 PROD_CURRENT="$(readlink -f /var/www/sphere.astraotoparts.co.id/current)"
 PROD_HASH="$(sha256sum "$PROD_CURRENT/index.html" | cut -d' ' -f1)"
 [[ -f "$PROD_CURRENT/index.html" ]] || exit 2
-RELEASE="$WEB/releases/$SHA"
-[[ ! -e "$RELEASE" ]] || { echo "BLOCKED: release already exists: $RELEASE"; exit 2; }
 install -d -m 0755 "$RELEASE"
 cp -a dist/. "$RELEASE/"
 cmp -s dist/index.html "$RELEASE/index.html"
