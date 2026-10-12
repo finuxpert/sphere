@@ -89,13 +89,13 @@ const files = {
   promConfig: read('ops/observability/prometheus-sphere-dev.yml'),
 }
 
-// Validate the six-column Live layout from source instead of pinning an obsolete 46% width.
+// Validate the seven-column Live layout with actual observation time and readable names.
 const liveColumnAllocation = [...files.currentWorkloadCss.matchAll(/\.rundeckJobsProgramsWorkspace \.rundeckCurrentWorkload td:nth-child\((\d+)\)\{width:(\d+)%!important\}/g)]
   .map(([, column, width]) => ({ column: Number(column), width: Number(width) }))
-const liveColumnLayoutValid = liveColumnAllocation.length === 6
+const liveColumnLayoutValid = liveColumnAllocation.length === 7
   && liveColumnAllocation.every((item, index) => item.column === index + 1 && item.width > 0)
   && liveColumnAllocation.reduce((sum, item) => sum + item.width, 0) === 100
-  && liveColumnAllocation[1].width >= 40 && liveColumnAllocation[1].width <= 50
+  && liveColumnAllocation[1].width >= 32 && liveColumnAllocation[1].width <= 43
 
 // Extract the base native-select rule, not one of its light-theme overrides.
 const themeSelectStyle = files.accessibilityThemeFinal.match(/(?:^|\n)\.sphereThemeControl select\{([^}]*)\}/)?.[1] || ''
@@ -104,6 +104,17 @@ const themeMinHeightPx = Number(themeSelectStyle.match(/min-height:(\d+)px/)?.[1
 
 const mockupStyle = read('src/tools/components/RundeckMockupParity.css')
 const checks = [
+  ['Approved cockpit redesign exposes observed data without invented metrics',
+    files.source.includes('rundeckDashboardTitle')
+    && files.currentWorkload.includes('Search loaded jobs and programs')
+    && files.currentWorkload.includes('Observed At')
+    && files.currentWorkload.includes('row.collected_at')
+    && files.serverTrend.includes('rundeckTrendEditorial')
+    && files.operationalEvidence.includes('className="rundeckAnalysisActions"')
+    && files.monitoringCore.includes('rundeckCockpitV13491')
+    && mockupStyle.includes('rundeckCockpitV13491')
+    && mockupStyle.includes('clamp(195px,24dvh,235px)')],
+
   ['Mockup-scale UI source transforms actual cockpit and investigation structure',
     files.wrapper.includes("import './RundeckMockupParity.css'")
     && files.wrapper.includes('rundeckProductNavigation')
@@ -183,7 +194,7 @@ const checks = [
     files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
-  ['monitoring flow version is v1.34.90', files.version.includes("APP_VERSION = '1.34.90'") && files.version.includes("APP_PREVIOUS_VERSION = '1.34.89'") && files.version.includes('monitoring-flow-v1.34.90') && files.version.includes('monitoring-flow-ui-v1.34.90')],
+  ['monitoring flow version is v1.34.91', files.version.includes("APP_VERSION = '1.34.91'") && files.version.includes("APP_PREVIOUS_VERSION = '1.34.90'") && files.version.includes('monitoring-flow-v1.34.91') && files.version.includes('monitoring-flow-ui-v1.34.91')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -295,7 +306,7 @@ const checks = [
   ['Correlated Events drawer uses roomier timeline rows and three-column timing details', files.evidenceTimelineCss.includes('min-height:46px!important') && files.evidenceTimelineCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important') && files.evidenceTimeline.includes('Critical Work Process first observed')],
   ['SAP Availability drawer distinguishes stale data from service failure', files.availability.includes('last reliable:') && files.availability.includes('using last reliable data') && files.availability.includes("const displayState = stale ? 'STALE' : serviceState")],
   ['Trend helper microcopy is removed from the cockpit', !files.serverTrend.includes('Click a chart point to inspect saved job and program data without expanding the page.')],
-  ['Real dashboard heading replaces hidden duplicate title and keeps page identity', files.source.includes('<h2 aria-label="SAP Performance"><SphereIcon name="activity" /> SAP Performance Dashboard</h2>') && files.wrapper.includes('rundeckProductNavigation') && files.monitoringCore.includes('rundeckCockpitV13490')],
+  ['Real dashboard heading replaces hidden duplicate title and keeps page identity', files.source.includes('className="rundeckDashboardTitle">SAP Performance Dashboard</span>') && !files.source.includes('<h2 aria-label="SAP Performance">') && files.wrapper.includes('rundeckProductNavigation') && files.monitoringCore.includes('rundeckCockpitV13490')],
   ['Review mode has no redundant Search button because Search is a workspace mode', files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('!forceSearch && !hideSearchButton')],
   ['Live Jobs table fills the merged workspace and keeps selected-row emphasis restrained',
     files.currentWorkloadCss.includes('SPHERE v1.34.61 — full-width Live table')
@@ -338,7 +349,7 @@ const checks = [
   ['Current workload count distinguishes total observations and loaded rows while preserving table scroll',
     files.currentWorkload.includes('observed · ${rows.length} loaded') &&
     files.currentWorkload.includes('workloadMeta.total > rows.length') &&
-    files.currentWorkload.includes('const visible = sortedRows.slice(0, visibleLimit)') &&
+    files.currentWorkload.includes('const loaded = sortedRows.slice(0, visibleLimit)') && files.currentWorkload.includes('const visible = query ? loaded.filter') &&
     files.currentWorkload.includes('rundeckCurrentWorkloadTableWrap') &&
     files.source.includes('compactLimit={50}') &&
     files.cockpitPolish.includes('overflow-y:auto!important')],
@@ -644,4 +655,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.90 monitoring flow, data trust, gap evidence and motion checks passed.')
+console.log('\nSPHERE v1.34.91 monitoring flow, data trust, gap evidence and motion checks passed.')

@@ -762,3 +762,42 @@ test('v1.34.90 desktop WP and Trace search acts on retained evidence only',async
     await expect(panel).toContainText('WP/Trace signal was not retained')
   }
 })
+
+test('v1.34.91 desktop review measures actual visual hierarchy, not just DOM existence',async ({page})=>{
+  await openCockpit(page)
+  const title=page.locator('.rundeckLandscapeHeader h2')
+  await expect(title).toHaveText('SAP Performance Dashboard')
+  const trendTitle=page.locator('.rundeckTrendEditorial h3')
+  await expect(trendTitle).toHaveText('Performance Trends')
+  const cards=page.locator('.rundeckUnifiedAppCards .rundeckUnifiedAppCard')
+  await expect(cards).toHaveCount(5)
+  const chart=page.locator('.rundeckTripleTrendGrid .rundeckTrendChart').first()
+  await expect(chart).toBeVisible({timeout:30000})
+  const metric=cards.first().locator('.rundeckUnifiedMetric strong').first()
+  const geometry=await page.evaluate(()=>{
+    const rect=(selector)=>{const e=document.querySelector(selector); if(!e)return null; const r=e.getBoundingClientRect();return {height:r.height,width:r.width,fontSize:parseFloat(getComputedStyle(e).fontSize)}}
+    return {title:rect('.rundeckLandscapeHeader h2'),
+      app:rect('.rundeckUnifiedAppCard'),metric:rect('.rundeckUnifiedMetric strong'),
+      trend:rect('.rundeckTrendChart'),operational:rect('.rundeckAnalysisLaunchers'),
+      horizontalOverflow:document.documentElement.scrollWidth-document.documentElement.clientWidth}
+  })
+  expect(geometry.title?.fontSize).toBeGreaterThanOrEqual(20)
+  expect(geometry.app?.height).toBeGreaterThanOrEqual(110)
+  expect(geometry.metric?.fontSize).toBeGreaterThanOrEqual(14)
+  expect(geometry.trend?.height).toBeGreaterThanOrEqual(187)
+  expect(geometry.operational?.height).toBeGreaterThanOrEqual(44)
+  expect(geometry.horizontalOverflow).toBeLessThanOrEqual(2)
+  await page.screenshot({path:'test-results/sphere-v13491-overview-'+(page.viewportSize()?.width||'desktop')+'.png',fullPage:false})
+})
+test('v1.34.91 desktop Live search filters only loaded real observations',async ({page})=>{
+  await openCockpit(page)
+  await expect(page.locator('.rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadTableWrap')).toBeVisible({timeout:30000})
+  const section=page.getByRole('region',{name:'Current SAP jobs and programs'})
+  const search=section.getByRole('searchbox',{name:'Search loaded jobs and programs'})
+  await expect(search).toBeVisible()
+  await expect(section.getByRole('columnheader',{name:'Observed At'})).toBeVisible()
+  await search.fill('nonexistent-unique-job-zyx4321')
+  await expect(section.getByText(/No matching job or program in the .*loaded rows/)).toBeVisible()
+  await search.clear()
+  await expect(section.locator('tbody tr').first()).toBeVisible()
+})
