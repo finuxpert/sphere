@@ -37,7 +37,8 @@ cd "$SOURCE"
 [[ "$(git branch --show-current)" == "rundeck-sphere-dev" ]]
 [[ "$(git rev-parse HEAD)" == "$EXPECTED" ]]
 [[ -z "$(git status --porcelain)" ]]
-grep -q "APP_VERSION = '1.34.91'" src/app/version.js
+APP_VERSION="$(sed -n "s/^export const APP_VERSION = '\([^']*\)'.*/\1/p" src/app/version.js | head -n 1)"
+[[ "$APP_VERSION" == "1.35.6" ]] || { echo "BLOCKED: expected UI-only v1.35.6 DEV source" >&2; exit 2; }
 test -d "$WEB_ROOT/releases"
 PREVIOUS="$(readlink -f "$WEB_CURRENT")"
 [[ -d "$PREVIOUS" && "$PREVIOUS" == "$WEB_ROOT/releases/"* ]]
@@ -59,28 +60,29 @@ fi
 
 # Runtime changes demand one fresh SHA-bound QA/build. No stale artifact reuse.
 ARTIFACT_SHA="$EXPECTED"
-if ! bash ops/rundeck/qa-build-dev.sh "$SOURCE" > /tmp/sphere-ui-v13491-qa.log 2>&1; then
+if ! bash ops/rundeck/qa-build-dev.sh "$SOURCE" > /tmp/sphere-ui-v1356-qa.log 2>&1; then
   echo "QA=FAIL"
-  tail -n 45 /tmp/sphere-ui-v13491-qa.log
+  tail -n 45 /tmp/sphere-ui-v1356-qa.log
   exit 1
 fi
 echo "QA_BUILD=PASS"
 
-# Playwright must be installed, and all four geometry viewports must PASS.
+# Playwright required. Desktop geometry and mobile overflow are independent hard gates.
+# The v1.34.91-named tests exercise existing contracts across later versions; their titles are legacy.
 test -x node_modules/.bin/playwright || {
   echo "VISUAL=BLOCKED (Playwright not installed)"; exit 1;
 }
 ./node_modules/.bin/vite preview \
   --config ops/rundeck/visual-preview-dev.config.mjs \
   --host 127.0.0.1 --port 4173 --strictPort \
-  > /tmp/sphere-ui-v13491-preview.log 2>&1 &
+  > /tmp/sphere-ui-v1356-preview.log 2>&1 &
 PREVIEW_PID=$!
 READY=0
 for _ in {1..15}; do
   if curl --noproxy '*' -fsS --max-time 2 http://127.0.0.1:4173/dev/ >/dev/null 2>&1; then READY=1; break; fi
   sleep 1
 done
-[[ "$READY" == 1 ]] || { tail -n 25 /tmp/sphere-ui-v13491-preview.log; exit 1; }
+[[ "$READY" == 1 ]] || { tail -n 25 /tmp/sphere-ui-v1356-preview.log; exit 1; }
 curl --noproxy '*' -fsS --max-time 10 http://127.0.0.1:4173/dev/api/collections/latest \
   | python3 -c 'import json,sys; x=json.load(sys.stdin); assert isinstance(x,dict)'
 SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
@@ -88,14 +90,26 @@ SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
   tests/visual/rundeck-v13479.visual.spec.mjs \
   --project=desktop-1536 --project=laptop-1366 \
   --grep 'v1\.34\.91 desktop' --workers=2 --reporter=line \
-  > /tmp/sphere-ui-v13491-visual.log 2>&1 || {
+  > /tmp/sphere-ui-v1356-visual.log 2>&1 || {
   echo "VISUAL=FAIL"
-  grep -E 'VISUAL_FAIL_BRIEF=|VISUAL_GEOMETRY_DEBUG_ERROR=|Error:|Expected:|Received:|[0-9]+ failed' /tmp/sphere-ui-v13491-visual.log | tail -n 45 || true
-  tail -n 55 /tmp/sphere-ui-v13491-visual.log
+  grep -E 'VISUAL_FAIL_BRIEF=|VISUAL_GEOMETRY_DEBUG_ERROR=|Error:|Expected:|Received:|[0-9]+ failed' /tmp/sphere-ui-v1356-visual.log | tail -n 45 || true
+  tail -n 55 /tmp/sphere-ui-v1356-visual.log
   exit 1;
 }
 echo "VISUAL_DESKTOP=PASS"
 echo "VISUAL_GEOMETRY=PASS scope=desktop-1536,laptop-1366"
+SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
+  ./node_modules/.bin/playwright test -c playwright.config.mjs \
+  tests/visual/rundeck-v13479.visual.spec.mjs \
+  --project=android-393 \
+  --grep 'Android-sized viewport does not introduce horizontal page overflow|v1\\.34\\.87 Android analysis groups fit the viewport without horizontal overflow' \
+  --workers=1 --reporter=line \
+  > /tmp/sphere-ui-v1356-mobile.log 2>&1 || {
+  echo "VISUAL_MOBILE=FAIL"
+  tail -n 55 /tmp/sphere-ui-v1356-mobile.log
+  exit 1;
+}
+echo "VISUAL_MOBILE=PASS scope=android-393"
 kill "$PREVIEW_PID" 2>/dev/null || true
 wait "$PREVIEW_PID" 2>/dev/null || true
 PREVIEW_PID=""
@@ -109,19 +123,19 @@ mkdir -m 0755 "$STAGED"
 cp -a dist/. "$STAGED/"
 test -f "$STAGED/index.html"
 grep -q '/dev/assets/' "$STAGED/index.html"
-grep -Rqs '1.34.91' "$STAGED/assets"
+grep -Rqs "$APP_VERSION" "$STAGED/assets"
 grep -Rqs "${ARTIFACT_SHA:0:7}" "$STAGED/assets"
 ln -s "$STAGED" "$WEB_ROOT/.next-$$"
 mv -Tf "$WEB_ROOT/.next-$$" "$WEB_CURRENT"
 CUTOVER=1
 
 curl --noproxy '*' -fsS --max-time 15 \
-  https://sphere.astraotoparts.co.id/dev/ -o /tmp/sphere-ui-v13491-live.html
-cmp -s "$STAGED/index.html" /tmp/sphere-ui-v13491-live.html
+  https://sphere.astraotoparts.co.id/dev/ -o /tmp/sphere-ui-v1356-live.html
+cmp -s "$STAGED/index.html" /tmp/sphere-ui-v1356-live.html
 curl --noproxy '*' -fsS --max-time 15 \
   https://sphere.astraotoparts.co.id/dev/api/collections/latest \
   | python3 -c 'import json,sys; assert isinstance(json.load(sys.stdin),dict)'
 [[ "$(readlink -f "$WEB_CURRENT")" == "$STAGED" ]]
 [[ "$(readlink -f /var/www/sphere.astraotoparts.co.id/current)" == "$PROD_WEB" ]]
 [[ "$(sha256sum "$PROD_WEB/index.html" | cut -d' ' -f1)" == "$PROD_HASH" ]]
-echo "FINAL=PASS DEV_UI=1.34.91 SOURCE_SHA=$EXPECTED ARTIFACT_SHA=$ARTIFACT_SHA DB_MIGRATION=SKIPPED PROD=UNCHANGED"
+echo "FINAL=PASS DEV_UI=$APP_VERSION SOURCE_SHA=$EXPECTED ARTIFACT_SHA=$ARTIFACT_SHA DB_MIGRATION=SKIPPED PROD=UNCHANGED"
