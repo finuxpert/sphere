@@ -188,9 +188,9 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       ...(Array.isArray(d.pids) ? d.pids : []),d.wp,d.wp_type]
       .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
   }) : loaded
-  // Display more *loaded real observations* when the viewport has room.
-  // Keep a compact page on smaller screens without creating page overflow.
-  const pageSize = viewportHeight <= 720 ? 3 : viewportHeight <= 800 ? 4 : viewportHeight <= 920 ? 7 : 9
+  // Keep pagination aligned with the viewport's available table height.
+  // Rows are still actual loaded observations; no synthetic results or truncation.
+  const pageSize = viewportHeight <= 720 ? 3 : viewportHeight <= 900 ? 4 : viewportHeight <= 1080 ? 5 : 7
   const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
   const currentPage=Math.min(listPage,totalPages-1)
   const pageRows=visible.slice(currentPage*pageSize,(currentPage+1)*pageSize)
