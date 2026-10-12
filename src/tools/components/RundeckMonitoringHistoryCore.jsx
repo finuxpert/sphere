@@ -3,7 +3,7 @@ import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckJobsProgramsWorkspace from './RundeckJobsProgramsWorkspace.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
-  return <section className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456">
+  return <section className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490">
     <section className="rundeckTopBandV13454 is-unified-app-infra">
       <RundeckUnifiedAppInfrastructure
         hosts={props.sourceHosts || []}

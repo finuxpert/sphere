@@ -45,7 +45,7 @@ export default function RundeckOperationalEvidence({
   // Six live evidence destinations, one flat navigation surface.
   // Each compact source continues to own its freshness/status text.
   return <nav className="rundeckAnalysisLaunchers" aria-label="Operational analysis">
-    <div className="rundeckAnalysisLaunchersHead"><h3>Operational Analysis</h3></div>
+    <div className="rundeckAnalysisLaunchersHead"><h3>Operational Analysis</h3><small>Investigate saved evidence</small></div>
     <div className="rundeckAnalysisActions" role="group" aria-label="Investigation shortcuts">
       {evidence}
       <button type="button" className="rundeckAnalysisSecondary" disabled={!selectedJob?.key}

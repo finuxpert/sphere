@@ -92,16 +92,25 @@ export default function RundeckUnifiedAppInfrastructure({
           title={'Open ' + key + ' SAP and Infrastructure analysis · SAP ' + sapState + ' · Infrastructure ' + infra.state}>
           <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>SAP · {sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
-            <span>CPU <strong>{metric(host.cpu_pct, '%')}</strong></span>
-            <span>RAM <strong>{metric(host.ram_pct, '%')}</strong></span>
-            <span>IO <strong>{metric(host.io_wait_pct, '%')}</strong></span>
-            <span>WP <strong>{metric(host.wp_critical)}</strong></span>
+            <span className="rundeckUnifiedMetric">
+              <small>CPU</small><strong>{metric(host.cpu_pct, '%')}</strong>
+              <i className="rundeckUnifiedMetricTrack" aria-hidden="true"><i style={{width: host.cpu_pct == null ? '0%' : Math.min(100,Math.max(0,Number(host.cpu_pct)||0)) + '%'}} /></i>
+            </span>
+            <span className="rundeckUnifiedMetric">
+              <small>RAM</small><strong>{metric(host.ram_pct, '%')}</strong>
+              <i className="rundeckUnifiedMetricTrack" aria-hidden="true"><i style={{width: host.ram_pct == null ? '0%' : Math.min(100,Math.max(0,Number(host.ram_pct)||0)) + '%'}} /></i>
+            </span>
+            <span className="rundeckUnifiedMetric" title={'Critical work processes observed: ' + metric(host.wp_critical)}>
+              <small>Critical WP</small><strong>{metric(host.wp_critical)}</strong>
+              <i className="rundeckUnifiedMetricTrack is-workprocess" aria-hidden="true" />
+            </span>
+            <span className="rundeckUnifiedMetric is-infrastructure" title={'Filesystem: '+(infra.topFs?.mount_point||'unknown')+' · Infrastructure '+infra.freshness}>
+              <small>FS</small><strong className={'is-'+infra.state.toLowerCase()}>{infra.topFs ? metric(infra.topFs.used_pct,'%') : '—'}</strong>
+              <i className="rundeckUnifiedMetricTrack" aria-hidden="true"><i style={{width: infra.topFs?.used_pct == null ? '0%' : Math.min(100,Math.max(0,Number(infra.topFs.used_pct)||0)) + '%'}} /></i>
+            </span>
           </span>
           <span className="rundeckUnifiedAppCardInfra">
-            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>Infra FS {infra.topFs?.mount_point || '—'} · {infra.freshness}</small>
-            <strong className={'is-' + infra.state.toLowerCase()}>
-              {infra.topFs ? (infra.freshness === 'FRESH' ? '' : 'Last ') + metric(infra.topFs.used_pct, '%') : '—'}
-            </strong>
+            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{infra.topFs?.mount_point || 'FS unavailable'} · {infra.freshness} · I/O wait {metric(host.io_wait_pct,'%')}</small>
           </span>
         </button>
       })}
