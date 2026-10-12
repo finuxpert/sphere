@@ -107,7 +107,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     ? 'Job/program ↔ issue: timestamps not verified'
     : `Job/program sample ↔ issue first observed · ${pair.deltaMinutes}m apart`
   const alignmentHint = state === 'WITHIN WINDOW'
-    ? 'Two retained observations are within the configured time window; the sample may be selected by the operator's chosen time. This does not identify job start or cause.'
+    ? "Two retained observations are within the configured time window; the sample may be selected by the operator\'s chosen time. This does not identify job start or cause."
     : state === 'NO OVERLAP'
       ? 'The retained workload episode does not overlap the issue window.'
       : 'The selected workload and issue timestamps do not establish timing alignment.'
