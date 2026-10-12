@@ -15,12 +15,15 @@ export function issueWorkloadTimePair(payload = {}) {
   const thresholdMinutes = Number.isFinite(threshold) && threshold > 0 ? threshold : null
   const deltaMinutes = issueTime === null || workloadTime === null ? null
     : Math.round(Math.abs(workloadTime - issueTime) / 6000) / 10
+  const direction = issueTime === null || workloadTime === null ? 'UNVERIFIED'
+    : workloadTime > issueTime ? 'AFTER ISSUE'
+      : workloadTime < issueTime ? 'BEFORE ISSUE' : 'SAME TIME'
   const referenceSource = (payload?.alignment?.sources || []).some(source => source?.name === 'Selected Time') ? 'Selected Time' : 'Issue Start'
   const noOverlap = payload?.alignment?.state === 'NO OVERLAP'
   const state = noOverlap ? 'NO OVERLAP'
     : deltaMinutes === null || thresholdMinutes === null ? 'INSUFFICIENT DATA'
       : deltaMinutes <= thresholdMinutes ? 'WITHIN WINDOW' : 'OUTSIDE WINDOW'
-  return { state, issueAt, workloadAt, deltaMinutes, thresholdMinutes, referenceSource,
+  return { state, issueAt, workloadAt, deltaMinutes, direction, thresholdMinutes, referenceSource,
     firstSeen: payload?.selected_workload?.first_seen || null,
     lastSeen: payload?.selected_workload?.last_seen || null }
 }
