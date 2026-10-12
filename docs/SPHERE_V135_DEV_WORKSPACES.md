@@ -82,3 +82,9 @@ Operator supplied DEV screenshots of **Infrastructure Analysis**, **Correlated E
 - Infrastructure shows source freshness separately from SAP status and keeps the existing APP selector, historical chart, and three existing filesystem/network/storage snapshot tables. On narrower screens, snapshot tables stack instead of overflowing.
 
 **Release:** source-only update to `rundeck-sphere-dev`, no CI visual QA, backend or PROD changes. Run `sphere deploy dev` and manually check these three popups at 1536px and mobile width. Do not unlock PROD promotion before screenshot approval.
+
+## Version display clarification (2026-10-12)
+
+The previous operator screenshot showed `Build v1.35.0-dev · e9cf696`. This was expected: `APP_VERSION` in `src/app/version.js` is manually controlled, while the seven-character build SHA is injected by the Vite build/deploy pipeline. CSS and JS commits do not automatically increase `APP_VERSION`.
+
+After the popup/Infrastructure consistency revisions, the DEV display version is explicitly advanced to **v1.35.1-dev** and the previous version metadata is **v1.35.0**. The expected browser header after a successful new `sphere deploy dev` is `Build v1.35.1-dev · <current short SHA>`. Production remains untouched. The pinned promotion script for v1.35.0 remains intentionally HOLD pending explicit operator screenshot approval; do not reuse it to promote v1.35.1 without updating/reviewing its approved SHA and version.
