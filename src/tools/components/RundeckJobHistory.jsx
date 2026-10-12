@@ -302,7 +302,7 @@ function SingleSamplePerformance({ row }) {
   </div>
 }
 
-function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, onSelectObservation = null }) {
+function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, dense = false, onSelectObservation = null }) {
   const ref = React.useRef(null)
   const chartConfig = React.useMemo(() => {
     const colors = palette()
@@ -314,23 +314,23 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, on
     const issueInRange = Number.isFinite(issueTs) && Number.isFinite(firstTs) && Number.isFinite(lastTs) && issueTs >= firstTs && issueTs <= lastTs
 
     const compactEpisode = rows.length <= 10
-    const laneScale = compactEpisode ? .76 : 1
+    const laneScale = dense ? 1 : (compactEpisode ? .76 : 1)
     const lanes = [
-      { id: 'cpu', name: 'CPU', height: Math.round((expanded ? 126 : 76) * laneScale) },
-      profile.hasPss ? { id: 'pss', name: 'PSS Memory', height: Math.round((expanded ? 82 : 50) * laneScale) } : null,
-      profile.hasIo ? { id: 'io', name: 'I/O', height: Math.round((expanded ? 70 : 44) * laneScale) } : null,
-      profile.hasWp ? { id: 'wp', name: 'WP', height: Math.round((expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28)) * laneScale) } : null,
-      profile.hasCritical ? { id: 'event', name: 'APP Critical WP', height: Math.round((expanded ? 38 : 28) * laneScale) } : null,
+      { id: 'cpu', name: 'CPU', height: Math.round((dense ? 58 : (expanded ? 126 : 76)) * laneScale) },
+      profile.hasPss ? { id: 'pss', name: 'PSS Memory', height: Math.round((dense ? 36 : (expanded ? 82 : 50)) * laneScale) } : null,
+      profile.hasIo ? { id: 'io', name: 'I/O', height: Math.round((dense ? 30 : (expanded ? 70 : 44)) * laneScale) } : null,
+      profile.hasWp ? { id: 'wp', name: 'WP', height: Math.round((dense ? 27 : (expanded ? (profile.wpVariable ? 58 : 46) : (profile.wpVariable ? 40 : 28))) * laneScale) } : null,
+      profile.hasCritical ? { id: 'event', name: 'APP Critical WP', height: Math.round((dense ? 17 : (expanded ? 38 : 28)) * laneScale) } : null,
     ].filter(Boolean)
 
-    let top = 16
-    const gap = expanded ? 16 : 14
+    let top = dense ? 11 : 16
+    const gap = dense ? 9 : (expanded ? 16 : 14)
     const grids = lanes.map((lane) => {
       const grid = { left: 96, right: 30, top, height: lane.height }
       top += lane.height + gap
       return grid
     })
-    const chartHeight = Math.max(170, top + 30)
+    const chartHeight = dense ? Math.max(185, top + 20) : Math.max(170, top + 30)
     const laneIndex = Object.fromEntries(lanes.map((lane, index) => [lane.id, index]))
 
     const axisBase = {
@@ -470,7 +470,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, on
         series,
       },
     }
-  }, [expanded, incidentStart, items])
+  }, [dense, expanded, incidentStart, items])
 
   React.useEffect(() => {
     if (!ref.current) return undefined
@@ -921,7 +921,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 {episodeItems.length === 1
                   ? <SingleSamplePerformance row={episodeItems[0]} />
                   : episodeItems.length > 1
-                    ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={effectiveIncidentStart} expanded={drawerPresentation} onSelectObservation={(row) => setDetailView({ type: 'observation', row })} />
+                    ? <UnifiedJobPerformanceChart items={episodeItems} incidentStart={effectiveIncidentStart} expanded={drawerPresentation} dense={drawerPresentation && typeof window !== 'undefined' && window.innerWidth >= 1200} onSelectObservation={(row) => setDetailView({ type: 'observation', row })} />
                     : <div className="rundeckJobHistoryState">No saved performance history yet.</div>}
               </div>
             : <div className="rundeckJobHistoricalRange">
@@ -989,7 +989,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           </table>
         </div>
         {wpSignals.length > wpPageSize && !normalizedWpSearch && !wpErrorsOnly && <small className="rundeckWpSignalMore">Showing saved WP/Trace observations by page, prioritized by snapshot error, retained trace error and RABAX count.</small>}
-        <p className="rundeckWpSignalNote">Source: retained WP-SCOUT observation. “Error at Snapshot” is shown only when the collector marks the error AT_SNAPSHOT. “Latest Trace Error” can be historical and does not mean the SAP job failed. CPU Signal is only the collector CPU classification. Counters are observation values from the WP trace sample. SM37 remains the authority for SAP job execution status.</p>
+        <details className="rundeckWpSignalNotes"><summary>About WP/Trace evidence</summary><p className="rundeckWpSignalNote">Source: retained WP-SCOUT observation. “Error at Snapshot” is shown only when the collector marks the error AT_SNAPSHOT. “Latest Trace Error” can be historical and does not mean the SAP job failed. CPU Signal is only the collector CPU classification. Counters are observation values from the WP trace sample. SM37 remains the authority for SAP job execution status.</p></details>
       </section> : <section className="rundeckWpSignalPanel is-empty" aria-label="WP trace signal coverage">
         <div className="rundeckWpSignalHead"><div><strong>Observed SAP WP / Trace Signals</strong><small>{wpSignalObservedAt ? `${formatWib(wpSignalObservedAt, true)} WIB` : 'Selected observation'}</small></div></div>
         <div className="rundeckJobHistoryState">WP/Trace signal was not retained for this observation. Older stored observations may predate this collector projection.</div>
