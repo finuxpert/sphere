@@ -123,6 +123,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trendData,setTrendData]=React.useState({scope:'',items:[],meta:null})
   const [selectedSeries,setSelectedSeries]=React.useState('')
+  const [fsPage,setFsPage]=React.useState(0)
   React.useEffect(()=>{
     if(!initialContext)return
     if(initialContext.host)setSelectedHost(initialContext.host)
@@ -136,6 +137,10 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const trend=React.useMemo(()=>trendData.scope===trendScope?trendData.items:[],[trendData,trendScope])
   const trendMeta=trendData.scope===trendScope?trendData.meta:null
   const observedData=data.host===host?data:{fs:[],network:[],storage:[]}
+  const fsPerPage=5
+  const fsPageCount=Math.max(1,Math.ceil(observedData.fs.length/fsPerPage))
+  const effectiveFsPage=Math.min(fsPage,fsPageCount-1)
+  const fsRows=observedData.fs.slice(effectiveFsPage*fsPerPage,(effectiveFsPage+1)*fsPerPage)
   const telemetryRows=[...observedData.fs,...observedData.network,...observedData.storage]
   const collectedAt=hostRow?.snapshot_ts||telemetryRows[0]?.collected_at
   const freshness=infrastructureTelemetryFreshness(collectedAt,hostRow?.collection_id,telemetryRows,clockNow)
@@ -281,7 +286,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       <div className="rundeckInfraCurrent">
         <div className="rundeckInfraCurrentLabel">{stale?'Last Observed Snapshot':'Current Snapshot'}</div>
         <div className="rundeckInfraGrid">
-      <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity</small></div><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{observedData.fs.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!observedData.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
+      <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity · ${observedData.fs.length} mount(s)</small></div><div className="rundeckInfraFsPager"><button type="button" aria-label="Previous filesystem mounts" disabled={effectiveFsPage===0} onClick={()=>setFsPage(n=>Math.max(0,n-1))}>‹</button><small>{effectiveFsPage+1}/{fsPageCount}</small><button type="button" aria-label="Next filesystem mounts" disabled={effectiveFsPage>=fsPageCount-1} onClick={()=>setFsPage(n=>Math.min(fsPageCount-1,n+1))}>›</button><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{fsRows.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!observedData.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article>
         <div className="cardHead"><h4>Network</h4><span className={`is-${netState.toLowerCase()}`}>{netState}</span></div>
         <table>
