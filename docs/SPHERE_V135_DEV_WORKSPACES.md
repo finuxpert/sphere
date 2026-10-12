@@ -31,3 +31,11 @@ sphere deploy dev
 This fetches the DEV branch, performs a Vite build, releases frontend-only, verifies HTTPS and retains prior release for rollback. It does not run Playwright or UI screenshot QA, backend deployments, DB migration, or modify PROD. If the build fails, do not deploy.
 
 After `FINAL=PASS`, visually review the Overview and at least Job Performance, SAP Checks, Infrastructure and Correlated Events **as popups**; send screenshots for follow-up correction.
+
+## PROD Overview placement parity (2026-10-12)
+
+The approved layout reference is the operator-provided PROD screenshot (not a source of SAP measurements). Desktop DEV Overview should use **one full-width vertical scan**: APP1–APP5 in one horizontal row, three trend charts across the available width, six operational analysis shortcuts in one horizontal rail, and full-width Live / Review / Search Jobs & Programs below. Individual investigations **stay popup dialogs** over the dashboard. Desktop tables retain all underlying job fields and only display observed API rows.
+
+In `RundeckMockupParity.css`, the obsolete v1.34.91 two-column arrangement (`apps/actions` side by side and `trends/workloads` side by side), its narrow-column 3×2 action override, the duplicate tall-screen chart height lock, and the old fixed cockpit height were removed. The existing full-width layout was restored and its four section areas made explicit. No PROD commit, API, backend, DB migration, or stored data is modified.
+
+**Verification still required:** operator run `sphere deploy dev`, confirm `FINAL=PASS`, and send a screenshot for comparison at 1366/1536 px if possible. Do not assume visual equivalence merely from CSS inspection.
