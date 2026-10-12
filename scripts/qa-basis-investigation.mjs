@@ -118,10 +118,10 @@ const checks = [
   ['Mockup-scale UI source transforms actual cockpit and investigation structure',
     files.wrapper.includes("import './RundeckMockupParity.css'")
     && files.wrapper.includes('rundeckProductNavigation')
-    && files.monitoringCore.includes('rundeckCockpitV13490')
+    && files.monitoringCore.includes('rundeckCockpitV13491')
     && files.source.includes('SAP Performance Dashboard')
-    && mockupStyle.includes('.rundeckCockpitV13490 .rundeckTripleTrendGrid .rundeckTrendChart')
-    && mockupStyle.includes('168px!important')
+    && mockupStyle.includes('.rundeckCockpitV13491 .rundeckTripleTrendGrid .rundeckTrendChart')
+    && mockupStyle.includes('height:clamp(195px,24dvh,235px)!important')
     && mockupStyle.includes('.rundeckInfraTrendWorkspace')
     && mockupStyle.includes('order:-1!important')
     && mockupStyle.includes('.rundeckJobAnalysisWorkspace')
