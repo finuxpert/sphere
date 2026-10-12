@@ -113,6 +113,10 @@ check_api EVALUATION "https://sphere.astraotoparts.co.id/api/evaluation/workload
 check_api INFRA "https://sphere.astraotoparts.co.id/api/infra/hosts"
 check_api JOB_SOURCE "https://sphere.astraotoparts.co.id/api/jobs/source"
 check_api PLATFORM "https://sphere.astraotoparts.co.id/api/platform/readiness"
+check_api AVAILABILITY "https://sphere.astraotoparts.co.id/api/availability/latest"
+check_api INCIDENT_HISTORY "https://sphere.astraotoparts.co.id/api/history/incidents?days=1&limit=1"
+check_api HOST_HISTORY "https://sphere.astraotoparts.co.id/api/history/hosts/latest"
+check_api RUNDECK_READINESS "https://sphere.astraotoparts.co.id/api/readiness"
 
 echo "TARGET_PROD_VERSION=$VERSION SOURCE_SHA=$APPROVED"
 echo "SCOPE=FRONTEND_ONLY PROD_BACKEND=UNCHANGED DB=UNCHANGED NGINX=UNCHANGED"
