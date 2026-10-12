@@ -2,18 +2,12 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import SphereOperatorTabs from './SphereOperatorTabs.jsx'
 import { numberText, shortHost } from './sapUiFormat.js'
+import { metricResourceState, sapWorkloadState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
+import { settleSapIssueSources, unavailableSapIssueIndicators, SAP_ISSUE_SOURCE_LABELS } from './rundeckIssueSources.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const SEVERITY_RANK = { CRITICAL: 4, WARNING: 3, ATTENTION: 2, NORMAL: 1, UNKNOWN: 0 }
 
-const pctState = (value, warning, critical) => {
-  const number = Number(value)
-  if (!Number.isFinite(number)) return 'UNKNOWN'
-  if (number >= critical) return 'CRITICAL'
-  if (number >= warning) return 'WARNING'
-  return 'NORMAL'
-}
-const wpState = (value) => Number(value || 0) >= 3 ? 'CRITICAL' : Number(value || 0) > 0 ? 'ATTENTION' : 'NORMAL'
 const serviceState = (value) => {
   const state = String(value || 'UNKNOWN').toUpperCase()
   if (['UP','PASS','ACTIVE','OK','NORMAL'].includes(state)) return 'NORMAL'
@@ -21,7 +15,7 @@ const serviceState = (value) => {
   if (['WARNING','STALE','PARTIAL','NOT_CONFIGURED','WAITING'].includes(state)) return 'WARNING'
   return 'UNKNOWN'
 }
-const valueText = (value, unit = '') => value === null || value === undefined || value === '' ? '—' : `${numberText(value, unit === '%' ? 1 : 0)}${unit}`
+const valueText = (value, unit = '') => value === null || value === undefined || String(value).trim() === '' || !Number.isFinite(Number(value)) ? '—' : `${numberText(value, unit === '%' ? 1 : 0)}${unit}`
 const durationText = (seconds) => {
   const value = Number(seconds)
   if (!Number.isFinite(value) || value < 0) return '—'
@@ -33,6 +27,8 @@ const durationText = (seconds) => {
 }
 const issueLabel = (value = '') => String(value || 'SAP Issue').replace(/Critical Work Process Count/gi,'Critical WP').replace(/Critical WP Count/gi,'Critical WP').replace(/Work Process/gi,'WP')
 const statusClass = (value) => `is-${String(value || 'UNKNOWN').toLowerCase()}`
+const wpState = host => sapWorkloadState({ wp_critical: host?.wp_critical })
+const wpValue = value => valueText(value)
 
 function Status({ value }) {
   return <span className={`rundeckIssueStatus ${statusClass(value)}`}><i aria-hidden="true" />{value}</span>
@@ -40,7 +36,7 @@ function Status({ value }) {
 
 export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false }) {
   const [data, setData] = React.useState({ incidents:null, hosts:null, availability:null, readiness:null })
-  const [error, setError] = React.useState('')
+  const [failedSources, setFailedSources] = React.useState([])
   const [indicatorView, setIndicatorView] = React.useState('review')
   const [indicatorQuery,setIndicatorQuery] = React.useState('')
   const [appFilter,setAppFilter] = React.useState('ALL')
@@ -52,61 +48,63 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
       if(!response.ok) throw new Error(`Request failed (${response.status})`)
       return response.json()
     }
+    setData({ incidents:null, hosts:null, availability:null, readiness:null })
+    setFailedSources([])
     Promise.allSettled([
       get(`${API}/history/incidents?days=1&limit=200`),
       get(`${API}/history/hosts/latest`),
       get(`${API}/availability/latest`),
       get(`${API}/readiness`),
-    ]).then(([incidents,hosts,availability,readiness]) => {
+    ]).then((results) => {
       if(controller.signal.aborted) return
-      setData({
-        incidents: incidents.status==='fulfilled' ? incidents.value : null,
-        hosts: hosts.status==='fulfilled' ? hosts.value : null,
-        availability: availability.status==='fulfilled' ? availability.value : null,
-        readiness: readiness.status==='fulfilled' ? readiness.value : null,
-      })
-      setError(incidents.status==='rejected' && hosts.status==='rejected' && availability.status==='rejected' ? 'SAP issue data unavailable' : '')
+      const settled = settleSapIssueSources(results)
+      setData(settled.data)
+      setFailedSources(settled.failed)
     })
     return () => controller.abort()
   },[refreshToken])
 
   const incidentItems=(data.incidents?.items||[]).filter((row)=>row.state==='ACTIVE')
-  const activeCount=Number(data.incidents?.active ?? incidentItems.length)
+  const activeCount=data.incidents ? Number(data.incidents.active ?? incidentItems.length) : null
   const peakCriticalWp=incidentItems.filter((row)=>row.code==='WP_CRITICAL').reduce((value,row)=>Math.max(value,Number(row.peak_value||0)),0)
 
   const hosts=data.hosts?.items||[]
   const availability=data.availability||{}
-  const indicators=[]
+  const indicators=unavailableSapIssueIndicators(failedSources)
 
   hosts.forEach((host)=>{
     const app=shortHost(host.host)
     indicators.push(
-      {scope:app,indicator:'CPU',status:pctState(host.cpu_pct,75,90),current:valueText(host.cpu_pct,'%'),reason:'Warn 75% · Crit 90%',host:host.host},
-      {scope:app,indicator:'RAM',status:pctState(host.ram_pct,75,90),current:valueText(host.ram_pct,'%'),reason:'Warn 75% · Crit 90%',host:host.host},
-      {scope:app,indicator:'I/O Wait',status:pctState(host.io_wait_pct,5,10),current:valueText(host.io_wait_pct,'%'),reason:'Warn 5% · Crit 10%',host:host.host},
-      {scope:app,indicator:'APP Critical WP',status:wpState(host.wp_critical),current:String(Number(host.wp_critical||0)),reason:'Attention 1–2 · Critical ≥3',host:host.host},
+      {scope:app,indicator:'CPU',status:metricResourceState(host.cpu_pct,'cpu'),current:valueText(host.cpu_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.cpu.warning}% · Crit ${OPERATOR_THRESHOLDS.cpu.critical}%`,host:host.host},
+      {scope:app,indicator:'RAM',status:metricResourceState(host.ram_pct,'ram'),current:valueText(host.ram_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.ram.warning}% · Crit ${OPERATOR_THRESHOLDS.ram.critical}%`,host:host.host},
+      {scope:app,indicator:'I/O Wait',status:metricResourceState(host.io_wait_pct ?? host.iowait_pct,'ioWait'),current:valueText(host.io_wait_pct ?? host.iowait_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.ioWait.warning}% · Crit ${OPERATOR_THRESHOLDS.ioWait.critical}%`,host:host.host},
+      {scope:app,indicator:'APP Critical WP',status:wpState(host),current:wpValue(host.wp_critical),reason:`Attention ${OPERATOR_THRESHOLDS.criticalWp.attention}–2 · Critical ≥${OPERATOR_THRESHOLDS.criticalWp.critical}`,host:host.host},
     )
   })
 
-  const addServices=(label,rows=[])=>rows.forEach((row)=>indicators.push({
+  if (data.hosts && !hosts.length) indicators.push({scope:'APP',indicator:'Host performance',status:'UNKNOWN',current:'No observations',reason:'Host response contains no APP readings'})
+  const addServices=(label,rows)=>{ if (!data.availability) return
+    if (!Array.isArray(rows) || !rows.length) { indicators.push({scope:label,indicator:label,status:'UNKNOWN',current:'Not reported',reason:'No service status in Availability response'}); return }
+    rows.forEach((row)=>indicators.push({
     scope:row.name||label,
     indicator:label,
     status:serviceState(row.status),
     current:String(row.status||'UNKNOWN').toUpperCase(),
     reason:['UP','PASS','ACTIVE','OK','NORMAL'].includes(String(row.status||'').toUpperCase())?'Service check passed':'Check service state',
   }))
+  }
   addServices('SAP App Availability',availability.sap_app)
   addServices('HANA',availability.hana_system_db)
   addServices('Replication',availability.hana_replication)
   addServices('Web Dispatcher',availability.web_dispatcher)
   addServices('SSH',availability.ssh)
 
-  const sm37=String(data.readiness?.features?.job_monitor||'WAITING_FOR_SM37_FEED').toUpperCase()
-  indicators.push({scope:'SAP Job Source',indicator:'SM37 Feed',status:sm37==='READY'?'NORMAL':'WARNING',current:sm37==='READY'?'CONNECTED':'NOT CONNECTED',reason:sm37==='READY'?'Execution source ready':'Check job status in SAP (SM37)'})
+  const sm37=data.readiness ? String(data.readiness?.features?.job_monitor || 'WAITING_FOR_SM37_FEED').toUpperCase() : 'UNKNOWN'
+  if(data.readiness) indicators.push({scope:'SAP Job Source',indicator:'SM37 Feed',status:sm37==='READY'?'NORMAL':'WARNING',current:sm37==='READY'?'CONNECTED':'NOT CONNECTED',reason:sm37==='READY'?'Execution source ready':'Check job status in SAP (SM37)'})
 
   const sortedIndicators=[...indicators].sort((a,b)=>(SEVERITY_RANK[b.status]||0)-(SEVERITY_RANK[a.status]||0))
-  const issueIndicators=sortedIndicators.filter((row)=>row.status!=='NORMAL'&&row.status!=='UNKNOWN')
-  const reviewIndicators=issueIndicators.filter((row)=>row.scope!=='SAP Job Source')
+  const reviewIndicators=sortedIndicators.filter((row)=>row.status!=='NORMAL' && row.scope!=='SAP Job Source')
+  const unknownCount=reviewIndicators.filter((row)=>row.status==='UNKNOWN').length
   const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
   const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
   const baseIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
@@ -118,10 +116,10 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
   if(compact){
-    const reviewText=reviewIndicators.length ? `${reviewIndicators.length} observations need review` : 'No SAP issue observation'
+    const reviewText=reviewIndicators.length ? `${reviewIndicators.length} indicators need review` : 'No reported issue'
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
-      <strong>{error ? 'Unavailable' : `${reviewText}${sm37 === 'READY' ? '' : ' · SM37 not connected'}`}</strong>
+      <strong>{failedSources.length ? `${failedSources.length} source(s) unavailable · ${reviewText}` : `${reviewText}${sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}`}</strong>
       <em aria-hidden="true">›</em>
     </button>
   }
@@ -129,13 +127,14 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const inspect=(row)=>row.host&&onInspectApp?.({host:row.host,source:'sap-issues',issue:row.indicator,severity:row.status})
 
   return <section className="rundeckSapIssuesV1231 is-indicator-console" aria-label="SAP operational issues">
-    {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} need review{sm37 === 'READY' ? '' : ' · SM37 not connected'}</span></header>}
-    {error&&<div className="rundeckReviewState is-error">{error}</div>}
+    {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} need review{sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}</span></header>}
+    {failedSources.length>0 && <div className="rundeckReviewState is-error" role="status">Unavailable: {failedSources.map(name=>SAP_ISSUE_SOURCE_LABELS[name]).join(', ')}. Successful checks remain visible; failed sources are UNKNOWN.</div>}
     <div className="rundeckSapIssuesSummaryStrip">
       <span><b>Needs review</b><strong>{reviewIndicators.length}</strong></span>
       <span><b>Critical</b><strong>{criticalCount}</strong></span>
       <span><b>Attention</b><strong>{warningCount}</strong></span>
-      <span><b>Active issues</b><strong>{activeCount}</strong></span>
+      <span><b>Unknown</b><strong>{unknownCount}</strong></span>
+      <span><b>Active issues</b><strong>{activeCount === null || !Number.isFinite(activeCount) ? '—' : activeCount}</strong></span>
     </div>
 
     <section className="rundeckIssueIndicatorSection">
@@ -152,7 +151,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
           onChange={setIndicatorView}
         />
       </div>
-      {sm37!=='READY'&&<p className="rundeckIssueSourceNote">SM37 feed not connected. Verify job execution status directly in SAP (SM37).</p>}
+      {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37 === 'UNKNOWN' ? 'SM37 feed status unavailable.' : 'SM37 feed not connected.'} Verify job execution status directly in SAP (SM37).</p>}
       <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
         <label><span>Find indicator</span><input type="search" value={indicatorQuery} onChange={event=>setIndicatorQuery(event.target.value)} placeholder="APP, indicator or status" /></label>
         <label><span>APP</span><select value={appFilter} onChange={event=>setAppFilter(event.target.value)}>
@@ -178,9 +177,9 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     {incidentItems.length>0&&<section className="rundeckIssueIndicatorSection is-history">
       <div className="rundeckIssueSectionTitle"><h4>Active issues</h4><small>Critical WP peak {peakCriticalWp||'—'}</small></div>
       <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
-        <thead><tr><th>APP</th><th>Signal</th><th>Now</th><th>Peak</th><th>Duration</th></tr></thead>
+        <thead><tr><th>APP</th><th>Signal</th><th>Current status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
         <tbody>{incidentItems.map((row)=>{
-          const severity=row.code==='WP_CRITICAL'?wpState(row.latest_value):String(row.current_severity||row.severity||'WARNING').toUpperCase()
+          const severity=row.code==='WP_CRITICAL'?sapWorkloadState({wp_critical:row.latest_value}):String(row.current_severity||row.severity||'UNKNOWN').toUpperCase()
           return <tr key={row.id} className={row.host?'is-investigable':''} onClick={row.host?()=>inspect({host:row.host,indicator:issueLabel(row.signal||row.code),status:severity}):undefined}>
             <td><strong>{shortHost(row.host||'APP')}</strong></td><td>{issueLabel(row.signal||row.code)}</td><td><Status value={severity}/></td><td>{valueText(row.peak_value,row.unit||'')}</td><td>{durationText(row.duration_seconds)}</td>
           </tr>
