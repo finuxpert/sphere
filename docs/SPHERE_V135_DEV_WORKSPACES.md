@@ -69,3 +69,16 @@ This revision continues the **popup-only** UX approved by the operator. It is a 
 **Acceptance status:** Source changes committed on GitHub DEV, not server-build-verified in this chat. No Playwright or visual QA is run automatically. Operator should use `sphere deploy dev` and send screenshots of Job Performance, Infrastructure, SAP Availability and APP CPU/RAM Detail before promoting to PROD.
 
 **Production hold remains** in `ops/rundeck/promote-ui-prod-from-dev.sh`; the last attempted promotion did not cut over and its unsupported duplicate readiness endpoint is removed. Do not unlock promotion before explicit acceptance of popup screenshots.
+
+## Operational Analysis modal alignment — screenshot audit 20:59–21:01 WIB (2026-10-12)
+
+Operator supplied DEV screenshots of **Infrastructure Analysis**, **Correlated Events**, and **SAP Issues**. Approved direction remains same-page popup, not full-screen navigation.
+
+**Visual defects addressed:**
+- Infrastructure chart was visibly letterboxed in the middle of the modal: SVG's 920×380 coordinates did not match the compact 200–225px CSS render height. Chart viewBox coordinates now use 920×250 and render with their natural aspect ratio. Existing retained samples, scales, thresholds, series and time labels remain data-derived.
+- All three modal types use an explicit shared desktop width (bounded at 1120px), header height, body padding and scroll ownership. The dialog height follows real content rather than forcing a blank lower half.
+- Correlated Events context, alignment summary, event timeline and expandable timing detail have consistent section borders, readable timestamps and optional internal event scrolling. Correlation is evidence only, not a causal diagnosis.
+- SAP Issues keeps the six existing backend-derived summary metrics in a readable 3×2 grid with consistent filter, SM37 notice and indicator table spacing. Unknown/unconnected SM37 is never reported as verified job execution.
+- Infrastructure shows source freshness separately from SAP status and keeps the existing APP selector, historical chart, and three existing filesystem/network/storage snapshot tables. On narrower screens, snapshot tables stack instead of overflowing.
+
+**Release:** source-only update to `rundeck-sphere-dev`, no CI visual QA, backend or PROD changes. Run `sphere deploy dev` and manually check these three popups at 1536px and mobile width. Do not unlock PROD promotion before screenshot approval.
