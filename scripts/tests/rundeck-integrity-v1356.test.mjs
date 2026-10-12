@@ -106,6 +106,7 @@ test('observation rows never masquerade as SM37 executions',()=>{
   assert.equal(counts.rundeckCollections,2)
   assert.equal(counts.sm37Executions,null)
   assert.equal(observationIdentityCounts([{collected_at:'2026-10-12T12:00:00Z'}]).rundeckCollections,null)
+  assert.equal(observationIdentityCounts([{execution_id:'153'}]).rundeckCollections,null)
 })
 
 test('five identical 89% filesystem values remain five host and collection-specific observations',()=>{
