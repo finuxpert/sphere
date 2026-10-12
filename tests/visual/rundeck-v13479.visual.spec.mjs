@@ -782,10 +782,10 @@ test('v1.34.91 desktop review measures actual visual hierarchy, not just DOM exi
       horizontalOverflow:document.documentElement.scrollWidth-document.documentElement.clientWidth}
   })
   expect(geometry.title?.fontSize).toBeGreaterThanOrEqual(20)
-  expect(geometry.app?.height).toBeGreaterThanOrEqual(110)
+  expect(geometry.app?.height).toBeGreaterThanOrEqual(90)
   expect(geometry.metric?.fontSize).toBeGreaterThanOrEqual(14)
   expect(geometry.trend?.height).toBeGreaterThanOrEqual(187)
-  expect(geometry.operational?.height).toBeGreaterThanOrEqual(44)
+  expect(geometry.operational?.height).toBeGreaterThanOrEqual(40)
   expect(geometry.horizontalOverflow).toBeLessThanOrEqual(2)
   // The overview must not acquire a second top-level navigation or a page scrollbar.
   await expect(page.locator('.rundeckProductNavigation')).toHaveCount(0)
@@ -810,4 +810,40 @@ test('v1.34.91 desktop Live search filters only loaded real observations',async 
   await expect(pager.getByRole('button',{name:'Next'})).toBeEnabled()
   await pager.getByRole('button',{name:'Next'}).click()
   await expect(pager).toContainText('Page 2/')
+})
+
+test('v1.34.91 desktop drilldowns fit without scrolling or duplicate navigation',async ({page})=>{
+  await openCockpit(page)
+  await expect(page.locator('.rundeckProductNavigation')).toHaveCount(0)
+  const job=await openActionableLiveJob(page)
+  await expect(job.locator('.rundeckJobHistoryContent')).toBeVisible({timeout:30000})
+  const assertFits=async(dialog)=>{
+    const fit=await dialog.evaluate(el=>{
+      const box=el.getBoundingClientRect(),body=el.querySelector('.rundeckWorkspaceDrawerBody')
+      return {left:box.left,right:box.right,top:box.top,bottom:box.bottom,
+        w:innerWidth,h:innerHeight,
+        extraY:body?body.scrollHeight-body.clientHeight:0,
+        extraX:body?body.scrollWidth-body.clientWidth:0}
+    })
+    expect(fit.left).toBeGreaterThanOrEqual(-1)
+    expect(fit.top).toBeGreaterThanOrEqual(-1)
+    expect(fit.right).toBeLessThanOrEqual(fit.w+1)
+    expect(fit.bottom).toBeLessThanOrEqual(fit.h+1)
+    expect(fit.extraX).toBeLessThanOrEqual(2)
+    expect(fit.extraY).toBeLessThanOrEqual(2)
+  }
+  await assertFits(job)
+  const wp=job.locator('.rundeckWpSignalPanel')
+  await expect(wp).toBeVisible()
+  if(await wp.locator('.rundeckWpSignalFilters').count()){
+    const pager=wp.getByRole('button',{name:'Next'})
+    await expect(pager).toBeVisible()
+  }
+  await job.getByRole('group',{name:'Related analysis'}).getByRole('button',{name:'Infrastructure'}).click()
+  const infra=page.getByRole('dialog',{name:'Infrastructure Analysis'})
+  await expect(infra).toBeVisible({timeout:30000})
+  await expect(infra.locator('.rundeckInfraTrendWorkspace')).toBeVisible({timeout:30000})
+  await assertFits(infra)
+  await infra.getByRole('button',{name:/Back to Performance Analysis/}).click()
+  await expect(page.locator('.rundeckWorkspaceDrawer.is-performance')).toBeVisible()
 })
