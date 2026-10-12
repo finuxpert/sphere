@@ -2,6 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { shortHost } from './sapUiFormat.js'
 import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
+import { OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const KEY = 'sphere.live.host'
@@ -74,7 +75,6 @@ export default function RundeckUnifiedAppInfrastructure({
       <div>
         <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
         {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {shortHost(highWp?.host)} {metric(highWp?.wp_critical)}</span>}
-        <span>Infrastructure freshness independent</span>
         {infraSnapshot.error && <span role="status" className="is-error">Infrastructure summary unavailable</span>}
       </div>
     </header>
@@ -84,13 +84,15 @@ export default function RundeckUnifiedAppInfrastructure({
         const infra = hostInfrastructureEvidence(host, infraSnapshot.hosts, infraSnapshot.filesystems, nowMs)
         const sapState = appSignalState(host, performanceVerified)
         const selected = key === appKey
+        const ioWait = host.io_wait_pct == null ? null : Number(host.io_wait_pct)
+        const showHostNote = infra.freshness !== 'FRESH' || (Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning)
         return <button key={host.host} type="button"
           className={'rundeckUnifiedAppCard is-sap-' + sapState.toLowerCase() + (selected ? ' is-active' : '')}
           aria-pressed={selected} onClick={() => { selectApp(key); onInspectApp?.({
             ...host, infraHost: infra.infra?.host || '',
           }) }}
-          title={'Open ' + key + ' SAP and Infrastructure analysis · SAP ' + sapState + ' · Infrastructure ' + infra.state}>
-          <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>SAP · {sapState}</em></span>
+          title={'Open ' + key + ' Analysis · SAP ' + sapState + ' · Infrastructure ' + infra.state + ' · ' + (infra.topFs?.mount_point || 'No mount') + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
+          <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
             <span className="rundeckUnifiedMetric">
               <small>CPU</small><strong>{metric(host.cpu_pct, '%')}</strong>
@@ -109,9 +111,9 @@ export default function RundeckUnifiedAppInfrastructure({
               <i className="rundeckUnifiedMetricTrack" aria-hidden="true"><i style={{width: infra.topFs?.used_pct == null ? '0%' : Math.min(100,Math.max(0,Number(infra.topFs.used_pct)||0)) + '%'}} /></i>
             </span>
           </span>
-          <span className="rundeckUnifiedAppCardInfra">
-            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{infra.topFs?.mount_point || 'FS unavailable'} · {infra.freshness} · I/O wait {metric(host.io_wait_pct,'%')}</small>
-          </span>
+          {showHostNote && <span className="rundeckUnifiedAppCardInfra">
+            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{infra.freshness !== 'FRESH' ? 'Infra ' + infra.freshness : ''}{Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning ? (infra.freshness !== 'FRESH' ? ' · ' : '') + 'I/O wait ' + metric(ioWait,'%') : ''}</small>
+          </span>}
         </button>
       })}
       {!hosts.length && <span className="rundeckHistoryState">No aligned APP performance snapshot. Infrastructure state is not inferred.</span>}
