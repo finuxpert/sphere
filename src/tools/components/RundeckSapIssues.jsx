@@ -38,7 +38,7 @@ function Status({ value }) {
   return <span className={`rundeckIssueStatus ${statusClass(value)}`}><i aria-hidden="true" />{value}</span>
 }
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false }) {
   const [data, setData] = React.useState({ incidents:null, hosts:null, availability:null, readiness:null })
   const [error, setError] = React.useState('')
   const [indicatorView, setIndicatorView] = React.useState('review')
@@ -72,7 +72,6 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
   const incidentItems=(data.incidents?.items||[]).filter((row)=>row.state==='ACTIVE')
   const activeCount=Number(data.incidents?.active ?? incidentItems.length)
-  const longestActive=incidentItems.reduce((value,row)=>Math.max(value,Number(row.duration_seconds||0)),0)
   const peakCriticalWp=incidentItems.filter((row)=>row.code==='WP_CRITICAL').reduce((value,row)=>Math.max(value,Number(row.peak_value||0)),0)
 
   const hosts=data.hosts?.items||[]
@@ -110,7 +109,6 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const reviewIndicators=issueIndicators.filter((row)=>row.scope!=='SAP Job Source')
   const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
   const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
-  const mostImpacted=reviewIndicators.find((row)=>/^APP\d+$/i.test(row.scope||''))?.scope || '—'
   const baseIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
   const normalizedQuery=indicatorQuery.trim().toLocaleLowerCase()
   const visibleIndicators=baseIndicators.filter(row=>
@@ -131,20 +129,18 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const inspect=(row)=>row.host&&onInspectApp?.({host:row.host,source:'sap-issues',issue:row.indicator,severity:row.status})
 
   return <section className="rundeckSapIssuesV1231 is-indicator-console" aria-label="SAP operational issues">
-    <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} observations need review{sm37 === 'READY' ? '' : ' · SM37 not connected'}</span></header>
+    {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} need review{sm37 === 'READY' ? '' : ' · SM37 not connected'}</span></header>}
     {error&&<div className="rundeckReviewState is-error">{error}</div>}
     <div className="rundeckSapIssuesSummaryStrip">
-      <span><b>Checked indicators</b><strong>{indicators.length}</strong></span>
+      <span><b>Needs review</b><strong>{reviewIndicators.length}</strong></span>
       <span><b>Critical</b><strong>{criticalCount}</strong></span>
-      <span><b>Warning / Attention</b><strong>{warningCount}</strong></span>
-      <span><b>Most signals</b><strong>{mostImpacted}</strong></span>
-      <span><b>Active incident rows</b><strong>{activeCount}</strong></span>
-      <span><b>Longest active</b><strong>{longestActive?durationText(longestActive):'—'}</strong></span>
+      <span><b>Attention</b><strong>{warningCount}</strong></span>
+      <span><b>Active issues</b><strong>{activeCount}</strong></span>
     </div>
 
     <section className="rundeckIssueIndicatorSection">
       <div className="rundeckIssueSectionTitle">
-        <h4>Current Indicator Status</h4>
+        <h4>Indicators</h4>
         <SphereOperatorTabs
           className="rundeckIssueViewSwitch"
           label="Indicator view"
@@ -162,7 +158,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
         <label><span>APP</span><select value={appFilter} onChange={event=>setAppFilter(event.target.value)}>
           <option value="ALL">All APPs</option>{appOptions.map(app=><option key={app} value={app}>{app}</option>)}
         </select></label>
-        <small>{visibleIndicators.length} of {baseIndicators.length} indicators</small>
+        <small>{visibleIndicators.length} shown</small>
       </div>
       {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">No abnormal indicators in the latest available checks. Verify freshness before treating this as current status.</p>}
       {!visibleIndicators.length && baseIndicators.length>0 && <p className="rundeckIssueEmpty">No indicators match these filters.</p>}
@@ -180,7 +176,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     </section>
 
     {incidentItems.length>0&&<section className="rundeckIssueIndicatorSection is-history">
-      <div className="rundeckIssueSectionTitle"><h4>Active Incident Signals</h4><small>Retained incident rows · Critical WP peak {peakCriticalWp||'—'}</small></div>
+      <div className="rundeckIssueSectionTitle"><h4>Active issues</h4><small>Critical WP peak {peakCriticalWp||'—'}</small></div>
       <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
         <thead><tr><th>APP</th><th>Signal</th><th>Now</th><th>Peak</th><th>Duration</th></tr></thead>
         <tbody>{incidentItems.map((row)=>{
