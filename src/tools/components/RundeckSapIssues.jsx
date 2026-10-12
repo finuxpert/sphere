@@ -70,7 +70,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const hosts=data.hosts?.items||[]
   const availability=data.availability||{}
   const availabilityFreshness=sapIssueTimestampFreshness(data.availability?.collected_at)
-  const loading=Object.values(data).every(value=>value===null) && failedSources.length===0
+  const loading=['incidents','hosts','availability','readiness'].every(key=>data[key]===null) && failedSources.length===0
   const indicators=unavailableSapIssueIndicators(failedSources)
 
   const nowMs = Date.now()
