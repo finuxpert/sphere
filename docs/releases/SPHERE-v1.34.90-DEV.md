@@ -17,6 +17,20 @@ v1.34.89 flattened borders but retained miniaturized page geometry. v1.34.90 del
 - **Modals** expand to desktop investigation width, with Job controls above the full-width evidence chart, Infrastructure history ahead of current filesystem/network/storage tables, and no duplicate Related Analysis cards.
 - **Other views** keep their existing data models and handlers for Correlated Events, Observation History, SAP Issues/Availability, Review/Closing, System Data and PDF Preview. Typography and surfaces inherit the existing flat workspace styles; detailed visual parity for those views is not asserted without screenshot comparison.
 
+## Additional mockup workflow coverage
+
+The complete set of **existing SAP Basis functions** remains wired to actual source APIs. The frontend-only additions in this release candidate are:
+
+- **Infrastructure host source readiness:** a loading message until the source responds, followed by verified APP selectors or an explicit failure/empty state; it never fabricates five hosts.
+- **SAP Issues:** source-backed search for APP, indicator, status, current value, or Basis check, plus an APP selector. The summary counters retain the complete original population and are not recalculated from the filtered rows.
+- **Job/Program WP Trace:** search the retained per-PID WP rows by PID/program/CPU/error, optional errors-only filter, and all-rows expansion. Collector recency and SM37 authority remain unchanged.
+- **System Data to PDF:** the three existing tabs remain functional; a PDF Preview action delegates to the existing actual report generator and closes the System Data modal first. Report content still comes from current SPHERE data.
+- **Review / Search:** existing retained-history search and operator-authored review closing form remain operational, with the redesign enhancing spacing rather than introducing invented review status or recommendations.
+
+Desktop Playwright cases exercise source-backed modal navigation, search/filter, WP signal rows, PDF handoff, APP selector readiness and visible report output where data permits.
+
+This does **not** imply that screenshot-only charts such as synthetic "SAP Availability 78%" or CPU User/System breakdown exist in the backend. Those are consciously excluded; supported metrics preserve their original source units and meanings.
+
 ## Explicitly not implemented from illustrative images
 
 Do not invent CPU User/System splits, synthetic RAM caches, generic service percentages, baseline deltas, fabricated SAP Jobs, target hostnames, SM37 failures, auto-generated findings, token rotation, or new PDF report metrics. The real screen must show only authoritative backed values. UI navigation into existing functions is allowed, new unproven backend features are not.
