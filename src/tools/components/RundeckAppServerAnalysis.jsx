@@ -61,7 +61,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
   if(!app) return null
   const matchedCollection = Boolean(latestCollectionId) && workloadMeta.collectionId === latestCollectionId && workloadMeta.host === app.host
   const displayRows = matchedCollection ? rows : []
-  const resolvedApp=hostSnapshot?.host === app.host ? hostSnapshot : app
+  const resolvedApp=matchedCollection && hostSnapshot?.host === app.host ? hostSnapshot : app
   const hostLabel=shortHost(resolvedApp.host)
   return <section className="rundeckAppServerAnalysis" aria-label={`${hostLabel} APP server analysis`}>
     <div className="rundeckAppServerSummary">
