@@ -295,7 +295,12 @@ const checks = [
   ['Drawer navigation no longer references removed Selected Job or Live Monitoring chrome', !files.wrapper.includes('Back to Selected Job') && !files.wrapper.includes('Back to Live Monitoring') && files.wrapper.includes('Back to SAP Performance') && files.wrapper.includes('Back to Performance Analysis')],
   ['Observation History drawer exposes compact observation context', files.observationHistory.includes('rundeckObservationHistoryContext') && files.observationHistory.includes('<b>Observations</b>') && files.observationHistory.includes('<b>Time span</b>')],
   ['Selected workload context is preserved inside Correlated Events without an extra cockpit row', !files.wrapper.includes('className="rundeckAnalysisContextStrip"') && files.wrapper.includes('selectedContextTime') && files.wrapper.includes("selectedJob.host ? shortHost(selectedJob.host)") && files.wrapper.includes('subtitle={selectedJob?.key')],
-  ['Typography system keeps cockpit and analysis drawers readable without extra card chrome', files.sourceCss.includes('SPHERE v1.34.59 — typography') && files.monitoringCss.includes('SPHERE v1.34.59 — cockpit readability') && files.workspaceDrawerCss.includes('SPHERE v1.34.59 — consistent analysis drawer typography')],
+  ['Typography system keeps cockpit and analysis drawers readable without extra card chrome',
+    files.sourceCss.includes('SPHERE v1.34.91 — keep the original header stylesheet consistent')
+    && files.sourceCss.includes('font-size:clamp(21px,1.75vw,27px)!important')
+    && !files.sourceCss.includes('font-size:17px!important')
+    && files.monitoringCss.includes('SPHERE v1.34.59 — cockpit readability')
+    && files.workspaceDrawerCss.includes('SPHERE v1.34.59 — consistent analysis drawer typography')],
   ['PDF current cockpit structure uses plain Basis wording for trend and workload evidence', files.source.includes("'RAM'") && files.source.includes("'CPU PEAK'") && files.source.includes("'PSS PEAK'") && files.source.includes("'MUNCUL'") && files.source.includes('serverChart1') && files.source.includes('serverChart2') && files.source.includes('JOB/PROGRAM SAAT RAM / CPU TINGGI')],
   ['Evidence timeline avoids claiming an exact Critical WP start', files.evidenceTimeline.includes('Critical Work Process first observed') && !files.evidenceTimeline.includes('Critical Work Process started')],
   ['Server trends share one collection coverage strip instead of duplicate bands', files.serverTrend.includes('rundeckSharedCollectionCoverage') && files.serverTrend.includes('showGap: false') && files.monitoringCss.includes('.rundeckSharedCollectionCoverage')],
