@@ -1,0 +1,122 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { OPERATOR_THRESHOLDS, metricResourceState, hostResourceState, sapWorkloadState, filesystemResourceState } from '../../src/tools/components/rundeckStatusSemantics.js'
+import { settleSapIssueSources, unavailableSapIssueIndicators, sapIssueSampleFreshness } from '../../src/tools/components/rundeckIssueSources.js'
+import { issueWorkloadTimePair } from '../../src/tools/components/rundeckEvidenceTiming.js'
+import { observationIdentityCounts } from '../../src/tools/components/rundeckObservationIdentity.js'
+import { hostInfrastructureEvidence, filesystemSamplesForHost } from '../../src/tools/components/rundeckUnifiedHost.js'
+
+test('one threshold authority covers host CPU/RAM/IO Wait, WP and filesystem', () => {
+  assert.deepEqual(OPERATOR_THRESHOLDS.cpu, { warning: 75, critical: 90 })
+  assert.deepEqual(OPERATOR_THRESHOLDS.ram, { warning: 80, critical: 90 })
+  assert.deepEqual(OPERATOR_THRESHOLDS.ioWait, { warning: 10, critical: 20 })
+  assert.deepEqual(OPERATOR_THRESHOLDS.filesystem, { warning: 75, critical: 90 })
+  const keys = ['cpu', 'ram', 'ioWait']
+  for (const key of keys) {
+    assert.equal(metricResourceState(OPERATOR_THRESHOLDS[key].warning, key), 'WARNING')
+    assert.equal(metricResourceState(OPERATOR_THRESHOLDS[key].critical, key), 'CRITICAL')
+    assert.equal(metricResourceState(OPERATOR_THRESHOLDS[key].warning - 0.01, key), 'NORMAL')
+  }
+  assert.equal(sapWorkloadState({wp_critical:1}), 'ATTENTION')
+  assert.equal(sapWorkloadState({wp_critical:2}), 'ATTENTION')
+  assert.equal(sapWorkloadState({wp_critical:3}), 'CRITICAL')
+  assert.equal(filesystemResourceState(75), 'ATTENTION')
+  assert.equal(filesystemResourceState(90), 'CRITICAL')
+})
+
+test('invalid and incomplete telemetry is UNKNOWN, not silently zero or NORMAL', () => {
+  for (const value of [null,undefined,'','  ','invalid',Number.NaN,-1]) {
+    assert.equal(metricResourceState(value,'ram'),'UNKNOWN')
+    assert.equal(sapWorkloadState({wp_critical:value}),'UNKNOWN')
+    assert.equal(filesystemResourceState(value),'UNKNOWN')
+  }
+  assert.equal(metricResourceState(0,'cpu'),'NORMAL')
+  assert.equal(sapWorkloadState({wp_critical:0}),'NORMAL')
+  assert.equal(hostResourceState({cpu_pct:22,ram_pct:null,io_wait_pct:1}),'UNKNOWN')
+  assert.equal(hostResourceState({cpu_pct:99,ram_pct:null,io_wait_pct:null}),'CRITICAL')
+  assert.equal(hostResourceState({cpu_pct:11,ram_pct:70,iowait_pct:11}),'WARNING')
+})
+
+test('one failed API source remains explicitly unavailable even when other sources succeed', () => {
+  const results = [
+    {status:'fulfilled',value:{items:[]}},
+    {status:'rejected',reason:new Error('503')},
+    {status:'fulfilled',value:{sap_app:[{status:'UP'}]}},
+    {status:'fulfilled',value:{features:{job_monitor:'WAITING_FOR_SM37_FEED'}}},
+  ]
+  const settled = settleSapIssueSources(results)
+  assert.equal(settled.data.hosts,null)
+  assert.equal(settled.data.availability.sap_app[0].status,'UP')
+  assert.deepEqual(settled.failed,['hosts'])
+  assert.deepEqual(unavailableSapIssueIndicators(settled.failed).map(row=>row.status),['UNKNOWN'])
+  assert.deepEqual(settleSapIssueSources([{status:'fulfilled',value:null}]).failed,
+    ['incidents','hosts','availability','readiness'])
+})
+
+test('APP issue freshness is collection-bound and never assumes an old snapshot is current',()=>{
+  const now = Date.parse('2026-10-12T17:00:00Z')
+  const payload={collection_id:'rundeck-234',complete:true}
+  const sample={host:'AOPH1PAPPDC',collection_id:'rundeck-234',collected_at:'2026-10-12T16:50:00Z'}
+  assert.equal(sapIssueSampleFreshness(payload,sample,now),'FRESH')
+  assert.equal(sapIssueSampleFreshness(payload,{...sample,collected_at:'2026-10-12T16:39:00Z'},now),'STALE')
+  assert.equal(sapIssueSampleFreshness(payload,{...sample,collected_at:null},now),'UNKNOWN')
+  assert.equal(sapIssueSampleFreshness(payload,{...sample,collection_id:'rundeck-999'},now),'UNKNOWN')
+})
+
+test('time check uses explicit issue signal and nearest selected workload sample, not first-observed or global skew',()=>{
+  const example={
+    incident:{signal_active_since:'2026-10-12T05:09:00Z'},
+    selected_workload:{
+      first_seen:'2026-10-10T16:12:00Z',
+      correlation_observed_at:'2026-10-12T05:19:00Z',
+      last_seen:'2026-10-12T16:29:00Z',
+    },
+    alignment:{state:'ALIGNED',max_skew_minutes:10,threshold_minutes:20},
+  }
+  const pair=issueWorkloadTimePair(example)
+  assert.equal(pair.state,'WITHIN WINDOW')
+  assert.equal(pair.deltaMinutes,10)
+  assert.notEqual(pair.firstSeen,pair.issueAt)
+  assert.notEqual(pair.lastSeen,pair.workloadAt)
+  assert.equal(issueWorkloadTimePair({...example,alignment:{...example.alignment,state:'NO OVERLAP'}}).state,'NO OVERLAP')
+  assert.equal(issueWorkloadTimePair({...example,selected_workload:{...example.selected_workload,correlation_observed_at:example.selected_workload.first_seen}}).state,'OUTSIDE WINDOW')
+  assert.equal(issueWorkloadTimePair({...example,incident:{signal_active_since:null}}).state,'INSUFFICIENT DATA')
+})
+
+test('observation rows never masquerade as SM37 executions',()=>{
+  const rows=[
+    {collection_id:'rundeck-11',execution_id:'11'},
+    {collection_id:'rundeck-11',execution_id:'11'},
+    {collection_id:'rundeck-12',execution_id:'12'},
+  ]
+  const counts=observationIdentityCounts(rows)
+  assert.equal(counts.performanceObservations,3)
+  assert.equal(counts.rundeckCollections,2)
+  assert.equal(counts.sm37Executions,null)
+  assert.equal(observationIdentityCounts([{collected_at:'2026-10-12T12:00:00Z'}]).rundeckCollections,null)
+})
+
+test('five identical 89% filesystem values remain five host and collection-specific observations',()=>{
+  const at='2026-10-12T16:59:00Z'
+  const now=Date.parse('2026-10-12T17:00:00Z')
+  const hosts=[1,2,3,4,5].map(n=>({host:`AOPH${n}PAPPDC`,collection_id:`infra-${n}`,snapshot_ts:at}))
+  const fs=hosts.map(h=>({host:h.host,collection_id:h.collection_id,collected_at:at,mount_point:'/sap/shared',used_pct:89}))
+  for(const host of hosts){
+    const evidence=hostInfrastructureEvidence(host,hosts,fs,now)
+    assert.equal(evidence.topFs.host,host.host)
+    assert.equal(evidence.topFs.collection_id,host.collection_id)
+    assert.equal(evidence.state,'ATTENTION')
+    assert.equal(filesystemSamplesForHost(host,fs).length,1)
+  }
+  assert.deepEqual(filesystemSamplesForHost(hosts[0],[{...fs[0],collection_id:'infra-2'}]),[])
+  assert.equal(hostInfrastructureEvidence(hosts[0],hosts,[{...fs[0],collection_id:'infra-2'}],now).state,'UNKNOWN')
+  // Identical percentages alone do not prove a duplicate-mapping defect.
+})
+
+test('the operator display has no unsupported SAME PERIOD status for Related Events',()=>{
+  const source=readFileSync(new URL('../../src/tools/components/RundeckEvidenceTimeline.jsx',import.meta.url),'utf8')
+  assert.doesNotMatch(source,/Same period|SAME PERIOD/)
+  assert.match(source,/issueWorkloadTimePair/)
+  assert.match(source,/Nearest workload sample/)
+})
