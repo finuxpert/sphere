@@ -10,7 +10,7 @@ const API=`${import.meta.env.BASE_URL}api/infra`
 const HOST_STORAGE_KEY='sphere.live.host'
 const metric=(value,suffix='')=>value===null||value===undefined||value===''?'—':`${Number(value).toLocaleString('en-US',{maximumFractionDigits:1})}${suffix}`
 const statusFs = filesystemResourceState
-const severityRank={NORMAL:0,ATTENTION:1,CRITICAL:2}
+const severityRank={NORMAL:0,UNKNOWN:1,ATTENTION:2,CRITICAL:3}
 const worst=(...states)=>states.reduce((a,b)=>(severityRank[b]||0)>(severityRank[a]||0)?b:a,'NORMAL')
 const normalizeClock=(value)=>String(value||'').replace(/(\d{1,2})\.(\d{2})/g,'$1:$2')
 const formatTime=(value)=>value?normalizeClock(new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short',hour12:false}).format(new Date(value))):'—'
@@ -29,14 +29,18 @@ const ageText=(value)=>{
   return `${Math.floor(sec/3600)}h ago`
 }
 const signalNetwork=(m={})=>{
+  if (!m || !['rx_dropped_delta','tx_dropped_delta','rx_errors_delta','tx_errors_delta'].some(key=>m[key]!==null&&m[key]!==undefined&&m[key]!=='')) return 'UNKNOWN'
   const drops=Number(m.rx_dropped_delta||0)+Number(m.tx_dropped_delta||0)
   const errors=Number(m.rx_errors_delta||0)+Number(m.tx_errors_delta||0)
+  if(!Number.isFinite(drops+errors))return 'UNKNOWN'
   if(drops+errors>=10)return 'CRITICAL'
   if(drops+errors>0)return 'ATTENTION'
   return 'NORMAL'
 }
 const signalStorage=(m={})=>{
-  const util=Number(m.util_pct||0)
+  if(m?.util_pct===null||m?.util_pct===undefined||m?.util_pct==='')return 'UNKNOWN'
+  const util=Number(m.util_pct)
+  if(!Number.isFinite(util))return 'UNKNOWN'
   if(util>=95)return 'CRITICAL'
   if(util>=80)return 'ATTENTION'
   return 'NORMAL'
@@ -312,7 +316,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
                 <td>{row.sample_key}</td>
                 <td>{metric(m.rx_mbps, ' Mbps')}</td>
                 <td>{metric(m.tx_mbps, ' Mbps')}</td>
-                <td className={`is-${observedStatus(signalNetwork(m)).toLowerCase()}`}>{metric(Number(m.rx_dropped_delta || 0) + Number(m.tx_dropped_delta || 0))}</td>
+                <td className={`is-${observedStatus(signalNetwork(m)).toLowerCase()}`}>{m.rx_dropped_delta == null && m.tx_dropped_delta == null ? '—' : metric(Number(m.rx_dropped_delta || 0) + Number(m.tx_dropped_delta || 0))}</td>
               </tr>
             })}
             {!observedData.network.length && <tr><td colSpan="4">No network sample.</td></tr>}
