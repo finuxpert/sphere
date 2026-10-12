@@ -705,7 +705,17 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
    overflow-x:hidden!important;overflow-y:auto!important;
  }
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryHead{
-   display:none!important; /* identity is already in the dialog title */
+   display:flex!important;align-items:center!important;gap:10px!important;
+   margin:0!important;padding:2px 0!important;min-height:0!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryHead>div>span{
+   display:none!important; /* duplicate generic section label, not job identity */
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryHead h3{
+   margin:0!important;font-size:12px!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryHead small{
+   font-size:10px!important;
  }
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeGroupLabel{
    padding:2px 5px!important;
