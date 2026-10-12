@@ -96,7 +96,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const coverage = data?.coverage || {}
   const events = data?.events || []
   const interpretation = data?.interpretation || []
-  // Compare the nearest retained workload sample with the issue timestamp;
+  // Compare the API-selected workload sample with the issue timestamp;
   // the API's cross-source max skew may instead describe Selected Time/Availability.
   const pair = issueWorkloadTimePair(data || {})
   const state = loading && !data ? 'LOADING' : error && !data ? 'UNAVAILABLE' : pair.state
@@ -107,7 +107,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     ? 'Job/program ↔ issue: timestamps not verified'
     : `Job/program sample ↔ issue first observed · ${pair.deltaMinutes}m apart`
   const alignmentHint = state === 'WITHIN WINDOW'
-    ? 'Two retained observations are within the configured time window. This does not identify job start or cause.'
+    ? 'Two retained observations are within the configured time window; the sample may be selected by the operator's chosen time. This does not identify job start or cause.'
     : state === 'NO OVERLAP'
       ? 'The retained workload episode does not overlap the issue window.'
       : 'The selected workload and issue timestamps do not establish timing alignment.'
@@ -137,7 +137,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
       <strong>Time check</strong>
       <span title={alignmentHint}>{timingSummary}</span>
       {issueAt && <small>Issue first observed: {formatWib(issueAt, true)} WIB</small>}
-      {pair.workloadAt && <small>Nearest workload sample: {formatWib(pair.workloadAt, true)} WIB</small>}
+      {pair.workloadAt && <small>Workload sample ({pair.referenceSource} anchor): {formatWib(pair.workloadAt, true)} WIB</small>}
     </div>
 
     <div className="rundeckEvidenceBody">
@@ -175,7 +175,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
             </span>)}
             <span><b>Availability History</b><strong>{coverage.availability_snapshots || 0} records</strong><em>{coverage.availability_history_started_at ? `since ${formatWib(coverage.availability_history_started_at, true)}` : 'no saved history'}</em></span>
             <span><b>Source alignment (API)</b><strong>{alignment.state || 'UNKNOWN'}</strong><em>API compares Selected Time/Issue, nearest Workload and Availability; not job start</em></span>
-            <span><b>Comparison window</b><strong>{hasThreshold ? `${threshold} min` : '—'}</strong><em>issue first observed ↔ nearest retained job/program observation</em></span>
+            <span><b>Comparison window</b><strong>{hasThreshold ? `${threshold} min` : '—'}</strong><em>issue first observed ↔ API-selected job/program sample</em></span>
           </div>
           {interpretation.length > 0 && <div className="rundeckEvidenceInterpretation">
             <ul>{interpretation.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
