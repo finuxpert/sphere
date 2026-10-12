@@ -1179,3 +1179,84 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
    font-size:11px!important;
  }
 }
+
+
+/* v1.35.0 DEV hybrid workspace: quick evidence stays in dialogs; wider investigations
+   receive nearly full-viewport room. No change to source semantics. */
+@media screen and (min-width:1100px){
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(.is-unified-app,.is-wide,.is-performance){
+   width:min(1500px,calc(100vw - 40px))!important;
+   max-width:calc(100vw - 40px)!important;
+   max-height:calc(100dvh - 32px)!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(.is-unified-app,.is-wide,.is-performance) .rundeckWorkspaceDrawerBody{
+   min-height:0!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(.is-unified-app,.is-wide,.is-performance) :is(h2,h3){
+   line-height:1.25;
+ }
+}
+/* Desktop operator canvas: an equal-width 5 APP card row with one flat action rail.
+   Keep the original 5 card and 6 action counts and native click handlers. */
+@media screen and (min-width:1281px){
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491{
+   --sphere-compact-gap:8px;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCards{
+   grid-template-columns:repeat(5,minmax(0,1fr))!important;
+   gap:var(--sphere-compact-gap)!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisLaunchers{
+   display:grid!important;
+   grid-template-columns:minmax(132px,170px) minmax(0,1fr)!important;
+   gap:8px!important;
+   min-height:47px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions{
+   display:grid!important;
+   grid-template-columns:repeat(6,minmax(0,1fr))!important;
+   align-items:stretch!important;
+   gap:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>button{
+   border-radius:0!important;
+   border-left:1px solid var(--sphere-design-edge)!important;
+   padding:5px 10px!important;
+   min-width:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>button:first-child{border-left:0!important}
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>button:focus-visible{
+   outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+   outline-offset:-2px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid{
+   grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid>section{
+   min-width:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadPager{
+   margin-top:3px!important;
+ }
+}
+/* On tall monitors, give graph and rows an explicit proportional budget instead
+   of leaving the entire bottom half of the window idle. Short screens retain
+   the established compact geometry. */
+@media screen and (min-width:1281px) and (min-height:900px){
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid .rundeckTrendChart{
+   height:clamp(230px,29dvh,345px)!important;
+   min-height:230px!important;
+   max-height:345px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadTableWrap{
+   max-height:clamp(260px,calc(100dvh - 555px),480px)!important;
+   overflow-y:auto!important;
+ }
+}
+@media screen and (max-width:760px){
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(.is-unified-app,.is-wide,.is-performance){
+   width:calc(100vw - 12px)!important;
+   max-width:calc(100vw - 12px)!important;
+   max-height:calc(100dvh - 16px)!important;
+ }
+}
