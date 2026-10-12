@@ -33,9 +33,8 @@ const signalNetwork=(m={})=>{
   if (!m) return 'UNKNOWN'
   const fields=['rx_dropped_delta','tx_dropped_delta','rx_errors_delta','tx_errors_delta']
   if (!fields.some(key=>hasNumericSample(m[key]))) return 'UNKNOWN'
-  if (fields.some(key=>m[key]!==null&&m[key]!==undefined&&m[key]!==''&&!hasNumericSample(m[key]))) return 'UNKNOWN'
-  const drops=Number(m.rx_dropped_delta||0)+Number(m.tx_dropped_delta||0)
-  const errors=Number(m.rx_errors_delta||0)+Number(m.tx_errors_delta||0)
+  const drops=Number(hasNumericSample(m.rx_dropped_delta)?m.rx_dropped_delta:0)+Number(hasNumericSample(m.tx_dropped_delta)?m.tx_dropped_delta:0)
+  const errors=Number(hasNumericSample(m.rx_errors_delta)?m.rx_errors_delta:0)+Number(hasNumericSample(m.tx_errors_delta)?m.tx_errors_delta:0)
   if(!Number.isFinite(drops+errors))return 'UNKNOWN'
   if(drops+errors>=10)return 'CRITICAL'
   if(drops+errors>0)return 'ATTENTION'
