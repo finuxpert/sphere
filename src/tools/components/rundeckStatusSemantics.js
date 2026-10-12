@@ -9,9 +9,9 @@ export const OPERATOR_THRESHOLDS = Object.freeze({
 })
 
 const numeric = (value) => {
-  if (value === null || value === undefined || value === '') return null
+  if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) return null
   const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
 }
 
 const explicitState = (value, allowed) => {
@@ -19,29 +19,31 @@ const explicitState = (value, allowed) => {
   return allowed.includes(state) ? state : ''
 }
 
-export function hostResourceState(host = {}) {
-  const explicit = explicitState(host.resource_health || host.health, ['NORMAL', 'WARNING', 'CRITICAL'])
-  if (explicit && host.resource_health) return explicit
+/** Strictly classify a host metric; missing values cannot become 0% or NORMAL. */
+export function metricResourceState(value, metric) {
+  const limits = OPERATOR_THRESHOLDS[metric]
+  const number = numeric(value)
+  if (!limits || number === null) return 'UNKNOWN'
+  if (number >= limits.critical) return 'CRITICAL'
+  if (number >= limits.warning) return 'WARNING'
+  return 'NORMAL'
+}
 
-  const cpu = numeric(host.cpu_pct)
-  const ram = numeric(host.ram_pct)
-  const ioWait = numeric(host.io_wait_pct)
-  if ([cpu, ram, ioWait].every(value => value === null)) return 'UNKNOWN'
-  if ((cpu !== null && cpu >= OPERATOR_THRESHOLDS.cpu.critical) ||
-      (ram !== null && ram >= OPERATOR_THRESHOLDS.ram.critical) ||
-      (ioWait !== null && ioWait >= OPERATOR_THRESHOLDS.ioWait.critical)) return 'CRITICAL'
-  if ((cpu !== null && cpu >= OPERATOR_THRESHOLDS.cpu.warning) ||
-      (ram !== null && ram >= OPERATOR_THRESHOLDS.ram.warning) ||
-      (ioWait !== null && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning)) return 'WARNING'
+export function hostResourceState(host = {}) {
+  const states = [
+    metricResourceState(host.cpu_pct, 'cpu'),
+    metricResourceState(host.ram_pct, 'ram'),
+    metricResourceState(host.io_wait_pct ?? host.iowait_pct, 'ioWait'),
+  ]
+  if (states.includes('CRITICAL')) return 'CRITICAL'
+  if (states.includes('WARNING')) return 'WARNING'
+  if (states.includes('UNKNOWN')) return 'UNKNOWN'
   return 'NORMAL'
 }
 
 export function sapWorkloadState(host = {}) {
-  const explicit = explicitState(host.sap_workload_state, ['NORMAL', 'ATTENTION', 'CRITICAL'])
-  if (explicit) return explicit
-
   const wp = numeric(host.wp_critical)
-  if (wp === null) return 'UNKNOWN'
+  if (wp === null) return explicitState(host.sap_workload_state, ['ATTENTION', 'CRITICAL']) || 'UNKNOWN'
   if (wp >= OPERATOR_THRESHOLDS.criticalWp.critical) return 'CRITICAL'
   if (wp >= OPERATOR_THRESHOLDS.criticalWp.attention) return 'ATTENTION'
   return 'NORMAL'
