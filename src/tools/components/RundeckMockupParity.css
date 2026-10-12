@@ -750,7 +750,7 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
    padding:0!important;min-height:0!important;
  }
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{
-   min-height:190px!important;max-height:205px!important;height:205px!important;
+   min-height:0!important;max-height:none!important; /* ECharts JSX height owns its actual lane geometry */
  }
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
    height:205px!important;min-height:190px!important;
@@ -860,9 +860,12 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobRangeMode{
     flex-wrap:wrap!important;gap:2px!important;
   }
-  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart,
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{
+    box-sizing:border-box!important;min-height:0!important;max-height:none!important;
+    /* No forced height: React uses the measured number and size of saved metric lanes. */
+  }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
-    box-sizing:border-box!important;height:187px!important;min-height:187px!important;max-height:187px!important;
+    box-sizing:border-box!important;height:225px!important;min-height:225px!important;max-height:225px!important;
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobMetricLegend{
     display:flex!important;flex-wrap:wrap!important;gap:3px 10px!important;
