@@ -2,7 +2,8 @@
 # SPHERE frontend-only release. No DB, backend, nginx, systemd or visual QA.
 set -Eeuo pipefail
 [[ "$(id -u)" == 0 ]] || { echo "Run as root"; exit 2; }
-MODE="${1:-}"
+[[ "${1:-}" == "deploy" ]] || { echo "Usage: sphere deploy dev | sphere deploy prod"; exit 2; }
+MODE="${2:-}"
 case "$MODE" in
   dev) SOURCE=/root/rundeck-sphere-dev; BRANCH=rundeck-sphere-dev; WEB=/var/www/sphere-dev; URL=https://sphere.astraotoparts.co.id/dev/; BASE=/dev/ ;;
   prod) SOURCE=/root/rundeck-sphere-prod; BRANCH=rundeck-sphere-prod; WEB=/var/www/sphere.astraotoparts.co.id; URL=https://sphere.astraotoparts.co.id/; BASE=/ ;;
@@ -21,10 +22,9 @@ if [[ "$MODE" == prod ]]; then
   read -r -p "Type exact 'DEPLOY PROD' to continue: " APPROVAL
   [[ "$APPROVAL" == "DEPLOY PROD" ]] || { echo "PROD=HOLD"; exit 2; }
 fi
-npm run build:dev 2>/dev/null && [[ "$MODE" == dev ]] || {
-  if [[ "$MODE" == dev ]]; then echo "BUILD=FAIL"; exit 1; fi
-}
-if [[ "$MODE" == prod ]]; then
+if [[ "$MODE" == dev ]]; then
+  npm run build:dev
+else
   GITHUB_REF_NAME="$BRANCH" GITHUB_SHA="$SHA" npm run build
 fi
 [[ -f dist/index.html ]] || { echo "BUILD=FAIL: index missing"; exit 1; }
@@ -61,7 +61,6 @@ ln -s "$RELEASE" "$WEB/.next-$$"
 mv -Tf "$WEB/.next-$$" "$CURRENT"
 CUTOVER=1
 TMP="$(mktemp)"
-trap 'rm -f "$TMP"' RETURN
 curl --noproxy '*' -fsS --max-time 20 "$URL" -o "$TMP"
 cmp -s "$RELEASE/index.html" "$TMP" || { echo "PUBLIC_HTML_MISMATCH"; exit 1; }
 rm -f "$TMP"
