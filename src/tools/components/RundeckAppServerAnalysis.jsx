@@ -7,14 +7,17 @@ const API = `${import.meta.env.BASE_URL}api`
 const metric = (value, suffix = '') => value === null || value === undefined || value === '' ? '—' : `${Number(value).toLocaleString('en-US',{maximumFractionDigits:1})}${suffix}`
 
 const pssText = (row = {}) => {
-  const value = Number(row.details?.total_pss_gb ?? row.details?.pss_gb)
-  return Number.isFinite(value) ? `${value.toLocaleString('en-US',{maximumFractionDigits:2})} GB` : '—'
+  const raw = row.details?.total_pss_gb ?? row.details?.pss_gb
+  const value = Number(raw)
+  return raw != null && String(raw).trim() !== '' && Number.isFinite(value) && value >= 0 ? `${value.toLocaleString('en-US',{maximumFractionDigits:2})} GB` : '—'
 }
 const processText = (row = {}) => {
-  const value = Number(row.details?.process_count ?? row.details?.pids?.length ?? 1)
-  return Number.isFinite(value) ? value.toLocaleString('en-US',{maximumFractionDigits:0}) : '—'
+  const raw = row.details?.process_count ?? row.details?.pids?.length
+  const value = Number(raw)
+  return raw != null && String(raw).trim() !== '' && Number.isInteger(value) && value >= 0 ? value.toLocaleString('en-US',{maximumFractionDigits:0}) : '—'
 }
 const durationText = (seconds) => {
+  if (seconds == null || String(seconds).trim() === '') return '—'
   const value = Number(seconds)
   if (!Number.isFinite(value) || value < 0) return '—'
   if (value < 60) return '<1m'
@@ -27,7 +30,7 @@ const durationText = (seconds) => {
 
 export default function RundeckAppServerAnalysis({ app, latestCollectionId = '', refreshToken = '', onSelectJob }) {
   const [rows,setRows]=React.useState([])
-  const [workloadMeta,setWorkloadMeta]=React.useState({total:0,coverage_scope:''})
+  const [workloadMeta,setWorkloadMeta]=React.useState({total:0,coverage_scope:'',collectionId:'',host:''})
   const [loading,setLoading]=React.useState(false)
   const [error,setError]=React.useState('')
   const [incident,setIncident]=React.useState(null)
@@ -44,9 +47,11 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
     ]).then(([result,analysis,hosts])=>{
       const hostRows=(result.items||[]).sort((a,b)=>Number(b.cpu_pct||0)-Number(a.cpu_pct||0))
       setRows(hostRows)
-      setWorkloadMeta({total:Number(result.total||0),coverage_scope:String(result.coverage_scope||'')})
+      setWorkloadMeta({total:Number.isFinite(Number(result.total)) && result.total != null ? Number(result.total) : hostRows.length,coverage_scope:String(result.coverage_scope||''),collectionId:latestCollectionId,host:app.host})
       const latestHost=(hosts?.items||[]).find(row=>row.host===app.host || shortHost(row.host)===shortHost(app.host))
-      setHostSnapshot(latestHost ? {...app,...latestHost} : app)
+      const hostCollection = latestHost?.collection_id || hosts?.collection_id
+      const alignedHost = latestHost && hostCollection && String(hostCollection) === String(latestCollectionId)
+      setHostSnapshot(alignedHost ? {...app,...latestHost} : app)
       setIncident(analysis?.active && shortHost(analysis.affected_server||'')===shortHost(app.host) ? analysis : null)
     }).catch(failure=>{if(failure.name!=='AbortError')setError(failure.message||'APP analysis unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
@@ -54,7 +59,9 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
   },[app,latestCollectionId,refreshToken])
 
   if(!app) return null
-  const resolvedApp=hostSnapshot || app
+  const matchedCollection = Boolean(latestCollectionId) && workloadMeta.collectionId === latestCollectionId && workloadMeta.host === app.host
+  const displayRows = matchedCollection ? rows : []
+  const resolvedApp=hostSnapshot?.host === app.host ? hostSnapshot : app
   const hostLabel=shortHost(resolvedApp.host)
   return <section className="rundeckAppServerAnalysis" aria-label={`${hostLabel} APP server analysis`}>
     <div className="rundeckAppServerSummary">
@@ -64,7 +71,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       <span><b>APP Critical WP</b>{metric(resolvedApp.wp_critical)}</span>
     </div>
 
-    {incident && <div className="rundeckAppServerIssue">
+    {incident && matchedCollection && <div className="rundeckAppServerIssue">
       <SphereIcon name="alert" />
       <div><strong>APP Critical WP active</strong><small>Observed Duration: {durationText(incident.duration_seconds)}, Peak: {metric(incident.primary_signal?.peak ?? incident.peak_value ?? resolvedApp.wp_critical)}</small></div>
     </div>}
@@ -72,14 +79,15 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
     <section className="rundeckAppServerWorkloads">
       <header>
         <div><span>Current Collection</span><h4>Jobs & Programs on {hostLabel}</h4></div>
-        <small>{rows.length} observed workloads</small>
+        <small>{matchedCollection ? `${displayRows.length} loaded / ${workloadMeta.total} observed` : 'Collection not loaded'}</small>
       </header>
+      {!latestCollectionId && <div className="rundeckAppServerState">Performance collection identity unavailable; workload observations not verified.</div>}
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
-      {!loading && !error && <><div className="rundeckAppServerSource">Source: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'Workload Observation' : 'Top Consumers fallback'} | Collection: {latestCollectionId} | APP: {hostLabel}</div><div className="rundeckAppServerTableWrap"><table>
+      {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Source: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'Workload Observation' : 'Top Consumers fallback'} | Collection: {latestCollectionId} | APP: {hostLabel}</div><div className="rundeckAppServerTableWrap"><table>
         <thead><tr><th>Job / Program</th><th>Type</th><th title="Grouped workload CPU across observed processes; can exceed 100% on multi-core systems">CPU</th><th title="Aggregate PSS memory for the observed workload">PSS Memory</th><th title="Unique PIDs grouped into this workload observation">Processes</th></tr></thead>
         <tbody>
-          {rows.map((row,index)=><tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}-${index}`} tabIndex={0} role="button"
+          {displayRows.map((row,index)=><tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}-${index}`} tabIndex={0} role="button"
             onClick={()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}
             onKeyDown={(event)=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}}>
             <td><strong title={row.consumer_key}>{observedWorkloadName(row.consumer_key, row.details)}</strong><small>{observedWorkloadName(row.details?.program || row.details?.job_name || '', row.details) || ''}</small></td>
@@ -88,7 +96,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
             <td>{pssText(row)}</td>
             <td>{processText(row)}</td>
           </tr>)}
-          {!rows.length&&<tr><td colSpan="5">No jobs or programs observed for this APP in the current collection.</td></tr>}
+          {!displayRows.length&&<tr><td colSpan="5">No jobs or programs observed for this APP in the current collection.</td></tr>}
         </tbody>
       </table></div></>}
     </section>
