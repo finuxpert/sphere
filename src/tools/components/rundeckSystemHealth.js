@@ -18,6 +18,8 @@ export function systemHealthState(hosts = [], {
 
   if (!hosts.length && availability === 'UNKNOWN') return 'UNKNOWN'
   if (availability === 'UNKNOWN') return 'ATTENTION'
+  // A missing SAP WP or host resource sample must not be labeled NORMAL.
+  if (resourceStates.includes('UNKNOWN') || workloadStates.includes('UNKNOWN')) return 'UNKNOWN'
   return 'NORMAL'
 }
 
