@@ -744,7 +744,7 @@ export default function RundeckSource({ onCollection }) {
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
-        <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">SAP Performance Dashboard</span></h2>
+        <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">SAP Performance</span></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span className="rundeckLastCollected">Last collected {formatTime(latestCollectionAt, true)} WIB</span>
           <span>{appCount || '—'} APP</span>
