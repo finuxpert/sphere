@@ -116,6 +116,13 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const [loadedSearch, setLoadedSearch] = React.useState('')
   const [listPage,setListPage]=React.useState(0)
   const [nowMs, setNowMs] = React.useState(() => Date.now())
+  const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 768 : window.innerHeight)
+
+  React.useEffect(() => {
+    const onResize = () => setViewportHeight(window.innerHeight)
+    window.addEventListener('resize', onResize, { passive: true })
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   React.useEffect(() => {
     if (!collectionId) {
@@ -181,7 +188,9 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       ...(Array.isArray(d.pids) ? d.pids : []),d.wp,d.wp_type]
       .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
   }) : loaded
-  const pageSize=typeof window!=='undefined' && window.innerHeight<=800 ? 3 : 4
+  // Display more *loaded real observations* when the viewport has room.
+  // Keep a compact page on smaller screens without creating page overflow.
+  const pageSize = viewportHeight <= 720 ? 3 : viewportHeight <= 800 ? 4 : viewportHeight <= 920 ? 7 : 9
   const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
   const currentPage=Math.min(listPage,totalPages-1)
   const pageRows=visible.slice(currentPage*pageSize,(currentPage+1)*pageSize)
