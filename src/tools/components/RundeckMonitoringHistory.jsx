@@ -172,6 +172,17 @@ export default function RundeckMonitoringHistory(props) {
             title={selectedJob.key}
             subtitle="Job / Program Performance Analysis"
             size="performance"
+            footer={<nav className="rundeckJobRelatedAnalysis" role="group" aria-label="Related analysis">
+              <strong>Related Analysis</strong>
+              <div className="rundeckJobRelatedLinks">
+                <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Correlated Events</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'history', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Observation History</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />Infrastructure</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="activity" />SAP Issues</button>
+                <button type="button" onClick={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />SAP Availability</button>
+                {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="database" />System Data</button>}
+              </div>
+            </nav>}
             actions={activeOverlay.reviewRow ? <button type="button" onClick={() => setActiveOverlay({
               type: 'review',
               row: activeOverlay.reviewRow,
@@ -190,17 +201,7 @@ export default function RundeckMonitoringHistory(props) {
           >
             <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading job performance…</div>}><RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" /></React.Suspense>
 
-            <nav className="rundeckJobRelatedAnalysis" role="group" aria-label="Related analysis">
-              <strong>Related Analysis</strong>
-              <div className="rundeckJobRelatedLinks">
-                <button type="button" onClick={() => setActiveOverlay({ type: 'evidence', job: selectedJob, returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Correlated Events</button>
-                <button type="button" onClick={() => setActiveOverlay({ type: 'history', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="history" />Observation History</button>
-                <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />Infrastructure</button>
-                <button type="button" onClick={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="activity" />SAP Issues</button>
-                <button type="button" onClick={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="server" />SAP Availability</button>
-                {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="database" />System Data</button>}
-              </div>
-            </nav>
+
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
