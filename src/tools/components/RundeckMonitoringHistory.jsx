@@ -3,6 +3,7 @@ import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
+import SphereOperatorTabs from './SphereOperatorTabs.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -94,12 +95,13 @@ export default function RundeckMonitoringHistory(props) {
     const pairs = current === 'evidence' || current === 'history'
       ? [['evidence', 'Correlated Events'], ['history', 'Observation History']]
       : [['availability', 'SAP Availability'], ['issues', 'SAP Issues']]
-    return <nav className="rundeckAnalysisRelatedNav" role="group" aria-label="Related analysis">
-      {pairs.map(([type, label]) => <button key={type} type="button"
-        aria-pressed={current === type}
-        disabled={type === 'history' && !selectedJob?.key}
-        onClick={() => setActiveOverlay({ ...activeOverlay, type })}>{label}</button>)}
-    </nav>
+    return <SphereOperatorTabs
+      className="rundeckAnalysisRelatedNav"
+      label="Related analysis"
+      value={current}
+      options={pairs.map(([type, label]) => ({ value: type, label, disabled: type === 'history' && !selectedJob?.key }))}
+      onChange={(type) => setActiveOverlay({ ...activeOverlay, type })}
+    />
   }
 
   const operationalEvidenceContent = <RundeckOperationalEvidence
