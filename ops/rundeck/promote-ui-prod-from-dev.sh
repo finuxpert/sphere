@@ -32,11 +32,19 @@ cleanup() {
   trap - EXIT
   set +e
   if (( rc != 0 && CUTOVER == 1 )) && [[ -n "$PREVIOUS" && -d "$PREVIOUS" ]]; then
-    ln -s "$PREVIOUS" "$PROD_ROOT/.rollback-ui-$$"
-    mv -Tf "$PROD_ROOT/.rollback-ui-$$" "$PROD_CURRENT"
-    echo "ROLLBACK=RESTORED_PREVIOUS_PROD_WEB"
+    ln -s "$PREVIOUS" "$PROD_ROOT/.rollback-ui-$$" &&
+      mv -Tf "$PROD_ROOT/.rollback-ui-$$" "$PROD_CURRENT"
+    if [[ "$(readlink -f "$PROD_CURRENT" 2>/dev/null || true)" == "$PREVIOUS" ]]; then
+      echo "ROLLBACK=RESTORED_PREVIOUS_PROD_WEB"
+    else
+      echo "ROLLBACK=FAILED_MANUAL_INTERVENTION_REQUIRED" >&2
+    fi
   fi
-  if (( rc != 0 && CREATED_RELEASE == 1 )); then rm -rf -- "$RELEASE"; fi
+  # Never remove active assets if symlink rollback failed.
+  if (( rc != 0 && CREATED_RELEASE == 1 )) &&
+     [[ "$(readlink -f "$PROD_CURRENT" 2>/dev/null || true)" != "$RELEASE" ]]; then
+    rm -rf -- "$RELEASE"
+  fi
   [[ -z "$STAGE_TMP" || ! -e "$STAGE_TMP" ]] || rm -rf -- "$STAGE_TMP"
   [[ -z "$BUILD_DIR" || ! -e "$BUILD_DIR" ]] || rm -rf -- "$BUILD_DIR"
   rm -f "/tmp/sphere-prod-ui-verify-$$.html" "/tmp/sphere-prod-ui-verify-$$.js" "/tmp/sphere-prod-ui-dev-verify-$$.html" "/tmp/sphere-prod-ui-dev-before-$$.html"
@@ -84,6 +92,13 @@ PREVIOUS="$(readlink -f "$PROD_CURRENT")"
   echo "BLOCKED: PROD web is not a managed release symlink"; exit 2;
 }
 if [[ "$PREVIOUS" == "$RELEASE" ]]; then
+  [[ -s "$RELEASE/index.html" ]] || { echo "BLOCKED: active PROD index missing"; exit 2; }
+  curl --noproxy '*' -fsS --max-time 15 \
+    "https://sphere.astraotoparts.co.id/?ui_release=$SHORT" \
+    -o "/tmp/sphere-prod-ui-verify-$$.html"
+  cmp -s "$RELEASE/index.html" "/tmp/sphere-prod-ui-verify-$$.html" || {
+    echo "BLOCKED: active PROD release does not match public HTTPS"; exit 2;
+  }
   echo "FINAL=PASS ALREADY_ACTIVE=YES SOURCE_SHA=$APPROVED PROD_BACKEND=UNCHANGED"
   exit 0
 fi
