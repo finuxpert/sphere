@@ -28,17 +28,21 @@ const ageText=(value)=>{
   if(sec<3600)return `${Math.floor(sec/60)}m ago`
   return `${Math.floor(sec/3600)}h ago`
 }
+const hasNumericSample=value=>value!==null&&value!==undefined&&String(value).trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0
 const signalNetwork=(m={})=>{
-  if (!m || !['rx_dropped_delta','tx_dropped_delta','rx_errors_delta','tx_errors_delta'].some(key=>m[key]!==null&&m[key]!==undefined&&m[key]!=='')) return 'UNKNOWN'
+  if (!m) return 'UNKNOWN'
+  const fields=['rx_dropped_delta','tx_dropped_delta','rx_errors_delta','tx_errors_delta']
+  if (!fields.some(key=>hasNumericSample(m[key]))) return 'UNKNOWN'
+  if (fields.some(key=>m[key]!==null&&m[key]!==undefined&&m[key]!==''&&!hasNumericSample(m[key]))) return 'UNKNOWN'
   const drops=Number(m.rx_dropped_delta||0)+Number(m.tx_dropped_delta||0)
   const errors=Number(m.rx_errors_delta||0)+Number(m.tx_errors_delta||0)
   if(!Number.isFinite(drops+errors))return 'UNKNOWN'
   if(drops+errors>=10)return 'CRITICAL'
   if(drops+errors>0)return 'ATTENTION'
-  return 'NORMAL'
+  return fields.every(key=>hasNumericSample(m[key]))?'NORMAL':'UNKNOWN'
 }
 const signalStorage=(m={})=>{
-  if(m?.util_pct===null||m?.util_pct===undefined||m?.util_pct==='')return 'UNKNOWN'
+  if(!hasNumericSample(m?.util_pct))return 'UNKNOWN'
   const util=Number(m.util_pct)
   if(!Number.isFinite(util))return 'UNKNOWN'
   if(util>=95)return 'CRITICAL'
@@ -47,9 +51,10 @@ const signalStorage=(m={})=>{
 }
 
 function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',range='6h'}){
+  const samples=React.useMemo(()=>items.filter(row=>hasNumericSample(row.value)&&Number.isFinite(Date.parse(row.collected_at||''))),[items])
   const groups=React.useMemo(()=>{
     const map=new Map()
-    items.forEach(row=>{const key=row.series_key||'series';if(!map.has(key))map.set(key,[]);map.get(key).push(row)})
+    samples.forEach(row=>{const key=row.series_key||'series';if(!map.has(key))map.set(key,[]);map.get(key).push(row)})
     const ranked=[...map.entries()]
       .sort(([,left],[,right])=>Math.max(...right.map(row=>Number(row.value)||0))-Math.max(...left.map(row=>Number(row.value)||0)))
     const limit=metricType==='filesystem'?4:6
@@ -58,23 +63,23 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
       visible[visible.length-1]=[selectedSeries,map.get(selectedSeries)]
     }
     return visible
-  },[items,metricType,selectedSeries])
+  },[samples,metricType,selectedSeries])
   // Match the compact popup chart's rendered aspect ratio (no letterboxing).
   // Only SVG geometry changes; trend data, thresholds and timestamps do not.
   const width=920,height=250
   const pad={left:56,right:34,top:12,bottom:34}
-  const values=items.map(row=>Number(row.value)).filter(Number.isFinite)
+  const values=samples.map(row=>Number(row.value))
   const rawMax=Math.max(1,...values)
   const min=0
   const max=metricType==='filesystem'?100:Math.max(1,rawMax*1.12)
   const ticks=metricType==='filesystem'
     ? [0,50,OPERATOR_THRESHOLDS.filesystem.warning,OPERATOR_THRESHOLDS.filesystem.critical,100]
     : [0,max/2,max]
-  const times=items.map(row=>new Date(row.collected_at).getTime()).filter(Number.isFinite)
+  const times=samples.map(row=>Date.parse(row.collected_at))
   const t0=Math.min(...times),t1=Math.max(...times)
   const x=t=>pad.left+((new Date(t).getTime()-t0)/Math.max(1,t1-t0))*(width-pad.left-pad.right)
   const y=v=>height-pad.bottom-((Number(v)-min)/Math.max(1,max-min))*(height-pad.top-pad.bottom)
-  if(!items.length)return <div className="rundeckInfraEmpty">No history for selected range.</div>
+  if(!samples.length)return <div className="rundeckInfraEmpty">No verified numeric samples for selected range.</div>
   const issueTs=Date.parse(incidentStart||'')
   const issueInRange=Number.isFinite(issueTs)&&issueTs>=t0&&issueTs<=t1
   const tickCount=range==='30d'?7:range==='7d'?6:range==='24h'?6:5
@@ -97,7 +102,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
         <text x={x(tick)} y={height-12} textAnchor={index===0?'start':index===xTicks.length-1?'end':'middle'}>{formatAxisTime(tick,range)}</text>
       </g>)}
       {groups.map(([key,rows],index)=>{
-        const cleanRows=rows.filter((row)=>Number.isFinite(Number(row.value))&&row.collected_at)
+        const cleanRows=rows
         const points=cleanRows.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')
         const selected=!selectedSeries||key===selectedSeries
         const latest=cleanRows.at(-1)
@@ -131,6 +136,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [trendData,setTrendData]=React.useState({scope:'',items:[],meta:null})
   const [selectedSeries,setSelectedSeries]=React.useState('')
   const [fsPage,setFsPage]=React.useState(0)
+  const [storagePage,setStoragePage]=React.useState(0)
   React.useEffect(()=>{
     if(!initialContext)return
     if(initialContext.host)setSelectedHost(initialContext.host)
@@ -148,6 +154,10 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const fsPageCount=Math.max(1,Math.ceil(observedData.fs.length/fsPerPage))
   const effectiveFsPage=Math.min(fsPage,fsPageCount-1)
   const fsRows=observedData.fs.slice(effectiveFsPage*fsPerPage,(effectiveFsPage+1)*fsPerPage)
+  const storagePerPage=4
+  const storagePageCount=Math.max(1,Math.ceil(observedData.storage.length/storagePerPage))
+  const effectiveStoragePage=Math.min(storagePage,storagePageCount-1)
+  const storageRows=observedData.storage.slice(effectiveStoragePage*storagePerPage,(effectiveStoragePage+1)*storagePerPage)
   const telemetryRows=[...observedData.fs,...observedData.network,...observedData.storage]
   const collectedAt=hostRow?.snapshot_ts||telemetryRows[0]?.collected_at
   const freshness=infrastructureTelemetryFreshness(collectedAt,hostRow?.collection_id,telemetryRows,clockNow)
@@ -169,7 +179,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       if(signal.aborted)return
       const available=hosts.map(row=>row.host)
       const target=lockedHost ? selectedHost : (selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||''))
-      if(target!==selectedHost)setSelectedHost(target)
+      if(target!==selectedHost){setSelectedHost(target);setFsPage(0);setStoragePage(0)}
       const q=target?`?host=${encodeURIComponent(target)}`:''
       const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (path,index)=>{
         const scope=index===3?'':q
@@ -183,7 +193,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       setData({host:target,hosts,fs:(values[0].items||[]).filter(belongsToSnapshot),network:(values[1].items||[]).filter(belongsToSnapshot),storage:(values[2].items||[]).filter(belongsToSnapshot)})
       setAllHostFilesystems(values[3].items||[])
       setError('')
-    }catch(e){if(!signal.aborted&&e.name!=='AbortError')setError(e.message)}
+    }catch(e){if(!signal.aborted&&e.name!=='AbortError'){setData({host:'',hosts:[],fs:[],network:[],storage:[]});setAllHostFilesystems([]);setError(e.message)}}
     finally { if(!signal.aborted) setSourcesLoading(false) }
   },[selectedHost,lockedHost])
 
@@ -194,7 +204,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     return()=>{window.clearInterval(timer);controller.abort()}
   },[refresh,refreshToken])
   React.useEffect(()=>{if(lockedHost||!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[lockedHost,selectedHost])
-  React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active)setError(e.message)}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
+  React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:[],meta:null});setError(e.message)}}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
 
   const fsState=observedData.fs.length?observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')):'UNKNOWN'
   const netState=observedData.network.length?observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')):'UNKNOWN'
@@ -208,11 +218,11 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       : observedData.network[0]
         ? `${observedData.network[0].sample_key||'Network'}`
         : 'No current infrastructure sample'
-  const selectedTrendRows=selectedSeries?trend.filter(row=>(row.series_key||'series')===selectedSeries):[]
-  const selectedValues=selectedTrendRows.map(row=>Number(row.value)).filter(Number.isFinite)
-  const selectedValues2=selectedTrendRows.map(row=>Number(row.value2)).filter(Number.isFinite)
-  const selectedWriteMbps=selectedTrendRows.map(row=>Number(row.write_mbps)).filter(Number.isFinite)
-  const selectedDrops=selectedTrendRows.map(row=>Number(row.drop_delta)).filter(Number.isFinite)
+  const selectedTrendRows=selectedSeries?trend.filter(row=>(row.series_key||'series')===selectedSeries&&Number.isFinite(Date.parse(row.collected_at||''))).sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at)):[]
+  const selectedValues=selectedTrendRows.filter(row=>hasNumericSample(row.value)).map(row=>Number(row.value))
+  const selectedValues2=selectedTrendRows.filter(row=>hasNumericSample(row.value2)).map(row=>Number(row.value2))
+  const selectedWriteMbps=selectedTrendRows.filter(row=>hasNumericSample(row.write_mbps)).map(row=>Number(row.write_mbps))
+  const selectedDrops=selectedTrendRows.filter(row=>hasNumericSample(row.drop_delta)).map(row=>Number(row.drop_delta))
   const trendCurrent=selectedValues.length?selectedValues.at(-1):null
   const trendMin=selectedValues.length?Math.min(...selectedValues):null
   const trendMax=selectedValues.length?Math.max(...selectedValues):null
@@ -227,8 +237,8 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     const grouped=new Map()
     for(const row of trend){
       const key=row.series_key||'series'
+      if(!hasNumericSample(row.value))continue
       const value=Number(row.value)
-      if(!Number.isFinite(value))continue
       grouped.set(key,Math.max(grouped.get(key)??Number.NEGATIVE_INFINITY,value))
     }
     const top=[...grouped.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||''
@@ -327,11 +337,11 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         </table>
       </article>
       <article>
-        <div className="cardHead"><div><h4>Storage I/O</h4><small>I/O Activity</small></div><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div>
+        <div className="cardHead"><div><h4>Storage I/O</h4><small>{observedData.storage.length} device(s)</small></div><div className="rundeckInfraFsPager"><button type="button" aria-label="Previous storage devices" disabled={effectiveStoragePage===0} onClick={()=>setStoragePage(n=>Math.max(0,n-1))}>‹</button><small>{effectiveStoragePage+1}/{storagePageCount}</small><button type="button" aria-label="Next storage devices" disabled={effectiveStoragePage>=storagePageCount-1} onClick={()=>setStoragePage(n=>Math.min(storagePageCount-1,n+1))}>›</button><span className={`is-${storageState.toLowerCase()}`}>{storageState}</span></div></div>
         <table>
           <thead><tr><th>Mount</th><th>Util</th><th>Write IOPS</th><th>Write</th></tr></thead>
           <tbody>
-            {observedData.storage.map((row) => {
+            {storageRows.map((row) => {
               const m = row.metrics || {}
               const series = m.mount || row.sample_key
               const open = () => openTrend('storage', series)
