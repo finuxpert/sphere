@@ -862,7 +862,8 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{
     box-sizing:border-box!important;min-height:0!important;max-height:none!important;
-    /* No forced height: React uses the measured number and size of saved metric lanes. */
+    height:var(--sphere-job-chart-height,244px)!important;
+    /* ECharts owns the true count and extent of rendered lanes, not old 425px CSS. */
   }
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
     box-sizing:border-box!important;height:225px!important;min-height:225px!important;max-height:225px!important;
