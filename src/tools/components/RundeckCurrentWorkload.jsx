@@ -2,6 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName, isUnresolvedSapIdentity } from './sapUiFormat.js'
 import './RundeckCurrentWorkload.css'
+import { processCount } from './rundeckWorkloadMetrics.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const CPU_HINT = 'CPU Total is the grouped multi-core workload CPU observation. It can exceed 100 percent when the workload uses more than one CPU core or process.'
@@ -31,13 +32,6 @@ function pssGb(row = {}) {
 
 function wpText(details = {}) {
   return [details.wp_type, details.wp].filter(Boolean).join(' ') || '—'
-}
-
-function processCount(details = {}) {
-  const raw = details.process_count
-  if (raw === null || raw === undefined || raw === '') return null
-  const value = Number(raw)
-  return Number.isInteger(value) && value >= 0 ? value : null
 }
 
 function relativeAge(value, nowMs) {
