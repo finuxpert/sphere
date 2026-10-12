@@ -102,7 +102,7 @@ export default function RundeckUnifiedAppInfrastructure({
             </span>
             <span className="rundeckUnifiedMetric" title={'Critical work processes observed: ' + metric(host.wp_critical)}>
               <small>Critical WP</small><strong>{metric(host.wp_critical)}</strong>
-              <i className="rundeckUnifiedMetricTrack is-workprocess" aria-hidden="true" />
+              
             </span>
             <span className="rundeckUnifiedMetric is-infrastructure" title={'Filesystem: '+(infra.topFs?.mount_point||'unknown')+' · Infrastructure '+infra.freshness}>
               <small>FS</small><strong className={'is-'+infra.state.toLowerCase()}>{infra.topFs ? metric(infra.topFs.used_pct,'%') : '—'}</strong>
