@@ -300,20 +300,7 @@ html[data-theme="light"] .rundeckWorkspacePortal .rundeckWorkspaceDrawerBody tab
 .rundeckWorkspacePortal > .rundeckWorkspaceModalBackdrop {
   animation:sphereBackdropQuietEnter 150ms ease-out both!important;
 }
-@media (min-width:1281px) {
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions {
-    grid-template-columns:repeat(6,minmax(0,1fr))!important;
-  }
-}
-@media (max-width:1280px) and (min-width:761px) {
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions {
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  }
-}
 @media (max-width:760px) {
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions {
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
   .rundeckWorkspacePortal > .rundeckWorkspaceDrawer > header {
     padding:8px 10px!important;
   }
