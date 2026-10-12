@@ -1138,3 +1138,44 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
  .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer{animation:none!important;transition:none!important}
 }
+
+
+/* Compact cockpit follow-up: viewport space belongs to observations.
+   Scoped to desktop; table is internally scrollable and page need not grow. */
+@media screen and (min-width:1281px) and (min-height:820px){
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendBandV13454{
+   min-height:clamp(230px,31dvh,350px)!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid .rundeckTrendChart{
+   height:clamp(205px,26dvh,290px)!important;
+   min-height:205px!important;max-height:290px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsWorkspaceBody{
+   min-height:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadTableWrap{
+   max-height:clamp(220px,calc(100dvh - 530px),490px)!important;
+   overflow-y:auto!important;
+ }
+}
+@media screen and (min-width:1281px){
+ .appShell:has(.rundeckPanel) .rundeckCurrentWorkload :is(th,td){
+   line-height:1.35!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCurrentWorkload :is(th,td):first-child{
+   white-space:nowrap;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadSearch input{
+   min-height:29px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckDataQualityNotice{
+   font-size:10.5px!important;line-height:1.4!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckLandscapeMeta{gap:6px!important}
+ .appShell:has(.rundeckPanel) .rundeckAnalysisLaunchersHead small{
+   font-size:10px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckAnalysisActions :is(.rundeckEvidenceCardTitle,.rundeckAnalysisSecondary>span,.rundeckAnalysisInfrastructure>span,.rundeckSystemDataUtility>span){
+   font-size:11px!important;
+ }
+}
