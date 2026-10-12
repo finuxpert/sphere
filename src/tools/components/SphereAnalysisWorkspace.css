@@ -193,3 +193,130 @@
     scroll-behavior:auto!important;
   }
 }
+
+
+/* Review workstation: real workload findings on the left, selected evidence
+   on the right. This replaces no API calls, assessments or SM37 status. */
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckPerformanceReviewV1231.has-sidecar{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(280px,29%)!important;
+  align-items:stretch;
+  gap:12px!important;
+  min-height:min(560px,calc(100dvh - 210px));
+  max-height:calc(100dvh - 180px);
+  overflow:hidden!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewWorkspaceMain{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewWorkspaceMain .rundeckReviewTableWrapV1231{
+  flex:1 1 auto;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:auto!important;
+  scrollbar-gutter:stable;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecar{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  min-height:0;
+  padding:15px;
+  border:1px solid rgba(89,151,177,.2);
+  border-radius:7px;
+  background:rgba(15,43,61,.35);
+  overflow:auto;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecar>header{
+  display:block!important;
+  padding:0 0 13px!important;
+  border:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecar h3{
+  margin:0 0 4px;
+  font-size:17px!important;
+  font-weight:750;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecar small{
+  font-size:11px;
+  color:var(--sphere-text-secondary,#a5bdc9);
+  line-height:1.35;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarIdentity{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin-bottom:12px;
+  overflow-wrap:anywhere;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarIdentity strong{
+  font-size:14px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarReason{
+  padding:10px 11px;
+  margin-bottom:12px;
+  border-left:2px solid var(--sphere-accent,#4fc6c8);
+  background:rgba(79,198,200,.045);
+  font-size:12px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarMetrics{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  margin:0;
+  gap:7px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarMetrics>div{
+  border-bottom:1px solid rgba(126,147,158,.14);
+  padding:8px 0;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarMetrics dt{
+  font-size:10px;color:var(--sphere-text-secondary,#a5bdc9)
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarMetrics dd{
+  margin:5px 0 0;
+  font-size:17px;font-weight:750;
+  font-variant-numeric:tabular-nums;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarProvenance{
+  display:flex;flex-direction:column;gap:6px;
+  color:var(--sphere-text-secondary,#a5bdc9);
+  font-size:11px;
+  padding:13px 0;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarOpen{
+  margin-top:auto;
+  min-height:36px;
+  width:100%;
+  color:#062229;
+  background:var(--sphere-accent,#4fc6c8);
+  border:0;border-radius:5px;
+  font:inherit;font-size:12px;font-weight:750;
+  cursor:pointer;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarOpen:disabled{
+  opacity:.5;cursor:not-allowed;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecarEmpty{
+  color:var(--sphere-text-secondary,#a5bdc9);
+  font-size:12px;
+}
+@media(max-width:950px){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .rundeckPerformanceReviewV1231.has-sidecar{
+    grid-template-columns:minmax(0,1fr)!important;
+    max-height:none;
+    overflow:visible!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewWorkspaceMain{
+    min-height:240px;
+    overflow:visible;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-workspace .sphereReviewSidecar{
+    min-height:0;overflow:visible;
+  }
+}
