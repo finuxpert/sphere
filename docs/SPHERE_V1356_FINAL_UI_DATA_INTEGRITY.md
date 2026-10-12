@@ -33,3 +33,25 @@ NO PROD deployment, backend/collector/Rundeck/DB/migration/credential changes.
 ## Source cleanup boundaries
 
 No indiscriminate CSS deletion. Existing Infrastructure CSS contains several historical selectors and overriding heights; these need screenshot-verified computed-style review before removal. The existing popup styles remain in place; large-scale refactor, backend logic changes and unrelated branch changes are deliberately excluded.
+
+
+## APP1 Analysis — screenshot and source audit (13 October 2026)
+
+Scope: **DEV frontend only**, `RundeckUnifiedAppAnalysis`. The screenshot showed 46 observed workload rows, 9 filesystem mounts, page 1/2, compact Storage I/O and an Infrastructure History chart. These are separate performance/infra sources; matching percentages across hosts alone are **not** proof of duplicate collection.
+
+Confirmed defects and DEV fixes:
+
+- APP detail could merge `history/hosts/latest` from another performance `collection_id`, and retain rows/incident belonging to a previously selected collection or host. Render only rows matched to the requested host and collection, and merge a host snapshot only when the collection matches.
+- Missing PSS, process count or incident duration must render UNKNOWN (`—`), not manufactured `0 GB`, `1` process or `<1m`. The APP list now differentiates loaded rows and source-observed total.
+- Infrastructure SVG used `Number(null) === 0` for chart series and summary values, which fabricates zero samples. Numeric metrics now require a present, finite, nonnegative value and a valid observation timestamp.
+- A failed Infrastructure snapshot must not reuse the previous successful source silently. Clear snapshot evidence on source failure; an unavailable trend clears its matching plotted series. Warning/critical network counters remain visible when independently verified; incomplete zero-like counters remain UNKNOWN.
+- Filesystem navigation buttons had no shared flex layout, producing cramped/stacked controls. The combined APP popup receives a single scoped layout rule and legible table/axis fonts. Storage I/O adds explicit 4-device pagination instead of nested uncontrolled scrolling.
+- Desktop modal keeps the right-hand chart as a compact evidence view, with content scroll owned by the modal body. No dashboard/global reset and no other popup geometry changes.
+
+Regression coverage added to `scripts/tests/rundeck-integrity-v1356.test.mjs` and `tests/visual/rundeck-v1356.visual.spec.mjs`. Actual ESLint, unit tests, build, Playwright geometry and DEV runtime deployment **must be verified on JAHSVR-SPHERE** before declaring release PASS.
+
+### Repository cleanup outcome
+
+Recursive GitHub DEV tree scan: **391 tracked files** and no checked-in `dist/`, `node_modules/`, `coverage/`, `test-results/`, `.bak`, `.orig`, `.tmp` or `.log` artifacts. No independently proven orphan file was identified, so **no tracked file was deleted**. Versioned CSS override blocks remain as known technical debt: preserve them until the active import graph, cascade and desktop/Android regression tests can establish which rules are unreachable. Do not confuse retained release docs, migration files or operational shell scripts with disposable junk.
+
+No database migration, backend, Rundeck job, credential, production branch, or production deployment changes were part of this audit.
