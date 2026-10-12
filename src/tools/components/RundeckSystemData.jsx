@@ -24,7 +24,7 @@ function State({value='UNKNOWN'}){
   return <span className={`rundeckSystemDataState is-${normalized.toLowerCase()}`}>{name}</span>
 }
 
-export default function RundeckSystemData({history=[],platform=null,platformState='UNKNOWN',serviceSummary='',releaseState='NORMAL'}){
+export default function RundeckSystemData({history=[],platform=null,platformState='UNKNOWN',serviceSummary='',releaseState='NORMAL',onOpenPdf=null}){
   const [tab,setTab]=React.useState('collections')
   const [showAll,setShowAll]=React.useState(false)
   const [selected,setSelected]=React.useState(null)
