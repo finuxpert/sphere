@@ -10,7 +10,6 @@ const files = {
   availabilityBackend: read('backend/rundeck_availability.py'),
   core: read('src/tools/components/RundeckMonitoringHistoryCore.jsx'),
   workspace: read('src/tools/components/RundeckWorkspace.css'),
-  appServers: read('src/tools/components/RundeckAppServers.jsx'),
   appServerAnalysis: read('src/tools/components/RundeckAppServerAnalysis.jsx'),
   appServerAnalysisCss: read('src/tools/components/RundeckAppServerAnalysis.css'),
   sm37: read('src/tools/components/RundeckSm37Verification.jsx'),
@@ -323,7 +322,7 @@ const checks = [
     && files.currentWorkloadCss.includes('box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important')],
   ['Compact Correlated Events summary avoids long timing text truncation', files.evidenceTimeline.includes('No overlap · ${Math.round(workloadGapMinutes)}m gap') && files.evidenceTimeline.includes('${Math.round(Number(skew))}m difference')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
-  ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
+  ['APP cross-focus uses unified host selection without auto-scroll or hidden legacy table', files.unifiedApp.includes('const focusHost =') && files.unifiedApp.includes('chooseUnifiedApp(') && !files.unifiedApp.includes('scrollIntoView(') && !files.unifiedApp.includes('requestAnimationFrame(')],
   ['APP card opens one modal with SAP and independent Infrastructure evidence', files.unifiedApp.includes('onInspectApp?.({') &&
     files.core.includes('onInspectApp={props.onInspectApp}') &&
     files.wrapper.includes("activeOverlay?.type === 'app'") &&
@@ -645,7 +644,7 @@ const checks = [
     files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
-  ['APP server summary labels derived state as signal without generic duplicate columns', !files.appServers.includes('OS Resource') && !files.appServers.includes('Jobs / Programs') && files.appServers.includes('<th>RAM</th>') && files.appServers.includes('<th>APP Critical WP</th>') && files.appServers.includes('<th>Signal</th>') && files.appServers.includes('Critical Signal') && files.appServers.includes('Highest CPU') && files.appServers.includes('Highest RAM')],
+  ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table', files.unifiedApp.includes('APP Servers & Infrastructure') && files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Highest RAM') && files.unifiedApp.includes('Critical WP') && !files.unifiedApp.includes('<th>Signal</th>') && files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure')],
   ['Infrastructure filesystem NORMAL state is explicit for fresh data and stale data is not live',
     files.infrastructure.includes("is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}") &&
     files.infrastructure.includes('{observedStatus(statusFs(row.used_pct))}</b>') &&
