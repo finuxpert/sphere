@@ -25,3 +25,11 @@ npm run build:dev
 ```
 
 Report `BUILD_DEV=PASS` only after the command succeeds; do not report deployment or screenshot acceptance as complete based on a build.
+
+## Compact cockpit visual batch (2026-10-12)
+
+Commit bcd943d adds a **CSS-only**, desktop-first refinement in `RundeckMockupParity.css`: narrower header actions, responsive status/popover width, denser APP cards and analysis launchers, readable chart minimum height, larger table text, expanded Jobs table capacity for taller screens, consistent modal padding/width, and reduced-motion support. Existing component hierarchy, API calls, SAP semantics, backend and DB were not changed.
+
+This is an initial v1.35 design batch; the deployed app version remains `1.34.91` until a separately coordinated version/release update. Do not assume all proposed improvements are implemented. It is deliberately not accompanied by Playwright or snapshot QA; operator validates on the DEV site after a verified build and frontend-only release.
+
+**Build only:** `npm run build:dev`. Deploy separately using a guarded frontend-only release process. PROD remains untouched.
