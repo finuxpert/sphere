@@ -102,7 +102,21 @@ const themeSelectStyle = files.accessibilityThemeFinal.match(/(?:^|\n)\.sphereTh
 const themeWidthPx = Number(themeSelectStyle.match(/\bwidth:(\d+)px/)?.[1] || 0)
 const themeMinHeightPx = Number(themeSelectStyle.match(/min-height:(\d+)px/)?.[1] || 0)
 
+const mockupStyle = read('src/tools/components/RundeckMockupParity.css')
 const checks = [
+  ['Mockup-scale UI source transforms actual cockpit and investigation structure',
+    files.wrapper.includes("import './RundeckMockupParity.css'")
+    && files.wrapper.includes('rundeckProductNavigation')
+    && files.monitoringCore.includes('rundeckCockpitV13490')
+    && files.source.includes('SAP Performance Dashboard')
+    && mockupStyle.includes('.rundeckCockpitV13490 .rundeckTripleTrendGrid .rundeckTrendChart')
+    && mockupStyle.includes('168px!important')
+    && mockupStyle.includes('.rundeckInfraTrendWorkspace')
+    && mockupStyle.includes('order:-1!important')
+    && mockupStyle.includes('.rundeckJobAnalysisWorkspace')
+    && mockupStyle.includes('flex-direction:column!important')
+    && files.unifiedAppInfrastructure.includes('rundeckUnifiedMetricTrack')],
+
   ['Rundeck HTTP 403 diagnostic is GET-only and credential-safe',
     files.rundeckAuthProbe.includes('method="GET"') &&
     files.rundeckAuthProbe.includes('NoRedirect') &&
@@ -169,7 +183,7 @@ const checks = [
     files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
   ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
-  ['monitoring flow version is v1.34.89', files.version.includes("APP_VERSION = '1.34.89'") && files.version.includes("APP_PREVIOUS_VERSION = '1.34.88'") && files.version.includes('monitoring-flow-v1.34.89') && files.version.includes('monitoring-flow-ui-v1.34.89')],
+  ['monitoring flow version is v1.34.90', files.version.includes("APP_VERSION = '1.34.90'") && files.version.includes("APP_PREVIOUS_VERSION = '1.34.89'") && files.version.includes('monitoring-flow-v1.34.90') && files.version.includes('monitoring-flow-ui-v1.34.90')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -281,7 +295,7 @@ const checks = [
   ['Correlated Events drawer uses roomier timeline rows and three-column timing details', files.evidenceTimelineCss.includes('min-height:46px!important') && files.evidenceTimelineCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important') && files.evidenceTimeline.includes('Critical Work Process first observed')],
   ['SAP Availability drawer distinguishes stale data from service failure', files.availability.includes('last reliable:') && files.availability.includes('using last reliable data') && files.availability.includes("const displayState = stale ? 'STALE' : serviceState")],
   ['Trend helper microcopy is removed from the cockpit', !files.serverTrend.includes('Click a chart point to inspect saved job and program data without expanding the page.')],
-  ['Duplicate SAP Performance title text is visually suppressed while preserving the accessible heading', files.source.includes('<h2 aria-label="SAP Performance"><SphereIcon name="activity" /></h2>') && !files.source.includes('rundeckPrimaryTitleText') && files.sourceCss.includes('parent page owns the visible SAP Performance title')],
+  ['Real dashboard heading replaces hidden duplicate title and keeps page identity', files.source.includes('<h2 aria-label="SAP Performance"><SphereIcon name="activity" /> SAP Performance Dashboard</h2>') && files.wrapper.includes('rundeckProductNavigation') && files.monitoringCore.includes('rundeckCockpitV13490')],
   ['Review mode has no redundant Search button because Search is a workspace mode', files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('!forceSearch && !hideSearchButton')],
   ['Live Jobs table fills the merged workspace and keeps selected-row emphasis restrained',
     files.currentWorkloadCss.includes('SPHERE v1.34.61 — full-width Live table')
@@ -630,4 +644,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.89 monitoring flow, data trust, gap evidence and motion checks passed.')
+console.log('\nSPHERE v1.34.90 monitoring flow, data trust, gap evidence and motion checks passed.')
