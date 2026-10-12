@@ -18,7 +18,7 @@ function Segmented({ options, value, onChange, label, disabled = false }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false, sidecar = false }) {
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
   const [data, setData] = React.useState(null)
@@ -77,11 +77,13 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     : []
   const reviewCount = Number(data?.summary?.review_required ?? data?.summary?.needs_review ?? reviewRows.length)
   const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)
+  const sidecarRow = sidecar ? (quickRow && visibleRows.some(row => row.consumer_key === quickRow.consumer_key && row.consumer_type === quickRow.consumer_type) ? quickRow : visibleRows[0] || null) : null
   const lowCoverage = String(quality.confidence || '').toUpperCase() === 'LOW'
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
 
   const openQuick = (row) => {
+    if (sidecar) { setQuickRow(row); return }
     if (onOpenQuickAnalysis) {
       setQuickRow(null)
       onOpenQuickAnalysis(row, { period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' })
@@ -94,7 +96,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     onSelectJob?.(job)
   }
 
-  return <section className="rundeckPerformanceReviewV1231 is-scroll-list" aria-label="Performance review">
+  return <section className={`rundeckPerformanceReviewV1231 is-scroll-list${sidecar ? ' has-sidecar' : ''}`} aria-label="Performance review">
+    <div className="sphereReviewWorkspaceMain">
     <header className={`rundeckReviewHeadV1231${embedded ? ' is-embedded' : ''}`}>
       <div>
         {!embedded && <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>}
@@ -143,7 +146,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
           <tbody>
             {visibleRows.map((row) => {
               const selected = selectedJob?.key === row.consumer_key && selectedJob?.consumerType === row.consumer_type
-              const internalQuickSelected = quickRow?.consumer_key === row.consumer_key && quickRow?.consumer_type === row.consumer_type
+              const internalQuickSelected = (sidecarRow || quickRow)?.consumer_key === row.consumer_key && (sidecarRow || quickRow)?.consumer_type === row.consumer_type
               const externalQuickSelected = externalQuickKey === `${row.consumer_type}:${row.consumer_key}`
               const quickSelected = internalQuickSelected || externalQuickSelected
               const reasonParts = evaluationReasonParts(row)
@@ -182,6 +185,39 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         </table>
       </div>
     </>}
+    </div>
+    {sidecar && <aside className="sphereReviewSidecar" aria-label="Selected workload quick analysis">
+      <header>
+        <h3>Quick Analysis</h3>
+        <small>Selected workload · evaluation evidence</small>
+      </header>
+      {sidecarRow ? <>
+        <div className="sphereReviewSidecarIdentity">
+          <strong title={sidecarRow.consumer_key}>{sidecarRow.consumer_key}</strong>
+          <small>{workloadTypeLabel(sidecarRow.consumer_type)} · {sidecarRow.status || 'Assessment pending'}</small>
+        </div>
+        <div className="sphereReviewSidecarReason">
+          {evaluationReasonParts(sidecarRow).join(' · ') || sidecarRow.assessment_reason || 'No assessment reason provided'}
+        </div>
+        <dl className="sphereReviewSidecarMetrics">
+          <div><dt>Avg CPU</dt><dd title={CPU_HINT}>{pct(sidecarRow.avg_cpu_pct)}</dd></div>
+          <div><dt>Peak CPU</dt><dd title={CPU_HINT}>{pct(sidecarRow.peak_cpu_pct)}</dd></div>
+          <div><dt>Avg PSS</dt><dd>{gb(sidecarRow.avg_pss_gb)}</dd></div>
+          <div><dt>Processes</dt><dd>{sidecarRow.avg_process_count == null ? '—' : numberText(sidecarRow.avg_process_count, 1)}</dd></div>
+        </dl>
+        <div className="sphereReviewSidecarProvenance">
+          <span>Period: {periodLabel}</span>
+          <span>Observations: {sidecarRow.observations ?? sidecarRow.occurrences ?? 'Not provided'}</span>
+          <span>Source: SPHERE workload evaluation</span>
+          <span>SM37 execution status must be verified separately.</span>
+        </div>
+        <button type="button" className="sphereReviewSidecarOpen"
+          onClick={() => onOpenQuickAnalysis?.(sidecarRow, { period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' })}
+          disabled={!onOpenQuickAnalysis}>
+          Open Performance Analysis →
+        </button>
+      </> : <p className="sphereReviewSidecarEmpty">No workloads match the selected period and filter.</p>}
+    </aside>}
     {!onOpenQuickAnalysis && quickRow && <RundeckReviewQuickAnalysis
       row={quickRow}
       reviewContext={{ period, days: data?.days || 1, start: data?.start || '', end: data?.end || '' }}
