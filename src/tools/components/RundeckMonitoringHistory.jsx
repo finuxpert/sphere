@@ -2,12 +2,8 @@ import React from 'react'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
-import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
-import RundeckObservationHistory from './RundeckObservationHistory.jsx'
-import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import SphereAnalysisWorkspace from './SphereAnalysisWorkspace.jsx'
-import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
@@ -24,6 +20,10 @@ import './RundeckUnifiedModalPolish.css'
 import './RundeckFlatWorkspace.css'
 import './RundeckMockupParity.css'
 
+const RundeckJobHistory = React.lazy(() => import('./RundeckJobHistory.jsx'))
+const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
+const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
+const RundeckReviewQuickAnalysis = React.lazy(() => import('./RundeckReviewQuickAnalysis.jsx'))
 const RundeckInfrastructure = React.lazy(() => import('./RundeckInfrastructure.jsx'))
 const RundeckUnifiedAppAnalysis = React.lazy(() => import('./RundeckUnifiedAppAnalysis.jsx'))
 
@@ -218,7 +218,7 @@ export default function RundeckMonitoringHistory(props) {
                   ? 'Back to Observation History'
                   : 'Back'}
           >
-            <RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" />
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading job performance…</div>}><RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" /></React.Suspense>
 
             <nav className="rundeckJobRelatedAnalysis" role="group" aria-label="Related analysis">
               <strong>Related Analysis</strong>
@@ -242,7 +242,7 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
-            <RundeckObservationHistory
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading observations…</div>}><RundeckObservationHistory
               job={selectedJob}
               refreshToken={refreshToken}
               onSelectJob={(job) => {
@@ -251,7 +251,7 @@ export default function RundeckMonitoringHistory(props) {
                 setActiveOverlay({ type: 'job', returnTo: activeOverlay })
               }}
               embedded
-            />
+            /></React.Suspense>
           </SphereAnalysisWorkspace>}
 
           {activeOverlay?.type === 'system-data' && systemDataContent && <SphereAnalysisWorkspace {...workspaceProps}
@@ -280,11 +280,11 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
-            <RundeckEvidenceTimeline
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading correlated events…</div>}><RundeckEvidenceTimeline
               refreshToken={refreshToken}
               job={activeOverlay.job || selectedJob}
               incidentActive
-            />
+            /></React.Suspense>
           </SphereAnalysisWorkspace>}
 
           {activeOverlay?.type === 'availability' && <SphereAnalysisWorkspace {...workspaceProps}
@@ -356,7 +356,7 @@ export default function RundeckMonitoringHistory(props) {
             </React.Suspense>
           </SphereAnalysisWorkspace>}
 
-          {activeOverlay?.type === 'review' && activeOverlay.row && <RundeckReviewQuickAnalysis
+          {activeOverlay?.type === 'review' && activeOverlay.row && <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading quick analysis…</div>}><RundeckReviewQuickAnalysis
             row={activeOverlay.row}
             reviewContext={activeOverlay.reviewContext}
             refreshToken={refreshToken}
@@ -390,6 +390,6 @@ export default function RundeckMonitoringHistory(props) {
               onSelectJob?.(job)
               setActiveOverlay({ type: 'job', reviewRow: activeOverlay.row, reviewContext: activeOverlay.reviewContext })
             }}
-          />}
+          /></React.Suspense>}
   </>
 }
