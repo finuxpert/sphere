@@ -2,7 +2,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import './RundeckWorkspaceDrawer.css'
 
-export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, actions = null, navigation = null, size = 'default', presentation = 'modal' }) {
+export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, actions = null, navigation = null, size = 'default' }) {
   const drawerRef = React.useRef(null)
   const portalRef = React.useRef(null)
   const isModal = true // All analysis overlays now share one accessible modal/focus contract.
@@ -81,7 +81,7 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
 
   return createPortal(<div ref={portalRef} className="rundeckWorkspacePortal">
     {isModal && <div className="rundeckWorkspaceModalBackdrop" aria-hidden="true" onClick={(event) => { if (event.target === event.currentTarget) onClose?.() }} />}
-    <aside ref={drawerRef} className={`rundeckWorkspaceDrawer is-${size}${presentation === 'workspace' ? ' is-workspace' : ''}`} role="dialog" aria-modal={isModal} aria-label={title}>
+    <aside ref={drawerRef} className={`rundeckWorkspaceDrawer is-${size}`} role="dialog" aria-modal={isModal} aria-label={title}>
       <header>
         <div className="rundeckWorkspaceDrawerIdentity">
           <span>SPHERE Analysis</span>
