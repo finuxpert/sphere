@@ -131,7 +131,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
 
   return <section className="rundeckEvidenceTimeline" aria-label="Related events">
     <div className="rundeckEvidenceSummary">
-      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Correlated Events</span>
+      <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Related Events</span>
       {!paired && <span className="rundeckEvidenceScope">Selected job</span>}
       <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME PERIOD' : state}</span>
       <small>{events.length ? `${events.length} event${events.length === 1 ? '' : 's'}` : 'No events'}</small>
@@ -160,7 +160,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
                 <strong>{displayTitle}</strong>
                 <small>{isHost && host ? `${appLabel(host)} · ` : ''}{sourceLabel(event.source)}{event.state && <span className={`rundeckEvidenceStateChip is-${String(event.state).toLowerCase().replaceAll(' ','-')}`}>{event.state}</span>}</small>
               </div>
-              {relation && <em className={`rundeckEvidenceRelation ${relation === 'ISSUE START' ? 'is-issue' : relation === 'SAME WINDOW' ? 'is-same' : ''}`}>{relation}</em>}
+              {relation && <em className={`rundeckEvidenceRelation ${relation === 'ISSUE START' ? 'is-issue' : relation === 'SAME WINDOW' ? 'is-same' : ''}`}>{relation === "SAME WINDOW" ? "SAME PERIOD" : relation}</em>}
             </div>
           })}
           {!events.length && <div className="rundeckEvidenceState">No event found in this time window.</div>}
