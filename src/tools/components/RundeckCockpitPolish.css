@@ -205,7 +205,7 @@
   }
 }
 
-// v1.34.79: improve operator legibility without adding a new layout override layer.
+/* v1.34.79: improve operator legibility without adding a new layout override layer. */
 .appShell:has(.rundeckPanel) .rundeckLiveScope select { font-size: 11px; min-height: 28px; max-width: 100%; }
 .appShell:has(.rundeckPanel) .rundeckLiveScope > span,
 .appShell:has(.rundeckPanel) .rundeckSourceFreshness { font-size: 10.5px; }
