@@ -240,7 +240,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
-      <div><p>{stale?'Last observed infrastructure measurements; live state unavailable.':'Current infrastructure state and retained history for this APP server.'}</p></div>
+      <div><p>{stale?'Last observed infrastructure measurements; live state unavailable.':'Host measurements and saved history.'}</p></div>
       <div className="rundeckInfraIdentity"><span className={`state is-${overall.toLowerCase()}`}>{shortHost(host)} · {overall}</span></div>
     </header>
     {!hideHostCards && <div className="rundeckInfraHostCards" role="group" aria-label="Select Infrastructure APP">
@@ -286,7 +286,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     {stale&&<div className="rundeckInfraHistoricalNote" role="status">Snapshot {freshness.toLowerCase()} or source collection mismatch; capacity, network and I/O values are last observed evidence, not current alerts.</div>}
     <div className="rundeckInfraWorkspace">
       <div className="rundeckInfraCurrent">
-        <div className="rundeckInfraCurrentLabel">{stale?'Last Observed Snapshot':'Current Snapshot'}</div>
+        <div className="rundeckInfraCurrentLabel">{stale?'Last collected readings':'Current readings'}</div>
         <div className="rundeckInfraGrid">
       <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity · {observedData.fs.length} mount(s)</small></div><div className="rundeckInfraFsPager"><button type="button" aria-label="Previous filesystem mounts" disabled={effectiveFsPage===0} onClick={()=>setFsPage(n=>Math.max(0,n-1))}>‹</button><small>{effectiveFsPage+1}/{fsPageCount}</small><button type="button" aria-label="Next filesystem mounts" disabled={effectiveFsPage>=fsPageCount-1} onClick={()=>setFsPage(n=>Math.min(fsPageCount-1,n+1))}>›</button><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{fsRows.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!observedData.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article>
@@ -353,7 +353,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
 
       <section className="rundeckInfraTrend rundeckInfraTrendWorkspace">
         <div className="rundeckInfraTrendWorkspaceHead">
-          <div><b>Infrastructure History</b><small>Retained measurements for {host}</small></div>
+          <div><b>Infrastructure History</b><small>{host}</small></div>
         </div>
         <header><div/><div className="controls">
         <div>{['1h','6h','24h','7d','30d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
