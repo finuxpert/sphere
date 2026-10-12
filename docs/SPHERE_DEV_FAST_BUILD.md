@@ -33,3 +33,9 @@ Commit bcd943d adds a **CSS-only**, desktop-first refinement in `RundeckMockupPa
 This is an initial v1.35 design batch; the deployed app version remains `1.34.91` until a separately coordinated version/release update. Do not assume all proposed improvements are implemented. It is deliberately not accompanied by Playwright or snapshot QA; operator validates on the DEV site after a verified build and frontend-only release.
 
 **Build only:** `npm run build:dev`. Deploy separately using a guarded frontend-only release process. PROD remains untouched.
+
+## Hybrid compact workspace patch (2026-10-12)
+
+Commit `aa3df17` updates the existing operator UI with a six-link horizontal analysis rail, consistent APP card width, larger trend/table budgets on tall desktops, and spacious existing APP/Infrastructure/Job dialogs. Small screens stay viewport bounded. The release changes CSS only and retains existing click handlers, routes, evidence semantics and backend. It is **not** a new fullscreen-router implementation; broad cleanup and code splitting remain deferred to a separate review.
+
+The developer performs manual UI acceptance from screenshots. Build via `npm run build:dev` or perform a guarded frontend-only DEV release with the installed `sphere deploy dev`. Do not invoke the full API/DB deploy script for this CSS-only change.
