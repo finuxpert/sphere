@@ -43,7 +43,7 @@ function eventRelation(eventAt = '', issueAt = '', thresholdMinutes = 15, source
   return deltaMinutes < 0 ? 'BEFORE ISSUE' : 'AFTER ISSUE'
 }
 
-export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false, compact = false, onOpen = null }) {
+export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false, compact = false, onOpen = null, paired = false }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
@@ -52,8 +52,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const host = job?.host || ''
   const consumerType = job?.consumerType || ''
   const anchorAt = job?.at || ''
-  const correlationScope = anchorAt ? 'Selected observation context' : 'Selected workload context'
-
+  
   React.useEffect(() => {
     if (!incidentActive) {
       setData(null)
@@ -102,8 +101,8 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const issueSource = (alignment.sources || []).find((source) => String(source?.name || '').toUpperCase() === 'ISSUE START')
   const issueEvent = events.find((event) => String(event?.source || '').toUpperCase() === 'ISSUE START')
   const issueAt = issueSource?.observed_at || issueEvent?.at || ''
-  const timingLabel = state === 'ALIGNED' ? 'Same time window' : state
-  const timingSummary = `${timingLabel}${hasSkew ? ` · ${Math.round(Number(skew))}m difference` : ''} · Cause not confirmed`
+  const timingLabel = state === 'ALIGNED' ? 'Same period' : state
+  const timingSummary = `${timingLabel}${hasSkew ? ` · ${Math.round(Number(skew))}m difference` : ''} · Root cause not confirmed`
   const workloadGapMinutes = Number(alignment.workload_gap_minutes)
   const hasWorkloadGap = Number.isFinite(workloadGapMinutes)
   const alignmentHint = state === 'ALIGNED'
@@ -117,31 +116,31 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         : 'Cross-source timing status.'
 
   if (compact) {
-    const timingState = state === 'ALIGNED' ? 'Same time window' : state
+    const timingState = state === 'ALIGNED' ? 'Same period' : state
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
       ? `No overlap · ${Math.round(workloadGapMinutes)}m gap`
       : hasSkew
         ? `${Math.round(Number(skew))}m difference`
         : timingState
-    return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Correlated Events">
-      <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
-      <strong>{events.length ? `${events.length} events · ${timingDetail}` : 'No correlated events'}</strong>
+    return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Related Events">
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events</span>
+      <strong>{events.length ? `${events.length} events · ${timingDetail}` : 'No related events'}</strong>
       <em aria-hidden="true">›</em>
     </button>
   }
 
-  return <section className="rundeckEvidenceTimeline" aria-label="Correlated events">
+  return <section className="rundeckEvidenceTimeline" aria-label="Related events">
     <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Correlated Events</span>
-      <span className="rundeckEvidenceScope">{correlationScope}</span>
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME TIME WINDOW' : state}</span>
+      {!paired && <span className="rundeckEvidenceScope">Selected job</span>}
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'ALIGNED' ? 'SAME PERIOD' : state}</span>
       <small>{events.length ? `${events.length} event${events.length === 1 ? '' : 's'}` : 'No events'}</small>
     </div>
 
     <div className={`rundeckEvidenceTimingStrip ${alignmentClass(state)}`}>
-      <strong>Timing</strong>
+      <strong>Time check</strong>
       <span>{timingSummary}</span>
-      {issueAt && <small>Issue reference {formatWib(issueAt, true)} WIB</small>}
+      {issueAt && <small>Issue time {formatWib(issueAt, true)} WIB</small>}
     </div>
 
     <div className="rundeckEvidenceBody">
@@ -168,7 +167,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
         </div>
 
         <details className="rundeckEvidenceTechnical">
-          <summary>Timing Details</summary>
+          <summary>Time check details</summary>
           <div className="rundeckEvidenceSources" aria-label="Source alignment">
             {alignment.sources?.map((source) => <span key={source.name}>
               <b>{sourceLabel(source.name)}</b>
