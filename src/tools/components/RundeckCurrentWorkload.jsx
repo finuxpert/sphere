@@ -206,7 +206,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap">
       <table>
-        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th></tr></thead>
+        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
         <tbody>
           {visible.map((row) => {
             const details = row.details || {}
@@ -240,10 +240,11 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
               <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
               <td>{numberText(processes, 0)}</td>
               <td>{wpText(details)}</td>
+               <td title="Last saved workload observation, not job end time">{row.collected_at ? `${formatWib(row.collected_at,true)} WIB` : '—'}</td>
             </tr>
           })}
-          {!rows.length && <tr><td colSpan="6">No job or program observed in this collection.</td></tr>}
-          {rows.length > 0 && !visible.length && <tr><td colSpan="6">No matching job or program in the {loaded.length} loaded rows. Use Search for retained history.</td></tr>}
+          {!rows.length && <tr><td colSpan="7">No job or program observed in this collection.</td></tr>}
+          {rows.length > 0 && !visible.length && <tr><td colSpan="7">No matching job or program in the {loaded.length} loaded rows. Use Search for retained history.</td></tr>}
         </tbody>
       </table>
     </div>}
