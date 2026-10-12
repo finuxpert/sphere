@@ -1070,3 +1070,71 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
   height:auto!important;
   padding-bottom:0!important;
 }
+
+
+/* SPHERE v1.35 compact cockpit: use available screen without nested chrome.
+   Presentation only: SAP data, threshold calculations and freshness unchanged. */
+@media screen and (min-width:1281px){
+ .appShell:has(.rundeckPanel) .rundeckLandscapeHeader{min-height:65px!important;padding:5px 0 7px!important;gap:10px!important}
+ .appShell:has(.rundeckPanel) .rundeckTitleBlock{min-width:250px!important;flex-basis:400px!important}
+ .appShell:has(.rundeckPanel) .rundeckActions{flex:1 1 auto!important;min-width:0!important;gap:4px 9px!important}
+ .appShell:has(.rundeckPanel) .rundeckActionCluster,
+ .appShell:has(.rundeckPanel) .rundeckStateCluster{min-width:0!important;column-gap:7px!important}
+ .appShell:has(.rundeckPanel) .rundeckDataAlignment{min-width:0!important;max-width:min(320px,100%)!important}
+ .appShell:has(.rundeckPanel) .rundeckDataAlignmentPopover{max-width:min(310px,calc(100vw - 24px))}
+ .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard{padding:10px 11px 8px!important;gap:4px!important;min-height:108px!important}
+ .appShell:has(.rundeckPanel) .rundeckUnifiedAppCards{gap:7px!important}
+ .appShell:has(.rundeckPanel) .rundeckUnifiedMetric strong{font-size:15px!important}
+ .appShell:has(.rundeckPanel) .rundeckUnifiedMetric small{font-size:10.5px!important}
+ .appShell:has(.rundeckPanel) .rundeckAnalysisLaunchers{min-height:52px!important;padding:3px 0!important;gap:10px!important}
+ .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button{min-height:43px!important;padding:4px 8px!important}
+ .appShell:has(.rundeckPanel) .rundeckTrendSharedControls{min-height:31px!important;margin-bottom:4px!important}
+ .appShell:has(.rundeckPanel) .rundeckTrendBandV13454{padding-top:6px!important}
+ .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid>section{padding:7px 10px 6px!important}
+ .appShell:has(.rundeckPanel) .rundeckTripleTrendGrid .rundeckTrendChart{height:clamp(195px,23dvh,270px)!important;min-height:195px!important;max-height:270px!important}
+ .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace{min-height:0!important}
+ .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceHead{margin-bottom:2px!important}
+ .appShell:has(.rundeckPanel) .rundeckCurrentWorkload :is(th,td){font-size:10.5px!important}
+ .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadName button{font-size:11px!important}
+ .appShell:has(.rundeckPanel) .rundeckWorkloadPager{min-height:25px!important}
+}
+@media screen and (min-width:1281px) and (min-height:800px){
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadTableWrap{
+   max-height:clamp(200px,calc(100dvh - 550px),460px)!important;
+   overflow-y:auto!important;
+ }
+}
+@media screen and (min-width:1281px) and (max-height:799px){
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid .rundeckTrendChart{
+   height:195px!important;min-height:195px!important
+ }
+}
+@media screen and (min-width:1281px){
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer{
+   max-height:calc(100dvh - 24px)!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer>header{padding-top:9px!important;padding-bottom:8px!important}
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawerBody{min-height:0!important}
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer :is(table, .rundeckJobRelatedAnalysis){font-size:11px}
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer :is(th,td){line-height:1.35}
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer :is(button,input,select):focus-visible{
+   outline:2px solid var(--sphere-accent,#4fc6c8)!important;outline-offset:1px;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-availability{
+   width:min(1080px,calc(100vw - 40px))!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-observation-history,
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-issues,
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-evidence{
+   width:min(1120px,calc(100vw - 40px))!important;
+ }
+}
+@media screen and (max-width:760px){
+ .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard{min-width:0!important}
+ .appShell:has(.rundeckPanel) .rundeckUnifiedMetric strong{font-variant-numeric:tabular-nums}
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer{max-width:calc(100vw - 12px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .appShell:has(.rundeckPanel) .rundeckUnifiedAppCard,
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer{animation:none!important;transition:none!important}
+}
