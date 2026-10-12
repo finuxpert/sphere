@@ -2,6 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost } from './sapUiFormat.js'
 import './RundeckObservationHistory.css'
+import { observationIdentityCounts } from './rundeckObservationIdentity.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const GAP_MS = 25 * 60 * 1000
@@ -15,7 +16,7 @@ const numeric = (value) => {
 const rowMetric = (row, key) => {
   const details = row?.details || {}
   if (key === 'pss') return numeric(details.total_pss_gb ?? details.pss_gb)
-  if (key === 'processes') return numeric(details.process_count) ?? numeric(details.pids?.length) ?? 1
+  if (key === 'processes') return numeric(details.process_count) ?? (Array.isArray(details.pids) ? details.pids.length : null)
   return null
 }
 
@@ -87,6 +88,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
     })
   }
 
+  const identity = observationIdentityCounts(rows)
   const selectedAt = Date.parse(job.at || '')
   const visibleRows = showAll ? rows : rows.slice(0, 8)
   const cpuValues = rows.map((row) => numeric(row.cpu_pct)).filter((value) => value !== null)
@@ -108,7 +110,8 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
   const content = <>
     {error && <div className="rundeckObservationHistoryState is-error">{error}</div>}
     {!error && embedded && <div className="rundeckObservationHistoryContext">
-      <span><b>Saved runs</b><strong>{rows.length}</strong></span>
+      <span><b>Performance observations</b><strong>{identity.performanceObservations}</strong></span>
+      <span><b>Rundeck collections</b><strong>{identity.rundeckCollections ?? '—'}</strong></span>
       {!paired && <span><b>APP</b><strong>{shortHost(job.host || rows[0]?.host || '—')}</strong></span>}
       <span><b>Period</b><strong>{timeSpan}</strong></span>
       {cpuValues.length > 0 && <span><b>CPU Range</b><strong>{numberText(Math.min(...cpuValues),1)}–{numberText(Math.max(...cpuValues),1)}%</strong></span>}
@@ -116,7 +119,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
       {criticalValues.length > 0 && <span><b>Critical WP Range</b><strong>{Math.min(...criticalValues)}–{Math.max(...criticalValues)}</strong></span>}
     </div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
-      <thead><tr><th>Time (WIB)</th><th>Run</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>Time (WIB)</th><th>Rundeck collection</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
       <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
@@ -137,22 +140,22 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           } : undefined}
         >
           <td>{formatWib(row.collected_at, true)}</td>
-          <td><button type="button" className="rundeckHistoryRunButton" title="Open this run timestamp in the selected job chart" onClick={(event) => { event.stopPropagation(); inspectObservation(row) }}>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</button></td>
+          <td><button type="button" className="rundeckHistoryRunButton" title="Rundeck collection reference, not an SAP SM37 execution" onClick={(event) => { event.stopPropagation(); inspectObservation(row) }}>#{row.execution_id || String(row.collection_id || '').replace('rundeck-', '') || '—'}</button></td>
           <td title={row.host}>{shortHost(row.host)}</td>
           <td>{numberText(row.cpu_pct)}%</td>
           <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
-          <td title={`Processes ${numberText(rowMetric(row, 'processes'), 0)} · WP ${wp}`}>{numberText(row.host_wp_critical, 0)}</td>
+          <td title={`Processes ${rowMetric(row, 'processes') ?? 'unknown'} · WP ${wp}`}>{numberText(row.host_wp_critical, 0)}</td>
         </tr>
       })}{!rows.length && <tr><td colSpan="6">No saved performance records for this job or program.</td></tr>}</tbody>
-    </table>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
+    </table><p className="rundeckIssueSourceNote">Performance samples and Rundeck collections are not SAP job executions. Verify job execution in SM37.</p>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
   if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Run history">{content}</section>
 
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
     <summary>
-      <SphereIcon name="history" /> Performance History
-      <span>{error ? 'unavailable' : `90D · ${rows.length} records`}</span>
+      <SphereIcon name="history" /> Performance observations
+      <span>{error ? 'unavailable' : `90D · ${identity.performanceObservations} observations`}</span>
       {historySummary && <small className="rundeckObservationHistorySummary">{historySummary}</small>}
     </summary>
     {content}
