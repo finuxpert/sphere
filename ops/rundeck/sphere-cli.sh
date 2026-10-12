@@ -22,6 +22,31 @@ if [[ "$MODE" == prod ]]; then
   read -r -p "Type exact 'DEPLOY PROD' to continue: " APPROVAL
   [[ "$APPROVAL" == "DEPLOY PROD" ]] || { echo "PROD=HOLD"; exit 2; }
 fi
+# Idempotency guard: once this SHA is the active verified web release,
+# re-running the command is a successful no-op, not another Vite build.
+# Existing but inactive release directories are never overwritten.
+CURRENT="$WEB/current"
+PREVIOUS="$(readlink -f "$CURRENT")"
+[[ -f "$PREVIOUS/index.html" && "$PREVIOUS" == "$WEB/releases/"* ]] || {
+  echo "BLOCKED: invalid current web release"
+  exit 2
+}
+RELEASE="$WEB/releases/$SHA"
+if [[ "$PREVIOUS" == "$RELEASE" ]]; then
+  PUBLIC_HTML="$(mktemp)"
+  trap 'rm -f "$PUBLIC_HTML"' EXIT
+  curl --noproxy '*' -fsS --max-time 20 "$URL" -o "$PUBLIC_HTML"
+  cmp -s "$RELEASE/index.html" "$PUBLIC_HTML" || {
+    echo "BLOCKED: active release differs from public HTTPS"
+    exit 2
+  }
+  echo "FINAL=PASS MODE=$MODE DEPLOY=ALREADY_CURRENT BUILD=SKIPPED SOURCE_SHA=$SHA QA=SKIPPED DB=UNCHANGED BACKEND=UNCHANGED"
+  exit 0
+fi
+[[ ! -e "$RELEASE" && ! -L "$RELEASE" ]] || {
+  echo "BLOCKED: inactive release already exists; refusing overwrite: $RELEASE"
+  exit 2
+}
 if [[ "$MODE" == dev ]]; then
   npm run build:dev
 else
