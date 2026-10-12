@@ -114,6 +114,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [loadedSearch, setLoadedSearch] = React.useState('')
+  const [listPage,setListPage]=React.useState(0)
   const [nowMs, setNowMs] = React.useState(() => Date.now())
 
   React.useEffect(() => {
@@ -180,6 +181,10 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       ...(Array.isArray(d.pids) ? d.pids : []),d.wp,d.wp_type]
       .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
   }) : loaded
+  const pageSize=4
+  const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
+  const currentPage=Math.min(listPage,totalPages-1)
+  const pageRows=visible.slice(currentPage*pageSize,(currentPage+1)*pageSize)
   const latestObservedAt = rows.reduce((latest, row) => {
     const timestamp = Date.parse(row.collected_at || '')
     return Number.isFinite(timestamp) && timestamp > Date.parse(latest || '') ? row.collected_at : latest
@@ -191,11 +196,11 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount" title="Observed count from API; loaded is the current response; use the internal table scroll for other loaded rows">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · ${rows.length} loaded` : `${workloadMeta.total || rows.length} observed · ${rows.length} loaded`}</span>
+      <span className="rundeckCurrentWorkloadCount" title="Observed count from API; loaded is the current response. Use Previous / Next for the loaded rows.">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · ${rows.length} loaded` : `${workloadMeta.total || rows.length} observed · ${rows.length} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <label className="rundeckCurrentWorkloadSearch">
           <span>Search loaded rows</span>
-          <input type="search" aria-label="Search loaded jobs and programs" placeholder="Job, program, APP or PID" value={loadedSearch} onChange={event => setLoadedSearch(event.target.value)} />
+          <input type="search" aria-label="Search loaded jobs and programs" placeholder="Job, program, APP or PID" value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
         </label>
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>
@@ -208,7 +213,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       <table>
         <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
         <tbody>
-          {visible.map((row) => {
+          {pageRows.map((row) => {
             const details = row.details || {}
             const context = jobContext(row)
             const active = context && selectedJob?.key === context.key && selectedJob?.host === context.host
@@ -248,5 +253,10 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
         </tbody>
       </table>
     </div>}
+    {!loading&&!error&&visible.length>0&&<nav className="rundeckWorkloadPager" aria-label="Loaded job pages">
+      <small>{visible.length} matching of {loaded.length} loaded · Page {currentPage+1}/{totalPages}</small>
+      <button type="button" disabled={currentPage===0} onClick={()=>setListPage(n=>Math.max(0,n-1))}>Previous</button>
+      <button type="button" disabled={currentPage>=totalPages-1} onClick={()=>setListPage(n=>Math.min(totalPages-1,n+1))}>Next</button>
+    </nav>}
   </section>
 }
