@@ -185,7 +185,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       setError('')
     }catch(e){if(!signal.aborted&&e.name!=='AbortError')setError(e.message)}
     finally { if(!signal.aborted) setSourcesLoading(false) }
-  },[selectedHost])
+  },[selectedHost,lockedHost])
 
   React.useEffect(()=>{
     const controller=new AbortController()
