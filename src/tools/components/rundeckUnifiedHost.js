@@ -1,19 +1,19 @@
 import { shortHost } from './sapUiFormat.js'
 import { infrastructureTelemetryFreshness } from './infrastructureFreshness.js'
+import { hostResourceState, sapWorkloadState, filesystemResourceState } from './rundeckStatusSemantics.js'
 
 const numeric = value => value === null || value === undefined || value === '' ? null : (Number.isFinite(Number(value)) ? Number(value) : null)
 
 export function appSignalState(host = {}, verified = true) {
   if (!verified) return 'UNKNOWN'
-  const cpu = numeric(host.cpu_pct)
-  const ram = numeric(host.ram_pct)
-  const io = numeric(host.io_wait_pct)
-  const wpValue = numeric(host.wp_critical)
-  if ([cpu, ram, io, wpValue].every(value => value === null)) return 'UNKNOWN'
-  const wp = wpValue || 0
-  if ((cpu !== null && cpu >= 90) || (ram !== null && ram >= 90) || (io !== null && io >= 10) || wp >= 3) return 'CRITICAL'
-  if ((cpu !== null && cpu >= 75) || (ram !== null && ram >= 75) || (io !== null && io >= 5)) return 'WARNING'
-  return wp > 0 ? 'ATTENTION' : 'NORMAL'
+  const resource = hostResourceState(host)
+  const sap = sapWorkloadState(host)
+  if (resource === 'CRITICAL' || sap === 'CRITICAL') return 'CRITICAL'
+  if (resource === 'WARNING') return 'WARNING'
+  if (sap === 'ATTENTION') return 'ATTENTION'
+  // A partially sampled host is not necessarily healthy.
+  if (resource === 'UNKNOWN' || sap === 'UNKNOWN') return 'UNKNOWN'
+  return 'NORMAL'
 }
 
 export function matchedInfrastructureHost(sapHost, infraHosts = []) {
@@ -33,7 +33,7 @@ export function hostInfrastructureEvidence(sapHost, infraHosts = [], filesystems
   const freshness = infrastructureTelemetryFreshness(infra?.snapshot_ts, infra?.collection_id, rows, nowMs)
   const topFs = rows.filter(row => numeric(row.used_pct) !== null)
     .sort((a, b) => Number(b.used_pct) - Number(a.used_pct))[0] || null
-  const rawState = topFs ? Number(topFs.used_pct) >= 90 ? 'CRITICAL' : Number(topFs.used_pct) >= 80 ? 'ATTENTION' : 'NORMAL' : 'UNKNOWN'
+  const rawState = topFs ? filesystemResourceState(topFs.used_pct) : 'UNKNOWN'
   const state = freshness === 'FRESH' ? rawState : freshness
   return { infra, freshness, state, topFs }
 }
