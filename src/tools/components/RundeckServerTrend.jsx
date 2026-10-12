@@ -196,7 +196,8 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
   const hostLabels = React.useMemo(() => hosts.map(shortHost), [hosts])
   const focusedHost = resolveTrendFocus(null, shortHost(selectedHost || ''), hostLabels)
   const option = React.useMemo(() => {
-    const colors = palette()
+    // Theme revision is part of the memoized palette snapshot: refresh ECharts tokens after theme changes.
+    const colors = { ...palette(), revision: themeRevision }
     const rows = trend?.items || []
     const availabilityMode = trend?.metric === 'availability'
     const selectedKey = focusedHost
