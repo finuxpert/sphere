@@ -224,34 +224,37 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       tooltip: {
         trigger: 'axis',
         confine: true,
+        enterable: false,
+        hideDelay: 0,
+        transitionDuration: 0,
         position: (pos, params, dom, rect, size) => {
           const x = Math.max(6, Math.min(pos[0] + 12, size.viewSize[0] - size.contentSize[0] - 6))
           const y = Math.max(6, Math.min(pos[1] - size.contentSize[1] - 12, size.viewSize[1] - size.contentSize[1] - 6))
           return [x, y]
         },
-        extraCssText: 'max-width:320px;white-space:normal;line-height:1.4;',
+        extraCssText: 'max-width:240px;white-space:normal;line-height:1.3;pointer-events:none;',
         backgroundColor: colors.panel,
         borderWidth: 0,
         textStyle: { color: colors.text, fontSize: 11 },
         formatter: (points = []) => {
           if (!points.length) return ''
           const bucketAt = points[0]?.axisValue
-          const lines = [`<b>Bucket: ${formatWib(bucketAt, true)} WIB</b>`]
-          const valid = points.filter(point => point?.data?.value?.[1] !== null && point?.data?.value?.[1] !== undefined)
-          const zeros = valid.filter(point => Number(point.data.value[1]) === 0)
-          const measured = valid.filter(point => Number(point.data.value[1]) !== 0)
-          const focusedZero = zeros.find(point => point.seriesName === focusedHost) || zeros[0]
-          const visible = [...measured, ...(focusedZero ? [focusedZero] : [])]
-          visible.forEach((point) => {
-            const value = point.data.value[1]
-            if (mode === 'max' && point.data?.peakAt) {
-              lines.push(`${point.marker || ''}${point.seriesName} Peak <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b> · Peak at ${formatWib(point.data.peakAt, true)} WIB`)
-            } else {
-              lines.push(`${point.marker || ''}${point.seriesName} ${mode === 'max' ? 'Peak' : 'Avg'} <b>${numberText(value, 1)}${trend?.unit === '%' ? '%' : ''}</b>`)
-            }
+          const valid = points.filter(point => {
+            const sample = point?.data?.value?.[1]
+            return sample !== null && sample !== undefined && sample !== '' && Number.isFinite(Number(sample))
           })
-          if (zeros.length > 1) lines.push(`${zeros.length} APP traces measured 0 · other zero traces grouped`)
-          if (!valid.length) lines.push('No retained sample at this bucket')
+          const focused = valid.find(point => point.seriesName === focusedHost)
+          const ranked = [...valid].sort((a, b) => Number(b.data.value[1]) - Number(a.data.value[1]))
+          const visible = focused ? [focused, ...ranked.filter(point => point !== focused).slice(0, 1)] : ranked.slice(0, 2)
+          const lines = [`<b>${formatWib(bucketAt, true)} WIB · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
+          visible.forEach(point => {
+            const name = String(point.seriesName || '').replace(/[&<>"']/g, character => ({
+              '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+            })[character])
+            lines.push(`${point.marker || ''}${name} <b>${numberText(point.data.value[1], 1)}${trend?.unit === '%' ? '%' : ''}</b>`)
+          })
+          if (valid.length > visible.length) lines.push(`+${valid.length - visible.length} APP samples · select point for details`)
+          if (!valid.length) lines.push('No retained sample in bucket')
           return lines.join('<br/>')
         },
       },
@@ -303,7 +306,8 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
 
     const selectItem = (item, seriesIndex = null, dataIndex = null) => {
       if (!item || item.gap || item?.value?.[1] === null || item?.value?.[1] === undefined) return
-      if (seriesIndex !== null && dataIndex !== null) chart.dispatchAction({ type: 'showTip', seriesIndex, dataIndex })
+      // A click opens exact-sample analysis; do not leave a hover bubble over the plot.
+      chart.dispatchAction({ type: 'hideTip' })
       const { onSelect: currentSelect, trend: currentTrend, mode: currentMode } = activeCallbackRef.current
       const availability = currentTrend?.metric === 'availability'
       const selectedAt = availability ? item.bucket : (currentMode === 'max' ? (item.peakAt || item.bucket) : item.bucket)
