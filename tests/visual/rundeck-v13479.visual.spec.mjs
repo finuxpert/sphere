@@ -819,8 +819,8 @@ test('v1.34.91 desktop Live search filters only loaded real observations',async 
   await expect(section.getByRole('columnheader',{name:'Observed At'})).toBeVisible()
   // Live data is not a fixture: an actual API response may legitimately contain zero workloads.
   const sourceCount=section.locator('.rundeckCurrentWorkloadCount')
-  await expect(sourceCount).toContainText(/\\d+ loaded/)
-  const loadedCount=Number((await sourceCount.textContent())?.match(/(\\d+)\\s+loaded/)?.[1] ?? -1)
+  await expect(sourceCount).toContainText(/\d+ loaded/)
+  const loadedCount=Number((await sourceCount.textContent())?.match(/(\d+)\s+loaded/)?.[1] ?? -1)
   expect(loadedCount).toBeGreaterThanOrEqual(0)
   await search.fill('nonexistent-unique-job-zyx4321')
   await expect(section.getByText(new RegExp('No matching job or program in the '+loadedCount+' loaded rows'))).toBeVisible()
