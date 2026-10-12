@@ -34,8 +34,10 @@ function wpText(details = {}) {
 }
 
 function processCount(details = {}) {
-  const value = Number(details.process_count || 0)
-  return Number.isFinite(value) && value > 0 ? value : 1
+  const raw = details.process_count
+  if (raw === null || raw === undefined || raw === '') return null
+  const value = Number(raw)
+  return Number.isInteger(value) && value >= 0 ? value : null
 }
 
 function relativeAge(value, nowMs) {
@@ -205,11 +207,11 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount" title="Observed count from API; loaded is the current response. Use Previous / Next for the loaded rows.">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · ${rows.length} loaded` : `${workloadMeta.total || rows.length} observed · ${rows.length} loaded`}</span>
+      <span className="rundeckCurrentWorkloadCount" title="Observed count from API; Live search and pagination cover only loaded rows. Use historical Search for all saved observations.">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · ${rows.length} loaded` : `${workloadMeta.total || rows.length} observed · ${rows.length} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <label className="rundeckCurrentWorkloadSearch">
-          <span>Search loaded rows</span>
-          <input type="search" aria-label="Search loaded jobs and programs" placeholder="Job, program, APP or PID" value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
+          <span>Search {rows.length} loaded rows</span>
+          <input type="search" aria-label={`Search ${loaded.length} loaded jobs and programs only`} placeholder={`Search ${loaded.length} loaded rows`} value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
         </label>
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>
@@ -235,15 +237,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             return <tr
               key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`}
               className={active ? 'is-selected' : ''}
-              tabIndex={context ? 0 : undefined}
-              role={context ? 'button' : undefined}
-              title={context ? 'Open this job or program in the analysis panel' : undefined}
               onClick={context ? () => onSelectJob?.(context) : undefined}
-              onKeyDown={context ? (event) => {
-                if (event.key !== 'Enter' && event.key !== ' ') return
-                event.preventDefault()
-                onSelectJob?.(context)
-              } : undefined}
             >
               <td title={row.host}>{shortHost(row.host)}</td>
               <td className="rundeckCurrentWorkloadName">
@@ -252,7 +246,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
               </td>
               <td title={CPU_HINT} className={Number.isFinite(cpu) && cpuNeedsAttention ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
               <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
-              <td>{numberText(processes, 0)}</td>
+              <td>{processes === null ? '—' : numberText(processes, 0)}</td>
               <td>{wpText(details)}</td>
                <td title="Last saved workload observation, not job end time">{row.collected_at ? `${formatWib(row.collected_at,true)} WIB` : '—'}</td>
             </tr>
