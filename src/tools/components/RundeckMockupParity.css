@@ -492,3 +492,34 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
     padding:9px 12px!important;
   }
 }
+
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters{
+  display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;
+  margin:7px 0 10px;padding-bottom:6px;
+  border-bottom:1px solid var(--sphere-design-edge);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters label:not(.is-checkbox){
+  display:flex;flex:1;min-width:180px;flex-direction:column;gap:4px;
+  font-size:10px;color:var(--sphere-design-caption);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters input[type="search"]{
+  width:100%;min-height:33px;padding:6px 10px;
+  border:1px solid var(--sphere-design-edge);border-radius:4px;
+  background:var(--sphere-page,#0f151a);color:var(--sphere-design-ink);
+  font:inherit;font-size:11px;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters .is-checkbox{
+  display:inline-flex;align-items:center;gap:5px;min-height:33px;
+  font-size:11px;white-space:nowrap;cursor:pointer;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters button{
+  min-height:32px;padding:5px 10px;cursor:pointer;
+  border:1px solid var(--sphere-design-edge);border-radius:4px;
+  color:var(--sphere-design-ink);background:transparent;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters button:hover{
+  background:var(--sphere-design-subtle);
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters small{
+  margin:0 0 10px auto;font-size:10px;color:var(--sphere-design-caption);
+}

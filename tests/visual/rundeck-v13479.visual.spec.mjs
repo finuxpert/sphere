@@ -743,3 +743,22 @@ test('v1.34.90 desktop SAP Issues supports source-backed APP and indicator filte
   await filters.getByRole('searchbox').fill('')
   await expect(filters.getByRole('combobox')).toBeVisible()
 })
+
+test('v1.34.90 desktop WP and Trace search acts on retained evidence only',async ({page})=>{
+  await openCockpit(page)
+  const modal=await openActionableLiveJob(page)
+  const panel=modal.locator('.rundeckWpSignalPanel')
+  await expect(panel).toBeVisible({timeout:30000})
+  if(await panel.locator('.rundeckWpSignalFilters').count()){
+    const search=panel.getByRole('searchbox')
+    await expect(search).toBeVisible()
+    await search.fill('no-matching-pid-zz')
+    await expect(panel.getByText('No saved WP / Trace row matches these filters.')).toBeVisible()
+    await search.fill('')
+    await expect(panel.getByRole('checkbox',{name:'Errors only'})).toBeVisible()
+    await expect(panel.getByRole('button',{name:'All rows'})).toBeVisible()
+  } else {
+    await expect(panel).toHaveClass(/is-empty/)
+    await expect(panel).toContainText('WP/Trace signal was not retained')
+  }
+})
