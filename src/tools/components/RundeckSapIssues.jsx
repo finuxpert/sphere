@@ -3,7 +3,7 @@ import SphereIcon from './SphereIcon.jsx'
 import SphereOperatorTabs from './SphereOperatorTabs.jsx'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { metricResourceState, sapWorkloadState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
-import { settleSapIssueSources, unavailableSapIssueIndicators, SAP_ISSUE_SOURCE_LABELS } from './rundeckIssueSources.js'
+import { settleSapIssueSources, unavailableSapIssueIndicators, SAP_ISSUE_SOURCE_LABELS, sapIssueSampleFreshness } from './rundeckIssueSources.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const SEVERITY_RANK = { CRITICAL: 4, WARNING: 3, ATTENTION: 2, NORMAL: 1, UNKNOWN: 0 }
@@ -17,7 +17,7 @@ const serviceState = (value) => {
 }
 const valueText = (value, unit = '') => value === null || value === undefined || String(value).trim() === '' || !Number.isFinite(Number(value)) ? '—' : `${numberText(value, unit === '%' ? 1 : 0)}${unit}`
 const durationText = (seconds) => {
-  const value = Number(seconds)
+  const value = seconds === null || seconds === undefined || String(seconds).trim() === '' ? NaN : Number(seconds)
   if (!Number.isFinite(value) || value < 0) return '—'
   const minutes = Math.floor(value / 60)
   if (minutes < 60) return minutes < 1 ? '<1m' : `${minutes}m`
@@ -72,16 +72,22 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const availability=data.availability||{}
   const indicators=unavailableSapIssueIndicators(failedSources)
 
+  const nowMs = Date.now()
   hosts.forEach((host)=>{
     const app=shortHost(host.host)
+    const freshness=sapIssueSampleFreshness(data.hosts,host,nowMs)
+    const reportedState=(state)=>freshness==='FRESH'?state:'UNKNOWN'
+    const prefix=freshness==='FRESH'?'':'Last '
+    const sampleReason=freshness==='FRESH'?'':freshness==='STALE'?' · Old sample':' · Sample time or collection not verified'
     indicators.push(
-      {scope:app,indicator:'CPU',status:metricResourceState(host.cpu_pct,'cpu'),current:valueText(host.cpu_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.cpu.warning}% · Crit ${OPERATOR_THRESHOLDS.cpu.critical}%`,host:host.host},
-      {scope:app,indicator:'RAM',status:metricResourceState(host.ram_pct,'ram'),current:valueText(host.ram_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.ram.warning}% · Crit ${OPERATOR_THRESHOLDS.ram.critical}%`,host:host.host},
-      {scope:app,indicator:'I/O Wait',status:metricResourceState(host.io_wait_pct ?? host.iowait_pct,'ioWait'),current:valueText(host.io_wait_pct ?? host.iowait_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.ioWait.warning}% · Crit ${OPERATOR_THRESHOLDS.ioWait.critical}%`,host:host.host},
-      {scope:app,indicator:'APP Critical WP',status:wpState(host),current:wpValue(host.wp_critical),reason:`Attention ${OPERATOR_THRESHOLDS.criticalWp.attention}–2 · Critical ≥${OPERATOR_THRESHOLDS.criticalWp.critical}`,host:host.host},
+      {scope:app,indicator:'CPU',status:reportedState(metricResourceState(host.cpu_pct,'cpu')),current:prefix+valueText(host.cpu_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.cpu.warning}% · Crit ${OPERATOR_THRESHOLDS.cpu.critical}%${sampleReason}`,host:host.host},
+      {scope:app,indicator:'RAM',status:reportedState(metricResourceState(host.ram_pct,'ram')),current:prefix+valueText(host.ram_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.ram.warning}% · Crit ${OPERATOR_THRESHOLDS.ram.critical}%${sampleReason}`,host:host.host},
+      {scope:app,indicator:'I/O Wait',status:reportedState(metricResourceState(host.io_wait_pct ?? host.iowait_pct,'ioWait')),current:prefix+valueText(host.io_wait_pct ?? host.iowait_pct,'%'),reason:`Warn ${OPERATOR_THRESHOLDS.ioWait.warning}% · Crit ${OPERATOR_THRESHOLDS.ioWait.critical}%${sampleReason}`,host:host.host},
+      {scope:app,indicator:'APP Critical WP',status:reportedState(wpState(host)),current:prefix+wpValue(host.wp_critical),reason:`Attention ${OPERATOR_THRESHOLDS.criticalWp.attention}–2 · Critical ≥${OPERATOR_THRESHOLDS.criticalWp.critical}${sampleReason}`,host:host.host},
     )
   })
 
+  if(data.hosts?.complete === false) indicators.push({scope:'APP',indicator:'Collection coverage',status:'UNKNOWN',current:`${data.hosts.received_host_count ?? hosts.length}/${data.hosts.expected_host_count ?? '—'} APPs`,reason:'Latest collection is incomplete'})
   if (data.hosts && !hosts.length) indicators.push({scope:'APP',indicator:'Host performance',status:'UNKNOWN',current:'No observations',reason:'Host response contains no APP readings'})
   const addServices=(label,rows)=>{ if (!data.availability) return
     if (!Array.isArray(rows) || !rows.length) { indicators.push({scope:label,indicator:label,status:'UNKNOWN',current:'Not reported',reason:'No service status in Availability response'}); return }
