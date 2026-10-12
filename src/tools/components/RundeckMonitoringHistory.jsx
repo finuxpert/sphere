@@ -96,9 +96,7 @@ export default function RundeckMonitoringHistory(props) {
     refreshToken={refreshToken}
     selectedJob={selectedJob}
     onOpenEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
-    onOpenAvailability={() => setActiveOverlay({ type: 'availability', returnTo: { type: 'selected' } })}
     onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
-    onOpenHistory={() => selectedJob?.key && setActiveOverlay({ type: 'history', returnTo: { type: 'selected' } })}
     onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
     systemDataSummary={systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2')}
@@ -184,7 +182,7 @@ export default function RundeckMonitoringHistory(props) {
               : activeOverlay.returnTo?.type === 'review'
                 ? 'Back to Review'
                 : activeOverlay.returnTo?.type === 'history'
-                  ? 'Back to Observation History'
+                  ? 'Back to Run History'
                   : 'Back'}
           >
             <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading job performance…</div>}><RundeckJobHistory job={selectedJob} refreshToken={refreshToken} incidentStart={props.incidentStart} latestCollectionId={props.latestCollectionId} presentation="drawer" /></React.Suspense>
@@ -283,7 +281,7 @@ export default function RundeckMonitoringHistory(props) {
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
             title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}
-            subtitle={`${activeOverlay.app.host || 'UNKNOWN host'} · SAP ${props.sourceQuality?.performanceValid && !props.sourceQuality?.collectorBad ? (props.latestCollectionAt ? formatWib(props.latestCollectionAt, true) + ' WIB' : 'sample time UNKNOWN') : 'UNVERIFIED'} · Infrastructure checked separately`}
+            subtitle={`${activeOverlay.app.host || 'UNKNOWN host'} · SAP ${props.sourceQuality?.performanceValid && !props.sourceQuality?.collectorBad ? (props.latestCollectionAt ? formatWib(props.latestCollectionAt, true) + ' WIB' : 'sample time UNKNOWN') : 'UNVERIFIED'} · Infra data checked separately`}
             size="unified-app"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
