@@ -1,0 +1,281 @@
+/* SPHERE v1.35 DEV — consistent operator POPUPS, following the approved
+   PROD-style APP Analysis layout. No new pages/routes; no SAP data changes.
+   Imported after legacy cockpit CSS as the single final dialog authority. */
+.rundeckWorkspacePortal {
+  position:fixed!important;
+  inset:0!important;
+  z-index:1300!important;
+  pointer-events:none!important;
+  isolation:isolate;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceModalBackdrop{
+  position:absolute!important;
+  inset:0!important;
+  background:rgba(3,9,14,.72)!important;
+  backdrop-filter:none!important;
+  z-index:0!important;
+  pointer-events:auto!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer{
+  --sphere-popup-gap:12px;
+  box-sizing:border-box!important;
+  position:fixed!important;
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:translate(-50%,-50%)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  height:auto!important;
+  min-height:0!important;
+  width:min(1040px,calc(100vw - 32px))!important;
+  max-width:calc(100vw - 32px)!important;
+  max-height:calc(100dvh - 24px)!important;
+  overflow:hidden!important;
+  border:1px solid rgba(113,161,176,.26)!important;
+  border-radius:10px!important;
+  background:var(--sphere-page,#0f151a)!important;
+  box-shadow:0 18px 56px rgba(0,0,0,.55)!important;
+  pointer-events:auto!important;
+  z-index:1!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer:is(.is-unified-app,.is-performance,.is-wide){
+  width:min(1400px,calc(100vw - 32px))!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer:is(.is-evidence,.is-issues,.is-observation-history,.is-availability,.is-system-data){
+  width:min(1040px,calc(100vw - 32px))!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-unified-app{
+  height:calc(100dvh - 24px)!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer>header{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex:0 0 auto!important;
+  min-height:54px!important;
+  gap:12px!important;
+  padding:10px 16px!important;
+  border-bottom:1px solid rgba(126,147,158,.18)!important;
+  background:var(--sphere-page,#0f151a)!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawerIdentity{
+  flex:1 1 auto;
+  min-width:0!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawerIdentity h3{
+  margin:0 0 3px!important;
+  font-size:15px!important;
+  line-height:1.25!important;
+  font-weight:780!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawerIdentity small{
+  display:block;
+  font-size:10px!important;
+  line-height:1.4!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer .rundeckWorkspaceDrawerHeaderActions{
+  display:flex!important;
+  align-items:center!important;
+  flex:0 0 auto!important;
+  gap:7px!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer .rundeckWorkspaceClose{
+  display:inline-flex!important;
+  flex:0 0 32px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:32px!important;
+  height:32px!important;
+  border:1px solid rgba(79,198,200,.4)!important;
+  border-radius:6px!important;
+  font-size:19px!important;
+  opacity:1!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer .rundeckWorkspaceBack{
+  min-height:32px!important;
+  width:auto!important;
+  padding:5px 10px!important;
+  border-radius:5px!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer .rundeckWorkspaceDrawerNavigation{
+  flex:0 0 auto!important;
+  padding:7px 16px 0!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  padding:10px 16px 14px!important;
+  font-size:10.5px!important;
+  line-height:1.4!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody table :is(th,td){
+  line-height:1.35!important;
+  vertical-align:middle;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer>footer{
+  flex:0 0 auto!important;
+  min-height:42px!important;
+  padding:7px 16px!important;
+  border-top:1px solid rgba(126,147,158,.15)!important;
+  background:var(--sphere-page,#0f151a)!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis{
+  min-height:0;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisGrid{
+  grid-template-columns:minmax(0, .95fr) minmax(0,1.15fr)!important;
+  align-items:stretch!important;
+  min-height:0;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisPane{
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer :is(button,input,select,textarea):focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+  outline-offset:2px!important;
+}
+/* Trend Details has its own body-level portal: give it the SAME centered,
+   opaque shell and scroll ownership. This fixes the off-screen title and
+   actions that were visible over underlying Jobs rows in the screenshot. */
+.rundeckTrendPointModalBackdrop{
+  position:fixed!important;
+  inset:0!important;
+  z-index:1500!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-sizing:border-box!important;
+  padding:12px!important;
+  overflow:hidden!important;
+  background:rgba(3,9,14,.72)!important;
+  isolation:isolate;
+}
+.rundeckTrendPointModalBackdrop>.rundeckTrendPointModal{
+  position:relative!important;
+  top:auto!important;
+  left:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  z-index:1!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  flex-direction:column!important;
+  width:min(1120px,100%)!important;
+  max-width:100%!important;
+  height:auto!important;
+  max-height:calc(100dvh - 24px)!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:1px solid rgba(113,161,176,.26)!important;
+  border-radius:10px!important;
+  background:var(--sphere-page,#0f151a)!important;
+  box-shadow:0 18px 56px rgba(0,0,0,.55)!important;
+}
+.rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalHeader{
+  flex:0 0 auto!important;
+  min-height:57px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  padding:10px 16px!important;
+  background:var(--sphere-page,#0f151a)!important;
+  border-bottom:1px solid rgba(126,147,158,.18)!important;
+}
+.rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalHeader>div{
+  min-width:0;
+}
+.rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalHeader h4{
+  font-size:15px!important;
+  margin:2px 0 3px!important;
+  line-height:1.25!important;
+}
+.rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalHeader small{
+  line-height:1.4!important;
+}
+.rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalHeader button{
+  flex:0 0 32px!important;
+  width:32px!important;
+  height:32px!important;
+  border:1px solid rgba(79,198,200,.4)!important;
+  border-radius:6px!important;
+  opacity:1!important;
+}
+.rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalBody{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  padding:10px 16px 14px!important;
+}
+.rundeckTrendPointModalBackdrop .rundeckTrendInvestigationActions{
+  position:relative!important;
+  z-index:0!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  background:var(--sphere-page,#0f151a)!important;
+}
+.rundeckTrendPointModalBackdrop .rundeckTrendInvestigationActions button{
+  min-height:30px!important;
+}
+.rundeckTrendPointModalBackdrop :is(button,[tabindex]):focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+  outline-offset:2px!important;
+}
+@media(max-width:1000px){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisGrid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-unified-app{
+    height:auto!important;
+  }
+}
+@media(max-width:640px){
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer{
+    width:calc(100vw - 12px)!important;
+    max-width:calc(100vw - 12px)!important;
+    max-height:calc(100dvh - 12px)!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer>header,
+  .rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalHeader{
+    padding:8px 10px!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer .rundeckWorkspaceDrawerBody,
+  .rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalBody{
+    padding:9px 10px 12px!important;
+  }
+  .rundeckTrendPointModalBackdrop{padding:6px!important}
+  .rundeckTrendPointModalBackdrop>.rundeckTrendPointModal{
+    max-height:calc(100dvh - 12px)!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawerIdentity h3,
+  .rundeckTrendPointModalBackdrop>.rundeckTrendPointModal>.rundeckTrendPointModalHeader h4{
+    font-size:14px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer,
+  .rundeckTrendPointModalBackdrop>.rundeckTrendPointModal{
+    animation:none!important;
+    transition:none!important;
+  }
+}
