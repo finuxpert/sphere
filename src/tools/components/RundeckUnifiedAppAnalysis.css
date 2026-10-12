@@ -13,3 +13,109 @@
 .rundeckUnifiedAnalysisUnknown{color:var(--sphere-text-muted,#718089);font-size:11px}
 @media(max-width:1000px){.rundeckUnifiedAnalysisGrid{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.rundeckUnifiedAnalysis *{scroll-behavior:auto!important}}
+
+
+/* v1.35.6 APP detail: one scroll owner, legible samples, no pager overlap.
+   Scoped to this combined APP popup; does not change Overview or Infrastructure-only modal. */
+@media (min-width:1100px) {
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisGrid {
+    grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)!important;
+    align-items:stretch!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap {
+    max-height:min(58dvh,580px)!important;
+    overflow-y:auto!important;
+  }
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap :is(th,td) {
+  padding:7px 6px!important;
+  font-size:10.5px!important;
+  line-height:1.35!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th {
+  font-size:9.5px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap td:first-child small,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerSource,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerWorkloads>header small {
+  font-size:10px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraFsPager {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:4px!important;
+  min-width:0!important;
+  flex-wrap:nowrap!important;
+  white-space:nowrap!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraFsPager button {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 23px!important;
+  width:23px!important;
+  height:25px!important;
+  padding:0!important;
+  font:inherit!important;
+  font-size:14px!important;
+  color:var(--sphere-text,#e7edf0)!important;
+  background:transparent!important;
+  border:1px solid rgba(126,147,158,.19)!important;
+  border-radius:4px!important;
+  cursor:pointer;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraFsPager button:disabled {
+  opacity:.36!important;
+  cursor:default;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraFsPager small {
+  font-size:10px!important;
+  font-variant-numeric:tabular-nums;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraFsPager span {
+  margin-left:4px!important;
+  font-size:9.5px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraCurrent,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid,
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid article {
+  max-height:none!important;
+  min-height:0!important;
+  overflow:visible!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid {
+  align-items:start!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid article .cardHead {
+  flex-wrap:wrap!important;
+  gap:4px 8px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraGrid :is(th,td) {
+  font-size:10px!important;
+  line-height:1.35!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg {
+  height:180px!important;
+  min-height:180px!important;
+  max-height:180px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraChartWrap svg :is(.xTick text,.yTick text,.threshold text) {
+  font-size:15px!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraLegend {
+  font-size:10.5px!important;
+}
+@media(max-width:1099px){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisGrid {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap {
+    max-height:38dvh!important;
+    overflow:auto!important;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg {
+    height:175px!important;
+    min-height:175px!important;
+  }
+}
