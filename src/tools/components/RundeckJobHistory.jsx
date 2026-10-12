@@ -497,7 +497,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, de
 
   return <div className="rundeckJobPerformanceWrap">
     {!chartConfig.profile.hasIo && <div className="rundeckHiddenMetric">I/O 0 MiB/s</div>}
-    <div ref={ref} className="rundeckJobPerformanceChart" style={{ height: `${chartConfig.height}px` }} role="img" aria-label="Job or program CPU usage, memory, I/O, work process and Critical WP timeline with WIB time axis" />
+    <div ref={ref} className="rundeckJobPerformanceChart" style={{ height: `${chartConfig.height}px`, '--sphere-job-chart-height': `${chartConfig.height}px` }} role="img" aria-label="Job or program CPU usage, memory, I/O, work process and Critical WP timeline with WIB time axis" />
   </div>
 }
 
