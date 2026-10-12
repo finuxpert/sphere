@@ -103,9 +103,11 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const issueAt = pair.issueAt || ''
   const hasThreshold = pair.thresholdMinutes !== null
   const threshold = pair.thresholdMinutes
+  const relativeTiming = pair.direction === 'AFTER ISSUE' ? 'after issue observation'
+    : pair.direction === 'BEFORE ISSUE' ? 'before issue observation' : 'from issue observation'
   const timingSummary = pair.deltaMinutes === null
     ? 'Job/program ↔ issue: timestamps not verified'
-    : `Job/program sample ↔ issue first observed · ${pair.deltaMinutes}m apart`
+    : `Workload sample · ${pair.deltaMinutes}m ${relativeTiming}`
   const alignmentHint = state === 'WITHIN WINDOW'
     ? "Two retained observations are within the configured time window; the sample may be selected by the operator\'s chosen time. This does not identify job start or cause."
     : state === 'NO OVERLAP'
@@ -117,7 +119,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   if (compact) {
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
       ? `No overlap · ${Math.round(workloadGapMinutes)}m gap`
-      : pair.deltaMinutes !== null ? `${pair.deltaMinutes}m between samples` : 'Timing unverified'
+      : pair.deltaMinutes !== null ? `${pair.deltaMinutes}m ${relativeTiming}` : 'Timing unverified'
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Related Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events</span>
       <strong>{events.length ? `${events.length} events · ${timingDetail}` : 'No related events'}</strong>
