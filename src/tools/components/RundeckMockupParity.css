@@ -438,3 +438,57 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
   --sphere-design-subtle:rgba(58,93,115,.04);
   --sphere-design-panel:rgba(236,244,248,.7);
 }
+/* Mockup parity: real source filtering and PDF access without synthetic counts. */
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters{
+  display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px 14px;
+  padding:10px 0;margin:2px 0 9px;border-bottom:1px solid var(--sphere-design-edge);
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters label{
+  display:flex;flex-direction:column;gap:4px;min-width:0;
+  color:var(--sphere-design-caption);font-size:10px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters label:first-child{flex:1;min-width:180px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters input,
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters select{
+  min-height:33px;padding:7px 10px;
+  border:1px solid var(--sphere-design-edge);border-radius:5px;
+  background:var(--sphere-page,#0f151a);color:var(--sphere-design-ink);
+  font:inherit;font-size:11px;
+}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters small{margin-left:auto;margin-bottom:8px}
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters input:focus-visible,
+.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters select:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);outline-offset:2px;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataToolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  border-bottom:1px solid var(--sphere-design-edge);margin-bottom:10px;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataToolbar .rundeckSystemDataTabs{
+  margin:0!important;border-bottom:0!important;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemPdfAction{
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:32px;padding:6px 10px;margin:0 0 4px;
+  border:1px solid var(--sphere-design-edge);border-radius:5px;
+  background:transparent;color:var(--sphere-design-ink);
+  font:inherit;font-size:11px;font-weight:650;cursor:pointer;
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemPdfAction:hover{
+  background:var(--sphere-design-subtle);
+}
+.rundeckWorkspaceDrawer.is-system-data .rundeckSystemPdfAction:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);outline-offset:2px;
+}
+/* Move investigation context closer to real review evidence, not decorative counters. */
+@media(min-width:1281px){
+  .rundeckQuickAnalysisDrawer{width:min(1050px,74vw)!important}
+  .rundeckQuickAnalysisHead{padding:16px 22px!important}
+  .rundeckQuickScroll{padding:0 18px 14px!important}
+  .rundeckQuickMetrics{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+  .rundeckQuickMetrics span{font-size:10.5px!important;padding:11px!important}
+  .rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable th,
+  .rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTable td{
+    padding:9px 12px!important;
+  }
+}

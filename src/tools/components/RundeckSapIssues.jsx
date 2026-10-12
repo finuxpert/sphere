@@ -41,6 +41,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const [data, setData] = React.useState({ incidents:null, hosts:null, availability:null, readiness:null })
   const [error, setError] = React.useState('')
   const [indicatorView, setIndicatorView] = React.useState('review')
+  const [indicatorQuery,setIndicatorQuery] = React.useState('')
+  const [appFilter,setAppFilter] = React.useState('ALL')
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -108,7 +110,13 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
   const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
   const mostImpacted=reviewIndicators.find((row)=>/^APP\d+$/i.test(row.scope||''))?.scope || '—'
-  const visibleIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
+  const baseIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
+  const normalizedQuery=indicatorQuery.trim().toLocaleLowerCase()
+  const visibleIndicators=baseIndicators.filter(row=>
+    (appFilter==='ALL' || row.scope===appFilter)
+    && (!normalizedQuery || [row.scope,row.indicator,row.status,row.current,row.reason].some(value=>String(value||'').toLocaleLowerCase().includes(normalizedQuery)))
+  )
+  const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
   if(compact){
     const reviewText=reviewIndicators.length ? `${reviewIndicators.length} observations need review` : 'No SAP issue observation'
@@ -142,7 +150,15 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
         </div>
       </div>
       {sm37!=='READY'&&<p className="rundeckIssueSourceNote">SM37 feed not connected. Verify job execution status directly in SAP (SM37).</p>}
+      <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
+        <label><span>Find indicator</span><input type="search" value={indicatorQuery} onChange={event=>setIndicatorQuery(event.target.value)} placeholder="APP, indicator or status" /></label>
+        <label><span>APP</span><select value={appFilter} onChange={event=>setAppFilter(event.target.value)}>
+          <option value="ALL">All APPs</option>{appOptions.map(app=><option key={app} value={app}>{app}</option>)}
+        </select></label>
+        <small>{visibleIndicators.length} of {baseIndicators.length} indicators</small>
+      </div>
       {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">No abnormal indicators in the latest available checks. Verify freshness before treating this as current status.</p>}
+      {!visibleIndicators.length && baseIndicators.length>0 && <p className="rundeckIssueEmpty">No indicators match these filters.</p>}
       {visibleIndicators.length>0&&<div className="rundeckIssueIndicatorTableWrap">
         <table className="rundeckIssueIndicatorTable">
           <thead><tr><th>Scope</th><th>Indicator</th><th>Status</th><th>Current</th><th>Basis Check</th></tr></thead>

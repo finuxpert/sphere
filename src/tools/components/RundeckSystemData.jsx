@@ -32,10 +32,13 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
   const tokenStatus=platform?.token_management
   const tokenRows=tokenStatus?.items?.length?tokenStatus.items:[{kind:'reader',label:'Monitoring Reader',state:'UNKNOWN'},{kind:'runner',label:'Job Runner',state:'UNKNOWN'}]
   return <section className="rundeckSystemData" aria-label="System Data">
+    <div className="rundeckSystemDataToolbar">
     <div className="rundeckSystemDataTabs" role="tablist" aria-label="System data view">
       <button type="button" role="tab" aria-selected={tab==='collections'} className={tab==='collections'?'is-active':''} onClick={()=>setTab('collections')}><SphereIcon name="history"/> Collection History <small>{history.length}</small></button>
       <button type="button" role="tab" aria-selected={tab==='services'} className={tab==='services'?'is-active':''} onClick={()=>setTab('services')}><SphereIcon name="database"/> SPHERE Services <small>{serviceSummary||platformState}</small></button>
       <button type="button" role="tab" aria-selected={tab==='tokens'} className={tab==='tokens'?'is-active':''} onClick={()=>setTab('tokens')}><SphereIcon name="database"/> Token Management <small>Reader / Runner</small></button>
+    </div>
+    {onOpenPdf && <button type="button" className="rundeckSystemPdfAction" onClick={onOpenPdf} aria-label="Open PDF Preview"><SphereIcon name="pdf" /> PDF Preview</button>}
     </div>
 
     {tab==='collections'&&<div className="rundeckSystemDataPane">

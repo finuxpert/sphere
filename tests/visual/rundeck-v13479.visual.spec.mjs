@@ -686,7 +686,20 @@ test('v1.34.90 desktop Infrastructure modal uses history-first layout and real s
   await page.getByRole('navigation',{name:'Performance views'}).getByRole('button',{name:'Infrastructure Analysis'}).click()
   const drawer=page.getByRole('dialog',{name:'Infrastructure Analysis'})
   await expect(drawer).toBeVisible({timeout:30000})
-  await expect(drawer.getByRole('group',{name:'Select Infrastructure APP'}).getByRole('button')).toHaveCount(5)
+  // A visible dialog is not proof that its lazy-loaded Infrastructure API finished.
+  await expect(drawer.locator('.rundeckInfra')).toBeVisible({timeout:30000})
+  const hosts=drawer.getByRole('group',{name:'Select Infrastructure APP'})
+  await expect(hosts).toBeVisible({timeout:30000})
+  try {
+    await expect(hosts.getByRole('button')).toHaveCount(5,{timeout:30000})
+  } catch (error) {
+    const evidence=await drawer.locator('.rundeckInfra').evaluate(el=>({
+      hostButtons:el.querySelectorAll('.rundeckInfraHostCard').length,
+      hostMessage:el.querySelector('.rundeckInfraHostMissing')?.textContent?.trim() || '',
+      sourceError:el.querySelector('.rundeckInfraError')?.textContent?.trim() || ''
+    }))
+    throw new Error('Infrastructure host source not ready: '+JSON.stringify(evidence)+'; '+error.message)
+  }
   const geometry=await drawer.evaluate(el=>{const box=el.getBoundingClientRect();return {left:box.left,right:box.right,top:box.top,bottom:box.bottom,vw:innerWidth,vh:innerHeight}})
   expect(geometry.left).toBeGreaterThanOrEqual(-1)
   expect(geometry.right).toBeLessThanOrEqual(geometry.vw+2)
@@ -700,4 +713,33 @@ test('v1.34.90 desktop Infrastructure modal uses history-first layout and real s
   expect(layout).not.toBeNull()
   expect(layout.chartTop).toBeLessThan(layout.snapshotTop)
   await page.screenshot({path:'test-results/sphere-v13490-infrastructure-'+(page.viewportSize()?.width||'desktop')+'.png',fullPage:false})
+})
+
+test('v1.34.90 desktop System Data offers actual PDF workflow entry',async ({page})=>{
+  await openCockpit(page)
+  await page.locator('.rundeckAnalysisActions').getByRole('button',{name:/System Data/}).click()
+  const data=page.getByRole('dialog',{name:'System Data'})
+  await expect(data).toBeVisible({timeout:30000})
+  await expect(data.getByRole('tab',{name:/Collection History/})).toBeVisible()
+  await expect(data.getByRole('tab',{name:/SPHERE Services/})).toBeVisible()
+  await expect(data.getByRole('tab',{name:/Token Management/})).toBeVisible()
+  await expect(data.getByRole('button',{name:'Open PDF Preview'})).toBeVisible()
+  await data.getByRole('button',{name:'Open PDF Preview'}).click()
+  await expect(data).toHaveCount(0)
+  const report=page.getByRole('dialog',{name:'PDF preview'})
+  await expect(report).toBeVisible({timeout:30000})
+  await expect(report.getByTitle('SPHERE PDF preview')).toBeVisible({timeout:30000})
+})
+test('v1.34.90 desktop SAP Issues supports source-backed APP and indicator filters',async ({page})=>{
+  await openCockpit(page)
+  await page.locator('.rundeckAnalysisActions').getByRole('button',{name:/SAP Issues/}).click()
+  const issues=page.getByRole('dialog',{name:'SAP Issues'})
+  await expect(issues).toBeVisible({timeout:30000})
+  const filters=issues.getByRole('group',{name:'Filter SAP indicators'})
+  await expect(filters).toBeVisible()
+  await expect(filters.getByRole('searchbox')).toBeVisible()
+  await filters.getByRole('searchbox').fill('no-such-indicator-zz')
+  await expect(issues.getByText('No indicators match these filters.')).toBeVisible({timeout:30000})
+  await filters.getByRole('searchbox').fill('')
+  await expect(filters.getByRole('combobox')).toBeVisible()
 })

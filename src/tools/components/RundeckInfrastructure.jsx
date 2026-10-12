@@ -116,6 +116,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [data,setData]=React.useState({host:'',hosts:[],fs:[],network:[],storage:[]})
   const [allHostFilesystems,setAllHostFilesystems]=React.useState([])
   const [error,setError]=React.useState('')
+  const [sourcesLoading,setSourcesLoading]=React.useState(true)
   const [clockNow,setClockNow]=React.useState(()=>Date.now())
   const [selectedHost,setSelectedHost]=React.useState(()=>{if(lockedHost)return initialContext?.host||'';try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
   const [range,setRange]=React.useState('6h')
@@ -148,6 +149,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const refresh=React.useCallback(async(signal)=>{
     if(signal.aborted)return
     setClockNow(Date.now())
+    setSourcesLoading(true)
     try{
       const hr=await fetch(`${API}/hosts`,{cache:'no-store',signal})
       if(!hr.ok)throw new Error('Infrastructure API hosts unavailable')
@@ -168,6 +170,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       setAllHostFilesystems(values[3].items||[])
       setError('')
     }catch(e){if(!signal.aborted&&e.name!=='AbortError')setError(e.message)}
+    finally { if(!signal.aborted) setSourcesLoading(false) }
   },[selectedHost])
 
   React.useEffect(()=>{
@@ -247,7 +250,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
           </strong></span>
         </button>
       })}
-      {!data.hosts.length&&<span className="rundeckInfraHostMissing">No verified infrastructure hosts.</span>}
+      {!data.hosts.length && <span className="rundeckInfraHostMissing" role="status">{sourcesLoading ? 'Loading infrastructure hosts…' : error ? 'Infrastructure host source unavailable; retry on next refresh.' : 'No verified infrastructure hosts.'}</span>}
     </div>}
     {!hideHostCards&&otherHosts.length>0&&<details className="rundeckInfraOtherHosts" defaultOpen={otherHosts.some(row=>row.host===host)}>
       <summary>Other Infrastructure Sources ({otherHosts.length})</summary>

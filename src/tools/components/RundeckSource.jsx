@@ -826,7 +826,7 @@ export default function RundeckSource({ onCollection }) {
       sourceAvailability={availabilitySnapshot}
       onTrendContext={setTrendContext}
       systemDataSummary={`${collectionCount} runs · ${partialCount} partial · ${failedCount} failed · ${serviceSummary}`}
-      systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} />}
+      systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} onOpenPdf={exportPdf} />}
     />
 
     {pdfPreview && <div className="rundeckPdfPreviewBackdrop" role="dialog" aria-modal="true" aria-label="PDF preview">

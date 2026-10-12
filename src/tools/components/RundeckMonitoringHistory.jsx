@@ -238,7 +238,13 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
-            {systemDataContent}
+            {React.isValidElement(systemDataContent)
+              ? React.cloneElement(systemDataContent, {
+                  onOpenPdf: systemDataContent.props.onOpenPdf
+                    ? () => { setActiveOverlay(null); systemDataContent.props.onOpenPdf() }
+                    : null,
+                })
+              : systemDataContent}
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'evidence' && <RundeckWorkspaceDrawer
