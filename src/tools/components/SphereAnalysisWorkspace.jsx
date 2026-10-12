@@ -1,6 +1,5 @@
 import React from 'react'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
-import './SphereAnalysisWorkspace.css'
 
 // Navigation only switches existing operator views. No API calls or generated data.
 const WORKSPACES = [
