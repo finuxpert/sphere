@@ -39,7 +39,7 @@ cleanup() {
   if (( rc != 0 && CREATED_RELEASE == 1 )); then rm -rf -- "$RELEASE"; fi
   [[ -z "$STAGE_TMP" || ! -e "$STAGE_TMP" ]] || rm -rf -- "$STAGE_TMP"
   [[ -z "$BUILD_DIR" || ! -e "$BUILD_DIR" ]] || rm -rf -- "$BUILD_DIR"
-  rm -f "/tmp/sphere-prod-ui-verify-$.htm$$" "/tmp/sphere-prod-ui-verify-$.j$$" "/tmp/sphere-prod-ui-dev-verify-$.htm$$" "/tmp/sphere-prod-ui-dev-before-$.htm$$"
+  rm -f "/tmp/sphere-prod-ui-verify-$$.html" "/tmp/sphere-prod-ui-verify-$$.js" "/tmp/sphere-prod-ui-dev-verify-$$.html" "/tmp/sphere-prod-ui-dev-before-$$.html"
   rm -f "$PROD_ROOT/.next-ui-$$" "$PROD_ROOT/.rollback-ui-$$"
   exit "$rc"
 }
