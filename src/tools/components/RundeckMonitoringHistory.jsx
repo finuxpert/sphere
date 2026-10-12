@@ -6,6 +6,7 @@ import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
 import RundeckObservationHistory from './RundeckObservationHistory.jsx'
 import RundeckJobHistory from './RundeckJobHistory.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
+import SphereAnalysisWorkspace from './SphereAnalysisWorkspace.jsx'
 import RundeckReviewQuickAnalysis from './RundeckReviewQuickAnalysis.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
@@ -142,10 +143,28 @@ export default function RundeckMonitoringHistory(props) {
         },
       }
       onSelectJob?.(reviewJob)
-      setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
+      setActiveOverlay({ type: 'job', reviewRow: row, reviewContext, returnTo: { type: 'workloads' } })
     }}
     externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
   />
+
+
+  // Route only existing analysis components. A selected APP/job retains its
+  // source identity; cross-workspace navigation never fabricates observations.
+  const navigateWorkspace = (next) => {
+    if (next === 'system-data' && !systemDataContent) return
+    setActiveOverlay({
+      type: next,
+      returnTo: { type: 'selected' },
+      ...(next === 'evidence' && selectedJob?.key ? { job: selectedJob } : {}),
+    })
+  }
+  const workspaceProps = {
+    current: activeOverlay?.type,
+    onNavigate: navigateWorkspace,
+    hasSelectedJob: Boolean(selectedJob?.key),
+    hasSystemData: Boolean(systemDataContent),
+  }
 
   return <>
     <RundeckMonitoringHistoryCore
@@ -167,7 +186,19 @@ export default function RundeckMonitoringHistory(props) {
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
 
-          {activeOverlay?.type === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'workloads' && <SphereAnalysisWorkspace
+            {...workspaceProps}
+            title="Jobs & Programs Review"
+            subtitle="Review saved workload findings and search historical jobs / programs"
+            size="performance"
+            onClose={() => setActiveOverlay(null)}
+            onBack={() => setActiveOverlay(null)}
+            backLabel="Back to SAP Performance"
+          >
+            {React.cloneElement(performanceReviewContent, { sidecar: true })}
+          </SphereAnalysisWorkspace>}
+
+          {activeOverlay?.type === 'job' && selectedJob?.key && <SphereAnalysisWorkspace {...workspaceProps}
             title={selectedJob.key}
             subtitle="Job / Program Performance Analysis"
             size="performance"
@@ -181,7 +212,7 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
             backLabel={activeOverlay.returnTo?.type === 'app'
               ? `Back to ${activeOverlay.returnTo.app?.host ? activeOverlay.returnTo.app.host.split('.').shift() : 'APP Server'}`
-              : activeOverlay.returnTo?.type === 'review'
+              : activeOverlay.returnTo?.type === 'workloads' || activeOverlay.returnTo?.type === 'review'
                 ? 'Back to Review'
                 : activeOverlay.returnTo?.type === 'history'
                   ? 'Back to Observation History'
@@ -200,9 +231,9 @@ export default function RundeckMonitoringHistory(props) {
                 {systemDataContent && <button type="button" onClick={() => setActiveOverlay({ type: 'system-data', returnTo: { type: 'job', returnTo: activeOverlay.returnTo || null } })}><SphereIcon name="database" />System Data</button>}
               </div>
             </nav>
-          </RundeckWorkspaceDrawer>}
+          </SphereAnalysisWorkspace>}
 
-          {activeOverlay?.type === 'history' && selectedJob?.key && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'history' && selectedJob?.key && <SphereAnalysisWorkspace {...workspaceProps}
             title="Observation History"
             size="observation-history"
             navigation={relatedAnalysisNav('history')}
@@ -221,9 +252,9 @@ export default function RundeckMonitoringHistory(props) {
               }}
               embedded
             />
-          </RundeckWorkspaceDrawer>}
+          </SphereAnalysisWorkspace>}
 
-          {activeOverlay?.type === 'system-data' && systemDataContent && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'system-data' && systemDataContent && <SphereAnalysisWorkspace {...workspaceProps}
             title="System Data"
             size="system-data"
             subtitle={systemDataSummary || 'Collection History · SPHERE Services'}
@@ -238,9 +269,9 @@ export default function RundeckMonitoringHistory(props) {
                     : null,
                 })
               : systemDataContent}
-          </RundeckWorkspaceDrawer>}
+          </SphereAnalysisWorkspace>}
 
-          {activeOverlay?.type === 'evidence' && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'evidence' && <SphereAnalysisWorkspace {...workspaceProps}
             title="Correlated Events"
             size="evidence"
             navigation={relatedAnalysisNav('evidence')}
@@ -254,9 +285,9 @@ export default function RundeckMonitoringHistory(props) {
               job={activeOverlay.job || selectedJob}
               incidentActive
             />
-          </RundeckWorkspaceDrawer>}
+          </SphereAnalysisWorkspace>}
 
-          {activeOverlay?.type === 'availability' && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'availability' && <SphereAnalysisWorkspace {...workspaceProps}
             title="SAP Availability"
             size="availability"
             navigation={relatedAnalysisNav('availability')}
@@ -266,9 +297,9 @@ export default function RundeckMonitoringHistory(props) {
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
             <RundeckAvailability refreshToken={refreshToken} />
-          </RundeckWorkspaceDrawer>}
+          </SphereAnalysisWorkspace>}
 
-          {activeOverlay?.type === 'issues' && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'issues' && <SphereAnalysisWorkspace {...workspaceProps}
             title="SAP Issues"
             size="issues"
             navigation={relatedAnalysisNav('issues')}
@@ -286,7 +317,7 @@ export default function RundeckMonitoringHistory(props) {
                 setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
               }}
             />
-          </RundeckWorkspaceDrawer>}
+          </SphereAnalysisWorkspace>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
             title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}
@@ -312,7 +343,7 @@ export default function RundeckMonitoringHistory(props) {
             </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
-          {activeOverlay?.type === 'infrastructure' && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'infrastructure' && <SphereAnalysisWorkspace {...workspaceProps}
             title="Infrastructure Analysis"
             size="wide"
             subtitle="Filesystem · Network · Storage I/O"
@@ -323,7 +354,7 @@ export default function RundeckMonitoringHistory(props) {
             <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading Infrastructure Analysis…</div>}>
               <RundeckInfrastructure incidentStart={props.incidentStart || ''} initialContext={activeOverlay.infraContext || activeOverlay.trendContext || null} />
             </React.Suspense>
-          </RundeckWorkspaceDrawer>}
+          </SphereAnalysisWorkspace>}
 
           {activeOverlay?.type === 'review' && activeOverlay.row && <RundeckReviewQuickAnalysis
             row={activeOverlay.row}
