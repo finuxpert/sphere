@@ -906,3 +906,117 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
     margin:4px 0!important;line-height:1.4!important;
   }
 }
+
+/* v1.34.91 one-screen composition — geometry diagnosis: Analysis at y=624
+   with the complete Jobs row still underneath inflated document height 242–253px.
+   Place Trends and Live/Review workspace alongside each other; analysis below.
+   Keep genuine DOM sizing so overflow QA cannot be bypassed. */
+@media screen and (min-width:1200px) {
+ .appShell:has(.rundeckPanel) .rundeckMonitoring.rundeckCockpitV13491 {
+   display:grid!important;
+   grid-template-columns:minmax(0,1.84fr) minmax(410px,1fr)!important;
+   grid-template-areas:"apps apps" "trends workloads" "actions actions"!important;
+   grid-template-rows:auto auto auto!important;
+   gap:5px 13px!important;
+   align-items:start!important;
+   min-width:0!important;max-width:100%!important;
+   height:auto!important;min-height:0!important;
+   overflow:visible!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491>.rundeckTopBandV13454{
+   grid-area:apps!important;min-width:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491>.rundeckTrendBandV13454{
+   grid-area:trends!important;min-width:0!important;align-self:start!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491>.rundeckJobsProgramsWorkspace{
+   grid-area:workloads!important;
+   display:flex!important;flex-direction:column!important;
+   min-width:0!important;max-width:100%!important;
+   width:100%!important;height:auto!important;min-height:0!important;
+   max-height:none!important;overflow:visible!important;
+   align-self:start!important;margin:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491>.rundeckAnalysisRailV13456{
+   grid-area:actions!important;min-width:0!important;margin:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid{
+   grid-template-columns:repeat(3,minmax(0,1fr))!important;min-width:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid>section{
+   min-width:0!important;padding:4px 6px 3px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendToolbar{
+   flex-wrap:wrap!important;min-width:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendSharedControls{
+   flex-wrap:wrap!important;gap:2px 7px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsWorkspaceHead{
+   display:flex!important;align-items:center!important;justify-content:space-between!important;
+   flex-wrap:wrap!important;gap:2px 6px!important;
+   min-height:38px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsIdentity{
+   flex:1 1 auto!important;min-width:0!important;gap:4px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsSubtitle{
+   display:none!important; /* descriptive copy, not workload data */
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsWorkspaceBody,
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload{
+   display:flex!important;flex-direction:column!important;
+   height:auto!important;min-height:0!important;max-height:none!important;
+   overflow:visible!important;flex:0 1 auto!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadHead{
+   flex-wrap:wrap!important;gap:4px!important;min-width:0!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadSearch input{
+   width:clamp(155px,15vw,210px)!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadTableWrap{
+   width:100%!important;min-width:0!important;
+   height:auto!important;max-height:none!important;overflow:visible!important;
+ }
+ /* Primary operator scan at this width: APP, Job, CPU, PSS, observation time.
+    Processes and WP remain in selectable full Job / Program Performance Analysis. */
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(th,td):nth-child(5),
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(th,td):nth-child(6){
+   display:none!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(th,td):nth-child(1){width:11%!important}
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(th,td):nth-child(2){width:34%!important}
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(th,td):nth-child(3){width:15%!important}
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(th,td):nth-child(4){width:18%!important}
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(th,td):nth-child(7){width:22%!important}
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload :is(td,th){
+   padding:5px 4px!important;line-height:1.22!important;
+   overflow-wrap:anywhere!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadName button{
+   white-space:normal!important;overflow-wrap:anywhere!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadPager{
+   min-height:24px!important;gap:5px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadPager small{
+   font-size:9px!important;
+ }
+ .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisLaunchers{
+   min-height:45px!important;
+ }
+}
+/* Exact 10px Job modal overflow: reclaim unused padding and rail spacing.
+   Keep header, summary, ECharts lanes, WP evidence and all six related routes. */
+@media screen and (min-width:1200px) {
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckWorkspaceDrawerBody{
+   padding:3px 14px 2px!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobRelatedAnalysis{
+   margin:0!important;padding:2px 0!important;
+ }
+ .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoryContent{
+   row-gap:2px!important;
+ }
+}
