@@ -148,13 +148,6 @@ export default function RundeckMonitoringHistory(props) {
   />
 
   return <>
-    <nav className="rundeckProductNavigation" aria-label="Performance views">
-      <button type="button" className="is-active" aria-current="page">Overview</button>
-      <button type="button" onClick={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}>Infrastructure Analysis</button>
-      <button type="button" disabled={!selectedJob?.key}
-        title={selectedJob?.key ? 'Analyze selected Job / Program' : 'Select a Job / Program in the Live table first'}
-        onClick={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}>Job / Program Analysis</button>
-    </nav>
     <RundeckMonitoringHistoryCore
             {...props}
             currentWorkloadContent={currentWorkloadContent}
