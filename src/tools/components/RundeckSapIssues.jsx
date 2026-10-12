@@ -1,5 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
+import SphereOperatorTabs from './SphereOperatorTabs.jsx'
 import { numberText, shortHost } from './sapUiFormat.js'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -144,10 +145,16 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     <section className="rundeckIssueIndicatorSection">
       <div className="rundeckIssueSectionTitle">
         <h4>Current Indicator Status</h4>
-        <div className="rundeckIssueViewSwitch" role="group" aria-label="Indicator view">
-          <button type="button" aria-pressed={indicatorView==='review'} onClick={()=>setIndicatorView('review')}>Needs review ({reviewIndicators.length})</button>
-          <button type="button" aria-pressed={indicatorView==='all'} onClick={()=>setIndicatorView('all')}>All indicators ({indicators.length})</button>
-        </div>
+        <SphereOperatorTabs
+          className="rundeckIssueViewSwitch"
+          label="Indicator view"
+          value={indicatorView}
+          options={[
+            { value: 'review', label: `Needs review (${reviewIndicators.length})` },
+            { value: 'all', label: `All indicators (${indicators.length})` },
+          ]}
+          onChange={setIndicatorView}
+        />
       </div>
       {sm37!=='READY'&&<p className="rundeckIssueSourceNote">SM37 feed not connected. Verify job execution status directly in SAP (SM37).</p>}
       <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
