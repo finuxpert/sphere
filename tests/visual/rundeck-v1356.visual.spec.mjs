@@ -118,3 +118,46 @@ test('v1.35.6 Android overview and SAP Issues modal have no horizontal overflow'
     contentType:'image/png',
   })
 })
+
+test('v1.35.6 APP analysis keeps pager controls visible, verified collection labels and legible rows', async ({page}) => {
+  await openCockpit(page)
+  test.skip((page.viewportSize()?.width || 0) < 1100, 'Desktop APP analysis geometry')
+  await page.locator('.rundeckUnifiedAppCards .rundeckUnifiedAppCard').first().click()
+  const dialog = page.getByRole('dialog',{name:/APP\d+ Analysis/})
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('.rundeckUnifiedAnalysisProvenance')).toBeVisible()
+  const pager = dialog.locator('.rundeckInfraGrid article:first-child .rundeckInfraFsPager')
+  await expect(pager).toBeVisible({timeout:20_000})
+  const evidence = await dialog.evaluate(el => {
+    const pane = el.querySelector('.rundeckInfraGrid article:first-child')
+    const pager = pane?.querySelector('.rundeckInfraFsPager')
+    const buttons = [...(pager?.querySelectorAll('button')||[])].map(node => {
+      const rect=node.getBoundingClientRect()
+      return {top:rect.top,bottom:rect.bottom,left:rect.left,right:rect.right}
+    })
+    const firstDataCell = el.querySelector('.rundeckAppServerTableWrap tbody td')
+    const box=el.getBoundingClientRect()
+    return {
+      left:box.left,right:box.right,top:box.top,bottom:box.bottom,
+      viewportWidth:innerWidth,viewportHeight:innerHeight,
+      buttons,pagerWidth:pager?.getBoundingClientRect().width ?? null,
+      fsOverflow:pane ? getComputedStyle(pane).overflowY : '',
+      workloadFont:firstDataCell ? parseFloat(getComputedStyle(firstDataCell).fontSize) : null,
+    }
+  })
+  console.log('SPHERE_V1356_APP_DETAIL=' + JSON.stringify(evidence))
+  expect(evidence.left).toBeGreaterThanOrEqual(-1)
+  expect(evidence.right).toBeLessThanOrEqual(evidence.viewportWidth + 1)
+  expect(evidence.top).toBeGreaterThanOrEqual(-1)
+  expect(evidence.bottom).toBeLessThanOrEqual(evidence.viewportHeight + 1)
+  expect(evidence.buttons).toHaveLength(2)
+  expect(Math.abs(evidence.buttons[0].top-evidence.buttons[1].top)).toBeLessThanOrEqual(2)
+  expect(evidence.buttons[0].right).toBeLessThan(evidence.buttons[1].left+1)
+  expect(evidence.fsOverflow).not.toBe('scroll')
+  expect(evidence.fsOverflow).not.toBe('auto')
+  if(evidence.workloadFont !== null) expect(evidence.workloadFont).toBeGreaterThanOrEqual(10)
+  await test.info().attach('sphere-v1356-app-analysis',{
+    body:await page.screenshot({animations:'disabled',fullPage:false}),
+    contentType:'image/png',
+  })
+})
