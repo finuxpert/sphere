@@ -28,3 +28,15 @@ export function unavailableSapIssueIndicators(failed = []) {
     reason: 'Check API response; no current status inferred',
   }))
 }
+
+/** Latest-ready rows must still be current and from the reported collection. */
+export function sapIssueSampleFreshness(hostsPayload, host, nowMs = Date.now(), staleAfterMinutes = 20) {
+  if (!hostsPayload || !host || !host.collection_id ||
+      String(host.collection_id) !== String(hostsPayload.collection_id || '')) return 'UNKNOWN'
+  const at = host.collected_at
+  const sampleTime = typeof at === 'string' && at.trim() ? Date.parse(at) : NaN
+  if (!Number.isFinite(sampleTime) || !Number.isFinite(nowMs)) return 'UNKNOWN'
+  const age = nowMs - sampleTime
+  if (age < -120000) return 'UNKNOWN'
+  return age > staleAfterMinutes * 60000 ? 'STALE' : 'FRESH'
+}
