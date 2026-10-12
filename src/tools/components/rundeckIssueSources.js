@@ -40,3 +40,10 @@ export function sapIssueSampleFreshness(hostsPayload, host, nowMs = Date.now(), 
   if (age < -120000) return 'UNKNOWN'
   return age > staleAfterMinutes * 60000 ? 'STALE' : 'FRESH'
 }
+
+/** Service Availability uses the same 20-minute UI stale default as its panel. */
+export function sapIssueTimestampFreshness(at, nowMs = Date.now(), staleAfterMinutes = 20) {
+  const time = typeof at === 'string' && at.trim() ? Date.parse(at) : NaN
+  if (!Number.isFinite(time) || !Number.isFinite(nowMs) || nowMs - time < -120000) return 'UNKNOWN'
+  return nowMs - time >= staleAfterMinutes * 60000 ? 'STALE' : 'FRESH'
+}
