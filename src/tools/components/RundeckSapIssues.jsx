@@ -6,7 +6,8 @@ import { metricResourceState, sapWorkloadState, OPERATOR_THRESHOLDS } from './ru
 import { settleSapIssueSources, unavailableSapIssueIndicators, SAP_ISSUE_SOURCE_LABELS, sapIssueSampleFreshness, sapIssueTimestampFreshness } from './rundeckIssueSources.js'
 
 const API = `${import.meta.env.BASE_URL}api`
-const SEVERITY_RANK = { CRITICAL: 4, WARNING: 3, ATTENTION: 2, NORMAL: 1, UNKNOWN: 0 }
+const SEVERITY_RANK = { CRITICAL: 4, WARNING: 3, ATTENTION: 2, UNKNOWN: 1, NORMAL: 0 }
+const EMPTY_SNAPSHOT = Object.freeze({ incidents:null, hosts:null, availability:null, readiness:null, failedSources:[] })
 
 const serviceState = (value) => {
   const state = String(value || 'UNKNOWN').toUpperCase()
@@ -35,8 +36,9 @@ function Status({ value }) {
 }
 
 export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false }) {
-  const [data, setData] = React.useState({ incidents:null, hosts:null, availability:null, readiness:null })
-  const [failedSources, setFailedSources] = React.useState([])
+  const [snapshot, setSnapshot] = React.useState({ ...EMPTY_SNAPSHOT, requestKey: refreshToken })
+  const data = snapshot.requestKey === refreshToken ? snapshot : EMPTY_SNAPSHOT
+  const failedSources = data.failedSources
   const [indicatorView, setIndicatorView] = React.useState('review')
   const [indicatorQuery,setIndicatorQuery] = React.useState('')
   const [appFilter,setAppFilter] = React.useState('ALL')
@@ -48,8 +50,6 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
       if(!response.ok) throw new Error(`Request failed (${response.status})`)
       return response.json()
     }
-    setData({ incidents:null, hosts:null, availability:null, readiness:null })
-    setFailedSources([])
     Promise.allSettled([
       get(`${API}/history/incidents?days=1&limit=200`),
       get(`${API}/history/hosts/latest`),
@@ -58,8 +58,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     ]).then((results) => {
       if(controller.signal.aborted) return
       const settled = settleSapIssueSources(results)
-      setData(settled.data)
-      setFailedSources(settled.failed)
+      setSnapshot({ ...settled.data, failedSources:settled.failed, requestKey:refreshToken })
     })
     return () => controller.abort()
   },[refreshToken])
