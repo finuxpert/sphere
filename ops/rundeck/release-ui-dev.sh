@@ -68,7 +68,7 @@ fi
 echo "QA_BUILD=PASS"
 
 # Playwright required. Desktop geometry and mobile overflow are independent hard gates.
-# The v1.34.91-named tests exercise existing contracts across later versions; their titles are legacy.
+# v1.35.6 visual suite tests real viewport geometry, themes, and Android overflow.
 test -x node_modules/.bin/playwright || {
   echo "VISUAL=BLOCKED (Playwright not installed)"; exit 1;
 }
@@ -87,9 +87,9 @@ curl --noproxy '*' -fsS --max-time 10 http://127.0.0.1:4173/dev/api/collections/
   | python3 -c 'import json,sys; x=json.load(sys.stdin); assert isinstance(x,dict)'
 SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
   ./node_modules/.bin/playwright test -c playwright.config.mjs \
-  tests/visual/rundeck-v13479.visual.spec.mjs \
+  tests/visual/rundeck-v1356.visual.spec.mjs \
   --project=desktop-1536 --project=laptop-1366 \
-  --grep 'v1\.34\.91 desktop' --workers=2 --reporter=line \
+  --grep 'v1\.35\.6 desktop' --workers=2 --reporter=line \
   > /tmp/sphere-ui-v1356-visual.log 2>&1 || {
   echo "VISUAL=FAIL"
   grep -E 'VISUAL_FAIL_BRIEF=|VISUAL_GEOMETRY_DEBUG_ERROR=|Error:|Expected:|Received:|[0-9]+ failed' /tmp/sphere-ui-v1356-visual.log | tail -n 45 || true
@@ -100,9 +100,9 @@ echo "VISUAL_DESKTOP=PASS"
 echo "VISUAL_GEOMETRY=PASS scope=desktop-1536,laptop-1366"
 SPHERE_VISUAL_BASE_URL="http://127.0.0.1:4173/dev/#/tool/logs" \
   ./node_modules/.bin/playwright test -c playwright.config.mjs \
-  tests/visual/rundeck-v13479.visual.spec.mjs \
+  tests/visual/rundeck-v1356.visual.spec.mjs \
   --project=android-393 \
-  --grep 'Android-sized viewport does not introduce horizontal page overflow|v1\\.34\\.87 Android analysis groups fit the viewport without horizontal overflow' \
+  --grep 'v1\.35\.6 Android' \
   --workers=1 --reporter=line \
   > /tmp/sphere-ui-v1356-mobile.log 2>&1 || {
   echo "VISUAL_MOBILE=FAIL"
