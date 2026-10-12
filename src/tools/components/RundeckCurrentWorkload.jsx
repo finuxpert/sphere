@@ -113,6 +113,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
+  const [loadedSearch, setLoadedSearch] = React.useState('')
   const [nowMs, setNowMs] = React.useState(() => Date.now())
 
   React.useEffect(() => {
@@ -171,7 +172,14 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
   const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
   const visibleLimit = Math.max(1, Number(compactLimit || 50))
-  const visible = sortedRows.slice(0, visibleLimit)
+  const loaded = sortedRows.slice(0, visibleLimit)
+  const query = loadedSearch.trim().toLocaleLowerCase()
+  const visible = query ? loaded.filter((row) => {
+    const d = row.details || {}
+    return [row.host,row.consumer_key,d.job_name,d.program,d.pid,
+      ...(Array.isArray(d.pids) ? d.pids : []),d.wp,d.wp_type]
+      .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
+  }) : loaded
   const latestObservedAt = rows.reduce((latest, row) => {
     const timestamp = Date.parse(row.collected_at || '')
     return Number.isFinite(timestamp) && timestamp > Date.parse(latest || '') ? row.collected_at : latest
@@ -185,6 +193,10 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
       <span className="rundeckCurrentWorkloadCount" title="Observed count from API; loaded is the current response; use the internal table scroll for other loaded rows">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · ${rows.length} loaded` : `${workloadMeta.total || rows.length} observed · ${rows.length} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
+        <label className="rundeckCurrentWorkloadSearch">
+          <span>Search loaded rows</span>
+          <input type="search" aria-label="Search loaded jobs and programs" placeholder="Job, program, APP or PID" value={loadedSearch} onChange={event => setLoadedSearch(event.target.value)} />
+        </label>
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>
     </div>
@@ -231,6 +243,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             </tr>
           })}
           {!rows.length && <tr><td colSpan="6">No job or program observed in this collection.</td></tr>}
+          {rows.length > 0 && !visible.length && <tr><td colSpan="6">No matching job or program in the {loaded.length} loaded rows. Use Search for retained history.</td></tr>}
         </tbody>
       </table>
     </div>}

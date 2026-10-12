@@ -1,4 +1,5 @@
 import React from 'react'
+import SphereIcon from './SphereIcon.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
@@ -51,17 +52,17 @@ export default function RundeckOperationalEvidence({
       <button type="button" className="rundeckAnalysisSecondary" disabled={!selectedJob?.key}
         title={selectedJob?.key ? 'Open saved observations for selected Job / Program' : 'Select a Job / Program to see observation history'}
         aria-label="Open Observation History" onClick={onOpenHistory}>
-        <span>Observation History</span>
+        <span><SphereIcon name="history" />Observation History</span>
         <small>{selectedJob?.key ? 'Selected Job' : 'Select Job'}</small>
       </button>
       <RundeckSapIssuesProxy refreshToken={refreshToken} onOpen={onOpenIssues} />
       <RundeckAvailability refreshToken={refreshToken} compact onOpen={onOpenAvailability} />
       <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure} aria-label="Open Infrastructure Analysis">
-        <span>Infrastructure</span><small>{infrastructureLabel || 'Independent host data'}</small>
+        <span><SphereIcon name="server" />Infrastructure</span><small>{infrastructureLabel || 'Independent host data'}</small>
       </button>
       {onOpenSystemData && <button type="button" className="rundeckSystemDataUtility"
         onClick={onOpenSystemData} aria-label="Open System Data">
-        <span>System Data</span><small title={systemDataSummary}>{systemDataSummary || 'Collections and services'}</small>
+        <span><SphereIcon name="database" />System Data</span><small title={systemDataSummary}>{systemDataSummary || 'Collections and services'}</small>
       </button>}
     </div>
   </nav>

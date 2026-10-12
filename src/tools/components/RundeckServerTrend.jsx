@@ -812,6 +812,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
 
   return <section className="rundeckTripleTrendV13457" aria-label="Server and Technical Trends">
+    <div className="rundeckTrendEditorial"><h3>Performance Trends</h3><small>Saved APP and technical measurements</small></div>
     <div className="rundeckTrendSharedControls">
       <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
       <div className="rundeckTrendSharedGroup"><span>Interval</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
