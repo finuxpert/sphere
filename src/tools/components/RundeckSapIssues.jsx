@@ -185,7 +185,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     </section>
 
     {incidentItems.length>0&&<section className="rundeckIssueIndicatorSection is-history">
-      <div className="rundeckIssueSectionTitle"><h4>Recorded active incidents</h4><small>Critical WP peak {peakCriticalWp||'—'} · latest status requires fresh APP sample</small></div>
+      <div className="rundeckIssueSectionTitle"><h4>Active issues</h4><small>Peak {peakCriticalWp||'—'} · current status uses fresh APP data</small></div>
       <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
         <thead><tr><th>APP</th><th>Signal</th><th>Current status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
         <tbody>{incidentItems.map((row)=>{
