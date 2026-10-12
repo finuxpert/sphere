@@ -27,9 +27,17 @@ export function matchedInfrastructureHost(sapHost, infraHosts = []) {
   return aopCandidates.length === 1 ? aopCandidates[0] : null
 }
 
+/** Keep filesystem samples tied to the exact Infrastructure host and collection. */
+export function filesystemSamplesForHost(infra, filesystems = []) {
+  if (!infra?.host || !infra?.collection_id) return []
+  return filesystems.filter(row =>
+    String(row?.host || '').trim().toUpperCase() === String(infra.host).trim().toUpperCase()
+    && String(row?.collection_id || '') === String(infra.collection_id))
+}
+
 export function hostInfrastructureEvidence(sapHost, infraHosts = [], filesystems = [], nowMs = Date.now()) {
   const infra = matchedInfrastructureHost(sapHost, infraHosts)
-  const rows = infra ? filesystems.filter(item => item.host === infra.host) : []
+  const rows = filesystemSamplesForHost(infra, filesystems)
   const freshness = infrastructureTelemetryFreshness(infra?.snapshot_ts, infra?.collection_id, rows, nowMs)
   const topFs = rows.filter(row => numeric(row.used_pct) !== null)
     .sort((a, b) => Number(b.used_pct) - Number(a.used_pct))[0] || null
