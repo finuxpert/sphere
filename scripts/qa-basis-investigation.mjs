@@ -410,7 +410,14 @@ const checks = [
   ['Job history reports truncation instead of presenting a loaded limit as complete lifetime', files.jobHistoryBackend.includes('observation_count') && files.jobHistoryBackend.includes('loaded_observations') && files.jobHistoryBackend.includes('history_truncated') && files.jobHistory.includes("'First Loaded'") && files.jobHistory.includes("'Loaded Span'")],
   ['WP signal labels distinguish resource classification counters and missing program capture', files.jobHistory.includes('CPU Signal') && files.jobHistory.includes('RABAX / RXMSG Count') && files.jobHistory.includes('SXPG / JobStart Count') && files.jobHistory.includes('Not captured') && files.jobHistory.includes('WP/Trace signal was not retained for this observation')],
   ['APP Critical WP wording is scoped to the workload period rather than the current incident', files.jobHistory.includes('APP Critical WP in period') && files.jobHistory.includes('APP-server evidence observed during the workload period') && files.jobHistory.includes('does not prove workload causation')],
-  ['Performance drawer uses a full-width controls and chart workspace', files.jobHistory.includes("height: Math.round((expanded ? 126 : 76) * laneScale)") && files.jobHistory.includes('rundeckJobAnalysisWorkspace') && files.jobHistoryCss.includes('grid-template-columns:minmax(250px,28fr) minmax(0,72fr)') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)')],
+  ['Performance drawer has two bounded desktop evidence columns without clipping chart lanes',
+    files.jobHistory.includes('rundeckJobAnalysisWorkspace')
+    && files.jobHistory.includes('dense={drawerPresentation')
+    && files.jobHistory.includes("'--sphere-job-chart-height': `${chartConfig.height}px`")
+    && mockupStyle.includes('grid-template-columns:minmax(0,1.16fr) minmax(0,1fr)!important')
+    && mockupStyle.includes('grid-column:1!important')
+    && mockupStyle.includes('grid-column:2!important')
+    && mockupStyle.includes('height:var(--sphere-job-chart-height,244px)!important')],
   ['Performance drawer keeps six working related-analysis paths in one bottom rail', files.wrapper.includes('rundeckJobRelatedAnalysis') && files.wrapper.includes("returnTo: { type: 'job'") && !files.wrapper.includes('className="rundeckPerformanceDrawerEvidence"')],
   ['Performance operational drilldowns return directly to Performance Analysis', files.wrapper.includes("activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis'")],
   ['Live cockpit lower half is content-driven and compact', files.currentWorkloadCss.includes('max-height:260px!important') && files.monitoringCss.includes('ramping pass: content-driven live cockpit') && files.monitoringCss.includes('min-height:60px!important')],
@@ -456,7 +463,14 @@ const checks = [
   ['Performance chart supports exact observation drilldown without changing raw observation semantics', files.jobHistory.includes('onSelectObservation') && files.jobHistory.includes("setDetailView({ type: 'observation', row })") && files.jobHistory.includes('Observation Details') && files.jobHistory.includes('APP Critical WP')],
   ['Historical performance buckets open bucket-specific aggregate details instead of raw-observation labels', files.jobHistory.includes('onSelectBucket') && files.jobHistory.includes("type: 'bucket'") && files.jobHistory.includes('Historical Bucket Details') && files.jobHistory.includes('APP Critical WP in period')],
   ['WP trace rows expose keyboard-accessible detail drilldown while preserving SM37 authority', files.jobHistory.includes("role=\"button\"") && files.jobHistory.includes("type: 'wp'") && files.jobHistory.includes('SAP WP Signal Details') && files.jobHistory.includes('SM37 remains the authority for SAP job execution status')],
-  ['Low-sample workload episodes are explicitly labelled and use adaptive chart height', files.jobHistory.includes('Limited samples -') && files.jobHistory.includes('const compactEpisode = rows.length <= 10') && files.jobHistory.includes('laneScale = compactEpisode ? .76 : 1')],
+  ['Low-sample workload episodes remain explicitly labelled and use source-computed chart lane height',
+    files.jobHistory.includes('Limited samples -')
+    && files.jobHistory.includes('episodeItems.length > 1 && episodeItems.length <= 5')
+    && files.jobHistory.includes('const compactEpisode = rows.length <= 10')
+    && files.jobHistory.includes('const laneScale = dense ? 1 : (compactEpisode ? .76 : 1)')
+    && files.jobHistory.includes('const chartHeight = dense ? Math.max(185, top + 20) : Math.max(170, top + 30)')
+    && files.jobHistory.includes("style={{ height: `${chartConfig.height}px`")
+    && mockupStyle.includes('height:var(--sphere-job-chart-height,244px)!important')],
   ['Performance issue marker label is short and horizontal', files.jobHistory.includes("formatter: `Issue · ${formatWib(incidentStart, false)}`") && files.jobHistory.includes('rotate: 0')],
   ['Infrastructure chart uses expanded internal plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=380') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
   ['Infrastructure analysis fixes Network Storage split and prevents clipped metric columns', files.infrastructureCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,60fr)!important') && files.infrastructureCss.includes('table-layout:fixed') && files.infrastructureCss.includes('nth-child(4)')],
