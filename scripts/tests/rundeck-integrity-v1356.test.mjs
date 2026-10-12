@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { OPERATOR_THRESHOLDS, metricResourceState, hostResourceState, sapWorkloadState, filesystemResourceState } from '../../src/tools/components/rundeckStatusSemantics.js'
 import { settleSapIssueSources, unavailableSapIssueIndicators, sapIssueSampleFreshness, sapIssueTimestampFreshness } from '../../src/tools/components/rundeckIssueSources.js'
 import { systemHealthState } from '../../src/tools/components/rundeckSystemHealth.js'
@@ -87,6 +87,8 @@ test('time check uses explicit issue signal and nearest selected workload sample
   const pair=issueWorkloadTimePair(example)
   assert.equal(pair.state,'WITHIN WINDOW')
   assert.equal(pair.deltaMinutes,10)
+  assert.equal(pair.direction,'AFTER ISSUE')
+  assert.equal(issueWorkloadTimePair({...example,selected_workload:{...example.selected_workload,correlation_observed_at:'2026-10-12T05:00:00Z'}}).direction,'BEFORE ISSUE')
   assert.equal(pair.referenceSource,'Issue Start')
   assert.notEqual(pair.firstSeen,pair.issueAt)
   assert.notEqual(pair.lastSeen,pair.workloadAt)
@@ -148,4 +150,16 @@ test('unified APP observations stay collection-bound and incomplete metrics neve
   assert.match(infra,/storageRows\.map/)
   assert.match(infra,/setData\(\{host:'',hosts:\[\],fs:\[\],network:\[\],storage:\[\]\}\)/)
   assert.match(css,/\.is-unified-app \.rundeckInfraFsPager/)
+})
+
+
+test('only active APP layout is retained and chart tooltip does not persist after drilldown',()=>{
+  const orphan = new URL('../../src/tools/components/RundeckAppServers.jsx',import.meta.url)
+  assert.equal(existsSync(orphan),false)
+  const trend=readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx',import.meta.url),'utf8')
+  const events=readFileSync(new URL('../../src/tools/components/RundeckEvidenceTimeline.jsx',import.meta.url),'utf8')
+  assert.match(trend,/chart\.dispatchAction\(\{ type: 'hideTip' \}\)/)
+  assert.match(trend,/const visible = focused/)
+  assert.match(events,/after issue observation/)
+  assert.doesNotMatch(events,/m between samples/)
 })
