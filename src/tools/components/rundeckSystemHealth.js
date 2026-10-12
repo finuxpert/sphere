@@ -16,8 +16,9 @@ export function systemHealthState(hosts = [], {
   if (resourceStates.includes('WARNING') || stale || availabilityStale) return 'WARNING'
   if (availability === 'ATTENTION' || workloadStates.some((state) => state === 'ATTENTION' || state === 'CRITICAL')) return 'ATTENTION'
 
-  if (!hosts.length && availability === 'UNKNOWN') return 'UNKNOWN'
-  if (availability === 'UNKNOWN') return 'ATTENTION'
+  // Availability confirms services only; it cannot prove absent host metrics are healthy.
+  if (!hosts.length) return 'UNKNOWN'
+  if (availability === 'UNKNOWN') return 'UNKNOWN'
   // A missing SAP WP or host resource sample must not be labeled NORMAL.
   if (resourceStates.includes('UNKNOWN') || workloadStates.includes('UNKNOWN')) return 'UNKNOWN'
   return 'NORMAL'
