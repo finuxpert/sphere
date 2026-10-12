@@ -803,7 +803,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     return [item?.pid,item?.wp,item?.wp_type,item?.program,item?.cpu_class,
       snapshotError,traceError].some(value=>String(value||'').toLowerCase().includes(normalizedWpSearch))
   })
-  const wpPageSize=typeof window!=='undefined' && window.innerHeight<=800 ? 3 : 4
+  const wpPageSize=typeof window!=='undefined' && window.innerHeight<=800 ? 2 : 4
   const wpPageCount=Math.max(1,Math.ceil(filteredWpSignals.length/wpPageSize))
   const safeWpPage=Math.min(wpPage,wpPageCount-1)
   const visibleWpSignals=filteredWpSignals.slice(safeWpPage*wpPageSize,(safeWpPage+1)*wpPageSize)
