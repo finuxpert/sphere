@@ -185,11 +185,14 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     </section>
 
     {incidentItems.length>0&&<section className="rundeckIssueIndicatorSection is-history">
-      <div className="rundeckIssueSectionTitle"><h4>Active issues</h4><small>Critical WP peak {peakCriticalWp||'—'}</small></div>
+      <div className="rundeckIssueSectionTitle"><h4>Recorded active incidents</h4><small>Critical WP peak {peakCriticalWp||'—'} · latest status requires fresh APP sample</small></div>
       <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
         <thead><tr><th>APP</th><th>Signal</th><th>Current status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
         <tbody>{incidentItems.map((row)=>{
-          const severity=row.code==='WP_CRITICAL'?sapWorkloadState({wp_critical:row.latest_value}):String(row.current_severity||row.severity||'UNKNOWN').toUpperCase()
+          // Active is a retained incident state; current severity requires a verified recent host sample.
+          const latestHost=hosts.find(host=>shortHost(host.host)===shortHost(row.host))
+          const currentVerified=latestHost && sapIssueSampleFreshness(data.hosts,latestHost,nowMs)==='FRESH'
+          const severity=!currentVerified?'UNKNOWN':row.code==='WP_CRITICAL'?sapWorkloadState(latestHost):String(row.current_severity||row.severity||'UNKNOWN').toUpperCase()
           return <tr key={row.id} className={row.host?'is-investigable':''} onClick={row.host?()=>inspect({host:row.host,indicator:issueLabel(row.signal||row.code),status:severity}):undefined}>
             <td><strong>{shortHost(row.host||'APP')}</strong></td><td>{issueLabel(row.signal||row.code)}</td><td><Status value={severity}/></td><td>{valueText(row.peak_value,row.unit||'')}</td><td>{durationText(row.duration_seconds)}</td>
           </tr>
