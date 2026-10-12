@@ -817,15 +817,32 @@ test('v1.34.91 desktop Live search filters only loaded real observations',async 
   const search=section.getByRole('searchbox',{name:'Search loaded jobs and programs'})
   await expect(search).toBeVisible()
   await expect(section.getByRole('columnheader',{name:'Observed At'})).toBeVisible()
+  // Live data is not a fixture: an actual API response may legitimately contain zero workloads.
+  const sourceCount=section.locator('.rundeckCurrentWorkloadCount')
+  await expect(sourceCount).toContainText(/\\d+ loaded/)
+  const loadedCount=Number((await sourceCount.textContent())?.match(/(\\d+)\\s+loaded/)?.[1] ?? -1)
+  expect(loadedCount).toBeGreaterThanOrEqual(0)
   await search.fill('nonexistent-unique-job-zyx4321')
-  await expect(section.getByText(/No matching job or program in the .*loaded rows/)).toBeVisible()
+  await expect(section.getByText(new RegExp('No matching job or program in the '+loadedCount+' loaded rows'))).toBeVisible()
   await search.clear()
   await expect(section.locator('tbody tr').first()).toBeVisible()
   const pager=page.getByRole('navigation',{name:'Loaded job pages'})
-  await expect(pager).toBeVisible()
-  await expect(pager.getByRole('button',{name:'Next'})).toBeEnabled()
-  await pager.getByRole('button',{name:'Next'}).click()
-  await expect(pager).toContainText('Page 2/')
+  if(loadedCount===0){
+    await expect(section.getByText('No job or program observed in this collection.')).toBeVisible()
+    await expect(pager).toHaveCount(0)
+    console.log('SPHERE_LIVE_SEARCH_SOURCE=ZERO_LOADED_ROWS; no synthetic pagination asserted')
+  }else{
+    await expect(pager).toBeVisible()
+    const pageSize=(page.viewportSize()?.height||0)<=800?3:4
+    if(loadedCount>pageSize){
+      await expect(pager.getByRole('button',{name:'Next'})).toBeEnabled()
+      await pager.getByRole('button',{name:'Next'}).click()
+      await expect(pager).toContainText('Page 2/')
+    }else{
+      await expect(pager.getByRole('button',{name:'Next'})).toBeDisabled()
+      await expect(pager).toContainText('Page 1/1')
+    }
+  }
 })
 
 test('v1.34.91 desktop drilldowns fit without scrolling or duplicate navigation',async ({page})=>{
