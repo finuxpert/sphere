@@ -113,7 +113,14 @@ test('v1.34.85 light operator palette corrects shadowed vars and preserves data 
   assert.match(light, /overflow-wrap:anywhere!important/)
   assert.match(light, /prefers-reduced-motion:reduce/)
   assert.match(app, /SAP · \{sapState\}/)
-  assert.match(app, /Infra FS \{infra\.topFs/)
+  // v1.34.90 renders FS in a separate four-metric cell, not the old "Infra FS" sentence.
+  // Preserve real FS source provenance, usage and its independent freshness semantics.
+  assert.match(app, /className="rundeckUnifiedMetric is-infrastructure"/)
+  assert.match(app, /infra\.topFs\?\.mount_point/)
+  assert.match(app, /metric\(infra\.topFs\.used_pct,'%'/)
+  assert.match(app, /infra\.freshness/)
+  assert.match(app, /Infrastructure freshness independent/)
+  assert.match(app, /hostInfrastructureEvidence\(host, infraSnapshot\.hosts, infraSnapshot\.filesystems, nowMs\)/)
   assert.match(chart, /MutationObserver/)
   assert.match(chart, /themeRevision\]/)
   assert.doesNotMatch(light, /animation-iteration-count\s*:\s*infinite/i)
