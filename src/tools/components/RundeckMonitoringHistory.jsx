@@ -223,6 +223,7 @@ export default function RundeckMonitoringHistory(props) {
                 <h3>Related Events</h3>
                 <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading events…</div>}>
                   <RundeckEvidenceTimeline
+                    paired
                     refreshToken={refreshToken}
                     job={activeOverlay.job || selectedJob}
                     incidentActive
@@ -234,6 +235,7 @@ export default function RundeckMonitoringHistory(props) {
                 {(activeOverlay.job || selectedJob)?.key
                   ? <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading saved runs…</div>}>
                     <RundeckObservationHistory
+                      paired
                       job={activeOverlay.job || selectedJob}
                       refreshToken={refreshToken}
                       embedded
@@ -260,11 +262,12 @@ export default function RundeckMonitoringHistory(props) {
             <div className="rundeckOperatorPairedWorkspace is-sap-checks">
               <section className="rundeckOperatorPairedPane" aria-label="SAP availability">
                 <h3>Availability</h3>
-                <RundeckAvailability refreshToken={refreshToken} />
+                <RundeckAvailability refreshToken={refreshToken} paired />
               </section>
               <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
                 <h3>Current Issues</h3>
                 <RundeckSapIssues
+                  paired
                   refreshToken={refreshToken}
                   onInspectApp={(context) => {
                     if (!context?.host) return
