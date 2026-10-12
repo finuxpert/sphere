@@ -21,6 +21,7 @@ import './RundeckCloudflareMotion.css'
 import './RundeckCloudflareLight.css'
 import './RundeckUnifiedModalPolish.css'
 import './RundeckFlatWorkspace.css'
+import './RundeckMockupParity.css'
 
 const RundeckInfrastructure = React.lazy(() => import('./RundeckInfrastructure.jsx'))
 const RundeckUnifiedAppAnalysis = React.lazy(() => import('./RundeckUnifiedAppAnalysis.jsx'))
