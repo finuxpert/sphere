@@ -40,7 +40,7 @@ function ageMinutes(value) {
   return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
 }
 
-export default function RundeckAvailability({ refreshToken = '', compact = false, onOpen = null }) {
+export default function RundeckAvailability({ refreshToken = '', compact = false, onOpen = null, paired = false }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [bundle, setBundle] = React.useState(null)
@@ -184,9 +184,9 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''} ${healthySummary ? 'is-healthy-compact' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
       <div>
-        <h3><SphereIcon name="server" /> SAP Availability</h3>
+        {!paired && <h3><SphereIcon name="server" /> SAP Availability</h3>}
         <span title="Current snapshot from the Rundeck Service Availability job.">
-          {data?.collected_at ? `Last update ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
+          {data?.collected_at ? `Checked ${formatWib(data.collected_at, true)} WIB` : 'Waiting for service check'}
           {data?.execution_id ? ` · Availability Run #${data.execution_id}` : ''}
         </span>
       </div>
@@ -214,7 +214,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
 
       <div className="rundeckAvailabilityDetailSections">
         <section>
-          <h4>Landscape Checks</h4>
+          <h4>HANA checks</h4>
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
             <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>
             <div><b>Replication</b><MatrixCell row={replication.PRIMARY} /><MatrixCell row={replication.SECONDARY} /><MatrixCell row={replication.DR} /></div>
