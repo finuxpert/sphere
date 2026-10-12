@@ -40,7 +40,7 @@ export default function RundeckOperationalEvidence({
     ? <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive compact onOpen={() => onOpenEvidence?.(evidenceJob)} />
     : <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard"
         onClick={() => onOpenEvidence?.(evidenceJob)} aria-label="Open Correlated Events">
-        <span className="rundeckEvidenceCardTitle">Correlated Events</span>
+        <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Correlated Events</span>
         <strong>{error ? 'Evidence unverified' : !summary ? 'Loading evidence' : 'No active correlation'}</strong>
       </button>
   // Six live evidence destinations, one flat navigation surface.
