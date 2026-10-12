@@ -2,7 +2,7 @@
 export function observationIdentityCounts(rows = []) {
   const observations = Array.isArray(rows) ? rows : []
   const collections = new Set(observations.map(row => {
-    const id = row?.collection_id || row?.execution_id
+    const id = row?.collection_id
     return id === null || id === undefined || String(id).trim() === '' ? null : String(id)
   }).filter(Boolean))
   return {
