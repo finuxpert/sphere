@@ -73,18 +73,18 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
 
     {incident && matchedCollection && <div className="rundeckAppServerIssue">
       <SphereIcon name="alert" />
-      <div><strong>APP Critical WP active</strong><small>Observed Duration: {durationText(incident.duration_seconds)}, Peak: {metric(incident.primary_signal?.peak ?? incident.peak_value ?? resolvedApp.wp_critical)}</small></div>
+      <div><strong>Recorded incident · Critical WP</strong><small>Duration: {durationText(incident.duration_seconds)} · Peak: {metric(incident.primary_signal?.peak ?? incident.peak_value ?? resolvedApp.wp_critical)}</small></div>
     </div>}
 
     <section className="rundeckAppServerWorkloads">
       <header>
-        <div><span>Current Collection</span><h4>Jobs & Programs on {hostLabel}</h4></div>
+        <div><span>Performance Collection</span><h4>Job / Program observations · {hostLabel}</h4></div>
         <small>{matchedCollection ? `${displayRows.length} loaded / ${workloadMeta.total} observed` : 'Collection not loaded'}</small>
       </header>
       {!latestCollectionId && <div className="rundeckAppServerState">Performance collection identity unavailable; workload observations not verified.</div>}
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
-      {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Source: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'Workload Observation' : 'Top Consumers fallback'} | Collection: {latestCollectionId} | APP: {hostLabel}</div><div className="rundeckAppServerTableWrap"><table>
+      {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Source: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'Observed workloads' : 'Top consumers'} | Collection: {latestCollectionId} | APP: {hostLabel}</div><div className="rundeckAppServerTableWrap"><table>
         <thead><tr><th>Job / Program</th><th>Type</th><th title="Grouped workload CPU across observed processes; can exceed 100% on multi-core systems">CPU</th><th title="Aggregate PSS memory for the observed workload">PSS Memory</th><th title="Unique PIDs grouped into this workload observation">Processes</th></tr></thead>
         <tbody>
           {displayRows.map((row,index)=><tr key={`${row.host}-${row.consumer_type}-${row.consumer_key}-${index}`} tabIndex={0} role="button"
