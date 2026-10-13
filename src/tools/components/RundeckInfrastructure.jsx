@@ -256,7 +256,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
-      <div><p>{stale?'Last observed infrastructure measurements; live state unavailable.':'Host measurements and saved history.'}</p></div>
+      <div><p>{stale?'Infrastructure sample: '+freshness:'Host sample and history'}</p></div>
       <div className="rundeckInfraIdentity"><span className={`state is-${overall.toLowerCase()}`}>{shortHost(host)} · {overall}</span></div>
     </header>
     {!hideHostCards && <div className="rundeckInfraHostCards" role="group" aria-label="Select Infrastructure APP">
@@ -300,7 +300,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
-    {stale&&<div className="rundeckInfraHistoricalNote" role="status">Snapshot {freshness.toLowerCase()} or source collection mismatch; capacity, network and I/O values are last observed evidence, not current alerts.</div>}
+    {stale&&<div className="rundeckInfraHistoricalNote" role="status">Infrastructure sample: {freshness} · host and collection checked separately</div>}
     <div className="rundeckInfraWorkspace">
       <div className="rundeckInfraCurrent">
         <div className="rundeckInfraCurrentLabel">{stale?'Last collected readings':'Current readings'}</div>
