@@ -38,6 +38,8 @@ if [[ -z "$(git status --porcelain)" && -s "$STAMP" && -f dist/index.html ]] &&
   grep -Rqs '/dev/assets/' dist/index.html &&
   grep -Rqs "$APP_VERSION" dist/assets &&
   grep -Rqs "$SHORT_SHA" dist/assets; then
+  SAVED_FINGERPRINT=''
+  SAVED_ARTIFACT=''
   read -r SAVED_FINGERPRINT SAVED_ARTIFACT < "$STAMP" || true
   if [[ "$SAVED_FINGERPRINT" == "$FINGERPRINT" && "$SAVED_ARTIFACT" == "$(artifact_digest)" ]]; then
     echo "QA=REUSED BUILD=REUSED SOURCE_SHA=$CURRENT_SHA ARTIFACT_SHA=$SAVED_ARTIFACT"
