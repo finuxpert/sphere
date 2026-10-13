@@ -7,7 +7,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { numberText, shortHost } from './sapUiFormat.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
-import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration } from './rundeckDataQuality.js'
+import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage } from './rundeckDataQuality.js'
 import './RundeckSource.css'
 import './RundeckPlatformHealth.css'
 
@@ -719,6 +719,7 @@ export default function RundeckSource({ onCollection }) {
   const recentGap = retainedReadyCollectionGaps(history)[0] || null
   const qualityDisplay = quality.state === 'FRESH' ? (historyRefreshFailed ? 'PARTIAL' : dataAlignment) : quality.state
   const freshnessSummary = `Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}`
+  const freshnessMessage = monitoringFreshnessMessage(quality, { availabilityFetchFailed: availabilityRefreshFailed })
 
   const freshnessWarning = historyRefreshFailed || quality.state !== 'FRESH' || performanceStale || availabilityStale || (sourceSkewMinutes !== null && sourceSkewMinutes > 15)
   const dataAlignmentTitle = [
@@ -784,7 +785,7 @@ export default function RundeckSource({ onCollection }) {
               <div><span>Time difference</span><strong>{sourceSkewMinutes === null ? 'Unknown' : `${sourceSkewMinutes}m`}</strong></div>
               {recentGap && <div><span>Retained gap</span><strong>{dataGapDuration(recentGap.observedSpacingMs)} · No complete READY</strong></div>}
               {historyRefreshFailed && <div><span>History coverage</span><strong>UNKNOWN · Fetch failed</strong></div>}
-              <p>{quality.state !== 'FRESH' ? 'Last observed values are not verified current conditions. Missing observation is not SAP downtime.' : 'Current samples are fresh. Any retained gap still represents unobserved history.'}</p>
+              <p>{quality.state !== 'FRESH' ? freshnessMessage : 'Current samples are fresh. Any retained gap still represents unobserved history.'}</p>
             </div>
           </details>
         </div>
@@ -796,7 +797,7 @@ export default function RundeckSource({ onCollection }) {
     {(quality.state !== 'FRESH' || recentGap || historyRefreshFailed) && <div className={`rundeckDataQualityNotice is-${quality.state.toLowerCase()}`} role="status" aria-label="Data quality and retained observation gap">
       <strong>{quality.state !== 'FRESH' ? `Data ${quality.state}` : historyRefreshFailed ? 'History coverage unverified' : 'Data current · historical gap retained'}</strong>
       <span>{quality.state !== 'FRESH'
-        ? `Last READY ${latestCollectionAt ? formatTime(latestCollectionAt) + ' WIB' : 'unknown'} · current SAP condition cannot be inferred from old samples.`
+        ? freshnessMessage
         : 'Current performance data is fresh; missing historical samples have not been reconstructed. Infrastructure has separate freshness.'}</span>
       {historyRefreshFailed && <small>History fetch failed · known observations remain historical; gap coverage cannot be fully verified.</small>}
       {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY {formatTime(new Date(recentGap.before).toISOString())} WIB and {formatTime(new Date(recentGap.after).toISOString())} WIB · {dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
