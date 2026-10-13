@@ -278,3 +278,9 @@ The source-health and history-gap logic are client-side. It does not change coll
 - Counts remain explicit: `observed` is the sum of backend totals; if any host returns fewer rows than its total, the UI says `loaded (partial)` and does not claim complete search. Use the historical Search for retained records outside this collection.
 - APP severity is determined by SAP host CPU/RAM/I/O wait and Critical WP. Filesystem is independent host/collection-matched Infrastructure telemetry. Identical percentages do not prove duplicate mapping; the filesystem mount and measurement freshness remain available for verification.
 - Run `npm run qa` and desktop/mobile visual QA before release. This change is frontend-only and compatible with `sphere deploy dev`; it does not require a backend restart or migration. PROD stays unchanged.
+
+### DEV APP filesystem label — 13 Oct 2026
+
+The unified APP card shows **Filesystem** instead of **FS**, the highest-used filesystem mount from the host/collection-matched Infrastructure sample, and its usage percentage. The one-line card footer gives the actual mount point; the full mount path, infrastructure state, source host, sample time and available capacity fields (GiB) appear in the native hover/focus tooltip. Unreported capacity must remain missing, never derived or filled with estimates.
+
+Filesystem warning remains independent of the SAP APP status (CPU, RAM, I/O Wait and Critical WP). Source freshness still gates Infrastructure status; an older observed percentage is never presented as a fresh measurement. No backend or database change is needed.
