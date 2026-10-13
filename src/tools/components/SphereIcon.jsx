@@ -4,6 +4,7 @@ const paths = {
   activity: <><path d="M3 12h3l2-5 4 10 2-5h7" /></>,
   server: <><rect x="4" y="4" width="16" height="6" rx="1.5" /><rect x="4" y="14" width="16" height="6" rx="1.5" /><path d="M8 7h.01M8 17h.01" /></>,
   trend: <><path d="M4 18V6" /><path d="M4 18h16" /><path d="m7 14 4-4 3 2 4-5" /></>,
+  hexagon: <><path d="M12 2.5 20.3 7v10L12 21.5 3.7 17V7L12 2.5Z" /><path d="M7.5 12h2.5l1.7-3 2 6 1.4-3h1.4" /></>,
   workload: <><rect x="7" y="7" width="10" height="10" rx="2" /><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" /></>,
   target: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></>,
   alert: <><path d="M12 3 3.8 19h16.4L12 3Z" /><path d="M12 9v4M12 16h.01" /></>,

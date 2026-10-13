@@ -12,9 +12,15 @@ export default function RundeckMonitoringHistoryCore(props) {
         selectedJob={props.selectedJob}
         focusRequest={props.focusedAppHost ? { host: props.focusedAppHost, token: 'shared-app-' + props.focusedAppHost, highlightOnly: true } : (props.selectedJob?.host ? { host: props.selectedJob.host, token: props.selectedJob.key || props.selectedJob.at || 'selected-workload', highlightOnly: true } : props.appFocusRequest || null)}
         onInspectApp={props.onInspectApp}
+        onSelectApp={props.onFocusAppHost}
         onOpenMetric={props.onOpenInfrastructureMetric}
       />
     </section>
+
+    {props.operationalEvidenceContent && <section className="rundeckAnalysisRailV13456" aria-label="Analysis shortcuts">
+      {props.operationalEvidenceContent}
+    </section>}
+
 
     <section className="rundeckTrendBandV13454">
       <RundeckServerTrend
@@ -30,10 +36,6 @@ export default function RundeckMonitoringHistoryCore(props) {
         onOpenEvidence={props.onOpenTrendEvidence}
       />
     </section>
-
-    {props.operationalEvidenceContent && <section className="rundeckAnalysisRailV13456" aria-label="Analysis shortcuts">
-      {props.operationalEvidenceContent}
-    </section>}
 
     <RundeckJobsProgramsWorkspace
       refreshToken={props.refreshToken}

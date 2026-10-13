@@ -81,9 +81,7 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'app', app: context })
   }, [chooseAppFocus])
 
-  const focusedOperationalHost = selectedJob?.host
-    ? (props.sourceHosts?.find(row => shortHost(row.host) === shortHost(selectedJob.host)) || null)
-    : (props.sourceHosts?.[0] || null)
+  const focusedOperationalHost = (props.sourceHosts || []).find(row => shortHost(row.host) === shortHost(trendFocusedHost)) || (props.sourceHosts?.[0] || null)
 
   const selectedContextTime = selectedJob?.at
     ? `${formatWib(selectedJob.at, true)} WIB`

@@ -1,4 +1,5 @@
 import React from 'react'
+import SphereIcon from './SphereIcon.jsx'
 import { formatWib } from './sapUiFormat.js'
 import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } from './rundeckWorkloadHealthState.js'
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
@@ -137,7 +138,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     data-state={state} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
-      <span><strong>Workload Health</strong><small>1D · {period} · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'}</small></span>
+      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Workload Health</strong></span><small>1D · {period} · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'}</small></span>
       <button type="button" className="rundeckWorkloadHealthReview" onClick={onReview}
         aria-label="Open Jobs & Programs Review">Review list</button>
     </header>
