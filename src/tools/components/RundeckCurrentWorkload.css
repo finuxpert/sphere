@@ -311,3 +311,20 @@
   background:rgba(79,198,200,.045)!important;
   box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important;
 }
+
+/* Compact APP filter, neutral in light and dark themes. */
+.appShell:has(.rundeckPanel) .rundeckWorkloadHostFilter{
+  flex:0 0 auto;width:94px;min-height:29px;padding:4px 6px;
+  border:1px solid var(--sphere-design-edge,var(--sphere-border,#4a5961));
+  border-radius:5px;background:var(--sphere-page,#0f151a);
+  color:var(--sphere-design-ink,var(--sphere-text,#e7edf0));
+  font:inherit;font-size:10.5px;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHostFilter:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);outline-offset:2px;
+}
+@media(max-width:760px){
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadTools{gap:6px!important;max-width:100%}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHostFilter{width:75px;padding-inline:3px}
+  .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadSearch input{width:min(155px,42vw)!important}
+}
