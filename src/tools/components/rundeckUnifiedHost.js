@@ -23,13 +23,17 @@ export function appSignalReason(host = {}, verified = true) {
     { name: 'RAM', value: host.ram_pct, type: 'ram' },
     { name: 'I/O wait', value: host.io_wait_pct ?? host.iowait_pct, type: 'ioWait' },
   ]
-  const priority = ['CRITICAL', 'WARNING']
-  for (const state of priority) {
+  const showMetric = state => {
     const row = metrics.find(metric => metricResourceState(metric.value, metric.type) === state)
-    if (row) return `${row.name} ${Number(row.value).toLocaleString('en-US',{maximumFractionDigits:1})}%`
+    return row ? `${row.name} ${Number(row.value).toLocaleString('en-US',{maximumFractionDigits:1})}%` : ''
   }
+  const criticalResource = showMetric('CRITICAL')
+  if (criticalResource) return criticalResource
   const wp = sapWorkloadState(host)
-  if (wp === 'CRITICAL' || wp === 'ATTENTION') return `Critical WP ${host.wp_critical}`
+  if (wp === 'CRITICAL') return `Critical WP ${host.wp_critical}`
+  const warningResource = showMetric('WARNING')
+  if (warningResource) return warningResource
+  if (wp === 'ATTENTION') return `Critical WP ${host.wp_critical}`
   if (hostResourceState(host) === 'UNKNOWN' || wp === 'UNKNOWN') return 'Incomplete SAP metrics'
   return 'Within SAP thresholds'
 }
