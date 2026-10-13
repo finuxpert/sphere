@@ -940,44 +940,42 @@
  .appShell:has(.rundeckPanel) .rundeckWorkloadDot{transition:none!important}
 }
 
-/* DEV v1.35.10 — restore selectable hexagon matrix using validated full-population evidence.
-   All dots are real backend workload identities; no 400+1 pagination and no clipped dots. */
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth {
-  height:196px!important;gap:5px!important;padding:8px 11px!important;
-  overflow:visible!important;min-width:0!important;
+/* Workload Health: measured hexagons and an explicit Review fallback, no clipping. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
+  height:196px!important;min-height:0!important;gap:5px!important;padding:8px 11px!important;
+  overflow:hidden!important;min-width:0!important;
 }
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid {
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{
   display:flex!important;flex:1 1 auto!important;flex-wrap:wrap!important;
   align-content:flex-start!important;align-items:flex-start!important;
   width:100%!important;min-width:0!important;min-height:0!important;
-  gap:2px!important;padding:1px 0!important;overflow:visible!important;
+  gap:var(--workload-dot-gap,2px)!important;padding:0!important;overflow:hidden!important;
 }
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot {
-  flex:0 0 10px!important;width:10px!important;height:10px!important;
-  min-width:10px!important;min-height:10px!important;
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot{
+  flex:0 0 var(--workload-dot-size,10px)!important;
+  width:var(--workload-dot-size,10px)!important;height:var(--workload-dot-size,10px)!important;
+  min-width:var(--workload-dot-size,10px)!important;min-height:var(--workload-dot-size,10px)!important;
 }
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealth[data-density="dense"] .rundeckWorkloadDot{
-  flex-basis:7px!important;width:7px!important;height:7px!important;min-width:7px!important;min-height:7px!important;
-}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealth[data-density="dense"] .rundeckWorkloadDotGrid{gap:1px!important}
-@media screen and (min-width:900px) and (max-height:800px) {
+@media screen and (min-width:900px) and (max-height:800px){
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
     height:164px!important;gap:4px!important;padding:7px 9px!important;
   }
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot{
-    flex-basis:8px!important;width:8px!important;height:8px!important;min-width:8px!important;min-height:8px!important;
-  }
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{gap:1px!important}
-}
-@media screen and (min-width:900px) and (max-width:1199px) {
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot{
-    flex-basis:8px!important;width:8px!important;height:8px!important;min-width:8px!important;min-height:8px!important;
-  }
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{gap:1px!important}
 }
 @media screen and (max-width:899px){
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{height:30px!important;padding:3px 6px!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsSplit{display:block!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide{
+    display:block!important;position:static!important;width:100%!important;height:auto!important;margin-top:5px!important
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsWorkspaceHead{padding-right:0!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
+    width:100%!important;height:auto!important;min-height:51px!important;padding:5px 8px!important;gap:3px!important
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthTitle small{display:none!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
+    display:flex!important;flex-wrap:wrap!important;gap:3px 9px!important;font-size:10px!important;line-height:14px!important
+  }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{display:none!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter{display:none!important}
 }
 
 /* DEV v1.35.9 - compact one-screen audit adjustments.

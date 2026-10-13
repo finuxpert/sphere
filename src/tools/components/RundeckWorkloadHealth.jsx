@@ -1,6 +1,7 @@
 import React from 'react'
 import { formatWib } from './sapUiFormat.js'
 import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } from './rundeckWorkloadHealthState.js'
+import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const MIN_REFRESH_MS = 5 * 60 * 1000
@@ -12,8 +13,8 @@ const SEVERITY_ORDER = { review: 0, attention: 1, unknown: 2, normal: 3 }
 const LEVELS = [
   { key: 'review', label: 'Review' },
   { key: 'attention', label: 'Watch' },
-  { key: 'normal', label: 'Normal' },
   { key: 'unknown', label: 'Unknown' },
+  { key: 'normal', label: 'Normal' },
 ]
 
 async function readPage(offset, signal) {
@@ -61,6 +62,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const [retryToken, setRetryToken] = React.useState(0)
   const loadedAt = React.useRef(0)
   const loadedRefreshToken = React.useRef(null)
+  const dotGridRef = React.useRef(null)
+  const [dotLayout, setDotLayout] = React.useState({ size: 10, gap: 2, fits: true })
 
   React.useEffect(() => {
     if (loadedAt.current > 0 && loadedRefreshToken.current === refreshToken &&
@@ -91,16 +94,41 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       SEVERITY_ORDER[workloadHealthLevel(left)] - SEVERITY_ORDER[workloadHealthLevel(right)] ||
       String(left.consumer_key).localeCompare(String(right.consumer_key))) : [],
   [data, preview])
+  React.useLayoutEffect(() => {
+    const grid = dotGridRef.current
+    if (!grid) return undefined
+    const measure = () => {
+      const next = workloadDotLayout({ count: rows.length, width: grid.clientWidth, height: grid.clientHeight })
+      setDotLayout(previous => previous.size === next.size && previous.gap === next.gap &&
+        previous.fits === next.fits ? previous : next)
+    }
+    measure()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(grid)
+    window.addEventListener('resize', measure, { passive: true })
+    return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
+  }, [rows.length])
+
+  const insufficient = rows.filter(row => workloadHealthLevel(row) === 'unknown' &&
+    String(row.status || '').toUpperCase() === 'INSUFFICIENT DATA').length
+  const otherUnknown = preview && !data?.tooMany
+    ? Math.max(0, Number(preview.health.unknown) - insufficient) : null
+  const unknownDescription = otherUnknown === null
+    ? 'Unknown evaluations need evidence review.'
+    : `${insufficient} insufficient data · ${otherUnknown} other unknown statuses. Not an SM37 result.`
   const state = error ? 'unavailable' : loading ? 'loading' : !preview ? 'unavailable' :
     preview.total === 0 ? 'empty' : preview.limited ? 'limited' :
-      preview.reviewRequired > 0 ? 'review' : 'normal'
+      preview.reviewRequired > 0 ? 'review' : Number(preview.health.attention) > 0 ? 'attention' :
+    Number(preview.health.unknown) > 0 ? 'limited' : 'normal'
   const period = data?.start && data?.end
     ? `${formatWib(data.start, true)} – ${formatWib(data.end, true)} WIB`
     : 'Window unavailable'
   const outcome = error ? 'Evaluation unavailable' : loading ? 'Loading evaluations…' :
     !preview ? 'No verified evaluation' : preview.total === 0 ? 'No evaluations' :
       data?.tooMany ? 'Open Review for individual evaluations' :
-      preview.limited ? 'Limited evidence' : preview.reviewRequired ? 'Needs review' : 'No review flagged'
+      preview.limited ? 'Limited evidence' : preview.reviewRequired ? 'Needs review' :
+    Number(preview.health.attention) > 0 ? 'Watch items recorded' :
+    Number(preview.health.unknown) > 0 ? 'Unknown evaluations' : 'No review flagged'
   const openWorkload = row => onSelectWorkload?.(row, {
     period: '1d', days: 1, start: data?.start || '', end: data?.end || '',
   })
@@ -114,10 +142,10 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         aria-label="Open Jobs & Programs Review">Review list</button>
     </header>
     <div className="rundeckWorkloadHealthLegend" aria-label="Full population evaluation categories">
-      {LEVELS.map(level => <span key={level.key}><i className={'is-' + level.key} />{preview ? preview.health[level.key] : '—'} {level.label}</span>)}
+      {LEVELS.map(level => <span key={level.key} title={level.key === 'unknown' ? unknownDescription : undefined}><i className={'is-' + level.key} />{preview ? preview.health[level.key] : '—'} {level.label}</span>)}
     </div>
-    <div className="rundeckWorkloadDotGrid" role="group" aria-label="Individual saved workload evaluations">
-      {rows.map(row => {
+    <div ref={dotGridRef} className="rundeckWorkloadDotGrid" role="group" aria-label="Individual saved workload evaluations" style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px` }}>
+      {(dotLayout.fits ? rows : []).map(row => {
         const level = workloadHealthLevel(row)
         const type = String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'
         const cpu = row.avg_cpu_pct == null ? '—' : row.avg_cpu_pct + '%'
@@ -129,10 +157,12 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
           title={description} aria-label={description}
           onClick={() => openWorkload(row)} />
       })}
-      {!rows.length && <span className="rundeckWorkloadDotEmpty" role="status">{outcome}</span>}
+      {(!rows.length || !dotLayout.fits) && <span className="rundeckWorkloadDotEmpty" role="status">
+        {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
+      </span>}
     </div>
     <footer className="rundeckWorkloadHealthFooter">
-      <span className={'is-' + state}>{outcome} · {rows.length ? '1 hexagon = 1 saved evaluation' : 'saved evaluations'} · not SM37 status</span>
+      <span className={'is-' + state}>{outcome} · {rows.length && dotLayout.fits ? '1 hexagon = 1 saved evaluation' : 'open Review for record details'} · not SM37 status</span>
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
     </footer>
   </section>
