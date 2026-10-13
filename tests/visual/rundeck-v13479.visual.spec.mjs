@@ -90,7 +90,7 @@ test('v1.34.79 cockpit keeps operational sections reachable at desktop target si
   const shortcuts = monitoring.locator('.rundeckAnalysisRailV13456')
   const jobs = monitoring.locator('.rundeckJobsProgramsWorkspace')
   for (const section of [top, trends, shortcuts, jobs]) await expect(section).toBeVisible()
-  await expect(monitoring.locator('.rundeckJobsProgramsModes').getByRole('tab', { name: 'Live' })).toBeVisible()
+  await expect(monitoring.locator('.rundeckJobsProgramsModes').getByRole('tab', { name: 'Current' })).toBeVisible()
   await expect(monitoring.locator('.rundeckJobsProgramsModes').getByRole('tab', { name: 'Review' })).toBeVisible()
   await expect(monitoring.locator('.rundeckJobsProgramsModes').getByRole('tab', { name: 'Search' })).toBeVisible()
   const metrics = await page.evaluate(() => {
@@ -146,7 +146,7 @@ test('Jobs and Programs mode tabs work with keyboard arrows and Home', async ({ 
   if (testInfo.project.name !== 'desktop-1536') test.skip()
   await openCockpit(page)
   const tabs = page.locator('.rundeckJobsProgramsModes')
-  const live = tabs.getByRole('tab', { name: 'Live' })
+  const live = tabs.getByRole('tab', { name: 'Current' })
   const review = tabs.getByRole('tab', { name: 'Review' })
   const search = tabs.getByRole('tab', { name: 'Search' })
   await live.focus()
