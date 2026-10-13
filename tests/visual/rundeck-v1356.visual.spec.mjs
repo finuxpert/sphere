@@ -204,8 +204,17 @@ test('DEV Workload Health and table are genuinely side-by-side without clipping 
     const displayed = await dots.count()
     expect(displayed).toBeGreaterThan(30)
     expect(displayed).toBeLessThanOrEqual(400)
+    const red = page.locator('.rundeckWorkloadDot.is-review').first()
+    if (await red.count()) {
+      const rowLabel = await red.getAttribute('aria-label')
+      expect(rowLabel).toMatch(/^(Job|Program) .+Review Required/)
+      await red.click()
+      const detail = page.getByRole('dialog',{name:/Job \/ Program Performance Analysis|^Z/i})
+      await expect(detail).toBeVisible({timeout:20000})
+      await expect(detail.getByRole('button',{name:'Review Result'})).toBeVisible()
+      await page.keyboard.press('Escape')
+    }
   } else {
-    expect(bounds.card.right).toBeLessThanOrEqual(bounds.viewport.width + 2)
     expect(bounds.card.right).toBeLessThanOrEqual(bounds.viewport.width + 2)
   }
   await health.click()

@@ -56,6 +56,8 @@ export function validatedWorkloadDots(first, following = [], pageIndex = 0, page
         report.page?.health !== 'ALL' || report.page?.offset !== offset ||
         report.page?.total !== preview.total ||
         Number(report.summary?.workloads) !== preview.total ||
+        ['review', 'attention', 'normal', 'unknown'].some(key =>
+          Number(report.summary?.health?.[key]) !== Number(preview.health[key])) ||
         report.start !== first.start || report.end !== first.end ||
         report.items.length !== count || report.page?.returned !== count) return null
     for (const row of report.items) {

@@ -19,7 +19,6 @@ test('full 388 workload population has verified server counts, never first-100 e
   const preview = workloadHealthPreview(report)
   assert.equal(preview.total,388)
   assert.equal(preview.reviewRequired,13)
-  assert.equal(preview.total,388)
   assert.equal(preview.health.review,13)
   assert.equal(preview.health.attention,61)
   assert.equal(preview.health.normal,290)
