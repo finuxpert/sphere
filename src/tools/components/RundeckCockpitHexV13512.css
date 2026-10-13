@@ -339,3 +339,10 @@
     transition:none!important;
   }
 }
+
+/* Legacy mockup parity uses CSS grid areas and would visually reorder the DOM
+   back to Trends-before-Analysis unless explicitly corrected in this revision. */
+.appShell:has(.rundeckPanel) .rundeckMonitoring.rundeckCockpitV13491{
+  grid-template-areas:"apps" "actions" "trends" "workloads"!important;
+  grid-template-rows:auto auto auto auto!important;
+}
