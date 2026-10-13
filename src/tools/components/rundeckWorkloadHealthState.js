@@ -7,15 +7,16 @@ export function workloadHealthLevel(row = {}) {
   return 'unknown'
 }
 
-/** Full report totals are not estimated from the 28 ranked preview dots. */
-export function workloadHealthPreview(report, maxDots = 28) {
+/** Full report totals are not estimated from the 30 ranked preview hexagons. */
+export function workloadHealthPreview(report, maxDots = 30) {
   if (!report || !Array.isArray(report.items) || !report.summary) return null
   const nonnegative = value => value !== null && value !== undefined && value !== '' &&
     Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : null
   const total = nonnegative(report.summary.workloads)
   const reviewRequired = nonnegative(report.summary.review_required)
   if (total === null || reviewRequired === null || reviewRequired > total) return null
-  const limit = Math.max(1, Math.min(28, Math.floor(Number(maxDots) || 28)))
+  if (total > 0 && report.items.length === 0) return null
+  const limit = Math.max(1, Math.min(30, Math.floor(Number(maxDots) || 30)))
   const sample = report.items.slice(0, Math.min(limit, total))
   const quality = report.quality || {}
   return {
