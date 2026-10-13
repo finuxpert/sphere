@@ -19,35 +19,6 @@ const STATUSES = [
 const pct = (value) => value === null || value === undefined ? '—' : `${numberText(value, 1)}%`
 const gb = (value) => value === null || value === undefined ? '—' : `${numberText(value, 2)} GB`
 
-function suggestedFinding(row = {}) {
-  const parts = []
-  const signals = row.signals || {}
-  if (signals.sustained_high_cpu) parts.push('Sustained high CPU was observed during the selected review period.')
-  else if (signals.cpu_spike) parts.push('A CPU spike was observed during the selected review period.')
-  if (signals.high_memory) parts.push('Memory usage was above the normal range for this job or program.')
-  if (signals.performance_shift || signals.increasing) parts.push('CPU usage increased compared with the previous review period.')
-  if (signals.critical_wp_correlated || signals.wp_excess_association) parts.push('APP Critical WP was observed on the same APP collection checks as this job or program.')
-  if (signals.baseline_anomaly) parts.push('Performance was above the retained historical baseline.')
-  if (!parts.length) parts.push('This job or program met the configured performance review criteria.')
-  parts.push('This is a performance correlation, not a confirmed root cause.')
-  return parts.join(' ')
-}
-
-function suggestedRecommendation(row = {}) {
-  const signals = row.signals || {}
-  if (signals.sustained_high_cpu || signals.high_memory || signals.baseline_anomaly) {
-    return 'Review the execution context, program logic and data volume as needed. Validate workload CPU, PSS memory and APP Critical WP again on the next observed run.'
-  }
-  if (signals.performance_shift || signals.increasing) {
-    return 'Compare this execution with previous runs and review any recent program, variant, data-volume or scheduling changes. Validate again on the next run.'
-  }
-  return 'Monitor the next observed run and compare workload CPU, PSS memory, observation span and APP Critical WP before closing the review.'
-}
-
-function defaultStatus() {
-  return 'NEEDS_FURTHER_RCA'
-}
-
 export default function RundeckReviewQuickAnalysis({
   row,
   reviewContext,
@@ -115,22 +86,22 @@ export default function RundeckReviewQuickAnalysis({
         const item = result.item || null
         setClosing(item)
         setForm({
-          closing_status: item?.closing_status || defaultStatus(row),
-          finding: item?.finding || suggestedFinding(row),
-          recommendation: item?.recommendation || suggestedRecommendation(row),
+          closing_status: item?.closing_status || '',
+          finding: item?.finding || '',
+          recommendation: item?.recommendation || '',
           owner: item?.owner || '',
-          follow_up: item?.follow_up || 'Validate the next observed run and compare workload CPU, PSS memory, observation span and APP Critical WP.',
+          follow_up: item?.follow_up || '',
         })
       })
       .catch((error) => {
         if (error.name === 'AbortError') return
         setClosing(null)
         setForm({
-          closing_status: defaultStatus(row),
-          finding: suggestedFinding(row),
-          recommendation: suggestedRecommendation(row),
+          closing_status: '',
+          finding: '',
+          recommendation: '',
           owner: '',
-          follow_up: 'Validate the next observed run and compare workload CPU, PSS memory, observation span and APP Critical WP.',
+          follow_up: '',
         })
         setSaveMessage(error.message || 'Analysis result storage unavailable')
       })
@@ -142,7 +113,7 @@ export default function RundeckReviewQuickAnalysis({
 
   if (!row) return null
 
-  const reason = evaluationReasonText(row) || row.status || 'Review'
+  const reason = evaluationReasonText(row) || row.status || '—'
   const reviewDataPoints = Number(row.occurrences ?? row.observations ?? 0)
   const limitedSample = Number.isFinite(reviewDataPoints) && reviewDataPoints > 0 && reviewDataPoints < 6
   const summaryMetrics = {
@@ -164,6 +135,7 @@ export default function RundeckReviewQuickAnalysis({
   const saveClosing = async (event) => {
     event.preventDefault()
     if (!form || !reviewContext?.end) return
+    if (!form.closing_status) { setSaveMessage('Select a result before saving'); return }
     setSaving(true)
     setSaveMessage('')
     try {
@@ -250,7 +222,8 @@ export default function RundeckReviewQuickAnalysis({
         {form && <>
           <label>
             <span>Result</span>
-            <select value={form.closing_status} onChange={(event) => setForm({ ...form, closing_status: event.target.value })}>
+            <select required value={form.closing_status} onChange={(event) => setForm({ ...form, closing_status: event.target.value })}>
+              <option value="" disabled>Choose result</option>
               {STATUSES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
           </label>
@@ -261,18 +234,18 @@ export default function RundeckReviewQuickAnalysis({
           </label>
 
           <label>
-            <span>Suggested Check</span>
+            <span>Basis Check Notes</span>
             <textarea rows="3" value={form.recommendation} onChange={(event) => setForm({ ...form, recommendation: event.target.value })} />
           </label>
 
           <div className="rundeckClosingGrid">
             <label>
               <span>Action Owner</span>
-              <input value={form.owner} onChange={(event) => setForm({ ...form, owner: event.target.value })} placeholder="Assign after validation" />
+              <input value={form.owner} onChange={(event) => setForm({ ...form, owner: event.target.value })} placeholder="Owner (optional)" />
             </label>
             <label>
               <span>Validation / Follow-up</span>
-              <input value={form.follow_up} onChange={(event) => setForm({ ...form, follow_up: event.target.value })} placeholder="Validation after next observed run" />
+              <input value={form.follow_up} onChange={(event) => setForm({ ...form, follow_up: event.target.value })} placeholder="Next check (optional)" />
             </label>
           </div>
 
@@ -280,8 +253,8 @@ export default function RundeckReviewQuickAnalysis({
             <strong>Closing Summary</strong>
             <p><b>{row.consumer_key}</b> · {workloadTypeLabel(row.consumer_type)} · {reviewContext?.period?.toUpperCase() || '1D'}</p>
             <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · APP Critical WP overlap {row.critical_wp_host_checks ?? 0} of {row.host_observations ?? row.occurrences ?? '—'} checks.</p>
-            <p>{form.finding}</p>
-            <p><b>{form.closing_status.replaceAll('_', ' ')}</b> · Action Owner: {form.owner || '—'} · {form.recommendation}</p>
+            <p>{form.finding || 'Analysis summary: —'}</p>
+            <p><b>{form.closing_status ? form.closing_status.replaceAll('_', ' ') : 'Result: —'}</b> · Action Owner: {form.owner || '—'}{form.recommendation ? ` · ${form.recommendation}` : ''}</p>
           </div>
 
           <div className="rundeckClosingActions">
