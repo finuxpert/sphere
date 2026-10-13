@@ -163,13 +163,21 @@ function AvailabilityCoverageBand({ trend }) {
 
 function AvailabilityObservationSummary({ trend }) {
   if (trend?.metric !== 'availability' || !Array.isArray(trend?.uptime) || !trend.uptime.length) return null
-  return <div className="rundeckAvailabilitySummaryV133" title="Observed availability is calculated only from retained Service Availability checks; it is not an SLA calculation.">
-    <span>Observed availability</span>
+  const observedAt = trend?.latest_observation_at || trend?.latest_collection_at
+  const observedMs = Date.parse(observedAt || '')
+  const ageMinutes = Number.isFinite(observedMs) ? Math.max(0, Math.floor((Date.now() - observedMs) / 60000)) : null
+  const staleAfter = Math.max(1, Number(trend?.stale_after_minutes || 20))
+  const observedLabel = ageMinutes === null ? 'Saved availability · time unknown'
+    : ageMinutes >= staleAfter ? `Saved availability · ${ageMinutes}m old` : 'Observed availability'
+  return <div className="rundeckAvailabilitySummaryV133" title={`Saved Service Availability checks, not an SLA or current replication-health verdict. Last observation: ${observedAt ? `${formatWib(observedAt, true)} WIB` : 'unknown'}.`}>
+    <span>{observedLabel}</span>
     <div>{trend.uptime.map((row) => <small key={row.name}><b>{row.name}</b> {row.uptime_pct === null || row.uptime_pct === undefined ? '—' : `${numberText(row.uptime_pct, 2)}%`}</small>)}</div>
   </div>
 }
 
 function TrendFreshness({ trend }) {
+  // Availability age is shown inline next to the saved-check percentages.
+  if (trend?.metric === 'availability') return null
   const latest = Date.parse(trend?.latest_collection_at || '')
   const staleMinutes = Math.max(1, Number(trend?.stale_after_minutes || 20))
   if (!Number.isFinite(latest) || Date.now() - latest < staleMinutes * 60 * 1000) return null
