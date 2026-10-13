@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { shortHost } from './sapUiFormat.js'
-import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
+import { formatWib, shortHost } from './sapUiFormat.js'
+import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, filesystemCapacitySummary } from './rundeckUnifiedHost.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const KEY = 'sphere.live.host'
@@ -71,7 +71,7 @@ export default function RundeckUnifiedAppInfrastructure({
 
   return <section className="rundeckUnifiedAppInfra" aria-label="SAP App Servers and Infrastructure">
     <header className="rundeckUnifiedAppInfraHead">
-      <h3 title="SAP status uses CPU, RAM, I/O Wait and APP Critical WP. FS is independent Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
+      <h3 title="SAP status uses CPU, RAM, I/O Wait and APP Critical WP. Filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
         <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
         {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · Highest RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {highWpHosts} {metric(highWp?.wp_critical)}</span>}
@@ -85,13 +85,30 @@ export default function RundeckUnifiedAppInfrastructure({
         const sapState = appSignalState(host, performanceVerified)
         const selected = key === appKey
         const reason = appSignalReason(host, performanceVerified)
-        const showHostNote = sapState !== 'NORMAL' || infra.freshness !== 'FRESH'
+        const mountPoint = String(infra.topFs?.mount_point || '').trim()
+        const mountNote = mountPoint ? `Mount ${mountPoint}` : infra.topFs ? 'Mount not reported' : ''
+        const sourceNote = [
+          sapState !== 'NORMAL' ? reason : '',
+          infra.freshness !== 'FRESH' ? `Infra ${infra.freshness}` : '',
+        ].filter(Boolean).join(' · ')
+        const fsCapacity = filesystemCapacitySummary(infra.topFs)
+        const fsDetails = [
+          `Filesystem used ${infra.topFs ? metric(infra.topFs.used_pct, '%') : '—'}`,
+          `Mount point ${mountPoint || 'not reported'}`,
+          `Infrastructure ${infra.state}`,
+          `Host ${infra.infra?.host || 'not matched'}`,
+          fsCapacity,
+          infra.topFs?.collected_at ? `Observed ${formatWib(infra.topFs.collected_at, true)} WIB` : '',
+          'Warning 75% · Critical 90%',
+          'Separate from SAP APP status',
+        ].filter(Boolean).join(' · ')
+        const showHostNote = Boolean(sourceNote || mountNote)
         return <button key={host.host} type="button"
           className={'rundeckUnifiedAppCard is-sap-' + sapState.toLowerCase() + (selected ? ' is-active' : '')}
           aria-pressed={selected} onClick={() => { selectApp(key); onInspectApp?.({
             ...host, infraHost: infra.infra?.host || '',
           }) }}
-          title={'Open ' + key + ' Analysis · SAP ' + sapState + ' (' + reason + ') · Infrastructure ' + infra.state + ' · FS ' + (infra.topFs?.mount_point || 'No mount') + ' ' + metric(infra.topFs?.used_pct,'%') + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
+          title={'Open ' + key + ' Analysis · SAP ' + sapState + ' (' + reason + ') · Infrastructure ' + infra.state + ' · Filesystem ' + (infra.topFs?.mount_point || 'No mount') + ' ' + metric(infra.topFs?.used_pct,'%') + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
           <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
             <span className="rundeckUnifiedMetric">
@@ -106,13 +123,14 @@ export default function RundeckUnifiedAppInfrastructure({
               <small>Critical WP</small><strong>{metric(host.wp_critical)}</strong>
               
             </span>
-            <span className="rundeckUnifiedMetric is-infrastructure" title={'Filesystem: '+(infra.topFs?.mount_point||'unknown')+' · Infrastructure '+infra.freshness}>
-              <small>FS</small><strong className={'is-'+infra.state.toLowerCase()}>{infra.topFs ? metric(infra.topFs.used_pct,'%') : '—'}</strong>
+            <span className="rundeckUnifiedMetric is-infrastructure" title={fsDetails}>
+              <small title="Filesystem usage (used capacity)">Filesystem</small><strong className={'is-'+infra.state.toLowerCase()}>{infra.topFs ? metric(infra.topFs.used_pct,'%') : '—'}</strong>
               <i className="rundeckUnifiedMetricTrack" aria-hidden="true"><i style={{width: infra.topFs?.used_pct == null ? '0%' : Math.min(100,Math.max(0,Number(infra.topFs.used_pct)||0)) + '%'}} /></i>
             </span>
           </span>
           {showHostNote && <span className="rundeckUnifiedAppCardInfra">
-            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{sapState !== 'NORMAL' ? reason : ''}{infra.freshness !== 'FRESH' ? (sapState !== 'NORMAL' ? ' · ' : '') + 'Infra ' + infra.freshness : ''}</small>
+            {sourceNote && <small className="rundeckUnifiedAppCardReason" title={sourceNote}>{sourceNote}</small>}
+            {mountNote && <small className="rundeckUnifiedAppCardMount" title={fsDetails}>{mountNote}</small>}
           </span>}
         </button>
       })}
