@@ -27,3 +27,16 @@ export function issueWorkloadTimePair(payload = {}) {
     firstSeen: payload?.selected_workload?.first_seen || null,
     lastSeen: payload?.selected_workload?.last_seen || null }
 }
+
+/** Short human duration for saved timing gaps; does not infer SAP execution start or cause. */
+export function formatDurationMinutes(value) {
+  const minutes = Number(value)
+  if (!Number.isFinite(minutes) || minutes < 0) return '—'
+  const rounded = Math.round(minutes)
+  const days = Math.floor(rounded / 1440)
+  const hours = Math.floor((rounded % 1440) / 60)
+  const remain = rounded % 60
+  if (days) return [days + 'd', hours ? hours + 'h' : '', remain ? remain + 'm' : ''].filter(Boolean).join(' ')
+  if (hours) return [hours + 'h', remain ? remain + 'm' : ''].filter(Boolean).join(' ')
+  return rounded + 'm'
+}

@@ -296,7 +296,14 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       </table>
     </div>}
     {!loading&&!error&&visible.length>0&&<nav className="rundeckWorkloadPager" aria-label="Current collection workload pages">
-      <small>{visible.length} matching of {rows.length} loaded · Page {currentPage+1}/{totalPages}</small>
+      <small>{visible.length} matching of {rows.length} loaded</small>
+      <label className="rundeckWorkloadPageJump">
+        <span>Page</span>
+        <select aria-label="Jump to workload page" value={currentPage}
+          onChange={event=>setListPage(Number(event.target.value))}>
+          {Array.from({length:totalPages},(_,page)=><option key={page} value={page}>{page+1}/{totalPages}</option>)}
+        </select>
+      </label>
       <button type="button" disabled={currentPage===0} onClick={()=>setListPage(n=>Math.max(0,n-1))}>Previous</button>
       <button type="button" disabled={currentPage>=totalPages-1} onClick={()=>setListPage(n=>Math.min(totalPages-1,n+1))}>Next</button>
     </nav>}

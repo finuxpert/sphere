@@ -328,3 +328,23 @@
   .appShell:has(.rundeckPanel) .rundeckWorkloadHostFilter{width:75px;padding-inline:3px}
   .appShell:has(.rundeckPanel) .rundeckCurrentWorkloadSearch input{width:min(155px,42vw)!important}
 }
+
+/* Direct page navigation avoids dozens of Next clicks in the one-screen workload table. */
+.appShell:has(.rundeckPanel) .rundeckWorkloadPageJump{
+  display:inline-flex;align-items:center;gap:4px;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font:inherit;font-size:10px;white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadPageJump select{
+  min-width:61px;max-width:78px;height:26px;padding:2px 3px;
+  color:var(--sphere-text,#e7edf0);
+  background:var(--sphere-page,#0f151a);
+  border:1px solid var(--sphere-border,rgba(126,147,158,.24));
+  border-radius:4px;font:inherit;font-size:10px;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadPageJump select:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);outline-offset:2px;
+}
+@media(max-width:760px){
+  .appShell:has(.rundeckPanel) .rundeckWorkloadPageJump span{display:none}
+}

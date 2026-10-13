@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib } from './sapUiFormat.js'
 import './RundeckEvidenceTimeline.css'
-import { issueWorkloadTimePair } from './rundeckEvidenceTiming.js'
+import { issueWorkloadTimePair, formatDurationMinutes } from './rundeckEvidenceTiming.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 
@@ -106,15 +106,15 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     : pair.direction === 'BEFORE ISSUE' ? 'before issue observation' : 'from issue observation'
   const timingSummary = pair.deltaMinutes === null
     ? 'Job/program ↔ issue: timestamps not verified'
-    : `Workload sample · ${pair.deltaMinutes}m ${relativeTiming}`
+    : `Workload sample · ${formatDurationMinutes(pair.deltaMinutes)} ${relativeTiming}`
   const alignmentHint = `Issue: ${issueAt ? `${formatWib(issueAt,true)} WIB` : '—'} · Workload: ${pair.workloadAt ? `${formatWib(pair.workloadAt,true)} WIB` : '—'} · Window: ${hasThreshold ? `${threshold}m` : '—'}`
   const workloadGapMinutes = Number(alignment.workload_gap_minutes)
   const hasWorkloadGap = alignment.workload_gap_minutes != null && Number.isFinite(workloadGapMinutes)
 
   if (compact) {
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
-      ? `No overlap · ${Math.round(workloadGapMinutes)}m gap`
-      : pair.deltaMinutes !== null ? `${pair.deltaMinutes}m ${relativeTiming}` : 'Timing unverified'
+      ? `No overlap · ${formatDurationMinutes(workloadGapMinutes)} gap`
+      : pair.deltaMinutes !== null ? `${formatDurationMinutes(pair.deltaMinutes)} ${relativeTiming}` : 'Timing unverified'
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Related Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events</span>
       <strong>{events.length ? `${events.length} events · ${timingDetail}` : 'No related events'}</strong>
