@@ -40,15 +40,14 @@ export function appSignalReason(host = {}, verified = true) {
 /** Format only source-provided filesystem capacity (bytes), never estimate missing values. */
 export function filesystemCapacitySummary(row = {}) {
   const gib = value => {
-    if (value === null || value === undefined || value === '') return ''
+    if (value === null || value === undefined || String(value).trim() === '') return ''
     const bytes = Number(value)
     if (!Number.isFinite(bytes) || bytes < 0) return ''
     return `${(bytes / (1024 ** 3)).toLocaleString('en-US', { maximumFractionDigits: 1 })} GiB`
   }
-  return [
-    row.total_bytes == null ? '' : (gib(row.total_bytes) ? `Total ${gib(row.total_bytes)}` : ''),
-    row.avail_bytes == null ? '' : (gib(row.avail_bytes) ? `Available ${gib(row.avail_bytes)}` : ''),
-  ].filter(Boolean).join(' · ')
+  const total = gib(row?.total_bytes)
+  const available = gib(row?.avail_bytes)
+  return [total && `Total ${total}`, available && `Available ${available}`].filter(Boolean).join(' · ')
 }
 
 export function matchedInfrastructureHost(sapHost, infraHosts = []) {
