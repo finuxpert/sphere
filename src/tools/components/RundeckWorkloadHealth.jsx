@@ -51,33 +51,34 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const state = error ? 'unavailable' : !preview ? 'loading'
     : totalCount === 0 ? 'empty' : preview.limited ? 'limited' : reviewCount > 0 ? 'review' : 'normal'
   const outcome = error ? 'Unavailable' : !preview ? 'Loading'
-    : totalCount === 0 ? 'No evaluations' : reviewCount > 0 ? 'Needs review' : preview.limited ? 'Limited evidence' : 'No review flagged'
-  const timeLabel = preview?.end ? `${formatWib(preview.end, true)} WIB` : 'unknown'
+    : totalCount === 0 ? 'No evaluations' : preview.limited ? 'Limited evidence'
+      : reviewCount > 0 ? 'Needs review' : 'No review flagged'
+  const timeLabel = preview?.end ? `${formatWib(preview.end, true)} WIB` : 'time unavailable'
   const description = preview
-    ? `${reviewCount} requiring review from ${totalCount} evaluated workloads. Colored hexagons show only the first ${preview.sample.length} ranked evaluations. As of ${timeLabel}. ${preview.limited ? 'Evaluation quality is limited. ' : ''}${performanceVerified ? '' : 'Latest Performance is not verified. '}Historical one-day evaluation, not an SM37 execution status.`
-    : error || 'Waiting for 1D workload evaluation; missing data is not a healthy signal'
+    ? `${totalCount} evaluated workloads over 1D: ${preview.health.review} review, ${preview.health.attention} attention, ${preview.health.normal} normal, ${preview.health.unknown} insufficient/unknown. Hexagons represent proportions of the ENTIRE population, approximately one cell per ${(totalCount/30).toFixed(1)} workloads; individual cells are not individual jobs. As of ${timeLabel}. ${preview.limited ? 'Coverage is limited; hexagons are muted. ' : ''}${performanceVerified ? '' : 'Current host performance freshness unverified. '}Not an SM37 execution status.`
+    : error || '1D distribution unavailable until the backend returns validated full-population counts'
   let cellIndex = 0
   return <button type="button" className="rundeckWorkloadHealth" onClick={onReview}
     title={description} aria-label={`Open Jobs & Programs Review. ${description}`}
     data-state={state}>
     <span className="rundeckWorkloadHealthTitle">
       <strong>Workload Health</strong>
-      <small>1D evaluation</small>
+      <small>1D · {preview?.end ? formatWib(preview.end, true) + ' WIB' : 'evaluation'}</small>
     </span>
     <span className="rundeckWorkloadHexGrid" aria-hidden="true">
       {HEX_ROWS.map((length, rowIndex) =>
         <span className="rundeckWorkloadHexRow" key={rowIndex}>
-          {Array.from({ length }, (_, columnIndex) => {
-            const item = preview?.sample[cellIndex++]
-            return <i key={columnIndex} className={item ? `is-${item.level}` : 'is-empty'} />
+          {Array.from({length}, (_,columnIndex) => {
+            const category = preview?.hexagons[cellIndex++]
+            return <i key={columnIndex} className={category && !preview?.limited ? `is-${category}` : 'is-empty'} />
           })}
         </span>
       )}
     </span>
     <span className="rundeckWorkloadHealthFooter">
       <span className={`is-${state}`}>{outcome}</span>
-      <strong title={preview ? `${totalCount} workloads evaluated in the saved 1D period` : 'Evaluation total unavailable'}>{preview ? totalCount.toLocaleString('en-US') : '—'}</strong>
+      <strong title={preview ? `${totalCount} workloads evaluated in 1D` : 'Evaluation total unavailable'}>{preview ? totalCount.toLocaleString('en-US') : '—'}</strong>
     </span>
-    <span className="rundeckWorkloadHealthCount" aria-hidden="true">{preview ? `${reviewCount} review` : 'No evaluation data'}</span>
+    <span className="rundeckWorkloadHealthCount" aria-hidden="true">{preview ? `${reviewCount} review · ${preview.health.attention} watch` : 'No validated distribution'}</span>
   </button>
 }
