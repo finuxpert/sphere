@@ -18,7 +18,7 @@ export function allocateWorkloadHexagons(health, total, slots = 30) {
   const count = Math.max(1, Math.min(30, Math.floor(Number(slots) || 30)))
   const exact = counts.map(n => n / total * count)
   const assigned = exact.map(Math.floor)
-  let remaining = count - assigned.reduce((sum,n) => sum + n, 0)
+  const remaining = count - assigned.reduce((sum,n) => sum + n, 0)
   const order = exact.map((n,i) => ({i, fraction:n-assigned[i]}))
     .sort((a,b) => b.fraction - a.fraction || a.i-b.i)
   for (let i=0; i < remaining; i++) assigned[order[i].i]++
