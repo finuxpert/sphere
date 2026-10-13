@@ -93,7 +93,7 @@ test('Workload Health is a full sibling of the table, with backend 1D hexagon re
   assert.match(ui,/className="rundeckWorkloadHexGrid"/)
   assert.match(ui,/Not an SM37 execution status/)
   assert.match(state,/allocateWorkloadHexagons/)
-  assert.match(ui,/preview\\?\\.hexagons/)
+  assert.match(ui,/preview\?\.hexagons/)
   assert.match(ui,/ENTIRE population/)
   assert.match(state,/status === 'REVIEW REQUIRED'/)
   assert.match(state,/status === 'NORMAL'/)
