@@ -127,13 +127,14 @@ test('Filesystem details use only host-matched source bytes and never estimate a
   assert.equal(filesystemCapacitySummary({...sample,avail_bytes:null}),'Total 100 GiB')
   assert.equal(filesystemCapacitySummary({total_bytes:null,avail_bytes:undefined}),'')
   assert.equal(filesystemCapacitySummary({total_bytes:-1,avail_bytes:'unknown'}),'')
+  assert.equal(filesystemCapacitySummary({total_bytes:'  ',avail_bytes:'  '}),'')
   assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...sample,collection_id:'other'}],now).topFs,null)
 })
 
 test('APP card identifies Filesystem and mount point without changing SAP status', () => {
   const source=readFileSync(new URL('../../src/tools/components/RundeckUnifiedAppInfrastructure.jsx',import.meta.url),'utf8')
   const styles=readFileSync(new URL('../../src/tools/components/RundeckMockupParity.css',import.meta.url),'utf8')
-  assert.match(source,/Filesystem<\/small>/)
+  assert.match(source,/>Filesystem<\/small>/)
   assert.match(source,/mountPoint = String\(infra\.topFs\?\.mount_point/)
   assert.match(source,/Mount \$\{mountPoint\}/)
   assert.match(source,/filesystemCapacitySummary\(infra\.topFs\)/)
