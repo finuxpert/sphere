@@ -631,14 +631,19 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
     if len(normalized_query) > 512:
         raise ValueError("q must contain at most 512 characters")
     full = report["items"]
+    def search_text(row: dict) -> str:
+        details = row.get("details")
+        details = details if isinstance(details, dict) else {}
+        return " ".join([
+            str(row.get("consumer_key") or ""),
+            str(row.get("program") or ""),
+            str(details.get("program") or ""),
+        ]).casefold()
+
     matching = [
         row for row in full
         if (group == "ALL" or _evaluation_health(row) == group)
-        and (not normalized_query or normalized_query in " ".join([
-            str(row.get("consumer_key") or ""),
-            str(row.get("program") or ""),
-            str((row.get("details") or {}).get("program") or ""),
-        ]).casefold())
+        and (not normalized_query or normalized_query in search_text(row))
     ]
     return {
         **report,
