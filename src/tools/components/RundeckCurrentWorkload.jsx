@@ -197,7 +197,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   })
   // Keep pagination aligned with the viewport's available table height.
   // Rows are still actual loaded observations; no synthetic results or truncation.
-  const pageSize = viewportHeight <= 720 ? 3 : viewportHeight <= 900 ? 4 : viewportHeight <= 1080 ? 5 : 7
+  const pageSize = viewportHeight <= 720 ? 2 : viewportHeight <= 940 ? 3 : viewportHeight <= 1100 ? 4 : 5
   const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
   const currentPage=Math.min(listPage,totalPages-1)
   const pageRows=visible.slice(currentPage*pageSize,(currentPage+1)*pageSize)
