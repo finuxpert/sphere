@@ -30,3 +30,26 @@ Important: PROD path/checkout assumptions require manual verification before its
 The CLI now checks the desired GitHub SHA against the active release *before* building. If the same SHA is already active and the public HTTPS index matches, it exits successfully with `DEPLOY=ALREADY_CURRENT BUILD=SKIPPED`. An existing inactive release still blocks overwriting, preserving rollback history. New SHAs build and deploy normally.
 
 The 1536px Overview has a roughly 460px-wide right-side analysis rail. A 6-column override compressed each link to an unreadable width. CSS restores a 3×2 layout with six unchanged actions and no new data/API behavior. Manual screenshot review remains the visual acceptance process.
+
+## DEV cockpit v1.35.13 — apply and verify (2026-10-14)
+
+Frontend-only changes: APP severity color remains independent from cyan selection outline;
+Current workload uses measured rows + pagination with no internal scrollbar; source-backed
+population and partial coverage labels are preserved; trend metrics remain selectable
+through a compact control; APP host and workload CPU/PSS are differentiated.
+
+On JAHSVR-SPHERE, in the existing DEV checkout only:
+```bash
+cd /root/rundeck-sphere-dev
+git fetch origin rundeck-sphere-dev
+git merge --ff-only origin/rundeck-sphere-dev
+npm run qa:unified-cockpit && npm run qa:integrity && npm run lint && npm run build
+sphere deploy dev
+```
+`sphere deploy dev` is frontend-only and handles its own fetch/fast-forward,
+build, HTTPS SHA confirmation and rollback. Do not deploy if the checkout is dirty,
+the branch differs, or the QA commands fail. The `npm run qa` full suite and manual
+Playwright visual checks are also recommended before marking the release PASS.
+Inspect 1366x768, 1536x864 and 1920x1080; verify that the selected APP remains
+severity-colored, Current has no nested scrollbar, the pager is visible, and the
+Workload Health hexagons match the saved 1D evaluation count. PROD is unchanged.

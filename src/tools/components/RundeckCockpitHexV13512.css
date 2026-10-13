@@ -56,8 +56,19 @@
   --hex-border:var(--sphere-danger,#d66973);
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelector.is-active{
-  --hex-border:var(--sphere-accent,#4fc6c8);
+  /* APP selection is not a health state; preserve its warning/critical/normal border. */
   --hex-fill:rgba(50,114,126,.17);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelector.is-active::before{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  pointer-events:none;
+  background:var(--sphere-accent,#4fc6c8);
+  clip-path:polygon(50% 0%,94% 25%,94% 75%,50% 100%,6% 75%,6% 25%);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelector.is-active .rundeckAppHexShape{
+  z-index:1;
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape{
   position:relative;
@@ -345,4 +356,36 @@
 .appShell:has(.rundeckPanel) .rundeckMonitoring.rundeckCockpitV13491{
   grid-template-areas:"apps" "actions" "trends" "workloads"!important;
   grid-template-rows:auto auto auto auto!important;
+}
+
+/* DEV v1.35.13 — only the Current table is paged; leave Review/Search scrolling unchanged. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491
+.rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap{
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  scrollbar-gutter:auto!important;
+}
+/* Keep the five selectable server measurements without five tiny buttons per chart. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491
+.rundeckTripleTrendGrid .rundeckTrendMetricSelect{
+  display:block;
+  width:min(100%,160px);
+  min-height:25px;
+  padding:3px 8px;
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.28));
+  border-radius:4px;
+  background:var(--sphere-page,#0f151a);
+  color:var(--sphere-text,#e7edf0);
+  font:inherit;
+  font-size:10.5px;
+  cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491
+.rundeckTripleTrendGrid .rundeckTrendMetricSelect:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);
+  outline-offset:2px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
+  font-size:10.5px!important;
 }

@@ -857,19 +857,19 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
 
     <div className="rundeckTripleTrendGrid">
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend</h3></div>
-        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric1} onChange={setServerMetric1} ariaLabel="Server Trend 1 metric" /></div>
+        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend <small>· APP host</small></h3></div>
+        <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric" value={serverMetric1} onChange={event => setServerMetric1(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
         {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label="Server Trend 2">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="trend" /> {metricLabel(serverMetric2)} Trend</h3></div>
-        <div className="rundeckTrendToolbar"><Segmented options={METRICS} value={serverMetric2} onChange={setServerMetric2} ariaLabel="Server Trend 2 metric" /></div>
+        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from workload PSS and CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric2)} Trend <small>· APP host</small></h3></div>
+        <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 2 metric" value={serverMetric2} onChange={event => setServerMetric2(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
         {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend <small>· {metricLabel(technicalMetric)}</small></h3></div>
+        <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend <small>· {technicalMetric === 'load' ? 'Host load average' : metricLabel(technicalMetric)}</small></h3></div>
         <div className="rundeckTrendToolbar">
           <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}

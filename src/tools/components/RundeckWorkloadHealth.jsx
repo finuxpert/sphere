@@ -142,7 +142,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       <button type="button" className="rundeckWorkloadHealthReview" onClick={onReview}
         aria-label="Open Jobs & Programs Review">Review list</button>
     </header>
-    <div className="rundeckWorkloadHealthLegend" aria-label="Full population evaluation categories">
+    <div className="rundeckWorkloadHealthLegend" aria-label="Saved evaluation categories; grouped by Review, Watch, Unknown and Normal">
       {LEVELS.map(level => <span key={level.key} title={level.key === 'unknown' ? unknownDescription : undefined}><i className={'is-' + level.key} />{preview ? preview.health[level.key] : '—'} {level.label}</span>)}
     </div>
     <div ref={dotGridRef} className="rundeckWorkloadDotGrid" role="group" aria-label="Individual saved workload evaluations" style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px` }}>

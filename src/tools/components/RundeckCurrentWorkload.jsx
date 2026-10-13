@@ -7,7 +7,7 @@ import { workloadRowsThatFit } from './rundeckWorkloadViewport.js'
 import { combineCurrentWorkloadResponses } from './rundeckCurrentWorkloadCoverage.js'
 
 const API = `${import.meta.env.BASE_URL}api`
-const CPU_HINT = 'CPU Total is the grouped multi-core workload CPU observation. It can exceed 100 percent when the workload uses more than one CPU core or process.'
+const CPU_HINT = 'Workload CPU Total (%) is a grouped multi-core observation and can exceed 100%. It is not APP host CPU (%); SAP execution status is verified separately in SM37.'
 const STALE_MINUTES = 15
 
 function jobContext(row) {
@@ -229,7 +229,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount" title="Current collection observations. Per-APP API is limited to 100 rows; unloaded observations are not searchable.">{workloadMeta.total || rows.length} observed · {rows.length} {allLoaded ? "searchable" : "loaded (partial)"}</span>
+      <span className="rundeckCurrentWorkloadCount" title="Current collection observations. Per-APP API is limited to 100 rows; unloaded observations are not searchable.">{allLoaded ? `${rows.length} current observations` : `${rows.length} of ${workloadMeta.total} loaded · search limited`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APP</option>
@@ -237,7 +237,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
         </select>
         <label className="rundeckCurrentWorkloadSearch">
           <span>Search {rows.length} observations</span>
-          <input type="search" aria-label={`Search ${rows.length} loaded jobs and programs`} placeholder={`Search ${rows.length} observations`} value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
+          <input type="search" aria-label={`Search ${rows.length} loaded jobs and programs`} placeholder="Search job / program" value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
         </label>
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>
@@ -248,7 +248,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap" ref={tableWrapRef}>
       <table>
-        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
+        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th title="Proportional Set Size; workload memory in gigabytes, not APP host RAM">PSS (GB)</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
         <tbody>
           {pageRows.map((row) => {
             const details = row.details || {}
@@ -284,7 +284,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       </table>
     </div>}
     {!loading&&!error&&visible.length>0&&<nav className="rundeckWorkloadPager" aria-label="Current collection workload pages">
-      <small>{visible.length} matching of {rows.length} loaded</small>
+      <small>{query || hostFilter !== 'ALL' ? `${visible.length} matches · ${rows.length} loaded` : `Showing ${currentPage * pageSize + 1}–${Math.min((currentPage + 1) * pageSize, visible.length)} of ${visible.length}`}</small>
       <label className="rundeckWorkloadPageJump">
         <span>Page</span>
         <select aria-label="Jump to workload page" value={currentPage}
