@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from '../../src/tools/components/rundeckTrendFocus.js'
 
 const hosts = ['APP1', 'APP2', 'APP3', 'APP4', 'APP5']
@@ -63,4 +64,12 @@ test('shared APP focus deduplicates inventory and historical hosts without creat
   assert.deepEqual(trendFocusHosts(live, saved), ['APP1','APP2'])
   assert.deepEqual(trendFocusHosts([], []), [])
   assert.equal(live[0].host, 'APP2')
+})
+
+test('Technical Trend uses saved availability observation timestamp, not performance timeline freshness', () => {
+  const source=readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx',import.meta.url),'utf8')
+  assert.match(source,/trend\?\.latest_observation_at \|\| trend\?\.latest_collection_at/)
+  assert.match(source,/Saved availability · \$\{ageMinutes\}m old/)
+  assert.match(source,/if \(trend\?\.metric === 'availability'\) return null/)
+  assert.match(source,/current replication-health verdict/)
 })
