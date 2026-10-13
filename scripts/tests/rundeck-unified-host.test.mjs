@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts } from '../../src/tools/components/rundeckUnifiedHost.js'
+import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts } from '../../src/tools/components/rundeckUnifiedHost.js'
 import { OPERATOR_THRESHOLDS, hostResourceState, filesystemResourceState, sapWorkloadState } from '../../src/tools/components/rundeckStatusSemantics.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
@@ -107,4 +107,14 @@ test('Filesystem color/threshold and host summary match exactly',()=>{
   assert.equal(filesystemResourceState(90),'CRITICAL')
   assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...fs,used_pct:75}],now).state,'ATTENTION')
   assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...fs,used_pct:90}],now).state,'CRITICAL')
+})
+
+
+test('APP status explanation prioritizes critical conditions and excludes filesystem', () => {
+  const base={host:'AOPH1PAPPDC',cpu_pct:20,ram_pct:50,io_wait_pct:1,wp_critical:2}
+  assert.equal(appSignalReason(base,true),'Critical WP 2')
+  assert.equal(appSignalReason({...base,wp_critical:3,cpu_pct:80},true),'Critical WP 3')
+  assert.equal(appSignalReason({...base,wp_critical:3,cpu_pct:92},true),'CPU 92%')
+  assert.equal(appSignalReason({...base,wp_critical:0},true),'Within SAP thresholds')
+  assert.equal(appSignalReason(base,false),'SAP snapshot unverified')
 })
