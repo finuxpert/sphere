@@ -649,6 +649,16 @@ const checks = [
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
   ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table', files.unifiedApp.includes('APP Servers & Infrastructure') && files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Highest RAM') && files.unifiedApp.includes('Critical WP') && !files.unifiedApp.includes('<th>Signal</th>') && files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure')],
+  ['APP cards explain filesystem usage with host-matched mount and retained capacity details',
+    files.unifiedApp.includes('>Filesystem</small>') &&
+    files.unifiedApp.includes('const mountPoint = String(infra.topFs?.mount_point') &&
+    files.unifiedApp.includes('Mount ${mountPoint}') &&
+    files.unifiedApp.includes('filesystemCapacitySummary(infra.topFs)') &&
+    files.unifiedApp.includes('formatWib(infra.topFs.collected_at, true)') &&
+    files.unifiedApp.includes('Separate from SAP APP status') &&
+    files.unifiedState.includes('export function filesystemCapacitySummary(') &&
+    files.unifiedState.includes('filesystemSamplesForHost(infra, filesystems)') &&
+    mockupStyle.includes('.rundeckUnifiedAppCardMount:only-child')],
   ['Infrastructure filesystem NORMAL state is explicit for fresh data and stale data is not live',
     files.infrastructure.includes("is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}") &&
     files.infrastructure.includes('{observedStatus(statusFs(row.used_pct))}</b>') &&
