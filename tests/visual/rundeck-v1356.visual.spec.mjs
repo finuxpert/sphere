@@ -161,3 +161,37 @@ test('v1.35.6 APP analysis keeps pager controls visible, verified collection lab
     contentType:'image/png',
   })
 })
+
+test('DEV Workload Health stays within existing Jobs header without page scroll and opens Review', async ({page}) => {
+  await openCockpit(page)
+  const indicator = page.getByRole('button',{name:/Open Jobs & Programs Review/})
+  await expect(indicator).toBeVisible()
+  const bounds = await page.evaluate(() => {
+    const header = document.querySelector('.rundeckJobsProgramsWorkspaceHead')
+    const indicator = document.querySelector('.rundeckWorkloadHealth')
+    const h = header?.getBoundingClientRect()
+    const d = indicator?.getBoundingClientRect()
+    return {
+      header: h ? { top:h.top,bottom:h.bottom,height:h.height,left:h.left,right:h.right } : null,
+      indicator: d ? { top:d.top,bottom:d.bottom,height:d.height,left:d.left,right:d.right } : null,
+      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      overflowY: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+      viewport: {width:innerWidth,height:innerHeight},
+    }
+  })
+  console.log('SPHERE_WORKLOAD_HEALTH_GEOMETRY=' + JSON.stringify(bounds))
+  expect(bounds.header).not.toBeNull()
+  expect(bounds.indicator).not.toBeNull()
+  expect(bounds.indicator.left).toBeGreaterThanOrEqual(bounds.header.left - 2)
+  expect(bounds.indicator.right).toBeLessThanOrEqual(bounds.header.right + 2)
+  expect(bounds.indicator.top).toBeGreaterThanOrEqual(bounds.header.top - 2)
+  expect(bounds.indicator.bottom).toBeLessThanOrEqual(bounds.header.bottom + 2)
+  expect(bounds.indicator.height).toBeLessThanOrEqual(34)
+  expect(bounds.overflowX).toBeLessThanOrEqual(2)
+  if (bounds.viewport.width >= 1200) {
+    expect(bounds.header.height).toBeLessThanOrEqual(38)
+    expect(bounds.overflowY).toBeLessThanOrEqual(2)
+  }
+  await indicator.click()
+  await expect(page.getByRole('tab',{name:'Review'})).toHaveAttribute('aria-selected','true')
+})
