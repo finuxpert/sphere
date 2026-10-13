@@ -284,3 +284,10 @@ The source-health and history-gap logic are client-side. It does not change coll
 The unified APP card shows **Filesystem** instead of **FS**, the highest-used filesystem mount from the host/collection-matched Infrastructure sample, and its usage percentage. The one-line card footer gives the actual mount point; the full mount path, infrastructure state, source host, sample time and available capacity fields (GiB) appear in the native hover/focus tooltip. Unreported capacity must remain missing, never derived or filled with estimates.
 
 Filesystem warning remains independent of the SAP APP status (CPU, RAM, I/O Wait and Critical WP). Source freshness still gates Infrastructure status; an older observed percentage is never presented as a fresh measurement. No backend or database change is needed.
+
+### DEV freshness, Technical Trend, and pager (13 October 2026)
+
+- `Data PARTIAL` distinguishes Performance (15-minute window) from Availability (20-minute window). A fresh Performance collection stays explicitly current if Availability is stale. Last observed Availability must not be presented as a current SAP service state.
+- Technical Availability trend summarizes saved checks and uses the API's actual `latest_observation_at` to label stale historical percentages. A recorded UP sample or 100% observed checks does not establish replication health or continuous service uptime.
+- Jobs & Programs Live pagination adapts by browser height (2/3/4/5 rows). On shorter desktops chart height is reduced moderately and nested Live table clipping is disabled. Full coverage and search still use the same fetched observations, with Previous/Next controls. Actual viewport geometry must be QA-verified before declaring one-screen PASS.
+- A new Job & Program health dot-matrix card remains a proposal only; do not assign red/green status to multi-core CPU >100% using the host CPU threshold. Evaluate workload-specific evidence, sample coverage and timestamps before adding that card.
