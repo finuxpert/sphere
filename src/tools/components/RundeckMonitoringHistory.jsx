@@ -107,32 +107,35 @@ export default function RundeckMonitoringHistory(props) {
     ? React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })
     : props.currentWorkloadContent
 
+  const openEvaluatedWorkload = React.useCallback((row, reviewContext) => {
+    if (!row?.consumer_key || !['JOB', 'PROGRAM'].includes(String(row.consumer_type || '').toUpperCase())) return
+    const reviewJob = {
+      key: row.consumer_key,
+      host: row?.hosts?.length === 1 ? row.hosts[0] : '',
+      consumerType: row.consumer_type,
+      source: 'performance-review',
+      days: reviewContext?.days || 1,
+      reviewPeriod: reviewContext?.period || '1d',
+      reviewMetrics: {
+        avgCpuPct: row.avg_cpu_pct ?? null,
+        peakCpuPct: row.peak_cpu_pct ?? null,
+        avgPssGb: row.avg_pss_gb ?? null,
+        avgProcesses: row.avg_process_count ?? null,
+        observations: row.observations ?? row.occurrences ?? null,
+        criticalWpChecks: row.critical_wp_host_checks ?? row.critical_wp_checks ?? null,
+        hostObservations: row.host_observations ?? null,
+      },
+    }
+    onSelectJob?.(reviewJob)
+    setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
+  }, [onSelectJob])
+
   const performanceReviewContent = <RundeckPerformanceReview
     refreshToken={refreshToken}
     selectedJob={selectedJob}
     onSelectJob={inspectJob}
     incidentStart={props.incidentStart || ''}
-    onOpenQuickAnalysis={(row, reviewContext) => {
-      const reviewJob = {
-        key: row.consumer_key,
-        host: row?.hosts?.length === 1 ? row.hosts[0] : '',
-        consumerType: row.consumer_type,
-        source: 'performance-review',
-        days: reviewContext?.days || 1,
-        reviewPeriod: reviewContext?.period || '1d',
-        reviewMetrics: {
-          avgCpuPct: row.avg_cpu_pct ?? null,
-          peakCpuPct: row.peak_cpu_pct ?? null,
-          avgPssGb: row.avg_pss_gb ?? null,
-          avgProcesses: row.avg_process_count ?? null,
-          observations: row.observations ?? row.occurrences ?? null,
-          criticalWpChecks: row.critical_wp_host_checks ?? row.critical_wp_checks ?? null,
-          hostObservations: row.host_observations ?? null,
-        },
-      }
-      onSelectJob?.(reviewJob)
-      setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
-    }}
+    onOpenQuickAnalysis={openEvaluatedWorkload}
     externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
   />
 
@@ -147,6 +150,7 @@ export default function RundeckMonitoringHistory(props) {
             onOpenInfrastructureMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })}
             operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
+            onOpenEvaluatedWorkload={openEvaluatedWorkload}
             appFocusRequest={appFocusRequest}
             onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
             onOpenTrendInfrastructure={(context) => setActiveOverlay({ type: 'infrastructure', trendContext: context, returnTo: { type: 'selected' } })}

@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 
-export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false }) {
+export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false, onOpenEvaluatedWorkload = null }) {
   const [mode, setMode] = React.useState('live')
   const [reviewJumpToken, setReviewJumpToken] = React.useState(0)
   const tabId = React.useId()
@@ -46,7 +46,7 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
         {mode === 'live' ? live : review}
       </div>
       <aside className="rundeckJobsProgramsHealthSide" aria-label="Workload health overview">
-        <RundeckWorkloadHealth refreshToken={refreshToken} performanceVerified={performanceVerified} onReview={() => { setReviewJumpToken(token => token + 1); setMode('review') }} />
+        <RundeckWorkloadHealth refreshToken={refreshToken} performanceVerified={performanceVerified} onSelectWorkload={onOpenEvaluatedWorkload} onReview={() => { setReviewJumpToken(token => token + 1); setMode('review') }} />
       </aside>
     </div>
   </section>

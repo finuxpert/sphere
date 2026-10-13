@@ -45,3 +45,45 @@ export function workloadHealthPreview(report, maxDots = 30) {
     end: report.end || '',
   }
 }
+
+/** Validate exact backend-page identity before turning a dot into a clickable job/program. */
+export function validatedWorkloadDots(first, following = [], pageIndex = 0, pageSize = 400) {
+  const preview = workloadHealthPreview(first)
+  const startOffset = pageIndex * pageSize
+  if (!preview || !Number.isSafeInteger(pageIndex) || pageIndex < 0 ||
+      !Number.isSafeInteger(pageSize) || pageSize < 1 ||
+      (preview.total > 0 && startOffset >= preview.total)) return null
+  const expected = Math.min(pageSize, Math.max(0, preview.total - startOffset))
+  const pages = [first, ...following]
+  const rows = []
+  const identities = new Set()
+  for (let index = 0; index < pages.length; index++) {
+    const report = pages[index]
+    const offset = startOffset + index * 100
+    const count = Math.min(100, Math.max(0, expected - index * 100))
+    if (count === 0 || !report || !Array.isArray(report.items) ||
+        report.page?.scope !== 'FULL_EVALUATED_POPULATION' ||
+        report.page?.health !== 'ALL' || report.page?.offset !== offset ||
+        report.page?.total !== preview.total ||
+        Number(report.summary?.workloads) !== preview.total ||
+        report.start !== first.start || report.end !== first.end ||
+        report.items.length !== count || report.page?.returned !== count) return null
+    for (const row of report.items) {
+      const type = String(row?.consumer_type || '').trim()
+      const key = String(row?.consumer_key || '').trim()
+      if (!type || !key) return null
+      const id = type + ':' + key
+      if (identities.has(id)) return null
+      identities.add(id)
+      rows.push(row)
+    }
+  }
+  if (rows.length !== expected) return null
+  // When the complete population fits on one page, status-level counts must agree.
+  if (startOffset === 0 && expected === preview.total) {
+    const counts = { review: 0, attention: 0, normal: 0, unknown: 0 }
+    for (const row of rows) counts[workloadHealthLevel(row)]++
+    if (Object.keys(counts).some(key => counts[key] !== Number(preview.health[key]))) return null
+  }
+  return { preview, rows, pageIndex, pageSize, start: first.start || '', end: first.end || '' }
+}

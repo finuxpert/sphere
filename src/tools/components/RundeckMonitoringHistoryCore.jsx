@@ -40,6 +40,7 @@ export default function RundeckMonitoringHistoryCore(props) {
       performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
       currentContent={props.currentWorkloadContent}
       reviewContent={props.performanceReviewContent}
+      onOpenEvaluatedWorkload={props.onOpenEvaluatedWorkload}
     />
   </section>
 }

@@ -36,3 +36,27 @@ test('invalid/missing status population is unverified, not green', () => {
   assert.deepEqual(allocateWorkloadHexagons(report.summary.health,1),Array(30).fill('normal'))
   assert.deepEqual(allocateWorkloadHexagons({review:0,attention:0,normal:0,unknown:0},0),[])
 })
+
+import { validatedWorkloadDots } from '../../src/tools/components/rundeckWorkloadHealthState.js'
+
+test('individual dots require exact backend pages, collection window and matching population', () => {
+  const rows=Array.from({length:394},(_,index)=>({
+    consumer_type:index%2?'JOB':'PROGRAM',consumer_key:'Z_WORKLOAD_'+index,
+    status:index<11?'REVIEW REQUIRED':index<214?'HIGH CPU':'NORMAL',avg_cpu_pct:20+index
+  }))
+  const health={review:11,attention:203,normal:180,unknown:0}
+  const page=(offset,items=rows.slice(offset,offset+100))=>({
+    summary:{workloads:394,review_required:11,health},items,
+    start:'2026-10-12T06:00:00Z',end:'2026-10-13T06:00:00Z',
+    page:{offset,limit:100,returned:items.length,total:394,scope:'FULL_EVALUATED_POPULATION',health:'ALL'}
+  })
+  const first=page(0),others=[page(100),page(200),page(300)]
+  const validated=validatedWorkloadDots(first,others,0,400)
+  assert.equal(validated.rows.length,394)
+  assert.equal(validated.rows.filter(row=>workloadHealthLevel(row)==='review').length,11)
+  assert.equal(validated.rows.find(row=>row.consumer_key==='Z_WORKLOAD_10')?.status,'REVIEW REQUIRED')
+  assert.equal(validatedWorkloadDots(first,[page(100),{...page(200),end:'different'},page(300)],0,400),null)
+  assert.equal(validatedWorkloadDots(first,[page(100),page(200)],0,400),null)
+  assert.equal(validatedWorkloadDots(first,[page(100),{...page(200),page:{...page(200).page,total:393}},page(300)],0,400),null)
+  assert.equal(validatedWorkloadDots(first,[page(100),page(100),page(300)],0,400),null)
+})
