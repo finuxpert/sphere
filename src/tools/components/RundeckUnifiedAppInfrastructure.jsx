@@ -72,10 +72,10 @@ export default function RundeckUnifiedAppInfrastructure({
 
   return <section className="rundeckUnifiedAppInfra" aria-label="SAP App Servers and Infrastructure">
     <header className="rundeckUnifiedAppInfraHead">
-      <h3><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
+      <h3 title="SAP status uses CPU, RAM, I/O Wait and APP Critical WP. FS is independent Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
         <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
-        {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {highWpHosts} {metric(highWp?.wp_critical)}</span>}
+        {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · Highest RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {highWpHosts} {metric(highWp?.wp_critical)}</span>}
         {infraSnapshot.error && <span role="status" className="is-error">Infrastructure summary unavailable</span>}
       </div>
     </header>
