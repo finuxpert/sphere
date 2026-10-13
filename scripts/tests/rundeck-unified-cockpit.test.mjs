@@ -81,7 +81,7 @@ test('center modal has a dedicated 220ms keyframe and keeps per-APP host provena
  assert.match(app,/sample time UNKNOWN/)
 })
 
-test('Workload Health is a full sibling of the table, with backend 1D hexagon review and responsive guards',()=>{
+test('Workload Health is a full sibling of the table, with individual 1D evaluated workloads and responsive guards',()=>{
   const workspace=read('RundeckJobsProgramsWorkspace.jsx')
   const state=read('rundeckWorkloadHealthState.js')
   const ui=read('RundeckWorkloadHealth.jsx')
@@ -96,11 +96,11 @@ test('Workload Health is a full sibling of the table, with backend 1D hexagon re
   assert.match(ui,/rundeckWorkloadHealthLegend/)
   assert.ok(workspace.indexOf('className="rundeckJobsProgramsWorkspaceBody') < workspace.indexOf('className="rundeckJobsProgramsHealthSide'))
   assert.match(core,/performanceVerified=\{props.sourceQuality\?\.performanceValid/)
-  assert.match(ui,/evaluation\/workloads\?period=1d&type=ALL&limit=100/)
+  assert.match(ui,/API \+ '\/evaluation\/workloads\?' \+ params\.toString\(\)/)
   assert.match(ui,/DOTS_PER_PAGE = 400/)
   assert.match(ui,/className="rundeckWorkloadDotGrid"/)
-  assert.match(ui,/Not an SM37 execution status/)
-  assert.match(state,/allocateWorkloadHexagons/)
+  assert.match(ui,/not SM37 status/)
+  assert.match(state,/validatedWorkloadDots/)
   assert.match(ui,/validatedWorkloadDots\(first, otherPages, dotPage, DOTS_PER_PAGE\)/)
   assert.match(ui,/1 dot = 1 workload/)
   assert.match(state,/status === 'REVIEW REQUIRED'/)

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { allocateWorkloadHexagons, workloadHealthLevel, workloadHealthPreview } from '../../src/tools/components/rundeckWorkloadHealthState.js'
+import { workloadHealthLevel, workloadHealthPreview, validatedWorkloadDots } from '../../src/tools/components/rundeckWorkloadHealthState.js'
 
 test('grouped multicore CPU above 100 percent never independently marks a workload red', () => {
   assert.equal(workloadHealthLevel({status:'NORMAL',avg_cpu_pct:199}), 'normal')
@@ -11,7 +11,7 @@ test('grouped multicore CPU above 100 percent never independently marks a worklo
   for (const status of ['INSUFFICIENT DATA','UNKNOWN','']) assert.equal(workloadHealthLevel({status}), 'unknown')
 })
 
-test('30 hexagons reflect full 388 workload population rather than top-ranked rows', () => {
+test('full 388 workload population has verified server counts, never first-100 estimates', () => {
   const health = {review:13,attention:61,unknown:24,normal:290}
   const report = {summary:{workloads:388,review_required:13,health},
     quality:{confidence:'HIGH'},end:'2026-10-13T03:00:00Z',
@@ -19,10 +19,10 @@ test('30 hexagons reflect full 388 workload population rather than top-ranked ro
   const preview = workloadHealthPreview(report)
   assert.equal(preview.total,388)
   assert.equal(preview.reviewRequired,13)
-  assert.equal(preview.hexagons.length,30)
-  assert.ok(preview.hexagons.filter(x=>x==='review').length <= 2)
-  assert.ok(preview.hexagons.filter(x=>x==='normal').length >= 20)
-  assert.equal(preview.hexagons.filter(x=>x==='attention').length,5)
+  assert.equal(preview.total,388)
+  assert.equal(preview.health.review,13)
+  assert.equal(preview.health.attention,61)
+  assert.equal(preview.health.normal,290)
   assert.equal(preview.limited,false)
 })
 
@@ -33,11 +33,10 @@ test('invalid/missing status population is unverified, not green', () => {
   const report={summary:{workloads:1,review_required:0,health:{review:0,attention:0,normal:1,unknown:0}},
     quality:{confidence:'LOW'},items:[]}
   assert.equal(workloadHealthPreview(report).limited,true)
-  assert.deepEqual(allocateWorkloadHexagons(report.summary.health,1),Array(30).fill('normal'))
-  assert.deepEqual(allocateWorkloadHexagons({review:0,attention:0,normal:0,unknown:0},0),[])
+  assert.equal(workloadHealthPreview(report).health.normal,1)
+  assert.equal(workloadHealthPreview({summary:{workloads:0,review_required:0,health:{review:0,attention:0,normal:0,unknown:0}},items:[]}).total,0)
 })
 
-import { validatedWorkloadDots } from '../../src/tools/components/rundeckWorkloadHealthState.js'
 
 test('individual dots require exact backend pages, collection window and matching population', () => {
   const rows=Array.from({length:394},(_,index)=>({
@@ -59,4 +58,7 @@ test('individual dots require exact backend pages, collection window and matchin
   assert.equal(validatedWorkloadDots(first,[page(100),page(200)],0,400),null)
   assert.equal(validatedWorkloadDots(first,[page(100),{...page(200),page:{...page(200).page,total:393}},page(300)],0,400),null)
   assert.equal(validatedWorkloadDots(first,[page(100),page(100),page(300)],0,400),null)
+  const empty={summary:{workloads:0,review_required:0,health:{review:0,attention:0,normal:0,unknown:0}},
+    items:[],page:{offset:0,limit:100,returned:0,total:0,scope:'FULL_EVALUATED_POPULATION',health:'ALL'}}
+  assert.deepEqual(validatedWorkloadDots(empty,[],0,400)?.rows,[])
 })
