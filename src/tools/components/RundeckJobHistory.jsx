@@ -872,7 +872,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <span><b>Observed</b>{observedAt ? `${formatWib(observedAt, true)} WIB` : '—'}</span>
           <span><b>WP</b>{wpContext}</span>
         </div>
-        <p>SM37 job data is not connected. Check Job Name, Program and execution time manually if needed.</p>
+        <p>SM37 feed: NOT CONNECTED · Execution status: SAP SM37</p>
       </details>}
 
       {(effectiveIncidentStart || timelineText) && <div className="rundeckJobTimeline">
@@ -880,7 +880,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
         <span><b>Issue Start</b>{effectiveIncidentStart ? `${formatWib(effectiveIncidentStart, true)} WIB` : '—'}</span>
         <span><b>First Seen</b>{stats.firstSeen ? `${formatWib(stats.firstSeen, true)} WIB` : '—'}</span>
         {timelineText && <em>{timelineText}</em>}
-        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel} · {timingState === 'NO OVERLAP' ? noOverlapText : 'nearest observations'} · cause not confirmed</small>
+        <small className="rundeckJobCorrelationDisclaimer">Timing: {timingLabel} · {timingState === 'NO OVERLAP' ? noOverlapText : 'nearest observations'}</small>
       </div>}
 
       <div className="rundeckJobAnalysisWorkspace">
