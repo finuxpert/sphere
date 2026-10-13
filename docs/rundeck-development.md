@@ -270,3 +270,11 @@ A collector recovery must not erase the fact that preceding samples were missing
 The frontend fetches up to 80 **retained** manifests, compares adjacent READY `finished_at` timestamps against the 10-minute collection cadence, and shows only recent (within 24h of the later observation) gaps in a compact status line. The displayed span is explicitly **between observations**; it is not an exact failure start/stop time, and PARTIAL/FAILED collections cannot be promoted to READY. Longer history remains on the existing server trend Collection Gap view, which uses bucketing and has separate detection semantics. No missing metrics are interpolated, copied forward as live data or treated as SAP downtime.
 
 The source-health and history-gap logic are client-side. It does not change collector frequency, write to SAP/Rundeck, rotate credentials, auto-abort behavior, or backend evidence retention. `npm run qa:data-quality` covers expired-token-like source errors, stale eight-hour-old samples, missing/invalid timestamps, post-recovery gaps and sparse history.
+
+
+## DEV workload coverage and APP reason labels (13 Oct 2026)
+
+- Current Jobs & Programs fetches the existing read-only `/history/jobs/current` endpoint once for each verified SAP APP in the current collection, with a maximum of 100 rows per host. Search and APP filter cover every fetched observation, rather than only the global top 50.
+- Counts remain explicit: `observed` is the sum of backend totals; if any host returns fewer rows than its total, the UI says `loaded (partial)` and does not claim complete search. Use the historical Search for retained records outside this collection.
+- APP severity is determined by SAP host CPU/RAM/I/O wait and Critical WP. Filesystem is independent host/collection-matched Infrastructure telemetry. Identical percentages do not prove duplicate mapping; the filesystem mount and measurement freshness remain available for verification.
+- Run `npm run qa` and desktop/mobile visual QA before release. This change is frontend-only and compatible with `sphere deploy dev`; it does not require a backend restart or migration. PROD stays unchanged.
