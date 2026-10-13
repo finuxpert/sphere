@@ -12,9 +12,12 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const [error, setError] = React.useState('')
   const fetchedAt = React.useRef(0)
   const hasData = React.useRef(false)
+  const lastAttemptAt = React.useRef(0)
 
   React.useEffect(() => {
     if (hasData.current && Date.now() - fetchedAt.current < MIN_REFRESH_MS) return undefined
+    if (!hasData.current && lastAttemptAt.current && Date.now() - lastAttemptAt.current < 60_000) return undefined
+    lastAttemptAt.current = Date.now()
     const controller = new AbortController()
     setLoading(true)
     setError('')
