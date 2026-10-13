@@ -255,7 +255,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           const ranked = [...valid].sort((a, b) => Number(b.data.value[1]) - Number(a.data.value[1]))
           const visible = focused ? [focused, ...ranked.filter(point => point !== focused)] : ranked
           const intervalMs = resolvedGapIntervalMs(trend)
-           const intervalEnd = Date.parse(bucketAt) + intervalMs
+           const intervalEnd = (typeof bucketAt === 'number' ? bucketAt : Date.parse(bucketAt)) + intervalMs
            const intervalLabel = Number.isFinite(intervalEnd) && Number.isFinite(intervalMs)
              ? ` – ${formatWib(intervalEnd, true)} WIB` : ' WIB'
            const lines = [`<b>Bucket ${formatWib(bucketAt, true)}${intervalLabel} · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
