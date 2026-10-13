@@ -208,3 +208,37 @@ test('DEV Workload Health and table are genuinely side-by-side without clipping 
   await health.click()
   await expect(page.getByRole('tab',{name:'Review'})).toHaveAttribute('aria-selected','true')
 })
+
+test('DEV historical Search locates workload ranked outside the first 100 via backend query', async ({page}) => {
+  test.skip((page.viewportSize()?.width || 0) < 1200, 'Desktop server-side search contract')
+  const requested = []
+  await page.route('**/api/evaluation/workloads?**', async route => {
+    const url = new URL(route.request().url())
+    const query = url.searchParams.get('q') || ''
+    requested.push({ query, offset: url.searchParams.get('offset'), health:url.searchParams.get('health') })
+    const matched = query.toUpperCase().includes('Z_PROGRAM_350')
+    const body = {
+      period:'1d', days:1, type:'ALL', end:'2026-10-13T03:00:00Z',
+      quality:{confidence:'HIGH',partial_or_incomplete_checks:0},
+      summary:{workloads:388,review_required:13,health:{review:13,attention:61,normal:290,unknown:24}},
+      page:{scope:'FULL_EVALUATED_POPULATION',offset:0,limit:2,total:matched?1:388,
+        returned:matched?1:2,has_more:!matched,query,health:url.searchParams.get('health')||'ALL'},
+      items:matched?[{consumer_type:'PROGRAM',consumer_key:'Z_PROGRAM_350',
+        status:'NORMAL',avg_cpu_pct:12,peak_cpu_pct:18,avg_pss_gb:0.8,
+        assessment_reason:'Within resource thresholds'}]:[
+        {consumer_type:'PROGRAM',consumer_key:'Z_PROGRAM_000',status:'REVIEW REQUIRED',
+          avg_cpu_pct:90,peak_cpu_pct:110,avg_pss_gb:5},
+        {consumer_type:'PROGRAM',consumer_key:'Z_PROGRAM_001',status:'REVIEW REQUIRED',
+          avg_cpu_pct:85,peak_cpu_pct:104,avg_pss_gb:4.4}
+      ],
+    }
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)})
+  })
+  await openCockpit(page)
+  await page.getByRole('tab',{name:'Search'}).click()
+  const search = page.getByRole('searchbox',{name:'Search historical job or program'})
+  await search.fill('Z_PROGRAM_350')
+  await expect(page.locator('.rundeckReviewWorkloadV1231 button',{hasText:'Z_PROGRAM_350'})).toBeVisible({timeout:15000})
+  expect(requested.some(item=>item.query==='Z_PROGRAM_350' && item.health==='ALL')).toBe(true)
+  await expect(page.locator('.rundeckReviewPager')).toContainText('1 matches')
+})
