@@ -32,27 +32,27 @@ const leadingResource = host => {
 function primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale = false, availabilityAge = null) {
   if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service DOWN observed', detail: `Availability state: ${availability}` }
   if (stale) return { level: 'WARNING', text: 'Performance collection: STALE', detail: 'Latest performance sample is outside the freshness window.' }
-  if (availabilityStale) return availabilityFreshnessSignal(availabilityAge)
-
   const ranked = hosts.map((host) => {
     const resource = hostResourceState(host)
     const workload = sapWorkloadState(host)
     const wp = Number(host?.wp_critical || 0)
     let score = 0
     if (resource === 'CRITICAL') score = 500
+    else if (workload === 'CRITICAL') score = 450
     else if (resource === 'WARNING') score = 400
-    else if (workload === 'CRITICAL') score = 300
     else if (workload === 'ATTENTION') score = 200
     return { host, resource, workload, wp, score }
   }).sort((left, right) => right.score - left.score || right.wp - left.wp)
 
   const top = ranked[0]
+  if (top?.score === 450) return { level: 'CRITICAL', text: `${shortHost(top.host.host)} · Critical WP ${top.wp}`, detail: `APP Critical WP ${top.wp} · OS Resource ${top.resource}` }
   if (top?.score >= 400) {
     const metric = leadingResource(top.host)
     const label = shortHost(top.host.host)
     const reading = metric ? `${metric.label} ${observedPct(metric.value)}` : 'Resource'
     return { level: top.resource, text: `${label} · ${reading}`, detail: `CPU ${observedPct(top.host.cpu_pct)} · RAM ${observedPct(top.host.ram_pct)} · I/O Wait ${observedPct(top.host.io_wait_pct ?? top.host.iowait_pct)} · ${top.resource}` }
   }
+  if (availabilityStale) return availabilityFreshnessSignal(availabilityAge)
   if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Critical WP ${top.wp}`, detail: `APP Critical WP ${top.wp} · OS Resource ${top.resource}` }
   if (availability === 'ATTENTION') return { level: 'ATTENTION', text: 'SAP availability: ATTENTION', detail: `Availability state: ${availability}` }
   return null

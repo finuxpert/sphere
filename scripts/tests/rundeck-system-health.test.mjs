@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { availabilityFreshnessSignal, deriveSystemHealthEvidence } from '../../src/tools/components/rundeckSystemHealth.js'
+import { readFileSync } from 'node:fs'
+import { availabilityFreshnessSignal, deriveSystemHealthEvidence, systemHealthState } from '../../src/tools/components/rundeckSystemHealth.js'
 
 const host = { host: 'APP1', cpu_pct: 20, ram_pct: 30, iowait_pct: 1, wp_critical: 0 }
 const valid = { state: 'FRESH', performanceValid: true, availabilityValid: true, collectorBad: false }
@@ -65,4 +66,36 @@ test('fresh availability does not turn missing host or critical-WP readings into
   })
   assert.equal(missingWp.state,'UNKNOWN')
   assert.equal(missingResource.state,'UNKNOWN')
+})
+
+test('Critical WP threshold on APP4 escalates overall System Health to CRITICAL', () => {
+  const hosts = [
+    {...host, host:'APP1', wp_critical:1},
+    {...host, host:'APP2', wp_critical:0},
+    {...host, host:'APP3', wp_critical:0},
+    {...host, host:'APP4', wp_critical:4},
+    {...host, host:'APP5', wp_critical:0},
+  ]
+  assert.equal(systemHealthState(hosts,{availabilityState:'NORMAL'}),'CRITICAL')
+  const result = deriveSystemHealthEvidence({hosts,availability:up,quality:valid,collector:{status:'NORMAL'}})
+  assert.equal(result.state,'CRITICAL')
+  assert.equal(systemHealthState([hosts[0]],{availabilityState:'NORMAL'}),'ATTENTION')
+  assert.equal(systemHealthState([hosts[1]],{availabilityState:'NORMAL'}),'NORMAL')
+})
+
+test('fresh critical SAP WP stays CRITICAL even when another APP has host resource WARNING', () => {
+  const warned = {...host, host:'APP2', cpu_pct:80, wp_critical:0}
+  const criticalWp = {...host, host:'APP4', wp_critical:4}
+  assert.equal(systemHealthState([warned,criticalWp],{availabilityState:'NORMAL'}),'CRITICAL')
+  assert.equal(systemHealthState([warned,criticalWp],{availabilityState:'NORMAL',availabilityStale:true}),'CRITICAL')
+  assert.equal(systemHealthState([warned,criticalWp],{availabilityState:'NORMAL',stale:true}),'CRITICAL')
+  assert.equal(systemHealthState([warned,criticalWp],{availabilityState:'NORMAL',serviceCritical:true}),'CRITICAL')
+  assert.equal(systemHealthState([], {availabilityState:'UNKNOWN',stale:true}),'WARNING')
+})
+
+test('the header reason does not downgrade critical WP to ATTENTION', () => {
+  const source = readFileSync(new URL('../../src/tools/components/RundeckSystemHealth.jsx',import.meta.url),'utf8')
+  assert.match(source,/workload === 'CRITICAL'\) score = 450/)
+  assert.match(source,/top\?\.score === 450\) return \{ level: 'CRITICAL'/)
+  assert.match(source,/if \(availabilityStale\) return availabilityFreshnessSignal\(availabilityAge\)/)
 })

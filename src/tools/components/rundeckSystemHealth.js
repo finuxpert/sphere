@@ -12,9 +12,9 @@ export function systemHealthState(hosts = [], {
   const workloadStates = hosts.map((host) => sapWorkloadState(host))
   const availability = normalize(availabilityState)
 
-  if (serviceCritical || availability === 'CRITICAL' || resourceStates.includes('CRITICAL')) return 'CRITICAL'
+  if (serviceCritical || availability === 'CRITICAL' || resourceStates.includes('CRITICAL') || workloadStates.includes('CRITICAL')) return 'CRITICAL'
   if (resourceStates.includes('WARNING') || stale || availabilityStale) return 'WARNING'
-  if (availability === 'ATTENTION' || workloadStates.some((state) => state === 'ATTENTION' || state === 'CRITICAL')) return 'ATTENTION'
+  if (availability === 'ATTENTION' || workloadStates.includes('ATTENTION')) return 'ATTENTION'
 
   // Availability confirms services only; it cannot prove absent host metrics are healthy.
   if (!hosts.length) return 'UNKNOWN'
