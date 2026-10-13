@@ -48,9 +48,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const preview = workloadHealthPreview(data, 30)
   const reviewCount = preview?.reviewRequired
   const totalCount = preview?.total
-  const state = error ? 'unavailable' : !preview ? 'loading'
+  const state = error ? 'unavailable' : !preview ? (loading ? 'loading' : 'unavailable')
     : totalCount === 0 ? 'empty' : preview.limited ? 'limited' : reviewCount > 0 ? 'review' : 'normal'
-  const outcome = error ? 'Unavailable' : !preview ? 'Loading'
+  const outcome = error ? 'Unavailable' : !preview ? (loading ? 'Loading' : 'Unavailable')
     : totalCount === 0 ? 'No evaluations' : preview.limited ? 'Limited evidence'
       : reviewCount > 0 ? 'Needs review' : 'No review flagged'
   const timeLabel = preview?.end ? `${formatWib(preview.end, true)} WIB` : 'time unavailable'
