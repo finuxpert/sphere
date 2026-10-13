@@ -41,20 +41,24 @@ test('every analysis overlay is modal, traps focus, handles Escape and restores 
   assert.match(geometry,/transform:translate\(-50%,-50%\)!important/)
 })
 
-test('flat analysis navigation keeps six actions and connected destinations',()=>{
+test('flat analysis navigation connects four real destinations with paired history and SAP checks',()=>{
   const evidence=read('RundeckOperationalEvidence.jsx')
-  const css=read('RundeckFlatWorkspace.css')
+  const css=read('RundeckOperatorFlatV1354.css')
   const wrapper=read('RundeckMonitoringHistory.jsx')
   assert.match(evidence,/className="rundeckAnalysisActions"/)
   assert.doesNotMatch(evidence,/className="rundeckAnalysisGroup"/)
-  for(const name of ['onOpenEvidence','onOpenHistory','onOpenAvailability','onOpenIssues','onOpenInfrastructure','onOpenSystemData']){
+  for(const name of ['onOpenEvidence','onOpenIssues','onOpenInfrastructure','onOpenSystemData']){
     assert.ok(evidence.includes(name),'Missing action: '+name)
     assert.ok(wrapper.includes(name+'='),'Missing connected modal: '+name)
   }
-  assert.match(evidence,/disabled=\{!selectedJob\?\.key\}/)
-  assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/)
-  assert.match(css,/@media\(max-width:1200px\)/)
-  assert.match(css, /prefers-reduced-motion:reduce/)
+  assert.match(evidence,/Open Related Events and Run History/)
+  assert.match(wrapper,/title="Related Events & Run History"/)
+  assert.match(wrapper,/aria-label="Run history"/)
+  assert.match(wrapper,/RundeckObservationHistory/)
+  assert.match(wrapper,/title="SAP Checks"/)
+  assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/)
+  assert.match(css,/@media\(min-width:640px\) and \(max-width:1099px\)/)
+  assert.match(css,/prefers-reduced-motion:reduce/)
   assert.doesNotMatch(wrapper,/rundeckSelectedSecondaryAnalysis|rundeckDrawerAnalysisMenu/)
 })
 
