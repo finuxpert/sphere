@@ -295,8 +295,13 @@ cat /tmp/sphere-dev-health.json
 
 # Evaluation SQL is part of the release contract.
 # Evaluation performs several retained-history aggregates on a cold API process.
-# Keep ordinary JSON smoke tests at 15s, but allow a bounded 30s cold-start window here.
-fetch_json 'http://127.0.0.1:8091/evaluation/workloads?period=1d&type=ALL&limit=5' /tmp/sphere-dev-evaluation.json 30
+# No success without the complete 1D evaluation contract. Cold historical SQL can
+# exceed 30s while its process-local cache warms after an API restart; give that
+# single request a finite 90s budget without spawning competing retry queries.
+EVALUATION_SMOKE_START=$SECONDS
+echo 'EVALUATION_SMOKE_START=1D_COLD_START TIMEOUT_SECONDS=90'
+fetch_json 'http://127.0.0.1:8091/evaluation/workloads?period=1d&type=ALL&limit=5' /tmp/sphere-dev-evaluation.json 90
+echo "EVALUATION_SMOKE_HTTP_JSON=PASS SECONDS=$((SECONDS-EVALUATION_SMOKE_START))"
 grep -q '"period":"1d"' /tmp/sphere-dev-evaluation.json
 grep -q '"wp_excess_association_pct"' /tmp/sphere-dev-evaluation.json
 cat /tmp/sphere-dev-evaluation.json

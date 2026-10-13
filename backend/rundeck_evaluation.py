@@ -11,6 +11,7 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 from statistics import median
+from threading import Lock
 from typing import Any
 
 from sqlalchemy import text
@@ -42,6 +43,9 @@ _CONFIDENCE_RANK = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
 EVALUATION_CACHE_TTL_SECONDS = max(5, int(os.getenv("SPHERE_EVAL_CACHE_TTL_SECONDS", "900")))
 EVALUATION_CACHE_MAX_ENTRIES = max(6, int(os.getenv("SPHERE_EVAL_CACHE_MAX_ENTRIES", "24")))
 _EVALUATION_CACHE: dict[tuple[str, str, str], tuple[float, dict]] = {}
+# Prevent simultaneous paginated requests from executing the same expensive cold SQL.
+# FastAPI runs this synchronous endpoint in a worker thread; lock scope is process-local.
+_EVALUATION_COMPUTE_LOCK = Lock()
 
 
 def _cache_get(key: tuple[str, str, str]) -> dict | None:
@@ -681,6 +685,12 @@ def _evaluation_health_summary(evaluated: list[dict]) -> dict:
 
 
 def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL") -> dict:
+    """Serialize cold full-population computations; cached pages use the same source anchor."""
+    with _EVALUATION_COMPUTE_LOCK:
+        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
+
+
+def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str) -> dict:
     started = time.perf_counter()
     period_key = str(period or "1d").lower()
     if period_key not in PERIOD_DAYS:

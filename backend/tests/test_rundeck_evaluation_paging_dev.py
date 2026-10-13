@@ -1,6 +1,11 @@
 """DEV: regression checks for full-population review/search and 30-hex population distribution."""
 import unittest
+import time
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
+from unittest.mock import patch
 
+from backend import rundeck_evaluation
 from backend.rundeck_evaluation import _evaluation_health_summary, _evaluation_page
 
 
@@ -59,6 +64,30 @@ class EvaluationPagingDevTests(unittest.TestCase):
         self.assertEqual(result["page"]["total"], 77)
         self.assertEqual(result["page"]["returned"], 5)
         self.assertIn("AOPH5PAPPDC", result["items"][0]["hosts"])
+
+    def test_evaluation_requests_are_singleflight_during_cold_start(self):
+        concurrent = 0
+        highest_concurrent = 0
+        guard = Lock()
+
+        def fake_evaluation(*_args):
+            nonlocal concurrent, highest_concurrent
+            with guard:
+                concurrent += 1
+                highest_concurrent = max(highest_concurrent, concurrent)
+            time.sleep(0.025)
+            with guard:
+                concurrent -= 1
+            return {"ok": True}
+
+        with patch.object(rundeck_evaluation, "_evaluation_report_locked", fake_evaluation):
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                results = list(executor.map(
+                    lambda limit: rundeck_evaluation.evaluation_report(limit=limit),
+                    [5, 25, 50, 100],
+                ))
+        self.assertEqual(results, [{"ok": True}] * 4)
+        self.assertEqual(highest_concurrent, 1)
 
     def test_empty_filter_and_invalid_parameters(self):
         report = self.report()
