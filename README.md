@@ -2,10 +2,22 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Current observed Rundeck-integrated DEV UI: **v1.34.78-dev · b878142** (operator screenshot, 2026-10-11 WIB). This is a DEV-only checkpoint; no PROD promotion is recorded.
+Rundeck DEV source version is declared in [`src/app/version.js`](src/app/version.js) (currently **v1.35.7**). Source and deployed builds may differ: verify the active DEV release SHA and public UI before claiming a release is live. PROD promotion is a separate guarded process.
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
+
+## Fast Rundeck DEV release
+
+On `JAHSVR-SPHERE`, for a reviewed **no-migration DEV release**:
+
+```bash
+cd /root/rundeck-sphere-dev && SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/release-dev-fast.sh
+```
+
+This single script handles source sync, guarded QA/build, DEV backend tests and guarded DEV API/web deployment. It emits compact `SOURCE/QA/DEPLOY/FINAL` results, stores detailed output in `/tmp/sphere-dev-release-last.log`, and can reuse verified QA artifacts or skip an already-active healthy SHA. It **does not** auto-approve schema changes or deploy PROD. Do not run separate QA/deploy commands around this wrapper or substitute the frontend-only `sphere deploy dev` when backend code changed.
+
+**Full procedure, failure diagnosis, approval gates and post-deploy verification:** [Fast DEV deployment — operator runbook](docs/rundeck-development.md#fast-dev-deployment--operator-runbook-v1357). Visual QA on desktop and Android remains a separate requirement.
 
 ## Product position
 
