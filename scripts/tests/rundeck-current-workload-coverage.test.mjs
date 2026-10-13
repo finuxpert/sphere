@@ -36,7 +36,7 @@ test('mixing collections or APP identities fails closed', () => {
 })
 test('live UI requests host-scoped pages rather than silently searching only 50 rows', () => {
   const source = readFileSync(new URL('../../src/tools/components/RundeckCurrentWorkload.jsx', import.meta.url), 'utf8')
-  assert.match(source, /hostKey\.split\(', '\)/)
+  assert.match(source, /hostKey\.split\(','\)/)
   assert.match(source, /combineCurrentWorkloadResponses/)
   assert.match(source, /host=\$\{encodeURIComponent\(host\)\}/)
   assert.match(source, /Search \$\{rows.length\} observations/)
