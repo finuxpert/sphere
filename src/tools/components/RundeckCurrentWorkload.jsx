@@ -3,6 +3,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName, isUnresolvedSapIdentity } from './sapUiFormat.js'
 import './RundeckCurrentWorkload.css'
 import { processCount } from './rundeckWorkloadMetrics.js'
+import { combineCurrentWorkloadResponses } from './rundeckCurrentWorkloadCoverage.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const CPU_HINT = 'CPU Total is the grouped multi-core workload CPU observation. It can exceed 100 percent when the workload uses more than one CPU core or process.'
@@ -104,12 +105,13 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 50, embedded = false }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], embedded = false }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [loadedSearch, setLoadedSearch] = React.useState('')
+  const [hostFilter, setHostFilter] = React.useState('ALL')
   const [listPage,setListPage]=React.useState(0)
   const [nowMs, setNowMs] = React.useState(() => Date.now())
   const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 768 : window.innerHeight)
@@ -120,40 +122,46 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  const hostKey = sourceHosts.map(row => String(row?.host || '').trim().toUpperCase()).filter(Boolean).sort().join(',')
   React.useEffect(() => {
     if (!collectionId) {
       setRows([])
       setWorkloadMeta({ total: 0, coverageScope: '' })
+      setHostFilter('ALL')
       return undefined
     }
     const controller = new AbortController()
+    const hosts = [...new Set(hostKey.split(',').filter(Boolean))]
+    const limit = Math.max(1, Math.min(100, Number(compactLimit) || 100))
+    const paths = hosts.length ? hosts.map(host =>
+      `${API}/history/jobs/current?collection_id=${encodeURIComponent(collectionId)}&host=${encodeURIComponent(host)}&limit=${limit}`
+    ) : [`${API}/history/jobs/current?collection_id=${encodeURIComponent(collectionId)}&limit=${limit}`]
+    setRows([])
+    setHostFilter('ALL')
+    setListPage(0)
     setLoading(true)
     setError('')
-    fetch(`${API}/history/jobs/current?collection_id=${encodeURIComponent(collectionId)}&limit=50`, {
-      cache: 'no-store',
-      signal: controller.signal,
-    })
-      .then(async (response) => {
+    Promise.all(paths.map(path => fetch(path, { cache: 'no-store', signal: controller.signal })
+      .then(async response => {
         if (!response.ok) {
           const body = await response.json().catch(() => ({}))
           throw new Error(body.detail || `Current SAP Workload unavailable (${response.status})`)
         }
         return response.json()
-      })
-      .then((result) => {
-        setRows(result.items || [])
-        setWorkloadMeta({ total: Number(result.total || 0), coverageScope: String(result.coverage_scope || '') })
+      })))
+      .then(results => {
+        if (controller.signal.aborted) return
+        const merged = combineCurrentWorkloadResponses(results, collectionId)
+        setRows(merged.items)
+        setWorkloadMeta({ total: merged.total, coverageScope: merged.coverageScope })
         setNowMs(Date.now())
       })
-      .catch((failure) => {
-        if (failure.name !== 'AbortError') setError(failure.message || 'Current SAP Workload unavailable')
+      .catch(failure => {
+        if (failure.name !== 'AbortError' && !controller.signal.aborted) setError(failure.message || 'Current SAP Workload unavailable')
       })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false)
-      })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [collectionId])
-
+  }, [collectionId, compactLimit, hostKey])
   React.useEffect(() => {
     if (!rows.length) return undefined
     const timer = window.setInterval(() => setNowMs(Date.now()), 30000)
@@ -175,15 +183,18 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   }, [rows, selectedJob, onSelectedContext])
 
   const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
-  const visibleLimit = Math.max(1, Number(compactLimit || 50))
-  const loaded = sortedRows.slice(0, visibleLimit)
+  const loaded = sortedRows
+  const availableHosts = [...new Set(rows.map(row => row.host).filter(Boolean))].sort()
+  const allLoaded = workloadMeta.total === rows.length
   const query = loadedSearch.trim().toLocaleLowerCase()
-  const visible = query ? loaded.filter((row) => {
+  const visible = loaded.filter(row => {
+    if (hostFilter !== 'ALL' && row.host !== hostFilter) return false
+    if (!query) return true
     const d = row.details || {}
     return [row.host,row.consumer_key,d.job_name,d.program,d.pid,
       ...(Array.isArray(d.pids) ? d.pids : []),d.wp,d.wp_type]
       .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
-  }) : loaded
+  })
   // Keep pagination aligned with the viewport's available table height.
   // Rows are still actual loaded observations; no synthetic results or truncation.
   const pageSize = viewportHeight <= 720 ? 3 : viewportHeight <= 900 ? 4 : viewportHeight <= 1080 ? 5 : 7
@@ -201,11 +212,15 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount" title="Observed count from API; Live search and pagination cover only loaded rows. Use historical Search for all saved observations.">{workloadMeta.total > rows.length ? `${workloadMeta.total} observed · ${rows.length} loaded` : `${workloadMeta.total || rows.length} observed · ${rows.length} loaded`}</span>
+      <span className="rundeckCurrentWorkloadCount" title="Current collection observations. Per-APP API is limited to 100 rows; unloaded observations are not searchable.">{workloadMeta.total || rows.length} observed · {rows.length} {allLoaded ? "searchable" : "loaded (partial)"}</span>
       <div className="rundeckCurrentWorkloadTools">
+        <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
+          <option value="ALL">All APP</option>
+          {availableHosts.map(host => <option key={host} value={host}>{shortHost(host)}</option>)}
+        </select>
         <label className="rundeckCurrentWorkloadSearch">
-          <span>Search {rows.length} loaded rows</span>
-          <input type="search" aria-label={`Search ${loaded.length} loaded jobs and programs only`} placeholder={`Search ${loaded.length} loaded rows`} value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
+          <span>Search {rows.length} observations</span>
+          <input type="search" aria-label={`Search ${rows.length} loaded jobs and programs`} placeholder={`Search ${rows.length} observations`} value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
         </label>
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>
@@ -246,13 +261,13 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             </tr>
           })}
           {!visible.length && <tr><td colSpan="7">{query
-            ? <>No matching job or program in the {loaded.length} loaded rows. {rows.length ? 'Use Search for retained history.' : 'No workload observations loaded for this collection.'}</>
+            ? <>No matching job or program in {rows.length} loaded observations. {!allLoaded ? 'Some observations are not loaded; use historical Search.' : ''}</>
             : 'No job or program observed in this collection.'}</td></tr>}
         </tbody>
       </table>
     </div>}
-    {!loading&&!error&&visible.length>0&&<nav className="rundeckWorkloadPager" aria-label="Loaded job pages">
-      <small>{visible.length} matching of {loaded.length} loaded · Page {currentPage+1}/{totalPages}</small>
+    {!loading&&!error&&visible.length>0&&<nav className="rundeckWorkloadPager" aria-label="Current collection workload pages">
+      <small>{visible.length} matching of {rows.length} loaded · Page {currentPage+1}/{totalPages}</small>
       <button type="button" disabled={currentPage===0} onClick={()=>setListPage(n=>Math.max(0,n-1))}>Previous</button>
       <button type="button" disabled={currentPage>=totalPages-1} onClick={()=>setListPage(n=>Math.min(totalPages-1,n+1))}>Next</button>
     </nav>}

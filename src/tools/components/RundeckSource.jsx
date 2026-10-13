@@ -683,7 +683,6 @@ export default function RundeckSource({ onCollection }) {
     platform?.collector?.status,
     platform?.filesystem?.status,
     platform?.inode?.status,
-    platform?.filesystem?.status,
     platform?.database?.status === 'ok' ? 'NORMAL' : platform?.database?.status,
     platform?.maintenance?.status,
     platform?.backup?.status || 'NOT_CONFIGURED',
@@ -738,7 +737,8 @@ export default function RundeckSource({ onCollection }) {
     selectedJob={selectedJob}
     onSelectJob={selectJob}
     onSelectedContext={enrichSelectedJob}
-    compactLimit={50}
+    compactLimit={100}
+    sourceHosts={operationalHosts}
   />
 
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">

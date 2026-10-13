@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { shortHost } from './sapUiFormat.js'
-import { appSignalState, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
+import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
 import { OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 
 const API = import.meta.env.BASE_URL + 'api'
@@ -59,6 +59,7 @@ export default function RundeckUnifiedAppInfrastructure({
   const highCpu = highest('cpu_pct')
   const highRam = highest('ram_pct')
   const highWp = highest('wp_critical')
+  const highWpHosts = highWp ? hosts.filter(row => Number(row.wp_critical) === Number(highWp.wp_critical)).map(row => shortHost(row.host)).join('/') : '—'
   const selectApp = key => {
     setManualSelection({ host: key, contextToken })
     const sapTarget = hosts.find(host => shortHost(host.host) === key)
@@ -74,7 +75,7 @@ export default function RundeckUnifiedAppInfrastructure({
       <h3><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
         <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
-        {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {shortHost(highWp?.host)} {metric(highWp?.wp_critical)}</span>}
+        {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {highWpHosts} {metric(highWp?.wp_critical)}</span>}
         {infraSnapshot.error && <span role="status" className="is-error">Infrastructure summary unavailable</span>}
       </div>
     </header>
@@ -85,13 +86,14 @@ export default function RundeckUnifiedAppInfrastructure({
         const sapState = appSignalState(host, performanceVerified)
         const selected = key === appKey
         const ioWait = host.io_wait_pct == null ? null : Number(host.io_wait_pct)
-        const showHostNote = infra.freshness !== 'FRESH' || (Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning)
+        const reason = appSignalReason(host, performanceVerified)
+        const showHostNote = sapState !== 'NORMAL' || infra.freshness !== 'FRESH' || (Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning)
         return <button key={host.host} type="button"
           className={'rundeckUnifiedAppCard is-sap-' + sapState.toLowerCase() + (selected ? ' is-active' : '')}
           aria-pressed={selected} onClick={() => { selectApp(key); onInspectApp?.({
             ...host, infraHost: infra.infra?.host || '',
           }) }}
-          title={'Open ' + key + ' Analysis · SAP ' + sapState + ' · Infrastructure ' + infra.state + ' · ' + (infra.topFs?.mount_point || 'No mount') + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
+          title={'Open ' + key + ' Analysis · SAP ' + sapState + ' (' + reason + ') · Infrastructure ' + infra.state + ' · FS ' + (infra.topFs?.mount_point || 'No mount') + ' ' + metric(infra.topFs?.used_pct,'%') + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
           <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
             <span className="rundeckUnifiedMetric">
@@ -112,7 +114,7 @@ export default function RundeckUnifiedAppInfrastructure({
             </span>
           </span>
           {showHostNote && <span className="rundeckUnifiedAppCardInfra">
-            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{infra.freshness !== 'FRESH' ? 'Infra ' + infra.freshness : ''}{Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning ? (infra.freshness !== 'FRESH' ? ' · ' : '') + 'I/O wait ' + metric(ioWait,'%') : ''}</small>
+            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{sapState !== 'NORMAL' ? reason : ''}{infra.freshness !== 'FRESH' ? (sapState !== 'NORMAL' ? ' · ' : '') + 'Infra ' + infra.freshness : ''}{Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning ? ' · I/O wait ' + metric(ioWait,'%') : ''}</small>
           </span>}
         </button>
       })}

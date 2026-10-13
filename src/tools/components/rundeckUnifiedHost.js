@@ -1,6 +1,6 @@
 import { shortHost } from './sapUiFormat.js'
 import { infrastructureTelemetryFreshness } from './infrastructureFreshness.js'
-import { hostResourceState, sapWorkloadState, filesystemResourceState } from './rundeckStatusSemantics.js'
+import { hostResourceState, sapWorkloadState, filesystemResourceState, metricResourceState } from './rundeckStatusSemantics.js'
 
 const numeric = value => value === null || value === undefined || value === '' ? null : (Number.isFinite(Number(value)) ? Number(value) : null)
 
@@ -16,6 +16,23 @@ export function appSignalState(host = {}, verified = true) {
   return 'NORMAL'
 }
 
+export function appSignalReason(host = {}, verified = true) {
+  if (!verified) return 'SAP snapshot unverified'
+  const metrics = [
+    { name: 'CPU', value: host.cpu_pct, type: 'cpu' },
+    { name: 'RAM', value: host.ram_pct, type: 'ram' },
+    { name: 'I/O wait', value: host.io_wait_pct ?? host.iowait_pct, type: 'ioWait' },
+  ]
+  const priority = ['CRITICAL', 'WARNING']
+  for (const state of priority) {
+    const row = metrics.find(metric => metricResourceState(metric.value, metric.type) === state)
+    if (row) return `${row.name} ${Number(row.value).toLocaleString('en-US',{maximumFractionDigits:1})}%`
+  }
+  const wp = sapWorkloadState(host)
+  if (wp === 'CRITICAL' || wp === 'ATTENTION') return `Critical WP ${host.wp_critical}`
+  if (hostResourceState(host) === 'UNKNOWN' || wp === 'UNKNOWN') return 'Incomplete SAP metrics'
+  return 'Within SAP thresholds'
+}
 export function matchedInfrastructureHost(sapHost, infraHosts = []) {
   const raw = String(sapHost?.host || '').trim().toUpperCase()
   const exact = infraHosts.find(row => String(row.host || '').trim().toUpperCase() === raw)
