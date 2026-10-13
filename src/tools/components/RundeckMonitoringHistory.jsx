@@ -21,6 +21,7 @@ import './RundeckMockupParity.css'
 import './RundeckPopupConsistencyV135.css'
 import './RundeckOperatorDesignSystemV135.css'
 import './RundeckOperatorFlatV1354.css'
+import './RundeckCockpitHexV13512.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
