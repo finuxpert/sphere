@@ -489,6 +489,7 @@
   gap:9px;
   width:247px;
   height:32px;
+  box-sizing:border-box;
   padding:4px 9px;
   border:1px solid var(--sphere-flat-separator)!important;
   border-radius:6px;
