@@ -1,6 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { numberText, workloadTypeLabel } from './sapUiFormat.js'
+import { formatWib, numberText, workloadTypeLabel } from './sapUiFormat.js'
 import { evaluationReasonParts } from './rundeckEvaluationExplain.js'
 
 const RundeckReviewQuickAnalysis = React.lazy(() => import('./RundeckReviewQuickAnalysis.jsx'))
@@ -196,7 +196,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     {error && <div className="rundeckReviewState is-error">{error}</div>}
 
     {!error && data && <>
-      <div className="rundeckReviewWindow" title="Window bounds are saved evaluation observations, not job start/end times">Saved evaluation · {data?.start ? String(data.start).slice(0,10) : '—'} – {data?.end ? String(data.end).slice(0,10) : '—'} · {periodLabel} · {data?.end ? 'WIB times in detail' : 'time unavailable'}</div>
+      <div className="rundeckReviewWindow" title="Window bounds are saved evaluation observations, not job start/end times">Saved evaluation {periodLabel} · {data?.start ? formatWib(data.start, true) + ' WIB' : 'start unknown'} – {data?.end ? formatWib(data.end, true) + ' WIB' : 'end unknown'}</div>
       {showQualityWarning && <div className="rundeckReviewQualityWarning">
         {lowCoverage && <span>LIMITED DATA · {pct(quality.coverage_pct)} coverage</span>}
         {incomplete > 0 && <span>{numberText(incomplete, 0)} incomplete check{incomplete === 1 ? '' : 's'} excluded</span>}
