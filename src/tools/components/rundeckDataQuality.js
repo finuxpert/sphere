@@ -45,6 +45,32 @@ export function assessRundeckDataQuality({
   }
 }
 
+
+/** Independent freshness copy: old Availability cannot make fresh Performance stale. */
+export function monitoringFreshnessMessage(quality = {}, { availabilityFetchFailed = false } = {}) {
+  const age = ms => {
+    if (ms == null || !Number.isFinite(Number(ms))) return null
+    const minutes = Math.max(0, Math.floor(Number(ms) / 60000))
+    if (minutes < 1) return '<1m'
+    if (minutes < 60) return `${minutes}m`
+    const hours = Math.floor(minutes / 60)
+    return minutes % 60 ? `${hours}h ${minutes % 60}m` : `${hours}h`
+  }
+  const performanceAge = age(quality.performanceAgeMs)
+  const availabilityAge = age(quality.availabilityAgeMs)
+  const performance = quality.performanceValid
+    ? `Performance current (${performanceAge || 'age unknown'})`
+    : performanceAge ? `Performance not current (${performanceAge})` : 'Performance unverified'
+  const availability = quality.availabilityValid
+    ? `Availability current (${availabilityAge || 'age unknown'})`
+    : availabilityFetchFailed ? 'Availability fetch failed'
+      : availabilityAge ? `Availability last checked ${availabilityAge} ago` : 'Availability not verified'
+  const note = quality.performanceValid && !quality.availabilityValid
+    ? 'Current SAP service availability is not verified; saved states are historical.'
+    : 'Check each source timestamp before assessing current SAP conditions.'
+  return `${performance} · ${availability}. ${note}`
+}
+
 // A gap is based on adjacent actually retained READY executions, not on
 // failure-log timestamps. Boundary timestamps are OBSERVATIONS, not precise
 // outage onset/recovery time. Partial/failed runs cannot close a READY gap.
