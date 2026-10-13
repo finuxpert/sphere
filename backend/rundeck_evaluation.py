@@ -41,10 +41,10 @@ SHIFT_CPU_MIN_DELTA_PP = max(0.0, float(os.getenv("SPHERE_EVAL_SHIFT_CPU_MIN_DEL
 _CONFIDENCE_RANK = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
 EVALUATION_CACHE_TTL_SECONDS = max(5, int(os.getenv("SPHERE_EVAL_CACHE_TTL_SECONDS", "900")))
 EVALUATION_CACHE_MAX_ENTRIES = max(6, int(os.getenv("SPHERE_EVAL_CACHE_MAX_ENTRIES", "24")))
-_EVALUATION_CACHE: dict[tuple[str, str, int, str], tuple[float, dict]] = {}
+_EVALUATION_CACHE: dict[tuple[str, str, str], tuple[float, dict]] = {}
 
 
-def _cache_get(key: tuple[str, str, int, str]) -> dict | None:
+def _cache_get(key: tuple[str, str, str]) -> dict | None:
     now = time.monotonic()
     cached = _EVALUATION_CACHE.get(key)
     if not cached:
@@ -59,7 +59,7 @@ def _cache_get(key: tuple[str, str, int, str]) -> dict | None:
     return payload
 
 
-def _cache_put(key: tuple[str, str, int, str], payload: dict) -> None:
+def _cache_put(key: tuple[str, str, str], payload: dict) -> None:
     now = time.monotonic()
     stale = [
         cache_key for cache_key, (stored_at, _payload) in _EVALUATION_CACHE.items()
@@ -620,7 +620,59 @@ def _anchor_time(conn) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
-def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30) -> dict:
+def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str) -> dict:
+    """Filter the FULL evaluated population, then slice; leave all-population summary intact."""
+    normalized_query = query.strip().casefold()
+    group = health.upper().strip()
+    if group not in {"ALL", "REVIEW", "ATTENTION", "NORMAL", "UNKNOWN"}:
+        raise ValueError("health must be ALL, REVIEW, ATTENTION, NORMAL or UNKNOWN")
+    if offset < 0 or offset > 100000:
+        raise ValueError("offset must be between 0 and 100000")
+    if len(normalized_query) > 512:
+        raise ValueError("q must contain at most 512 characters")
+    full = report["items"]
+    matching = [
+        row for row in full
+        if (group == "ALL" or _evaluation_health(row) == group)
+        and (not normalized_query or normalized_query in " ".join([
+            str(row.get("consumer_key") or ""),
+            str(row.get("program") or ""),
+            str((row.get("details") or {}).get("program") or ""),
+        ]).casefold())
+    ]
+    return {
+        **report,
+        "items": matching[offset:offset + limit],
+        "page": {
+            "offset": offset, "limit": limit,
+            "total": len(matching), "returned": len(matching[offset:offset + limit]),
+            "has_more": offset + limit < len(matching),
+            "query": query.strip(), "health": group,
+            "scope": "FULL_EVALUATED_POPULATION",
+        },
+    }
+
+
+def _evaluation_health(row: dict) -> str:
+    status = str(row.get("status") or "").upper()
+    if status == "REVIEW REQUIRED":
+        return "REVIEW"
+    if status in {"HIGH CPU", "HIGH MEMORY", "CPU SPIKE", "INCREASING CPU", "RECURRING"}:
+        return "ATTENTION"
+    if status == "NORMAL":
+        return "NORMAL"
+    return "UNKNOWN"
+
+
+def _evaluation_health_summary(evaluated: list[dict]) -> dict:
+    """Mutually-exclusive population counts; no approximation from first-ranked rows."""
+    counts = {"review": 0, "attention": 0, "normal": 0, "unknown": 0}
+    for row in evaluated:
+        counts[_evaluation_health(row).lower()] += 1
+    return counts
+
+
+def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL") -> dict:
     started = time.perf_counter()
     period_key = str(period or "1d").lower()
     if period_key not in PERIOD_DAYS:
@@ -630,6 +682,11 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         raise ValueError("type must be ALL, JOB or PROGRAM")
 
     limit_key = max(1, min(int(limit), 100))
+    offset_key = int(offset)
+    query_key = str(query or '').strip()
+    health_key = str(health or 'ALL').strip().upper()
+    if offset_key < 0 or offset_key > 100000 or len(query_key) > 512 or health_key not in {'ALL','REVIEW','ATTENTION','NORMAL','UNKNOWN'}:
+        raise ValueError('Invalid evaluation paging/filter parameters')
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Database history is not enabled")
@@ -638,10 +695,10 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
     with engine.connect() as conn:
         end = _anchor_time(conn) + timedelta(microseconds=1)
         anchor_key = end.isoformat()
-        cache_key = (period_key, type_key, limit_key, anchor_key)
+        cache_key = (period_key, type_key, anchor_key)
         cached = _cache_get(cache_key)
         if cached:
-            return _runtime_payload(cached, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
+            return _runtime_payload(_evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key), cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
         start = end - timedelta(days=days)
         previous_start = start - timedelta(days=days)
         current_quality = _collection_quality(conn, start, end)
@@ -742,10 +799,9 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         item.get("occurrences") or 0,
         item.get("avg_cpu_pct") or 0,
     ), reverse=True)
-    items = evaluated[:limit_key]
-
     summary = {
         "workloads": len(evaluated),
+        "health": _evaluation_health_summary(evaluated),
         "programs": sum(1 for item in evaluated if item.get("consumer_type") == "PROGRAM"),
         "jobs": sum(1 for item in evaluated if item.get("consumer_type") == "JOB"),
         "needs_review": sum(1 for item in evaluated if item["assessment"] == "NEEDS REVIEW"),
@@ -803,8 +859,8 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
             "confidence_high_occurrences": CONFIDENCE_HIGH_OCCURRENCES,
         },
         "summary": summary,
-        "items": items,
+        "items": evaluated,
         "method": "Deterministic complete-collection evaluation with workload-specific median and P95 baseline, recent CPU shift detection and App Server normalized Critical WP overlap. Investigation signal only; not root-cause proof.",
     }
     _cache_put(cache_key, result)
-    return _runtime_payload(result, cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)
+    return _runtime_payload(_evaluation_page(result, limit=limit_key, offset=offset_key, query=query_key, health=health_key), cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)
