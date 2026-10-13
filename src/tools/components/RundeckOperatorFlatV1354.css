@@ -618,6 +618,29 @@
   .appShell:has(.rundeckPanel) .rundeckWorkloadHealthTitle strong{font-size:10.5px}
   .appShell:has(.rundeckPanel) .rundeckWorkloadHealthTitle small{font-size:8px}
 }
+/* Reduce the side card's height before it can push a short desktop down. */
+@media screen and (min-width:1200px) and (max-height:800px){
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
+    height:105px!important;
+    padding:5px 9px 4px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHexGrid{
+    min-height:48px;
+    max-height:52px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHexRow{
+    height:7px;
+    min-height:7px;
+    gap:2px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHexRow i{
+    flex-basis:11px;
+    height:11px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthTitle small,
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthCount{display:none!important}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthFooter strong{font-size:16px}
+}
 @media screen and (max-width:1199px){
   .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace{position:relative}
   .appShell:has(.rundeckPanel) .rundeckJobsProgramsSplit{
