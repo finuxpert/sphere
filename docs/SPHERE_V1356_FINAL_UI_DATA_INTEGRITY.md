@@ -70,3 +70,18 @@ Screenshot findings reviewed against DEV source:
 **Cleanup verified:** `src/tools/components/RundeckAppServers.jsx` was an unimported legacy component. All other 102 `src` JavaScript/JSX modules were checked for references; none imported or used it. It contained obsolete RAM/I/O thresholds and was removed from **DEV**. `scripts/qa-basis-investigation.mjs` had two stale static assertions and an unconditional read of the unused file; these were replaced with equivalent checks for the live `RundeckUnifiedAppInfrastructure` component. Related regression assertions now enforce that the dead file stays absent. No bulk stylesheet deletion: versioned CSS remains loaded, and blind removal could regress Android/desktop modal geometry.
 
 **Validation:** 7/7 isolated source/logic checks PASS. Real `npm run qa`, build, Playwright desktop/Android, and public DEV deployment are **not verified in this session**. The fast `sphere deploy dev` command may skip QA; do not report full QA PASS from `BUILD PASS` alone. Production checkout, backend, schema, Rundeck collectors/jobs, nginx, credentials and environment remain untouched.
+
+
+## 13 Oct 2026 — operator wording / sourced facts (DEV only)
+
+The UI now reports the source metric, severity, timestamp, or readiness flag instead of generating narrative findings:
+
+- System Health reason: exact APP, primary exceeded CPU/RAM/I/O reading, or APP Critical WP observed count. The Collector remains a separate status source.
+- Related Events: issue/workload observed timestamps, signed before/after direction, reported time difference and configured window. Backend `interpretation[]` paragraphs are no longer rendered. Remove the unused `rundeckEvidenceInterpretation` CSS block.
+- SAP Issues: non-NORMAL indicator count, current measured value, configured thresholds, and raw readiness status. Missing `job_monitor` from a readiness response is `UNKNOWN`, not assumed to be an offline SM37 feed. Saved incidents are separate from fresh current samples.
+- APP Analysis and Infrastructure: plain names for collection, observed workloads, peak and duration; stale samples are identified by freshness state, not described as a causal verdict.
+- Performance Review/Job History: no “needs review” conclusion when the review list is empty and no root-cause verdict in the timing row.
+- Review Result: removes generated `suggestedFinding()`/`suggestedRecommendation()` and the implicit `NEEDS_FURTHER_RCA` selection. New drafts have empty finding, recommendation, owner, follow-up, and status fields. The operator explicitly selects an allowed closing status before POST; saved human-entered records load unchanged. Backend closing schema and allowed status values are unchanged.
+- Contract tests updated for the current four Operational Analysis destinations and operator-sourced wording. New integrity regression guards against reintroducing auto-filled finding/recommendation text.
+
+Source files only; no backend, migration, poller, Rundeck jobs, credentials, production branch or production release changes. GitHub commits do not constitute runtime QA. Run full lint, integrity, build, and desktop/Android visual QA separately from the fast `sphere deploy dev` frontend build.
