@@ -105,7 +105,7 @@ const mockupStyle = read('src/tools/components/RundeckMockupParity.css')
 const checks = [
   ['Approved cockpit redesign exposes observed data without invented metrics',
     files.source.includes('rundeckDashboardTitle')
-    && files.currentWorkload.includes('Search loaded jobs and programs')
+    && files.currentWorkload.includes('Search ${rows.length} observations')
     && files.currentWorkload.includes('Observed At')
     && files.currentWorkload.includes('row.collected_at')
     && files.serverTrend.includes('rundeckTrendEditorial')
@@ -351,12 +351,15 @@ const checks = [
   ['Correlated events use APP Server and Job Program terms', read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'Job / Program'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'APP Server'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes('WITHIN WINDOW')],
   ['Correlated events can anchor timing to the selected observation', files.evidenceTimeline.includes("params.set('at', anchorAt)") && files.api.includes('anchor_at: str | None = Query(None, alias="at"') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot')],
   ['Issue correlation compares nearest retained observations instead of unrelated latest snapshots', files.evidenceBackend.includes('correlation_anchor') && files.evidenceBackend.includes('Issue Start') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot') && files.evidenceBackend.includes('Timing alignment uses retained timestamps')],
-  ['Current workload count distinguishes total observations and loaded rows while preserving table scroll',
-    files.currentWorkload.includes('observed · ${rows.length} loaded') &&
-    files.currentWorkload.includes('workloadMeta.total > rows.length') &&
-    files.currentWorkload.includes('const loaded = sortedRows.slice(0, visibleLimit)') && files.currentWorkload.includes('const visible = query ? loaded.filter') &&
+  ['Current workloads search across APP-host observations while declaring partial coverage',
+    files.currentWorkload.includes('combineCurrentWorkloadResponses(results, collectionId)') &&
+    files.currentWorkload.includes('host=${encodeURIComponent(host)}') &&
+    files.currentWorkload.includes('const loaded = sortedRows') &&
+    files.currentWorkload.includes('allLoaded ? "searchable" : "loaded (partial)"') &&
+    files.currentWorkload.includes('Filter workload APP') &&
     files.currentWorkload.includes('rundeckCurrentWorkloadTableWrap') &&
-    files.source.includes('compactLimit={50}') &&
+    files.source.includes('compactLimit={100}') &&
+    files.source.includes('sourceHosts={operationalHosts}') &&
     files.cockpitPolish.includes('overflow-y:auto!important')],
   ['Performance summary labels averaged process count and observations precisely', files.jobHistory.includes('Avg Processes') && files.jobHistory.includes('<b>Observations</b>') && files.jobHistory.includes('<b>Checks</b>')],
   ['Closing workflow stores finding recommendation owner and follow-up', files.quickAnalysis.includes('closing_status') && files.quickAnalysis.includes('Analysis Summary') && files.quickAnalysis.includes('Basis Check Notes') && files.quickAnalysis.includes('Validation / Follow-up')],
