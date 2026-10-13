@@ -236,11 +236,11 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         hideDelay: 0,
         transitionDuration: 0,
         position: (pos, params, dom, rect, size) => {
-          const x = Math.max(6, Math.min(pos[0] + 12, size.viewSize[0] - size.contentSize[0] - 6))
-          const y = Math.max(6, Math.min(pos[1] - size.contentSize[1] - 12, size.viewSize[1] - size.contentSize[1] - 6))
+          const x = pos[0] > size.viewSize[0] / 2 ? 6 : Math.max(6, size.viewSize[0] - size.contentSize[0] - 6)
+          const y = Math.max(6, Math.min(8, size.viewSize[1] - size.contentSize[1] - 6))
           return [x, y]
         },
-        extraCssText: 'max-width:240px;white-space:normal;line-height:1.3;pointer-events:none;',
+        extraCssText: 'max-width:340px;min-width:230px;white-space:normal;line-height:1.35;pointer-events:none;',
         backgroundColor: colors.panel,
         borderWidth: 0,
         textStyle: { color: colors.text, fontSize: 11 },
@@ -253,15 +253,19 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           })
           const focused = valid.find(point => point.seriesName === focusedHost)
           const ranked = [...valid].sort((a, b) => Number(b.data.value[1]) - Number(a.data.value[1]))
-          const visible = focused ? [focused, ...ranked.filter(point => point !== focused).slice(0, 1)] : ranked.slice(0, 2)
-          const lines = [`<b>Bucket: ${formatWib(bucketAt, true)} WIB · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
+          const visible = focused ? [focused, ...ranked.filter(point => point !== focused)] : ranked
+          const intervalMs = resolvedGapIntervalMs(trend)
+           const intervalEnd = Date.parse(bucketAt) + intervalMs
+           const intervalLabel = Number.isFinite(intervalEnd) && Number.isFinite(intervalMs)
+             ? ` – ${formatWib(intervalEnd, true)} WIB` : ' WIB'
+           const lines = [`<b>Bucket ${formatWib(bucketAt, true)}${intervalLabel} · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
           visible.forEach(point => {
             const name = String(point.seriesName || '').replace(/[&<>"']/g, character => ({
               '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
             })[character])
             lines.push(`${point.marker || ''}${name} <b>${numberText(point.data.value[1], 1)}${trend?.unit === '%' ? '%' : ''}</b>${mode === 'max' && point.data?.peakAt ? ` · Peak at ${formatWib(point.data.peakAt, true)} WIB` : ''}`)
           })
-          if (valid.length > visible.length) lines.push(`+${valid.length - visible.length} APP samples · select point for details`)
+          if (valid.length && visible.length < hosts.length) lines.push(`${hosts.length - visible.length} APP without samples in this bucket`)
           if (!valid.length) lines.push('No retained sample in bucket')
           return lines.join('<br/>')
         },
@@ -829,7 +833,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     <div className="rundeckTrendEditorial"><h3>Performance Trends</h3><small>Saved APP and technical measurements</small></div>
     <div className="rundeckTrendSharedControls">
       <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
-      <div className="rundeckTrendSharedGroup"><span>Interval</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
+      <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
       <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
         <span>APP Focus</span>
