@@ -37,7 +37,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const loadedRefreshToken = React.useRef(null)
 
   React.useEffect(() => {
-    if (data && loadedRefreshToken.current === refreshToken &&
+    if (loadedAt.current > 0 && loadedRefreshToken.current === refreshToken &&
         Date.now() - loadedAt.current < MIN_REFRESH_MS) return undefined
     const controller = new AbortController()
     let retryTimer
@@ -51,6 +51,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     }).catch(failure => {
       if (controller.signal.aborted) return
       setData(null)
+      loadedAt.current = 0
+      loadedRefreshToken.current = null
       setError(failure.message || 'Evaluation unavailable')
       retryTimer = window.setTimeout(() => setRetryToken(value => value + 1), 60_000)
     }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
