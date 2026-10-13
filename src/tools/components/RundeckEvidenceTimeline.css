@@ -173,24 +173,6 @@
 
 .rundeckEvidenceSources em.is-limited { color: var(--sphere-warning, #d8b35f); }
 
-.rundeckEvidenceInterpretation {
-  margin-top: 6px;
-  padding-top: 5px;
-  border-top: 1px solid var(--sphere-border-subtle, rgba(113, 128, 137, .10));
-}
-
-.rundeckEvidenceInterpretation ul {
-  margin: 3px 0 0 15px;
-  padding: 0;
-}
-
-.rundeckEvidenceInterpretation li {
-  margin: 2px 0;
-  color: var(--sphere-text-secondary, #a9b5bb);
-  font-size: 8.1px;
-  line-height: 1.35;
-}
-
 .rundeckEvidenceNote {
   margin: 5px 0 0;
   font-style: italic;
