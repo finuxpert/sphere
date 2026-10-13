@@ -254,12 +254,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           const focused = valid.find(point => point.seriesName === focusedHost)
           const ranked = [...valid].sort((a, b) => Number(b.data.value[1]) - Number(a.data.value[1]))
           const visible = focused ? [focused, ...ranked.filter(point => point !== focused).slice(0, 1)] : ranked.slice(0, 2)
-          const lines = [`<b>${formatWib(bucketAt, true)} WIB · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
+          const lines = [`<b>Bucket: ${formatWib(bucketAt, true)} WIB · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
           visible.forEach(point => {
             const name = String(point.seriesName || '').replace(/[&<>"']/g, character => ({
               '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
             })[character])
-            lines.push(`${point.marker || ''}${name} <b>${numberText(point.data.value[1], 1)}${trend?.unit === '%' ? '%' : ''}</b>`)
+            lines.push(`${point.marker || ''}${name} <b>${numberText(point.data.value[1], 1)}${trend?.unit === '%' ? '%' : ''}</b>${mode === 'max' && point.data?.peakAt ? ` · Peak at ${formatWib(point.data.peakAt, true)} WIB` : ''}`)
           })
           if (valid.length > visible.length) lines.push(`+${valid.length - visible.length} APP samples · select point for details`)
           if (!valid.length) lines.push('No retained sample in bucket')
@@ -609,7 +609,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
         <span className={Number(selectedRow.wp_critical || 0) > 0 ? 'is-attention' : ''}><b>APP Critical WP</b>{selectedRow.wp_critical ?? 'Not observed'}</span>
         <span><b>APP Resource</b>{resourceState || 'UNKNOWN'}</span>
       </div>
-      <p>Source: APP performance observation · Execution status: SAP SM37</p>
+      <p>Source: APP performance observation · Execution status: SAP SM37 · Temporal overlap does not prove workload causation.</p>
     </section>}
 
     {!loading && !error && selected && <MiniTrendContext trend={trend} selected={selected} range={range} />}
