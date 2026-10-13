@@ -781,3 +781,15 @@
     max-width:110px;
   }
 }
+
+/* v1.35.7: metric severity is independent of the APP-wide Critical WP status. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard .rundeckUnifiedMetric:is(.is-cpu-normal,.is-ram-normal) .rundeckUnifiedMetricTrack>i{background:var(--sphere-accent,#4fc6c8)!important}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard .rundeckUnifiedMetric:is(.is-cpu-warning,.is-ram-warning) .rundeckUnifiedMetricTrack>i{background:var(--sphere-warning,#d8b35f)!important}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard .rundeckUnifiedMetric:is(.is-cpu-critical,.is-ram-critical) .rundeckUnifiedMetricTrack>i{background:var(--sphere-danger,#db7d86)!important}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard .rundeckUnifiedMetric.is-wp-critical .rundeckCriticalWpValue{color:var(--sphere-danger,#db7d86)!important}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard .rundeckUnifiedMetric.is-wp-attention .rundeckCriticalWpValue{color:var(--sphere-warning,#d8b35f)!important}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard .rundeckUnifiedMetric.is-infrastructure .is-unverified{color:var(--sphere-text-muted,#8a98a4)!important}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppInfraHead>div{gap:10px!important;flex-wrap:wrap;white-space:normal}
+/* Readable metrics with one-screen APP cards retained. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedMetric small{font-size:10.5px!important}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCardTop em.is-critical{color:var(--sphere-danger,#db7d86)!important}
