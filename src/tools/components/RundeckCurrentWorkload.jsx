@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName, isUnresolvedSapIdentity } from './sapUiFormat.js'
 import './RundeckCurrentWorkload.css'
-import { processCount } from './rundeckWorkloadMetrics.js'
+import { processCount, workloadCpuSignal } from './rundeckWorkloadMetrics.js'
 import { workloadRowsThatFit } from './rundeckWorkloadViewport.js'
 import { combineCurrentWorkloadResponses } from './rundeckCurrentWorkloadCoverage.js'
 
@@ -73,18 +73,6 @@ function identitySummary(row = {}) {
   if (pid) parts.push(`PID ${pid}`)
   if (processes > 1) parts.push(`${processes} proc`)
   return parts.join(' · ') || workloadTypeLabel(row.consumer_type)
-}
-
-function hasReviewSignal(row = {}) {
-  const details = row.details || {}
-  const status = String(row.review_status || row.status || '').toUpperCase()
-  const anomaly = String(row.anomaly_status || details.anomaly_status || '').toUpperCase()
-  return Boolean(
-    row.review_required ||
-    details.review_required ||
-    ['REVIEW REQUIRED', 'ATTENTION', 'CRITICAL'].includes(status) ||
-    ['ABOVE BASELINE', 'ANOMALY'].includes(anomaly)
-  )
 }
 
 function identityTitle(row = {}) {
@@ -267,8 +255,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             const context = jobContext(row)
             const active = context && selectedJob?.key === context.key && selectedJob?.host === context.host
             const pss = pssGb(row)
-            const cpu = Number(row.cpu_pct)
-            const cpuNeedsAttention = hasReviewSignal(row)
+            const cpu = row.cpu_pct === null || row.cpu_pct === undefined || row.cpu_pct === '' ? null : Number(row.cpu_pct)
+            const cpuNeedsAttention = workloadCpuSignal(row)
             const processes = processCount(details)
             const identity = identitySummary(row)
             const fullIdentity = identityTitle(row)
@@ -282,7 +270,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
                 <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }} title={row.consumer_key}>{observedWorkloadName(row.consumer_key, details)}</button>
                 <small title={fullIdentity || identity}>{identity}</small>
               </td>
-              <td title={CPU_HINT} className={Number.isFinite(cpu) && cpuNeedsAttention ? 'is-attention' : ''}>{numberText(row.cpu_pct)}%</td>
+              <td title={CPU_HINT} className={Number.isFinite(cpu) && cpu >= 0 && cpuNeedsAttention ? 'is-attention' : ''}>{Number.isFinite(cpu) && cpu >= 0 ? numberText(cpu) + '%' : '—'}</td>
               <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
               <td>{processes === null ? '—' : numberText(processes, 0)}</td>
               <td>{wpText(details)}</td>
