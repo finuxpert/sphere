@@ -5,7 +5,6 @@ export function combineCurrentWorkloadResponses(payloads, collectionId) {
   const items = []
   let total = 0
   const scopes = new Set()
-  const seen = new Set()
   for (const payload of payloads) {
     if (String(payload?.collection_id || '') !== String(collectionId || '')) {
       throw new Error('Current workload collection changed during fetch')
@@ -21,9 +20,6 @@ export function combineCurrentWorkloadResponses(payloads, collectionId) {
     for (const row of rows) {
       if (String(row.collection_id || '') !== String(collectionId || '')) throw new Error('Workload sample is from another collection')
       if (host && String(row.host || '').toUpperCase() !== host) throw new Error('Workload APP does not match its query')
-      const key = [row.collection_id, row.host, row.consumer_type, row.consumer_key, row.collected_at, row.rank ?? ''].join('|')
-      if (seen.has(key)) throw new Error('Workload observations overlap across APP queries')
-      seen.add(key)
       items.push(row)
     }
   }
