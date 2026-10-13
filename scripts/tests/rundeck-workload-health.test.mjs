@@ -61,3 +61,24 @@ test('individual dots require exact backend pages, collection window and matchin
     items:[],page:{offset:0,limit:100,returned:0,total:0,scope:'FULL_EVALUATED_POPULATION',health:'ALL'}}
   assert.deepEqual(validatedWorkloadDots(empty,[],0,400)?.rows,[])
 })
+
+test('401 saved workloads fit in one validated hexagon population without page 2', () => {
+  const rows=Array.from({length:401},(_,index)=>({
+    consumer_type:'JOB', consumer_key:'Z_VALID_'+index,
+    status:index<10?'REVIEW REQUIRED':index<218?'HIGH CPU':index<295?'NORMAL':'UNKNOWN'
+  }))
+  const health={review:10,attention:208,normal:77,unknown:106}
+  const page=offset=>({
+    summary:{workloads:401,review_required:10,health},items:rows.slice(offset,offset+100),
+    start:'2026-10-12T11:41:00Z',end:'2026-10-13T11:41:00Z',
+    page:{offset,limit:100,returned:rows.slice(offset,offset+100).length,total:401,
+      scope:'FULL_EVALUATED_POPULATION',health:'ALL'}
+  })
+  const first=page(0)
+  const full=validatedWorkloadDots(first,[page(100),page(200),page(300),page(400)],0,500)
+  assert.equal(full?.rows.length,401)
+  assert.equal(full?.pageIndex,0)
+  assert.equal(full?.preview.health.attention,208)
+  assert.equal(validatedWorkloadDots(first,[page(100),page(200),page(300)],0,500),null)
+  assert.equal(validatedWorkloadDots(first,[page(100),page(200),page(300),page(300)],0,500),null)
+})
