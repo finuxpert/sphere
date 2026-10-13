@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts, filesystemCapacitySummary } from '../../src/tools/components/rundeckUnifiedHost.js'
-import { OPERATOR_THRESHOLDS, hostResourceState, filesystemResourceState, sapWorkloadState } from '../../src/tools/components/rundeckStatusSemantics.js'
+import { OPERATOR_THRESHOLDS, hostResourceState, filesystemResourceState, sapWorkloadState, metricResourceState } from '../../src/tools/components/rundeckStatusSemantics.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
 const sap = [{host: 'AOPH1PAPPDC',cpu_pct: 12,ram_pct: 42,wp_critical: 2}, {host: 'AOPH2PAPPDC',cpu_pct: 15,ram_pct: 44,wp_critical: 0}]
