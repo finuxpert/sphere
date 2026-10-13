@@ -38,10 +38,14 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
         <button type="button" ref={(node) => { tabRefs.current.search = node }} id={`${tabId}-search`} role="tab" aria-controls={`${tabId}-panel`} aria-selected={mode === 'search'} tabIndex={mode === 'search' ? 0 : -1} className={mode === 'search' ? 'is-active' : ''} onKeyDown={handleTabKeyDown} onClick={() => setMode('search')}>Search</button>
         </div>
       </div>
-      <RundeckWorkloadHealth refreshToken={refreshToken} performanceVerified={performanceVerified} onReview={() => setMode('review')} />
     </header>
-    <div key={mode} role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${mode}`} className={`rundeckJobsProgramsWorkspaceBody is-${mode}`}>
-      {mode === 'live' ? live : review}
+    <div className="rundeckJobsProgramsSplit">
+      <div key={mode} role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${mode}`} className={`rundeckJobsProgramsWorkspaceBody is-${mode}`}>
+        {mode === 'live' ? live : review}
+      </div>
+      <aside className="rundeckJobsProgramsHealthSide" aria-label="Workload health overview">
+        <RundeckWorkloadHealth refreshToken={refreshToken} performanceVerified={performanceVerified} onReview={() => setMode('review')} />
+      </aside>
     </div>
   </section>
 }
