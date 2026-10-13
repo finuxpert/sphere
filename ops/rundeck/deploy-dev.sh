@@ -19,6 +19,20 @@ if [[ -n "$(git -C "$SOURCE" status --porcelain)" ]]; then
 fi
 
 REVISION=$(git -C "$SOURCE" rev-parse HEAD)
+DEPLOY_START_SECONDS=$SECONDS
+SHORT_REVISION="${REVISION:0:7}"
+# A proven healthy, exact active release is a read-only no-op. This does NOT approve
+# a new SHA, disable migration guards, restart services, or alter PROD.
+if [[ "$(readlink -f "$API_CURRENT" 2>/dev/null || true)" == "/opt/sphere-rundeck-dev/releases/$REVISION" &&
+      "$(readlink -f "$WEB_CURRENT" 2>/dev/null || true)" == "/var/www/sphere-dev/releases/$REVISION" &&
+      -f "$WEB_CURRENT/index.html" ]] &&
+   grep -Rqs "$SHORT_REVISION" "$WEB_CURRENT/assets" &&
+   systemctl is-active --quiet sphere-rundeck-api.service &&
+   curl --noproxy '*' -fsS --max-time 6 http://127.0.0.1:8091/health >/dev/null &&
+   curl --noproxy '*' -fsS --max-time 8 https://sphere.astraotoparts.co.id/dev/ >/dev/null; then
+  echo "FINAL=PASS DEV=ALREADY_CURRENT SHA=$REVISION DB_MIGRATION=UNCHANGED API_RESTART=SKIPPED DURATION=${SECONDS}s"
+  exit 0
+fi
 
 # Fail BEFORE changing credentials, Nginx, releases, services or the DB.
 # A live env file may retain migrations=true for historical reasons.
@@ -146,7 +160,10 @@ python3 -m compileall -q "$RELEASE/backend"
 if ! test -x /opt/sphere-rundeck-dev/venv/bin/python; then
   /opt/sphere/tools/bin/uv venv --python /opt/sphere/current/.venv/bin/python /opt/sphere-rundeck-dev/venv
 fi
-if test -x /opt/sphere/tools/bin/uv; then
+if [[ -n "$PREVIOUS_API" && -x /opt/sphere-rundeck-dev/venv/bin/python ]] &&
+   cmp -s "$PREVIOUS_API/backend/requirements.txt" "$RELEASE/backend/requirements.txt"; then
+  echo "PYTHON_DEPENDENCIES=UNCHANGED"
+elif test -x /opt/sphere/tools/bin/uv; then
   /opt/sphere/tools/bin/uv pip install --python /opt/sphere-rundeck-dev/venv/bin/python -r "$RELEASE/backend/requirements.txt"
 else
   /opt/sphere-rundeck-dev/venv/bin/pip install -r "$RELEASE/backend/requirements.txt"
@@ -348,3 +365,4 @@ cat /tmp/sphere-dev-platform.json
 trap - ERR
 printf '\nPRODUCTION ROUTING VERIFIED\nPRODUCTION UNCHANGED\nDEV REVISION %s\nROLLBACK READY %s\nRELEASES RETAINED %s\n' \
   "$REVISION" "$(basename "${PREVIOUS_API:-none}")" "$KEEP"
+printf 'DEPLOY_DURATION_SECONDS=%s\n' "$((SECONDS-DEPLOY_START_SECONDS))"
