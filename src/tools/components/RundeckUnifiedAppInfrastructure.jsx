@@ -108,7 +108,7 @@ export default function RundeckUnifiedAppInfrastructure({
           aria-pressed={selected} onClick={() => { selectApp(key); onInspectApp?.({
             ...host, infraHost: infra.infra?.host || '',
           }) }}
-          title={'Open ' + key + ' Analysis · SAP ' + sapState + ' (' + reason + ') · Infrastructure ' + infra.state + ' · Filesystem ' + (infra.topFs?.mount_point || 'No mount') + ' ' + metric(infra.topFs?.used_pct,'%') + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
+          title={'Open ' + key + ' Analysis · SAP ' + sapState + ' (' + reason + ') · ' + fsDetails + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
           <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
             <span className="rundeckUnifiedMetric">
