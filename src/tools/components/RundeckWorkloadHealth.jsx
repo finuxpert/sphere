@@ -4,6 +4,7 @@ import { workloadHealthPreview } from './rundeckWorkloadHealthState.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const MIN_REFRESH_MS = 5 * 60 * 1000
+const HEX_ROWS = [3, 4, 5, 6, 5, 4, 3] // 30 positions, centered as a honeycomb
 
 /** Read-only, compact 1D evaluated workload preview; not SM37 execution health. */
 export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview }) {
@@ -44,26 +45,39 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     return () => controller.abort()
   }, [refreshToken])
 
-  const preview = workloadHealthPreview(data)
-  const label = error ? 'Review unavailable'
-    : !preview ? '1D evaluation'
-      : preview.limited ? `1D · ${preview.reviewRequired} review · limited`
-        : `1D · ${preview.reviewRequired} review`
-  const timeLabel = preview?.end ? formatWib(preview.end, true) + ' WIB' : 'unknown'
+  const preview = workloadHealthPreview(data, 30)
+  const reviewCount = preview?.reviewRequired
+  const totalCount = preview?.total
+  const state = error ? 'unavailable' : !preview ? 'loading'
+    : preview.limited ? 'limited' : reviewCount > 0 ? 'review' : 'normal'
+  const outcome = error ? 'Unavailable' : !preview ? 'Loading'
+    : reviewCount > 0 ? 'Needs review' : preview.limited ? 'Limited evidence' : 'No review flagged'
+  const timeLabel = preview?.end ? `${formatWib(preview.end, true)} WIB` : 'unknown'
   const description = preview
-    ? `${preview.reviewRequired} require review of ${preview.total} evaluated workloads. Top ${preview.sample.length} ranked shown as dots. As of ${timeLabel}. ${performanceVerified ? '' : 'Current performance freshness not verified. '}Historical one-day evaluation, not an SM37 execution status.`
-    : error || 'Loading saved workload evaluations'
+    ? `${reviewCount} requiring review from ${totalCount} evaluated workloads. Colored hexagons show only the first ${preview.sample.length} ranked evaluations. As of ${timeLabel}. ${preview.limited ? 'Evaluation quality is limited. ' : ''}${performanceVerified ? '' : 'Latest Performance is not verified. '}Historical one-day evaluation, not an SM37 execution status.`
+    : error || 'Waiting for 1D workload evaluation; missing data is not a healthy signal'
+  let cellIndex = 0
   return <button type="button" className="rundeckWorkloadHealth" onClick={onReview}
     title={description} aria-label={`Open Jobs & Programs Review. ${description}`}
-    data-state={error ? 'error' : loading ? 'loading' : 'ready'}>
-    <span className="rundeckWorkloadHealthWords">
-      <strong>Workload health</strong>
-      <small>{label}</small>
+    data-state={state}>
+    <span className="rundeckWorkloadHealthTitle">
+      <strong>Workload Health</strong>
+      <small>1D evaluation</small>
     </span>
-    <span className="rundeckWorkloadHealthDots" aria-hidden="true">
-      {preview?.sample.length ? preview.sample.map((item, index) =>
-        <i key={`${item.key}:${index}`} className={`is-${item.level}`} />)
-        : <span className="rundeckWorkloadHealthPending">{loading ? '···' : '—'}</span>}
+    <span className="rundeckWorkloadHexGrid" aria-hidden="true">
+      {HEX_ROWS.map((length, rowIndex) =>
+        <span className="rundeckWorkloadHexRow" key={rowIndex}>
+          {Array.from({ length }, (_, columnIndex) => {
+            const item = preview?.sample[cellIndex++]
+            return <i key={columnIndex} className={item ? `is-${item.level}` : 'is-empty'} />
+          })}
+        </span>
+      )}
     </span>
+    <span className="rundeckWorkloadHealthFooter">
+      <span className={`is-${state}`}>{outcome}</span>
+      <strong title={preview ? `${totalCount} workloads evaluated in the saved 1D period` : 'Evaluation total unavailable'}>{preview ? totalCount.toLocaleString('en-US') : '—'}</strong>
+    </span>
+    <span className="rundeckWorkloadHealthCount" aria-hidden="true">{preview ? `${reviewCount} review` : 'No evaluation data'}</span>
   </button>
 }
