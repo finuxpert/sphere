@@ -13,13 +13,13 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const [error, setError] = React.useState('')
   const fetchedAt = React.useRef(0)
   const hasData = React.useRef(false)
-  const lastAttemptAt = React.useRef(0)
+  const [retryToken, setRetryToken] = React.useState(0)
+  const loadedRefreshToken = React.useRef(null)
 
   React.useEffect(() => {
-    if (hasData.current && Date.now() - fetchedAt.current < MIN_REFRESH_MS) return undefined
-    if (!hasData.current && lastAttemptAt.current && Date.now() - lastAttemptAt.current < 60_000) return undefined
-    lastAttemptAt.current = Date.now()
+    if (hasData.current && loadedRefreshToken.current === refreshToken && Date.now() - fetchedAt.current < MIN_REFRESH_MS) return undefined
     const controller = new AbortController()
+    let retryTimer
     setLoading(true)
     setError('')
     fetch(`${API}/evaluation/workloads?period=1d&type=ALL&limit=100`, { cache: 'no-store', signal: controller.signal })
@@ -32,6 +32,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         if (!workloadHealthPreview(result)) throw new Error('Evaluation data incomplete')
         fetchedAt.current = Date.now()
         hasData.current = true
+        loadedRefreshToken.current = refreshToken
         setData(result)
       })
       .catch(failure => {
@@ -39,11 +40,12 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
           hasData.current = false
           setError(failure.message || 'Evaluation unavailable')
           setData(null)
+          retryTimer = window.setTimeout(() => setRetryToken(value => value + 1), 60_000)
         }
       })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => controller.abort()
-  }, [refreshToken])
+    return () => { controller.abort(); window.clearTimeout(retryTimer) }
+  }, [refreshToken, retryToken])
 
   const preview = workloadHealthPreview(data, 30)
   const reviewCount = preview?.reviewRequired
@@ -63,7 +65,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     data-state={state}>
     <span className="rundeckWorkloadHealthTitle">
       <strong>Workload Health</strong>
-      <small>1D · {preview?.end ? formatWib(preview.end, true) + ' WIB' : 'evaluation'}</small>
+      <small>1D · {preview?.end ? formatWib(preview.end, true) + ' WIB' : 'evaluation time unavailable'}</small>
     </span>
     <span className="rundeckWorkloadHexGrid" aria-hidden="true">
       {HEX_ROWS.map((length, rowIndex) =>
@@ -79,6 +81,11 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       <span className={`is-${state}`}>{outcome}</span>
       <strong title={preview ? `${totalCount} workloads evaluated in 1D` : 'Evaluation total unavailable'}>{preview ? totalCount.toLocaleString('en-US') : '—'}</strong>
     </span>
-    <span className="rundeckWorkloadHealthCount" aria-hidden="true">{preview ? `${reviewCount} review · ${preview.health.attention} watch` : 'No validated distribution'}</span>
+    <span className="rundeckWorkloadHealthLegend" aria-label={preview ? `${reviewCount} review required, ${preview.health.attention} watch, ${preview.health.normal} normal, ${preview.health.unknown} unknown` : 'Evaluation distribution unavailable'}>
+      <span><i className="is-review" />{preview ? `${reviewCount} Review` : 'Review'}</span>
+      <span><i className="is-attention" />{preview ? `${preview.health.attention} Watch` : 'Watch'}</span>
+      <span><i className="is-normal" />Normal</span>
+      <span><i className="is-unknown" />Unknown</span>
+    </span>
   </button>
 }
