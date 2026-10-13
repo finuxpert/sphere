@@ -18,6 +18,7 @@ class EvaluationPagingDevTests(unittest.TestCase):
                 "consumer_type": "PROGRAM",
                 "consumer_key": f"Z_PROGRAM_{index:03d}",
                 "program": f"Z_PROGRAM_{index:03d}",
+                "hosts": [f"AOPH{1 + index % 5}PAPPDC"],
                 "status": status,
                 "details": {},
             })
@@ -50,6 +51,14 @@ class EvaluationPagingDevTests(unittest.TestCase):
         self.assertEqual(result["page"]["total"], 61)
         self.assertEqual(result["page"]["returned"], 1)
         self.assertEqual(result["items"][0]["consumer_key"], "Z_PROGRAM_073")
+
+    def test_host_search_scans_all_observed_app_associations(self):
+        report = self.report()
+        result = _evaluation_page(report, limit=5, offset=0,
+                                  query="AOPH5PAPPDC", health="ALL")
+        self.assertEqual(result["page"]["total"], 77)
+        self.assertEqual(result["page"]["returned"], 5)
+        self.assertIn("AOPH5PAPPDC", result["items"][0]["hosts"])
 
     def test_empty_filter_and_invalid_parameters(self):
         report = self.report()
