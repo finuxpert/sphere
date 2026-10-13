@@ -73,3 +73,13 @@ test('Technical Trend uses saved availability observation timestamp, not perform
   assert.match(source,/if \(trend\?\.metric === 'availability'\) return null/)
   assert.match(source,/current replication-health verdict/)
 })
+
+test('v1.35.7 trend tooltip includes all retained APP samples, exact peak and resolved interval', () => {
+  const source = readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx',import.meta.url),'utf8')
+  assert.match(source,/focused \? \[focused, \.\.\.ranked\.filter\(point => point !== focused\)\] : ranked/)
+  assert.match(source,/const intervalMs = resolvedGapIntervalMs\(trend\)/)
+  assert.match(source,/formatWib\(intervalEnd, true\)/)
+  assert.match(source,/mode === 'max' && point\.data\?\.peakAt/)
+  assert.match(source,/Auto →/)
+  assert.doesNotMatch(source,/\.slice\(0, 1\)\] : ranked\.slice\(0, 2\)/)
+})
