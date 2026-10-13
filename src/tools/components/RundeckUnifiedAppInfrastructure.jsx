@@ -2,7 +2,6 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { shortHost } from './sapUiFormat.js'
 import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
-import { OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const KEY = 'sphere.live.host'
@@ -85,9 +84,8 @@ export default function RundeckUnifiedAppInfrastructure({
         const infra = hostInfrastructureEvidence(host, infraSnapshot.hosts, infraSnapshot.filesystems, nowMs)
         const sapState = appSignalState(host, performanceVerified)
         const selected = key === appKey
-        const ioWait = host.io_wait_pct == null ? null : Number(host.io_wait_pct)
         const reason = appSignalReason(host, performanceVerified)
-        const showHostNote = sapState !== 'NORMAL' || infra.freshness !== 'FRESH' || (Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning)
+        const showHostNote = sapState !== 'NORMAL' || infra.freshness !== 'FRESH'
         return <button key={host.host} type="button"
           className={'rundeckUnifiedAppCard is-sap-' + sapState.toLowerCase() + (selected ? ' is-active' : '')}
           aria-pressed={selected} onClick={() => { selectApp(key); onInspectApp?.({
@@ -114,7 +112,7 @@ export default function RundeckUnifiedAppInfrastructure({
             </span>
           </span>
           {showHostNote && <span className="rundeckUnifiedAppCardInfra">
-            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{sapState !== 'NORMAL' ? reason : ''}{infra.freshness !== 'FRESH' ? (sapState !== 'NORMAL' ? ' · ' : '') + 'Infra ' + infra.freshness : ''}{Number.isFinite(ioWait) && ioWait >= OPERATOR_THRESHOLDS.ioWait.warning ? ' · I/O wait ' + metric(ioWait,'%') : ''}</small>
+            <small title={infra.topFs?.mount_point || 'No filesystem observation'}>{sapState !== 'NORMAL' ? reason : ''}{infra.freshness !== 'FRESH' ? (sapState !== 'NORMAL' ? ' · ' : '') + 'Infra ' + infra.freshness : ''}</small>
           </span>}
         </button>
       })}
