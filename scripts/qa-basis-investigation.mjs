@@ -192,7 +192,7 @@ const checks = [
     files.source.includes("availabilityState: reportAvailabilityStale ? 'UNKNOWN' : availabilityState") &&
     files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
   ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
-  ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
+  ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && ['ATTENTION', 'CRITICAL'].includes(fsOverall)") && files.liveOverview.includes("snapshotFreshness === 'FRESH' && ['ATTENTION', 'CRITICAL'].includes(storageOverall)") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
   ['Monitoring flow and UI tags reflect the declared current APP_VERSION', (() => {
     const version = files.version.match(/APP_VERSION = '([0-9]+\.[0-9]+\.[0-9]+)'/)?.[1]
     const previous = files.version.match(/APP_PREVIOUS_VERSION = '([0-9]+\.[0-9]+\.[0-9]+)'/)?.[1]
@@ -664,7 +664,10 @@ const checks = [
   ['APP cards explain filesystem usage with host-matched mount and retained capacity details',
     files.unifiedApp.includes('>Filesystem</small>') &&
     files.unifiedApp.includes('const mountPoint = String(infra.topFs?.mount_point') &&
-    files.unifiedApp.includes('Mount ${mountPoint}') &&
+    files.unifiedApp.includes('filesystemMountSource(infra.topFs)') &&
+    files.unifiedApp.includes('const mountNote = mountPoint ?') &&
+    files.unifiedApp.includes('Device ${String(infra.topFs?.device') &&
+    files.unifiedState.includes('export function filesystemMountSource(') &&
     files.unifiedApp.includes('filesystemCapacitySummary(infra.topFs)') &&
     files.unifiedApp.includes('formatWib(infra.topFs.collected_at, true)') &&
     files.unifiedApp.includes('Separate from SAP APP status') &&
