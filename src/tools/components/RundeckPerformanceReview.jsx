@@ -18,14 +18,17 @@ function Segmented({ options, value, onChange, label, disabled = false }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false, reviewJumpToken = 0 }) {
 
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
   const [healthGroup, setHealthGroup] = React.useState(forceSearch ? 'ALL' : 'REVIEW')
   const [pageIndex, setPageIndex] = React.useState(0)
   const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 864 : window.innerHeight)
-  const pageSize = viewportHeight <= 940 ? 2 : 3
+  const [fittedRows, setFittedRows] = React.useState(null)
+  const tableWrapRef = React.useRef(null)
+  const initialPageSize = viewportHeight <= 800 ? 2 : viewportHeight <= 940 ? 3 : 4
+  const pageSize = fittedRows ?? initialPageSize
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
@@ -37,6 +40,25 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [appliedQuery, setAppliedQuery] = React.useState('')
+  React.useEffect(() => {
+    if (!reviewJumpToken) return
+    setHealthGroup('REVIEW')
+    setSearchQuery('')
+    setAppliedQuery('')
+    setPageIndex(0)
+  }, [reviewJumpToken])
+  React.useLayoutEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const updateFit = () => {
+      const top = tableWrapRef.current?.getBoundingClientRect().top
+      if (!Number.isFinite(top)) return
+      const fits = Math.min(8, Math.max(2, Math.floor((window.innerHeight - top - 76) / 51)))
+      setFittedRows(old => old === fits ? old : fits)
+    }
+    updateFit()
+    window.addEventListener('resize', updateFit, { passive: true })
+    return () => window.removeEventListener('resize', updateFit)
+  }, [viewportHeight, data?.end, healthGroup, period, type])
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -174,12 +196,13 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     {error && <div className="rundeckReviewState is-error">{error}</div>}
 
     {!error && data && <>
+      <div className="rundeckReviewWindow" title="Window bounds are saved evaluation observations, not job start/end times">Saved evaluation · {data?.start ? String(data.start).slice(0,10) : '—'} – {data?.end ? String(data.end).slice(0,10) : '—'} · {periodLabel} · {data?.end ? 'WIB times in detail' : 'time unavailable'}</div>
       {showQualityWarning && <div className="rundeckReviewQualityWarning">
         {lowCoverage && <span>LIMITED DATA · {pct(quality.coverage_pct)} coverage</span>}
         {incomplete > 0 && <span>{numberText(incomplete, 0)} incomplete check{incomplete === 1 ? '' : 's'} excluded</span>}
       </div>}
 
-      <div className={`rundeckReviewTableWrapV1231${loading && hasLoaded ? ' is-updating' : ''}`}>
+      <div ref={tableWrapRef} className={`rundeckReviewTableWrapV1231${loading && hasLoaded ? ' is-updating' : ''}`}>
         <table className="rundeckReviewTableV1231">
           <thead><tr><th>Job / Program</th><th>Reason</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th></tr></thead>
           <tbody>
