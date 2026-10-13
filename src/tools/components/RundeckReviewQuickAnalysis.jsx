@@ -191,7 +191,7 @@ export default function RundeckReviewQuickAnalysis({
       <span><b>CPU Peak</b>{pct(row.peak_cpu_pct)}</span>
       <span><b>Memory Avg (PSS)</b>{gb(row.avg_pss_gb)}</span>
       <span className={limitedSample ? 'is-limited-sample' : ''}><b>Data Points</b>{row.occurrences ?? row.observations ?? '—'}{limitedSample && <em className="rundeckQuickSampleHint">Limited sample</em>}</span>
-      <span title="APP-level temporal overlap on host checks; not workload-level causation"><b>APP Critical WP Overlap</b>{row.critical_wp_host_checks ?? 0} of {row.host_observations ?? row.occurrences ?? '—'} checks</span>
+      <span title="APP-level temporal overlap on host checks; not workload-level causation"><b>APP Critical WP Overlap</b>{row.critical_wp_host_checks ?? '—'} of {row.host_observations ?? row.occurrences ?? '—'} checks</span>
       <span><b>Baseline</b>{row.anomaly_status || row.baseline_status || '—'}</span>
     </div>
 
@@ -252,7 +252,7 @@ export default function RundeckReviewQuickAnalysis({
           <div className="rundeckClosingPreview">
             <strong>Closing Summary</strong>
             <p><b>{row.consumer_key}</b> · {workloadTypeLabel(row.consumer_type)} · {reviewContext?.period?.toUpperCase() || '1D'}</p>
-            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · APP Critical WP overlap {row.critical_wp_host_checks ?? 0} of {row.host_observations ?? row.occurrences ?? '—'} checks.</p>
+            <p>CPU {pct(row.avg_cpu_pct)} avg / {pct(row.peak_cpu_pct)} peak · Memory {gb(row.avg_pss_gb)} · APP Critical WP overlap {row.critical_wp_host_checks ?? '—'} of {row.host_observations ?? row.occurrences ?? '—'} checks.</p>
             <p>{form.finding || 'Analysis summary: —'}</p>
             <p><b>{form.closing_status ? form.closing_status.replaceAll('_', ' ') : 'Result: —'}</b> · Action Owner: {form.owner || '—'}{form.recommendation ? ` · ${form.recommendation}` : ''}</p>
           </div>
