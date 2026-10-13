@@ -11,9 +11,67 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- Current DEV source candidate: **v1.34.76** (does not imply the server is already deployed).
+- DEV application source version: see `src/app/version.js` (currently **v1.35.7** on this branch). The actual running DEV version/SHA must be checked from release symlinks and the browser; source version alone does not establish successful deployment.
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
+
+## Fast DEV deployment — operator runbook (v1.35.7)
+
+**Standard route: full-stack SPHERE Rundeck DEV only.** Run on `JAHSVR-SPHERE` as the authorized deploy operator. The script lives on GitHub branch `rundeck-sphere-dev`; it runs against `/root/rundeck-sphere-dev`. **Do not run against `rundeck-sphere-prod`, `sphere-dev`, or `sphere-prod`.** The currently deployed version is established from active release symlinks and HTTP health, **not** from the branch version string alone.
+
+### One command: sync, QA, build, verify, deploy
+
+After confirming this release needs **no database migration** and reviewing the diff of `backend/db/migrations`, run:
+
+```bash
+cd /root/rundeck-sphere-dev && SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/release-dev-fast.sh
+```
+
+This is the preferred command for **frontend or backend changes**. Do **not** prepend a second `git fetch/merge`, run `qa-build-dev.sh` separately, or invoke `deploy-dev.sh` afterward: the wrapper already does all of that. Do not use `sphere deploy dev` for a release that changes backend code; that is the frontend-only workflow.
+
+**Actual script stages and boundaries:**
+
+1. `SOURCE` checks branch `rundeck-sphere-dev` and clean Git checkout, fetches `origin/rundeck-sphere-dev`, and performs `git merge --ff-only`. A dirty checkout, branch mismatch, or non-fast-forward **stops** the release.
+2. `QA` runs `ops/rundeck/qa-build-dev.sh`: ESLint, existing integrity/data-quality/infra/unified Basis checks, and Vite build via `npm run qa`. A **previous PASS** may be reused only when the same commit SHA, application version, Node/npm runtime, relevant environment fingerprint, and on-disk `dist` hashes match; otherwise the whole QA/build runs again. No source change is skipped merely to save time.
+3. `BACKEND_UNIT_TESTS` runs the v1.19.4 evaluation regression and full-population paging/search tests using the DEV Python venv. These tests **always run**, including when frontend QA/build is reused.
+4. `MIGRATION_GUARD` reads `/etc/sphere/rundeck-dev.env`. If migrations are enabled, the wrapper requires explicit `SPHERE_DEV_MIGRATION_DECISION=skip`, verifies the active DEV release is a known Git commit, and requires **no diff under `backend/db/migrations`** versus the proposed SHA. Only then does it set the SHA-bound skip approval for this process. Unexpected schema/migration changes must **block**; never fake approval or use `apply` in this wrapper.
+5. `DEPLOY` calls guarded `ops/rundeck/deploy-dev.sh`, which still checks PROD separation, API health, metrics/watchdog, public DEV route and rollback conditions. If exact API and frontend release symlinks already point to the same SHA and health checks succeed, the deploy script returns a read-only `DEV=ALREADY_CURRENT` no-op. For a **new SHA**, the API is still restarted and checked; Python package installation is skipped if `backend/requirements.txt` is byte-identical to the previous active release.
+
+**Normal concise output** (illustrative; values/times are not promises):
+
+```text
+SOURCE=PASS SHA=<short-sha>
+QA=PASS BUILD=PASS QA_SECONDS=<elapsed>
+BACKEND_TESTS=PASS
+DEPLOY=PASS DB_MIGRATION=SKIPPED DEPLOY_SECONDS=<elapsed>
+FINAL=PASS DEV_SHA=<short-sha> TOTAL_SECONDS=<elapsed> PROD=UNCHANGED_BY_RELEASE_GUARDS
+```
+
+The QA/build phase may instead be logged as `QA=REUSED BUILD=REUSED` inside the release log when its proof matches; the wrapper's final `QA=PASS BUILD=PASS` reports that the gate passed. `FINAL=PASS` covers script checks/smoke tests, **not** a substitute for interactive UI visual QA.
+
+### Failure handling — do not paste huge logs
+
+`FINAL=FAIL STAGE=SOURCE|QA|BACKEND_UNIT_TESTS|MIGRATION_GUARD|DEPLOY` identifies the failure point. The wrapper does not continue into deployment after a prior stage fails. Retrieve only the important lines:
+
+```bash
+grep -E '^FAIL |^not ok |BLOCKED|QA FAILED|DEPLOY FAILED|error:|Error:' /tmp/sphere-dev-release-last.log | head -n 25
+```
+
+For context, use `tail -n 60 /tmp/sphere-dev-release-last.log`. Detailed frontend QA is also in `/tmp/sphere-qa.log`. If `STAGE=MIGRATION_GUARD`, **stop** and review DEV DB/migrations; do not change environment flags, manually supply arbitrary SHA approval, or force deployment. If `STAGE=DEPLOY`, review the rollback and route checks in the log before considering a retry. Keep release logs and credentials separate; do not paste tokens or protected `/etc/sphere/` values.
+
+### Post-deploy checks
+
+```bash
+cd /root/rundeck-sphere-dev
+printf 'SOURCE_SHA=%s\n' "$(git rev-parse --short HEAD)"
+printf 'DEV_API_RELEASE=%s\n' "$(readlink -f /opt/sphere-rundeck-dev/current)"
+printf 'DEV_WEB_RELEASE=%s\n' "$(readlink -f /var/www/sphere-dev/current)"
+curl --noproxy '*' -fsS --max-time 10 http://127.0.0.1:8091/health >/dev/null && echo DEV_API_HEALTH=PASS
+```
+
+Also open https://sphere.astraotoparts.co.id/dev/ and verify displayed build SHA, APP metric severity, 5-APP trend tooltip, Review/Search, Workload Health, and desktop **1366×768 / 1536×864** plus Android geometry. Browser/Playwright visual tests are **separate from the shell wrapper** and must not be reported as passed without running them. For filesystem host identity, optionally run the **read-only** `bash ops/rundeck/audit-app-filesystems-dev.sh`. Never infer shared mounts from equal 89% usage values.
+
+**Where to investigate:** `ops/rundeck/release-dev-fast.sh` (orchestrator), `ops/rundeck/qa-build-dev.sh` (cached proof), `ops/rundeck/deploy-dev.sh` (rollback, PROD safety, health and idempotency), `docs/rundeck-development.md` (this runbook), and `ops/rundeck/OPERATIONS.md` (operational safety). No database migration, PROD deployment, or production approval is implied by this documentation.
 
 ## Single-server topology
 
