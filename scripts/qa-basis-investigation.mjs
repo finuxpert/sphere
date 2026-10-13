@@ -271,7 +271,7 @@ const checks = [
     !files.unifiedApp.includes('Inspect SAP') &&
     !files.unifiedApp.includes('rundeckUnifiedAppInfraDetail') &&
     files.unifiedApp.includes('onInspectApp?.({') &&
-    files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Critical WP') &&
+    files.unifiedApp.includes('Current highest CPU') && files.unifiedApp.includes('Critical WP') &&
     files.unifiedAnalysis.includes('RundeckAppServerAnalysis') &&
     files.unifiedAnalysis.includes('RundeckInfrastructure') &&
     files.unifiedAnalysis.includes('lockedHost') && files.unifiedAnalysis.includes('hideHostCards') &&
@@ -390,7 +390,7 @@ const checks = [
   ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes('<span>PSS Memory</span>') && files.serverTrend.includes('Grouped workload CPU can exceed 100%') && files.serverTrend.includes(' GB')],
   ['Trend modal distinguishes actual sample time from aggregation bucket time', files.serverTrend.includes('selectedActualAt') && files.serverTrend.includes('selectedBucketAt') && files.serverTrend.includes('Actual ') && files.serverTrend.includes('Bucket ')],
   ['Trend mini history anchors marker to clicked bucket while preserving exact selected value', files.serverTrend.includes("const selectedBucketAt = Date.parse(selected?.bucket || '')") && files.serverTrend.includes('Math.abs(row.at-selectedBucketAt)') && files.serverTrend.includes('const resolvedSelectedValue = Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value') && files.serverTrend.includes('selectedValue:resolvedSelectedValue') && files.serverTrend.includes('<MiniTrendContext')],
-  ['Peak tooltip labels the bucket and exact retained peak separately', files.serverTrend.includes('Bucket: ${formatWib(bucketAt, true)} WIB') && files.serverTrend.includes('Peak at ${formatWib(point.data.peakAt, true)} WIB') && files.serverTrend.includes("mode === 'max' && point.data?.peakAt")],
+  ['Peak tooltip labels the bucket and exact retained peak separately', files.serverTrend.includes('Bucket ${formatWib(bucketAt, true)}${intervalLabel}') && files.serverTrend.includes('Peak at ${formatWib(point.data.peakAt, true)} WIB') && files.serverTrend.includes("mode === 'max' && point.data?.peakAt")],
   ['Trend point selection prefers exact ECharts data before nearest-point fallback', files.serverTrend.includes("chart.on('click', exactClick)") && files.serverTrend.includes("chart.getZr().on('click', fallbackClick)") && files.serverTrend.includes('Date.now() - lastExactClickAt < 80')],
   ['Trend Details header distinguishes historical value, exact observation time and bucket',
     files.serverTrend.includes('SPHERE ANALYSIS · HISTORICAL OBSERVATION') &&
@@ -660,7 +660,7 @@ const checks = [
     files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
-  ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table', files.unifiedApp.includes('APP Servers & Infrastructure') && files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Highest RAM') && files.unifiedApp.includes('Critical WP') && !files.unifiedApp.includes('<th>Signal</th>') && files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure')],
+  ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table', files.unifiedApp.includes('APP Servers & Infrastructure') && files.unifiedApp.includes('Current highest CPU') && files.unifiedApp.includes('· RAM') && files.unifiedApp.includes('Critical WP') && !files.unifiedApp.includes('<th>Signal</th>') && files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure')],
   ['APP cards explain filesystem usage with host-matched mount and retained capacity details',
     files.unifiedApp.includes('>Filesystem</small>') &&
     files.unifiedApp.includes('const mountPoint = String(infra.topFs?.mount_point') &&
