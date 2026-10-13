@@ -150,6 +150,32 @@
   font-size:10px!important;color:var(--sphere-design-caption)!important;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
 }
+/* Keep mount identity visible on a single row; do not increase APP-card height. */
+.appShell:has(.rundeckPanel) .rundeckUnifiedMetric.is-infrastructure small{
+  font-size:9px!important;
+  letter-spacing:-.15px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra .rundeckUnifiedAppCardReason{
+  flex:0 1 auto;
+  min-width:0;
+  max-width:56%!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra .rundeckUnifiedAppCardMount{
+  flex:1 1 0;
+  min-width:0;
+  max-width:none!important;
+  text-align:right;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra .rundeckUnifiedAppCardMount:only-child{
+  flex:1 1 auto;
+  text-align:left;
+}
 
 /* Three charts on one continuous region rather than three floating cards. */
 .appShell:has(.rundeckPanel) .rundeckTrendBandV13454{
