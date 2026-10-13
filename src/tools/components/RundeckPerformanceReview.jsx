@@ -129,17 +129,21 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
       <div>
         {!embedded && <h3><SphereIcon name="trend" /> Jobs & Programs to Review</h3>}
         {!loading && !error && data && <span>{forceSearch
-          ? (searchActive
-              ? `${searchRows.length} match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
-              : 'Search historical jobs and programs')
-          : searchActive
-            ? `${searchRows.length} historical match${searchRows.length === 1 ? '' : 'es'} · ${periodLabel}`
-            : `${reviewCount} item${reviewCount === 1 ? '' : 's'} · Basis review priority`}</span>}
+          ? (searchActive ? `${totalMatching} matches · ${periodLabel}` : 'Search historical jobs and programs')
+          : searchActive ? `${totalMatching} matches · ${periodLabel}`
+            : `${totalMatching} ${healthGroup === 'REVIEW' ? 'items · Basis review priority' : 'evaluations · selected category'}`}</span>}
       </div>
       <div className="rundeckReviewControlsV1231">
         {!forceSearch && !hideSearchButton && <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>}
-        <Segmented options={PERIODS} value={period} onChange={(value) => setPeriod(value)} label="Review period" disabled={loading && !hasLoaded} />
-        <Segmented options={TYPES} value={type} onChange={(value) => setType(value)} label="Workload type" disabled={loading && !hasLoaded} />
+        <Segmented options={PERIODS} value={period} onChange={changePeriod} label="Review period" disabled={loading && !hasLoaded} />
+        <Segmented options={TYPES} value={type} onChange={changeType} label="Workload type" disabled={loading && !hasLoaded} />
+        <select className="rundeckReviewHealthFilter" aria-label="Evaluation category" value={healthGroup} onChange={event => changeGroup(event.target.value)}>
+          <option value="REVIEW">Review required</option>
+          <option value="ATTENTION">Watch</option>
+          <option value="NORMAL">Normal</option>
+          <option value="UNKNOWN">Limited / unknown</option>
+          <option value="ALL">All evaluations</option>
+        </select>
       </div>
     </header>
 
@@ -147,12 +151,12 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
       <input
         type="search"
         value={searchQuery}
-        onChange={(event) => setSearchQuery(event.target.value)}
+        onChange={(event) => { setSearchQuery(event.target.value); setPageIndex(0) }}
         placeholder="Search job or program (min. 2 characters)"
         aria-label="Search historical job or program"
         autoFocus
       />
-      {searchQuery && <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search">×</button>}
+      {searchQuery && <button type="button" onClick={() => {setSearchQuery('');setPageIndex(0)}} aria-label="Clear search">×</button>}
     </div>}
     {loading && !hasLoaded && <div className="rundeckReviewState">Loading performance review…</div>}
     {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">
@@ -205,12 +209,19 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 <td>{gb(row.avg_pss_gb)}</td>
               </tr>
             })}
-            {!visibleRows.length && <tr><td colSpan="5">{forceSearch
-              ? (normalizedSearch.length < 2 ? 'Type at least 2 characters to search historical jobs and programs.' : 'No historical job or program matches this search.')
-              : searchActive ? 'No historical job or program matches this search.' : 'No review rows for this period.'}</td></tr>}
+            {!visibleRows.length && <tr><td colSpan="5">{searchPending || loading
+              ? 'Searching the saved evaluations…'
+              : forceSearch && normalizedSearch.length < 2
+                ? 'Type at least 2 characters to search historical jobs and programs.'
+                : 'No matching jobs or programs in the full evaluated population.'}</td></tr>}
           </tbody>
         </table>
       </div>
+      <nav className="rundeckReviewPager" aria-label="Historical evaluation pages">
+        <small>{totalMatching} matches · Page {currentPage+1}/{totalPages} · {reviewCount} total Review Required</small>
+        <button type="button" disabled={loading || currentPage === 0} onClick={() => changePage(currentPage - 1)}>Previous</button>
+        <button type="button" disabled={loading || currentPage >= totalPages - 1} onClick={() => changePage(currentPage + 1)}>Next</button>
+      </nav>
     </>}
     {!onOpenQuickAnalysis && quickRow && <React.Suspense fallback={<div className="rundeckReviewState" role="status">Loading quick analysis…</div>}><RundeckReviewQuickAnalysis
       row={quickRow}
