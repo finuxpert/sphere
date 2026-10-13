@@ -176,7 +176,7 @@ test('operator copy shows only evidence and does not auto-fill closing decisions
   assert.ok(!health.includes('Resource pressure signal'))
   assert.ok(!health.includes('needs review on this server'))
   assert.ok(events.includes('Issue: ${issueAt'))
-  assert.ok(events.includes('Workload sample · ${pair.deltaMinutes}m'))
+  assert.ok(events.includes('Workload sample · ${formatDurationMinutes(pair.deltaMinutes)}'))
   assert.ok(!events.includes('data?.interpretation'))
   assert.ok(!events.includes('rundeckEvidenceInterpretation'))
   assert.ok(!css.includes('.rundeckEvidenceInterpretation'))
