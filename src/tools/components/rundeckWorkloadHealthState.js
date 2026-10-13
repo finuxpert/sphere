@@ -17,7 +17,7 @@ export function workloadHealthPreview(report) {
   if (total === null || reviewRequired === null || reviewRequired > total) return null
   const health = report.summary.health
   const keys = ['review', 'attention', 'normal', 'unknown']
-  if (!health || keys.some(key => !Number.isSafeInteger(Number(health[key])) || Number(health[key]) < 0) ||
+  if (!health || keys.some(key => health[key] === null || health[key] === undefined || !Number.isSafeInteger(Number(health[key])) || Number(health[key]) < 0) ||
       keys.reduce((sum, key) => sum + Number(health[key]), 0) !== total ||
       Number(health.review) !== reviewRequired) return null
   const quality = report.quality || {}

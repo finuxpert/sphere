@@ -98,10 +98,12 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       {rows.map(row => {
         const level = workloadHealthLevel(row)
         const type = String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'
+        const cpu = row.avg_cpu_pct == null ? '—' : row.avg_cpu_pct + '%'
+        const pss = row.avg_pss_gb == null ? '—' : row.avg_pss_gb + ' GB'
         const label = type + ' ' + row.consumer_key + ' · ' +
           (level === 'review' ? 'Review Required' : level === 'attention' ? 'Watch' :
             level === 'normal' ? 'Normal' : 'Unknown') +
-          ' · avg CPU ' + (row.avg_cpu_pct ?? '—') + '% · avg PSS ' + (row.avg_pss_gb ?? '—') + ' GB'
+          ' · avg CPU ' + cpu + ' · avg PSS ' + pss
         return <button key={row.consumer_type + ':' + row.consumer_key} type="button"
           className={'rundeckWorkloadDot is-' + level + (preview?.limited ? ' is-limited' : '')}
           title={label} aria-label={label}

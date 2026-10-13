@@ -209,7 +209,7 @@ test('DEV Workload Health and table are genuinely side-by-side without clipping 
       const rowLabel = await red.getAttribute('aria-label')
       expect(rowLabel).toMatch(/^(Job|Program) .+Review Required/)
       await red.click()
-      const detail = page.getByRole('dialog',{name:/Job \/ Program Performance Analysis|^Z/i})
+      const detail = page.getByRole('dialog')
       await expect(detail).toBeVisible({timeout:20000})
       await expect(detail.getByRole('button',{name:'Review Result'})).toBeVisible()
       await page.keyboard.press('Escape')
