@@ -430,3 +430,170 @@
     padding-bottom:2px!important;
   }
 }
+
+/* DEV cockpit polish: quiet operator hierarchy with a 32px integrated Workload Health strip.
+   No extra dashboard row and no alteration of metric or review classifications. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsWorkspaceHead{
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  min-height:32px!important;
+  padding:1px 0!important;
+  box-sizing:border-box!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsIdentity{
+  display:flex!important;
+  flex-flow:row nowrap!important;
+  align-items:center!important;
+  flex:1 1 auto;
+  min-width:0!important;
+  gap:11px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsIdentity h3{
+  white-space:nowrap!important;
+  font-weight:740!important;
+  letter-spacing:-.015em!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsSubtitle{
+  white-space:nowrap!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  color:var(--sphere-text-secondary,#9daeb8)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes{
+  display:flex!important;
+  align-items:center!important;
+  flex:0 0 auto!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button{
+  font-weight:650!important;
+  transition:background-color .14s ease,color .14s ease!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button:is(:hover,:focus-visible){
+  background:var(--sphere-flat-hover)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button.is-active{
+  background:var(--sphere-flat-active)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealth{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:9px;
+  width:247px;
+  height:32px;
+  padding:4px 9px;
+  border:1px solid var(--sphere-flat-separator)!important;
+  border-radius:6px;
+  background:rgba(91,145,159,.045)!important;
+  color:var(--sphere-text,#e7edf0)!important;
+  font-family:inherit;
+  box-shadow:none!important;
+  text-align:left;
+  cursor:pointer;
+  transition:background-color .16s ease,border-color .16s ease;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealth:is(:hover,:focus-visible){
+  background:rgba(75,147,163,.11)!important;
+  border-color:var(--sphere-accent,#4fc6c8)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealth:focus-visible{
+  outline:2px solid var(--sphere-accent,#4fc6c8);
+  outline-offset:2px;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthWords{
+  display:flex;
+  flex-flow:column nowrap;
+  gap:1px;
+  flex:1 1 auto;
+  min-width:0;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthWords strong{
+  color:var(--sphere-text,#e7edf0)!important;
+  font-size:10.5px;
+  font-weight:740;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthWords small{
+  color:var(--sphere-text-secondary,#9daeb8)!important;
+  font-size:9px;
+  font-weight:500;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots{
+  display:grid;
+  grid-template-columns:repeat(14,6px);
+  grid-template-rows:repeat(2,6px);
+  gap:3px;
+  align-content:center;
+  flex:0 0 auto;
+  min-width:123px;
+  height:15px;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots i{
+  display:block;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#7b8791;
+}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots i:nth-child(n+15){transform:translateX(2px)}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots .is-normal{background:#62af81}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots .is-attention{background:#d1ad60}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots .is-review{background:#d66b72}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots .is-unknown{background:#7b8791}
+.appShell:has(.rundeckPanel) .rundeckWorkloadHealthPending{
+  grid-column:1/-1;
+  text-align:center;
+  color:var(--sphere-text-secondary,#9daeb8);
+  font-size:11px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkloadTableWrap thead{
+  background:rgba(102,150,163,.035)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody tr:hover{
+  background:rgba(75,152,169,.075)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload td{
+  border-bottom-color:rgba(124,158,175,.065)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard.is-active{
+  background:linear-gradient(90deg,rgba(75,164,182,.10),rgba(75,164,182,.025))!important;
+  border-left:2px solid var(--sphere-accent,#4fc6c8)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckUnifiedAppCard:is(:hover,:focus-visible){
+  background-color:rgba(75,164,182,.06)!important;
+}
+@media screen and (max-width:960px){
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsSubtitle{display:none!important}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealth{width:206px}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots{
+    grid-template-columns:repeat(14,5px);
+    grid-template-rows:repeat(2,5px);
+    gap:2px;min-width:96px;height:12px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots i{width:5px;height:5px}
+}
+@media screen and (max-width:560px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsWorkspaceHead{gap:5px!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsIdentity{gap:4px!important}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealth{width:auto;min-width:84px;padding:4px 6px}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthDots{display:none}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthWords strong{font-size:9px}
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealthWords small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+  .appShell:has(.rundeckPanel) .rundeckWorkloadHealth,
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsModes button{transition:none!important}
+}
