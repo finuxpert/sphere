@@ -4,10 +4,16 @@ import { readFileSync } from 'node:fs'
 
 const read = filename => readFileSync(new URL('../../src/tools/components/' + filename, import.meta.url),'utf8')
 
-test('APP card is a one-click route, with no second dashboard host selector or secondary toolbar',()=>{
-  const cards=read('RundeckUnifiedAppInfrastructure.jsx')
-  assert.match(cards,/onClick=\{\(\) => \{ selectApp\(key\); onInspectApp\?\.\(/)
-  assert.doesNotMatch(cards,/rundeckUnifiedAppInfraDetail|Inspect SAP|<select/)
+test('APP hexagon selects host and Full Analysis separately opens the modal', () => {
+  const app=read('RundeckUnifiedAppInfrastructure.jsx')
+  const core=read('RundeckMonitoringHistoryCore.jsx')
+  assert.match(app,/className="rundeckAppHexSelectors rundeckUnifiedAppCards"/)
+  assert.match(app,/onSelectApp\?\.\(host\.host\)/)
+  assert.match(app,/aria-pressed=\{appKey === key\}/)
+  assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
+  assert.match(app,/onClick=\{openSelectedAnalysis\}/)
+  assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
+  assert.doesNotMatch(app,/<select/)
 })
 
 test('SAP+Infrastructure modal preserves host provenance, freshness and workload drilldown',()=>{

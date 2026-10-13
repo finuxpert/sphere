@@ -19,7 +19,7 @@ async function viewportEvidence(page) {
     const jobs = document.querySelector('.rundeckJobsProgramsWorkspace')
     const pager = document.querySelector('.rundeckWorkloadPager')
     const table = document.querySelector('.rundeckCurrentWorkloadTableWrap')
-    const metric = document.querySelector('.rundeckUnifiedMetric strong')
+    const metric = document.querySelector('.rundeckSelectedAppMetric strong')
     const appTitle = document.querySelector('.rundeckLandscapeHeader h2')
     return {
       pageOverflowX: pageRoot.scrollWidth - pageRoot.clientWidth,
@@ -34,7 +34,7 @@ async function viewportEvidence(page) {
 
 test('v1.35.6 desktop overview fits viewport with readable metrics and visible workload controls', async ({page}) => {
   await openCockpit(page)
-  const cards = page.locator('.rundeckUnifiedAppCards .rundeckUnifiedAppCard')
+  const cards = page.locator('.rundeckAppHexSelectors .rundeckAppHexSelector')
   await expect(cards).toHaveCount(5)
   await expect(page.locator('.rundeckTripleTrendGrid .rundeckTrendChart').first()).toBeVisible()
   await expect(page.locator('.rundeckJobsProgramsWorkspace')).toBeVisible()
@@ -122,7 +122,9 @@ test('v1.35.6 Android overview and SAP Issues modal have no horizontal overflow'
 test('v1.35.6 APP analysis keeps pager controls visible, verified collection labels and legible rows', async ({page}) => {
   await openCockpit(page)
   test.skip((page.viewportSize()?.width || 0) < 1100, 'Desktop APP analysis geometry')
-  await page.locator('.rundeckUnifiedAppCards .rundeckUnifiedAppCard').first().click()
+  await page.locator('.rundeckAppHexSelectors .rundeckAppHexSelector').first().click()
+  await expect(page.locator('.rundeckSelectedAppDetail')).toBeVisible()
+  await page.locator('.rundeckSelectedAppOpen').click()
   const dialog = page.getByRole('dialog',{name:/APP\d+ Analysis/})
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('.rundeckUnifiedAnalysisProvenance')).toBeVisible()

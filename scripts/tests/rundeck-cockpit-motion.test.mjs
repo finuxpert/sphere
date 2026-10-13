@@ -113,16 +113,13 @@ test('v1.34.85 light operator palette corrects shadowed vars and preserves data 
   assert.match(light, /overflow-wrap:anywhere!important/)
   assert.match(light, /prefers-reduced-motion:reduce/)
   assert.match(app, /appSignalState\(host, performanceVerified\)/)
-  assert.match(app, /\{sapState\}<\/em>/)
-  // v1.34.90 renders FS in a separate four-metric cell, not the old "Infra FS" sentence.
-  // Preserve real FS source provenance, usage and its independent freshness semantics.
-  assert.match(app, /className="rundeckUnifiedMetric is-infrastructure"/)
-  assert.match(app, /infra\.topFs\?\.mount_point/)
-  assert.match(app, /metric\(infra\.topFs\.used_pct,'%'/)
-  assert.match(app, /infra\.freshness/)
-  assert.match(app, /Filesystem is separate Infrastructure telemetry/)
-  assert.match(app, /'Separate from SAP APP status'/)
-  assert.match(app, /hostInfrastructureEvidence\(host, infraSnapshot\.hosts, infraSnapshot\.filesystems, nowMs\)/)
+  // Selected APP reads real source metrics; filesystem evidence remains independent.
+  assert.match(app,/rundeckAppHexSelector/)
+  assert.match(app,/selectedInfra\?\.topFs\?\.mount_point/)
+  assert.match(app,/metric\(selectedInfra\.topFs\.used_pct, '%'/)
+  assert.match(app,/selectedInfra\?\.freshness/)
+  assert.match(app,/filesystem is separate Infrastructure telemetry/i)
+  assert.match(app,/hostInfrastructureEvidence\(selectedHost, infraSnapshot\.hosts, infraSnapshot\.filesystems, nowMs\)/)
   assert.match(chart, /MutationObserver/)
   assert.match(chart, /themeRevision\]/)
   assert.doesNotMatch(light, /animation-iteration-count\s*:\s*infinite/i)
