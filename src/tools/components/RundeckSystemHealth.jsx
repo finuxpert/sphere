@@ -1,7 +1,7 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
 import { availabilityFreshnessSignal, deriveSystemHealthEvidence } from './rundeckSystemHealth.js'
-import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
+import { hostResourceState, sapWorkloadState, metricResourceState } from './rundeckStatusSemantics.js'
 import { formatWib, shortHost } from './sapUiFormat.js'
 
 function StatusPill({ value = 'UNKNOWN', title = '' }) {
@@ -18,9 +18,20 @@ function ageText(seconds) {
   return minutes ? `${hours}h ${minutes}m` : `${hours}h`
 }
 
+const observedPct = value => value == null || String(value).trim() === '' || !Number.isFinite(Number(value))
+  ? '—' : `${Number(value).toLocaleString('en-US',{maximumFractionDigits:1})}%`
+const leadingResource = host => {
+  const metrics = [
+    { label: 'CPU', value: host?.cpu_pct, type: 'cpu' },
+    { label: 'RAM', value: host?.ram_pct, type: 'ram' },
+    { label: 'I/O Wait', value: host?.io_wait_pct ?? host?.iowait_pct, type: 'ioWait' },
+  ]
+  return metrics.find(row => metricResourceState(row.value,row.type) === 'CRITICAL')
+    || metrics.find(row => metricResourceState(row.value,row.type) === 'WARNING')
+}
 function primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale = false, availabilityAge = null) {
-  if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service impact observed', detail: `Availability state ${availability}.` }
-  if (stale) return { level: 'WARNING', text: 'Performance data is old', detail: 'The latest performance collection is older than expected.' }
+  if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service DOWN observed', detail: `Availability state: ${availability}` }
+  if (stale) return { level: 'WARNING', text: 'Performance collection: STALE', detail: 'Latest performance sample is outside the freshness window.' }
   if (availabilityStale) return availabilityFreshnessSignal(availabilityAge)
 
   const ranked = hosts.map((host) => {
@@ -36,11 +47,14 @@ function primaryHealthSignal(hosts, availability, serviceCritical, stale, availa
   }).sort((left, right) => right.score - left.score || right.wp - left.wp)
 
   const top = ranked[0]
-  if (top?.score >= 500) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'CPU, memory or I/O needs review on this server.' }
-  if (top?.score >= 400) return { level: top.resource, text: `${shortHost(top.host.host)} · OS Resource ${top.resource}`, detail: 'Resource pressure signal; validate CPU, memory and I/O evidence.' }
-  if (top?.score >= 300) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Critical WP ${top.wp}`, detail: `Critical WP ${top.wp} observed on this APP · OS Resource ${top.resource}. Open the server and selected job for timing correlation.` }
-  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Critical WP ${top.wp}`, detail: `Critical WP ${top.wp} observed on this APP · OS Resource ${top.resource}. Open the server and selected job for timing correlation.` }
-  if (availability === 'ATTENTION') return { level: 'ATTENTION', text: 'SAP availability attention', detail: 'Review service availability evidence.' }
+  if (top?.score >= 400) {
+    const metric = leadingResource(top.host)
+    const label = shortHost(top.host.host)
+    const reading = metric ? `${metric.label} ${observedPct(metric.value)}` : 'Resource'
+    return { level: top.resource, text: `${label} · ${reading}`, detail: `CPU ${observedPct(top.host.cpu_pct)} · RAM ${observedPct(top.host.ram_pct)} · I/O Wait ${observedPct(top.host.io_wait_pct ?? top.host.iowait_pct)} · ${top.resource}` }
+  }
+  if (top?.score >= 200) return { level: 'ATTENTION', text: `${shortHost(top.host.host)} · Critical WP ${top.wp}`, detail: `APP Critical WP ${top.wp} · OS Resource ${top.resource}` }
+  if (availability === 'ATTENTION') return { level: 'ATTENTION', text: 'SAP availability: ATTENTION', detail: `Availability state: ${availability}` }
   return null
 }
 
@@ -85,11 +99,11 @@ export default function RundeckSystemHealth({ sourceQuality = null, sourceCollec
   const availabilityAge = sourceQuality?.availabilityAgeMs == null ? null : Math.floor(sourceQuality.availabilityAgeMs / 60000)
   const recovery = collector?.last_recovery || null
   const primarySignal = !sourceQuality || sourceQuality.state === 'UNKNOWN'
-    ? { level: 'WARNING', text: 'Monitoring data unverified', detail: 'SAP state cannot be inferred from unverified observations.' }
+    ? { level: 'WARNING', text: 'Monitoring data: UNKNOWN', detail: 'Source quality: UNKNOWN' }
     : collectorUnreliable && !performanceEvidenceStale
-      ? { level: 'WARNING', text: 'Monitoring source unavailable', detail: 'Retained evidence exists, but its collector is unhealthy.' }
+      ? { level: 'WARNING', text: 'Collector: NOT VERIFIED', detail: `Poller: ${collector.poller_status || 'UNKNOWN'} · Watchdog: ${collector.watchdog_status || 'UNKNOWN'}` }
       : primaryHealthSignal(observedHosts, observedAvailability, observedImpact, performanceEvidenceStale, availabilityEvidenceStale, availabilityAge)
-  const title = `System Health and SAP Data share the same observations. Collector ${collector.status || 'UNKNOWN'} is independent. Availability ${observedAvailability}${availabilityEvidenceStale ? ' · old or missing' : ''}${performanceEvidenceStale ? ' · performance stale' : ''}.`
+  const title = `SAP status: ${state} · Availability: ${observedAvailability}${availabilityEvidenceStale ? ' (old or missing)' : ''} · Performance: ${performanceEvidenceStale ? 'STALE' : 'FRESH'} · Collector: ${collector.status || 'UNKNOWN'}`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
