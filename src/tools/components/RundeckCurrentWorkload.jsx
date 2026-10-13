@@ -3,6 +3,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName, isUnresolvedSapIdentity } from './sapUiFormat.js'
 import './RundeckCurrentWorkload.css'
 import { processCount } from './rundeckWorkloadMetrics.js'
+import { workloadRowsThatFit } from './rundeckWorkloadViewport.js'
 import { combineCurrentWorkloadResponses } from './rundeckCurrentWorkloadCoverage.js'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -105,7 +106,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], embedded = false }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], layoutKey = '', embedded = false }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
@@ -115,6 +116,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const [listPage,setListPage]=React.useState(0)
   const [nowMs, setNowMs] = React.useState(() => Date.now())
   const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 768 : window.innerHeight)
+  const [fittedRows, setFittedRows] = React.useState(null)
+  const tableWrapRef = React.useRef(null)
 
   React.useEffect(() => {
     const onResize = () => setViewportHeight(window.innerHeight)
@@ -195,9 +198,35 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       ...(Array.isArray(d.pids) ? d.pids : []),d.wp,d.wp_type]
       .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
   })
-  // Keep pagination aligned with the viewport's available table height.
-  // Rows are still actual loaded observations; no synthetic results or truncation.
-  const pageSize = viewportHeight <= 720 ? 2 : viewportHeight <= 940 ? 3 : viewportHeight <= 1100 ? 4 : 5
+
+  const defaultPageSize = viewportHeight <= 720 ? 2 : viewportHeight <= 940 ? 3 : viewportHeight <= 1100 ? 4 : 5
+  React.useLayoutEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const measure = () => {
+      if (window.innerWidth < 1200 || !visible.length) {
+        setFittedRows(null)
+        return
+      }
+      const wrap = tableWrapRef.current
+      if (!wrap) return
+      const header = wrap.querySelector('thead tr')
+      const firstRow = wrap.querySelector('tbody tr')
+      if (!header || !firstRow) return
+      const next = workloadRowsThatFit({
+        viewportHeight: window.innerHeight,
+        tableTop: wrap.getBoundingClientRect().top,
+        headerHeight: header.getBoundingClientRect().height,
+        rowHeight: firstRow.getBoundingClientRect().height,
+        reserveBelow: 44,
+        maxRows: defaultPageSize,
+      })
+      setFittedRows(old => old === next ? old : next)
+    }
+    measure()
+    window.addEventListener('resize', measure, { passive: true })
+    return () => window.removeEventListener('resize', measure)
+  }, [visible.length, viewportHeight, defaultPageSize, layoutKey])
+  const pageSize = fittedRows === null ? defaultPageSize : Math.min(defaultPageSize, fittedRows)
   const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
   const currentPage=Math.min(listPage,totalPages-1)
   const pageRows=visible.slice(currentPage*pageSize,(currentPage+1)*pageSize)
@@ -229,7 +258,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     {loading && <div className="rundeckCurrentWorkloadState">Loading jobs and programs…</div>}
     {error && <div className="rundeckCurrentWorkloadState is-error">{error}</div>}
 
-    {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap">
+    {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap" ref={tableWrapRef}>
       <table>
         <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th>PSS Memory</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
         <tbody>

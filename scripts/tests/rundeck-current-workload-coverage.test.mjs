@@ -42,3 +42,12 @@ test('live UI requests host-scoped pages rather than silently searching only 50 
   assert.match(source, /Search \$\{rows.length\} observations/)
   assert.doesNotMatch(source, /sortedRows\.slice\(0, visibleLimit\)/)
 })
+
+test('live pagination measures space for pager rather than using only viewport buckets', () => {
+  const src = readFileSync(new URL('../../src/tools/components/RundeckCurrentWorkload.jsx',import.meta.url),'utf8')
+  const parent = readFileSync(new URL('../../src/tools/components/RundeckSource.jsx',import.meta.url),'utf8')
+  assert.match(src,/workloadRowsThatFit\(/)
+  assert.match(src,/tableWrapRef\.current/)
+  assert.match(src,/reserveBelow: 44/)
+  assert.match(parent,/layoutKey=\{/)
+})

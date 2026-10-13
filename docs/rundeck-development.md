@@ -291,3 +291,8 @@ Filesystem warning remains independent of the SAP APP status (CPU, RAM, I/O Wait
 - Technical Availability trend summarizes saved checks and uses the API's actual `latest_observation_at` to label stale historical percentages. A recorded UP sample or 100% observed checks does not establish replication health or continuous service uptime.
 - Jobs & Programs Live pagination adapts by browser height (2/3/4/5 rows). On shorter desktops chart height is reduced moderately and nested Live table clipping is disabled. Full coverage and search still use the same fetched observations, with Previous/Next controls. Actual viewport geometry must be QA-verified before declaring one-screen PASS.
 - A new Job & Program health dot-matrix card remains a proposal only; do not assign red/green status to multi-core CPU >100% using the host CPU threshold. Evaluate workload-specific evidence, sample coverage and timestamps before adding that card.
+
+
+### DEV no-scroll desktop workload pager — 13 Oct 2026
+
+Current Jobs & Programs computes visible page rows from the rendered table header, first row height and remaining viewport space, reserving 44px for its pager and footer. This is a *layout* calculation only; the total searchable observations and existing API results remain unchanged. On a short desktop it may show two full rows rather than cropping the third/fourth; remaining records remain accessible via the existing pager. Recalculate when source-quality warning banners or browser size change. Tablet/mobile retain their existing bounded layout. Keep visual geometry QA at 1366×768 and 1536×864 before deploying.

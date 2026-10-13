@@ -740,6 +740,7 @@ export default function RundeckSource({ onCollection }) {
     onSelectedContext={enrichSelectedJob}
     compactLimit={100}
     sourceHosts={operationalHosts}
+    layoutKey={`${quality.state}:${Boolean(recentGap)}:${historyRefreshFailed}`}
   />
 
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
