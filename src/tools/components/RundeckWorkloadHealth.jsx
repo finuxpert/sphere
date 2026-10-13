@@ -49,9 +49,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const reviewCount = preview?.reviewRequired
   const totalCount = preview?.total
   const state = error ? 'unavailable' : !preview ? 'loading'
-    : preview.limited ? 'limited' : reviewCount > 0 ? 'review' : 'normal'
+    : totalCount === 0 ? 'empty' : preview.limited ? 'limited' : reviewCount > 0 ? 'review' : 'normal'
   const outcome = error ? 'Unavailable' : !preview ? 'Loading'
-    : reviewCount > 0 ? 'Needs review' : preview.limited ? 'Limited evidence' : 'No review flagged'
+    : totalCount === 0 ? 'No evaluations' : reviewCount > 0 ? 'Needs review' : preview.limited ? 'Limited evidence' : 'No review flagged'
   const timeLabel = preview?.end ? `${formatWib(preview.end, true)} WIB` : 'unknown'
   const description = preview
     ? `${reviewCount} requiring review from ${totalCount} evaluated workloads. Colored hexagons show only the first ${preview.sample.length} ranked evaluations. As of ${timeLabel}. ${preview.limited ? 'Evaluation quality is limited. ' : ''}${performanceVerified ? '' : 'Latest Performance is not verified. '}Historical one-day evaluation, not an SM37 execution status.`
