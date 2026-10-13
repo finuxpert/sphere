@@ -601,7 +601,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
         <span className={Number(selectedRow.wp_critical || 0) > 0 ? 'is-attention' : ''}><b>APP Critical WP</b>{selectedRow.wp_critical ?? 'Not observed'}</span>
         <span><b>APP Resource</b>{resourceState || 'UNKNOWN'}</span>
       </div>
-      <p>APP Critical WP is APP-level evidence at this retained observation; it does not prove workload causation.</p>
+      <p>Source: APP performance observation · Execution status: SAP SM37</p>
     </section>}
 
     {!loading && !error && selected && <MiniTrendContext trend={trend} selected={selected} range={range} />}
