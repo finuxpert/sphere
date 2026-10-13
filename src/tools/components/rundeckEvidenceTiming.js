@@ -30,6 +30,7 @@ export function issueWorkloadTimePair(payload = {}) {
 
 /** Short human duration for saved timing gaps; does not infer SAP execution start or cause. */
 export function formatDurationMinutes(value) {
+  if (value === null || value === undefined || value === '') return '—'
   const minutes = Number(value)
   if (!Number.isFinite(minutes) || minutes < 0) return '—'
   const rounded = Math.round(minutes)
