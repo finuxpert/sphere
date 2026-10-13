@@ -177,7 +177,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
             })}
             {!visibleRows.length && <tr><td colSpan="5">{forceSearch
               ? (normalizedSearch.length < 2 ? 'Type at least 2 characters to search historical jobs and programs.' : 'No historical job or program matches this search.')
-              : searchActive ? 'No historical job or program matches this search.' : 'No job or program needs review for this period.'}</td></tr>}
+              : searchActive ? 'No historical job or program matches this search.' : 'No review rows for this period.'}</td></tr>}
           </tbody>
         </table>
       </div>
