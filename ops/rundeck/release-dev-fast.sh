@@ -30,6 +30,12 @@ QA_START=$SECONDS
 bash ops/rundeck/qa-build-dev.sh >> "$LOG" 2>&1
 echo "QA=PASS BUILD=PASS QA_SECONDS=$((SECONDS-QA_START))"
 
+STAGE=BACKEND_UNIT_TESTS
+/opt/sphere-rundeck-dev/venv/bin/python -m unittest \
+  backend.tests.test_rundeck_evaluation_v1194 \
+  backend.tests.test_rundeck_evaluation_paging_dev >> "$LOG" 2>&1
+echo "BACKEND_TESTS=PASS"
+
 STAGE=MIGRATION_GUARD
 # An exact-SHA migration approval is issued only for an explicit operator SKIP
 # with unchanged migration files relative to the active DEV release.
