@@ -207,6 +207,12 @@ test('DEV Workload Health and table are genuinely side-by-side without clipping 
   }
   await health.click()
   await expect(page.getByRole('tab',{name:'Review'})).toHaveAttribute('aria-selected','true')
+  const category = page.getByRole('combobox',{name:'Evaluation category'})
+  await expect(category).toHaveValue('REVIEW')
+  await category.selectOption('ATTENTION')
+  await expect(category).toHaveValue('ATTENTION')
+  await health.click()
+  await expect(category).toHaveValue('REVIEW')
 })
 
 test('DEV historical Search locates workload ranked outside the first 100 via backend query', async ({page}) => {
