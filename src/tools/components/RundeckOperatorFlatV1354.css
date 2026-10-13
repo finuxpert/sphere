@@ -963,3 +963,39 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthBand{display:none!important}
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{height:30px!important}
 }
+
+/* DEV v1.35.9 - compact one-screen audit adjustments.
+   Saved workload evaluation categories remain source-backed; no changing severity colors. */
+@media screen and (min-width:900px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthTitle small {
+    font-size:10.5px!important;
+    line-height:1.25!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend {
+    font-size:10.5px!important;
+    line-height:15px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter span {
+    font-size:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthBand {
+    height:16px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsWorkspace .rundeckWorkloadPager {
+    gap:7px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadPageJump {
+    font-size:10.5px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadPageJump select {
+    min-width:66px!important;
+  }
+}
+@media screen and (min-width:900px) and (max-height:800px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthTitle small {
+    font-size:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend {
+    font-size:10px!important;
+  }
+}
