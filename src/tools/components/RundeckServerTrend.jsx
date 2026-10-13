@@ -1,3 +1,4 @@
+import { buildHostTrendSeries } from './rundeckTrendSeries.js'
 import React from 'react'
 import { createPortal } from 'react-dom'
 import * as echarts from './logEcharts.js'
@@ -79,9 +80,7 @@ function gapTimeRangeText(from, to) {
   const endDate = dateFmt.format(end)
   const startTime = timeFmt.format(start).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
   const endTime = timeFmt.format(end).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
-  return startDate === endDate
-    ? `${startTime} - ${endTime} WIB`
-    : `${startDate} ${startTime} - ${endDate} ${endTime} WIB`
+  return `${startDate} ${startTime} - ${endDate} ${endTime} WIB`
 }
 
 function gapLabel(from, to) {
@@ -288,10 +287,11 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: traceStyle.itemOpacity }
           : { color: traceColor, opacity: traceStyle.itemOpacity },
         emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.8, opacity: 1 } },
-        data: [
-          ...rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
-          ...gapPoints.map((at) => ({ value: [at, null], gap: true })),
-        ].sort((a, b) => new Date(a.value[0]).getTime() - new Date(b.value[0]).getTime()),
+        data: buildHostTrendSeries(
+          rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
+          resolvedGapIntervalMs(trend),
+          gapPoints.map((at) => ({ value: [at, null], gap: true }))
+        ),
         markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined,
         markArea: index === 0 && gaps.length ? {
           silent: true,

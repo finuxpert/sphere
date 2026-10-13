@@ -18,7 +18,7 @@
     "test": "vitest run",
     "qa:cockpit": "node --test scripts/tests/rundeck-cockpit-motion.test.mjs",
     "qa:system-health": "node --test scripts/tests/rundeck-system-health.test.mjs",
-    "qa:trend-focus": "node --test scripts/tests/rundeck-trend-focus.test.mjs",
+    "qa:trend-focus": "node --test scripts/tests/rundeck-trend-focus.test.mjs scripts/tests/rundeck-trend-series.test.mjs",
     "qa:unified-host": "node --test scripts/tests/rundeck-unified-host.test.mjs scripts/tests/rundeck-infra-display-semantics.test.mjs",
     "qa:unified-cockpit": "node --test scripts/tests/rundeck-unified-cockpit.test.mjs scripts/tests/rundeck-workload-health.test.mjs"
   },
