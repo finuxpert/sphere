@@ -638,6 +638,9 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
             str(row.get("consumer_key") or ""),
             str(row.get("program") or ""),
             str(details.get("program") or ""),
+            str(details.get("job_name") or ""),
+            str(row.get("consumer_type") or ""),
+            " ".join(str(host) for host in (row.get("hosts") or []) if host),
         ]).casefold()
 
     matching = [
