@@ -9,7 +9,7 @@
     "build:dev": "node scripts/build-sphere-dev.mjs",
     "lint": "eslint .",
     "qa": "npm run lint && npm run qa:integrity && npm run qa:infra-freshness && npm run qa:data-quality && npm run qa:system-health && npm run qa:trend-focus && npm run qa:unified-host && npm run qa:unified-cockpit && npm run qa:cockpit && npm run qa:basis-investigation && npm run build",
-    "qa:integrity": "node --test scripts/tests/rundeck-integrity-v1356.test.mjs",
+    "qa:integrity": "node --test scripts/tests/rundeck-integrity-v1356.test.mjs scripts/tests/rundeck-current-workload-coverage.test.mjs",
     "qa:infra-freshness": "node --test scripts/tests/infrastructure-freshness.test.mjs",
     "qa:data-quality": "node --test scripts/tests/rundeck-data-quality.test.mjs",
     "qa:basis-investigation": "node scripts/qa-basis-investigation.mjs",
