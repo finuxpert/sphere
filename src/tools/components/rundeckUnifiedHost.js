@@ -37,6 +37,20 @@ export function appSignalReason(host = {}, verified = true) {
   if (hostResourceState(host) === 'UNKNOWN' || wp === 'UNKNOWN') return 'Incomplete SAP metrics'
   return 'Within SAP thresholds'
 }
+/** Format only source-provided filesystem capacity (bytes), never estimate missing values. */
+export function filesystemCapacitySummary(row = {}) {
+  const gib = value => {
+    if (value === null || value === undefined || value === '') return ''
+    const bytes = Number(value)
+    if (!Number.isFinite(bytes) || bytes < 0) return ''
+    return `${(bytes / (1024 ** 3)).toLocaleString('en-US', { maximumFractionDigits: 1 })} GiB`
+  }
+  return [
+    row.total_bytes == null ? '' : (gib(row.total_bytes) ? `Total ${gib(row.total_bytes)}` : ''),
+    row.avail_bytes == null ? '' : (gib(row.avail_bytes) ? `Available ${gib(row.avail_bytes)}` : ''),
+  ].filter(Boolean).join(' · ')
+}
+
 export function matchedInfrastructureHost(sapHost, infraHosts = []) {
   const raw = String(sapHost?.host || '').trim().toUpperCase()
   const exact = infraHosts.find(row => String(row.host || '').trim().toUpperCase() === raw)
