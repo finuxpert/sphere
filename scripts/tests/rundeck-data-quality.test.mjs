@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration,
+  assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage,
 } from '../../src/tools/components/rundeckDataQuality.js'
 
 const now = Date.parse('2026-10-10T23:30:00+07:00')
@@ -81,4 +81,16 @@ test('failed availability refresh never shows stale availability as aligned', ()
   assert.equal(q.performanceValid, true)
   assert.equal(q.availabilityValid, false)
   assert.equal(q.availabilityAt, null)
+})
+
+test('fresh Performance but old Availability never gets a generic old-SAP notice', () => {
+  const sample={performanceValid:true,availabilityValid:false,performanceAgeMs:30000,availabilityAgeMs:21*60000}
+  const message=monitoringFreshnessMessage(sample)
+  assert.match(message,/Performance current \(<1m\)/)
+  assert.match(message,/Availability last checked 21m ago/)
+  assert.match(message,/saved states are historical/)
+  assert.doesNotMatch(message,/Performance not current|current SAP condition cannot be inferred from old samples/)
+  assert.match(monitoringFreshnessMessage(sample,{availabilityFetchFailed:true}),/Availability fetch failed/)
+  assert.match(monitoringFreshnessMessage({...sample,performanceValid:false}),/Performance not current/)
+  assert.match(monitoringFreshnessMessage({...sample,availabilityValid:true}),/Availability current/)
 })
