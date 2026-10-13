@@ -162,36 +162,49 @@ test('v1.35.6 APP analysis keeps pager controls visible, verified collection lab
   })
 })
 
-test('DEV Workload Health stays within existing Jobs header without page scroll and opens Review', async ({page}) => {
+test('DEV Workload Health and table are genuinely side-by-side without clipping pager', async ({page}) => {
   await openCockpit(page)
-  const indicator = page.getByRole('button',{name:/Open Jobs & Programs Review/})
-  await expect(indicator).toBeVisible()
+  const health = page.getByRole('button',{name:/Open Jobs & Programs Review/})
+  await expect(health).toBeVisible()
   const bounds = await page.evaluate(() => {
-    const header = document.querySelector('.rundeckJobsProgramsWorkspaceHead')
-    const indicator = document.querySelector('.rundeckWorkloadHealth')
-    const h = header?.getBoundingClientRect()
-    const d = indicator?.getBoundingClientRect()
+    const rect = selector => {
+      const node = document.querySelector(selector)
+      if (!node) return null
+      const box = node.getBoundingClientRect()
+      return {left:box.left,right:box.right,top:box.top,bottom:box.bottom,width:box.width,height:box.height}
+    }
     return {
-      header: h ? { top:h.top,bottom:h.bottom,height:h.height,left:h.left,right:h.right } : null,
-      indicator: d ? { top:d.top,bottom:d.bottom,height:d.height,left:d.left,right:d.right } : null,
-      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      overflowY: document.documentElement.scrollHeight - document.documentElement.clientHeight,
-      viewport: {width:innerWidth,height:innerHeight},
+      header:rect('.rundeckJobsProgramsWorkspaceHead'),
+      split:rect('.rundeckJobsProgramsSplit'),
+      table:rect('.rundeckJobsProgramsWorkspaceBody'),
+      side:rect('.rundeckJobsProgramsHealthSide'),
+      card:rect('.rundeckWorkloadHealth'),
+      pager:rect('.rundeckWorkloadPager'),
+      overflowX:document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      overflowY:document.documentElement.scrollHeight - document.documentElement.clientHeight,
+      viewport:{width:innerWidth,height:innerHeight},
     }
   })
-  console.log('SPHERE_WORKLOAD_HEALTH_GEOMETRY=' + JSON.stringify(bounds))
+  console.log('SPHERE_WORKLOAD_HEALTH_TWO_COLUMN_GEOMETRY=' + JSON.stringify(bounds))
   expect(bounds.header).not.toBeNull()
-  expect(bounds.indicator).not.toBeNull()
-  expect(bounds.indicator.left).toBeGreaterThanOrEqual(bounds.header.left - 2)
-  expect(bounds.indicator.right).toBeLessThanOrEqual(bounds.header.right + 2)
-  expect(bounds.indicator.top).toBeGreaterThanOrEqual(bounds.header.top - 2)
-  expect(bounds.indicator.bottom).toBeLessThanOrEqual(bounds.header.bottom + 2)
-  expect(bounds.indicator.height).toBeLessThanOrEqual(34)
+  expect(bounds.table).not.toBeNull()
+  expect(bounds.side).not.toBeNull()
+  expect(bounds.card).not.toBeNull()
   expect(bounds.overflowX).toBeLessThanOrEqual(2)
   if (bounds.viewport.width >= 1200) {
-    expect(bounds.header.height).toBeLessThanOrEqual(38)
+    expect(bounds.table.right).toBeLessThanOrEqual(bounds.side.left + 2)
+    expect(bounds.table.width).toBeGreaterThan(bounds.side.width * 3)
+    expect(Math.abs(bounds.table.top - bounds.card.top)).toBeLessThanOrEqual(5)
+    expect(bounds.card.bottom).toBeLessThanOrEqual(bounds.viewport.height + 2)
     expect(bounds.overflowY).toBeLessThanOrEqual(2)
+    if (bounds.pager) expect(bounds.pager.bottom).toBeLessThanOrEqual(bounds.viewport.height + 2)
+    const hexagonRows = page.locator('.rundeckWorkloadHexGrid .rundeckWorkloadHexRow')
+    await expect(hexagonRows).toHaveCount(7)
+    await expect(page.locator('.rundeckWorkloadHexRow i')).toHaveCount(30)
+  } else {
+    expect(bounds.card.right).toBeLessThanOrEqual(bounds.viewport.width + 2)
+    expect(bounds.card.bottom).toBeLessThanOrEqual(bounds.table.top + 2)
   }
-  await indicator.click()
+  await health.click()
   await expect(page.getByRole('tab',{name:'Review'})).toHaveAttribute('aria-selected','true')
 })
