@@ -36,6 +36,8 @@ export default function RundeckMonitoringHistoryCore(props) {
     </section>}
 
     <RundeckJobsProgramsWorkspace
+      refreshToken={props.refreshToken}
+      performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
       currentContent={props.currentWorkloadContent}
       reviewContent={props.performanceReviewContent}
     />
