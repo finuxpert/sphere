@@ -30,6 +30,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [hasLoaded, setHasLoaded] = React.useState(false)
+  const [loadedKey, setLoadedKey] = React.useState('')
   const [quickRow, setQuickRow] = React.useState(null)
   const [loadedPeriod, setLoadedPeriod] = React.useState('')
   const [loadedType, setLoadedType] = React.useState('')
@@ -51,10 +52,12 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const normalizedSearch = searchQuery.trim().toLowerCase()
   const searchActive = effectiveSearchOpen && normalizedSearch.length >= 2
   const searchPending = searchActive && appliedQuery.toLowerCase() !== normalizedSearch
+  const requestKey = [period,type,healthGroup,pageIndex,pageSize,forceSearch ? 'SEARCH' : 'REVIEW',effectiveSearchOpen && appliedQuery.length >= 2 ? appliedQuery : ''].join('|')
   React.useEffect(() => {
     if (forceSearch && appliedQuery.length < 2) {
       setData(null)
       setHasLoaded(false)
+      setLoadedKey('')
       setLoading(false)
       return undefined
     }
@@ -82,6 +85,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         setData(result)
         setLoadedPeriod(period)
         setLoadedType(type)
+        setLoadedKey(requestKey)
         setHasLoaded(true)
       })
       .catch(failure => {
@@ -89,7 +93,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
       })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [period, type, healthGroup, appliedQuery, pageIndex, pageSize, refreshToken, forceSearch, effectiveSearchOpen])
+  }, [period, type, healthGroup, appliedQuery, pageIndex, pageSize, refreshToken, forceSearch, effectiveSearchOpen, requestKey])
 
   const quality = data?.quality || {}
   const periodLabel = PERIODS.find(([key]) => key === period)?.[1] || period.toUpperCase()
@@ -99,7 +103,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const reviewRows = allRows
   const searchRows = allRows
   const reviewCount = Number(data?.summary?.review_required ?? 0)
-  const visibleRows = forceSearch ? (searchActive && !searchPending ? searchRows : []) : (searchActive && !searchPending ? searchRows : reviewRows)
+  const visibleRows = loadedKey !== requestKey ? [] : forceSearch ? (searchActive && !searchPending ? searchRows : []) : (searchActive && !searchPending ? searchRows : reviewRows)
   const totalMatching = Number(data?.page?.total ?? 0)
   const totalPages = Math.max(1, Math.ceil(totalMatching / pageSize))
   const currentPage = Math.min(pageIndex, totalPages-1)
@@ -209,7 +213,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
                 <td>{gb(row.avg_pss_gb)}</td>
               </tr>
             })}
-            {!visibleRows.length && <tr><td colSpan="5">{searchPending || loading
+            {!visibleRows.length && <tr><td colSpan="5">{searchPending || loading || loadedKey !== requestKey
               ? 'Searching the saved evaluations…'
               : forceSearch && normalizedSearch.length < 2
                 ? 'Type at least 2 characters to search historical jobs and programs.'
