@@ -98,7 +98,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     status:availabilityFreshness==='FRESH'?serviceState(row.status):'UNKNOWN',
     current:`${availabilityFreshness==='FRESH'?'':'Last '}${String(row.status||'UNKNOWN').toUpperCase()}`,
     reason:availabilityFreshness==='FRESH'
-      ? (['UP','PASS','ACTIVE','OK','NORMAL'].includes(String(row.status||'').toUpperCase())?'Service check passed':'Check service state')
+      ? `Reported status: ${String(row.status || 'UNKNOWN').toUpperCase()}`
       : availabilityFreshness==='STALE'?'Availability sample is old':'Availability sample time not verified',
   }))
   }
@@ -108,8 +108,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   addServices('Web Dispatcher',availability.web_dispatcher)
   addServices('SSH',availability.ssh)
 
-  const sm37=data.readiness ? String(data.readiness?.features?.job_monitor || 'WAITING_FOR_SM37_FEED').toUpperCase() : 'UNKNOWN'
-  if(data.readiness) indicators.push({scope:'SAP Job Source',indicator:'SM37 Feed',status:sm37==='READY'?'NORMAL':'WARNING',current:sm37==='READY'?'CONNECTED':'NOT CONNECTED',reason:sm37==='READY'?'Execution source ready':'Check job status in SAP (SM37)'})
+  const sm37=data.readiness ? String(data.readiness?.features?.job_monitor ?? 'UNKNOWN').toUpperCase() : 'UNKNOWN'
+  if(data.readiness) indicators.push({scope:'SAP Job Source',indicator:'SM37 Feed',status:sm37==='READY'?'NORMAL':sm37==='UNKNOWN'?'UNKNOWN':'WARNING',current:sm37==='READY'?'CONNECTED':sm37==='UNKNOWN'?'UNVERIFIED':'NOT CONNECTED',reason:`Readiness: ${sm37} · Execution status: SAP SM37`})
 
   const sortedIndicators=[...indicators].sort((a,b)=>(SEVERITY_RANK[b.status]||0)-(SEVERITY_RANK[a.status]||0))
   const reviewIndicators=sortedIndicators.filter((row)=>row.status!=='NORMAL' && row.scope!=='SAP Job Source')
@@ -125,7 +125,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
   if(compact){
-    const reviewText=reviewIndicators.length ? `${reviewIndicators.length} indicators need review` : 'No reported issue'
+    const reviewText=`${reviewIndicators.length} non-normal indicators`
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
       <strong>{loading ? 'Checking source data…' : failedSources.length ? `${failedSources.length} source(s) unavailable · ${reviewText}` : `${reviewText}${sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}`}</strong>
@@ -136,11 +136,11 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const inspect=(row)=>row.host&&onInspectApp?.({host:row.host,source:'sap-issues',issue:row.indicator,severity:row.status})
 
   return <section className="rundeckSapIssuesV1231 is-indicator-console" aria-label="SAP operational issues">
-    {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} need review{sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}</span></header>}
+    {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} non-normal indicators</span></header>}
     {loading && <div className="rundeckReviewState" role="status">Checking SAP source data…</div>}
     {failedSources.length>0 && <div className="rundeckReviewState is-error" role="status">Unavailable: {failedSources.map(name=>SAP_ISSUE_SOURCE_LABELS[name]).join(', ')}. Successful checks remain visible; failed sources are UNKNOWN.</div>}
     <div className="rundeckSapIssuesSummaryStrip">
-      <span><b>Needs review</b><strong>{reviewIndicators.length}</strong></span>
+      <span><b>Non-normal</b><strong>{reviewIndicators.length}</strong></span>
       <span><b>Critical</b><strong>{criticalCount}</strong></span>
       <span><b>Attention</b><strong>{warningCount}</strong></span>
       <span><b>Unknown</b><strong>{unknownCount}</strong></span>
@@ -155,13 +155,13 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
           label="Indicator view"
           value={indicatorView}
           options={[
-            { value: 'review', label: `Needs review (${reviewIndicators.length})` },
+            { value: 'review', label: `Non-normal (${reviewIndicators.length})` },
             { value: 'all', label: `All indicators (${indicators.length})` },
           ]}
           onChange={setIndicatorView}
         />
       </div>
-      {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37 === 'UNKNOWN' ? 'SM37 feed status unavailable.' : 'SM37 feed not connected.'} Verify job execution status directly in SAP (SM37).</p>}
+      {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37 === 'UNKNOWN' ? 'SM37 feed: UNKNOWN' : `SM37 not connected · ${sm37}`} · Execution status: SAP SM37</p>}
       <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
         <label><span>Find indicator</span><input type="search" value={indicatorQuery} onChange={event=>setIndicatorQuery(event.target.value)} placeholder="APP, indicator or status" /></label>
         <label><span>APP</span><select value={appFilter} onChange={event=>setAppFilter(event.target.value)}>
@@ -169,7 +169,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
         </select></label>
         <small>{visibleIndicators.length} shown</small>
       </div>
-      {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">No abnormal indicators in the latest available checks. Verify freshness before treating this as current status.</p>}
+      {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">0 non-normal indicators · status based on available samples</p>}
       {!visibleIndicators.length && baseIndicators.length>0 && <p className="rundeckIssueEmpty">No indicators match these filters.</p>}
       {visibleIndicators.length>0&&<div className="rundeckIssueIndicatorTableWrap">
         <table className="rundeckIssueIndicatorTable">
