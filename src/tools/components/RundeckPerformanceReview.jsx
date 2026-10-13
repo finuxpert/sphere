@@ -19,8 +19,13 @@ function Segmented({ options, value, onChange, label, disabled = false }) {
 }
 
 export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false }) {
+
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
+  const [healthGroup, setHealthGroup] = React.useState(forceSearch ? 'ALL' : 'REVIEW')
+  const [pageIndex, setPageIndex] = React.useState(0)
+  const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 864 : window.innerHeight)
+  const pageSize = viewportHeight <= 940 ? 2 : 3
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
@@ -30,56 +35,81 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [loadedType, setLoadedType] = React.useState('')
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
+  const [appliedQuery, setAppliedQuery] = React.useState('')
 
   React.useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const update = () => setViewportHeight(window.innerHeight)
+    window.addEventListener('resize', update, { passive:true })
+    return () => window.removeEventListener('resize', update)
+  }, [])
+  React.useEffect(() => {
+    const timer = setTimeout(() => setAppliedQuery(searchQuery.trim()), 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+  const effectiveSearchOpen = forceSearch || searchOpen
+  const normalizedSearch = searchQuery.trim().toLowerCase()
+  const searchActive = effectiveSearchOpen && normalizedSearch.length >= 2
+  const searchPending = searchActive && appliedQuery.toLowerCase() !== normalizedSearch
+  React.useEffect(() => {
+    if (forceSearch && appliedQuery.length < 2) {
+      setData(null)
+      setHasLoaded(false)
+      setLoading(false)
+      return undefined
+    }
     const controller = new AbortController()
     setLoading(true)
     setError('')
-    fetch(`${API}/evaluation/workloads?period=${encodeURIComponent(period)}&type=${encodeURIComponent(type)}&limit=100`, { cache: 'no-store', signal: controller.signal })
-      .then(async (response) => {
+    const params = new URLSearchParams({
+      period, type, health:healthGroup, limit:String(pageSize),
+      offset:String(pageIndex * pageSize),
+      q: effectiveSearchOpen && appliedQuery.length >= 2 ? appliedQuery : '',
+    })
+    fetch(`${API}/evaluation/workloads?${params.toString()}`, { cache:'no-store', signal:controller.signal })
+      .then(async response => {
         if (!response.ok) {
           const body = await response.json().catch(() => ({}))
           throw new Error(body.detail || `Performance review unavailable (${response.status})`)
         }
         return response.json()
       })
-      .then((result) => {
+      .then(result => {
+        if (controller.signal.aborted) return
+        if (!result.page || result.page.scope !== 'FULL_EVALUATED_POPULATION') {
+          throw new Error('Backend pagination unavailable; refusing partial historical search')
+        }
         setData(result)
         setLoadedPeriod(period)
         setLoadedType(type)
         setHasLoaded(true)
       })
-      .catch((failure) => {
-        if (failure.name !== 'AbortError') setError(failure.message || 'Performance review unavailable')
+      .catch(failure => {
+        if (failure.name !== 'AbortError' && !controller.signal.aborted) setError(failure.message || 'Performance review unavailable')
       })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false)
-      })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [period, type, refreshToken])
+  }, [period, type, healthGroup, appliedQuery, pageIndex, pageSize, refreshToken, forceSearch, effectiveSearchOpen])
 
   const quality = data?.quality || {}
   const periodLabel = PERIODS.find(([key]) => key === period)?.[1] || period.toUpperCase()
   const typeLabel = TYPES.find(([key]) => key === type)?.[1] || type
   const showingPreviousResult = loading && hasLoaded && (loadedPeriod !== period || loadedType !== type)
-  const allRows = [...(data?.items || [])]
+  const allRows = [...(data?.items || [])] // Backend-filtered and paginated, never global top 100.
   const reviewRows = allRows
-    .filter((row) => String(row.status || '').toUpperCase() === 'REVIEW REQUIRED')
-    .sort((left, right) => Number(right.avg_cpu_pct || 0) - Number(left.avg_cpu_pct || 0))
-  const normalizedSearch = searchQuery.trim().toLowerCase()
-  const effectiveSearchOpen = forceSearch || searchOpen
-  const searchActive = effectiveSearchOpen && normalizedSearch.length >= 2
-  const searchRows = searchActive
-    ? allRows.filter((row) => [row.consumer_key, row.program, row.details?.program]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedSearch)))
-        .sort((left, right) => Number(right.peak_cpu_pct || right.avg_cpu_pct || 0) - Number(left.peak_cpu_pct || left.avg_cpu_pct || 0))
-    : []
-  const reviewCount = Number(data?.summary?.review_required ?? data?.summary?.needs_review ?? reviewRows.length)
-  const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)
+  const searchRows = allRows
+  const reviewCount = Number(data?.summary?.review_required ?? 0)
+  const visibleRows = forceSearch ? (searchActive && !searchPending ? searchRows : []) : (searchActive && !searchPending ? searchRows : reviewRows)
+  const totalMatching = Number(data?.page?.total ?? 0)
+  const totalPages = Math.max(1, Math.ceil(totalMatching / pageSize))
+  const currentPage = Math.min(pageIndex, totalPages-1)
   const lowCoverage = String(quality.confidence || '').toUpperCase() === 'LOW'
   const incomplete = Number(quality.partial_or_incomplete_checks || 0)
   const showQualityWarning = lowCoverage || incomplete > 0
+  const changePage = next => setPageIndex(Math.max(0, Math.min(totalPages-1, next)))
+  const changePeriod = value => { setPeriod(value); setPageIndex(0) }
+  const changeType = value => { setType(value); setPageIndex(0) }
+  const changeGroup = value => { setHealthGroup(value); setPageIndex(0) }
 
   const openQuick = (row) => {
     if (onOpenQuickAnalysis) {
