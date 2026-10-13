@@ -82,6 +82,10 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         if (!result.page || result.page.scope !== 'FULL_EVALUATED_POPULATION') {
           throw new Error('Backend pagination unavailable; refusing partial historical search')
         }
+        if (pageIndex > 0 && pageIndex * pageSize >= result.page.total) {
+          setPageIndex(Math.max(0, Math.ceil(result.page.total / pageSize) - 1))
+          return
+        }
         setData(result)
         setLoadedPeriod(period)
         setLoadedType(type)
