@@ -719,6 +719,7 @@ export default function RundeckSource({ onCollection }) {
   const recentGap = retainedReadyCollectionGaps(history)[0] || null
   const qualityDisplay = quality.state === 'FRESH' ? (historyRefreshFailed ? 'PARTIAL' : dataAlignment) : quality.state
   const freshnessSummary = `Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}`
+  const freshnessShort = `Perf ${ageLabel(performanceAgeMinutes)} · Avail ${ageLabel(availabilityAgeMinutes)}`
   const freshnessMessage = monitoringFreshnessMessage(quality, { availabilityFetchFailed: availabilityRefreshFailed })
 
   const freshnessWarning = historyRefreshFailed || quality.state !== 'FRESH' || performanceStale || availabilityStale || (sourceSkewMinutes !== null && sourceSkewMinutes > 15)
@@ -776,7 +777,7 @@ export default function RundeckSource({ onCollection }) {
           <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
             <summary title={dataAlignmentTitle}>
               <span>SAP Data</span><StatusPill value={qualityDisplay} />
-              <small className="rundeckSourceFreshness" title={freshnessSummary}>{freshnessSummary}</small>
+              <small className="rundeckSourceFreshness" title={freshnessSummary}>{freshnessShort}</small>
             </summary>
             <div className="rundeckDataAlignmentPopover">
               <div><span>Performance / Availability</span><strong>{quality.state}</strong></div>
