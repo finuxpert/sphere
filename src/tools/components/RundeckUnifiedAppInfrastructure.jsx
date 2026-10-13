@@ -2,6 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, shortHost } from './sapUiFormat.js'
 import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, filesystemCapacitySummary } from './rundeckUnifiedHost.js'
+import { metricResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const KEY = 'sphere.live.host'
@@ -22,7 +23,8 @@ export default function RundeckUnifiedAppInfrastructure({
     try { return window.localStorage.getItem(KEY) || '' } catch { return '' }
   })
   const [manualSelection, setManualSelection] = React.useState(null)
-  const [infraSnapshot, setInfraSnapshot] = React.useState({ hosts: [], filesystems: [], error: '' })
+  const [infraSnapshot, setInfraSnapshot] = React.useState({ hosts: [], filesystems: [], hostsError: '', filesystemsError: '' })
+  const [infraRetry, setInfraRetry] = React.useState(0)
   const [nowMs, setNowMs] = React.useState(() => Date.now())
 
   React.useEffect(() => {
@@ -33,18 +35,23 @@ export default function RundeckUnifiedAppInfrastructure({
 
   React.useEffect(() => {
     const controller = new AbortController()
-    Promise.all([
+    let retryTimer
+    Promise.allSettled([
       readJson('/infra/hosts', controller.signal),
       readJson('/infra/filesystems', controller.signal),
-    ]).then(([hostData, filesystemData]) => {
-      if (!controller.signal.aborted) setInfraSnapshot({
-        hosts: hostData.items || [], filesystems: filesystemData.items || [], error: '',
-      })
-    }).catch((error) => {
-      if (!controller.signal.aborted) setInfraSnapshot({ hosts: [], filesystems: [], error: error.message })
+    ]).then(([hostsResult, filesystemsResult]) => {
+      if (controller.signal.aborted) return
+      const hostsError = hostsResult.status === 'rejected' ? String(hostsResult.reason?.message || 'Hosts unavailable') : ''
+      const filesystemsError = filesystemsResult.status === 'rejected' ? String(filesystemsResult.reason?.message || 'Filesystems unavailable') : ''
+      setInfraSnapshot(previous => ({
+        hosts: hostsError ? previous.hosts : (hostsResult.value.items || []),
+        filesystems: filesystemsError ? previous.filesystems : (filesystemsResult.value.items || []),
+        hostsError, filesystemsError,
+      }))
+      if (hostsError || filesystemsError) retryTimer = window.setTimeout(() => setInfraRetry(value => value + 1), 60_000)
     })
-    return () => controller.abort()
-  }, [refreshToken, nowMs])
+    return () => { controller.abort(); window.clearTimeout(retryTimer) }
+  }, [refreshToken, infraRetry])
 
   const focusHost = focusRequest?.host || selectedJob?.host || ''
   const contextToken = String(focusRequest?.token || '') + ':' + String(focusHost)
@@ -74,14 +81,16 @@ export default function RundeckUnifiedAppInfrastructure({
       <h3 title="SAP status uses CPU, RAM, I/O Wait and APP Critical WP. Filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
         <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
-        {performanceVerified && <span>Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · Highest RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {highWpHosts} {metric(highWp?.wp_critical)}</span>}
-        {infraSnapshot.error && <span role="status" className="is-error">Infrastructure summary unavailable</span>}
+        {performanceVerified && <span>Current highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {highWpHosts} {metric(highWp?.wp_critical)}</span>}
+        {(infraSnapshot.hostsError || infraSnapshot.filesystemsError) && <span role="status" className="is-error" title={[infraSnapshot.hostsError, infraSnapshot.filesystemsError].filter(Boolean).join(' · ')}>Infrastructure data unverified</span>}
       </div>
     </header>
     <div className="rundeckUnifiedAppCards" role="group" aria-label="Select APP server">
       {hosts.map(host => {
         const key = shortHost(host.host)
-        const infra = hostInfrastructureEvidence(host, infraSnapshot.hosts, infraSnapshot.filesystems, nowMs)
+        const observedInfra = hostInfrastructureEvidence(host, infraSnapshot.hosts, infraSnapshot.filesystems, nowMs)
+        const infraUnverified = Boolean(infraSnapshot.hostsError || infraSnapshot.filesystemsError)
+        const infra = infraUnverified ? { ...observedInfra, state: 'UNVERIFIED', freshness: 'UNVERIFIED' } : observedInfra
         const sapState = appSignalState(host, performanceVerified)
         const selected = key === appKey
         const reason = appSignalReason(host, performanceVerified)
@@ -111,16 +120,16 @@ export default function RundeckUnifiedAppInfrastructure({
           title={'Open ' + key + ' Analysis · SAP ' + sapState + ' (' + reason + ') · ' + fsDetails + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
           <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
-            <span className="rundeckUnifiedMetric">
+            <span className={'rundeckUnifiedMetric is-cpu-' + metricResourceState(host.cpu_pct, 'cpu').toLowerCase()}>
               <small>CPU</small><strong>{metric(host.cpu_pct, '%')}</strong>
               <i className="rundeckUnifiedMetricTrack" aria-hidden="true"><i style={{width: host.cpu_pct == null ? '0%' : Math.min(100,Math.max(0,Number(host.cpu_pct)||0)) + '%'}} /></i>
             </span>
-            <span className="rundeckUnifiedMetric">
+            <span className={'rundeckUnifiedMetric is-ram-' + metricResourceState(host.ram_pct, 'ram').toLowerCase()}>
               <small>RAM</small><strong>{metric(host.ram_pct, '%')}</strong>
               <i className="rundeckUnifiedMetricTrack" aria-hidden="true"><i style={{width: host.ram_pct == null ? '0%' : Math.min(100,Math.max(0,Number(host.ram_pct)||0)) + '%'}} /></i>
             </span>
-            <span className="rundeckUnifiedMetric" title={'Critical work processes observed: ' + metric(host.wp_critical)}>
-              <small>Critical WP</small><strong>{metric(host.wp_critical)}</strong>
+            <span className={'rundeckUnifiedMetric is-wp-' + sapWorkloadState(host).toLowerCase()} title={'Critical work processes observed: ' + metric(host.wp_critical)}>
+              <small>Critical WP</small><strong className="rundeckCriticalWpValue">{metric(host.wp_critical)}</strong>
               
             </span>
             <span className="rundeckUnifiedMetric is-infrastructure" title={fsDetails}>
