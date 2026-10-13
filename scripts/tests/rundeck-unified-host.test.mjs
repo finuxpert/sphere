@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts } from '../../src/tools/components/rundeckUnifiedHost.js'
+import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts, filesystemCapacitySummary } from '../../src/tools/components/rundeckUnifiedHost.js'
 import { OPERATOR_THRESHOLDS, hostResourceState, filesystemResourceState, sapWorkloadState } from '../../src/tools/components/rundeckStatusSemantics.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
@@ -117,4 +117,28 @@ test('APP status explanation prioritizes critical conditions and excludes filesy
   assert.equal(appSignalReason({...base,wp_critical:3,cpu_pct:92},true),'CPU 92%')
   assert.equal(appSignalReason({...base,wp_critical:0},true),'Within SAP thresholds')
   assert.equal(appSignalReason(base,false),'SAP snapshot unverified')
+})
+
+test('Filesystem details use only host-matched source bytes and never estimate absent capacity', () => {
+  const sample={...fs,total_bytes:100*1024**3,avail_bytes:11*1024**3}
+  const evidence=hostInfrastructureEvidence(sap[0],[ready],[sample],now)
+  assert.equal(evidence.topFs.mount_point,'/SAP_ARCH')
+  assert.equal(filesystemCapacitySummary(evidence.topFs),'Total 100 GiB · Available 11 GiB')
+  assert.equal(filesystemCapacitySummary({...sample,avail_bytes:null}),'Total 100 GiB')
+  assert.equal(filesystemCapacitySummary({total_bytes:null,avail_bytes:undefined}),'')
+  assert.equal(filesystemCapacitySummary({total_bytes:-1,avail_bytes:'unknown'}),'')
+  assert.equal(hostInfrastructureEvidence(sap[0],[ready],[{...sample,collection_id:'other'}],now).topFs,null)
+})
+
+test('APP card identifies Filesystem and mount point without changing SAP status', () => {
+  const source=readFileSync(new URL('../../src/tools/components/RundeckUnifiedAppInfrastructure.jsx',import.meta.url),'utf8')
+  const styles=readFileSync(new URL('../../src/tools/components/RundeckMockupParity.css',import.meta.url),'utf8')
+  assert.match(source,/Filesystem<\/small>/)
+  assert.match(source,/mountPoint = String\(infra\.topFs\?\.mount_point/)
+  assert.match(source,/Mount \$\{mountPoint\}/)
+  assert.match(source,/filesystemCapacitySummary\(infra\.topFs\)/)
+  assert.match(source,/formatWib\(infra\.topFs\.collected_at, true\)/)
+  assert.match(source,/Separate from SAP APP status/)
+  assert.match(styles,/\.rundeckUnifiedAppCardMount:only-child/)
+  assert.doesNotMatch(source,/<small>FS<\/small>/)
 })
