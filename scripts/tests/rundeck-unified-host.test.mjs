@@ -143,3 +143,21 @@ test('APP card identifies Filesystem and mount point without changing SAP status
   assert.match(styles,/\.rundeckUnifiedAppCardMount:only-child/)
   assert.doesNotMatch(source,/<small>FS<\/small>/)
 })
+
+test('v1.35.7 APP1 critical WP does not recolor normal CPU and RAM metrics', () => {
+  const base = {host:'AOPH1PAPPDC',cpu_pct:24.3,ram_pct:56.8,io_wait_pct:1,wp_critical:4}
+  assert.equal(appSignalState(base,true),'CRITICAL')
+  assert.equal(metricResourceState(base.cpu_pct,'cpu'),'NORMAL')
+  assert.equal(metricResourceState(base.ram_pct,'ram'),'NORMAL')
+  assert.equal(sapWorkloadState(base),'CRITICAL')
+  const source = readFileSync(new URL('../../src/tools/components/RundeckUnifiedAppInfrastructure.jsx',import.meta.url),'utf8')
+  const css = readFileSync(new URL('../../src/tools/components/RundeckOperatorFlatV1354.css',import.meta.url),'utf8')
+  assert.match(source,/metricResourceState\(host\.cpu_pct, 'cpu'\)/)
+  assert.match(source,/metricResourceState\(host\.ram_pct, 'ram'\)/)
+  assert.match(source,/sapWorkloadState\(host\)/)
+  assert.match(css,/\.is-cpu-normal/)
+  assert.match(css,/\.is-wp-critical/)
+  assert.match(source,/Promise\.allSettled/)
+  assert.match(source,/infraRetry/)
+  assert.doesNotMatch(source,/\[refreshToken, nowMs\]/)
+})
