@@ -296,3 +296,11 @@ Filesystem warning remains independent of the SAP APP status (CPU, RAM, I/O Wait
 ### DEV no-scroll desktop workload pager — 13 Oct 2026
 
 Current Jobs & Programs computes visible page rows from the rendered table header, first row height and remaining viewport space, reserving 44px for its pager and footer. This is a *layout* calculation only; the total searchable observations and existing API results remain unchanged. On a short desktop it may show two full rows rather than cropping the third/fourth; remaining records remain accessible via the existing pager. Recalculate when source-quality warning banners or browser size change. Tablet/mobile retain their existing bounded layout. Keep visual geometry QA at 1366×768 and 1536×864 before deploying.
+
+### DEV Workload Health and flat cockpit polish (13 Oct 2026)
+
+- A compact dot strip appears in the **existing Jobs & Programs header**. It is **not** a new card or page row. The dots display up to 28 of the backend's **top-ranked evaluations**, in the backend's order, from read-only `/evaluation/workloads?period=1d&type=ALL&limit=100`. Client-side reuse up to five minutes prevents expensive evaluation queries every minute.
+- Red = persisted `REVIEW REQUIRED`; amber = `HIGH CPU`, `HIGH MEMORY`, `CPU SPIKE`, `INCREASING CPU`, `RECURRING`; green = `NORMAL`; grey = `INSUFFICIENT DATA`, unknown or unsupported. Do **not** derive these from 100% grouped multicore CPU or equate review classification with SAP SM37 execution success/failure.
+- Total evaluated workloads and Review Required count come from the backend **full-report summary**, not the 28 preview dots. Tooltip states top-ranked preview scope and timestamp, with a freshness disclaimer. Clicking the entire indicator opens the existing Review tab; failed/missing data cannot render green.
+- Styling uses the already-loaded final operator CSS for restrained contrast, typography, APP focus, and workload rows; no added frame or vertical space. Small screens hide dots first, not functional navigation; honor reduced motion and keyboard focus.
+- QA gates: `npm run qa`, browser geometry tests on desktop 1366x768 / 1536x864 and Android, verify no document scroll or clipped pager, and backend evaluation matches returned summary. DEV only; PROD unchanged.
