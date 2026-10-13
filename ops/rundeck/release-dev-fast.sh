@@ -8,14 +8,14 @@ START=$SECONDS
 STAGE=SOURCE
 
 report_failure() {
-  local code=$?
+  local code="$1"
   echo "FINAL=FAIL STAGE=$STAGE SHA=$(git rev-parse --short HEAD 2>/dev/null || echo unknown) EXIT=$code"
   if [[ -f "$LOG" ]]; then
     grep -E '^FAIL |^not ok |BLOCKED|QA FAILED|DEPLOY FAILED|error:' "$LOG" | head -n 25 || true
   fi
   echo "LOG=$LOG"
 }
-trap report_failure ERR
+trap 'rc=$?; if ((rc != 0)); then report_failure "$rc"; fi' EXIT
 
 test "$(git branch --show-current)" = "rundeck-sphere-dev"
 test -z "$(git status --porcelain)"
@@ -53,4 +53,4 @@ DEPLOY_START=$SECONDS
 SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/deploy-dev.sh >> "$LOG" 2>&1
 echo "DEPLOY=PASS DB_MIGRATION=SKIPPED DEPLOY_SECONDS=$((SECONDS-DEPLOY_START))"
 echo "FINAL=PASS DEV_SHA=${SHA:0:8} TOTAL_SECONDS=$((SECONDS-START)) PROD=UNCHANGED_BY_RELEASE_GUARDS"
-trap - ERR
+trap - EXIT
