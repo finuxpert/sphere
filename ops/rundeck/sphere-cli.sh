@@ -2,11 +2,9 @@
 # SPHERE frontend-only release. No DB, backend, nginx, systemd or visual QA.
 set -Eeuo pipefail
 [[ "$(id -u)" == 0 ]] || { echo "Run as root"; exit 2; }
-# Promote only the screenshot-approved DEV revision; never confuse this
-# with 'deploy prod', which builds from the separate PROD checkout.
+# Promote the currently served DEV UI SHA, after explicit operator confirmation.
 if [[ "${1:-}" == promote && "${2:-}" == dev-to-prod && "$#" -eq 2 ]]; then
-  exec bash /root/rundeck-sphere-dev/ops/rundeck/promote-ui-prod-from-dev.sh \
-    2bf89c756fb66b985875492c31d7c78057e37302
+  exec bash /root/rundeck-sphere-dev/ops/rundeck/promote-ui-prod-current-dev.sh
 fi
 [[ "${1:-}" == "deploy" ]] || { echo "Usage: sphere deploy dev | sphere deploy prod | sphere promote dev-to-prod"; exit 2; }
 MODE="${2:-}"
