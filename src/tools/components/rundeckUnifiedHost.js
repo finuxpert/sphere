@@ -38,6 +38,14 @@ export function appSignalReason(host = {}, verified = true) {
   return 'Within SAP thresholds'
 }
 /** Format only source-provided filesystem capacity (bytes), never estimate missing values. */
+/** Identify the observed mount source without inferring shared physical storage. */
+export function filesystemMountSource(row = {}) {
+  const device = String(row?.device || row?.filesystem || '').trim()
+  if (/^[^:\s]+:\/\S+/.test(device)) return 'NFS'
+  if (device.startsWith('/dev/mapper/')) return 'Mapper'
+  return 'Mount'
+}
+
 export function filesystemCapacitySummary(row = {}) {
   const gib = value => {
     if (value === null || value === undefined || String(value).trim() === '') return ''

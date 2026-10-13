@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts, filesystemCapacitySummary } from '../../src/tools/components/rundeckUnifiedHost.js'
+import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts, filesystemCapacitySummary, filesystemMountSource } from '../../src/tools/components/rundeckUnifiedHost.js'
 import { OPERATOR_THRESHOLDS, hostResourceState, filesystemResourceState, sapWorkloadState, metricResourceState } from '../../src/tools/components/rundeckStatusSemantics.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
@@ -136,7 +136,7 @@ test('APP card identifies Filesystem and mount point without changing SAP status
   const styles=readFileSync(new URL('../../src/tools/components/RundeckMockupParity.css',import.meta.url),'utf8')
   assert.match(source,/>Filesystem<\/small>/)
   assert.match(source,/mountPoint = String\(infra\.topFs\?\.mount_point/)
-  assert.match(source,/Mount \$\{mountPoint\}/)
+  assert.match(source,/filesystemMountSource\(infra\.topFs\)/)
   assert.match(source,/filesystemCapacitySummary\(infra\.topFs\)/)
   assert.match(source,/formatWib\(infra\.topFs\.collected_at, true\)/)
   assert.match(source,/Separate from SAP APP status/)

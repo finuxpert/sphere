@@ -1,6 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
+import { infrastructureMetric as metric, filesystemDisplayState as fsState, storageUtilizationState as storageState, worstInfrastructureState as worst } from './rundeckInfraDisplaySemantics.js'
 import './RundeckLiveOverview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
@@ -12,24 +13,7 @@ async function loadJson(url, signal) {
   return response.json()
 }
 
-function metric(value, suffix = '') {
-  const number = Number(value)
-  return Number.isFinite(number) ? number.toLocaleString('en-US', { maximumFractionDigits: 1 }) + suffix : '—'
-}
-
-function fsState(value) {
-  return Number(value) >= 90 ? 'CRITICAL' : Number(value) >= 80 ? 'ATTENTION' : 'NORMAL'
-}
-
-function storageState(value) {
-  return Number(value) >= 95 ? 'CRITICAL' : Number(value) >= 80 ? 'ATTENTION' : 'NORMAL'
-}
-
-const severity = { NORMAL: 0, ATTENTION: 1, CRITICAL: 2 }
-
-function worst(values) {
-  return values.reduce((current, value) => (severity[value] || 0) > (severity[current] || 0) ? value : current, 'NORMAL')
-}
+const severity = { UNKNOWN: -1, NORMAL: 0, ATTENTION: 1, CRITICAL: 2 }
 
 function ageText(value) {
   if (!value || !Number.isFinite(Date.parse(value))) return '—'
@@ -115,8 +99,8 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
     .map((row) => row.collected_at)
     .filter((stamp) => Number.isFinite(Date.parse(stamp || '')))
     .sort((a, b) => Date.parse(a) - Date.parse(b))[0] || hostRow?.snapshot_ts
-  const topFs = [...observedInfra.fs].sort((a, b) => severity[fsState(b.used_pct)] - severity[fsState(a.used_pct)] || Number(b.used_pct || 0) - Number(a.used_pct || 0)).slice(0, 4)
-  const topStorage = [...observedInfra.storage].sort((a, b) => severity[storageState(b.metrics?.util_pct)] - severity[storageState(a.metrics?.util_pct)] || Number(b.metrics?.util_pct || 0) - Number(a.metrics?.util_pct || 0)).slice(0, 3)
+  const topFs = [...observedInfra.fs].sort((a, b) => (severity[fsState(b.used_pct)] ?? -1) - (severity[fsState(a.used_pct)] ?? -1) || Number(b.used_pct || 0) - Number(a.used_pct || 0)).slice(0, 4)
+  const topStorage = [...observedInfra.storage].sort((a, b) => (severity[storageState(b.metrics?.util_pct)] ?? -1) - (severity[storageState(a.metrics?.util_pct)] ?? -1) || Number(b.metrics?.util_pct || 0) - Number(a.metrics?.util_pct || 0)).slice(0, 3)
   const fsOverall = worst(observedInfra.fs.map((row) => fsState(row.used_pct)))
   const storageOverall = worst(observedInfra.storage.map((row) => storageState(row.metrics?.util_pct)))
   const dropTotal = observedInfra.network.reduce((sum, row) => sum + Number(row.metrics?.rx_dropped_delta || 0) + Number(row.metrics?.tx_dropped_delta || 0), 0)
@@ -132,12 +116,12 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
   const networkDisplayState = observedInfra.network.length ? infrastructureObservationStatus(networkOverall, snapshotFreshness) : 'UNKNOWN'
   const topFsRow = topFs[0]
   const exceptionParts = []
-  if (snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL' && topFsRow) exceptionParts.push(`${topFsRow.mount_point} ${metric(topFsRow.used_pct, '%')}`)
-  if (snapshotFreshness === 'FRESH' && storageOverall !== 'NORMAL') exceptionParts.push(`${storageOverall} · Storage I/O`)
+  if (snapshotFreshness === 'FRESH' && ['ATTENTION', 'CRITICAL'].includes(fsOverall) && topFsRow) exceptionParts.push(`${topFsRow.mount_point} ${metric(topFsRow.used_pct, '%')}`)
+  if (snapshotFreshness === 'FRESH' && ['ATTENTION', 'CRITICAL'].includes(storageOverall)) exceptionParts.push(`${storageOverall} · Storage I/O`)
   if (snapshotFreshness === 'FRESH' && networkOverall !== 'NORMAL') exceptionParts.push('ATTENTION · Network errors/drops')
-  const summaryTarget = fsOverall !== 'NORMAL' && topFsRow
+  const summaryTarget = ['ATTENTION', 'CRITICAL'].includes(fsOverall) && topFsRow
     ? { metric: 'filesystem', series: topFsRow.mount_point }
-    : storageOverall !== 'NORMAL' && topStorage[0]
+    : ['ATTENTION', 'CRITICAL'].includes(storageOverall) && topStorage[0]
       ? { metric: 'storage', series: topStorage[0].metrics?.mount || topStorage[0].sample_key }
       : networkOverall !== 'NORMAL'
         ? { metric: 'network', series: '' }

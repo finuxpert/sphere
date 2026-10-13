@@ -174,7 +174,7 @@
 }
 .appShell:has(.rundeckPanel) .rundeckUnifiedAppCardInfra .rundeckUnifiedAppCardMount:only-child{
   flex:1 1 auto;
-  text-align:left;
+  text-align:right;
 }
 
 /* Three charts on one continuous region rather than three floating cards. */

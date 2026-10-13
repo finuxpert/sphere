@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, shortHost } from './sapUiFormat.js'
-import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, filesystemCapacitySummary } from './rundeckUnifiedHost.js'
+import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, filesystemCapacitySummary, filesystemMountSource } from './rundeckUnifiedHost.js'
 import { metricResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
 
 const API = import.meta.env.BASE_URL + 'api'
@@ -95,15 +95,16 @@ export default function RundeckUnifiedAppInfrastructure({
         const selected = key === appKey
         const reason = appSignalReason(host, performanceVerified)
         const mountPoint = String(infra.topFs?.mount_point || '').trim()
-        const mountNote = mountPoint ? `Mount ${mountPoint}` : infra.topFs ? 'Mount not reported' : ''
+        const mountNote = mountPoint ? `${filesystemMountSource(infra.topFs)} ${mountPoint}` : infra.topFs ? 'Mount not reported' : ''
         const sourceNote = [
-          sapState !== 'NORMAL' ? reason : '',
+          sapState !== 'NORMAL' ? reason : ['ATTENTION', 'CRITICAL'].includes(infra.state) ? `FS ${infra.state}` : '',
           infra.freshness !== 'FRESH' ? `Infra ${infra.freshness}` : '',
         ].filter(Boolean).join(' · ')
         const fsCapacity = filesystemCapacitySummary(infra.topFs)
         const fsDetails = [
           `Filesystem used ${infra.topFs ? metric(infra.topFs.used_pct, '%') : '—'}`,
           `Mount point ${mountPoint || 'not reported'}`,
+          `Device ${String(infra.topFs?.device || infra.topFs?.filesystem || '').trim() || 'not reported'}`,
           `Infrastructure ${infra.state}`,
           `Host ${infra.infra?.host || 'not matched'}`,
           fsCapacity,
@@ -118,7 +119,7 @@ export default function RundeckUnifiedAppInfrastructure({
             ...host, infraHost: infra.infra?.host || '',
           }) }}
           title={'Open ' + key + ' Analysis · SAP ' + sapState + ' (' + reason + ') · ' + fsDetails + ' · I/O Wait ' + metric(host.io_wait_pct, '%')}>
-          <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>{sapState}</em></span>
+          <span className="rundeckUnifiedAppCardTop"><b>{key}</b><em className={'is-' + sapState.toLowerCase()}>SAP {sapState}</em></span>
           <span className="rundeckUnifiedAppCardMetrics">
             <span className={'rundeckUnifiedMetric is-cpu-' + metricResourceState(host.cpu_pct, 'cpu').toLowerCase()}>
               <small>CPU</small><strong>{metric(host.cpu_pct, '%')}</strong>
