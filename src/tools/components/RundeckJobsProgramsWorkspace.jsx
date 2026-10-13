@@ -4,6 +4,7 @@ import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 
 export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false }) {
   const [mode, setMode] = React.useState('live')
+  const [reviewJumpToken, setReviewJumpToken] = React.useState(0)
   const tabId = React.useId()
   const tabs = ['live', 'review', 'search']
   const tabRefs = React.useRef({})
@@ -25,6 +26,7 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
         embedded: true,
         forceSearch: mode === 'search',
         hideSearchButton: true,
+         reviewJumpToken,
       })
     : reviewContent
 
@@ -44,7 +46,7 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
         {mode === 'live' ? live : review}
       </div>
       <aside className="rundeckJobsProgramsHealthSide" aria-label="Workload health overview">
-        <RundeckWorkloadHealth refreshToken={refreshToken} performanceVerified={performanceVerified} onReview={() => setMode('review')} />
+        <RundeckWorkloadHealth refreshToken={refreshToken} performanceVerified={performanceVerified} onReview={() => { setReviewJumpToken(token => token + 1); setMode('review') }} />
       </aside>
     </div>
   </section>
