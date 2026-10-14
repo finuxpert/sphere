@@ -389,3 +389,17 @@
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
   font-size:10.5px!important;
 }
+
+/* DEV: preserve status on the stroke and keep text on a dark, readable surface. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape::before {
+  z-index:0!important;
+  background:var(--hex-fill,var(--sphere-page,#0f151a))!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape :is(strong,small,em){
+  position:relative;
+  z-index:1;
+}
+@media (min-width:1200px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape small{font-size:9px!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape em{font-size:8.5px!important}
+}
