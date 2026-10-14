@@ -236,8 +236,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
       <span className="rundeckCurrentWorkloadCount" title="Saved workload observations for the current collection. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved · ${coverageLabel}` : `${rows.length}/${workloadMeta.total} loaded · ${coverageLabel}`}</span>
       <div className="rundeckCurrentWorkloadTools">
-        <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
-          <option value="ALL">All APP</option>
+        <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
+          <option value="ALL">All APP · global</option>
           {availableHosts.map(host => <option key={host} value={host}>{shortHost(host)}</option>)}
         </select>
         <label className="rundeckCurrentWorkloadSearch">
