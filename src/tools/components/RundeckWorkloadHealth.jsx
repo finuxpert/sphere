@@ -12,10 +12,10 @@ const API_PAGE_SIZE = 100
 const MAX_VISIBLE_DOTS = 800
 const SEVERITY_ORDER = { review: 0, attention: 1, unknown: 2, normal: 3 }
 const LEVELS = [
-  { key: 'review', label: 'Review' },
-  { key: 'attention', label: 'Watch' },
-  { key: 'unknown', label: 'Unknown' },
-  { key: 'normal', label: 'Normal' },
+  { key: 'review', label: 'Review', health: 'REVIEW' },
+  { key: 'attention', label: 'Watch', health: 'ATTENTION' },
+  { key: 'unknown', label: 'Unknown', health: 'UNKNOWN' },
+  { key: 'normal', label: 'Normal', health: 'NORMAL' },
 ]
 
 async function readPage(offset, signal) {
@@ -139,11 +139,18 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
       <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Workload Health</strong></span><small>1D · {period} · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'}</small></span>
-      <button type="button" className="rundeckWorkloadHealthReview" onClick={onReview}
+      <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
         aria-label="Open Jobs & Programs Review">Review list</button>
     </header>
-    <div className="rundeckWorkloadHealthLegend" aria-label="Saved evaluation categories; grouped by Review, Watch, Unknown and Normal">
-      {LEVELS.map(level => <span key={level.key} title={level.key === 'unknown' ? unknownDescription : undefined}><i className={'is-' + level.key} />{preview ? preview.health[level.key] : '—'} {level.label}</span>)}
+    <div className="rundeckWorkloadHealthLegend" aria-label="Filter saved evaluations by review category">
+      {LEVELS.map(level => <button type="button" key={level.key} className={'rundeckWorkloadCategory is-' + level.key}
+        onClick={() => onReview?.(level.health)} disabled={!preview}
+        title={level.key === 'unknown' ? unknownDescription : 'Open 1D saved evaluations filtered to ' + level.label}
+        aria-label={`Open ${preview ? preview.health[level.key] : 'unverified'} ${level.label} evaluations in Review`}>
+        <i className={'is-' + level.key} aria-hidden="true" />
+        <strong>{preview ? preview.health[level.key] : '—'}</strong>
+        <span>{level.label}</span>
+      </button>)}
     </div>
     <div ref={dotGridRef} className="rundeckWorkloadDotGrid" role="group" aria-label="Individual saved workload evaluations" style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
       {(dotLayout.fits ? rows : []).map((row, index) => {
