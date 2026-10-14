@@ -1,5 +1,6 @@
 import { buildHostTrendSeries } from './rundeckTrendSeries.js'
 import { trendPercentAxisMax } from './rundeckTrendAxis.js'
+import { technicalLoadScale } from './rundeckTechnicalLoadScale.js'
 import React from 'react'
 import { createPortal } from 'react-dom'
 import * as echarts from './logEcharts.js'
@@ -185,7 +186,7 @@ function TrendFreshness({ trend }) {
   return <div className="rundeckHistoryState">Last collection {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
 }
 
-function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full' }) {
+function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null }) {
   const ref = React.useRef(null)
   const chartRef = React.useRef(null)
   const activeCallbackRef = React.useRef(null)
@@ -275,7 +276,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
         },
       },
       xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 10.5, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : undefined, splitNumber: 2 },
+      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (trend?.metric === 'load' && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
@@ -307,7 +308,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
       }
       })
     }
-  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, scaleMode, trend, themeRevision])
+  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, scaleMode, technicalAxisMax, trend, themeRevision])
 
   // ECharts stays mounted while focus and stored samples update. No chart loop.
   // The latest handler is read at click-time, not captured by the mount effect.
@@ -683,6 +684,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [scaleMode, setScaleMode] = React.useState('full')
+  const [loadScaleMode, setLoadScaleMode] = React.useState('full')
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
@@ -811,7 +813,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const openTrendInfrastructure = React.useCallback((context) => { closeTrendDetails(); onOpenInfrastructure?.(context) }, [closeTrendDetails, onOpenInfrastructure])
   const openTrendEvidence = React.useCallback((context) => { closeTrendDetails(); onOpenEvidence?.(context) }, [closeTrendDetails, onOpenEvidence])
 
-  const renderTrendState = (trend, loading, error, onSelect, { showGap = true } = {}) => {
+  const renderTrendState = (trend, loading, error, onSelect, { showGap = true, technicalAxisMax = null } = {}) => {
     if (!databaseEnabled) return <div className="rundeckHistoryState">Trend data is not available yet.</div>
     if (loading) return <div className="rundeckHistoryState">Loading trend…</div>
     if (error) return <div className="rundeckHistoryState is-error">{error}</div>
@@ -820,7 +822,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityCoverageBand trend={trend} />
       {showGap && <CollectionGapBand trend={trend} />}
       <AvailabilityObservationSummary trend={trend} />
-      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} />
     </>
     return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
   }
@@ -832,6 +834,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   ])
   const activeFocus = shortHost(focusedHost || '')
   const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
+  const loadScale = React.useMemo(() => technicalLoadScale(technicalTrend?.items, mode), [technicalTrend, mode])
+  const typicalLoadActive = technicalMetric === 'load' && loadScaleMode === 'typical'
   const activeTrend = selectedTrend || serverTrend1
   const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
 
@@ -885,13 +889,28 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
-        <div className="rundeckMonitoringHead"><h3><SphereIcon name="server" /> Technical Trend <small>· {technicalMetric === 'load' ? 'Host load average' : metricLabel(technicalMetric)}</small></h3></div>
+        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3><SphereIcon name="server" /> Technical Trend <small>· {technicalMetric === 'load' ? 'Host load average' : metricLabel(technicalMetric)}</small></h3>
+          {technicalMetric === 'load' && <button type="button" className="rundeckTechnicalScaleToggle"
+            aria-pressed={loadScaleMode === 'typical'} aria-label="Switch Technical Load between Full and Typical scale"
+            title="Typical zooms the plotted Load axis when extreme saved samples compress other observations. Peak and timestamp remain visible; Full restores every value."
+            onClick={() => setLoadScaleMode(value => value === 'full' ? 'typical' : 'full')}>
+            Load Y · {loadScaleMode === 'typical' ? 'Typical' : 'Full'}
+          </button>}
+        </div>
         <div className="rundeckTrendToolbar">
           <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
         </div>
-        {/* Technical gaps remain visible on the chart; keep only one collection-gap rail above the 3 charts. */}
-        {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint, { showGap: false })}
+        {typicalLoadActive && loadScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice" role="status"
+          title="Source peak remains unchanged; Typical is a visual crop, not missing data or SAP outage. Switch to Full to inspect the outlier on the chart.">
+          {loadScale.outliers} samples above Y {loadScale.axisMax} · Peak {numberText(loadScale.peak,1)}
+          {loadScale.peakHost ? ' · ' + shortHost(loadScale.peakHost) : ''}
+          {loadScale.peakAt ? ' · ' + formatWib(loadScale.peakAt,true) + ' WIB' : ''}
+          <button type="button" onClick={() => setLoadScaleMode('full')}>Show Full</button>
+        </div>}
+        {/* Source samples, gap markers and peak identity are preserved in both scales. */}
+        {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint, { showGap: false,
+          technicalAxisMax: typicalLoadActive ? loadScale.axisMax : null })}
       </section>
     </div>
 
