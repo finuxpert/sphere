@@ -117,7 +117,7 @@ export default function RundeckUnifiedAppInfrastructure({
       <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
         <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
-        {performanceVerified && <span title={`Highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · Highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`}>Selected APP sample · {selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'time unverified'}</span>}
+        {performanceVerified && <span title={`Highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · Highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`}>SAP APP sample · {selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'time unverified'}</span>}
         {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
       </div>
     </header>
@@ -164,8 +164,8 @@ export default function RundeckUnifiedAppInfrastructure({
           </div>
         </div>
         <div className="rundeckSelectedAppSource" title={fsDetails}>
-          <small>{mountNote} · {selectedInfra?.infra?.host || 'Host unverified'}</small>
-          <small>{fsSampleAt ? `${fsFresh ? 'Observed' : 'Last observed'} ${formatWib(fsSampleAt, true)} WIB` : 'Filesystem sample time unavailable'} · {selectedInfra?.freshness || 'UNKNOWN'}</small>
+          <small>Infra FS · {mountNote} · {selectedInfra?.infra?.host || 'Host unverified'}</small>
+          <small>{fsSampleAt ? `${fsFresh ? 'Infra sampled' : 'Last Infra sample'} ${formatWib(fsSampleAt, true)} WIB` : 'Infra sample time unavailable'} · {selectedInfra?.freshness || 'UNKNOWN'}</small>
         </div>
         <button type="button" className="rundeckSelectedAppOpen" onClick={openSelectedAnalysis}
           aria-label={'Open ' + appKey + ' SAP and Infrastructure full analysis'}>Process / Infra <span aria-hidden="true">↗</span></button>
