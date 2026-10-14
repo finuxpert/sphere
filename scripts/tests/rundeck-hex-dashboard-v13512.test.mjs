@@ -13,6 +13,8 @@ test('hexagon APP selection, source provenance and modal behavior', () => {
   assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
   assert.match(app,/selectedInfra\?\.topFs\?\.mount_point/)
   assert.match(app,/onClick=\{openSelectedAnalysis\}/)
+  assert.match(app,/openAppAnalysis\(host\)/)
+  assert.match(app,/infraHostVerified: Boolean\(infraHost\)/)
   assert.match(css,/clip-path:polygon\(50% 0%/)
   assert.match(css,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/)
   assert.match(css,/@media \(max-width:430px\)/)
