@@ -449,3 +449,119 @@
     font-size:7.5px;
   }
 }
+
+/* v1.35.16 DEV — stable 3+2 honeycomb. Existing health states and click handlers remain unchanged.
+   Two interleaved rows stay within a compact cockpit band, not stacked full-height cards. */
+@media (min-width:900px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+    display:grid!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    grid-template-rows:repeat(2,42px)!important;
+    gap:0!important;
+    max-width:320px;
+    width:100%;
+    min-height:98px;
+    box-sizing:border-box;
+    padding:7px 0!important;
+    margin-inline:auto!important;
+    align-items:center!important;
+    justify-items:center!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
+    width:min(100%,62px)!important;
+    height:60px!important;
+    min-width:0!important;
+    align-self:center;
+    justify-self:center;
+    z-index:1;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector:nth-child(1){grid-column:1 / span 2;grid-row:1}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector:nth-child(2){grid-column:3 / span 2;grid-row:1}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector:nth-child(3){grid-column:5 / span 2;grid-row:1}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector:nth-child(4){grid-column:2 / span 2;grid-row:2}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector:nth-child(5){grid-column:4 / span 2;grid-row:2}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector:is(:hover,:focus-visible,.is-active){z-index:3}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppDetail{min-height:75px}
+}
+@media (min-width:900px) and (max-width:1199px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+    max-width:280px;
+    grid-template-rows:repeat(2,37px)!important;
+    min-height:86px;
+    padding:6px 0!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
+    width:min(100%,55px)!important;
+    height:54px!important;
+  }
+}
+@media (min-width:900px) and (max-height:800px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+    grid-template-rows:repeat(2,34px)!important;
+    min-height:82px;
+    padding:7px 0!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
+    width:min(100%,53px)!important;height:52px!important;
+  }
+}
+@media (max-width:899px){
+  /* Phone/tablet: keep a compact five-APP line instead of consuming a second viewport row. */
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    grid-template-rows:1fr!important;
+    gap:3px!important;
+    min-height:0;
+    padding:0!important;
+    max-width:none;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
+    grid-column:auto!important;grid-row:auto!important;
+  }
+}
+/* Save room for the staggered APP cluster without losing the chart grid or zoom controls. */
+@media screen and (min-width:1281px) and (min-height:780px) and (max-height:1100px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendGrid .rundeckTrendChart{
+    height:clamp(124px,calc(100dvh - 820px),158px)!important;
+    min-height:124px!important;max-height:158px!important;
+  }
+}
+/* Workload Health: alternating hexagon rows; dimensioned by actual panel fit, no fake dots. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{
+  display:grid!important;
+  grid-template-columns:repeat(var(--workload-columns,1),var(--workload-dot-size,10px))!important;
+  grid-auto-rows:var(--workload-dot-size,10px)!important;
+  align-content:center!important;
+  justify-content:start!important;
+  align-items:center!important;
+  justify-items:center!important;
+  flex-wrap:nowrap!important;
+  gap:var(--workload-dot-gap,2px)!important;
+  padding:1px 1px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot{
+  flex:none!important;
+  width:var(--workload-dot-size,10px)!important;
+  height:var(--workload-dot-size,10px)!important;
+  min-width:0!important;min-height:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot.is-staggered-row{
+  translate:calc((var(--workload-dot-size,10px) + var(--workload-dot-gap,2px)) / 2) 0;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
+  column-gap:14px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter{
+  line-height:1.25;
+}
+@media(max-width:899px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{
+    display:none!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelector,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot{
+    transition:none!important;
+  }
+}
