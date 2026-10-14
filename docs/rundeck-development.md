@@ -11,11 +11,11 @@ This document describes the active SPHERE Rundeck DEV/PROD runtime contract.
 - PROD checkout: `/root/rundeck-sphere-prod`
 - DEV URL: https://sphere.astraotoparts.co.id/dev/
 - PROD URL: https://sphere.astraotoparts.co.id/
-- DEV application source version: see `src/app/version.js` (currently **v1.35.7** on this branch). The actual running DEV version/SHA must be checked from release symlinks and the browser; source version alone does not establish successful deployment.
+- DEV application source version: see `src/app/version.js` (the checked-out source declares the active version; this runbook deliberately does not hardcode it). The actual running DEV version/SHA must be checked from release symlinks and the browser; source version alone does not establish successful deployment.
 
 The manual branch family (`sphere-dev` / `sphere-prod`) is a separate Upload Logs release line.
 
-## Fast DEV deployment — operator runbook (v1.35.7)
+## Fast DEV deployment — operator runbook
 
 **Standard route: full-stack SPHERE Rundeck DEV only.** Run on `JAHSVR-SPHERE` as the authorized deploy operator. The script lives on GitHub branch `rundeck-sphere-dev`; it runs against `/root/rundeck-sphere-dev`. **Do not run against `rundeck-sphere-prod`, `sphere-dev`, or `sphere-prod`.** The currently deployed version is established from active release symlinks and HTTP health, **not** from the branch version string alone.
 

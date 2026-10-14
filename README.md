@@ -2,7 +2,7 @@
 
 SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
 
-Rundeck DEV source version is declared in [`src/app/version.js`](src/app/version.js) (currently **v1.35.7**). Source and deployed builds may differ: verify the active DEV release SHA and public UI before claiming a release is live. PROD promotion is a separate guarded process.
+Rundeck DEV source version is declared in [`src/app/version.js`](src/app/version.js) (check the file for the current version; do not rely on a hardcoded README version). Source and deployed builds may differ: verify the active DEV release SHA and public UI before claiming a release is live. PROD promotion is a separate guarded process.
 
 - Production: https://sphere.astraotoparts.co.id
 - Development: https://sphere.astraotoparts.co.id/dev/
@@ -114,8 +114,8 @@ Performance Analysis is a single SAP Performance cockpit (the obsolete Live Moni
 
 - SAP App Servers (CPU, host RAM, I/O Wait, APP Critical WP) and an Infrastructure overview with source/freshness context.
 - Two selectable Server Trends, complementary CPU / RAM by default, plus Technical Trend; shared range, interval and Avg/Peak controls.
-- Six selected-context shortcuts: Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis and System Data.
-- One full-width **Jobs & Programs** workspace with **Live / Review / Search** modes and a bounded internally scrolling table.
+- Four main Operational Analysis shortcuts: Related Events, SAP Checks, Infrastructure and System Data. Detailed historical checks remain available through the existing analysis drawers.
+- One full-width **Jobs & Programs** workspace with **Current / Review / Search** tabs. Current observations are paginated; Review/Search have their own bounded list behavior.
 - Historical workload evidence and APP-level investigation through contextual analysis drawers; System Data is a centered accessible dialog.
 - System Health and Collector Health with distinct freshness/observation semantics; absence of a sample is never an SAP outage verdict.
 - PDF preview/quick reporting for Basis and Infrastructure handoff, with host RAM separate from workload PSS Memory.
@@ -335,6 +335,6 @@ Source-only work; **not deployment evidence**. Last browser-observed DEV release
 
 - **Source-only GitHub change**, not evidence of an active DEV deployment. v1.34.79 QA and deployment remain unverified until the operator completes the DEV gate.
 - Existing Server Trend CPU/RAM/Technical evidence is unchanged. Chart instances persist for focus/option updates; APP1–APP5 + All form a keyboard-accessible color-coded highlight control. The selected APP trace changes emphasis; it never fabricates points, bridges null collection gaps, or alters threshold interpretation.
-- Jobs & Programs retains Live / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
+- Jobs & Programs shows Current / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
 - Reduced motion disables entrance/transition effects; no blinking health, infinite pulses, synthetic number counters, polling changes, backend migrations or SAP job execution.
 - Run DEV regression, lint, build and manual visual QA (1366×768, 1536×864, 1920×1080, Android) before authorizing the revision-bound deployment. PROD remains unchanged.

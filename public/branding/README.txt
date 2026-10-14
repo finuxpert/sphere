@@ -61,12 +61,12 @@ After npm run build, these files are copied into:
 IMPORTANT FOR YOUR TWO DEPLOYMENTS
 ----------------------------------
 DEV:
-  https://sapdev.cbj-kontruksi.com/
+  https://sphere.astraotoparts.co.id/dev/
 
 PROD:
-  https://cbj-kontruksi.com/sap/
+  https://sphere.astraotoparts.co.id/
 
-Avoid hardcoding "/branding/..." if the PROD app is hosted under /sap/.
+Avoid hardcoding "/branding/..." on DEV, which is served under /dev/; PROD is served at /.
 Use import.meta.env.BASE_URL or a relative/base-aware asset path.
 
 Example:
