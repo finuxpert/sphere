@@ -178,7 +178,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const availableHosts = [...new Set(rows.map(row => row.host).filter(Boolean))].sort()
   const allLoaded = workloadMeta.total === rows.length
   const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
-    ? 'current collection'
+    ? 'current run · observed'
     : workloadMeta.coverageScope === 'TOP_CONSUMERS_ONLY'
       ? 'top consumers only'
       : 'coverage unverified'

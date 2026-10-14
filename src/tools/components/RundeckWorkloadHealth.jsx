@@ -141,7 +141,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     data-state={state} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
-      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Workload Health</strong></span><small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>1D saved · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small></span>
+      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Workload Health</strong></span><small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>1D saved · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small></span>
       <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
         aria-label="Open Jobs & Programs Review">Review list</button>
     </header>
