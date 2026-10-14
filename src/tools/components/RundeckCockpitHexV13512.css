@@ -548,9 +548,6 @@
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot.is-staggered-row{
   translate:calc((var(--workload-dot-size,10px) + var(--workload-dot-gap,2px)) / 2) 0;
 }
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
-  column-gap:14px!important;
-}
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter{
   line-height:1.25;
 }
