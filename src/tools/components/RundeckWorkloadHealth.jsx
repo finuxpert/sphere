@@ -64,7 +64,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const loadedAt = React.useRef(0)
   const loadedRefreshToken = React.useRef(null)
   const dotGridRef = React.useRef(null)
-  const [dotLayout, setDotLayout] = React.useState({ size: 10, gap: 2, fits: true })
+  const [dotLayout, setDotLayout] = React.useState({ size: 10, gap: 2, columns: 1, fits: true })
 
   React.useEffect(() => {
     if (loadedAt.current > 0 && loadedRefreshToken.current === refreshToken &&
@@ -101,7 +101,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     const measure = () => {
       const next = workloadDotLayout({ count: rows.length, width: grid.clientWidth, height: grid.clientHeight })
       setDotLayout(previous => previous.size === next.size && previous.gap === next.gap &&
-        previous.fits === next.fits ? previous : next)
+        previous.columns === next.columns && previous.fits === next.fits ? previous : next)
     }
     measure()
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
@@ -145,8 +145,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     <div className="rundeckWorkloadHealthLegend" aria-label="Saved evaluation categories; grouped by Review, Watch, Unknown and Normal">
       {LEVELS.map(level => <span key={level.key} title={level.key === 'unknown' ? unknownDescription : undefined}><i className={'is-' + level.key} />{preview ? preview.health[level.key] : '—'} {level.label}</span>)}
     </div>
-    <div ref={dotGridRef} className="rundeckWorkloadDotGrid" role="group" aria-label="Individual saved workload evaluations" style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px` }}>
-      {(dotLayout.fits ? rows : []).map(row => {
+    <div ref={dotGridRef} className="rundeckWorkloadDotGrid" role="group" aria-label="Individual saved workload evaluations" style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
+      {(dotLayout.fits ? rows : []).map((row, index) => {
         const level = workloadHealthLevel(row)
         const type = String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'
         const cpu = row.avg_cpu_pct == null ? '—' : row.avg_cpu_pct + '%'
@@ -154,7 +154,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         const description = `${type} ${row.consumer_key} · ${level === 'review' ? 'Review Required' :
           level === 'attention' ? 'Watch' : level === 'normal' ? 'Normal' : 'Unknown'} · avg CPU ${cpu} · avg PSS ${pss}`
         return <button key={row.consumer_type + ':' + row.consumer_key} type="button"
-          className={'rundeckWorkloadDot is-' + level + (preview?.limited ? ' is-limited' : '')}
+          className={'rundeckWorkloadDot is-' + level +
+            (dotLayout.columns > 0 && Math.floor(index / dotLayout.columns) % 2 ? ' is-staggered-row' : '') +
+            (preview?.limited ? ' is-limited' : '')}
           title={description} aria-label={description}
           onClick={() => openWorkload(row)} />
       })}
