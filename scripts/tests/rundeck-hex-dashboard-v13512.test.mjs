@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { workloadDotLayout } from '../../src/tools/components/rundeckWorkloadGrid.js'
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
 test('hexagon APP selection, source provenance and modal behavior', () => {
@@ -38,4 +39,37 @@ test('Workload Health keeps validated 1D identities and adds hexagon title icon'
   assert.match(read('SphereIcon.jsx'),/hexagon: <>/)
   assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
   assert.match(health,/onClick=\{\(\) => openWorkload\(row\)\}/)
+})
+
+test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity', () => {
+  const app=read('RundeckUnifiedAppInfrastructure.jsx')
+  const css=read('RundeckCockpitHexV13512.css')
+  assert.match(app,/hosts\.length === 5 \? ' is-honeycomb'/)
+  assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)!important/)
+  for (let index=1;index<=5;index++) {
+    assert.match(css,new RegExp('is-honeycomb>\\\\.rundeckAppHexSelector:nth-child\\\\(' + index + '\\\\)'))
+  }
+  assert.match(css,/nth-child\(4\)\{grid-column:2 \/ span 2;grid-row:2\}/)
+  assert.match(css,/nth-child\(5\)\{grid-column:4 \/ span 2;grid-row:2\}/)
+  assert.match(css,/@media \(max-width:899px\)/)
+  assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\); openAppAnalysis\(host\) \}\}/)
+})
+
+test('saved workload honeycomb capacity reserves stagger offset and never hides excess records', () => {
+  const health=read('RundeckWorkloadHealth.jsx')
+  const css=read('RundeckCockpitHexV13512.css')
+  const fitted=workloadDotLayout({count:395,width:640,height:145})
+  assert.equal(fitted.fits,true)
+  assert.ok(fitted.columns>1)
+  assert.ok(fitted.rows>1)
+  assert.ok(fitted.capacity>=395)
+  assert.ok(fitted.rows*(fitted.size+fitted.gap)-fitted.gap+2<=145)
+  const maxX=(fitted.columns-1)*(fitted.size+fitted.gap)+fitted.size+(fitted.size+fitted.gap)/2+2
+  assert.ok(maxX<=640,'last staggered hexagon must fit inside panel')
+  assert.equal(workloadDotLayout({count:395,width:90,height:42}).fits,false)
+  assert.match(health,/Math\.floor\(index \/ dotLayout\.columns\) % 2/)
+  assert.match(health,/dotLayout\.fits \? rows : \[\]/)
+  assert.match(health,/open Review/)
+  assert.match(css,/\.rundeckWorkloadDot\.is-staggered-row/)
+  assert.match(css,/grid-template-columns:repeat\(var\(--workload-columns,1\)/)
 })
