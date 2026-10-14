@@ -21,6 +21,7 @@ export function validateAppWorkloadResponse(result, collectionId, host) {
   const same = (left, right) => String(left || '').trim().toUpperCase() === String(right || '').trim().toUpperCase()
   if (!collectionId || !host || !result || String(result.collection_id || '') !== String(collectionId) ||
       !same(result.host, host) || !Array.isArray(result.items) ||
+      (result.total === null || result.total === undefined || result.total === '') ||
       !Number.isSafeInteger(Number(result.total)) || Number(result.total) < result.items.length) return false
   const unique = new Set()
   for (const row of result.items) {
@@ -137,7 +138,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
       {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Coverage: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'All observed workloads' :
-  workloadMeta.coverage_scope === 'TOP_CONSUMERS' ? 'Top consumers only' : workloadMeta.coverage_scope || 'Unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped, not host CPU or SM37 status</div><div className="rundeckAppServerTableWrap"><table>
+  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped, not host CPU or SM37 status</div><div className="rundeckAppServerTableWrap"><table>
         <thead><tr>
           <th>Job / Program</th><th title="Grouped multi-core workload CPU; may exceed 100%, not host CPU">CPU Total</th>
           <th title="Proportional Set Size, grouped workload memory in GB">PSS</th>
