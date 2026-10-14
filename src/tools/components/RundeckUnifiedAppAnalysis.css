@@ -119,3 +119,32 @@
     min-height:175px!important;
   }
 }
+
+/* DEV APP process evidence: readable columns without adding dashboard scroll. */
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap table {
+  width:100%;
+  table-layout:fixed;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(1){width:33%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(2){width:12%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(3){width:11%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(4){width:11%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(5){width:19%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(6){width:14%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap :is(th,td) {
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap td:nth-child(5) {
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap td:first-child .rundeckAppTypeBadge {
+  min-height:16px;
+  padding:0 4px;
+  margin-right:3px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisUnknown {
+  padding:12px 10px;
+  border-left:2px solid var(--sphere-warning,#d5ad55);
+  line-height:1.45;
+}
