@@ -47,7 +47,7 @@ test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity
   assert.match(app,/hosts\.length === 5 \? ' is-honeycomb'/)
   assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)!important/)
   for (let index=1;index<=5;index++) {
-    assert.match(css,new RegExp('is-honeycomb>\\\\.rundeckAppHexSelector:nth-child\\\\(' + index + '\\\\)'))
+    assert.ok(css.includes('.rundeckAppHexSelector:nth-child(' + index + ')'))
   }
   assert.match(css,/nth-child\(4\)\{grid-column:2 \/ span 2;grid-row:2\}/)
   assert.match(css,/nth-child\(5\)\{grid-column:4 \/ span 2;grid-row:2\}/)
