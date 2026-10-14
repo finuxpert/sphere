@@ -289,3 +289,41 @@ test('v1.35.15 APP shortcut keeps verified Infrastructure host identity', async 
   expect(geometry.top).toBeGreaterThanOrEqual(-1)
   expect(geometry.bottom).toBeLessThanOrEqual(geometry.height+1)
 })
+
+test('v1.35.16 APP honeycomb geometry and evaluated dot packing stay inside viewport', async ({page}) => {
+  test.skip((page.viewportSize()?.width || 0) < 900, 'Mobile keeps a compact APP row')
+  await openCockpit(page)
+  const apps=page.locator('.rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector')
+  await expect(apps).toHaveCount(5)
+  const layout=await apps.evaluateAll(items=>items.map(el=>{
+    const r=el.getBoundingClientRect()
+    return {x:r.left+r.width/2,y:r.top+r.height/2,width:r.width,height:r.height}
+  }))
+  for(const n of [1,2])expect(Math.abs(layout[n].y-layout[0].y)).toBeLessThanOrEqual(2)
+  expect(Math.abs(layout[4].y-layout[3].y)).toBeLessThanOrEqual(2)
+  expect(layout[3].y).toBeGreaterThan(layout[0].y+15)
+  expect(layout[3].x).toBeGreaterThan(layout[0].x)
+  expect(layout[3].x).toBeLessThan(layout[1].x)
+  expect(layout[4].x).toBeGreaterThan(layout[1].x)
+  expect(layout[4].x).toBeLessThan(layout[2].x)
+  const viewport=await viewportEvidence(page)
+  expect(viewport.pageOverflowX).toBeLessThanOrEqual(2)
+  expect(viewport.pageOverflowY).toBeLessThanOrEqual(2)
+  const matrix=page.locator('.rundeckWorkloadDotGrid')
+  const dots=matrix.locator('.rundeckWorkloadDot')
+  if(await dots.count()){
+    const geometry=await matrix.evaluate(grid=>{
+      const box=grid.getBoundingClientRect()
+      const nodes=[...grid.querySelectorAll('.rundeckWorkloadDot')]
+      const outside=nodes.filter(node=>{
+        const r=node.getBoundingClientRect()
+        return r.right>box.right+2 || r.left<box.left-2 || r.bottom>box.bottom+2 || r.top<box.top-2
+      }).length
+      return {display:getComputedStyle(grid).display,visible:nodes.length,outside,
+        staggered:grid.querySelectorAll('.is-staggered-row').length}
+    })
+    expect(geometry.display).toBe('grid')
+    expect(geometry.outside).toBe(0)
+    expect(geometry.staggered).toBeGreaterThan(0)
+  }
+})
