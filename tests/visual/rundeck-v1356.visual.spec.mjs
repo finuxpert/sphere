@@ -327,3 +327,36 @@ test('v1.35.16 APP honeycomb geometry and evaluated dot packing stay inside view
     expect(geometry.staggered).toBeGreaterThan(0)
   }
 })
+
+test('v1.35.17 Workload Health fills the current workspace and Y-axis focus stays reversible', async ({page}) => {
+  test.skip((page.viewportSize()?.width || 0) < 1200, 'Desktop measured health workspace')
+  await openCockpit(page)
+  const viewport=page.viewportSize()
+  const card=page.locator('.rundeckWorkloadHealth')
+  const sourceTable=page.locator('.rundeckJobsProgramsWorkspaceBody.is-live')
+  await expect(card).toBeVisible()
+  const layout=await page.evaluate(() => {
+    const measure=selector=>{
+      const node=document.querySelector(selector)
+      if (!node) return null
+      const r=node.getBoundingClientRect()
+      return {top:r.top,bottom:r.bottom,height:r.height}
+    }
+    return {card:measure('.rundeckWorkloadHealth'),table:measure('.rundeckJobsProgramsWorkspaceBody.is-live'),
+      dots:[...document.querySelectorAll('.rundeckWorkloadDot')].map(el=>el.getBoundingClientRect().width)}
+  })
+  expect(layout.card).not.toBeNull()
+  expect(layout.table).not.toBeNull()
+  expect(layout.card.height).toBeGreaterThanOrEqual((viewport?.height || 0) <= 800 ? 156 : 200)
+  expect(layout.card.bottom).toBeLessThanOrEqual((viewport?.height || 0)+2)
+  if (layout.dots.length && (viewport?.height || 0) >= 850) {
+    expect(Math.max(...layout.dots)).toBeGreaterThanOrEqual(10)
+  }
+  const zoom=page.getByRole('button',{name:/Y Axis · 0–100%/})
+  await expect(zoom).toBeVisible()
+  await zoom.click()
+  await expect(page.getByRole('button',{name:/Y Axis · Focus/})).toHaveAttribute('aria-pressed','true')
+  await expect(page.locator('.rundeckTrendFocusReference')).toBeVisible()
+  await page.getByRole('button',{name:/Y Axis · Focus/}).click()
+  await expect(zoom).toHaveAttribute('aria-pressed','false')
+})
