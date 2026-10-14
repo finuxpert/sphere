@@ -133,6 +133,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const openWorkload = row => onSelectWorkload?.(row, {
     period: '1d', days: 1, start: data?.start || '', end: data?.end || '',
   })
+  const statusNote = rows.length && dotLayout.fits
+    ? '1 hexagon = 1 saved evaluation'
+    : 'Open Review for individual records'
 
   return <section className="rundeckWorkloadHealth"
     data-state={state} data-density={rows.length > 500 ? 'dense' : 'normal'}
@@ -145,7 +148,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     <div className="rundeckWorkloadHealthLegend" aria-label="Filter saved evaluations by review category">
       {LEVELS.map(level => <button type="button" key={level.key} className={'rundeckWorkloadCategory is-' + level.key}
         onClick={() => onReview?.(level.health)} disabled={!preview}
-        title={level.key === 'unknown' ? unknownDescription : 'Open 1D saved evaluations filtered to ' + level.label}
+        title={level.key === 'unknown' ? unknownDescription + ' Click to review full saved evaluations.' : 'Click to open 1D saved evaluations filtered to ' + level.label}
         aria-label={`Open ${preview ? preview.health[level.key] : 'unverified'} ${level.label} evaluations in Review`}>
         <i className={'is-' + level.key} aria-hidden="true" />
         <strong>{preview ? preview.health[level.key] : '—'}</strong>
@@ -172,7 +175,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       </span>}
     </div>
     <footer className="rundeckWorkloadHealthFooter">
-      <span className={'is-' + state}>{outcome} · {rows.length && dotLayout.fits ? '1 hexagon = 1 saved evaluation' : 'open Review for record details'} · not SM37 status</span>
+      <span className={'is-' + state} title="Evaluation priority is based on saved evidence, not SAP SM37 execution status.">{outcome} · {statusNote} · not SM37 status</span>
       {preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
         <small title={unknownDescription}>Unknown: {insufficient} insufficient data · {otherUnknown} other</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
