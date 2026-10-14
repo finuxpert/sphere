@@ -152,7 +152,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
               onKeyDown={(event)=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}}>
               <td>
                 <strong title={row.consumer_key}>{observedWorkloadName(row.consumer_key, row.details)}</strong>
-                <small title={row.details?.identity_source || 'SAP workload observation'}><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{String(row.consumer_type||'—').toUpperCase()}</span> {observedWorkloadName(row.details?.program || row.details?.job_name || '', row.details) || ''}</small>
+                <small title={`Observed identity: ${row.details?.identity_source || 'SAP workload observation'}; not SM37 execution status`}><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{String(row.consumer_type||'—').toUpperCase()}</span> {observedWorkloadName(row.details?.program || row.details?.job_name || '', row.details) || ''}</small>
               </td>
               <td>{metric(row.cpu_pct,'%')}</td>
               <td>{pssText(row)}</td>
