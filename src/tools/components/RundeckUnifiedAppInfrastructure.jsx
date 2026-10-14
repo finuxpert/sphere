@@ -104,8 +104,8 @@ export default function RundeckUnifiedAppInfrastructure({
   // The Infrastructure host is strictly matched from collected evidence, never inferred.
   const openAppAnalysis = (host) => {
     if (!host?.host) return
-    const infraHost = matchedInfrastructureHost(host, infraSnapshot.hosts)?.host || ''
-    onInspectApp?.({ ...host, infraHost })
+    const infraHost = infraSnapshot.hostsError ? '' : matchedInfrastructureHost(host, infraSnapshot.hosts)?.host || ''
+    onInspectApp?.({ ...host, infraHost, infraHostVerified: Boolean(infraHost) })
   }
   const openSelectedAnalysis = () => openAppAnalysis(selectedHost)
 
