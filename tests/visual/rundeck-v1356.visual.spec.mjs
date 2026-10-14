@@ -412,3 +412,35 @@ test('v1.35.18 Technical Load Typical mode has a reversible Full scale', async (
   expect(geometry.pageOverflowX).toBeLessThanOrEqual(2)
   expect(geometry.pageOverflowY).toBeLessThanOrEqual(2)
 })
+
+test('v1.35.19 Workload Health grid, source labels and action focus stay within cockpit',async ({page})=>{
+  test.skip((page.viewportSize()?.width || 0)<1200,'Desktop one-screen geometry')
+  await openCockpit(page)
+  const app=page.locator('.rundeckSelectedAppDetail')
+  await expect(app).toBeVisible()
+  const header=page.locator('.rundeckUnifiedAppInfraHead')
+  await expect(header).toContainText('SAP APP sample')
+  const source=app.locator('.rundeckSelectedAppSource')
+  if(await source.isVisible())await expect(source).toContainText('Infra FS')
+  const health=page.locator('.rundeckWorkloadHealth')
+  await expect(health).toBeVisible()
+  const geometry=await health.evaluate(node=>{
+    const rect=element=>{
+      const r=element.getBoundingClientRect()
+      return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,height:r.height}
+    }
+    const blocks=['.rundeckWorkloadHealthTitle','.rundeckWorkloadHealthLegend','.rundeckWorkloadDotGrid','.rundeckWorkloadHealthFooter']
+      .map(selector=>node.querySelector(selector)).filter(Boolean).map(rect)
+    return {layout:getComputedStyle(node).display,blocks,card:rect(node),screenHeight:innerHeight}
+  })
+  expect(geometry.layout).toBe('grid')
+  expect(geometry.blocks).toHaveLength(4)
+  for(let i=1;i<geometry.blocks.length;i++)expect(geometry.blocks[i].top).toBeGreaterThanOrEqual(geometry.blocks[i-1].bottom-3)
+  expect(geometry.card.bottom).toBeLessThanOrEqual(geometry.screenHeight+2)
+  const category=health.locator('.rundeckWorkloadCategory').first()
+  await category.focus()
+  await expect(category).toBeFocused()
+  const result=await viewportEvidence(page)
+  expect(result.pageOverflowX).toBeLessThanOrEqual(2)
+  expect(result.pageOverflowY).toBeLessThanOrEqual(2)
+})
