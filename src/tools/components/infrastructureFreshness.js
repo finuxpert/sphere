@@ -12,11 +12,12 @@ export function infrastructureFreshness(timestamp, nowMs = Date.now()) {
 export function infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows, nowMs = Date.now()) {
   const hostState = infrastructureFreshness(hostTimestamp, nowMs)
   if (hostState !== 'FRESH') return hostState
+  if (!collectionId || !String(collectionId).trim()) return 'UNKNOWN'
   if (!Array.isArray(rows) || rows.length === 0) return 'UNKNOWN'
   for (const row of rows) {
     const rowState = infrastructureFreshness(row?.collected_at, nowMs)
     if (rowState !== 'FRESH') return rowState
-    if (collectionId && row.collection_id !== collectionId) return 'UNKNOWN'
+    if (!row?.collection_id || String(row.collection_id) !== String(collectionId)) return 'UNKNOWN'
   }
   return 'FRESH'
 }
