@@ -124,9 +124,11 @@ test('v1.35.6 APP analysis keeps pager controls visible, verified collection lab
   test.skip((page.viewportSize()?.width || 0) < 1100, 'Desktop APP analysis geometry')
   await page.locator('.rundeckAppHexSelectors .rundeckAppHexSelector').first().click()
   await expect(page.locator('.rundeckSelectedAppDetail')).toBeVisible()
-  await page.locator('.rundeckSelectedAppOpen').click()
+  // Regression: one hexagon click opens the existing per-APP process and Infrastructure modal.
   const dialog = page.getByRole('dialog',{name:/APP\d+ Analysis/})
   await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('region',{name:'SAP performance evidence'})).toBeVisible()
+  await expect(dialog.getByRole('region',{name:'Infrastructure evidence'})).toBeVisible()
   await expect(dialog.locator('.rundeckUnifiedAnalysisProvenance')).toBeVisible()
   const pager = dialog.locator('.rundeckInfraGrid article:first-child .rundeckInfraFsPager')
   await expect(pager).toBeVisible({timeout:20_000})
