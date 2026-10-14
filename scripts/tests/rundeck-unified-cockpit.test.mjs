@@ -121,3 +121,38 @@ test('Workload Health is a full sibling with verified 1D selectable hexagons wit
   assert.match(style,/@media screen and \(max-width:1199px\)/)
   assert.doesNotMatch(state,/cpu_pct\s*[><=]+\s*100/)
 })
+
+test('selected APP Infrastructure navigation never reuses a different persisted host', () => {
+  const wrapper=read('RundeckMonitoringHistory.jsx')
+  const infra=read('RundeckInfrastructure.jsx')
+  assert.match(wrapper,/sapHost: focusedOperationalHost\?\.host \|\| ''/)
+  assert.match(wrapper,/lockedHost=\{Boolean\(activeOverlay\.sapHost\)\}/)
+  assert.match(infra,/matchedInfrastructureHost\(\{host:requestedSapHost\}, hosts\)/)
+  assert.match(infra,/if\(requestedSapHost&&!resolvedTarget\)/)
+  assert.match(infra,/No verified Infrastructure host mapping/)
+  assert.match(infra,/lockedHost\|\|requestedSapHost\?null/)
+})
+
+test('APP snapshot separates current and retained filesystem evidence', () => {
+  const app=read('RundeckUnifiedAppInfrastructure.jsx')
+  const css=read('RundeckCockpitHexV13512.css')
+  assert.match(app,/<small>Host CPU<\/small>/)
+  assert.match(app,/<small>Host RAM<\/small>/)
+  assert.match(app,/<small>Highest FS<\/small>/)
+  assert.match(app,/fsFresh && selectedInfra\?\.topFs/)
+  assert.match(app,/Last observed/)
+  assert.match(app,/performanceVerified \? selectedHost\.cpu_pct : null/)
+  assert.match(css,/\.rundeckSelectedAppFsMeta/)
+})
+
+test('operational shortcuts disclose exact evidence and bounded collector scope', () => {
+  const evidence=read('RundeckOperationalEvidence.jsx')
+  const wrapper=read('RundeckMonitoringHistory.jsx')
+  const source=read('RundeckSource.jsx')
+  assert.match(evidence,/evidenceScope/)
+  assert.match(evidence,/Incident \$\{incidentHost\}/)
+  assert.match(evidence,/System availability · SAP issues/)
+  assert.match(wrapper,/scopeLabel=\{activeOverlay\.scope \|\| ''\}/)
+  assert.match(source,/Last \$\{collectionCount\} collector runs · 90D/)
+  assert.match(source,/historyRefreshFailed \? 'Collector history unverified'/)
+})
