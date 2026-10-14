@@ -86,9 +86,7 @@
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape::before{
   content:"";
   position:absolute;
-  z-index:-1;
   inset:2px;
-  background:var(--hex-fill);
   clip-path:polygon(50% 0%,94% 25%,94% 75%,50% 100%,6% 75%,6% 25%);
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape strong{
@@ -167,7 +165,7 @@
   min-width:0;
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppMetric{
-  display:flex;flex-direction:column;gap:4px;min-width:0;
+  display:flex;flex-direction:column;min-width:0;
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppMetric small{
   color:var(--sphere-text-secondary,#a9b5bb);
@@ -244,9 +242,6 @@
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button :is(span,strong){
   font-size:11px!important;
-}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button small{
-  font-size:9.5px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendBandV13454{
   padding-top:5px!important;
@@ -488,7 +483,6 @@
 }
 @media (min-width:900px) and (max-width:1199px){
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
-    max-width:280px;
     grid-template-rows:repeat(2,37px)!important;
     min-height:86px;
     padding:6px 0!important;
@@ -648,18 +642,8 @@
     height:100%!important;
     min-height:200px!important;
     max-height:340px!important;
-    gap:7px!important;
-    padding:11px 14px!important;
-  }
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{
-    justify-content:center!important;
-    align-content:center!important;
-  }
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthTitle small{
-    font-size:10.5px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter{
-    gap:10px!important;
     flex-wrap:wrap;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter span{
@@ -670,8 +654,6 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
     min-height:156px!important;
     max-height:230px!important;
-    padding:7px 10px!important;
-    gap:4px!important;
   }
 }
 
@@ -717,9 +699,6 @@
     line-height:1.15!important;
     width:100%;min-width:0;
   }
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{
-    align-content:center!important;
-  }
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory{
   display:flex;align-items:center;justify-content:center;
@@ -757,7 +736,7 @@
     display:grid!important;gap:2px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory{
-    min-height:27px;padding:1px;
+    padding:1px;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory strong{font-size:12px!important}
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory span{font-size:8px}
@@ -800,7 +779,7 @@
 }
 @media (max-width:899px){
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle{
-    font-size:8px;padding:2px 4px;
+    padding:2px 4px;
   }
 }
 

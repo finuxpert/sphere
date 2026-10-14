@@ -7,7 +7,7 @@ const read = filename => readFileSync(new URL('../../src/tools/components/' + fi
 test('APP hexagon opens combined modal in one click and Full Analysis remains a fallback', () => {
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const core=read('RundeckMonitoringHistoryCore.jsx')
-  assert.match(app,/className="rundeckAppHexSelectors rundeckUnifiedAppCards"/)
+  assert.match(app,/className=\{'rundeckAppHexSelectors rundeckUnifiedAppCards' \+ \(hosts\.length === 5 \? ' is-honeycomb'/)
   assert.match(app,/onSelectApp\?\.\(host\.host\)/)
   assert.match(app,/aria-pressed=\{appKey === key\}/)
   assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
@@ -86,7 +86,7 @@ test('center modal has a dedicated 220ms keyframe and keeps per-APP host provena
  assert.match(css,/top:50%!important;left:50%!important/)
  assert.match(css,/transform:translate\(-50%,-50%\)/)
  assert.match(css,/prefers-reduced-motion:reduce/)
- assert.match(app,/shortHost\(infraKey\) === shortHost\(appKey\)/)
+ assert.match(app,/const allowedHost = Boolean\(host\) && shortHost\(host\) === label/)
  assert.match(app,/sample time UNKNOWN/)
 })
 
@@ -140,7 +140,7 @@ test('APP snapshot separates current and retained filesystem evidence', () => {
   assert.match(app,/<small>Host RAM<\/small>/)
   assert.match(app,/<small>Highest FS<\/small>/)
   assert.match(app,/fsFresh && selectedInfra\?\.topFs/)
-  assert.match(app,/Last observed/)
+  assert.match(app,/fsHistorical \? `Last \$\{metric\(/)
   assert.match(app,/performanceVerified \? selectedHost\.cpu_pct : null/)
   assert.match(css,/\.rundeckSelectedAppFsMeta/)
 })

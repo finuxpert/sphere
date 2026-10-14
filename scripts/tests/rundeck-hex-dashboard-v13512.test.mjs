@@ -82,7 +82,7 @@ test('v1.35.17 Workload Health uses available vertical room without changing one
   assert.ok(dense.size>10,'larger panel should grow verified hexagons')
   assert.equal(dense.rows*dense.columns>=423,true)
   assert.equal(workloadDotLayout({count:423,width:90,height:42}).fits,false)
-  assert.ok(css.includes('max-width:380px!important'))
+  assert.ok(css.includes('max-width:350px!important'))
   assert.ok(css.includes('height:100%!important'))
   assert.ok(css.includes('align-items:stretch!important'))
   assert.ok(css.includes('justify-content:center!important'))
