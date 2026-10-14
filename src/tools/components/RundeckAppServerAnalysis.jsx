@@ -17,7 +17,7 @@ const processText = (row = {}) => {
   return raw != null && String(raw).trim() !== '' && Number.isInteger(value) && value >= 0 ? value.toLocaleString('en-US',{maximumFractionDigits:0}) : '—'
 }
 /** Reject mixed collection/APP payloads; request parameters alone do not prove source identity. */
-export function validateAppWorkloadResponse(result, collectionId, host) {
+function validateAppWorkloadResponse(result, collectionId, host) {
   const same = (left, right) => String(left || '').trim().toUpperCase() === String(right || '').trim().toUpperCase()
   if (!collectionId || !host || !result || String(result.collection_id || '') !== String(collectionId) ||
       !same(result.host, host) || !Array.isArray(result.items) ||
@@ -108,7 +108,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       }
     }).finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return()=>controller.abort()
-  },[app?.host,latestCollectionId,refreshToken])
+  },[app,latestCollectionId,refreshToken])
 
   if(!app) return null
   const matchedCollection = Boolean(latestCollectionId) && workloadMeta.collectionId === latestCollectionId &&
