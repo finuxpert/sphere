@@ -802,3 +802,10 @@
     font-size:8px;padding:2px 4px;
   }
 }
+
+/* Global workload scope is explicit and remains separate from APP Trend focus. */
+@media (min-width:900px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHostFilter{
+    width:116px!important;
+  }
+}
