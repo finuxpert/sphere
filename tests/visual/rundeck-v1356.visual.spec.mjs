@@ -206,9 +206,9 @@ test('DEV Workload Health and table are genuinely side-by-side without clipping 
     const dots = page.locator('.rundeckWorkloadDotGrid .rundeckWorkloadDot')
     await expect.poll(async () => {
       const txt = await page.locator('.rundeckWorkloadHealthTitle small').textContent()
-      return /\\d[\\d,]* evaluated/.test(txt || '')
+      return /\d[\d,]* evaluated/.test(txt || '')
     },{timeout:30000}).toBe(true)
-    const match = (await page.locator('.rundeckWorkloadHealthTitle small').textContent()).match(/(\\d[\\d,]*) evaluated/)
+    const match = (await page.locator('.rundeckWorkloadHealthTitle small').textContent()).match(/(\d[\d,]*) evaluated/)
     const evaluated = Number(match[1].replace(/,/g,''))
     const displayed = await dots.count()
     if (displayed) {
