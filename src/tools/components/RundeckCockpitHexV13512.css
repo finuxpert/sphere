@@ -468,8 +468,8 @@
     justify-items:center!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
-    width:min(100%,62px)!important;
-    height:60px!important;
+    width:min(100%,60px)!important;
+    height:55px!important;
     min-width:0!important;
     align-self:center;
     justify-self:center;
@@ -491,8 +491,8 @@
     padding:6px 0!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
-    width:min(100%,55px)!important;
-    height:54px!important;
+    width:min(100%,52px)!important;
+    height:48px!important;
   }
 }
 @media (min-width:900px) and (max-height:800px){
@@ -502,7 +502,7 @@
     padding:7px 0!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
-    width:min(100%,53px)!important;height:52px!important;
+    width:min(100%,50px)!important;height:46px!important;
   }
 }
 @media (max-width:899px){
