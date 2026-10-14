@@ -98,7 +98,7 @@ export default function RundeckMonitoringHistory(props) {
     onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
     onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', sapHost: focusedOperationalHost?.host || '', returnTo: { type: 'selected' } })}
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
-    systemDataSummary={systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2')}
+    systemDataSummary={systemDataSummary}
     focusedHost={focusedOperationalHost?.host || ''}
     infrastructureLabel={focusedOperationalHost ? `APP ${shortHost(focusedOperationalHost.host)} · verified host required` : 'No APP host selected'}
   />
