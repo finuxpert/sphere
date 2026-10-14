@@ -178,7 +178,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const availableHosts = [...new Set(rows.map(row => row.host).filter(Boolean))].sort()
   const allLoaded = workloadMeta.total === rows.length
   const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
-    ? 'observed workload source'
+    ? 'observed workloads'
     : workloadMeta.coverageScope === 'TOP_CONSUMERS_ONLY'
       ? 'top consumers only'
       : 'coverage unverified'
@@ -234,7 +234,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount" title="Saved workload observations for the current collection. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved workload rows · ${coverageLabel}` : `${rows.length} of ${workloadMeta.total} loaded · ${coverageLabel} · search limited`}</span>
+      <span className="rundeckCurrentWorkloadCount" title="Saved workload observations for the current collection. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved · ${coverageLabel}` : `${rows.length}/${workloadMeta.total} loaded · ${coverageLabel}`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APP</option>
