@@ -177,6 +177,11 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const loaded = sortedRows
   const availableHosts = [...new Set(rows.map(row => row.host).filter(Boolean))].sort()
   const allLoaded = workloadMeta.total === rows.length
+  const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
+    ? 'observed workload source'
+    : workloadMeta.coverageScope === 'TOP_CONSUMERS_ONLY'
+      ? 'top consumers only'
+      : 'coverage unverified'
   const query = loadedSearch.trim().toLocaleLowerCase()
   const visible = loaded.filter(row => {
     if (hostFilter !== 'ALL' && row.host !== hostFilter) return false
@@ -229,7 +234,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount" title="Current collection observations. Per-APP API is limited to 100 rows; unloaded observations are not searchable.">{allLoaded ? `${rows.length} current observations` : `${rows.length} of ${workloadMeta.total} loaded · search limited`}</span>
+      <span className="rundeckCurrentWorkloadCount" title="Saved workload observations for the current collection. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved workload rows · ${coverageLabel}` : `${rows.length} of ${workloadMeta.total} loaded · ${coverageLabel} · search limited`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APP</option>
@@ -248,7 +253,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap" ref={tableWrapRef}>
       <table>
-        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓</th><th title="Proportional Set Size; workload memory in gigabytes, not APP host RAM">PSS (GB)</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
+        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total (multi-core) ↓</th><th title="Proportional Set Size; workload memory in gigabytes, not APP host RAM">PSS (GB)</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
         <tbody>
           {pageRows.map((row) => {
             const details = row.details || {}
