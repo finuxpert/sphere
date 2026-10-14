@@ -130,6 +130,9 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [sourcesLoading,setSourcesLoading]=React.useState(true)
   const [clockNow,setClockNow]=React.useState(()=>Date.now())
   const requestedSapHost = String(initialContext?.sapHost || '').trim()
+  const contextHost = initialContext?.host || ''
+  const contextMetric = initialContext?.metric || ''
+  const contextSeries = initialContext?.series || ''
   const [selectedHost,setSelectedHost]=React.useState(()=>{if(lockedHost)return initialContext?.host||'';if(initialContext?.sapHost)return '';try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
@@ -139,10 +142,10 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [storagePage,setStoragePage]=React.useState(0)
   React.useEffect(()=>{
     if(requestedSapHost)setSelectedHost('')
-    else if(initialContext?.host)setSelectedHost(initialContext.host)
-    if(['filesystem','network','storage'].includes(initialContext?.metric))setTrendMetric(initialContext.metric)
-    if(initialContext?.series)setSelectedSeries(initialContext.series)
-  },[requestedSapHost,initialContext?.host,initialContext?.metric,initialContext?.series])
+    else if(contextHost)setSelectedHost(contextHost)
+    if(['filesystem','network','storage'].includes(contextMetric))setTrendMetric(contextMetric)
+    if(contextSeries)setSelectedSeries(contextSeries)
+  },[requestedSapHost,contextHost,contextMetric,contextSeries])
   const { primary: primaryHosts, others: otherHosts }=splitInfrastructureHosts(data.hosts)
   const hostRow=data.hosts.find(row=>row.host===selectedHost)||(lockedHost||requestedSapHost?null:data.hosts[0])
   const host=hostRow?.host||selectedHost||(requestedSapHost?'':'AOQ')
