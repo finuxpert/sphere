@@ -25,3 +25,22 @@ export function combineCurrentWorkloadResponses(payloads, collectionId) {
   }
   return { items, total, complete: items.length === total, coverageScope: scopes.size === 1 ? [...scopes][0] : 'MIXED' }
 }
+
+/** One APP modal may display only rows from its requested collection and host. */
+export function validateAppWorkloadResponse(result, collectionId, host) {
+  const same = (left, right) => String(left || '').trim().toUpperCase() === String(right || '').trim().toUpperCase()
+  if (!collectionId || !host || !result || String(result.collection_id || '') !== String(collectionId) ||
+      !same(result.host, host) || !Array.isArray(result.items) ||
+      result.total === null || result.total === undefined || result.total === '' ||
+      !Number.isSafeInteger(Number(result.total)) || Number(result.total) < result.items.length) return false
+  const unique = new Set()
+  for (const row of result.items) {
+    if (!row || String(row.collection_id || '') !== String(collectionId) || !same(row.host, host) ||
+        !['JOB', 'PROGRAM'].includes(String(row.consumer_type || '').toUpperCase()) ||
+        !String(row.consumer_key || '').trim()) return false
+    const key = String(row.consumer_type).toUpperCase() + ':' + String(row.consumer_key)
+    if (unique.has(key)) return false
+    unique.add(key)
+  }
+  return true
+}
