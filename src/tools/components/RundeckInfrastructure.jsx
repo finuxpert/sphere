@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
-import { hostInfrastructureEvidence, splitInfrastructureHosts } from './rundeckUnifiedHost.js'
+import { hostInfrastructureEvidence, splitInfrastructureHosts, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
 import { filesystemResourceState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 import { shortHost } from './sapUiFormat.js'
 import './RundeckInfrastructure.css'
@@ -129,7 +129,8 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [error,setError]=React.useState('')
   const [sourcesLoading,setSourcesLoading]=React.useState(true)
   const [clockNow,setClockNow]=React.useState(()=>Date.now())
-  const [selectedHost,setSelectedHost]=React.useState(()=>{if(lockedHost)return initialContext?.host||'';try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
+  const requestedSapHost = String(initialContext?.sapHost || '').trim()
+  const [selectedHost,setSelectedHost]=React.useState(()=>{if(lockedHost)return initialContext?.host||'';if(initialContext?.sapHost)return '';try{return window.localStorage.getItem(HOST_STORAGE_KEY)||''}catch{return ''}})
   const [range,setRange]=React.useState('6h')
   const [trendMetric,setTrendMetric]=React.useState('filesystem')
   const [trendData,setTrendData]=React.useState({scope:'',items:[],meta:null})
@@ -137,14 +138,14 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const [fsPage,setFsPage]=React.useState(0)
   const [storagePage,setStoragePage]=React.useState(0)
   React.useEffect(()=>{
-    if(!initialContext)return
-    if(initialContext.host)setSelectedHost(initialContext.host)
-    if(['filesystem','network','storage'].includes(initialContext.metric))setTrendMetric(initialContext.metric)
-    if(initialContext.series)setSelectedSeries(initialContext.series)
-  },[initialContext])
+    if(requestedSapHost)setSelectedHost('')
+    else if(initialContext?.host)setSelectedHost(initialContext.host)
+    if(['filesystem','network','storage'].includes(initialContext?.metric))setTrendMetric(initialContext.metric)
+    if(initialContext?.series)setSelectedSeries(initialContext.series)
+  },[requestedSapHost,initialContext?.host,initialContext?.metric,initialContext?.series])
   const { primary: primaryHosts, others: otherHosts }=splitInfrastructureHosts(data.hosts)
-  const hostRow=data.hosts.find(row=>row.host===selectedHost)||(lockedHost?null:data.hosts[0])
-  const host=hostRow?.host||selectedHost||'AOQ'
+  const hostRow=data.hosts.find(row=>row.host===selectedHost)||(lockedHost||requestedSapHost?null:data.hosts[0])
+  const host=hostRow?.host||selectedHost||(requestedSapHost?'':'AOQ')
   const trendScope=[host,range,trendMetric].join(':')
   const trend=React.useMemo(()=>trendData.scope===trendScope?trendData.items:[],[trendData,trendScope])
   const trendMeta=trendData.scope===trendScope?trendData.meta:null
@@ -178,8 +179,15 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       if(signal.aborted)return
       const available=hosts.map(row=>row.host)
       const target=lockedHost ? selectedHost : (selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||''))
-      if(target!==selectedHost){setSelectedHost(target);setFsPage(0);setStoragePage(0)}
-      const q=target?`?host=${encodeURIComponent(target)}`:''
+      const resolvedTarget=requestedSapHost ? (matchedInfrastructureHost({host:requestedSapHost}, hosts)?.host || '') : target
+      if(resolvedTarget!==selectedHost){setSelectedHost(resolvedTarget);setFsPage(0);setStoragePage(0)}
+      if(requestedSapHost&&!resolvedTarget){
+        setData({host:'',hosts:[],fs:[],network:[],storage:[]})
+        setAllHostFilesystems([])
+        setError('No verified Infrastructure host mapping for SAP ' + shortHost(requestedSapHost))
+        return
+      }
+      const q=resolvedTarget?`?host=${encodeURIComponent(resolvedTarget)}`:''
       const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (path,index)=>{
         const scope=index===3?'':q
         const response=await fetch(`${API}/${path}${scope}`,{cache:'no-store',signal})
@@ -187,14 +195,14 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         return response.json()
       }))
       if(signal.aborted)return
-      const collection = hosts.find(row=>row.host===target)?.collection_id
-      const belongsToSnapshot = row => row?.host === target && collection != null && String(row.collection_id || '') === String(collection)
-      setData({host:target,hosts,fs:(values[0].items||[]).filter(belongsToSnapshot),network:(values[1].items||[]).filter(belongsToSnapshot),storage:(values[2].items||[]).filter(belongsToSnapshot)})
+      const collection = hosts.find(row=>row.host===resolvedTarget)?.collection_id
+      const belongsToSnapshot = row => row?.host === resolvedTarget && collection != null && String(row.collection_id || '') === String(collection)
+      setData({host:resolvedTarget,hosts,fs:(values[0].items||[]).filter(belongsToSnapshot),network:(values[1].items||[]).filter(belongsToSnapshot),storage:(values[2].items||[]).filter(belongsToSnapshot)})
       setAllHostFilesystems(values[3].items||[])
       setError('')
     }catch(e){if(!signal.aborted&&e.name!=='AbortError'){setData({host:'',hosts:[],fs:[],network:[],storage:[]});setAllHostFilesystems([]);setError(e.message)}}
     finally { if(!signal.aborted) setSourcesLoading(false) }
-  },[selectedHost,lockedHost])
+  },[selectedHost,lockedHost,requestedSapHost])
 
   React.useEffect(()=>{
     const controller=new AbortController()
@@ -202,8 +210,8 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     const timer=window.setInterval(()=>refresh(controller.signal),60000)
     return()=>{window.clearInterval(timer);controller.abort()}
   },[refresh,refreshToken])
-  React.useEffect(()=>{if(lockedHost||!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[lockedHost,selectedHost])
-  React.useEffect(()=>{let active=true;(async()=>{try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:[],meta:null});setError(e.message)}}})();return()=>{active=false}},[range,trendMetric,host,collectedAt])
+  React.useEffect(()=>{if(lockedHost||requestedSapHost||!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[lockedHost,requestedSapHost,selectedHost])
+  React.useEffect(()=>{let active=true;(async()=>{if(requestedSapHost && !host)return;try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:[],meta:null});setError(e.message)}}})();return()=>{active=false}},[range,trendMetric,host,collectedAt,requestedSapHost])
 
   const fsState=observedData.fs.length?observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')):'UNKNOWN'
   const netState=observedData.network.length?observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')):'UNKNOWN'
