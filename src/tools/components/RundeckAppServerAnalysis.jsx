@@ -1,6 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { shortHost, observedWorkloadName, formatWib } from './sapUiFormat.js'
+import { validateAppWorkloadResponse } from './rundeckCurrentWorkloadCoverage.js'
 import './RundeckAppServerAnalysis.css'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -16,25 +17,6 @@ const processText = (row = {}) => {
   const value = Number(raw)
   return raw != null && String(raw).trim() !== '' && Number.isInteger(value) && value >= 0 ? value.toLocaleString('en-US',{maximumFractionDigits:0}) : '—'
 }
-/** Reject mixed collection/APP payloads; request parameters alone do not prove source identity. */
-function validateAppWorkloadResponse(result, collectionId, host) {
-  const same = (left, right) => String(left || '').trim().toUpperCase() === String(right || '').trim().toUpperCase()
-  if (!collectionId || !host || !result || String(result.collection_id || '') !== String(collectionId) ||
-      !same(result.host, host) || !Array.isArray(result.items) ||
-      (result.total === null || result.total === undefined || result.total === '') ||
-      !Number.isSafeInteger(Number(result.total)) || Number(result.total) < result.items.length) return false
-  const unique = new Set()
-  for (const row of result.items) {
-    if (!row || String(row.collection_id || '') !== String(collectionId) || !same(row.host, host) ||
-        !['JOB', 'PROGRAM'].includes(String(row.consumer_type || '').toUpperCase()) ||
-        !String(row.consumer_key || '').trim()) return false
-    const key = String(row.consumer_type).toUpperCase() + ':' + String(row.consumer_key)
-    if (unique.has(key)) return false
-    unique.add(key)
-  }
-  return true
-}
-
 const processIdentity = (details = {}) => {
   const values = (plural, singular) => {
     const items = Array.isArray(details[plural]) && details[plural].length
