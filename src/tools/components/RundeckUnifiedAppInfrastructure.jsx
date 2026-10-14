@@ -100,10 +100,14 @@ export default function RundeckUnifiedAppInfrastructure({
     'Filesystem threshold: Attention 75% · Critical 90%',
     'SAP and Infrastructure statuses are independent',
   ].filter(Boolean).join(' · ')
-  const openSelectedAnalysis = () => {
-    if (!selectedHost) return
-    onInspectApp?.({ ...selectedHost, infraHost: selectedInfra?.infra?.host || '' })
+  // Open the existing combined APP modal directly from either the hexagon or Full Analysis.
+  // The Infrastructure host is strictly matched from collected evidence, never inferred.
+  const openAppAnalysis = (host) => {
+    if (!host?.host) return
+    const infraHost = matchedInfrastructureHost(host, infraSnapshot.hosts)?.host || ''
+    onInspectApp?.({ ...host, infraHost })
   }
+  const openSelectedAnalysis = () => openAppAnalysis(selectedHost)
 
   return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure">
     <header className="rundeckUnifiedAppInfraHead">
@@ -121,10 +125,10 @@ export default function RundeckUnifiedAppInfrastructure({
           const state = appSignalState(host, performanceVerified)
           return <button key={host.host} type="button"
             className={'rundeckAppHexSelector is-sap-' + state.toLowerCase() + (appKey === key ? ' is-active' : '')}
-            aria-label={key + ' SAP ' + state + ' · Critical WP ' + metric(host.wp_critical) + ' · Select APP'}
-            title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + ' · select for detail'}
+            aria-label={key + ' SAP ' + state + ' · Critical WP ' + metric(host.wp_critical) + ' · Open processes and Infrastructure analysis'}
+            title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + ' · click to open processes and Infrastructure'}
             aria-pressed={appKey === key}
-            onClick={() => { selectApp(key); onSelectApp?.(host.host) }}>
+            onClick={() => { selectApp(key); onSelectApp?.(host.host); openAppAnalysis(host) }}>
             <span className="rundeckAppHexShape" aria-hidden="true">
               <strong>{key}</strong>
               <small>{state === 'ATTENTION' ? 'ATTN' : state === 'WARNING' ? 'WARN' : state}</small>
