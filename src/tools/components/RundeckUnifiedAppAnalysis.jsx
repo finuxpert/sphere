@@ -9,15 +9,15 @@ export default function RundeckUnifiedAppAnalysis({
   incidentStart = '', performanceVerified = false, performanceCollectedAt = '',
 }) {
   if (!app?.host) return null
-  const host = app.infraHost || app.host
   const label = shortHost(app.host)
-  const infraKey = String(host).trim().toUpperCase()
-  const appKey = String(app.host).trim().toUpperCase()
-  const allowedHost = infraKey === appKey || (Boolean(app.infraHost) && shortHost(infraKey) === shortHost(appKey))
+  // Only an explicit, source-matched Infrastructure host may unlock telemetry.
+  // Never silently fall back to the SAP hostname when Infrastructure is missing.
+  const host = app.infraHostVerified === true ? String(app.infraHost || '').trim() : ''
+  const allowedHost = Boolean(host) && shortHost(host) === label
   return <section className="rundeckUnifiedAnalysis" aria-label={`${label} SAP and Infrastructure analysis`}>
     <div className="rundeckUnifiedAnalysisProvenance">
       <span><strong>SAP Performance</strong> · {performanceVerified ? 'VERIFIED' : 'UNVERIFIED'} · {performanceVerified && performanceCollectedAt ? `${formatWib(performanceCollectedAt,true)} WIB` : 'sample time UNKNOWN'}</span>
-      <span><strong>Infrastructure</strong> · {allowedHost ? `${host} · freshness below` : 'UNKNOWN · APP identity mismatch'}</span>
+      <span><strong>Infrastructure</strong> · {allowedHost ? `${host} · independent collection and freshness` : 'UNVERIFIED · no confirmed host mapping'}</span>
     </div>
     <div className="rundeckUnifiedAnalysisGrid">
       <section aria-label="SAP performance evidence" className="rundeckUnifiedAnalysisPane">
@@ -40,7 +40,7 @@ export default function RundeckUnifiedAppAnalysis({
               incidentStart={incidentStart}
               refreshToken={refreshToken}
             />
-          : <p className="rundeckUnifiedAnalysisUnknown">Infrastructure hostname unverified; measurements are UNKNOWN, not NORMAL.</p>}
+          : <p className="rundeckUnifiedAnalysisUnknown" role="status">No verified Infrastructure host mapping for {label}. Filesystem, Network and Storage I/O are unavailable, not NORMAL.</p>}
       </section>
     </div>
   </section>
