@@ -1,7 +1,7 @@
 /** Size every saved evaluation against actual panel dimensions.
  * Reserve half a pitch for alternating honeycomb rows; never clip dots offscreen.
  */
-export function workloadDotLayout({ count = 0, width = 0, height = 0, minSize = 6, maxSize = 10 } = {}) {
+export function workloadDotLayout({ count = 0, width = 0, height = 0, minSize = 6, maxSize = 13 } = {}) {
   const population = Number(count), w = Number(width), h = Number(height)
   if (!Number.isSafeInteger(population) || population < 0 ||
       !Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0)
