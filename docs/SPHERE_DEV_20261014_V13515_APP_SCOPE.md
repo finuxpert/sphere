@@ -8,7 +8,7 @@ Target branch: `rundeck-sphere-dev` only. PROD and `rundeck-sphere-prod` are unc
 - Selected APP summary names **Host CPU**, **Host RAM**, **Critical WP**, **Highest FS**. APP status comes from SAP host/WP thresholds; filesystem capacity remains independent.
 - Host numbers are hidden when Performance source validity cannot be established.
 - Highest FS shows the current percentage only when the Infrastructure host snapshot and samples are FRESH. When not fresh, the current reading is “—” with an explicit last retained percentage and freshness state; mount, Infrastructure host, collection ID and observation time remain accessible.
-- The Infrastructure shortcut follows the selected SAP APP. It maps the APP host only against the fresh source-provided Infrastructure host list, never a stored user preference. No unique verified match = UNVERIFIED, without silently showing another host.
+- The Infrastructure shortcut follows the selected SAP APP. It maps the APP host against the latest READY source-provided Infrastructure host list, never a stored user preference. Telemetry freshness is evaluated independently. No unique verified match = UNVERIFIED, without silently showing another host.
 - Related Events identifies incident versus selected job scope. Correlation alone is not an execution status or causal verdict. SM37 remains authoritative for job execution status.
 - System Data summary states the bounded query: most recent 80 collector runs in a 90-day window, including observed failures/partials. Fetch failures render unverified instead of successful history.
 - SAP Checks is system-level Availability/Issues; it is not filtered automatically by hexagon.
