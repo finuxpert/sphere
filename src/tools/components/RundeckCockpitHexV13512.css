@@ -403,3 +403,49 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape small{font-size:9px!important}
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexShape em{font-size:8.5px!important}
 }
+
+/* v1.35.15 DEV — status-first APP readout and compact, accessible drilldowns. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppFsMeta {
+  display:block;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppMetric {
+  gap:3px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button {
+  position:relative;
+  outline-offset:1px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button:not(.rundeckCorrelatedCard)::after {
+  content:'›';
+  position:absolute;
+  right:5px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:14px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button:is(:focus-visible,:hover) {
+  border-left-color:var(--sphere-accent,#4fc6c8)!important;
+  background:var(--sphere-flat-hover,rgba(82,165,187,.10))!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button small {
+  padding-right:10px;
+  font-size:10px!important;
+}
+@media(max-width:1199px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppFsMeta {
+    font-size:8px;
+  }
+}
+@media(max-width:430px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppFsMeta {
+    max-width:100%;
+    font-size:7.5px;
+  }
+}
