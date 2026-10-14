@@ -184,7 +184,7 @@ function TrendFreshness({ trend }) {
   return <div className="rundeckHistoryState">Last collection {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
 }
 
-function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
+function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full' }) {
   const ref = React.useRef(null)
   const chartRef = React.useRef(null)
   const activeCallbackRef = React.useRef(null)
@@ -209,12 +209,21 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
     const availabilityMode = trend?.metric === 'availability'
     const selectedKey = focusedHost
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
+    // Focus changes only the visual Y range, never samples, severity thresholds, or source evidence.
+    const percentTrend = !availabilityMode && trend?.unit === '%'
+    const validValues = rows.map(row => row[valueKey]).filter(value =>
+      value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))).map(Number)
+    const highObserved = validValues.length ? Math.max(0, ...validValues) : 0
+    const focusAxisMax = percentTrend && scaleMode === 'focus'
+      ? Math.min(100, Math.max(10, Math.ceil(highObserved * 1.12 / 10) * 10))
+      : 100
     const compactPoints = ['30m', '1h', '3h', '6h'].includes(range)
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
     const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
+    const visibleThresholds = scaleMode === 'focus' && percentTrend ? threshold.filter(line => line.yAxis <= focusAxisMax) : threshold
     return {
       // Reveal observed history once; avoid perpetual "live" motion.
       // Reduced-motion preference is respected by the chart renderer itself.
@@ -270,7 +279,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
         },
       },
       xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 10.5, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? 100 : undefined, splitNumber: 2 },
+      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : undefined, splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
@@ -292,7 +301,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
           resolvedGapIntervalMs(trend),
           gapPoints.map((at) => ({ value: [at, null], gap: true }))
         ),
-        markLine: index === 0 && threshold.length ? { silent: true, symbol: ['none', 'none'], data: threshold } : undefined,
+        markLine: index === 0 && visibleThresholds.length ? { silent: true, symbol: ['none', 'none'], data: visibleThresholds } : undefined,
         markArea: index === 0 && gaps.length ? {
           silent: true,
           label: { show: true, formatter: (params) => params?.name || (availabilityMode ? 'NO OBSERVATION' : 'COLLECTION GAP'), fontSize: 8, color: availabilityMode ? colors.attention : colors.warning, position: 'insideTop' },
@@ -302,7 +311,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '' }) {
       }
       })
     }
-  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, trend, themeRevision])
+  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, scaleMode, trend, themeRevision])
 
   // ECharts stays mounted while focus and stored samples update. No chart loop.
   // The latest handler is read at click-time, not captured by the mount effect.
@@ -677,6 +686,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
+  const [scaleMode, setScaleMode] = React.useState('full')
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
@@ -814,7 +824,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityCoverageBand trend={trend} />
       {showGap && <CollectionGapBand trend={trend} />}
       <AvailabilityObservationSummary trend={trend} />
-      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} />
     </>
     return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
   }
@@ -830,7 +840,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
 
   return <section className="rundeckTripleTrendV13457" aria-label="Server and Technical Trends">
-    <div className="rundeckTrendEditorial"><h3>Performance Trends</h3><small>Saved APP and technical measurements</small></div>
+    <div className="rundeckTrendEditorial">
+      <h3>Performance Trends</h3><small>Saved APP and technical measurements</small>
+      <button type="button" className="rundeckTrendYAxisToggle"
+        aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
+        title="Focus rescales percent-based APP charts to observed samples. SAP Warning/Critical thresholds do not change; markers above the zoomed axis are not plotted. Full restores 0–100%."
+      >Y Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
+    </div>
     <div className="rundeckTrendSharedControls">
       <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
       <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
