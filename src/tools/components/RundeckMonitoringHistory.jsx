@@ -94,7 +94,7 @@ export default function RundeckMonitoringHistory(props) {
   const operationalEvidenceContent = <RundeckOperationalEvidence
     refreshToken={refreshToken}
     selectedJob={selectedJob}
-    onOpenEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
+    onOpenEvidence={(job, scope) => setActiveOverlay({ type: 'evidence', job, scope, returnTo: { type: 'selected' } })}
     onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
     onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', sapHost: focusedOperationalHost?.host || '', returnTo: { type: 'selected' } })}
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
@@ -216,7 +216,7 @@ export default function RundeckMonitoringHistory(props) {
             size="evidence"
             subtitle={(activeOverlay.job || selectedJob)?.key
               ? `${(activeOverlay.job || selectedJob).key} · ${(activeOverlay.job || selectedJob).host ? shortHost((activeOverlay.job || selectedJob).host) + ' · ' : ''}${selectedContextTime}`
-              : 'Events and saved observations'}
+              : activeOverlay.scope ? `${activeOverlay.scope} · saved observations` : 'System events and saved observations'}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo && activeOverlay.returnTo.type !== 'selected'
               ? () => returnFromOverlay(activeOverlay.returnTo) : null}
@@ -229,6 +229,7 @@ export default function RundeckMonitoringHistory(props) {
                     paired
                     refreshToken={refreshToken}
                     job={activeOverlay.job || selectedJob}
+                    scopeLabel={activeOverlay.scope || ''}
                     incidentActive
                   />
                 </React.Suspense>
