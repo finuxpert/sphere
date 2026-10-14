@@ -211,8 +211,8 @@
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisLaunchers{
   display:grid!important;
-  grid-template-columns:133px minmax(0,1fr)!important;
-  gap:12px!important;
+  grid-template-columns:120px minmax(0,1fr)!important;
+  gap:10px!important;
   align-items:center;
   min-height:40px!important;
   padding:2px 0!important;
@@ -224,7 +224,8 @@
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  gap:6px!important;
+  gap:8px!important;
+  align-items:stretch!important;
   min-width:0;
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button{
@@ -356,6 +357,8 @@
 .appShell:has(.rundeckPanel) .rundeckMonitoring.rundeckCockpitV13491{
   grid-template-areas:"apps" "actions" "trends" "workloads"!important;
   grid-template-rows:auto auto auto auto!important;
+  gap:6px!important;
+  align-items:stretch!important;
 }
 
 /* DEV v1.35.13 — only the Current table is paged; leave Review/Search scrolling unchanged. */
@@ -563,21 +566,22 @@
   }
 }
 
-/* DEV v1.35.17 — visual balance only: no metric/source/status contract changes. */
+/* Desktop APP composition: one source of truth for 3:7 grid and 3+2 selectors. */
 @media (min-width:1200px) {
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexMain{
-    grid-template-columns:minmax(375px,1.05fr) minmax(0,1.9fr)!important;
-    gap:clamp(12px,1.3vw,22px)!important;
+    grid-template-columns:minmax(330px,3fr) minmax(0,7fr)!important;
+    gap:clamp(10px,.85vw,14px)!important;
+    align-items:center!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
-    max-width:380px!important;
-    grid-template-rows:repeat(2,46px)!important;
-    min-height:106px!important;
-    padding:4px 1px!important;
+    max-width:350px!important;
+    grid-template-rows:repeat(2,44px)!important;
+    min-height:104px!important;
+    padding:3px 1px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector{
-    width:min(100%,69px)!important;
-    height:62px!important;
+    width:min(100%,67px)!important;
+    height:60px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppDetail{
     min-width:0;
@@ -628,10 +632,17 @@
    This uses the height already budgeted by the Jobs & Programs workspace. */
 @media (min-width:1200px) {
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsSplit{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
     align-items:stretch!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide{
     align-self:stretch!important;align-items:stretch!important;
+    min-width:0!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsSplit>.rundeckJobsProgramsWorkspaceBody{
+    align-self:stretch!important;
+    min-width:0!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
     height:100%!important;
@@ -697,15 +708,8 @@
   }
 }
 
-/* v1.35.18 — operator clarity, using the existing one-screen cockpit and no new cards. */
+/* Desktop saved-evaluation categories; APP proportions defined above. */
 @media (min-width:1200px){
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexMain{
-    grid-template-columns:minmax(360px,1fr) minmax(0,2fr)!important;
-    gap:clamp(10px,1vw,16px)!important;
-  }
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
-    margin-inline:auto!important;
-  }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
     display:grid!important;
     grid-template-columns:repeat(4,minmax(0,1fr))!important;

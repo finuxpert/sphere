@@ -599,7 +599,7 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
  .appShell:has(.rundeckPanel) .rundeckActions,
  .appShell:has(.rundeckPanel) .rundeckStateCluster{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
  .appShell:has(.rundeckPanel) .rundeckLandscapeHeader{
-   display:grid!important;grid-template-columns:minmax(270px,.72fr) minmax(0,1.28fr)!important;
+   display:grid!important;grid-template-columns:minmax(270px,.62fr) minmax(0,1.38fr)!important;
    gap:14px!important;align-items:center!important;
    min-height:65px!important;padding:5px 0 8px!important;
  }
@@ -613,7 +613,7 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
  }
  .appShell:has(.rundeckPanel) .rundeckActions{
    display:flex!important;margin-left:0!important;
-   justify-content:flex-end!important;flex-wrap:wrap!important;gap:3px 10px!important;
+   justify-content:space-between!important;flex-wrap:wrap!important;gap:3px 9px!important;
  }
  .appShell:has(.rundeckPanel) .rundeckActionCluster,
  .appShell:has(.rundeckPanel) .rundeckStateCluster{
