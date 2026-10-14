@@ -842,6 +842,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   return <section className="rundeckTripleTrendV13457" aria-label="Server and Technical Trends">
     <div className="rundeckTrendEditorial">
       <h3>Performance Trends</h3><small>Saved APP and technical measurements</small>
+      {scaleMode === 'focus' && <small className="rundeckTrendFocusReference" title="These are the original backend thresholds, not zoomed or recalculated.">
+        {[serverTrend1,serverTrend2].filter(trend => trend?.unit === '%').map((trend,index) =>
+          <span key={trend.metric || index}>{metricLabel(trend.metric)} warn {trend.warning ?? '—'}% / crit {trend.critical ?? '—'}%</span>)} · thresholds unchanged
+      </small>}
       <button type="button" className="rundeckTrendYAxisToggle"
         aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
         title="Focus rescales percent-based APP charts to observed samples. SAP Warning/Critical thresholds do not change; markers above the zoomed axis are not plotted. Full restores 0–100%."
