@@ -1,5 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
+import { shortHost } from './sapUiFormat.js'
 import RundeckEvidenceTimeline from './RundeckEvidenceTimeline.jsx'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -16,7 +17,7 @@ function jobContext(workload, host, source) {
 
 export default function RundeckOperationalEvidence({
   refreshToken = '', selectedJob = null, onOpenEvidence, onOpenIssues,
-  onOpenInfrastructure, onOpenSystemData, systemDataSummary = '', infrastructureLabel = '',
+  onOpenInfrastructure, onOpenSystemData, systemDataSummary = '', infrastructureLabel = '', focusedHost = '',
 }) {
   const [summary, setSummary] = React.useState(null)
   const [error, setError] = React.useState('')
@@ -30,11 +31,19 @@ export default function RundeckOperationalEvidence({
   }, [refreshToken])
   const current = summary?.current_workload
   const evidenceJob = selectedJob || (summary?.active ? jobContext(current, summary?.affected_server, 'current') : null)
+  const incidentHost = summary?.active ? shortHost(summary.affected_server || '') : ''
+  const evidenceScope = selectedJob?.key ? `Job ${shortHost(selectedJob.host) || 'host unverified'}`
+    : incidentHost ? `Incident ${incidentHost}` : 'System'
+  const selectionMismatch = Boolean(focusedHost && incidentHost && shortHost(focusedHost) !== incidentHost)
+  const evidenceTitle = selectionMismatch && !selectedJob?.key
+    ? `Current incident ${incidentHost}; selected ${shortHost(focusedHost)} is different`
+    : `Related evidence scope: ${evidenceScope}`
   const evidence = summary?.active && !error
-    ? <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} incidentActive compact onOpen={() => onOpenEvidence?.(evidenceJob)} />
+    ? <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} scopeLabel={evidenceScope}
+        incidentActive compact onOpen={() => onOpenEvidence?.(evidenceJob)} />
     : <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard"
-        onClick={() => onOpenEvidence?.(evidenceJob)} aria-label="Open Related Events and Run History">
-        <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events & Runs</span>
+        onClick={() => onOpenEvidence?.(evidenceJob)} aria-label="Open Related Events and Run History" title={evidenceTitle}>
+        <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events · {evidenceScope}</span>
         <strong>{error ? 'Evidence unverified' : !summary ? 'Loading evidence' : 'No current event'}</strong>
       </button>
   // Four distinct destinations; related data shares a popup rather than duplicated links.
@@ -44,7 +53,7 @@ export default function RundeckOperationalEvidence({
       {evidence}
       <button type="button" className="rundeckAnalysisSecondary" onClick={onOpenIssues} aria-label="Open SAP Checks">
         <span><SphereIcon name="activity" />SAP Checks</span>
-        <small>Availability · Issues</small>
+        <small>System availability · SAP issues</small>
       </button>
       <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure} aria-label="Open Infrastructure Analysis">
         <span><SphereIcon name="server" />Infrastructure</span><small>{infrastructureLabel || 'Host metrics'}</small>
