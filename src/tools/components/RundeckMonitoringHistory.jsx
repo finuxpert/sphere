@@ -96,10 +96,11 @@ export default function RundeckMonitoringHistory(props) {
     selectedJob={selectedJob}
     onOpenEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
     onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
-    onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', returnTo: { type: 'selected' } })}
+    onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', sapHost: focusedOperationalHost?.host || '', returnTo: { type: 'selected' } })}
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
     systemDataSummary={systemDataSummary.replace(/(\d+ runs).*?(\d+ failed).*/, '$1 · $2')}
-    infrastructureLabel={focusedOperationalHost ? `Selected SAP ${shortHost(focusedOperationalHost.host)} · Infra source separate` : 'Select a host in Infrastructure'}
+    focusedHost={focusedOperationalHost?.host || ''}
+    infrastructureLabel={focusedOperationalHost ? `APP ${shortHost(focusedOperationalHost.host)} · verified host required` : 'No APP host selected'}
   />
 
   const currentWorkloadContent = React.isValidElement(props.currentWorkloadContent)
@@ -315,7 +316,14 @@ export default function RundeckMonitoringHistory(props) {
             backLabel={activeOverlay.returnTo?.type === 'job' ? 'Back to Performance Analysis' : activeOverlay.returnTo?.type === 'selected' ? 'Back to SAP Performance' : 'Back'}
           >
             <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading Infrastructure Analysis…</div>}>
-              <RundeckInfrastructure incidentStart={props.incidentStart || ''} initialContext={activeOverlay.infraContext || activeOverlay.trendContext || null} />
+              <RundeckInfrastructure
+                incidentStart={props.incidentStart || ''}
+                initialContext={activeOverlay.infraContext || activeOverlay.trendContext ||
+                  (activeOverlay.sapHost ? { sapHost: activeOverlay.sapHost, metric: 'filesystem' } : null)}
+                lockedHost={Boolean(activeOverlay.sapHost)}
+                hideHostCards={Boolean(activeOverlay.sapHost)}
+                refreshToken={refreshToken}
+              />
             </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
