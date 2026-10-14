@@ -22,7 +22,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
 
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
-  const [healthGroup, setHealthGroup] = React.useState(forceSearch ? 'ALL' : 'REVIEW')
+  const [healthGroup, setHealthGroup] = React.useState(forceSearch ? 'ALL' : reviewJumpToken ? reviewJumpHealth : 'REVIEW')
   const [pageIndex, setPageIndex] = React.useState(0)
   const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 864 : window.innerHeight)
   const [fittedRows, setFittedRows] = React.useState(null)
