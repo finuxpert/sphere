@@ -122,7 +122,8 @@ export default function RundeckUnifiedAppInfrastructure({
       </div>
     </header>
     <div className="rundeckAppHexMain">
-      <div className="rundeckAppHexSelectors rundeckUnifiedAppCards" role="group" aria-label="Select APP server">
+      <div className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '')}
+        role="group" aria-label="Select APP server">
         {hosts.map(host => {
           const key = shortHost(host.host)
           const state = appSignalState(host, performanceVerified)
