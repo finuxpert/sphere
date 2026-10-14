@@ -113,7 +113,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
 
   if (compact) {
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
-      ? `No overlap · ${formatDurationMinutes(workloadGapMinutes)} gap`
+      ? `No overlap · ${formatDurationMinutes(workloadGapMinutes)} between observations`
       : pair.deltaMinutes !== null ? `${formatDurationMinutes(pair.deltaMinutes)} ${relativeTiming}` : 'Timing unverified'
     return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Related Events">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events</span>
