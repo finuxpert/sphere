@@ -384,7 +384,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
   React.useEffect(() => {
     const chart = chartRef.current
     if (!chart) return
-    const schema = `${trend?.metric || ''}:${range}:${mode}`
+    const schema = `${trend?.metric || ''}:${range}:${mode}:${scaleMode}:${technicalAxisMax ?? 'auto'}`
     const schemaChanged = optionSchemaRef.current !== schema
     optionSchemaRef.current = schema
     chart.setOption(reduceMotion ? { ...option, animation: false } : option, {
@@ -392,7 +392,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
       replaceMerge: schemaChanged ? undefined : ['series'],
       lazyUpdate: false,
     })
-  }, [mode, option, range, reduceMotion, trend?.metric])
+  }, [mode, option, range, reduceMotion, scaleMode, technicalAxisMax, trend?.metric])
 
   return <div className="rundeckTrendPlot">
     <div ref={ref} className="rundeckTrendChart" role="img"
