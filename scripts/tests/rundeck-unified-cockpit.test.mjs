@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 
 const read = filename => readFileSync(new URL('../../src/tools/components/' + filename, import.meta.url),'utf8')
 
-test('APP hexagon selects host and Full Analysis separately opens the modal', () => {
+test('APP hexagon opens combined modal in one click and Full Analysis remains a fallback', () => {
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const core=read('RundeckMonitoringHistoryCore.jsx')
   assert.match(app,/className="rundeckAppHexSelectors rundeckUnifiedAppCards"/)
@@ -12,6 +12,7 @@ test('APP hexagon selects host and Full Analysis separately opens the modal', ()
   assert.match(app,/aria-pressed=\{appKey === key\}/)
   assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
   assert.match(app,/onClick=\{openSelectedAnalysis\}/)
+  assert.match(app,/openAppAnalysis\(host\)/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
   assert.doesNotMatch(app,/<select/)
 })
@@ -24,6 +25,8 @@ test('SAP+Infrastructure modal preserves host provenance, freshness and workload
   assert.match(workspace,/lockedHost/)
   assert.match(workspace,/hideHostCards/)
   assert.match(workspace,/performanceVerified/)
+  assert.match(workspace,/app.infraHostVerified === true/)
+  assert.match(workspace,/no confirmed host mapping/)
   assert.match(infrastructure,/const target=lockedHost \? selectedHost/)
   assert.match(infrastructure,/trendData\.scope===trendScope/)
 })
