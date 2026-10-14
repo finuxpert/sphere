@@ -264,3 +264,28 @@ test('DEV historical Search locates workload ranked outside the first 100 via ba
   expect(requested.some(item=>item.query==='Z_PROGRAM_350' && item.health==='ALL')).toBe(true)
   await expect(page.locator('.rundeckReviewPager')).toContainText('1 matches')
 })
+
+test('v1.35.15 APP shortcut keeps verified Infrastructure host identity', async ({page}) => {
+  await openCockpit(page)
+  test.skip((page.viewportSize()?.width || 0) < 1100, 'Desktop APP navigation regression')
+  const selectors=page.locator('.rundeckAppHexSelectors .rundeckAppHexSelector')
+  await expect(selectors).toHaveCount(5)
+  await selectors.nth(1).click()
+  const appDialog=page.getByRole('dialog',{name:/APP2 Analysis/})
+  await expect(appDialog).toBeVisible()
+  await appDialog.getByRole('button',{name:'Close analysis'}).click()
+  await expect(appDialog).toHaveCount(0)
+  await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:'Open Infrastructure Analysis'}).click()
+  const infraDialog=page.getByRole('dialog',{name:'Infrastructure Analysis'})
+  await expect(infraDialog).toBeVisible()
+  const focus=infraDialog.locator('.rundeckInfraIdentity, .rundeckInfraError')
+  await expect.poll(async () => (await focus.allTextContents()).join(' '), {timeout:30000}).toMatch(/APP2/)
+  const geometry=await infraDialog.evaluate(el=>{
+    const box=el.getBoundingClientRect()
+    return {left:box.left,right:box.right,top:box.top,bottom:box.bottom,width:innerWidth,height:innerHeight}
+  })
+  expect(geometry.left).toBeGreaterThanOrEqual(-1)
+  expect(geometry.right).toBeLessThanOrEqual(geometry.width+1)
+  expect(geometry.top).toBeGreaterThanOrEqual(-1)
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.height+1)
+})
