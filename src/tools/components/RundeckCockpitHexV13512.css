@@ -666,3 +666,36 @@
     gap:4px!important;
   }
 }
+
+/* The optional percent-axis zoom is visibly separate from SAP's source thresholds. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendEditorial{
+  display:flex!important;align-items:center!important;gap:8px!important;min-width:0;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendYAxisToggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-left:auto;min-height:22px;padding:3px 9px;
+  font:inherit;font-size:10px;font-weight:650;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  background:transparent;
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.28));
+  border-radius:4px;white-space:nowrap;cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendYAxisToggle[aria-pressed="true"]{
+  color:var(--sphere-accent,#4fc6c8);
+  border-color:var(--sphere-accent,#4fc6c8);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendYAxisToggle:is(:hover,:focus-visible){
+  outline:2px solid var(--sphere-accent,#4fc6c8);outline-offset:1px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendFocusReference{
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendFocusReference span+span::before{
+  content:' · ';
+}
+@media(max-width:1199px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendFocusReference{
+    font-size:8px;max-width:45vw;
+  }
+}
