@@ -348,3 +348,13 @@
 @media(max-width:760px){
   .appShell:has(.rundeckPanel) .rundeckWorkloadPageJump span{display:none}
 }
+
+/* DEV: visible grouped CPU semantics without widening the cockpit table. */
+.appShell:has(.rundeckPanel) .rundeckCurrentWorkload th .rundeckWorkloadCpuUnit {
+  display:block;
+  font-size:8.5px;
+  font-weight:500;
+  line-height:1.1;
+  white-space:nowrap;
+  color:var(--sphere-text-muted,#8d9aa3);
+}
