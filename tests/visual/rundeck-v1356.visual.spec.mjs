@@ -204,10 +204,19 @@ test('DEV Workload Health and table are genuinely side-by-side without clipping 
     expect(bounds.overflowY).toBeLessThanOrEqual(2)
     if (bounds.pager) expect(bounds.pager.bottom).toBeLessThanOrEqual(bounds.viewport.height + 2)
     const dots = page.locator('.rundeckWorkloadDotGrid .rundeckWorkloadDot')
-    await expect(dots.first()).toBeVisible({timeout:30000})
+    await expect.poll(async () => {
+      const txt = await page.locator('.rundeckWorkloadHealthTitle small').textContent()
+      return /\\d[\\d,]* evaluated/.test(txt || '')
+    },{timeout:30000}).toBe(true)
+    const match = (await page.locator('.rundeckWorkloadHealthTitle small').textContent()).match(/(\\d[\\d,]*) evaluated/)
+    const evaluated = Number(match[1].replace(/,/g,''))
     const displayed = await dots.count()
-    expect(displayed).toBeGreaterThan(30)
-    expect(displayed).toBeLessThanOrEqual(400)
+    if (displayed) {
+      expect(displayed).toBe(evaluated)
+      expect(displayed).toBeLessThanOrEqual(800)
+    } else {
+      await expect(page.locator('.rundeckWorkloadDotEmpty')).toContainText(/Review/)
+    }
     const red = page.locator('.rundeckWorkloadDot.is-review').first()
     if (await red.count()) {
       const rowLabel = await red.getAttribute('aria-label')
@@ -359,4 +368,47 @@ test('v1.35.17 Workload Health fills the current workspace and Y-axis focus stay
   await expect(page.locator('.rundeckTrendFocusReference')).toBeVisible()
   await page.getByRole('button',{name:/Y Axis · Focus/}).click()
   await expect(zoom).toHaveAttribute('aria-pressed','false')
+})
+
+test('v1.35.18 Workload Health categories open the matching backend Review filter', async ({page}) => {
+  test.skip((page.viewportSize()?.width || 0) < 1200, 'Desktop category shortcuts')
+  await openCockpit(page)
+  const health=page.locator('.rundeckWorkloadHealth')
+  await expect(health.locator('.rundeckWorkloadCategory')).toHaveCount(4)
+  await expect(health.locator('.rundeckWorkloadCategory.is-unknown')).toBeEnabled({timeout:30000})
+  await health.locator('.rundeckWorkloadCategory.is-unknown').click()
+  await expect(page.getByRole('tab',{name:'Review'})).toHaveAttribute('aria-selected','true')
+  await expect(page.getByRole('combobox',{name:'Evaluation category'})).toHaveValue('UNKNOWN')
+  await page.getByRole('tab',{name:'Current'}).click()
+  await health.locator('.rundeckWorkloadCategory.is-normal').click()
+  await expect(page.getByRole('combobox',{name:'Evaluation category'})).toHaveValue('NORMAL')
+  await page.getByRole('tab',{name:'Current'}).click()
+  await health.getByRole('button',{name:'Open Jobs & Programs Review'}).click()
+  await expect(page.getByRole('combobox',{name:'Evaluation category'})).toHaveValue('REVIEW')
+  const bounds=await viewportEvidence(page)
+  expect(bounds.pageOverflowX).toBeLessThanOrEqual(2)
+  expect(bounds.pageOverflowY).toBeLessThanOrEqual(2)
+})
+
+test('v1.35.18 Technical Load Typical mode has a reversible Full scale', async ({page}) => {
+  test.skip((page.viewportSize()?.width || 0) < 1200, 'Desktop trend scope')
+  await openCockpit(page)
+  const technical=page.locator('.rundeckServerTrendPanelV1234.is-technical-trend')
+  await technical.getByRole('button',{name:'Load',exact:true}).click()
+  const toggle=technical.locator('.rundeckTechnicalScaleToggle')
+  await expect(toggle).toContainText('Full')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed','true')
+  await expect(toggle).toContainText('Typical')
+  const note=technical.locator('.rundeckTechnicalLoadPeakNotice')
+  if(await note.isVisible()) {
+    await expect(note).toContainText('Peak')
+    await note.getByRole('button',{name:'Show Full'}).click()
+  } else {
+    await toggle.click()
+  }
+  await expect(toggle).toHaveAttribute('aria-pressed','false')
+  const geometry=await viewportEvidence(page)
+  expect(geometry.pageOverflowX).toBeLessThanOrEqual(2)
+  expect(geometry.pageOverflowY).toBeLessThanOrEqual(2)
 })
