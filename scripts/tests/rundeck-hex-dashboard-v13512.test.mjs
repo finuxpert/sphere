@@ -118,4 +118,6 @@ test('v1.35.18 saved evaluation categories are backend Review shortcuts, not loc
   assert.ok(review.includes("setPeriod('1d')"))
   assert.ok(review.includes("health:healthGroup"))
   assert.ok(review.includes("result.page.scope !== 'FULL_EVALUATED_POPULATION'"))
+  const trend=read('RundeckServerTrend.jsx')
+  assert.ok(trend.includes("technicalAxisMax ?? 'auto'"),'chart schema resets when switching axis scale')
 })
