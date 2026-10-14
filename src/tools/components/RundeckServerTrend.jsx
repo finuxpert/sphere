@@ -1,4 +1,5 @@
 import { buildHostTrendSeries } from './rundeckTrendSeries.js'
+import { trendPercentAxisMax } from './rundeckTrendAxis.js'
 import React from 'react'
 import { createPortal } from 'react-dom'
 import * as echarts from './logEcharts.js'
@@ -211,12 +212,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
     // Focus changes only the visual Y range, never samples, severity thresholds, or source evidence.
     const percentTrend = !availabilityMode && trend?.unit === '%'
-    const validValues = rows.map(row => row[valueKey]).filter(value =>
-      value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))).map(Number)
-    const highObserved = validValues.length ? Math.max(0, ...validValues) : 0
-    const focusAxisMax = percentTrend && scaleMode === 'focus'
-      ? Math.min(100, Math.max(10, Math.ceil(highObserved * 1.12 / 10) * 10))
-      : 100
+    const focusAxisMax = percentTrend ? trendPercentAxisMax(rows, valueKey, scaleMode) : 100
     const compactPoints = ['30m', '1h', '3h', '6h'].includes(range)
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
     const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
