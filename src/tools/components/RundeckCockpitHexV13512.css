@@ -809,3 +809,98 @@
     width:116px!important;
   }
 }
+
+/* DEV v1.35.19 — final cockpit polish layer.
+   Keep the one-screen footprint, real saved dots, source labels, and SAP severity.
+   No new decorative cards, fetches, or status inference. */
+@media (min-width:1200px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
+    display:grid!important;
+    grid-template-rows:auto auto minmax(54px,1fr) auto!important;
+    align-content:stretch!important;
+    justify-content:stretch!important;
+    gap:5px!important;
+    padding:10px 12px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{
+    height:100%!important;
+    min-height:0!important;
+    align-content:center!important;
+    justify-content:center!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter{
+    align-self:end!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:7px!important;
+    min-width:0!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter :is(span,small){
+    font-size:10px!important;
+    line-height:1.25!important;
+    min-width:0;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthTitle small{
+    font-size:10.5px!important;line-height:1.25!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory{
+    position:relative;
+    min-height:36px!important;
+    gap:3px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory:is(:hover,:focus-visible){
+    background:rgba(79,198,200,.08)!important;
+    border-color:rgba(79,198,200,.35)!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory:focus-visible{
+    outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+    outline-offset:1px!important;
+  }
+}
+@media (min-width:1200px) and (max-height:800px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
+    grid-template-rows:auto auto minmax(25px,1fr) auto!important;
+    gap:3px!important;
+    padding:6px 9px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory{
+    min-height:26px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter :is(span,small){
+    font-size:8.5px!important;
+  }
+}
+@media(min-width:900px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppSource small{
+    font-size:10px!important;
+    line-height:1.25!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppMetric small{
+    font-size:10px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppFsMeta{
+    font-size:9.5px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button:is(:hover,:focus-visible){
+    background:rgba(79,198,200,.065)!important;
+    border-left-color:var(--sphere-accent,#4fc6c8)!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button small{
+    font-size:10.5px!important;
+    line-height:1.2!important;
+  }
+}
+/* Full/Typical switches retain their separate, descriptive focus targets. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle,
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendYAxisToggle{
+  font-size:10px!important;
+  min-height:24px!important;
+}
+@media (max-width:899px){
+  /* Mobile retains the compact Workload Health header and existing Review route. */
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle{
+    font-size:8px!important;
+    min-height:20px!important;
+  }
+}
