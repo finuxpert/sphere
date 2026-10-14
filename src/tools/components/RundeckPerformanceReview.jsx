@@ -18,7 +18,7 @@ function Segmented({ options, value, onChange, label, disabled = false }) {
   </div>
 }
 
-export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false, reviewJumpToken = 0 }) {
+export default function RundeckPerformanceReview({ refreshToken = '', selectedJob = null, onSelectJob, incidentStart = '', onOpenQuickAnalysis = null, externalQuickKey = '', embedded = false, forceSearch = false, hideSearchButton = false, reviewJumpToken = 0, reviewJumpHealth = 'REVIEW' }) {
 
   const [period, setPeriod] = React.useState('1d')
   const [type, setType] = React.useState('ALL')
@@ -42,11 +42,13 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [appliedQuery, setAppliedQuery] = React.useState('')
   React.useEffect(() => {
     if (!reviewJumpToken) return
-    setHealthGroup('REVIEW')
+    setPeriod('1d')
+    setHealthGroup(['REVIEW','ATTENTION','UNKNOWN','NORMAL'].includes(reviewJumpHealth) ? reviewJumpHealth : 'REVIEW')
     setSearchQuery('')
     setAppliedQuery('')
+    setSearchOpen(false)
     setPageIndex(0)
-  }, [reviewJumpToken])
+  }, [reviewJumpToken, reviewJumpHealth])
   React.useLayoutEffect(() => {
     if (typeof window === 'undefined') return undefined
     const updateFit = () => {
