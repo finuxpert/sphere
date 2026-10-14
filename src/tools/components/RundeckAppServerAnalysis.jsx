@@ -114,7 +114,10 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
   const matchedCollection = Boolean(latestCollectionId) && workloadMeta.collectionId === latestCollectionId &&
     String(workloadMeta.host || '').trim().toUpperCase() === String(app.host || '').trim().toUpperCase()
   const displayRows = matchedCollection ? rows : []
-  const resolvedApp=matchedCollection && hostSnapshot?.host === app.host ? hostSnapshot : app
+  // A stale/unverified performance snapshot is never shown as a current host reading.
+  const resolvedApp = !latestCollectionId
+    ? {...app, cpu_pct:null, ram_pct:null, io_wait_pct:null, wp_critical:null}
+    : matchedCollection && hostSnapshot?.host === app.host ? hostSnapshot : app
   const hostLabel=shortHost(resolvedApp.host)
   return <section className="rundeckAppServerAnalysis" aria-label={`${hostLabel} APP server analysis`}>
     <div className="rundeckAppServerSummary">
