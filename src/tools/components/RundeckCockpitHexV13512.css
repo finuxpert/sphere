@@ -699,3 +699,106 @@
     font-size:8px;max-width:45vw;
   }
 }
+
+/* v1.35.18 — operator clarity, using the existing one-screen cockpit and no new cards. */
+@media (min-width:1200px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexMain{
+    grid-template-columns:minmax(360px,1fr) minmax(0,2fr)!important;
+    gap:clamp(10px,1vw,16px)!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+    margin-left:auto!important;margin-right:0!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:5px!important;
+    line-height:1.15!important;
+    width:100%;min-width:0;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid{
+    align-content:center!important;
+  }
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory{
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:3px;min-width:0;min-height:37px;
+  border:1px solid transparent;border-radius:4px;
+  background:transparent;cursor:pointer;
+  font:inherit;color:var(--sphere-text,#e7edf0);padding:4px 2px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory strong{
+  font-size:15px!important;font-weight:700!important;
+  line-height:1!important;font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory span{
+  display:block;font-size:10px;line-height:1.1;
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory i{
+  display:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory.is-review strong{color:#d66973}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory.is-attention strong{color:#d5ad55}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory.is-unknown strong{color:#9da8b3}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory.is-normal strong{color:#65ba7f}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory:is(:hover,:focus-visible){
+  background:rgba(75,160,180,.09)!important;
+  border-color:rgba(85,175,190,.42)!important;
+  outline:1px solid var(--sphere-accent,#4fc6c8);
+  outline-offset:1px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory:disabled{
+  cursor:default;opacity:.5;
+}
+@media (min-width:1200px) and (max-height:800px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
+    display:grid!important;gap:2px!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory{
+    min-height:27px;padding:1px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory strong{font-size:12px!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory span{font-size:8px}
+}
+@media (max-width:1199px){
+  /* Compact mobile/tablet layout retains Review's existing category selector. */
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory{
+    min-height:22px;flex-direction:row;gap:4px;padding:1px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory strong{font-size:11px!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory span{font-size:9px}
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalTrendHeading{
+  display:flex!important;align-items:center;justify-content:space-between;
+  gap:6px;min-width:0;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle{
+  flex:0 0 auto;border:1px solid var(--sphere-design-edge,rgba(126,147,158,.28));
+  color:var(--sphere-text-secondary,#a9b5bb);background:transparent;
+  border-radius:4px;font:inherit;font-size:9px;font-weight:650;
+  padding:3px 6px;min-height:22px;cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle[aria-pressed="true"]{
+  color:var(--sphere-accent,#4fc6c8);
+  border-color:var(--sphere-accent,#4fc6c8);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle:is(:hover,:focus-visible){
+  outline:2px solid var(--sphere-accent,#4fc6c8);outline-offset:1px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalLoadPeakNotice{
+  display:flex;align-items:center;gap:5px;min-width:0;
+  margin:2px 9px 0;padding:1px 2px;
+  font-size:9px;line-height:1.2;color:var(--sphere-warning,#d5ad55);
+  white-space:nowrap;overflow:hidden;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalLoadPeakNotice button{
+  margin-left:auto;flex:0 0 auto;border:0;background:transparent;
+  color:var(--sphere-accent,#4fc6c8);font:inherit;font-weight:700;
+  cursor:pointer;padding:2px 3px;
+}
+@media (max-width:899px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle{
+    font-size:8px;padding:2px 4px;
+  }
+}
