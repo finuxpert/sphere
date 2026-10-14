@@ -116,7 +116,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     ? Math.max(0, Number(preview.health.unknown) - insufficient) : null
   const unknownDescription = otherUnknown === null
     ? 'Unknown evaluations need evidence review.'
-    : `${insufficient} insufficient data · ${otherUnknown} other unknown statuses. Not an SM37 result.`
+    : `${insufficient} insufficient data · ${otherUnknown} other unknown statuses. UNKNOWN is not NORMAL and is not an SM37 result.`
   const state = error ? 'unavailable' : loading ? 'loading' : !preview ? 'unavailable' :
     preview.total === 0 ? 'empty' : preview.limited ? 'limited' :
       preview.reviewRequired > 0 ? 'review' : Number(preview.health.attention) > 0 ? 'attention' :
@@ -141,7 +141,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     data-state={state} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
-      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Workload Health</strong></span><small>1D · {period} · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'}</small></span>
+      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Workload Health</strong></span><small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>1D saved · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small></span>
       <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
         aria-label="Open Jobs & Programs Review">Review list</button>
     </header>
@@ -162,12 +162,15 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         const cpu = row.avg_cpu_pct == null ? '—' : row.avg_cpu_pct + '%'
         const pss = row.avg_pss_gb == null ? '—' : row.avg_pss_gb + ' GB'
         const description = `${type} ${row.consumer_key} · ${level === 'review' ? 'Review Required' :
-          level === 'attention' ? 'Watch' : level === 'normal' ? 'Normal' : 'Unknown'} · avg CPU ${cpu} · avg PSS ${pss}`
+          level === 'attention' ? 'Watch' : level === 'normal' ? 'Normal' : 'Unknown'} · avg grouped CPU ${cpu} · avg PSS ${pss}`
+        const detail = [description, row.host ? 'APP ' + row.host : '',
+          'Saved status ' + (row.status || 'UNKNOWN'), 'Window ' + period,
+          'Saved performance evaluation; not SAP SM37 execution status'].filter(Boolean).join(' · ')
         return <button key={row.consumer_type + ':' + row.consumer_key} type="button"
           className={'rundeckWorkloadDot is-' + level +
             (dotLayout.columns > 0 && Math.floor(index / dotLayout.columns) % 2 ? ' is-staggered-row' : '') +
             (preview?.limited ? ' is-limited' : '')}
-          title={description} aria-label={description}
+          title={detail} aria-label={description + ' · open saved 1D evaluation'}
           onClick={() => openWorkload(row)} />
       })}
       {(!rows.length || !dotLayout.fits) && <span className="rundeckWorkloadDotEmpty" role="status">

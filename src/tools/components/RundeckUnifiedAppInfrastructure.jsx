@@ -116,7 +116,7 @@ export default function RundeckUnifiedAppInfrastructure({
     <header className="rundeckUnifiedAppInfraHead">
       <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
-        <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
+        <span title="Counts describe APP health classifications, not the number of Critical Work Processes. APP Critical WP is displayed separately below.">{performanceVerified ? 'APP status · ' + hosts.length + ' total · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
         {performanceVerified && <span title={`Highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · Highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`}>SAP APP sample · {selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'time unverified'}</span>}
         {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
       </div>
