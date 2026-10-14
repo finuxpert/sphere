@@ -43,6 +43,9 @@ test('per-host ready collection and telemetry rows must share identity', () => {
   const row = { collection_id: 'infra-rundeck-150', collected_at: host }
   assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-150', [row], now), 'FRESH')
   assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-151', [row], now), 'UNKNOWN')
+  assert.equal(infrastructureTelemetryFreshness(host, '', [row], now), 'UNKNOWN')
+  assert.equal(infrastructureTelemetryFreshness(host, null, [row], now), 'UNKNOWN')
+  assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-150', [{collected_at:host}], now), 'UNKNOWN')
   assert.equal(infrastructureTelemetryFreshness(host, 'infra-rundeck-150', [], now), 'UNKNOWN')
 })
 
