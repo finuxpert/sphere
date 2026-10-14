@@ -256,7 +256,7 @@ const checks = [
   ['Run History shares evidence drawer without separate nested modal', files.wrapper.includes('size="evidence"') && files.wrapper.includes('rundeckOperatorPairedWorkspace is-events') && files.wrapper.includes('RundeckObservationHistory')],
   ['APP analysis uses explicit workload type badges', files.appServerAnalysis.includes('rundeckAppTypeBadge') && files.appServerAnalysisCss.includes('.rundeckAppTypeBadge.is-job')],
   ['APP analysis labels host-level Critical WP and observation duration without implying workload causation', files.appServerAnalysis.includes('Recorded incident · Critical WP') && files.appServerAnalysis.includes('Duration:')],
-  ['APP workload list states observation scope and avoids active or captured claims', files.appServerAnalysis.includes('loaded / ${workloadMeta.total} observed') && files.appServerAnalysis.includes('Source:') && !files.appServerAnalysis.includes(' captured</small>')],
+  ['APP workload list states observation scope and avoids active or captured claims', files.appServerAnalysis.includes('loaded / ${workloadMeta.total} stored') && files.appServerAnalysis.includes('Coverage:') && !files.appServerAnalysis.includes(' captured</small>')],
   ['Current workload API prefers all observed JOB and PROGRAM rows with legacy Top Consumers fallback', read('backend/rundeck_job_history.py').includes('rundeck_workload_observations') && read('backend/rundeck_job_history.py').includes('ALL_OBSERVED_ACTIVE_WORKLOADS') && read('backend/rundeck_job_history.py').includes("tc.consumer_type IN ('JOB', 'PROGRAM')")],
   ['APP analysis scopes workload retrieval to the selected host before applying the result limit', files.appServerAnalysis.includes('&host=${encodeURIComponent(app.host)}&limit=100') && files.apiCore.includes('host: str | None = Query(None')],
   ['Observed workload classification keeps RCA-WP identity provenance separate from SM37 authority', read('backend/rundeck_consumers.py').includes('identity_source') && read('backend/rundeck_consumers.py').includes('identity_authority') && files.appServerAnalysis.includes('not SM37 execution status')],
@@ -271,7 +271,7 @@ const checks = [
     !files.unifiedApp.includes('Inspect SAP') &&
     !files.unifiedApp.includes('rundeckUnifiedAppInfraDetail') &&
     files.unifiedApp.includes('onInspectApp?.({') &&
-    files.unifiedApp.includes('Current highest CPU') && files.unifiedApp.includes('Critical WP') &&
+    files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Critical WP') &&
     files.unifiedAnalysis.includes('RundeckAppServerAnalysis') &&
     files.unifiedAnalysis.includes('RundeckInfrastructure') &&
     files.unifiedAnalysis.includes('lockedHost') && files.unifiedAnalysis.includes('hideHostCards') &&
@@ -327,7 +327,7 @@ const checks = [
     && files.currentWorkloadCss.includes('text-align:right;font-variant-numeric:tabular-nums;')
     && files.currentWorkloadCss.includes('background:rgba(79,198,200,.045)!important')
     && files.currentWorkloadCss.includes('box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8)!important')],
-  ['Compact Correlated Events summary avoids long timing text truncation', files.evidenceTimeline.includes('No overlap · ${formatDurationMinutes(workloadGapMinutes)} gap') && files.evidenceTimeline.includes('${formatDurationMinutes(pair.deltaMinutes)} ${relativeTiming}') && files.evidenceTimeline.includes('events · ${timingDetail}') && files.evidenceTimeline.includes('issueWorkloadTimePair, formatDurationMinutes')],
+  ['Compact Correlated Events summary avoids long timing text truncation', files.evidenceTimeline.includes('No overlap · ${formatDurationMinutes(workloadGapMinutes)} between observations') && files.evidenceTimeline.includes('${formatDurationMinutes(pair.deltaMinutes)} ${relativeTiming}') && files.evidenceTimeline.includes('events · ${timingDetail}') && files.evidenceTimeline.includes('issueWorkloadTimePair, formatDurationMinutes')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['APP cross-focus uses unified host selection without auto-scroll or hidden legacy table', files.unifiedApp.includes('const focusHost =') && files.unifiedApp.includes('chooseUnifiedApp(') && !files.unifiedApp.includes('scrollIntoView(') && !files.unifiedApp.includes('requestAnimationFrame(')],
   ['APP card opens one modal with SAP and independent Infrastructure evidence', files.unifiedApp.includes('onInspectApp?.({') &&
@@ -342,8 +342,8 @@ const checks = [
     read('src/tools/components/RundeckUnifiedModalPolish.css').includes('.is-unified-app,.is-wide') &&
     files.unifiedAnalysis.includes('<strong>SAP Performance</strong>') &&
     files.unifiedAnalysis.includes('<strong>Infrastructure</strong>') &&
-    files.unifiedAnalysis.includes("shortHost(infraKey) === shortHost(appKey)") &&
-    files.unifiedAnalysis.includes("'UNKNOWN · APP identity mismatch'") &&
+    files.unifiedAnalysis.includes('app.infraHostVerified === true') &&
+    files.unifiedAnalysis.includes('UNVERIFIED · no confirmed host mapping') &&
     files.unifiedAnalysis.includes('lockedHost')],
   ['Performance Review pages the full evaluated population, not first 100 rows', files.performanceReview.includes('FULL_EVALUATED_POPULATION') && files.performanceReview.includes('const visibleRows = loadedKey !== requestKey ? [] : forceSearch') && files.performanceReview.includes('rundeckReviewPager') && !files.performanceReview.includes("is-top4")],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.performanceReview.includes("' is-updating'")],
@@ -361,7 +361,7 @@ const checks = [
     files.currentWorkload.includes('combineCurrentWorkloadResponses(results, collectionId)') &&
     files.currentWorkload.includes('host=${encodeURIComponent(host)}') &&
     files.currentWorkload.includes('const loaded = sortedRows') &&
-    files.currentWorkload.includes('allLoaded ? "searchable" : "loaded (partial)"') &&
+    files.currentWorkload.includes('coverageLabel') &&
     files.currentWorkload.includes('Filter workload APP') &&
     files.currentWorkload.includes('rundeckCurrentWorkloadTableWrap') &&
     files.source.includes('compactLimit={100}') &&
@@ -379,7 +379,7 @@ const checks = [
   ['Operational Events can collapse to natural content height', files.uiPolish.includes('.is-operational-events .rundeckEvidenceTimeline') && files.uiPolish.includes('height: auto !important')],
   ['System Data moved out of inline disclosure into shared analysis drawer', !files.source.includes('rundeckSupportingDataDisclosure') && files.wrapper.includes("activeOverlay?.type === 'system-data'") && files.wrapper.includes('systemDataContent')],
   ['Current Workloads keeps explicit compact column allocation', files.currentWorkloadCss.includes('table-layout: fixed') && files.currentWorkloadCss.includes('nth-child(2)') && files.currentWorkloadCss.includes('width: 45%')],
-  ['Current Workloads exposes multi-core CPU semantics and opens shared analysis without duplicate selected card', files.currentWorkload.includes('CPU Total ↓') && files.currentWorkload.includes("className={active ? 'is-selected' : ''}") && files.wrapper.includes('React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })') && !files.monitoringCore.includes('rundeckSelectedCompactIdentity')],
+  ['Current Workloads exposes multi-core CPU semantics and opens shared analysis without duplicate selected card', files.currentWorkload.includes('CPU Total (multi-core) ↓') && files.currentWorkload.includes("className={active ? 'is-selected' : ''}") && files.wrapper.includes('React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })') && !files.monitoringCore.includes('rundeckSelectedCompactIdentity')],
   ['Trend chart point opens a compact modal instead of expanding the live page', files.serverTrend.includes('rundeckTrendPointModalBackdrop') && files.serverTrend.includes('aria-modal="true"') && files.serverTrend.includes('closeTrendDetails') && !files.serverTrend.includes('<details className="rundeckHistoricalSnapshot">')],
   ['Trend modal uses one hierarchy and full-width actionable workload rows', files.serverTrend.includes('rundeckTrendInvestigationSnapshot') && files.serverTrend.includes('rundeckTrendWorkloadPanel') && files.serverTrend.includes('rundeckTrendWorkloadRow') && files.serverTrend.includes('Analyze Top Workload') && !files.serverTrend.includes('rundeckTrendSpikeSummary')],
   ['Trend snapshot launches shared Performance Analysis with exact saved workload details', files.serverTrend.includes("source: 'trend-snapshot'") && files.serverTrend.includes('snapshot: {') && files.serverTrend.includes('details: consumer.details || {}') && files.jobHistory.includes("jobSource === 'trend-snapshot'") && files.jobHistory.includes('const snapshotRow = jobSnapshot') && files.jobHistory.includes('const selectedObservation = snapshotRow')],
@@ -502,7 +502,7 @@ const checks = [
   ['SM37 source is compact integration status instead of a fourth infrastructure card', files.liveOverview.includes('rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED') && !files.liveOverview.includes('rundeckLiveJobsCard')],
   ['Current selection carries live CPU memory process and Critical WP metrics', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('cpuPct: row.cpu_pct') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('criticalWp: row.host_wp_critical')],
   ['Selected job context is enriched from the matching current workload row', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('onSelectedContext(context)') && files.source.includes('onSelectedContext={enrichSelectedJob}') && files.source.includes('return { ...current, ...context, pinned: current.pinned }')],
-  ['Current workload CPU warning color requires an explicit review or anomaly signal', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('hasReviewSignal(row)') && !read('src/tools/components/RundeckCurrentWorkload.jsx').includes("cpu >= 80 ? 'is-attention'")],
+  ['Current workload CPU warning color requires an explicit review or anomaly signal', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('workloadCpuSignal(row)') && !read('src/tools/components/RundeckCurrentWorkload.jsx').includes("cpu >= 80 ? 'is-attention'")],
   ['Review CPU chip uses compact Basis wording', read('src/tools/components/rundeckEvaluationExplain.js').includes("parts.push('High CPU')") && !read('src/tools/components/rundeckEvaluationExplain.js').includes("parts.push('High CPU usage')")],
   ['Review chips remain readable at nine pixels', files.monitoringCss.includes('.rundeckReviewReasonChips span') && files.monitoringCss.includes('font-size:9px')],
   ['Review reasons render as compact signal chips', files.performanceReview.includes('evaluationReasonParts') && files.performanceReview.includes('rundeckReviewReasonChips') && files.monitoringCss.includes('.rundeckReviewReasonChips')],
@@ -660,7 +660,7 @@ const checks = [
     files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
-  ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table', files.unifiedApp.includes('APP Servers & Infrastructure') && files.unifiedApp.includes('Current highest CPU') && files.unifiedApp.includes('· RAM') && files.unifiedApp.includes('Critical WP') && !files.unifiedApp.includes('<th>Signal</th>') && files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure')],
+  ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table', files.unifiedApp.includes('APP Servers & Infrastructure') && files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('· RAM') && files.unifiedApp.includes('Critical WP') && !files.unifiedApp.includes('<th>Signal</th>') && files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure')],
   ['APP cards explain filesystem usage with host-matched mount and retained capacity details',
     files.unifiedApp.includes('>Filesystem</small>') &&
     files.unifiedApp.includes('const mountPoint = String(infra.topFs?.mount_point') &&
