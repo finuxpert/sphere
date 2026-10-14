@@ -86,11 +86,14 @@ export default function RundeckUnifiedAppInfrastructure({
   const selectedInfra = infraUnverified && selectedInfraEvidence
     ? { ...selectedInfraEvidence, state: 'UNVERIFIED', freshness: 'UNVERIFIED' }
     : selectedInfraEvidence
+  const fsFresh = selectedInfra?.freshness === 'FRESH' && !infraUnverified
+  const fsSampleAt = selectedInfra?.topFs?.collected_at
+  const fsHistorical = !fsFresh && selectedInfra?.topFs
   const mountPoint = String(selectedInfra?.topFs?.mount_point || '').trim()
   const mountNote = mountPoint
     ? filesystemMountSource(selectedInfra.topFs) + ' ' + mountPoint : 'Mount unverified'
   const fsDetails = [
-    'Filesystem used ' + (selectedInfra?.topFs ? metric(selectedInfra.topFs.used_pct, '%') : '—'),
+    'Highest observed filesystem used ' + (selectedInfra?.topFs ? metric(selectedInfra.topFs.used_pct, '%') : '—'),
     'Infrastructure ' + (selectedInfra?.state || 'UNKNOWN'),
     'Source ' + (selectedInfra?.infra?.host || 'unverified'),
     'Mount ' + (mountPoint || 'unverified'),
@@ -114,7 +117,7 @@ export default function RundeckUnifiedAppInfrastructure({
       <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
         <span>{performanceVerified ? hosts.length + ' APP · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
-        {performanceVerified && <span title="Highest values across all APP hosts">Highest CPU {shortHost(highCpu?.host)} {metric(highCpu?.cpu_pct, '%')} · RAM {shortHost(highRam?.host)} {metric(highRam?.ram_pct, '%')} · Critical WP {highWpHosts} {metric(highWp?.wp_critical)}</span>}
+        {performanceVerified && <span title={`Highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · Highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`}>Host metrics · {hosts[0]?.collected_at ? `Observed ${formatWib(hosts[0].collected_at, true)} WIB` : 'sample time unverified'}</span>}
         {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
       </div>
     </header>
@@ -145,25 +148,26 @@ export default function RundeckUnifiedAppInfrastructure({
           <span title={appSignalReason(selectedHost, performanceVerified)}>{appSignalReason(selectedHost, performanceVerified)}</span>
         </div>
         <div className="rundeckSelectedAppMetrics">
-          <div className={'rundeckSelectedAppMetric is-' + metricResourceState(selectedHost.cpu_pct, 'cpu').toLowerCase()}>
-            <small>CPU</small><strong>{metric(selectedHost.cpu_pct, '%')}</strong>
+          <div className={'rundeckSelectedAppMetric is-' + (performanceVerified ? metricResourceState(selectedHost.cpu_pct, 'cpu').toLowerCase() : 'unknown')}>
+            <small>Host CPU</small><strong>{metric(performanceVerified ? selectedHost.cpu_pct : null, '%')}</strong>
           </div>
-          <div className={'rundeckSelectedAppMetric is-' + metricResourceState(selectedHost.ram_pct, 'ram').toLowerCase()}>
-            <small>RAM</small><strong>{metric(selectedHost.ram_pct, '%')}</strong>
+          <div className={'rundeckSelectedAppMetric is-' + (performanceVerified ? metricResourceState(selectedHost.ram_pct, 'ram').toLowerCase() : 'unknown')}>
+            <small>Host RAM</small><strong>{metric(performanceVerified ? selectedHost.ram_pct : null, '%')}</strong>
           </div>
-          <div className={'rundeckSelectedAppMetric is-' + sapWorkloadState(selectedHost).toLowerCase()}>
-            <small>Critical WP</small><strong>{metric(selectedHost.wp_critical)}</strong>
+          <div className={'rundeckSelectedAppMetric is-' + (performanceVerified ? sapWorkloadState(selectedHost).toLowerCase() : 'unknown')}>
+            <small>Critical WP</small><strong>{metric(performanceVerified ? selectedHost.wp_critical : null)}</strong>
           </div>
           <div className={'rundeckSelectedAppMetric is-' + String(selectedInfra?.state || 'UNKNOWN').toLowerCase()} title={fsDetails}>
-            <small>Filesystem</small><strong>{selectedInfra?.topFs ? metric(selectedInfra.topFs.used_pct, '%') : '—'}</strong>
+            <small>Highest FS</small><strong>{fsFresh && selectedInfra?.topFs ? metric(selectedInfra.topFs.used_pct, '%') : '—'}</strong>
+            <span className="rundeckSelectedAppFsMeta">{fsFresh ? `FS ${selectedInfra.state} · FRESH` : fsHistorical ? `Last ${metric(selectedInfra.topFs.used_pct, '%')} · ${selectedInfra?.freshness || 'UNKNOWN'}` : `FS ${selectedInfra?.state || 'UNKNOWN'}`}</span>
           </div>
         </div>
         <div className="rundeckSelectedAppSource" title={fsDetails}>
-          <small>{mountNote}</small>
-          <small>FS {selectedInfra?.state || 'UNKNOWN'} · {selectedInfra?.freshness || 'UNKNOWN'}</small>
+          <small>{mountNote} · {selectedInfra?.infra?.host || 'Host unverified'}</small>
+          <small>{fsSampleAt ? `${fsFresh ? 'Observed' : 'Last observed'} ${formatWib(fsSampleAt, true)} WIB` : 'Filesystem sample time unavailable'} · {selectedInfra?.freshness || 'UNKNOWN'}</small>
         </div>
         <button type="button" className="rundeckSelectedAppOpen" onClick={openSelectedAnalysis}
-          aria-label={'Open ' + appKey + ' SAP and Infrastructure full analysis'}>Full Analysis <span aria-hidden="true">↗</span></button>
+          aria-label={'Open ' + appKey + ' SAP and Infrastructure full analysis'}>Process / Infra <span aria-hidden="true">↗</span></button>
       </div>}
     </div>
   </section>
