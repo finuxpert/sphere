@@ -40,9 +40,9 @@ export default function RundeckOperationalEvidence({
     : `Related evidence scope: ${evidenceScope}`
   const evidence = summary?.active && !error
     ? <RundeckEvidenceTimeline refreshToken={refreshToken} job={evidenceJob} scopeLabel={evidenceScope}
-        incidentActive compact onOpen={() => onOpenEvidence?.(evidenceJob)} />
+        incidentActive compact onOpen={() => onOpenEvidence?.(evidenceJob, evidenceScope)} />
     : <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard"
-        onClick={() => onOpenEvidence?.(evidenceJob)} aria-label="Open Related Events and Run History" title={evidenceTitle}>
+        onClick={() => onOpenEvidence?.(evidenceJob, evidenceScope)} aria-label="Open Related Events and Run History" title={evidenceTitle}>
         <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events · {evidenceScope}</span>
         <strong>{error ? 'Evidence unverified' : !summary ? 'Loading evidence' : 'No current event'}</strong>
       </button>
