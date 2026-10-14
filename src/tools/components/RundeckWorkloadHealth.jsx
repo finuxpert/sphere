@@ -164,6 +164,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     </div>
     <footer className="rundeckWorkloadHealthFooter">
       <span className={'is-' + state}>{outcome} · {rows.length && dotLayout.fits ? '1 hexagon = 1 saved evaluation' : 'open Review for record details'} · not SM37 status</span>
+      {preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
+        <small title={unknownDescription}>Unknown: {insufficient} insufficient data · {otherUnknown} other</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
     </footer>
   </section>
