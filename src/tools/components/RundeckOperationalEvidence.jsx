@@ -32,7 +32,8 @@ export default function RundeckOperationalEvidence({
   const current = summary?.current_workload
   const evidenceJob = selectedJob || (summary?.active ? jobContext(current, summary?.affected_server, 'current') : null)
   const incidentHost = summary?.active ? shortHost(summary.affected_server || '') : ''
-  const evidenceScope = selectedJob?.key ? `Job ${shortHost(selectedJob.host) || 'host unverified'}`
+  const evidenceScope = selectedJob?.key
+    ? `${incidentHost ? 'Issue ' + incidentHost + ' / ' : ''}Job ${shortHost(selectedJob.host) || 'host unverified'}`
     : incidentHost ? `Incident ${incidentHost}` : 'System'
   const selectionMismatch = Boolean(focusedHost && incidentHost && shortHost(focusedHost) !== incidentHost)
   const evidenceTitle = selectionMismatch && !selectedJob?.key
