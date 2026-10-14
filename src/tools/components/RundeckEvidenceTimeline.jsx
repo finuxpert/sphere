@@ -44,7 +44,7 @@ function eventRelation(eventAt = '', issueAt = '', thresholdMinutes = 15, source
   return deltaMinutes < 0 ? 'BEFORE ISSUE' : 'AFTER ISSUE'
 }
 
-export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false, compact = false, onOpen = null, paired = false }) {
+export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false, compact = false, onOpen = null, paired = false, scopeLabel = '' }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
@@ -115,8 +115,8 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
       ? `No overlap · ${formatDurationMinutes(workloadGapMinutes)} apart`
       : pair.deltaMinutes !== null ? `${formatDurationMinutes(pair.deltaMinutes)} ${relativeTiming}` : 'Timing unverified'
-    return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Related Events" title={alignmentHint}>
-      <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events</span>
+    return <button type="button" className="rundeckEvidenceCard rundeckCorrelatedCard" onClick={onOpen} aria-label="Open Related Events" title={[scopeLabel, alignmentHint].filter(Boolean).join(' · ')}>
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events{scopeLabel ? ' · ' + scopeLabel : ''}</span>
       <strong>{events.length ? `${events.length} events · ${timingDetail}` : 'No related events'}</strong>
       <em aria-hidden="true">›</em>
     </button>
