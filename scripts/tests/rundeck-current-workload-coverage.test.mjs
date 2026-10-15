@@ -39,7 +39,7 @@ test('live UI requests host-scoped pages rather than silently searching only 50 
   assert.match(source, /hostKey\.split\(','\)/)
   assert.match(source, /combineCurrentWorkloadResponses/)
   assert.match(source, /host=\$\{encodeURIComponent\(host\)\}/)
-  assert.match(source, /Search \$\{rows.length\} observations/)
+  assert.match(source, /Search \$\{rows.length\} loaded jobs and programs/)
   assert.doesNotMatch(source, /sortedRows\.slice\(0, visibleLimit\)/)
 })
 
