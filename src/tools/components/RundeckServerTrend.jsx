@@ -872,7 +872,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <button type="button" className="rundeckTrendYAxisToggle"
         aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
         title="Focus rescales percent-based APP charts to observed samples. SAP Warning/Critical thresholds do not change; markers above the zoomed axis are not plotted. Full restores 0–100%."
-      >Y Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
+      >APP % Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
     </div>
     <div className="rundeckTrendSharedControls">
       <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
@@ -912,7 +912,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
-        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3><SphereIcon name="server" /> Technical Trend <small>· {technicalMetric === 'load' ? 'Host load average' : metricLabel(technicalMetric)}</small></h3>
+        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3><SphereIcon name="server" /> Technical Trend <small title={technicalMetric === 'load' ? 'Linux load average, not CPU usage percent. Compare with logical CPU count and saved evidence.' : ''}>· {technicalMetric === 'load' ? 'Host load average (not %)' : metricLabel(technicalMetric)}</small></h3>
           {technicalMetric === 'load' && <button type="button" className="rundeckTechnicalScaleToggle"
             aria-pressed={loadScaleMode === 'typical'} aria-label="Switch Technical Load between Full and Typical scale"
             title="Typical zooms the plotted Load axis when extreme saved samples compress other observations. Peak and timestamp remain visible; Full restores every value."

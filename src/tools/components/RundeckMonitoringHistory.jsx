@@ -104,7 +104,7 @@ export default function RundeckMonitoringHistory(props) {
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
     systemDataSummary={systemDataSummary}
     focusedHost={focusedOperationalHost?.host || ''}
-    infrastructureLabel={focusedOperationalHost ? `APP ${shortHost(focusedOperationalHost.host)} · verified host required` : 'No APP host selected'}
+    infrastructureLabel={focusedOperationalHost ? `APP ${shortHost(focusedOperationalHost.host)} · FS / Network / Storage` : 'No APP host selected'}
   />
 
   const currentWorkloadContent = React.isValidElement(props.currentWorkloadContent)

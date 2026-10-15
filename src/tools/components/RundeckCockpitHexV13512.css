@@ -884,3 +884,15 @@
     min-height:20px!important;
   }
 }
+
+/* DEV v1.35.21 — compact, legible status text; keep the 3+2 APP shape. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter small {
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+}
+@media (min-width:1200px) and (max-height:800px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter :is(span,small) {
+    font-size:9.5px!important;
+    line-height:1.22!important;
+  }
+}

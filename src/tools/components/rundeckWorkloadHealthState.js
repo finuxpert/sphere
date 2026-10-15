@@ -23,6 +23,8 @@ export function workloadHealthPreview(report) {
   const quality = report.quality || {}
   return {
     total, reviewRequired, health,
+    classified: total - Number(health.unknown),
+    unknownSharePct: total ? Math.round(Number(health.unknown) / total * 100) : 0,
     limited: String(quality.confidence || '').toUpperCase() === 'LOW' ||
       Number(quality.partial_or_incomplete_checks || 0) > 0,
     end: report.end || '',

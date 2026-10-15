@@ -82,3 +82,15 @@ test('401 saved workloads fit in one validated hexagon population without page 2
   assert.equal(validatedWorkloadDots(first,[page(100),page(200),page(300)],0,500),null)
   assert.equal(validatedWorkloadDots(first,[page(100),page(200),page(300),page(300)],0,500),null)
 })
+
+test('coverage uses full 1D population and keeps unknown separate from SAP execution', () => {
+  const report={summary:{workloads:406,review_required:8,
+    health:{review:8,attention:201,unknown:130,normal:67}},
+    quality:{confidence:'HIGH'},items:[]}
+  const preview=workloadHealthPreview(report)
+  assert.equal(preview.classified,276)
+  assert.equal(preview.unknownSharePct,32)
+  assert.equal(preview.reviewRequired,8)
+  assert.equal(workloadHealthPreview({summary:{workloads:0,review_required:0,
+    health:{review:0,attention:0,unknown:0,normal:0}},items:[]}).unknownSharePct,0)
+})

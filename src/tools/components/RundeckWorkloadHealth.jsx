@@ -118,18 +118,18 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     ? 'Unknown evaluations need evidence review.'
     : `${insufficient} insufficient data · ${otherUnknown} other unknown statuses. UNKNOWN is not NORMAL and is not an SM37 result.`
   const state = error ? 'unavailable' : loading ? 'loading' : !preview ? 'unavailable' :
-    preview.total === 0 ? 'empty' : preview.limited ? 'limited' :
-      preview.reviewRequired > 0 ? 'review' : Number(preview.health.attention) > 0 ? 'attention' :
-    Number(preview.health.unknown) > 0 ? 'limited' : 'normal'
+    preview.total === 0 ? 'empty' : preview.reviewRequired > 0 ? 'review' :
+    Number(preview.health.attention) > 0 ? 'attention' :
+    (preview.limited || Number(preview.health.unknown) > 0) ? 'limited' : 'normal'
   const period = data?.start && data?.end
     ? `${formatWib(data.start, true)} – ${formatWib(data.end, true)} WIB`
     : 'Window unavailable'
   const outcome = error ? 'Evaluation unavailable' : loading ? 'Loading evaluations…' :
     !preview ? 'No verified evaluation' : preview.total === 0 ? 'No evaluations' :
       data?.tooMany ? 'Open Review for individual evaluations' :
-      preview.limited ? 'Limited evidence' : preview.reviewRequired ? 'Needs review' :
+      preview.reviewRequired ? 'Needs review' :
     Number(preview.health.attention) > 0 ? 'Watch items recorded' :
-    Number(preview.health.unknown) > 0 ? 'Unknown evaluations' : 'No review flagged'
+    (preview.limited || Number(preview.health.unknown) > 0) ? 'Limited evidence' : 'No review flagged'
   const openWorkload = row => onSelectWorkload?.(row, {
     period: '1d', days: 1, start: data?.start || '', end: data?.end || '',
   })
@@ -138,7 +138,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     : 'Open Review for individual records'
 
   return <section className="rundeckWorkloadHealth"
-    data-state={state} data-density={rows.length > 500 ? 'dense' : 'normal'}
+    data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
       <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Workload Health</strong></span><small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>1D saved · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small></span>
@@ -180,7 +180,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     <footer className="rundeckWorkloadHealthFooter">
       <span className={'is-' + state} title="Evaluation priority is based on saved evidence, not SAP SM37 execution status.">{outcome} · {statusNote} · not SM37 status</span>
       {preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
-        <small title={unknownDescription}>Unknown: {insufficient} insufficient data · {otherUnknown} other</small>}
+        <small title={unknownDescription}>Unknown {preview.health.unknown}/{preview.total} ({preview.unknownSharePct}%) · {insufficient} insufficient</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
     </footer>
   </section>

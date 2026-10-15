@@ -156,3 +156,16 @@ test('operational shortcuts disclose exact evidence and bounded collector scope'
   assert.match(source,/Last \$\{collectionCount\} collector runs · 90D/)
   assert.match(source,/historyRefreshFailed \? 'Collector history unverified'/)
 })
+
+test('tab switching retains Current/Review state and labels technical scope',()=>{
+  const workspace=read('RundeckJobsProgramsWorkspace.jsx')
+  const trend=read('RundeckServerTrend.jsx')
+  const wrapper=read('RundeckMonitoringHistory.jsx')
+  assert.doesNotMatch(workspace,/key=\{mode\}/)
+  assert.match(workspace,/rundeckCurrentPersistentPane/)
+  assert.match(workspace,/reviewVisited &&/)
+  assert.match(workspace,/selectMode\('review'\)/)
+  assert.match(wrapper,/FS \/ Network \/ Storage/)
+  assert.match(trend,/APP % Axis/)
+  assert.match(trend,/Host load average \(not %\)/)
+})
