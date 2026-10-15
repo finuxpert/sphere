@@ -101,8 +101,23 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
         <text x={x(tick)} y={height-12} textAnchor={index===0?'start':index===xTicks.length-1?'end':'middle'}>{formatAxisTime(tick,range)}</text>
       </g>)}
       {groups.map(([key,rows],index)=>{
-        const cleanRows=rows
-        const points=cleanRows.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')
+        const cleanRows=[...rows].sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at))
+        // A retained collection gap must not become a continuous trend line.
+        // Use the actual stored cadence, not the live 5-second collector interval.
+        const gaps=cleanRows.slice(1).map((row,i)=>Date.parse(row.collected_at)-Date.parse(cleanRows[i].collected_at))
+          .filter(delta=>delta>0).sort((a,b)=>a-b)
+        const typicalGap=gaps.length?gaps[Math.floor((gaps.length-1)/2)]:0
+        const maxGap=Math.max(15*60*1000,typicalGap*3)
+        const segments=[]
+        let segment=[]
+        cleanRows.forEach((row,i)=>{
+          if(i>0&&Date.parse(row.collected_at)-Date.parse(cleanRows[i-1].collected_at)>maxGap){
+            if(segment.length)segments.push(segment)
+            segment=[]
+          }
+          segment.push(row)
+        })
+        if(segment.length)segments.push(segment)
         const selected=!selectedSeries||key===selectedSeries
         const latest=cleanRows.at(-1)
         if(cleanRows.length===1){
@@ -112,7 +127,9 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
           </circle>
         }
         return <g key={key}>
-          <polyline points={points} className={`series s${index%8} ${selected?'is-selected':'is-dimmed'}`} fill="none"/>
+          {segments.map((part,segmentIndex)=>part.length===1
+            ? <circle key={segmentIndex} cx={x(part[0].collected_at)} cy={y(part[0].value)} r="2.5" className={`seriesPoint s${index%8} ${selected?'is-selected':'is-dimmed'}`}/>
+            : <polyline key={segmentIndex} points={part.map(r=>`${x(r.collected_at)},${y(r.value)}`).join(' ')} className={`series s${index%8} ${selected?'is-selected':'is-dimmed'}`} fill="none"/>)}
           {selected&&latest&&<circle cx={x(latest.collected_at)} cy={y(latest.value)} r="4.2" className={`seriesPoint s${index%8} is-selected`}>
             <title>{key} - {metric(latest.value,metricType==='network'?' Mbps':'%')} - {formatTime(latest.collected_at)} WIB</title>
           </circle>}
@@ -164,10 +181,12 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const telemetryRows=[...observedData.fs,...observedData.network,...observedData.storage]
   const collectedAt=hostRow?.snapshot_ts||telemetryRows[0]?.collected_at
   const freshness=infrastructureTelemetryFreshness(collectedAt,hostRow?.collection_id,telemetryRows,clockNow)
-  const observedAt=telemetryRows
-    .map(row=>row.collected_at)
-    .filter(value=>Number.isFinite(Date.parse(value||'')))
-    .sort((a,b)=>Date.parse(a)-Date.parse(b))[0]||collectedAt
+  // Show the verified host snapshot time; the oldest individual metric is not
+  // the 'last collected' host timestamp.
+  const observedAt=(Number.isFinite(Date.parse(hostRow?.snapshot_ts||''))&&hostRow.snapshot_ts)
+    ||telemetryRows.map(row=>row.collected_at)
+      .filter(value=>Number.isFinite(Date.parse(value||'')))
+      .sort((a,b)=>Date.parse(a)-Date.parse(b)).at(-1)||collectedAt
   const stale=freshness!=='FRESH'
   const observedStatus=(state)=>infrastructureObservationStatus(state,freshness)
 
@@ -390,7 +409,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       {selectedSeries&&selectedValues.length>0&&<div className="rundeckInfraTrendSummary">
         <strong>Selected: {selectedSeries}</strong>
         <div className="rundeckInfraTrendStats">
-          <span><b>{stale?'Last in range':'Current'}</b>{metric(trendCurrent,trendMetric==='network'?' Mbps':'%')}</span>
+          <span><b>Last sample in range</b>{metric(trendCurrent,trendMetric==='network'?' Mbps':'%')}</span>
           <span><b>Min</b>{metric(trendMin,trendMetric==='network'?' Mbps':'%')}</span>
           <span><b>{storageSourceOver100?'Reported Max':'Max'}</b>{metric(trendMax,trendMetric==='network'?' Mbps':'%')}</span>
           {trendChange!==null&&<span><b>Change from range start</b>{trendChange>0?'+':''}{metric(trendChange,trendMetric==='network'?' Mbps':' pp')}</span>}
