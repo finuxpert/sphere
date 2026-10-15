@@ -36,7 +36,7 @@ function Status({ value }) {
   return <span className={`rundeckIssueStatus ${statusClass(value)}`}><i aria-hidden="true" />{value}</span>
 }
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false, readinessRoot = null }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false, readinessRoot = null, historyRoot = null }) {
   const [snapshot, setSnapshot] = React.useState({ ...EMPTY_SNAPSHOT, requestKey: refreshToken })
   const data = snapshot.requestKey === refreshToken ? snapshot : EMPTY_SNAPSHOT
   const failedSources = data.failedSources
@@ -44,6 +44,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const [indicatorQuery,setIndicatorQuery] = React.useState('')
   const [appFilter,setAppFilter] = React.useState('ALL')
   const [showMoreIndicators,setShowMoreIndicators] = React.useState(false)
+  const [showFilters,setShowFilters] = React.useState(false)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -133,8 +134,10 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     (appFilter==='ALL' || row.scope===appFilter)
     && (!normalizedQuery || [row.scope,row.indicator,row.status,row.current,row.reason].some(value=>String(value||'').toLocaleLowerCase().includes(normalizedQuery)))
   )
-  const displayedIndicators=paired && indicatorView==='review' && !showMoreIndicators && !normalizedQuery && appFilter==='ALL' ? visibleIndicators.slice(0,4) : visibleIndicators
+  const displayedIndicators=paired && indicatorView==='review' && !showMoreIndicators && !normalizedQuery && appFilter==='ALL' ? visibleIndicators.slice(0,5) : visibleIndicators
   const hiddenIndicatorCount=visibleIndicators.length-displayedIndicators.length
+  const filtersExpanded=!paired || indicatorView==='all' || showFilters || Boolean(normalizedQuery) || appFilter!=='ALL'
+  const showWpThreshold=displayedIndicators.some(row=>row.indicator==='APP Critical WP')
   const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
   if(compact){
@@ -147,6 +150,33 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   }
 
   const inspect=(row)=>row.host&&onInspectApp?.({host:row.host,source:'sap-issues',issue:row.indicator,severity:row.status})
+
+  const historyContent = data.incidents ? <details className="rundeckSapChecksHistoryDisclosure" open={!paired}>
+      <summary>Incident history <span>{retainedIncidentCount ?? '—'}</span><small>Saved records · peak and duration</small></summary>
+      <section className="rundeckIssueIndicatorSection is-history">
+      <div className="rundeckIssueSectionTitle"><h4>Saved incidents</h4><small>Peak Critical WP {peakCriticalWp||'—'} · APP status from latest verified sample</small></div>
+      {incidentItems.length > 0 ? <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
+        <thead><tr><th>APP</th><th>Signal</th><th>Current APP status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
+        <tbody>{incidentItems.map((row)=>{
+          // Active is a retained incident state; current severity requires a verified recent host sample.
+          const latestHost=hosts.find(host=>shortHost(host.host)===shortHost(row.host))
+          const currentVerified=latestHost && sapIssueSampleFreshness(data.hosts,latestHost,nowMs)==='FRESH'
+          const code=String(row.code||'').toUpperCase()
+          const severity=!currentVerified?'UNKNOWN'
+            :code==='WP_CRITICAL'?sapWorkloadState(latestHost)
+            :code.includes('IOWAIT')||code.includes('IO_WAIT')?metricResourceState(latestHost.io_wait_pct ?? latestHost.iowait_pct,'ioWait')
+            :code.includes('CPU')?metricResourceState(latestHost.cpu_pct,'cpu')
+            :code.includes('RAM')||code.includes('MEMORY')?metricResourceState(latestHost.ram_pct,'ram')
+            :'UNKNOWN'
+          return <tr key={row.id} className={row.host?'is-investigable':''}>
+            <td>{row.host
+              ? <button type="button" className="rundeckIssueInspect" onClick={()=>inspect({host:row.host,indicator:issueLabel(row.signal||row.code),status:severity})} aria-label={`Inspect ${shortHost(row.host)} ${issueLabel(row.signal||row.code)} incident`}>{shortHost(row.host)} <span aria-hidden="true">↗</span></button>
+              : <strong>{shortHost(row.host||'APP')}</strong>}</td><td>{issueLabel(row.signal||row.code)}</td><td><Status value={severity}/></td><td>{valueText(row.peak_value,row.unit||'')}</td><td>{durationText(row.duration_seconds)}</td>
+          </tr>
+        })}</tbody>
+      </table></div> : <p className="rundeckIssueEmpty">No retained active issues in the current incident window.</p>}
+      </section>
+    </details> : failedSources.includes('incidents') ? <div className="rundeckIssueEmpty" role="status">Incident history unavailable.</div> : loading ? <div className="rundeckIssueEmpty">Checking incident history…</div> : null
 
   return <section className="rundeckSapIssuesV1231 is-indicator-console" aria-label="SAP operational issues">
     {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} non-normal indicators</span></header>}
@@ -175,55 +205,32 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
         />
       </div>
       {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37SourceFailed ? 'SM37 readiness unavailable' : sm37 === 'UNKNOWN' ? 'SM37 readiness unverified' : `SM37 not connected · ${sm37}`}. Confirm job execution status in SAP SM37.</p>}
-      <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
+      {paired && indicatorView==='review' && <button type="button" className="rundeckSapChecksFilterToggle" aria-expanded={filtersExpanded} onClick={()=>setShowFilters(!showFilters)}>{filtersExpanded ? 'Hide filters' : 'Filter indicators'}</button>}
+      {filtersExpanded && <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
         <label><span>Find indicator</span><input type="search" value={indicatorQuery} onChange={event=>setIndicatorQuery(event.target.value)} placeholder="APP, indicator or status" /></label>
         <label><span>APP</span><select value={appFilter} onChange={event=>setAppFilter(event.target.value)}>
           <option value="ALL">All APPs</option>{appOptions.map(app=><option key={app} value={app}>{app}</option>)}
         </select></label>
         <small aria-live="polite">{visibleIndicators.length} shown</small>
-      </div>
+      </div>}
       {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">0 non-normal indicators · status based on available samples</p>}
       {!visibleIndicators.length && baseIndicators.length>0 && <p className="rundeckIssueEmpty">No indicators match these filters.</p>}
       {visibleIndicators.length>0&&<div className="rundeckIssueIndicatorTableWrap">
         <table className="rundeckIssueIndicatorTable">
-          <thead><tr><th>Scope</th><th>Indicator</th><th>Status</th><th>Current</th><th>Basis Check</th></tr></thead>
+          <thead><tr><th>Scope</th><th>Indicator</th><th>Status</th><th>Current</th>{!paired && <th>Basis Check</th>}</tr></thead>
           <tbody>
             {displayedIndicators.map((row,index)=><tr key={`${row.scope}-${row.indicator}-${index}`} className={row.host?'is-investigable':''}>
               <td>{row.host ? <button type="button" className="rundeckIssueInspect" onClick={()=>inspect(row)} aria-label={`Inspect ${row.scope} ${row.indicator}`}>{row.scope} <span aria-hidden="true">↗</span></button> : <strong>{row.scope}</strong>}</td>
-              <td>{row.indicator}</td><td><Status value={row.status}/></td><td>{row.current}</td><td>{row.reason}</td>
+              <td title={paired ? row.reason : undefined}>{row.indicator}{paired && row.status==='UNKNOWN' && <small className="rundeckSapChecksUnknownReason">{row.reason}</small>}</td><td><Status value={row.status}/></td><td>{row.current}</td>{!paired && <td>{row.reason}</td>}
             </tr>)}
           </tbody>
         </table>
       </div>}
+      {paired && showWpThreshold && <p className="rundeckSapChecksThresholdNote">APP Critical WP: Attention 1–2 · Critical ≥3</p>}
       {hiddenIndicatorCount>0 && <button type="button" className="rundeckSapChecksMoreButton" onClick={()=>setShowMoreIndicators(true)}>Show {hiddenIndicatorCount} more indicators</button>}
       {paired && showMoreIndicators && indicatorView==='review' && !normalizedQuery && appFilter==='ALL' && <button type="button" className="rundeckSapChecksMoreButton" onClick={()=>setShowMoreIndicators(false)}>Show fewer indicators</button>}
     </section>
 
-    {data.incidents&&<details className="rundeckSapChecksHistoryDisclosure" open={!paired}>
-      <summary>Incident records <span>{retainedIncidentCount ?? '—'}</span><small>Retained ACTIVE records; current status is separate</small></summary>
-      <section className="rundeckIssueIndicatorSection is-history">
-      <div className="rundeckIssueSectionTitle"><h4>Retained incidents</h4><small>Peak Critical WP {peakCriticalWp||'—'} · APP status from latest verified sample</small></div>
-      {incidentItems.length > 0 ? <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
-        <thead><tr><th>APP</th><th>Signal</th><th>Current status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
-        <tbody>{incidentItems.map((row)=>{
-          // Active is a retained incident state; current severity requires a verified recent host sample.
-          const latestHost=hosts.find(host=>shortHost(host.host)===shortHost(row.host))
-          const currentVerified=latestHost && sapIssueSampleFreshness(data.hosts,latestHost,nowMs)==='FRESH'
-          const code=String(row.code||'').toUpperCase()
-          const severity=!currentVerified?'UNKNOWN'
-            :code==='WP_CRITICAL'?sapWorkloadState(latestHost)
-            :code.includes('IOWAIT')||code.includes('IO_WAIT')?metricResourceState(latestHost.io_wait_pct ?? latestHost.iowait_pct,'ioWait')
-            :code.includes('CPU')?metricResourceState(latestHost.cpu_pct,'cpu')
-            :code.includes('RAM')||code.includes('MEMORY')?metricResourceState(latestHost.ram_pct,'ram')
-            :'UNKNOWN'
-          return <tr key={row.id} className={row.host?'is-investigable':''}>
-            <td>{row.host
-              ? <button type="button" className="rundeckIssueInspect" onClick={()=>inspect({host:row.host,indicator:issueLabel(row.signal||row.code),status:severity})} aria-label={`Inspect ${shortHost(row.host)} ${issueLabel(row.signal||row.code)} incident`}>{shortHost(row.host)} <span aria-hidden="true">↗</span></button>
-              : <strong>{shortHost(row.host||'APP')}</strong>}</td><td>{issueLabel(row.signal||row.code)}</td><td><Status value={severity}/></td><td>{valueText(row.peak_value,row.unit||'')}</td><td>{durationText(row.duration_seconds)}</td>
-          </tr>
-        })}</tbody>
-      </table></div> : <p className="rundeckIssueEmpty">No retained active issues in the current incident window.</p>}
-      </section>
-    </details>}
+    {paired ? (historyRoot && historyContent ? createPortal(historyContent, historyRoot) : null) : historyContent}
   </section>
 }
