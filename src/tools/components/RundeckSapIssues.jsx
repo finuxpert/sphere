@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import SphereIcon from './SphereIcon.jsx'
 import SphereOperatorTabs from './SphereOperatorTabs.jsx'
 import { numberText, shortHost } from './sapUiFormat.js'
@@ -35,7 +36,7 @@ function Status({ value }) {
   return <span className={`rundeckIssueStatus ${statusClass(value)}`}><i aria-hidden="true" />{value}</span>
 }
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false, readinessRoot = null }) {
   const [snapshot, setSnapshot] = React.useState({ ...EMPTY_SNAPSHOT, requestKey: refreshToken })
   const data = snapshot.requestKey === refreshToken ? snapshot : EMPTY_SNAPSHOT
   const failedSources = data.failedSources
@@ -109,6 +110,13 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   addServices('SSH',availability.ssh)
 
   const sm37=data.readiness ? String(data.readiness?.features?.job_monitor ?? 'UNKNOWN').toUpperCase() : 'UNKNOWN'
+  const sm37SourceFailed = failedSources.includes('readiness')
+  const readinessSummary = <div className="rundeckSapChecksReadiness" title="Readiness of the SAP SM37 data source, not SAP job execution status.">
+    <b>SM37 readiness</b>
+    <strong className={sm37 === 'READY' ? 'is-ready' : sm37SourceFailed || sm37 === 'UNKNOWN' ? 'is-unknown' : 'is-warning'}>
+      {sm37SourceFailed ? 'UNAVAILABLE' : loading ? 'CHECKING' : sm37}
+    </strong>
+  </div>
   if(data.readiness) indicators.push({scope:'SAP Job Source',indicator:'SM37 Feed',status:sm37==='READY'?'NORMAL':sm37==='UNKNOWN'?'UNKNOWN':'WARNING',current:sm37==='READY'?'CONNECTED':sm37==='UNKNOWN'?'UNVERIFIED':'NOT CONNECTED',reason:`Readiness: ${sm37} · Execution status: SAP SM37`})
 
   const sortedIndicators=[...indicators].sort((a,b)=>(SEVERITY_RANK[b.status]||0)-(SEVERITY_RANK[a.status]||0))
@@ -139,12 +147,12 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} non-normal indicators</span></header>}
     {loading && <div className="rundeckReviewState" role="status">Checking SAP source data…</div>}
     {failedSources.length>0 && <div className="rundeckReviewState is-error" role="status">Unavailable: {failedSources.map(name=>SAP_ISSUE_SOURCE_LABELS[name]).join(', ')}. Successful checks remain visible; failed sources are UNKNOWN.</div>}
-    <div className="rundeckSapIssuesSummaryStrip">
-      <span title="Non-normal source indicators exclude SAP SM37 readiness, which is shown separately."><b>Non-normal</b><strong>{reviewIndicators.length}</strong></span>
+    {paired && readinessRoot ? createPortal(readinessSummary, readinessRoot) : readinessSummary}
+    <div className="rundeckSapIssuesSummaryStrip" aria-label="Current indicator status">
+      <span title="Non-normal indicators exclude SAP SM37 readiness."><b>Non-normal</b><strong>{reviewIndicators.length}</strong></span>
       <span><b>Critical</b><strong>{criticalCount}</strong></span>
       <span><b>Attention</b><strong>{warningCount}</strong></span>
       <span><b>Unknown</b><strong>{unknownCount}</strong></span>
-      <span title="Retained active incidents, distinct from current non-normal indicators."><b>Active issues</b><strong>{activeCount === null || !Number.isFinite(activeCount) ? '—' : activeCount}</strong></span>
     </div>
 
     <section className="rundeckIssueIndicatorSection">
@@ -161,13 +169,13 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
           onChange={setIndicatorView}
         />
       </div>
-      {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37 === 'UNKNOWN' ? 'SM37 feed: UNKNOWN' : `SM37 not connected · ${sm37}`} · Execution status: SAP SM37</p>}
+      {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37SourceFailed ? 'SM37 readiness unavailable' : sm37 === 'UNKNOWN' ? 'SM37 readiness unverified' : `SM37 not connected · ${sm37}`}. Confirm job execution status in SAP SM37.</p>}
       <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
         <label><span>Find indicator</span><input type="search" value={indicatorQuery} onChange={event=>setIndicatorQuery(event.target.value)} placeholder="APP, indicator or status" /></label>
         <label><span>APP</span><select value={appFilter} onChange={event=>setAppFilter(event.target.value)}>
           <option value="ALL">All APPs</option>{appOptions.map(app=><option key={app} value={app}>{app}</option>)}
         </select></label>
-        <small>{visibleIndicators.length} shown</small>
+        <small aria-live="polite">{visibleIndicators.length} shown</small>
       </div>
       {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">0 non-normal indicators · status based on available samples</p>}
       {!visibleIndicators.length && baseIndicators.length>0 && <p className="rundeckIssueEmpty">No indicators match these filters.</p>}
@@ -185,7 +193,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     </section>
 
     {incidentItems.length>0&&<section className="rundeckIssueIndicatorSection is-history">
-      <div className="rundeckIssueSectionTitle"><h4>Active issues</h4><small>Peak {peakCriticalWp||'—'} · current status uses fresh APP data</small></div>
+      <div className="rundeckIssueSectionTitle"><h4>Active issues <span className="rundeckSapChecksIncidentCount">{activeCount === null || !Number.isFinite(activeCount) ? '—' : activeCount}</span></h4><small>Retained incidents · peak Critical WP {peakCriticalWp||'—'} · current status uses fresh APP data</small></div>
       <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
         <thead><tr><th>APP</th><th>Signal</th><th>Current status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
         <tbody>{incidentItems.map((row)=>{

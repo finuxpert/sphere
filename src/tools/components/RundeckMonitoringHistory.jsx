@@ -22,6 +22,7 @@ import './RundeckPopupConsistencyV135.css'
 import './RundeckOperatorDesignSystemV135.css'
 import './RundeckOperatorFlatV1354.css'
 import './RundeckCockpitHexV13512.css'
+import './RundeckSapChecksLayout.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -50,6 +51,8 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [activeOverlay, setActiveOverlay] = React.useState(null)
+  const [availabilitySummaryRoot, setAvailabilitySummaryRoot] = React.useState(null)
+  const [readinessSummaryRoot, setReadinessSummaryRoot] = React.useState(null)
   const [manualAppFocus, setManualAppFocus] = React.useState({ contextHost: '', host: null })
   const selectedHostKey = selectedJob?.host || ''
   const trendFocusedHost = manualAppFocus.contextHost === selectedHostKey && manualAppFocus.host !== null
@@ -263,26 +266,33 @@ export default function RundeckMonitoringHistory(props) {
             onBack={activeOverlay.returnTo && activeOverlay.returnTo.type !== 'selected'
               ? () => returnFromOverlay(activeOverlay.returnTo) : null}
           >
-            <div className="rundeckOperatorPairedWorkspace is-sap-checks">
-              <section className="rundeckOperatorPairedPane" aria-label="SAP availability">
-                <h3>Availability</h3>
-                <RundeckAvailability refreshToken={refreshToken} paired />
-              </section>
-              <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
-                <h3>Current Issues</h3>
-                <RundeckSapIssues
-                  paired
-                  refreshToken={refreshToken}
+            <div className="rundeckSapChecksLayout">
+              <div className="rundeckSapChecksSummaryRail" aria-label="Availability and SAP SM37 readiness summary">
+                <div className="rundeckSapChecksSummaryAvailability" ref={setAvailabilitySummaryRoot} />
+                <div className="rundeckSapChecksSummaryReadiness" ref={setReadinessSummaryRoot} />
+              </div>
+              <div className="rundeckOperatorPairedWorkspace is-sap-checks rundeckSapChecksDetailGrid">
+                <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
+                  <h3>Technical checks</h3>
+                  <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
+                </section>
+                <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
+                  <h3>Current Issues</h3>
+                  <RundeckSapIssues
+                      paired
+                    readinessRoot={readinessSummaryRoot}
+                    refreshToken={refreshToken}
                   onInspectApp={(context) => {
                     if (!context?.host) return
                     focusSequence.current += 1
                     setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
                     setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
                   }}
-                />
-              </section>
+                  />
+                </section>
+              </div>
             </div>
-          </RundeckWorkspaceDrawer>}
+          </RundeckWorkspaceDrawer>
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
             title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}

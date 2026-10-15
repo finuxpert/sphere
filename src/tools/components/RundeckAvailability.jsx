@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib } from './sapUiFormat.js'
 import './RundeckAvailability.css'
@@ -40,7 +41,7 @@ function ageMinutes(value) {
   return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
 }
 
-export default function RundeckAvailability({ refreshToken = '', compact = false, onOpen = null, paired = false }) {
+export default function RundeckAvailability({ refreshToken = '', compact = false, onOpen = null, paired = false, summaryRoot = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [bundle, setBundle] = React.useState(null)
@@ -172,6 +173,13 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
     technicalCheckCount > 0 && technicalPassCount === technicalCheckCount &&
     availabilityAge !== null && !stale && !showDataTrust
 
+  const summary = <div className="rundeckAvailabilitySummaryStrip" aria-label="Availability summary">
+    <span><b>SAP APP</b><strong>{apps.length ? `${appsUp}/${apps.length} UP` : '—'}</strong></span>
+    <span><b>HANA</b><strong>{hanaRows.length ? `${hanaUp}/${hanaRows.length} UP` : '—'}</strong></span>
+    <span><b>WEB</b><strong>{webRows.length ? `${webUp}/${webRows.length} UP` : '—'}</strong></span>
+    <span title="PASS counts only verified positive technical checks. UNKNOWN, absent, or failed checks do not count as PASS."><b>TECHNICAL</b><strong>{technicalCheckCount ? `${technicalPassCount}/${technicalCheckCount} ${stale || availabilityAge === null ? 'LAST PASS' : 'PASS'}` : '—'}</strong></span>
+  </div>
+
   if (compact) {
     return <button type="button" className="rundeckEvidenceCard rundeckAvailabilityCard" onClick={onOpen} aria-label="Open SAP Availability details">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> SAP Availability</span>
@@ -203,14 +211,9 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
 
     {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}
 
+    {paired && summaryRoot && createPortal(summary, summaryRoot)}
     {data && <>
-      <div className="rundeckAvailabilitySummaryStrip" aria-label="Availability summary">
-        <span><b>SAP APP</b><strong>{apps.length ? `${appsUp}/${apps.length} UP` : '—'}</strong></span>
-        <span><b>HANA</b><strong>{hanaRows.length ? `${hanaUp}/${hanaRows.length} UP` : '—'}</strong></span>
-        <span><b>WEB</b><strong>{webRows.length ? `${webUp}/${webRows.length} UP` : '—'}</strong></span>
-        <span title="PASS counts only verified positive technical checks. UNKNOWN, absent, or failed checks do not count as PASS."><b>TECHNICAL</b><strong>{technicalCheckCount ? `${technicalPassCount}/${technicalCheckCount} ${stale || availabilityAge === null ? 'LAST PASS' : 'PASS'}` : '—'}</strong></span>
-      </div>
-
+      {!summaryRoot && summary}
       <div className="rundeckAvailabilityDetailSections">
         <section>
           <h4>HANA checks</h4>
