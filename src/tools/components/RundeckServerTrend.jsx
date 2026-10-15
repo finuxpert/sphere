@@ -1007,7 +1007,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           {technicalNetwork && <div className="rundeckNetworkDirection" role="group" aria-label="Network throughput direction">
             <button type="button" aria-pressed={networkDirection === 'rx'} className={networkDirection === 'rx' ? 'is-active' : ''} onClick={() => setNetworkDirection('rx')}>RX</button>
             <button type="button" aria-pressed={networkDirection === 'tx'} className={networkDirection === 'tx' ? 'is-active' : ''} onClick={() => setNetworkDirection('tx')}>TX</button>
-            <small title="One APP point = highest throughput network interface seen for that APP at the sample time. Source is Infrastructure, not SAP workload CPU.">APP1–APP5 · highest interface · Mbps</small>
+            <small title="Infrastructure source. One APP point uses the highest-throughput interface in that sample. The figure is not total network throughput for all interfaces.">{technicalLoading ? 'Loading Infrastructure…' : technicalTrend?.network_source
+              ? `${technicalTrend.observed_hosts?.length || 0}/5 APP sampled · highest interface · Mbps`
+              : 'APP1–APP5 · highest interface · Mbps'}</small>
           </div>}
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
         </div>
@@ -1042,8 +1044,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           {selected?.network ? <section className="rundeckNetworkObservation">
             <p><strong>Infrastructure Network · {selected.metricLabel}</strong></p>
             <p>APP {shortHost(selected.host)} · {selected.sourceHost || 'host identity unavailable'}</p>
-            <p>{selected.interface ? 'Interface: ' + selected.interface : 'Interface: unverified'} · {selected.value == null ? 'no value' : numberText(selected.value, 2) + ' Mbps'}</p>
-            <p>Observed {selected.at ? formatWib(selected.at, true) + ' WIB' : 'time unknown'} · {selected.mode === 'max' ? 'Peak in selected bucket' : 'Average of observed values in bucket'}.</p>
+            <p>{selected.interface ? (activeTrend?.bucket === 'raw' ? 'Observed interface: ' : 'Peak interface in bucket: ') + selected.interface : 'Interface: unverified'} · {selected.value == null ? 'no value' : numberText(selected.value, 2) + ' Mbps'}</p>
+            <p>{activeTrend?.bucket === 'raw' ? 'Sample' : selected.mode === 'max' ? 'Peak sample' : 'Bucket start'}: {selected.at ? formatWib(selected.at, true) + ' WIB' : 'time unknown'} · {activeTrend?.bucket === 'raw' ? 'Recorded rate' : selected.mode === 'max' ? 'Peak in selected bucket' : 'Average of observed per-sample rates'}.</p>
             <p>Each APP trace uses the highest-throughput single interface at each collected sample. Interface traffic is not summed; no zero values are invented for missing samples.</p>
             <p>This is network throughput evidence, not proof of a SAP job issue, link saturation, or network outage.</p>
           </section> :
