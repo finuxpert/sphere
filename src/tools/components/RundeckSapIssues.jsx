@@ -151,7 +151,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
   const inspect=(row)=>row.host&&onInspectApp?.({host:row.host,source:'sap-issues',issue:row.indicator,severity:row.status})
 
-  const historyContent = data.incidents ? <details className="rundeckSapChecksHistoryDisclosure" open={!paired}>
+  const historyContent = data.incidents ? <details className="rundeckSapChecksHistoryDisclosure" open={!paired || (incidentItems.length > 0 && incidentItems.length <= 2)}>
       <summary>Incident history <span>{retainedIncidentCount ?? '—'}</span><small>Saved records · peak and duration</small></summary>
       <section className="rundeckIssueIndicatorSection is-history">
       <div className="rundeckIssueSectionTitle"><h4>Saved incidents</h4><small>Peak Critical WP {peakCriticalWp||'—'} · APP status from latest verified sample</small></div>
