@@ -26,7 +26,7 @@ test('verified population fits or provides an explicit Review fallback', () => {
 
 test('workload UX preserves population evidence and responsive controls', () => {
   const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url),'utf8')
-  assert.match(read('RundeckWorkloadHealth.jsx'), /hexagons do not fit/)
+  assert.match(read('RundeckWorkloadHealth.jsx'), /rundeckWorkloadDistribution/)
   assert.match(read('RundeckWorkloadHealth.jsx'), /INSUFFICIENT DATA/)
   assert.match(read('RundeckOperatorFlatV1354.css'), /--workload-dot-size/)
   assert.match(read('RundeckJobsProgramsWorkspace.jsx'), />Current<\/button>/)
