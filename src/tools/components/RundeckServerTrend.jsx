@@ -203,7 +203,8 @@ function TrendFreshness({ trend }) {
   const staleMinutes = Math.max(1, Number(trend?.stale_after_minutes || 20))
   if (!Number.isFinite(latest) || Date.now() - latest < staleMinutes * 60 * 1000) return null
   const ageMinutes = Math.max(1, Math.floor((Date.now() - latest) / 60000))
-  return <div className="rundeckHistoryState">Last collection {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
+  const source = trend?.network_source ? 'Infrastructure network sample' : 'collection'
+  return <div className="rundeckHistoryState">Last {source} {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
 }
 
 function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null }) {
@@ -290,7 +291,11 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
             const name = String(point.seriesName || '').replace(/[&<>"']/g, character => ({
               '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
             })[character])
-            lines.push(`${point.marker || ''}${name} <b>${numberText(point.data.value[1], 1)}${trend?.unit === '%' ? '%' : ''}</b>${mode === 'max' && point.data?.peakAt ? ` · Peak at ${formatWib(point.data.peakAt, true)} WIB` : ''}`)
+            const interfaceName = String(point.data?.peakInterface || '').replace(/[&<>"']/g, character => ({
+              '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+            })[character])
+            const unit = trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''
+            lines.push(`${point.marker || ''}${name} <b>${numberText(point.data.value[1], 1)}${unit}</b>${interfaceName ? ' · NIC ' + interfaceName : ''}${mode === 'max' && point.data?.peakAt ? ` · Peak at ${formatWib(point.data.peakAt, true)} WIB` : ''}`)
           })
           if (valid.length && visible.length < hosts.length) lines.push(`${hosts.length - visible.length} APP without samples in this bucket`)
           if (!valid.length) lines.push('No retained sample in bucket')
@@ -298,7 +303,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
         },
       },
       xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 10.5, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (trend?.metric === 'load' && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
+      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (trend?.metric === 'load' && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
@@ -316,7 +321,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           : { color: traceColor, opacity: traceStyle.itemOpacity },
         emphasis: { focus: 'series', scale: true, lineStyle: { width: availabilityMode ? 2.5 : 2.8, opacity: 1 } },
         data: buildHostTrendSeries(
-          rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
+          rows.filter((row) => row.host === host).map((row) => ({ value: [row.bucket, row[valueKey]], bucket: row.bucket, peakAt: row.peak_at, peakCollectionId: row.peak_collection_id, peakInterface: row.peak_interface, sourceHost: row.source_host, host: row.host, avg: row.avg_value, max: row.max_value, status: row.status })),
           resolvedGapIntervalMs(trend),
           gapPoints.map((at) => ({ value: [at, null], gap: true }))
         ),
@@ -359,6 +364,9 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
         status: item.status, availability, mode: currentMode,
         metricLabel: currentTrend?.metric_label || metricLabel(currentTrend?.metric),
         unit: availability ? '' : (currentTrend?.unit || ''),
+        network: Boolean(currentTrend?.network_source),
+        interface: item.peakInterface || '',
+        sourceHost: item.sourceHost || '',
       })
     }
 
@@ -825,6 +833,17 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [customWindow, databaseEnabled, range, refreshToken])
 
   const selectPoint = React.useCallback((point, sourceTrend) => {
+    // Network is sourced from Infrastructure snapshots; do not drill into the SAP
+    // collection timeline or attach a misleading SAP job/process causal narrative.
+    if (point?.network) {
+      timelineRequestSequence.current += 1
+      setSelected(point)
+      setSelectedTrend(sourceTrend)
+      setTimeline(null)
+      setTimelineLoading(false)
+      setTimelineError('')
+      return
+    }
     // The normal point timeline spans ±5 minutes. Custom must never show outside-window rows.
     if (range === 'custom') {
       if (windowEvidence) setWindowModal(true)
@@ -895,7 +914,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityObservationSummary trend={trend} />
       <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} />
     </>
-    return trend ? <div className="rundeckHistoryState">{range === 'custom' ? 'No retained sample in the selected WIB interval. This is a collection gap / unknown observation, not evidence of SAP downtime.' : 'No stored data in this range yet.'}</div> : null
+    return trend ? <div className="rundeckHistoryState">{trend.network_source ? 'No saved Infrastructure network samples for APP1–APP5 in this time range. Traffic is unknown, not zero.' : range === 'custom' ? 'No retained sample in the selected WIB interval. This is a collection gap / unknown observation, not evidence of SAP downtime.' : 'No stored data in this range yet.'}</div> : null
   }
 
   const focusOptions = trendFocusHosts(sourceHosts, [
@@ -1020,7 +1039,15 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
-          <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} onOpenInfrastructure={openTrendInfrastructure} onOpenEvidence={openTrendEvidence} trend={activeTrend} range={range} />
+          {selected?.network ? <section className="rundeckNetworkObservation">
+            <p><strong>Infrastructure Network · {selected.metricLabel}</strong></p>
+            <p>APP {shortHost(selected.host)} · {selected.sourceHost || 'host identity unavailable'}</p>
+            <p>{selected.interface ? 'Interface: ' + selected.interface : 'Interface: unverified'} · {selected.value == null ? 'no value' : numberText(selected.value, 2) + ' Mbps'}</p>
+            <p>Observed {selected.at ? formatWib(selected.at, true) + ' WIB' : 'time unknown'} · {selected.mode === 'max' ? 'Peak in selected bucket' : 'Average of observed values in bucket'}.</p>
+            <p>Each APP trace uses the highest-throughput single interface at each collected sample. Interface traffic is not summed; no zero values are invented for missing samples.</p>
+            <p>This is network throughput evidence, not proof of a SAP job issue, link saturation, or network outage.</p>
+          </section> :
+            <SelectedTime selected={selected} timeline={timeline} loading={timelineLoading} error={timelineError} onSelectJob={openSelectedJob} onOpenInfrastructure={openTrendInfrastructure} onOpenEvidence={openTrendEvidence} trend={activeTrend} range={range} />}
         </div>
       </section>
     </div>, document.body)}
