@@ -5,6 +5,7 @@ import { validateAppWorkloadResponse } from './rundeckCurrentWorkloadCoverage.js
 import './RundeckAppServerAnalysis.css'
 
 const API = `${import.meta.env.BASE_URL}api`
+const APP_ROWS_PER_PAGE = 6
 const metric = (value, suffix = '') => value === null || value === undefined || value === '' ? '—' : `${Number(value).toLocaleString('en-US',{maximumFractionDigits:1})}${suffix}`
 
 const pssText = (row = {}) => {
@@ -46,6 +47,8 @@ const durationText = (seconds) => {
 
 export default function RundeckAppServerAnalysis({ app, latestCollectionId = '', refreshToken = '', onSelectJob }) {
   const [rows,setRows]=React.useState([])
+  const [page,setPage]=React.useState(0)
+  const [search,setSearch]=React.useState('')
   const [workloadMeta,setWorkloadMeta]=React.useState({total:0,coverage_scope:'',collectionId:'',host:''})
   const [loading,setLoading]=React.useState(false)
   const [error,setError]=React.useState('')
@@ -54,6 +57,8 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
 
   React.useEffect(()=>{
     setRows([])
+    setPage(0)
+    setSearch('')
     setWorkloadMeta({total:0,coverage_scope:'',collectionId:'',host:''})
     setIncident(null)
     setHostSnapshot(app)
@@ -96,6 +101,15 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
   const matchedCollection = Boolean(latestCollectionId) && workloadMeta.collectionId === latestCollectionId &&
     String(workloadMeta.host || '').trim().toUpperCase() === String(app.host || '').trim().toUpperCase()
   const displayRows = matchedCollection ? rows : []
+  const query = search.trim().toLowerCase()
+  const filteredRows = query ? displayRows.filter(row => [
+    row.consumer_key, row.consumer_type, row.details?.program,
+    row.details?.job_name, row.details?.wp_type,
+    ...(Array.isArray(row.details?.pids) ? row.details.pids : []),
+  ].some(value => String(value ?? '').toLowerCase().includes(query))) : displayRows
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / APP_ROWS_PER_PAGE))
+  const safePage = Math.min(page, pageCount - 1)
+  const visibleRows = filteredRows.slice(safePage * APP_ROWS_PER_PAGE, (safePage + 1) * APP_ROWS_PER_PAGE)
   // A stale/unverified performance snapshot is never shown as a current host reading.
   const resolvedApp = !latestCollectionId
     ? {...app, cpu_pct:null, ram_pct:null, io_wait_pct:null, wp_critical:null}
@@ -123,14 +137,19 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
       {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Coverage: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'All observed workloads' :
-  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample and SM37 status</div><div className="rundeckAppServerTableWrap"><table>
+  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample and SM37 status</div>
+      <div className="rundeckAppServerFilters">
+        <label><span>Find job / program</span><input type="search" value={search} onChange={event => { setSearch(event.target.value); setPage(0) }} placeholder="Program, job or PID" /></label>
+        <small>{filteredRows.length} matches · {displayRows.length} loaded / {workloadMeta.total} stored</small>
+      </div>
+      <div className="rundeckAppServerTableWrap"><table>
         <thead><tr>
           <th>Job / Program</th><th title="Grouped multi-core workload CPU; may exceed 100%, not host CPU">CPU Total</th>
           <th title="Proportional Set Size, grouped workload memory in GB">PSS</th>
           <th title="Process count">Proc.</th><th>WP / PID</th><th title="Workload sample time in WIB; not the time of the APP host snapshot">Observed</th>
         </tr></thead>
         <tbody>
-          {displayRows.map(row=>{
+          {visibleRows.map(row=>{
             const identity=processIdentity(row.details || {})
             return <tr key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`} tabIndex={0} role="button"
               onClick={()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}
@@ -148,9 +167,14 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
                   : '—'}</td>
             </tr>
           })}
-          {!displayRows.length&&<tr><td colSpan="6">No job or program observed for this APP in the verified collection.</td></tr>}
+          {!filteredRows.length&&<tr><td colSpan="6">{query ? 'No matching job or program in loaded observations.' : 'No job or program observed for this APP in the verified collection.'}</td></tr>}
         </tbody>
-      </table></div></>}
+      </table></div>
+      {filteredRows.length > 0 && <nav className="rundeckAppServerPager" aria-label="APP job and program pages">
+        <small>Showing {safePage * APP_ROWS_PER_PAGE + 1}–{Math.min(filteredRows.length, (safePage + 1) * APP_ROWS_PER_PAGE)} of {filteredRows.length} · Page {safePage + 1}/{pageCount}</small>
+        <button type="button" disabled={safePage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</button>
+        <button type="button" disabled={safePage >= pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</button>
+      </nav>}</>}
     </section>
   </section>
 }
