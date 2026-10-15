@@ -445,7 +445,7 @@ test('v1.35.19 Workload Health grid, source labels and action focus stay within 
   expect(result.pageOverflowY).toBeLessThanOrEqual(2)
 })
 
-test('v1.35.20 SAP Checks uses compact technical row and full-width issue section',async ({page})=>{
+test('v1.35.21 SAP Checks uses side-by-side source panes and disclosed incident history',async ({page})=>{
   test.skip((page.viewportSize()?.width||0)<1100,'Desktop SAP Checks arrangement')
   await openCockpit(page)
   await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:'Open SAP Checks'}).click()
@@ -457,6 +457,10 @@ test('v1.35.20 SAP Checks uses compact technical row and full-width issue sectio
   await expect(issues).toBeVisible()
   await expect(technical).toContainText('Service Availability source')
   await expect(issues).toContainText('APP signals and retained incidents')
+  await expect(technical).toContainText('HANA checks')
+  const history=issues.locator('.rundeckSapChecksHistoryDisclosure')
+  await expect(history.locator('summary')).toBeVisible()
+  await expect(history).not.toHaveAttribute('open','')
   const positions=await drawer.evaluate(root=>{
     const rect=node=>{
       const b=node.getBoundingClientRect()
@@ -465,15 +469,20 @@ test('v1.35.20 SAP Checks uses compact technical row and full-width issue sectio
     const technical=root.querySelector('[aria-label="SAP technical checks"]')
     const issues=root.querySelector('[aria-label="Current SAP issues"]')
     const bar=root.querySelector('.rundeckSapChecksSummaryRail')
+    const body=root.querySelector('.rundeckWorkspaceDrawerBody')
     return {technical:rect(technical),issues:rect(issues),summary:rect(bar),
+      bodyScrollHeight:body.scrollHeight,bodyClientHeight:body.clientHeight,
       drawer:rect(root),viewport:{width:innerWidth,height:innerHeight}}
   })
-  expect(Math.abs(positions.technical.left-positions.issues.left)).toBeLessThanOrEqual(3)
-  expect(Math.abs(positions.technical.right-positions.issues.right)).toBeLessThanOrEqual(3)
-  expect(positions.issues.top).toBeGreaterThanOrEqual(positions.technical.bottom-3)
+  expect(positions.technical.right).toBeLessThanOrEqual(positions.issues.left+3)
+  expect(Math.abs(positions.technical.top-positions.issues.top)).toBeLessThanOrEqual(4)
   expect(positions.technical.top).toBeGreaterThanOrEqual(positions.summary.bottom-3)
   expect(positions.drawer.left).toBeGreaterThanOrEqual(-2)
   expect(positions.drawer.right).toBeLessThanOrEqual(positions.viewport.width+2)
   expect(positions.drawer.bottom).toBeLessThanOrEqual(positions.viewport.height+2)
-  await test.info().attach('sphere-sap-checks-v13520',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
+  expect(positions.bodyScrollHeight-positions.bodyClientHeight).toBeLessThanOrEqual(12)
+  await history.locator('summary').click()
+  await expect(history).toHaveAttribute('open','')
+  await expect(history.getByText('Retained incidents',{exact:true})).toBeVisible()
+  await test.info().attach('sphere-sap-checks-v13521',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
 })
