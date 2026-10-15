@@ -259,3 +259,84 @@
     padding:10px 0 0!important;
   }
 }
+
+/* v1.35.21 — SAP Checks compact two-column desktop overview.
+   The issue list is current evidence; retained incidents open separately on demand.
+   Keep one column on narrow/mobile viewports. */
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure{
+  border-top:1px solid var(--sphere-flat-separator,rgba(124,158,175,.15));
+  margin-top:10px;padding-top:7px;min-width:0;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure>summary{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  padding:8px 0;cursor:pointer;font-size:12px;font-weight:650;
+  color:var(--sphere-text,#e7edf0);
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure>summary>span{
+  font-variant-numeric:tabular-nums;color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure>summary>small{
+  margin-left:auto;font-size:10.5px;font-weight:400;
+  color:var(--sphere-text-muted,#8d9aa3);
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksSampleTime{
+  display:inline-block;margin-left:9px;font-size:10px!important;font-weight:450;
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksMoreButton{
+  display:inline-flex;margin-top:6px;padding:5px 2px;
+  border:0;background:transparent;color:var(--sphere-info,#77bcc6);
+  font-size:11px;font-weight:650;cursor:pointer;text-align:left;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksMoreButton:hover{text-decoration:underline;}
+@media(min-width:1041px){
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksLayout{
+    gap:11px!important;grid-template-rows:auto minmax(0,1fr)!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid{
+    display:grid!important;
+    grid-template-columns:minmax(280px,.88fr) minmax(0,1.12fr)!important;
+    gap:clamp(14px,1.6vw,24px)!important;align-items:start!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid>.rundeckOperatorPairedPane{
+    min-width:0!important;border:0!important;padding:0!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid>.rundeckOperatorPairedPane + .rundeckOperatorPairedPane{
+    border-top:0!important;
+    border-left:1px solid var(--sphere-flat-separator,rgba(124,158,175,.16))!important;
+    padding:0 0 0 clamp(14px,1.4vw,21px)!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckAvailabilityDetailSections{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    gap:0!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckAvailabilityDetailSections>section{
+    min-width:0!important;padding:8px 0!important;
+    border:0!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckAvailabilityDetailSections>section+section{
+    border:0!important;
+    border-top:1px solid var(--sphere-flat-separator,rgba(124,158,175,.12))!important;
+    padding:9px 0!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckAvailabilityDetailSections :is(h4,b,span){
+    font-size:11px!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckIssueFilters{
+    grid-template-columns:minmax(0,1fr) minmax(100px,145px) auto!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckIssueIndicatorTableWrap{
+    max-height:min(270px,36dvh)!important;overflow-y:auto!important;
+  }
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure[open]{
+    padding-bottom:10px;
+  }
+}
+@media(max-width:1040px){
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure>summary>small{
+    margin-left:0;flex-basis:100%;
+  }
+}
