@@ -1058,41 +1058,13 @@
   .rundeckCustomRangeDialogBackdrop {padding-top:30px}
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalTrendHeading h3 small {font-size:9px}
 }
-
-/* DEV: reviewed evaluation proportions. One compact status bar replaces
-   hundreds of tiny workload hexagons; the five APP selectors remain hexagons. */
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistribution {
-  display:flex;
-  align-items:stretch;
-  width:100%;
-  height:24px;
-  min-height:24px;
-  gap:2px;
-  overflow:hidden;
-  align-self:center;
-  margin:auto 0;
-  border-radius:4px;
-  background:var(--sphere-surface-2, #1a252d);
+ 
+/* Evaluation cells: preserve full one-record-per-hexagon visibility.
+   Notes are provenance, not failures; only real evaluation statuses use alert colors. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter span {
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
 }
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistribution button {
-  min-width:0;
-  flex-basis:0;
-  padding:0;
-  border:0;
-  border-radius:2px;
-  cursor:pointer;
-  transition:filter .12s ease;
-}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistribution button:is(:hover,:focus-visible) {
-  filter:brightness(1.26);
-  outline:2px solid var(--sphere-text, #e7edf0);
-  outline-offset:-2px;
-}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistribution .is-review{background:#d66973}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistribution .is-attention{background:#d5ad55}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistribution .is-unknown{background:#9da8b3}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistribution .is-normal{background:#65ba7f}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDistributionEmpty{
-  width:100%;padding:5px 10px;
-  color:var(--sphere-text-secondary,#a9b5bb);font-size:10px;
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory:focus:not(:focus-visible) {
+  outline:none!important;
+  box-shadow:none!important;
 }
