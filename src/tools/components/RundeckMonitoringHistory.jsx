@@ -53,6 +53,7 @@ export default function RundeckMonitoringHistory(props) {
   const [activeOverlay, setActiveOverlay] = React.useState(null)
   const [availabilitySummaryRoot, setAvailabilitySummaryRoot] = React.useState(null)
   const [readinessSummaryRoot, setReadinessSummaryRoot] = React.useState(null)
+  const [incidentHistoryRoot, setIncidentHistoryRoot] = React.useState(null)
   const [manualAppFocus, setManualAppFocus] = React.useState({ contextHost: '', host: null })
   const selectedHostKey = selectedJob?.host || ''
   const trendFocusedHost = manualAppFocus.contextHost === selectedHostKey && manualAppFocus.host !== null
@@ -275,12 +276,14 @@ export default function RundeckMonitoringHistory(props) {
                 <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
                   <h3>Technical checks <small>Service Availability source</small></h3>
                   <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
+                  <div className="rundeckSapChecksHistoryDock" ref={setIncidentHistoryRoot} aria-label="SAP incident history" />
                 </section>
                 <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
                   <h3>Current Issues <small>APP signals and retained incidents</small></h3>
                   <RundeckSapIssues
                     paired
                     readinessRoot={readinessSummaryRoot}
+                    historyRoot={incidentHistoryRoot}
                     refreshToken={refreshToken}
                     onInspectApp={(context) => {
                       if (!context?.host) return
