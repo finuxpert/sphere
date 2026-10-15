@@ -735,6 +735,7 @@ test('v1.34.90 desktop SAP Issues supports source-backed APP and indicator filte
   await page.locator('.rundeckAnalysisActions').getByRole('button',{name:/SAP Issues/}).click()
   const issues=page.getByRole('dialog',{name:'SAP Issues'})
   await expect(issues).toBeVisible({timeout:30000})
+  await issues.getByRole('button',{name:'Filter indicators'}).click()
   const filters=issues.getByRole('group',{name:'Filter SAP indicators'})
   await expect(filters).toBeVisible()
   await expect(filters.getByRole('searchbox')).toBeVisible()
