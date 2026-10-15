@@ -6,9 +6,9 @@ import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } fro
 const API = import.meta.env.BASE_URL + 'api'
 const MIN_REFRESH_MS = 5 * 60 * 1000
 const API_PAGE_SIZE = 100
-// All visible hexagons represent individually verified backend evaluations.
-// Beyond this limit, show verified counts and a Review link rather than hiding records.
-const MAX_VISIBLE_DOTS = 800
+// Verify all saved rows and their categories before drawing a distribution.
+// Above this limit show the validated summary counts and direct users to Review.
+const MAX_VALIDATED_EVALUATIONS = 800
 const LEVELS = [
   { key: 'review', label: 'Review', health: 'REVIEW' },
   { key: 'attention', label: 'Attention', health: 'ATTENTION' },
@@ -37,7 +37,7 @@ async function readVerifiedPopulation(signal) {
       first.items.length !== Math.min(preview.total, API_PAGE_SIZE)) {
     throw new Error('Evaluated workload population unverified')
   }
-  if (preview.total > MAX_VISIBLE_DOTS) {
+  if (preview.total > MAX_VALIDATED_EVALUATIONS) {
     return { preview, rows: [], tooMany: true, start: first.start || '', end: first.end || '' }
   }
   const offsets = []
