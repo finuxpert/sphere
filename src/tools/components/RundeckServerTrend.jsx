@@ -821,6 +821,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [customWindow, databaseEnabled, range, refreshToken])
 
   const selectPoint = React.useCallback((point, sourceTrend) => {
+    // The normal point timeline spans ±5 minutes. Custom must never show outside-window rows.
+    if (range === 'custom') {
+      if (windowEvidence) setWindowModal(true)
+      return
+    }
     timelineRequestSequence.current += 1
     const requestSequence = timelineRequestSequence.current
     setSelected(point)
@@ -835,7 +840,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       .then((result) => { if (timelineRequestSequence.current === requestSequence) setTimeline(result) })
       .catch((failure) => { if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load saved history.') })
       .finally(() => { if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false) })
-  }, [])
+  }, [range, windowEvidence])
 
   const closeTrendDetails = React.useCallback(() => {
     timelineRequestSequence.current += 1
