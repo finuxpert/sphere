@@ -914,8 +914,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       >APP % Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
     </div>
     <div className="rundeckTrendSharedControls">
-      <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
-      <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
+      <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }} ariaLabel="Shared trend period" />
+        <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')} aria-pressed={range === 'custom'} aria-expanded={customOpen} onClick={() => setCustomOpen(value => !value)}>Custom</button></div>
+      <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span>{range === 'custom' ? <strong className="rundeckCustomRangeRaw">Raw · observed</strong> : <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div>
       <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
         <span>APP Focus</span>
@@ -933,7 +934,19 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </div>
     </div>
 
-    {serverTrend1?.items?.length > 0 && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
+    {customOpen && <form className="rundeckCustomRangeForm" onSubmit={applyCustom} aria-label="Custom time range in WIB">
+      <label>From · WIB<input type="datetime-local" step="60" required value={customStart} onChange={event => { setCustomStart(event.target.value); setCustomError('') }} /></label>
+      <label>To · WIB<input type="datetime-local" step="60" required value={customEnd} onChange={event => { setCustomEnd(event.target.value); setCustomError('') }} /></label>
+      <button type="submit">Apply</button><button type="button" onClick={() => { setCustomOpen(false); setCustomError('') }}>Cancel</button>
+      {customError && <span className="is-error" role="alert">{customError}</span>}
+    </form>}
+    {range === 'custom' && customWindow && <div className="rundeckCustomRangeSummary" role="status">
+      <strong>Custom · {customRangeCaption(customWindow)}</strong>
+      <span>{windowLoading ? 'Loading saved observations…' : windowError ? windowError :
+        windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
+      <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
+    </div>}
+    {serverTrend1?.items?.length > 0 && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
       <CollectionGapBand trend={serverTrend1} />
     </div>}
 
