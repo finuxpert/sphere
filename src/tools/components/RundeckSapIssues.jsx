@@ -2,7 +2,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import SphereIcon from './SphereIcon.jsx'
 import SphereOperatorTabs from './SphereOperatorTabs.jsx'
-import { numberText, shortHost } from './sapUiFormat.js'
+import { formatWib, numberText, shortHost } from './sapUiFormat.js'
 import { metricResourceState, sapWorkloadState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 import { settleSapIssueSources, unavailableSapIssueIndicators, SAP_ISSUE_SOURCE_LABELS, sapIssueSampleFreshness, sapIssueTimestampFreshness } from './rundeckIssueSources.js'
 
@@ -43,6 +43,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const [indicatorView, setIndicatorView] = React.useState('review')
   const [indicatorQuery,setIndicatorQuery] = React.useState('')
   const [appFilter,setAppFilter] = React.useState('ALL')
+  const [showMoreIndicators,setShowMoreIndicators] = React.useState(false)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -65,10 +66,12 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   },[refreshToken])
 
   const incidentItems=(data.incidents?.items||[]).filter((row)=>row.state==='ACTIVE')
-  const activeCount=data.incidents ? Number(data.incidents.active ?? incidentItems.length) : null
+  // ACTIVE describes the retained incident lifecycle, not the current APP severity.
+  const retainedIncidentCount=data.incidents ? incidentItems.length : null
   const peakCriticalWp=incidentItems.filter((row)=>row.code==='WP_CRITICAL').reduce((value,row)=>Math.max(value,Number(row.peak_value||0)),0)
 
   const hosts=data.hosts?.items||[]
+  const appSampleTime=data.hosts?.collected_at || hosts.find(host=>host.collected_at)?.collected_at || ''
   const availability=data.availability||{}
   const availabilityFreshness=sapIssueTimestampFreshness(data.availability?.collected_at)
   const loading=['incidents','hosts','availability','readiness'].every(key=>data[key]===null) && failedSources.length===0
@@ -130,6 +133,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     (appFilter==='ALL' || row.scope===appFilter)
     && (!normalizedQuery || [row.scope,row.indicator,row.status,row.current,row.reason].some(value=>String(value||'').toLocaleLowerCase().includes(normalizedQuery)))
   )
+  const displayedIndicators=paired && indicatorView==='review' && !showMoreIndicators && !normalizedQuery && appFilter==='ALL' ? visibleIndicators.slice(0,4) : visibleIndicators
+  const hiddenIndicatorCount=visibleIndicators.length-displayedIndicators.length
   const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
   if(compact){
@@ -157,7 +162,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
     <section className="rundeckIssueIndicatorSection">
       <div className="rundeckIssueSectionTitle">
-        <h4>Indicators</h4>
+        <h4>Current indicators{appSampleTime && <small className="rundeckSapChecksSampleTime" title="APP host collection sample">APP sample {formatWib(appSampleTime,true)} WIB</small>}</h4>
         <SphereOperatorTabs
           className="rundeckIssueViewSwitch"
           label="Indicator view"
@@ -183,24 +188,34 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
         <table className="rundeckIssueIndicatorTable">
           <thead><tr><th>Scope</th><th>Indicator</th><th>Status</th><th>Current</th><th>Basis Check</th></tr></thead>
           <tbody>
-            {visibleIndicators.map((row,index)=><tr key={`${row.scope}-${row.indicator}-${index}`} className={row.host?'is-investigable':''}>
+            {displayedIndicators.map((row,index)=><tr key={`${row.scope}-${row.indicator}-${index}`} className={row.host?'is-investigable':''}>
               <td>{row.host ? <button type="button" className="rundeckIssueInspect" onClick={()=>inspect(row)} aria-label={`Inspect ${row.scope} ${row.indicator}`}>{row.scope} <span aria-hidden="true">↗</span></button> : <strong>{row.scope}</strong>}</td>
               <td>{row.indicator}</td><td><Status value={row.status}/></td><td>{row.current}</td><td>{row.reason}</td>
             </tr>)}
           </tbody>
         </table>
       </div>}
+      {hiddenIndicatorCount>0 && <button type="button" className="rundeckSapChecksMoreButton" onClick={()=>setShowMoreIndicators(true)}>Show {hiddenIndicatorCount} more indicators</button>}
+      {paired && showMoreIndicators && indicatorView==='review' && !normalizedQuery && appFilter==='ALL' && <button type="button" className="rundeckSapChecksMoreButton" onClick={()=>setShowMoreIndicators(false)}>Show fewer indicators</button>}
     </section>
 
-    {data.incidents&&<section className="rundeckIssueIndicatorSection is-history">
-      <div className="rundeckIssueSectionTitle"><h4>Active issues <span className="rundeckSapChecksIncidentCount">{activeCount === null || !Number.isFinite(activeCount) ? '—' : activeCount}</span></h4><small>Retained incidents · peak Critical WP {peakCriticalWp||'—'} · current status uses fresh APP data</small></div>
+    {data.incidents&&<details className="rundeckSapChecksHistoryDisclosure" open={!paired}>
+      <summary>Incident records <span>{retainedIncidentCount ?? '—'}</span><small>Retained ACTIVE records; current status is separate</small></summary>
+      <section className="rundeckIssueIndicatorSection is-history">
+      <div className="rundeckIssueSectionTitle"><h4>Retained incidents</h4><small>Peak Critical WP {peakCriticalWp||'—'} · APP status from latest verified sample</small></div>
       {incidentItems.length > 0 ? <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
         <thead><tr><th>APP</th><th>Signal</th><th>Current status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
         <tbody>{incidentItems.map((row)=>{
           // Active is a retained incident state; current severity requires a verified recent host sample.
           const latestHost=hosts.find(host=>shortHost(host.host)===shortHost(row.host))
           const currentVerified=latestHost && sapIssueSampleFreshness(data.hosts,latestHost,nowMs)==='FRESH'
-          const severity=!currentVerified?'UNKNOWN':row.code==='WP_CRITICAL'?sapWorkloadState(latestHost):String(row.current_severity||row.severity||'UNKNOWN').toUpperCase()
+          const code=String(row.code||'').toUpperCase()
+          const severity=!currentVerified?'UNKNOWN'
+            :code==='WP_CRITICAL'?sapWorkloadState(latestHost)
+            :code.includes('IOWAIT')||code.includes('IO_WAIT')?metricResourceState(latestHost.io_wait_pct ?? latestHost.iowait_pct,'ioWait')
+            :code.includes('CPU')?metricResourceState(latestHost.cpu_pct,'cpu')
+            :code.includes('RAM')||code.includes('MEMORY')?metricResourceState(latestHost.ram_pct,'ram')
+            :'UNKNOWN'
           return <tr key={row.id} className={row.host?'is-investigable':''}>
             <td>{row.host
               ? <button type="button" className="rundeckIssueInspect" onClick={()=>inspect({host:row.host,indicator:issueLabel(row.signal||row.code),status:severity})} aria-label={`Inspect ${shortHost(row.host)} ${issueLabel(row.signal||row.code)} incident`}>{shortHost(row.host)} <span aria-hidden="true">↗</span></button>
@@ -208,6 +223,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
           </tr>
         })}</tbody>
       </table></div> : <p className="rundeckIssueEmpty">No retained active issues in the current incident window.</p>}
-    </section>}
+      </section>
+    </details>}
   </section>
 }
