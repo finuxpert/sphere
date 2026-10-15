@@ -192,9 +192,9 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
       </div>}
     </section>
 
-    {incidentItems.length>0&&<section className="rundeckIssueIndicatorSection is-history">
+    {data.incidents&&<section className="rundeckIssueIndicatorSection is-history">
       <div className="rundeckIssueSectionTitle"><h4>Active issues <span className="rundeckSapChecksIncidentCount">{activeCount === null || !Number.isFinite(activeCount) ? '—' : activeCount}</span></h4><small>Retained incidents · peak Critical WP {peakCriticalWp||'—'} · current status uses fresh APP data</small></div>
-      <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
+      {incidentItems.length > 0 ? <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
         <thead><tr><th>APP</th><th>Signal</th><th>Current status</th><th>Incident peak</th><th>Incident duration</th></tr></thead>
         <tbody>{incidentItems.map((row)=>{
           // Active is a retained incident state; current severity requires a verified recent host sample.
@@ -207,7 +207,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
               : <strong>{shortHost(row.host||'APP')}</strong>}</td><td>{issueLabel(row.signal||row.code)}</td><td><Status value={severity}/></td><td>{valueText(row.peak_value,row.unit||'')}</td><td>{durationText(row.duration_seconds)}</td>
           </tr>
         })}</tbody>
-      </table></div>
+      </table></div> : <p className="rundeckIssueEmpty">No retained active issues in the current incident window.</p>}
     </section>}
   </section>
 }

@@ -279,15 +279,15 @@ export default function RundeckMonitoringHistory(props) {
                 <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
                   <h3>Current Issues</h3>
                   <RundeckSapIssues
-                      paired
+                    paired
                     readinessRoot={readinessSummaryRoot}
                     refreshToken={refreshToken}
-                  onInspectApp={(context) => {
-                    if (!context?.host) return
-                    focusSequence.current += 1
-                    setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
-                    setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
-                  }}
+                    onInspectApp={(context) => {
+                      if (!context?.host) return
+                      focusSequence.current += 1
+                      setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
+                      setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
+                    }}
                   />
                 </section>
               </div>
