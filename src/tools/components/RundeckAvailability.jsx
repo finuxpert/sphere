@@ -7,22 +7,23 @@ import './RundeckAvailability.css'
 const API = `${import.meta.env.BASE_URL}api`
 const STALE_MINUTES = 20
 
-function Status({ value = 'UNKNOWN' }) {
-  return <span className={`rundeckAvailabilityStatus is-${String(value).toLowerCase()}`}>{value}</span>
+function Status({ value = 'UNKNOWN', historical = false }) {
+  // A prior UP is a retained observation, not the current SAP service state.
+  return <span className={`rundeckAvailabilityStatus is-${historical ? 'historical' : String(value).toLowerCase()}`} title={historical ? 'Historical service check; current state unverified' : undefined}>{historical ? 'LAST ' + value : value}</span>
 }
 
 function roleMap(rows = []) {
   return Object.fromEntries(rows.map((row) => [String(row.name || '').toUpperCase(), row]))
 }
 
-function ServiceList({ rows = [], fallback = 'No data' }) {
+function ServiceList({ rows = [], fallback = 'No data', historical = false }) {
   if (!rows.length) return <span className="rundeckAvailabilityMuted">{fallback}</span>
-  return rows.map((row) => <span key={`${row.category}-${row.name}-${row.endpoint || ''}`} title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><b>{row.name}</b><Status value={row.status} /></span>)
+  return rows.map((row) => <span key={`${row.category}-${row.name}-${row.endpoint || ''}`} title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><b>{row.name}</b><Status value={row.status} historical={historical} /></span>)
 }
 
-function MatrixCell({ row }) {
+function MatrixCell({ row, historical = false }) {
   if (!row) return <span className="rundeckAvailabilityMuted">—</span>
-  return <span title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><Status value={row.status} /></span>
+  return <span title={`${row.endpoint || ''}${row.description ? ` · ${row.description}` : ''}`}><Status value={row.status} historical={historical} /></span>
 }
 
 function bundleSourceStatus(bundle, key) {
@@ -219,20 +220,20 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
       {!summaryRoot && summary}
       <div className="rundeckAvailabilityDetailSections">
         <section>
-          <h4>HANA checks</h4>
+          <h4>HANA checks {lastSnapshot && <small>· last recorded, not current</small>}</h4>
           <div className="rundeckAvailabilityMatrix" aria-label="HANA technical checks">
             <div className="is-head"><span>Check</span><span>Primary</span><span>Secondary</span><span>DR</span></div>
-            <div><b>Replication</b><MatrixCell row={replication.PRIMARY} /><MatrixCell row={replication.SECONDARY} /><MatrixCell row={replication.DR} /></div>
-            <div><b>SSH</b><MatrixCell row={ssh.PRIMARY} /><MatrixCell row={ssh.SECONDARY} /><MatrixCell row={ssh.DR} /></div>
+            <div><b>Replication</b><MatrixCell row={replication.PRIMARY} historical={lastSnapshot} /><MatrixCell row={replication.SECONDARY} historical={lastSnapshot} /><MatrixCell row={replication.DR} historical={lastSnapshot} /></div>
+            <div><b>SSH</b><MatrixCell row={ssh.PRIMARY} historical={lastSnapshot} /><MatrixCell row={ssh.SECONDARY} historical={lastSnapshot} /><MatrixCell row={ssh.DR} historical={lastSnapshot} /></div>
           </div>
         </section>
         <section>
           <h4>SAP APP SSH</h4>
-          <div className="rundeckAvailabilityInfra"><ServiceList rows={appSsh} /></div>
+          <div className="rundeckAvailabilityInfra"><ServiceList rows={appSsh} historical={lastSnapshot} /></div>
         </section>
         {otherSsh.length > 0 && <section>
           <h4>Other SSH</h4>
-          <div className="rundeckAvailabilityInfra"><ServiceList rows={otherSsh} /></div>
+          <div className="rundeckAvailabilityInfra"><ServiceList rows={otherSsh} historical={lastSnapshot} /></div>
         </section>}
       </div>
     </>}
