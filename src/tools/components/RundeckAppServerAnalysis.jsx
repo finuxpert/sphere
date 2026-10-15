@@ -172,8 +172,8 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       </table></div>
       {filteredRows.length > 0 && <nav className="rundeckAppServerPager" aria-label="APP job and program pages">
         <small>Showing {safePage * APP_ROWS_PER_PAGE + 1}–{Math.min(filteredRows.length, (safePage + 1) * APP_ROWS_PER_PAGE)} of {filteredRows.length} · Page {safePage + 1}/{pageCount}</small>
-        <button type="button" disabled={safePage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</button>
-        <button type="button" disabled={safePage >= pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</button>
+        <button type="button" disabled={safePage === 0} onClick={() => setPage(Math.max(0, safePage - 1))}>Previous</button>
+        <button type="button" disabled={safePage >= pageCount - 1} onClick={() => setPage(Math.min(pageCount - 1, safePage + 1))}>Next</button>
       </nav>}</>}
     </section>
   </section>
