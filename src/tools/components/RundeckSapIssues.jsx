@@ -205,7 +205,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
         />
       </div>
       {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37SourceFailed ? 'SM37 readiness unavailable' : sm37 === 'UNKNOWN' ? 'SM37 readiness unverified' : `SM37 not connected · ${sm37}`}. Confirm job execution status in SAP SM37.</p>}
-      {paired && indicatorView==='review' && <button type="button" className="rundeckSapChecksFilterToggle" aria-expanded={filtersExpanded} onClick={()=>setShowFilters(!showFilters)}>{filtersExpanded ? 'Hide filters' : 'Filter indicators'}</button>}
+      {paired && indicatorView==='review' && <button type="button" className="rundeckSapChecksFilterToggle" aria-expanded={filtersExpanded} onClick={()=>{ if(filtersExpanded){ setIndicatorQuery(''); setAppFilter('ALL'); setShowFilters(false) } else setShowFilters(true) }}>{filtersExpanded ? 'Clear and hide filters' : 'Filter indicators'}</button>}
       {filtersExpanded && <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
         <label><span>Find indicator</span><input type="search" value={indicatorQuery} onChange={event=>setIndicatorQuery(event.target.value)} placeholder="APP, indicator or status" /></label>
         <label><span>APP</span><select value={appFilter} onChange={event=>setAppFilter(event.target.value)}>
