@@ -140,7 +140,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
   workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample and SM37 status</div>
       <div className="rundeckAppServerFilters">
         <label><span>Find job / program</span><input type="search" value={search} onChange={event => { setSearch(event.target.value); setPage(0) }} placeholder="Program, job or PID" /></label>
-        <small>{filteredRows.length} matches · {displayRows.length} loaded / {workloadMeta.total} stored</small>
+        <small>{query ? `${filteredRows.length} matches in loaded data` : 'Search loaded observations'}</small>
       </div>
       <div className="rundeckAppServerTableWrap"><table>
         <thead><tr>
