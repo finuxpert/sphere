@@ -305,12 +305,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
         const traceColor = colors.series[trendHostColorIndex(shortHost(host), index, colors.series.length)]
         const focused = selectedKey && shortHost(host) === selectedKey
         return {
-        id: host, name: shortHost(host), type: 'line', step: availabilityMode ? 'end' : false, connectNulls: false,
+        id: host, name: shortHost(host), type: 'line', step: availabilityMode && trend?.range !== 'custom' ? 'end' : false, connectNulls: false,
         showSymbol: availabilityMode || compactPoints,
         symbolSize: availabilityMode
           ? ((value, params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? 8 : 3.5)
           : (focused ? 5 : (compactPoints ? 3.5 : 2.5)),
-        lineStyle: { color: traceColor, width: traceStyle.width, opacity: traceStyle.opacity },
+        lineStyle: { color: traceColor, width: availabilityMode && trend?.range === 'custom' ? 0 : traceStyle.width, opacity: traceStyle.opacity },
         itemStyle: availabilityMode
           ? { color: (params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? colors.danger : colors.attention, opacity: traceStyle.itemOpacity }
           : { color: traceColor, opacity: traceStyle.itemOpacity },
