@@ -1111,7 +1111,7 @@ html[data-theme="light"] .rundeckJobHistoricalEmpty .sphereIcon{color:#687a83!im
 .rundeckWpSignalTable td{
   padding:5px 7px!important;
   white-space:normal!important;
-  overflow-wrap:anywhere;
+  overflow-wrap:break-word;
 }
 .rundeckWpSignalTable th:nth-child(1){width:11%}
 .rundeckWpSignalTable th:nth-child(2){width:20%}

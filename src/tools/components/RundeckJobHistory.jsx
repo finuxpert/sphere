@@ -845,7 +845,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           <span><b>{historyTruncated ? 'Loaded Span' : 'Observation Span'}</b>{observed}</span>
           <span title={historyTruncated ? `History response is limited: ${history.loaded_observations || episodeItems.length} of ${history.observation_count || 'more'} observations loaded.` : undefined}><b>Observations</b>{historyTruncated ? `${episodeItems.length} loaded` : episodeItems.length}</span>
           <span title={CPU_HINT}><b>Avg CPU</b>{numberText(stats.avgCpu)}%</span>
-          <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}</span>
+          <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, true)} WIB` : ''}</span>
           <span><b>Avg PSS</b>{stats.avgPss === null ? '—' : `${numberText(stats.avgPss, 2)} GB`}</span>
           <span><b>Avg Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
         </div>
@@ -896,7 +896,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 <button type="button" disabled={range==='current'} title={range==='current'?'Avg and Peak are identical for the selected workload episode.':''} className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
               </div>
             </div>
-            <small className="rundeckJobCurrentSemantics" title="Current shows the selected workload observation episode">Current = selected workload episode</small>
+            <small className="rundeckJobCurrentSemantics" title="Current shows the selected workload observation episode">Current = saved workload observation episode, not SM37 running status</small>
             {range === 'current' && episodeItems.length > 1 && episodeItems.length <= 5 && <small className="rundeckJobLimitedSamples">Limited samples - {episodeItems.length} observations in selected period</small>}
           </section>
 
@@ -904,10 +904,10 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             <span><b>Range</b>{range === 'current' ? 'Current' : range.toUpperCase()}</span>
             <span><b>{range === 'current' ? 'Observations' : 'Checks'}</b>{range === 'current' ? profile.totalSamples : (historicalSummary?.checks ?? '—')}</span>
             <span><b>Avg CPU</b>{range === 'current' ? `${numberText(stats.avgCpu)}%` : (historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`)}</span>
-            <span><b>Peak CPU</b>{range === 'current' ? `${numberText(stats.peakCpu)}%${stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, false)}` : ''}` : (historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`)}</span>
+            <span><b>Peak CPU</b>{range === 'current' ? `${numberText(stats.peakCpu)}%${stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, true)} WIB` : ''}` : (historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`)}</span>
             <span><b>Avg PSS</b>{range === 'current' ? (stats.avgPss == null ? '—' : `${numberText(stats.avgPss,2)} GB`) : (historicalSummary?.avg_pss_gb == null ? '—' : `${numberText(historicalSummary.avg_pss_gb,2)} GB`)}</span>
-            <span><b>Peak PSS</b>{range === 'current' ? (stats.peakPss == null ? '—' : `${numberText(stats.peakPss,2)} GB${stats.peakPssAt ? ` at ${formatWib(stats.peakPssAt, false)}` : ''}`) : (historicalSummary?.peak_pss_gb == null ? '—' : `${numberText(historicalSummary.peak_pss_gb,2)} GB`)}</span>
-            <span className={(range === 'current' ? profile.criticalSamples : historicalSummary?.critical_wp_checks) ? 'is-attention' : ''} title="APP Critical WP is APP-server evidence observed during the workload period. It does not prove workload causation."><b>APP Critical WP in period</b>{range === 'current' ? `${profile.criticalSamples} of ${profile.totalSamples} observations` : (historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} checks` : '—')}</span>
+            <span><b>Peak PSS</b>{range === 'current' ? (stats.peakPss == null ? '—' : `${numberText(stats.peakPss,2)} GB${stats.peakPssAt ? ` at ${formatWib(stats.peakPssAt, true)} WIB` : ''}`) : (historicalSummary?.peak_pss_gb == null ? '—' : `${numberText(historicalSummary.peak_pss_gb,2)} GB`)}</span>
+            <span className={(range === 'current' ? profile.criticalSamples : historicalSummary?.critical_wp_checks) ? 'is-attention' : ''} title="Critical Work Processes are host observations overlapping this workload episode; they are not the selected job status and do not establish causation."><b>APP Critical WP in period</b>{range === 'current' ? `${profile.criticalSamples} of ${profile.totalSamples} observations` : (historicalSummary ? `${historicalSummary.critical_wp_checks ?? 0} of ${historicalSummary.checks ?? 0} checks` : '—')}</span>
             <span className={(range === 'current' ? stats.peakCriticalWp : historicalSummary?.max_critical_wp) ? 'is-attention' : ''} title="Peak APP Critical WP is APP-server evidence during this workload range, not workload execution status."><b>Peak APP Critical WP</b>{range === 'current' ? `${numberText(stats.peakCriticalWp ?? 0,0)}${stats.peakCriticalWpAt ? ` at ${formatWib(stats.peakCriticalWpAt, false)}` : ''}` : (historicalSummary ? numberText(historicalSummary.max_critical_wp ?? 0,0) : '—')}</span>
           </div>
         </aside>
@@ -964,8 +964,8 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
               <th title="Collector CPU resource classification only; not overall SAP or job health.">CPU Signal</th>
               <th>Error at Snapshot</th>
               <th>Latest Trace Error</th>
-              <th title="Counters observed in the retained WP trace sample.">RABAX / RXMSG Count</th>
-              <th title="Counters observed in the retained WP trace sample.">SXPG / JobStart Count</th>
+              <th title="RABAX / RXMSG counters observed in the retained WP trace sample.">RABAX / RXMSG</th>
+              <th title="SXPG / JobStart counters observed in the retained WP trace sample.">SXPG / JobStart</th>
             </tr></thead>
             <tbody>
               {visibleWpSignals.map((item, index) => {

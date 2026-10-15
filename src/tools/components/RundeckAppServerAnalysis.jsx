@@ -123,11 +123,11 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
       {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Coverage: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'All observed workloads' :
-  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped, not host CPU or SM37 status</div><div className="rundeckAppServerTableWrap"><table>
+  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample and SM37 status</div><div className="rundeckAppServerTableWrap"><table>
         <thead><tr>
           <th>Job / Program</th><th title="Grouped multi-core workload CPU; may exceed 100%, not host CPU">CPU Total</th>
           <th title="Proportional Set Size, grouped workload memory in GB">PSS</th>
-          <th>Processes</th><th>WP / PID</th><th>Observed At</th>
+          <th title="Process count">Proc.</th><th>WP / PID</th><th title="Workload sample time in WIB; not the time of the APP host snapshot">Observed</th>
         </tr></thead>
         <tbody>
           {displayRows.map(row=>{
@@ -142,8 +142,10 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
               <td>{metric(row.cpu_pct,'%')}</td>
               <td>{pssText(row)}</td>
               <td>{processText(row)}</td>
-              <td title={identity.full}>{identity.short}</td>
-              <td title="Saved workload observation; not job completion time">{row.collected_at ? `${formatWib(row.collected_at,true)} WIB` : '—'}</td>
+              <td title={identity.full}><span className="rundeckAppWpIdentity">{identity.short}</span></td>
+              <td title={row.collected_at ? `Saved workload observation ${formatWib(row.collected_at,true)} WIB; not job completion or APP host sample time` : 'Sample time unverified'}>{row.collected_at
+                  ? <time dateTime={row.collected_at} className="rundeckAppObservedAt"><span>{formatWib(row.collected_at,true).split(', ')[0]}</span><span>{formatWib(row.collected_at)} WIB</span></time>
+                  : '—'}</td>
             </tr>
           })}
           {!displayRows.length&&<tr><td colSpan="6">No job or program observed for this APP in the verified collection.</td></tr>}

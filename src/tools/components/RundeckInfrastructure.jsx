@@ -305,7 +305,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     <div className="rundeckInfraFreshness">
       <span><b>Last collected</b> {formatTime(observedAt)} WIB</span>
       <span><b>Freshness</b> {freshness==='UNKNOWN'?'UNKNOWN':`${ageText(observedAt)} · ${freshness}`}</span>
-      <span><b>Sampling</b> {metric(hostRow?.sample_seconds,'s')}</span>
+      <span title="Infrastructure collector sampling interval, not historical graph bucket resolution."><b>Sample interval</b> {metric(hostRow?.sample_seconds,'s')}</span>
       <span><b>State</b> <strong className={`is-${overall.toLowerCase()}`}>{overall}</strong></span>
       <span title={`${host} · snapshot ${hostRow?.snapshot_ts || 'unknown'}`}><b>Collection</b> {hostRow?.collection_id || '—'}</span>
     </div>
@@ -403,7 +403,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       </div>}
       {coverageDelayed&&<div className="rundeckInfraCoverageNote">Retained history starts {formatTime(coverageStart)} WIB; earlier time in this range has no retained collection.</div>}
       <SparkChart items={trend} metricType={trendMetric} selectedSeries={selectedSeries} incidentStart={incidentStart} range={range}/>
-        <small>{trendMetric==='filesystem'?'Filesystem Capacity':trendMetric==='network'?'RX Throughput History - TX peak and drop delta shown above':'Storage I/O Activity - write peaks shown above'} - {range.toUpperCase()}</small>
+        <small>{trendMetric==='filesystem'?'Filesystem Capacity':trendMetric==='network'?'RX Throughput History - TX peak and drop delta shown above':'Storage I/O Activity - write peaks shown above'} - {range.toUpperCase()} · {selectedTrendRows.length} retained samples for selected series</small>
       </section>
     </div>
   </section>
