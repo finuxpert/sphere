@@ -34,7 +34,7 @@ test('custom API window and UI are wired without defaulting to latest collection
   assert.match(trend,/customRangeSearch\(customWindow\)/)
   assert.match(trend,/history\/window/)
   assert.match(trend,/onSubmit=\{applyCustom\}/)
-  assert.match(trend,/Custom Range/)
+  assert.match(trend,/Custom<\/button>/)
   assert.match(modal,/No stored APP samples/)
   assert.match(modal,/SM37/)
 })
