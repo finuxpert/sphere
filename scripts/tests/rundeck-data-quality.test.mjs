@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import {
   assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage,
 } from '../../src/tools/components/rundeckDataQuality.js'
@@ -93,4 +94,14 @@ test('fresh Performance but old Availability never gets a generic old-SAP notice
   assert.match(monitoringFreshnessMessage(sample,{availabilityFetchFailed:true}),/Availability fetch failed/)
   assert.match(monitoringFreshnessMessage({...sample,performanceValid:false}),/Performance not current/)
   assert.match(monitoringFreshnessMessage({...sample,availabilityValid:true}),/Availability current/)
+})
+
+test('PDF never reports an old or missing SAP availability sample as current UP', () => {
+  const source = readFileSync(new URL('../../src/tools/components/RundeckSource.jsx', import.meta.url), 'utf8')
+  assert.match(source, /const reportAvailabilityUnverified = !availabilityResult/)
+  assert.match(source, /!Number\.isFinite\(reportAvailabilityTs\) \|\| reportAvailabilityStale/)
+  assert.match(source, /Current service status unverified/)
+  assert.match(source, /availabilityState: reportAvailabilityUnverified \? 'UNKNOWN' : availabilityState/)
+  assert.match(source, /availabilityStale: reportAvailabilityUnverified/)
+  assert.match(source, /LAST UP/)
 })
