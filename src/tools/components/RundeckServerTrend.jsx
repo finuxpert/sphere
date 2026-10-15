@@ -9,6 +9,7 @@ import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiForm
 import { hostResourceState } from './rundeckStatusSemantics.js'
 import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
 import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
+import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 
@@ -712,7 +713,6 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [windowError, setWindowError] = React.useState('')
   const [windowLoading, setWindowLoading] = React.useState(false)
   const [windowModal, setWindowModal] = React.useState(false)
-  const windowModalRef = React.useRef(null)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
@@ -886,7 +886,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityObservationSummary trend={trend} />
       <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} />
     </>
-    return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
+    return trend ? <div className="rundeckHistoryState">{range === 'custom' ? 'No retained sample in the selected WIB interval. This is a collection gap / unknown observation, not evidence of SAP downtime.' : 'No stored data in this range yet.'}</div> : null
   }
 
   const focusOptions = trendFocusHosts(sourceHosts, [
@@ -945,6 +945,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <span>{windowLoading ? 'Loading saved observations…' : windowError ? windowError :
         windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
       <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
+      <small>Jobs &amp; Programs Current below shows latest collection, not this history window</small>
     </div>}
     {serverTrend1?.items?.length > 0 && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
       <CollectionGapBand trend={serverTrend1} />
@@ -989,6 +990,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </section>
     </div>
 
+    {windowModal && windowEvidence && customWindow && <RundeckCustomWindowDetails
+      data={windowEvidence} selectedWindow={customWindow}
+      onClose={() => setWindowModal(false)} onSelectJob={onSelectJob} />}
     {selected && createPortal(<div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
       <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
