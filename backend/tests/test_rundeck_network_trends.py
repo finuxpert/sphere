@@ -54,7 +54,7 @@ class AppNetworkTrendTests(unittest.TestCase):
 
     def test_verified_rows_keep_interface_provenance(self):
         self.execute.return_value = [SimpleNamespace(_mapping={
-            "host": "APP3", "peak_at": self.start, "source_host": "AOPH3PAPPDC",
+            "host": "APP3", "peak_at": self.start, "latest_at": self.start, "source_host": "AOPH3PAPPDC",
             "peak_interface": "eth0", "avg_value": 0.9, "max_value": 0.9,
             "min_value": 0.9, "bucket": self.start, "samples": 1,
         })]
