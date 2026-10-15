@@ -29,7 +29,9 @@ if [[ "$(readlink -f "$API_CURRENT" 2>/dev/null || true)" == "/opt/sphere-rundec
    grep -Rqs "$SHORT_REVISION" "$WEB_CURRENT/assets" &&
    systemctl is-active --quiet sphere-rundeck-api.service &&
    curl --noproxy '*' -fsS --max-time 6 http://127.0.0.1:8091/health >/dev/null &&
-   curl --noproxy '*' -fsS --max-time 8 https://sphere.astraotoparts.co.id/dev/ >/dev/null; then
+   curl --noproxy '*' -fsS --max-time 8 https://sphere.astraotoparts.co.id/dev/ >/dev/null &&
+   bash "$SOURCE/ops/rundeck/smoke-network-trends-dev.sh" >/dev/null &&
+   bash "$SOURCE/ops/rundeck/smoke-custom-window-dev.sh" >/dev/null; then
   echo "FINAL=PASS DEV=ALREADY_CURRENT SHA=$REVISION DB_MIGRATION=UNCHANGED API_RESTART=SKIPPED DURATION=${SECONDS}s"
   exit 0
 fi
@@ -319,6 +321,8 @@ grep -q '"items"' /tmp/sphere-dev-watchdog-events.json
 bash "$RELEASE/ops/rundeck/smoke-watchdog-dev.sh" 'https://sphere.astraotoparts.co.id/dev'
 # Ensure the DEV API and public proxy both accept the new network trend metrics.
 bash "$RELEASE/ops/rundeck/smoke-network-trends-dev.sh" 'http://127.0.0.1:8091' 'https://sphere.astraotoparts.co.id/dev/api'
+# Custom Range must agree across local/public API on CPU, RAM, Network and saved evidence.
+bash "$RELEASE/ops/rundeck/smoke-custom-window-dev.sh" 'http://127.0.0.1:8091' 'https://sphere.astraotoparts.co.id/dev/api'
 
 # Cross-environment contract: a DEV deploy is not successful unless the existing
 # production Rundeck routes still return JSON. This specifically prevents the
