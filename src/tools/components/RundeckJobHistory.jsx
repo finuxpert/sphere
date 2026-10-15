@@ -35,7 +35,7 @@ const palette = () => ({
   danger: themeToken('--sphere-danger', '#db7d86'),
 })
 
-const PERFORMANCE_RANGES = [['current','Current'],['3h','3H'],['6h','6H'],['24h','24H'],['7d','7D'],['30d','30D']]
+const PERFORMANCE_RANGES = [['current','Selected'],['3h','3H'],['6h','6H'],['24h','24H'],['7d','7D'],['30d','30D']]
 
 async function loadHistory(job, signal) {
   const params = new URLSearchParams({ job: job.key, days: '90', limit: '1000' })
@@ -641,7 +641,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const jobSource = job?.source || ''
   const jobSnapshot = job?.snapshot || null
   const historicalContext = Boolean(jobAt) || ['workload-explorer', 'observation-history', 'trend-snapshot'].includes(jobSource)
-  const effectiveIncidentStart = historicalContext ? '' : incidentStart
+  // Never associate a dashboard-wide incident timestamp with an arbitrary
+  // program. A marker requires explicitly matching APP and timestamp evidence.
+  const effectiveIncidentStart = !historicalContext && job?.incidentHost
+    && shortHost(job.incidentHost) === shortHost(jobHost)
+    && job?.incidentStart === incidentStart ? incidentStart : ''
 
   React.useEffect(() => {
     setRange('current')
@@ -826,7 +830,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
     <div className="rundeckJobHistoryHead">
       <div>
         <span>Selected Job / Program</span>
-        <h3><SphereIcon name="target" /> {displayKey} <span className="rundeckJobTypeBadge">{displayType}</span> {history && <em className={isCurrent ? 'is-current' : 'is-ended'}>{isCurrent ? 'CURRENTLY OBSERVED' : 'NO LONGER OBSERVED'}</em>}</h3>
+        <h3><SphereIcon name="target" /> {displayKey} <span className="rundeckJobTypeBadge">{displayType}</span> {history && <em className={isCurrent ? 'is-current' : 'is-ended'}>{isCurrent ? 'IN LATEST COLLECTION' : 'NOT IN LATEST COLLECTION'}</em>}</h3>
         <small>{contextText}</small>
       </div>
     </div>
@@ -896,12 +900,12 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                 <button type="button" disabled={range==='current'} title={range==='current'?'Avg and Peak are identical for the selected workload episode.':''} className={rangeMode==='peak'?'is-active':''} aria-pressed={rangeMode==='peak'} onClick={()=>setRangeMode('peak')}>Peak</button>
               </div>
             </div>
-            <small className="rundeckJobCurrentSemantics" title="Current shows the selected workload observation episode">Current = saved workload observation episode, not SM37 running status</small>
+            <small className="rundeckJobCurrentSemantics" title="Current shows the selected workload observation episode">Selected = saved workload observations; execution status must be checked in SM37</small>
             {range === 'current' && episodeItems.length > 1 && episodeItems.length <= 5 && <small className="rundeckJobLimitedSamples">Limited samples - {episodeItems.length} observations in selected period</small>}
           </section>
 
           <div className="rundeckJobHistoricalSummary is-unified">
-            <span><b>Range</b>{range === 'current' ? 'Current' : range.toUpperCase()}</span>
+            <span><b>Range</b>{range === 'current' ? 'Selected' : range.toUpperCase()}</span>
             <span><b>{range === 'current' ? 'Observations' : 'Checks'}</b>{range === 'current' ? profile.totalSamples : (historicalSummary?.checks ?? '—')}</span>
             <span><b>Avg CPU</b>{range === 'current' ? `${numberText(stats.avgCpu)}%` : (historicalSummary?.avg_cpu_pct == null ? '—' : `${numberText(historicalSummary.avg_cpu_pct,1)}%`)}</span>
             <span><b>Peak CPU</b>{range === 'current' ? `${numberText(stats.peakCpu)}%${stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, true)} WIB` : ''}` : (historicalSummary?.peak_cpu_pct == null ? '—' : `${numberText(historicalSummary.peak_cpu_pct,1)}%`)}</span>
