@@ -30,6 +30,7 @@ from backend.rundeck_monitoring import (
 from backend.rundeck_platform import platform_health
 from backend.rundeck_store import ROOT, collections, identifier
 from backend.rundeck_watchdog import read_events as read_watchdog_events
+from backend.rundeck_network_trends import app_network_trend
 from backend.rundeck_trends import (
     collection_timeline,
     collection_timeline_at,
@@ -211,7 +212,7 @@ def history_hosts_latest():
 def history_trend(
     range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d)$"),
     bucket: str = Query("auto", pattern="^(auto|10m|30m|1h|6h|1d)$"),
-    metric: str = Query("cpu", pattern="^(cpu|ram|load|iowait|swap|wp)$"),
+    metric: str = Query("cpu", pattern="^(cpu|ram|load|iowait|swap|wp|network_rx|network_tx)$"),
     from_at: str | None = Query(None, max_length=64),
     to_at: str | None = Query(None, max_length=64),
 ):
@@ -228,11 +229,14 @@ def history_trend(
             if from_at or to_at:
                 raise ValueError("Explicit dates require range=custom")
             since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
-        latest_row = _latest_ready()
+        network = metric in {"network_rx", "network_tx"}
+        series = (app_network_trend(since, range_key, bucket, metric, until=until)
+                  if network else trend_series(since, range_key, bucket, metric, until=until))
+        latest_row = None if network else _latest_ready()
         return {
-            **trend_series(since, range_key, bucket, metric, until=until),
+            **series,
             "timezone": "Asia/Jakarta",
-            "latest_collection_at": (latest_row or {}).get("finished_at"),
+            "latest_collection_at": (series.get("last_observed_at") if network else (latest_row or {}).get("finished_at")),
             "stale_after_minutes": STALE_MINUTES,
             "collection_cadence_seconds": max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600"))),
         }
