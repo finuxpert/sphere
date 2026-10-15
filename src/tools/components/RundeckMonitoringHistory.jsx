@@ -138,7 +138,7 @@ export default function RundeckMonitoringHistory(props) {
     refreshToken={refreshToken}
     selectedJob={selectedJob}
     onSelectJob={inspectJob}
-    incidentStart={props.incidentStart || ''}
+    incidentStart=""
     onOpenQuickAnalysis={openEvaluatedWorkload}
     externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
   />
@@ -311,7 +311,7 @@ export default function RundeckMonitoringHistory(props) {
               latestCollectionId={props.latestCollectionId}
               performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
               performanceCollectedAt={props.latestCollectionAt || ''}
-              incidentStart={props.incidentStart || ''}
+              incidentStart=""
               refreshToken={refreshToken}
               onSelectJob={(job) => {
                 onSelectJob?.(job)
@@ -331,7 +331,7 @@ export default function RundeckMonitoringHistory(props) {
           >
             <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading Infrastructure Analysis…</div>}>
               <RundeckInfrastructure
-                incidentStart={props.incidentStart || ''}
+                incidentStart=""
                 initialContext={activeOverlay.infraContext || activeOverlay.trendContext ||
                   (activeOverlay.sapHost ? { sapHost: activeOverlay.sapHost, metric: 'filesystem' } : null)}
                 lockedHost={Boolean(activeOverlay.sapHost)}
@@ -345,7 +345,7 @@ export default function RundeckMonitoringHistory(props) {
             row={activeOverlay.row}
             reviewContext={activeOverlay.reviewContext}
             refreshToken={refreshToken}
-            incidentStart={props.incidentStart || ''}
+            incidentStart=""
             onClose={() => {
               if (activeOverlay.returnToJob) {
                 const reviewJob = {
