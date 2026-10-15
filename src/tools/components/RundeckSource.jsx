@@ -338,12 +338,12 @@ export default function RundeckSource({ onCollection }) {
       const reportAvailabilityStale = Number.isFinite(reportAvailabilityAgeMinutes) && reportAvailabilityAgeMinutes >= 20
       // Missing, invalid or stale timestamps never qualify a service as currently UP.
       const reportAvailabilityUnverified = !availabilityResult || !Number.isFinite(reportAvailabilityTs) || reportAvailabilityStale
-      const availabilitySnapshotLabel = [
+      const availabilitySnapshotLabel = availabilityResult ? [
         `SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} LAST UP` : 'UNKNOWN'}`,
         `HANA Primary LAST ${availabilityStatus(hanaRows, 'PRIMARY')}`,
         `Secondary LAST ${availabilityStatus(hanaRows, 'SECONDARY')}`,
         `Replication LAST ${availabilityStatus(hanaRows, 'DR')}`,
-      ].join(' · ')
+      ].join(' · ') : 'No availability check data available'
       const reportQuality = assessRundeckDataQuality({
         latest, health, platform, availability: availabilityResult,
         refreshFailed: Boolean(error) || metaRefreshFailed,
