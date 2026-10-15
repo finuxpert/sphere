@@ -273,11 +273,11 @@ export default function RundeckMonitoringHistory(props) {
               </div>
               <div className="rundeckOperatorPairedWorkspace is-sap-checks rundeckSapChecksDetailGrid">
                 <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
-                  <h3>Technical checks</h3>
+                  <h3>Technical checks <small>Service Availability source</small></h3>
                   <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
                 </section>
                 <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
-                  <h3>Current Issues</h3>
+                  <h3>Current Issues <small>APP signals and retained incidents</small></h3>
                   <RundeckSapIssues
                     paired
                     readinessRoot={readinessSummaryRoot}
