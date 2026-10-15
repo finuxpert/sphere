@@ -75,6 +75,8 @@ def history_window_endpoint(
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:
         raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Custom window evidence unavailable: {type(error).__name__}") from None
 
 
 @app.get("/availability/history")
