@@ -1,6 +1,8 @@
 """SPHERE Rundeck API entrypoint with service-availability and job intelligence."""
 from __future__ import annotations
 
+from datetime import datetime
+
 import os
 import secrets
 
@@ -9,6 +11,8 @@ from fastapi import Body, HTTPException, Query, Request
 from backend import rundeck_api_core as _core
 from backend.rundeck_availability import availability_history, latest_availability
 from backend.models import AnalysisClosureInput
+from backend.rundeck_time_window import saved_window_observations
+from backend.rundeck_trends import validate_custom_window
 from backend.rundeck_closing import (
     get_analysis_closure,
     list_analysis_closures,
@@ -49,12 +53,45 @@ def availability_latest():
         raise HTTPException(503, f"Service availability unavailable: {type(error).__name__}") from None
 
 
+def _parse_custom_timestamp(value: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        raise ValueError("Invalid custom timestamp") from None
+    if parsed.tzinfo is None:
+        raise ValueError("Custom timestamp requires timezone offset")
+    return parsed
+
+
+@app.get("/history/window")
+def history_window_endpoint(
+    from_at: str = Query(..., max_length=64),
+    to_at: str = Query(..., max_length=64),
+):
+    try:
+        since, until = validate_custom_window(_parse_custom_timestamp(from_at), _parse_custom_timestamp(to_at))
+        return saved_window_observations(since, until)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+
+
 @app.get("/availability/history")
 def availability_history_endpoint(
     range_key: str = Query("24h", alias="range"),
     category: str = Query("SAP_APP"),
+    from_at: str | None = Query(None, max_length=64),
+    to_at: str | None = Query(None, max_length=64),
 ):
     try:
+        if range_key == "custom":
+            if not from_at or not to_at:
+                raise ValueError("Custom availability requires both timestamps")
+            since, until = validate_custom_window(_parse_custom_timestamp(from_at), _parse_custom_timestamp(to_at))
+            return availability_history(range_key=range_key, category=category, start_at=since, end_at=until)
+        if from_at or to_at:
+            raise ValueError("Explicit dates require range=custom")
         return availability_history(range_key=range_key, category=category)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
