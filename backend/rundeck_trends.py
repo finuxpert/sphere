@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import text
 
@@ -12,6 +12,7 @@ from backend.db.session import get_engine
 # progressively so operators can zoom from the last 30 minutes to long-term context
 # without losing the newest collection-level spikes.
 RANGES = {
+    "custom": {"hours": None, "auto_bucket": "raw"},
     "30m": {"hours": 0.5, "auto_bucket": "raw"},
     "1h": {"hours": 1, "auto_bucket": "raw"},
     "3h": {"hours": 3, "auto_bucket": "raw"},
@@ -85,6 +86,22 @@ METRICS = {
 }
 
 
+def validate_custom_window(start: datetime, end: datetime, now: datetime | None = None) -> tuple[datetime, datetime]:
+    """Exact sample bounds [start, end). Inputs must carry a timezone offset."""
+    if start.tzinfo is None or end.tzinfo is None:
+        raise ValueError("Custom timestamps require timezone offsets")
+    now = now or datetime.now(timezone.utc)
+    start, end, now = (value.astimezone(timezone.utc) for value in (start, end, now))
+    duration = end - start
+    if not timedelta(minutes=1) <= duration <= timedelta(hours=24):
+        raise ValueError("Custom window must span between 1 minute and 24 hours")
+    if start < now - timedelta(days=90):
+        raise ValueError("Custom range exceeds 90-day retention")
+    if end > now + timedelta(minutes=1):
+        raise ValueError("Custom range cannot extend into the future")
+    return start, end
+
+
 def resolve_range(range_key: str) -> dict:
     try:
         return RANGES[range_key]
@@ -125,6 +142,7 @@ def trend_series(
     range_key: str,
     bucket_key: str,
     metric_key: str,
+    until: datetime | None = None,
 ) -> dict:
     """Return host metric trend data aligned to logical Rundeck collection time.
 
@@ -138,21 +156,26 @@ def trend_series(
 
     metric = resolve_metric(metric_key)
     resolved_bucket, stride = resolve_bucket(range_key, bucket_key)
+    if range_key == "custom" and (resolved_bucket != "raw" or until is None):
+        raise ValueError("Custom range requires raw samples and an end time")
     column = metric["column"]
+    sample_time = "h.collected_at" if range_key == "custom" else "COALESCE(c.started_at, c.finished_at, h.collected_at)"
+    end_clause = "AND h.collected_at < :until" if range_key == "custom" else ""
 
     if resolved_bucket == "raw":
         query = text(f"""
             WITH base AS (
                 SELECT
                     h.collection_id,
-                    COALESCE(c.started_at, c.finished_at, h.collected_at) AS bucket,
+                    {sample_time} AS bucket,
                     h.collected_at,
                     h.host,
                     h.{column}::double precision AS value
                 FROM rundeck_host_metrics h
                 LEFT JOIN rundeck_collections c
                   ON c.collection_id = h.collection_id
-                WHERE COALESCE(c.started_at, c.finished_at, h.collected_at) >= :since
+                WHERE {sample_time} >= :since
+                  {end_clause}
             ),
             ranked AS (
                 SELECT
@@ -184,6 +207,8 @@ def trend_series(
             ORDER BY bucket ASC, host ASC
         """)
         params = {"since": since, "warning": metric["warning"]}
+        if until is not None:
+            params["until"] = until
     else:
         query = text(f"""
             WITH base AS (
@@ -201,7 +226,8 @@ def trend_series(
                 FROM rundeck_host_metrics h
                 LEFT JOIN rundeck_collections c
                   ON c.collection_id = h.collection_id
-                WHERE COALESCE(c.started_at, c.finished_at, h.collected_at) >= :since
+                WHERE {sample_time} >= :since
+                  {end_clause}
             ),
             ranked AS (
                 SELECT
@@ -233,6 +259,8 @@ def trend_series(
             ORDER BY bucket ASC, host ASC
         """)
         params = {"since": since, "stride": stride, "warning": metric["warning"]}
+        if until is not None:
+            params["until"] = until
 
     with engine.connect() as conn:
         result = conn.execute(query, params)
@@ -240,6 +268,8 @@ def trend_series(
 
     return {
         "since": since,
+        "window_end": until if range_key == "custom" else None,
+        "observation_time_basis": "host_sample" if range_key == "custom" else "collection",
         "range": range_key,
         "bucket": resolved_bucket,
         "requested_bucket": bucket_key,
