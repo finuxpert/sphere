@@ -10,6 +10,8 @@ import { hostResourceState } from './rundeckStatusSemantics.js'
 import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
 import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
+import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
+import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 
@@ -73,9 +75,12 @@ function trendAxisSplitNumber(range) {
 
 const palette = () => ({ text: token('--sphere-text', '#e7edf0'), secondary: token('--sphere-text-secondary', '#a9b5bb'), muted: token('--sphere-text-muted', '#718089'), grid: token('--sphere-chart-grid', 'rgba(126,147,158,.08)'), panel: token('--sphere-surface-1', '#141d23'), attention: token('--sphere-attention', '#6aa2d8'), warning: token('--sphere-warning', '#d8b35f'), danger: token('--sphere-danger', '#db7d86'), series: [token('--sphere-chart-1', '#72a9e8'), token('--sphere-chart-2', '#8cc985'), token('--sphere-chart-3', '#aaa0df'), token('--sphere-chart-4', '#e1a16c'), token('--sphere-chart-5', '#5dcbd1')] })
 
-async function json(url, signal) {
+async function json(url, signal, requestedMetric = '') {
   const response = await fetch(url, { cache: 'no-store', signal })
-  if (!response.ok) throw new Error(`Trend data unavailable (${response.status})`)
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    throw new Error(trendApiError(response.status, payload, requestedMetric))
+  }
   return response.json()
 }
 
@@ -713,7 +718,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
   const initialServerMetrics = React.useMemo(() => resolveServerTrendMetrics(saved), [saved])
-  const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
+  const [range, setRange] = React.useState(saved.range !== 'custom' && RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [customOpen, setCustomOpen] = React.useState(false)
   const [customStart, setCustomStart] = React.useState(() => wibMinuteInput(new Date(Date.now() - 15 * 60000)))
   const [customEnd, setCustomEnd] = React.useState(() => wibMinuteInput(new Date(Date.now() - 5 * 60000)))
@@ -771,7 +776,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(range === 'custom' ? 'auto' : bucket)}&metric=${encodeURIComponent(queriedMetric)}${windowQuery}`
     setLoading(true)
     setError('')
-    return json(url, signal)
+    return json(url, signal, queriedMetric)
       .then((result) => setter(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result))
       .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message || 'Unable to load trend.') })
       .finally(() => { if (!signal.aborted) setLoading(false) })
@@ -944,7 +949,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     </div>
     <div className="rundeckTrendSharedControls">
       <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }} ariaLabel="Shared trend period" />
-        <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')} aria-pressed={range === 'custom'} aria-expanded={customOpen} onClick={() => setCustomOpen(value => !value)}>Custom</button></div>
+        <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')} aria-pressed={range === 'custom'} aria-expanded={customOpen} onClick={() => { setCustomError(''); setCustomOpen(value => !value) }} aria-haspopup="dialog">Custom</button></div>
       <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span>{range === 'custom' ? <strong className="rundeckCustomRangeRaw">Raw · observed</strong> : <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div>
       <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
@@ -963,12 +968,14 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </div>
     </div>
 
-    {customOpen && <form className="rundeckCustomRangeForm" onSubmit={applyCustom} aria-label="Custom time range in WIB">
-      <label>From · WIB<input type="datetime-local" step="60" required value={customStart} onChange={event => { setCustomStart(event.target.value); setCustomError('') }} /></label>
-      <label>To · WIB<input type="datetime-local" step="60" required value={customEnd} onChange={event => { setCustomEnd(event.target.value); setCustomError('') }} /></label>
-      <button type="submit">Apply</button><button type="button" onClick={() => { setCustomOpen(false); setCustomError('') }}>Cancel</button>
-      {customError && <span className="is-error" role="alert">{customError}</span>}
-    </form>}
+    {customOpen && <RundeckCustomRangeDialog
+      start={customStart} end={customEnd} error={customError}
+      activeLabel={range === 'custom' ? customRangeCaption(customWindow) : rangeLabel(range)}
+      onStart={value => { setCustomStart(value); setCustomError('') }}
+      onEnd={value => { setCustomEnd(value); setCustomError('') }}
+      onApply={applyCustom}
+      onClose={() => { setCustomOpen(false); setCustomError('') }}
+    />}
     {range === 'custom' && customWindow && <div className="rundeckCustomRangeSummary" role="status">
       <strong>Custom · {customRangeCaption(customWindow)}</strong>
       <span>{windowLoading ? 'Loading saved observations…' : windowError ? windowError :
@@ -1001,16 +1008,20 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             onClick={() => setLoadScaleMode(value => value === 'full' ? 'typical' : 'full')}>
             Load Y · {loadScaleMode === 'typical' ? 'Typical' : 'Full'}
           </button>}
-        </div>
-        <div className="rundeckTrendToolbar">
-          <Segmented options={[["load","Load"],["swap","Swap I/O"],["network","Network"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
           {technicalNetwork && <div className="rundeckNetworkDirection" role="group" aria-label="Network throughput direction">
             <button type="button" aria-pressed={networkDirection === 'rx'} className={networkDirection === 'rx' ? 'is-active' : ''} onClick={() => setNetworkDirection('rx')}>RX</button>
             <button type="button" aria-pressed={networkDirection === 'tx'} className={networkDirection === 'tx' ? 'is-active' : ''} onClick={() => setNetworkDirection('tx')}>TX</button>
-            <small title="Infrastructure source. One APP point uses the highest-throughput interface in that sample. The figure is not total network throughput for all interfaces.">{technicalLoading ? 'Loading Infrastructure…' : technicalTrend?.network_source
-              ? `${technicalTrend.observed_hosts?.length || 0}/5 APP sampled · highest interface · Mbps`
-              : 'APP1–APP5 · highest interface · Mbps'}</small>
           </div>}
+        </div>
+        <div className="rundeckTrendToolbar">
+          <Segmented options={[["load","Load"],["swap","Swap I/O"],["network","Network"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
+          {technicalNetwork && <span className="rundeckNetworkCoverage"
+            title="Infrastructure Collector: the single interface with highest observed throughput per APP; not all NICs summed.">
+            {technicalLoading ? 'Loading…' : technicalTrend?.network_source
+              ? `${technicalTrend.observed_hosts?.length || 0}/5 APP sampled`
+              : 'Source: Infrastructure'}
+          </span>}
+
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
         </div>
         {typicalLoadActive && loadScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice" role="status"
