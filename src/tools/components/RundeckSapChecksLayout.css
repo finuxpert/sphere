@@ -113,6 +113,14 @@
   }
 }
 
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid>.rundeckOperatorPairedPane>h3 small{
+  margin-left:9px;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:10px!important;
+  font-weight:500;
+  line-height:1.25;
+  white-space:normal;
+}
 /* DEV v1.35.20 — SAP Checks is one investigation, not two tall unmatched columns.
    Availability keeps its own sample/run; SAP Issues keeps its separate collectors.
    This is a presentation-only pass: no status inference, no hidden indicators. */
