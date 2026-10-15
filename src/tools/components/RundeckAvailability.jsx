@@ -141,7 +141,9 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   const issueText = String(data?.summary?.issue_text || '').replace(/\bDr\b/g, 'DR').trim()
   const availabilityAge = ageMinutes(data?.collected_at)
   const stale = availabilityAge !== null && availabilityAge >= STALE_MINUTES
-  const displayState = stale ? 'STALE' : serviceState
+  const unverified = Boolean(error || availabilityAge === null)
+  const displayState = unverified ? 'UNKNOWN' : stale ? 'STALE' : serviceState
+  const lastSnapshot = stale || unverified
   const bundlePerformance = bundleSourceStatus(bundle, 'performance')
   const bundleAvailability = bundleSourceStatus(bundle, 'availability')
   const bundleState = String(bundle?.bundle_status || '').toUpperCase()
@@ -171,13 +173,13 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   const healthyWeb = webRows.length > 0 && webUp === webRows.length
   const healthySummary = healthyApps && healthyHana && healthyWeb &&
     technicalCheckCount > 0 && technicalPassCount === technicalCheckCount &&
-    availabilityAge !== null && !stale && !showDataTrust
+    availabilityAge !== null && !stale && !error && !showDataTrust
 
   const summary = <div className="rundeckAvailabilitySummaryStrip" aria-label="Availability summary">
-    <span><b>SAP APP</b><strong>{apps.length ? `${appsUp}/${apps.length} UP` : '—'}</strong></span>
-    <span><b>HANA</b><strong>{hanaRows.length ? `${hanaUp}/${hanaRows.length} UP` : '—'}</strong></span>
-    <span><b>WEB</b><strong>{webRows.length ? `${webUp}/${webRows.length} UP` : '—'}</strong></span>
-    <span title="PASS counts only verified positive technical checks. UNKNOWN, absent, or failed checks do not count as PASS."><b>TECHNICAL</b><strong>{technicalCheckCount ? `${technicalPassCount}/${technicalCheckCount} ${stale || availabilityAge === null ? 'LAST PASS' : 'PASS'}` : '—'}</strong></span>
+    <span title="SAP application service checks reported by Service Availability, not SSH reachability or SAP workload health"><b>SAP APP</b><strong>{apps.length ? `${appsUp}/${apps.length} ${lastSnapshot ? 'LAST' : 'UP'}` : '—'}</strong></span>
+    <span title="HANA system DB service checks, separate from SSH and replication checks"><b>HANA DB</b><strong>{hanaRows.length ? `${hanaUp}/${hanaRows.length} ${lastSnapshot ? 'LAST' : 'UP'}` : '—'}</strong></span>
+    <span title="Web Dispatcher HTTP and HTTPS checks, not an end-to-end Fiori transaction"><b>WEB HTTP</b><strong>{webRows.length ? `${webUp}/${webRows.length} ${lastSnapshot ? 'LAST' : 'UP'}` : '—'}</strong></span>
+    <span title="SSH and HANA replication only. PASS counts reported positive checks; missing or failed checks do not count. SM37 is separate."><b>SSH / REPL</b><strong>{technicalCheckCount ? `${technicalPassCount}/${technicalCheckCount} ${lastSnapshot ? 'LAST' : 'PASS'}` : '—'}</strong></span>
   </div>
 
   if (compact) {
@@ -199,8 +201,9 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
       </div>
       <div className="rundeckAvailabilityState">
         {displayState !== 'NORMAL' && <Status value={displayState} />}
-        {stale && <small>{availabilityAge}m old · last reliable: {serviceState}</small>}
-        {!stale && issueText && <small>{issueText}</small>}
+        {stale && <small>{availabilityAge}m old · last reported: {serviceState}</small>}
+        {unverified && <small>{error ? 'Latest request failed · showing last received values' : 'Sample time not verified'}</small>}
+        {!lastSnapshot && issueText && <small>{issueText}</small>}
       </div>
     </div>
 
@@ -209,7 +212,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
       {showCollectionGap && <small className="rundeckAvailabilityTrust is-warning" title={bundleTitle}>Data time difference {Math.round(skew / 60)}m</small>}
     </div>}
 
-    {error && !data && <div className="rundeckAvailabilityError">Availability data unavailable.</div>}
+    {error && <div className="rundeckAvailabilityError" role="status">{data ? 'Availability refresh failed. Values below are from the last received snapshot.' : 'Availability data unavailable.'}</div>}
 
     {paired && summaryRoot && createPortal(summary, summaryRoot)}
     {data && <>
