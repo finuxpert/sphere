@@ -44,6 +44,23 @@ function formatTrendAxis(value, range) {
   return formatWib(value, false)
 }
 
+function numericTrendSample(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null
+  const sample = Number(value)
+  return Number.isFinite(sample) ? sample : null
+}
+
+function formatSavedBucketWindow(trend, bucket) {
+  const at = Date.parse(bucket || '')
+  if (!Number.isFinite(at)) return 'Bucket unavailable'
+  const duration = BUCKET_INTERVAL_MS[String(trend?.bucket || '').toLowerCase()] || null
+  if (!duration) return `Bucket ${formatWib(at, true)} WIB`
+  const end = at + duration
+  const fromLabel = formatWib(at, true)
+  const endLabel = formatWib(end, true)
+  const sameDate = fromLabel.split(',')[0] === endLabel.split(',')[0]
+  return `Bucket ${fromLabel}–${sameDate ? formatWib(end) : endLabel} WIB`
+}
 function trendAxisSplitNumber(range) {
   if (range === '30d') return 6
   if (range === '7d') return 6
@@ -332,6 +349,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
       const selectedCollectionId = availability ? '' : (currentMode === 'max' ? (item.peakCollectionId || '') : '')
       currentSelect?.({
         host: item.host, at: selectedAt, collectionId: selectedCollectionId,
+        peakAtVerified: currentMode === 'max' && Boolean(item.peakAt),
         bucket: item.bucket, value: availability ? item.status : (currentMode === 'max' ? item.max : item.avg),
         status: item.status, availability, mode: currentMode,
         metricLabel: currentTrend?.metric_label || metricLabel(currentTrend?.metric),
@@ -453,8 +471,9 @@ function MiniTrendContext({ trend, selected, range }) {
       .filter((row) => shortHost(row.host || '') === shortHost(host))
       .map((row) => {
         const at = Date.parse(row.bucket || '')
-        const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
-        return Number.isFinite(at) && Number.isFinite(value) ? { at, value } : null
+        const value = numericTrendSample(selected?.mode === 'max' ? row.max_value : row.avg_value)
+        const peakAt = Date.parse(row.peak_at || '')
+        return Number.isFinite(at) && value !== null ? { at, value, peakAt: Number.isFinite(peakAt) ? peakAt : null } : null
       })
       .filter(Boolean)
       .sort((a,b)=>a.at-b.at)
@@ -465,8 +484,8 @@ function MiniTrendContext({ trend, selected, range }) {
     const values = rows.map((row)=>row.value)
     const rawMin = Math.min(...values)
     const rawMax = Math.max(...values)
-    const warning = Number(trend?.warning)
-    const critical = Number(trend?.critical)
+    const warning = numericTrendSample(trend?.warning)
+    const critical = numericTrendSample(trend?.critical)
     const percentScale = unit === '%'
     const yMin = percentScale ? 0 : Math.min(rawMin, 0)
     const yMaxBase = Math.max(rawMax, Number.isFinite(critical) ? critical : Number.NEGATIVE_INFINITY, Number.isFinite(warning) ? warning : Number.NEGATIVE_INFINITY)
@@ -479,14 +498,13 @@ function MiniTrendContext({ trend, selected, range }) {
     })
     const y = (value) => 78 - ((value-yMin)/spanValue)*58
     const points = rows.map((row)=>point(row))
-    const selectedActualAt = Date.parse(selected?.at || '')
+    const selectedActualAt = selected?.mode === 'max' && selected?.peakAtVerified ? Date.parse(selected?.at || '') : NaN
     const selectedBucketAt = Date.parse(selected?.bucket || '')
-    const selectedRow = Number.isFinite(selectedBucketAt)
-      ? rows.reduce((best,row)=>!best || Math.abs(row.at-selectedBucketAt)<Math.abs(best.at-selectedBucketAt) ? row : best,null)
-      : rows.at(-1)
+    // Do not present a nearest or missing bucket as the exact selected point.
+    const selectedRow = Number.isFinite(selectedBucketAt) ? rows.find(row => row.at === selectedBucketAt) : null
     const marker = selectedRow ? point(selectedRow) : null
-    const selectedValue = Number(selected?.value)
-    const resolvedSelectedValue = Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value
+    const selectedValue = numericTrendSample(selected?.value)
+    const resolvedSelectedValue = selectedValue ?? selectedRow?.value ?? null
     const peakRow = rows.reduce((best,row)=>!best || row.value>best.value ? row : best,null)
     return {
       points: points.map((p)=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),
@@ -500,9 +518,10 @@ function MiniTrendContext({ trend, selected, range }) {
       selectedValue:resolvedSelectedValue,
       firstAt:minAt,
       lastAt:maxAt,
-      selectedActualAt:Number.isFinite(selectedActualAt) ? selectedActualAt : selectedRow?.at,
-      selectedBucketAt:Number.isFinite(selectedBucketAt) ? selectedBucketAt : selectedRow?.at,
-      peakAt:peakRow?.at || null,
+      selectedActualAt:Number.isFinite(selectedActualAt) ? selectedActualAt : null,
+      selectedBucketAt:Number.isFinite(selectedBucketAt) ? selectedBucketAt : null,
+      peakObservedAt:selected?.mode === 'max' ? peakRow?.peakAt ?? null : null,
+      peakBucketAt:peakRow?.at ?? null,
       peakValue:peakRow?.value ?? null,
       y,
       unit,
@@ -516,7 +535,8 @@ function MiniTrendContext({ trend, selected, range }) {
       <div><span>History</span><strong>{selected?.metricLabel || metricLabel(trend?.metric)} · {rangeLabel(range)} · {selected?.mode === 'max' ? 'Peak' : 'Average'}</strong></div>
       <div className="rundeckTrendMiniSummary">
         <small>Range {numberText(model.rawMin,1)}–{numberText(model.rawMax,1)}{model.unit}</small>
-        <small>Peak {model.peakValue == null ? '—' : `${numberText(model.peakValue,1)}${model.unit}`}{model.peakAt ? ` · ${formatWib(model.peakAt,true)} WIB` : ''}</small>
+        <small>{selected?.mode === 'max' ? 'Peak' : 'Highest average'} {model.peakValue == null ? '—' : `${numberText(model.peakValue,1)}${model.unit}`}{model.peakObservedAt ? ` · observed ${formatWib(model.peakObservedAt,true)} WIB` : model.peakBucketAt ? ` · bucket ${formatWib(model.peakBucketAt,true)} WIB` : ''}</small>
+        {(model.warning !== null || model.critical !== null) && <small className="rundeckTrendMiniThresholdKey">{model.warning !== null ? `Warn ${numberText(model.warning,0)}${model.unit}` : ''}{model.warning !== null && model.critical !== null ? ' · ' : ''}{model.critical !== null ? `Critical ${numberText(model.critical,0)}${model.unit}` : ''}</small>
       </div>
     </header>
     <svg viewBox="0 0 520 112" role="img" aria-label="History with thresholds and selected point">
@@ -529,24 +549,21 @@ function MiniTrendContext({ trend, selected, range }) {
       })}
       {model.warning !== null && model.warning >= model.yMin && model.warning <= model.yMax && <>
         <line x1="52" y1={model.y(model.warning)} x2="490" y2={model.y(model.warning)} className="rundeckTrendMiniThreshold is-warning" />
-        <text x="488" y={model.y(model.warning)-3} textAnchor="end" className="rundeckTrendMiniThresholdLabel is-warning">Warn {numberText(model.warning,0)}{model.unit}</text>
       </>}
       {model.critical !== null && model.critical >= model.yMin && model.critical <= model.yMax && <>
         <line x1="52" y1={model.y(model.critical)} x2="490" y2={model.y(model.critical)} className="rundeckTrendMiniThreshold is-critical" />
-        <text x="488" y={model.y(model.critical)-3} textAnchor="end" className="rundeckTrendMiniThresholdLabel is-critical">Crit {numberText(model.critical,0)}{model.unit}</text>
       </>}
       <polyline points={model.points} className="rundeckTrendMiniLine" />
       {model.marker && <>
         <line x1={model.marker.x} y1="16" x2={model.marker.x} y2="82" className="rundeckTrendMiniMarkerLine" />
-        <circle cx={model.marker.x} cy={model.marker.y} r="4.5" className="rundeckTrendMiniMarker" />
-        <text x={Math.min(480,Math.max(70,model.marker.x+8))} y={Math.max(15,model.marker.y-7)} className="rundeckTrendMiniSelectedLabel">Selected {numberText(model.selectedValue,1)}{model.unit}</text>
+        <circle cx={model.marker.x} cy={model.marker.y} r="4.5" className="rundeckTrendMiniMarker"><title>{`Selected ${model.selectedValue == null ? 'unavailable' : numberText(model.selectedValue,1)+model.unit} · ${formatSavedBucketWindow(trend,selected?.bucket)}`}</title></circle>
       </>}
       <text x="52" y="105" textAnchor="start" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.firstAt, range)}</text>
-      {model.selectedBucketAt && <text x={model.marker?.x || 270} y="105" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
+      {model.marker && model.marker.x > 170 && model.marker.x < 370 && <text x={model.marker.x} y="105" textAnchor="middle" fill="var(--sphere-warning,#d8b35f)" fontSize="9">{formatTrendAxis(model.selectedBucketAt, range)}</text>}
       <text x="490" y="105" textAnchor="end" fill="var(--sphere-text-muted,#718089)" fontSize="9">{formatTrendAxis(model.lastAt, range)}</text>
     </svg>
     <footer>
-      <span>Actual {model.selectedActualAt ? `${formatWib(model.selectedActualAt, true)} WIB` : '—'} · Bucket {model.selectedBucketAt ? `${formatWib(model.selectedBucketAt, true)} WIB` : '—'}</span>
+      <span>{model.selectedActualAt ? `Peak observed ${formatWib(model.selectedActualAt,true)} WIB · ` : ''}{formatSavedBucketWindow(trend, selected?.bucket)}{!model.marker ? ' · Selected bucket not retained in plot' : ''}</span>
       <strong>{model.selectedValue == null ? '—' : `${numberText(model.selectedValue,1)}${model.unit}`}</strong>
     </footer>
   </section>
@@ -558,25 +575,29 @@ function trendPointNeighbors(trend, selected) {
     .filter((row) => shortHost(row.host || '') === host)
     .map((row) => {
       const bucketAt = Date.parse(row.bucket || '')
-      const value = Number(selected?.mode === 'max' ? row.max_value : row.avg_value)
-      return Number.isFinite(bucketAt) && Number.isFinite(value) ? { ...row, bucketAt, value } : null
+      const value = numericTrendSample(selected?.mode === 'max' ? row.max_value : row.avg_value)
+      return Number.isFinite(bucketAt) && value !== null ? { ...row, bucketAt, value } : null
     })
     .filter(Boolean)
     .sort((left, right) => left.bucketAt - right.bucketAt)
-  if (!rows.length) return { previous: null, current: null, next: null }
-  const target = Date.parse(selected?.bucket || selected?.at || '')
-  const index = Number.isFinite(target)
-    ? rows.reduce((bestIndex, row, rowIndex) => Math.abs(row.bucketAt - target) < Math.abs(rows[bestIndex].bucketAt - target) ? rowIndex : bestIndex, 0)
-    : rows.length - 1
-  return { previous: rows[index - 1] || null, current: rows[index] || null, next: rows[index + 1] || null }
+  if (!rows.length) return { previous: null, current: null, next: null, gap: false }
+  const target = Date.parse(selected?.bucket || '')
+  const index = Number.isFinite(target) ? rows.findIndex(row => row.bucketAt === target) : -1
+  if (index < 0) return { previous: null, current: null, next: null, gap: false }
+  const earlier = rows[index - 1] || null
+  const expected = resolvedGapIntervalMs(trend)
+  const elapsed = earlier ? rows[index].bucketAt - earlier.bucketAt : 0
+  const isRaw = String(trend?.bucket || '').toLowerCase() === 'raw'
+  const contiguous = earlier && (isRaw ? elapsed > 0 && elapsed <= expected * 1.5 : elapsed === expected)
+  return { previous: contiguous ? earlier : null, current: rows[index], next: rows[index + 1] || null, gap: Boolean(earlier && !contiguous) }
 }
 
 function signedDelta(value, previous, unit = '') {
-  const currentValue = Number(value)
-  const previousValue = Number(previous)
-  if (!Number.isFinite(currentValue) || !Number.isFinite(previousValue)) return '—'
+  const currentValue = numericTrendSample(value)
+  const previousValue = numericTrendSample(previous)
+  if (currentValue === null || previousValue === null) return null
   const delta = currentValue - previousValue
-  return `${delta > 0 ? '+' : ''}${numberText(delta, 1)}${unit}`
+  return `${delta > 0 ? '+' : ''}${numberText(delta, 1)}${unit === '%' ? ' pp' : unit ? ' ' + unit : ''}`
 }
 
 function workloadWp(consumer) {
@@ -593,13 +614,15 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
   const neighbors = trendPointNeighbors(trend, selected)
   const selectedUnit = selected?.unit || trend?.unit || ''
   const topContext = consumers[0] ? snapshotContext(selected, selectedRow, consumers[0]) : null
-  const warning = Number(trend?.warning)
-  const critical = Number(trend?.critical)
-  const selectedValue = Number(selected?.value)
+  const warning = numericTrendSample(trend?.warning)
+  const critical = numericTrendSample(trend?.critical)
+  const selectedValue = numericTrendSample(selected?.value)
+  const delta = neighbors.previous ? signedDelta(selectedValue, neighbors.previous.value, selectedUnit) : null
   const thresholdText = [
-    Number.isFinite(warning) ? `Warn ${numberText(warning, 0)}${selectedUnit}` : '',
-    Number.isFinite(critical) ? `Critical ${numberText(critical, 0)}${selectedUnit}` : '',
-    neighbors.previous ? `${signedDelta(selectedValue, neighbors.previous.value, selectedUnit)} vs previous` : '',
+    warning !== null ? `Warn ${numberText(warning, 0)}${selectedUnit}` : '',
+    critical !== null ? `Critical ${numberText(critical, 0)}${selectedUnit}` : '',
+    delta ? `${delta} vs previous ${trend?.bucket === 'raw' ? 'sample' : 'bucket'}` : '',
+    neighbors.gap ? 'Previous bucket unavailable (collection gap)' : '',
   ].filter(Boolean).join(' · ')
 
   return <section className="rundeckTrendModalContent" aria-live="polite">
@@ -608,7 +631,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
         <span>APP Snapshot</span>
         <small>
           {selectedRow.collected_at ? `${formatWib(selectedRow.collected_at, true)} WIB` : 'Saved observation'}
-          {thresholdText ? ` · ${thresholdText}` : ''}
+          {timeline?.correlation_mode === 'nearest-collection' ? ' · Nearest collection (±5m from bucket start)' : ''}{thresholdText ? ` · ${thresholdText}` : ''}
           {collectionId ? ` · Collection ${collectionId.replace(/^rundeck-/, '').slice(0, 18)}` : ''}
         </small>
       </header>
@@ -630,14 +653,14 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
     {!loading && !error && selected && <section className="rundeckTrendWorkloadPanel">
       <header>
         <div>
-          <span>Top Jobs / Programs at Selected Time</span>
+          <span>Top Workloads at Saved Observation</span>
           <strong>Top {consumers.length} loaded</strong>
         </div>
-        {selected?.at && <small>{formatWib(selected.at, true)} WIB</small>}
+        {selectedRow?.collected_at && <small title="Timestamp of the saved host sample, not the bucket start">{formatWib(selectedRow.collected_at,true)} WIB</small>}
       </header>
 
       <div className="rundeckTrendWorkloadHead" aria-hidden="true">
-        <span>Job / Program</span><span title="Grouped workload CPU can exceed 100% when multiple CPU cores are used.">CPU</span><span>PSS Memory</span><span>Processes</span><span>WP</span><span />
+        <span>Job / Program / Process</span><span title="Grouped CPU is multicore and may exceed 100%">CPU Total</span><span>PSS Memory</span><span>Processes</span><span>WP</span><span />
       </div>
 
       <div className="rundeckTrendWorkloadRows">
@@ -921,7 +944,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             <span>SPHERE ANALYSIS · HISTORICAL OBSERVATION</span>
             <h4>{selected?.host ? shortHost(selected.host) : 'APP'} {selected?.metricLabel || metricLabel(activeMetric)} {activeTrend?.warning !== null && activeTrend?.warning !== undefined && Number.isFinite(Number(activeTrend.warning)) && Number(selected?.value) >= Number(activeTrend.warning) ? 'Spike' : 'Detail'}</h4>
             <small>{selected?.mode === 'max' ? 'Peak' : 'Average'} · {selected?.value == null ? '—' : `${numberText(selected.value, 1)}${selected?.unit || activeTrend?.unit || ''}`}</small>
-            <small>{selected?.mode === 'max' ? 'Historical peak at' : 'Historical observation at'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · Bucket ${formatWib(selected.bucket, true)} WIB` : ''}</small>
+            <small>{selected?.mode === 'max' && selected?.peakAtVerified ? 'Peak observed' : selected?.mode === 'max' ? 'Peak bucket starts' : 'Average bucket starts'} {selected?.at ? `${formatWib(selected.at, true)} WIB` : '—'}{selected?.bucket ? ` · ${formatSavedBucketWindow(activeTrend,selected.bucket)}` : ''}</small>
           </div>
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>

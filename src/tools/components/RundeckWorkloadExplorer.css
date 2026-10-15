@@ -519,6 +519,8 @@ html[data-theme="light"] .rundeckExplorerHeader p{color:#52666f!important}
 .rundeckTrendMiniContext.is-dashboard-like svg{width:100%;height:auto;min-height:154px;display:block}
 .rundeckTrendMiniContext .rundeckTrendMiniSummary{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;justify-content:flex-end}
 .rundeckTrendMiniContext .rundeckTrendMiniSummary small{white-space:nowrap}
+.rundeckTrendMiniContext .rundeckTrendMiniSummary{row-gap:4px}
+.rundeckTrendMiniContext .rundeckTrendMiniThresholdKey{color:var(--sphere-text-secondary,#a9b5bb);font-variant-numeric:tabular-nums}
 .rundeckTrendMiniAxisLabel{fill:var(--sphere-text-muted,#718089);font-size:8px}
 .rundeckTrendMiniThreshold{stroke-width:1;stroke-dasharray:4 3;opacity:.78}
 .rundeckTrendMiniThreshold.is-warning{stroke:var(--sphere-warning,#d8b35f)}
