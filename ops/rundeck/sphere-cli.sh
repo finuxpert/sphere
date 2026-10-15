@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPHERE frontend-only release. No DB, backend, nginx, systemd or visual QA.
+# SPHERE CLI: DEV uses guarded full-stack QA + API/web deployment; PROD remains frontend-only.
 set -Eeuo pipefail
 [[ "$(id -u)" == 0 ]] || { echo "Run as root"; exit 2; }
 # Promote the currently served DEV UI SHA, after explicit operator confirmation.
@@ -13,6 +13,13 @@ case "$MODE" in
   prod) SOURCE=/root/rundeck-sphere-prod; BRANCH=rundeck-sphere-prod; WEB=/var/www/sphere.astraotoparts.co.id; URL=https://sphere.astraotoparts.co.id/; BASE=/ ;;
   *) echo "Usage: sphere deploy dev | sphere deploy prod"; exit 2 ;;
 esac
+# DEV must never return a misleading ALREADY_CURRENT from the web-only path.
+# The guarded release verifies exact source SHA, QA, Python tests, backend and
+# frontend cutover, DEV API contracts, and PROD invariants before success.
+if [[ "$MODE" == dev ]]; then
+  echo "DEV_RELEASE=FULL_STACK_GUARDED"
+  exec bash "$SOURCE/ops/rundeck/release-dev-fast.sh"
+fi
 cd "$SOURCE"
 [[ "$(git branch --show-current)" == "$BRANCH" ]] || { echo "BLOCKED: wrong branch"; exit 2; }
 [[ -z "$(git status --porcelain)" ]] || { echo "BLOCKED: dirty worktree"; exit 2; }
