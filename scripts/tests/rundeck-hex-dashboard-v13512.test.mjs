@@ -122,22 +122,14 @@ test('v1.35.19 APP and Infrastructure source times are named independently',()=>
   assert.match(css,/\.rundeckSelectedAppSource small/)
 })
 
-
-
- bounded header, categories, measured grid and footer',()=>{
+test('v1.35.21 evaluation summary has bounded categories, verified counts and navigation', () => {
   const css=read('RundeckCockpitHexV13512.css')
   const ui=read('RundeckWorkloadHealth.jsx')
   assert.match(css,/DEV v1\.35\.19 — final cockpit polish layer/)
-  assert.match(css,/grid-template-rows:auto auto minmax\(54px,1fr\) auto!important/)
-  assert.match(css,/grid-template-rows:auto auto minmax\(25px,1fr\) auto!important/)
   assert.match(css,/\.rundeckWorkloadHealthFooter :is\(span,small\)/)
-  assert.match(css,/\.rundeckWorkloadCategory:focus-visible/)
-  assert.match(ui,/const statusNote = rows\.length && dotLayout\.fits/)
-  assert.match(ui,/dotLayout\.fits \? rows : \[\]/)
-  assert.match(ui,/aria-label=\{`Open \$\{preview/)
-  assert.match(ui,/onClick=\{\(\) => openWorkload\(row\)\}/)
-  const fit=workloadDotLayout({count:414,width:620,height:135})
-  assert.equal(fit.fits,true)
-  assert.ok(fit.capacity>=414)
-  assert.equal(workloadDotLayout({count:414,width:88,height:32}).fits,false)
+  assert.match(ui,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
+  assert.match(ui,/className="rundeckWorkloadDistribution"/)
+  assert.match(ui,/aria-label=\{level\.label \+ ': ' \+ count/)
+  assert.match(ui,/onClick=\{\(\) => onReview\?\.\(level\.health\)\}/)
+  assert.match(ui,/not SAP SM37 job status/)
 })
