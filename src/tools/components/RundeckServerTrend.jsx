@@ -29,7 +29,7 @@ const BUCKET_INTERVAL_MS = {
   '1d': 24 * 60 * 60 * 1000,
 }
 
-const metricLabel = (value) => ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability' })[value] || 'Metric'
+const metricLabel = (value) => ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability', network: 'Network', network_rx: 'Network RX', network_tx: 'Network TX' })[value] || 'Metric'
 const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
 const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
 
@@ -718,7 +718,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
-  const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
+  const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','network','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
+  const [networkDirection, setNetworkDirection] = React.useState(saved.networkDirection === 'tx' ? 'tx' : 'rx')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [scaleMode, setScaleMode] = React.useState('full')
   const [loadScaleMode, setLoadScaleMode] = React.useState('full')
@@ -752,13 +753,14 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     setWindowModal(false)
   }, [customStart, customEnd])
 
-  const loadTrend = React.useCallback((metric, setter, setLoading, setError, signal) => {
+  const loadTrend = React.useCallback((metric, setter, setLoading, setError, signal, direction = 'rx') => {
     if (range === 'custom' && !customWindow) return Promise.resolve()
     const category = AVAILABILITY_CATEGORIES[metric]
+    const queriedMetric = metric === 'network' ? 'network_' + direction : metric
     const windowQuery = range === 'custom' ? '&' + customRangeSearch(customWindow) : ''
     const url = category
       ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}${windowQuery}`
-      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(range === 'custom' ? 'auto' : bucket)}&metric=${encodeURIComponent(metric)}${windowQuery}`
+      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(range === 'custom' ? 'auto' : bucket)}&metric=${encodeURIComponent(queriedMetric)}${windowQuery}`
     setLoading(true)
     setError('')
     return json(url, signal)
@@ -774,10 +776,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   React.useEffect(() => {
     try {
       window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({
-        range, bucket, serverMetric1, serverMetric2, technicalMetric, mode,
+        range, bucket, serverMetric1, serverMetric2, technicalMetric, networkDirection, mode,
       }))
     } catch { /* best effort */ }
-  }, [bucket, mode, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, mode, networkDirection, range, serverMetric1, serverMetric2, technicalMetric])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
@@ -796,9 +798,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
-    loadTrend(technicalMetric, setTechnicalTrend, setTechnicalLoading, setTechnicalError, controller.signal)
+    loadTrend(technicalMetric, setTechnicalTrend, setTechnicalLoading, setTechnicalError, controller.signal, networkDirection)
     return () => controller.abort()
-  }, [databaseEnabled, loadTrend, refreshToken, technicalMetric])
+  }, [databaseEnabled, loadTrend, networkDirection, refreshToken, technicalMetric])
 
   React.useEffect(() => {
     timelineRequestSequence.current += 1
@@ -807,7 +809,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     setTimeline(null)
     setTimelineLoading(false)
     setTimelineError('')
-  }, [bucket, customWindow, mode, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, customWindow, mode, networkDirection, range, serverMetric1, serverMetric2, technicalMetric])
 
   React.useEffect(() => {
     if (range !== 'custom' || !customWindow || !databaseEnabled) return undefined
@@ -903,6 +905,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   ])
   const activeFocus = shortHost(focusedHost || '')
   const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
+  const technicalNetwork = technicalMetric === 'network'
   const loadScale = React.useMemo(() => technicalLoadScale(technicalTrend?.items, mode), [technicalTrend, mode])
   const typicalLoadActive = technicalMetric === 'load' && loadScaleMode === 'typical'
   const activeTrend = selectedTrend || serverTrend1
@@ -972,7 +975,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
-        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3><SphereIcon name="server" /> Technical Trend <small title={technicalMetric === 'load' ? 'Linux load average, not CPU usage percent. Compare with logical CPU count and saved evidence.' : ''}>· {technicalMetric === 'load' ? 'Host load average (not %)' : metricLabel(technicalMetric)}</small></h3>
+        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3><SphereIcon name="server" /> Technical Trend <small title={technicalMetric === 'load' ? 'Linux load average, not CPU usage percent. Compare with logical CPU count and saved evidence.' : technicalNetwork ? 'Infrastructure Collector · highest single-interface observed throughput per APP; not summed across interfaces.' : ''}>· {technicalMetric === 'load' ? 'Host load average (not %)' : technicalNetwork ? 'Network ' + networkDirection.toUpperCase() + ' · Mbps' : metricLabel(technicalMetric)}</small></h3>
           {technicalMetric === 'load' && <button type="button" className="rundeckTechnicalScaleToggle"
             aria-pressed={loadScaleMode === 'typical'} aria-label="Switch Technical Load between Full and Typical scale"
             title="Typical zooms the plotted Load axis when extreme saved samples compress other observations. Peak and timestamp remain visible; Full restores every value."
@@ -981,7 +984,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           </button>}
         </div>
         <div className="rundeckTrendToolbar">
-          <Segmented options={[["load","Load"],["swap","Swap I/O"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
+          <Segmented options={[["load","Load"],["swap","Swap I/O"],["network","Network"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
+          {technicalNetwork && <div className="rundeckNetworkDirection" role="group" aria-label="Network throughput direction">
+            <button type="button" aria-pressed={networkDirection === 'rx'} className={networkDirection === 'rx' ? 'is-active' : ''} onClick={() => setNetworkDirection('rx')}>RX</button>
+            <button type="button" aria-pressed={networkDirection === 'tx'} className={networkDirection === 'tx' ? 'is-active' : ''} onClick={() => setNetworkDirection('tx')}>TX</button>
+            <small title="One APP point = highest throughput network interface seen for that APP at the sample time. Source is Infrastructure, not SAP workload CPU.">APP1–APP5 · highest interface · Mbps</small>
+          </div>}
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
         </div>
         {typicalLoadActive && loadScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice" role="status"
