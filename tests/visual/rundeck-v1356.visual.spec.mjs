@@ -445,7 +445,7 @@ test('v1.35.19 Workload Health grid, source labels and action focus stay within 
   expect(result.pageOverflowY).toBeLessThanOrEqual(2)
 })
 
-test('v1.35.21 SAP Checks uses side-by-side source panes and disclosed incident history',async ({page})=>{
+test('v1.35.22 SAP Checks shows five indicators with incident history on left',async ({page})=>{
   test.skip((page.viewportSize()?.width||0)<1100,'Desktop SAP Checks arrangement')
   await openCockpit(page)
   await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:'Open SAP Checks'}).click()
@@ -458,9 +458,18 @@ test('v1.35.21 SAP Checks uses side-by-side source panes and disclosed incident 
   await expect(technical).toContainText('Service Availability source')
   await expect(issues).toContainText('APP signals and retained incidents')
   await expect(technical).toContainText('HANA checks')
-  const history=issues.locator('.rundeckSapChecksHistoryDisclosure')
+  const history=technical.locator('.rundeckSapChecksHistoryDisclosure')
+  await expect(issues.locator('.rundeckSapChecksHistoryDisclosure')).toHaveCount(0)
+  await expect(issues.getByRole('button',{name:'Filter indicators'})).toBeVisible()
   await expect(history.locator('summary')).toBeVisible()
   await expect(history).not.toHaveAttribute('open','')
+  const counters=issues.locator('.rundeckSapIssuesSummaryStrip')
+  const countText=await counters.locator('strong').first().innerText()
+  const nonNormal=Number(countText)
+  if(Number.isFinite(nonNormal) && nonNormal>0 && nonNormal<=5){
+    await expect(issues.locator('.rundeckIssueIndicatorTable tbody tr')).toHaveCount(nonNormal)
+    await expect(issues.locator('.rundeckIssueIndicatorTable thead th')).toHaveCount(4)
+  }
   const positions=await drawer.evaluate(root=>{
     const rect=node=>{
       const b=node.getBoundingClientRect()
@@ -483,6 +492,6 @@ test('v1.35.21 SAP Checks uses side-by-side source panes and disclosed incident 
   expect(positions.bodyScrollHeight-positions.bodyClientHeight).toBeLessThanOrEqual(12)
   await history.locator('summary').click()
   await expect(history).toHaveAttribute('open','')
-  await expect(history.getByText('Retained incidents',{exact:true})).toBeVisible()
-  await test.info().attach('sphere-sap-checks-v13521',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
+  await expect(history.getByText('Saved incidents',{exact:true})).toBeVisible()
+  await test.info().attach('sphere-sap-checks-v13522',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
 })
