@@ -444,3 +444,36 @@ test('v1.35.19 Workload Health grid, source labels and action focus stay within 
   expect(result.pageOverflowX).toBeLessThanOrEqual(2)
   expect(result.pageOverflowY).toBeLessThanOrEqual(2)
 })
+
+test('v1.35.20 SAP Checks uses compact technical row and full-width issue section',async ({page})=>{
+  test.skip((page.viewportSize()?.width||0)<1100,'Desktop SAP Checks arrangement')
+  await openCockpit(page)
+  await page.locator('.rundeckAnalysisRailV13456').getByRole('button',{name:'Open SAP Checks'}).click()
+  const drawer=page.locator('.rundeckWorkspaceDrawer.is-issues')
+  await expect(drawer).toBeVisible()
+  const technical=drawer.getByRole('region',{name:'SAP technical checks'})
+  const issues=drawer.getByRole('region',{name:'Current SAP issues'})
+  await expect(technical).toBeVisible()
+  await expect(issues).toBeVisible()
+  await expect(technical).toContainText('Service Availability source')
+  await expect(issues).toContainText('APP signals and retained incidents')
+  const positions=await drawer.evaluate(root=>{
+    const rect=node=>{
+      const b=node.getBoundingClientRect()
+      return {left:b.left,right:b.right,top:b.top,bottom:b.bottom}
+    }
+    const technical=root.querySelector('[aria-label="SAP technical checks"]')
+    const issues=root.querySelector('[aria-label="Current SAP issues"]')
+    const bar=root.querySelector('.rundeckSapChecksSummaryRail')
+    return {technical:rect(technical),issues:rect(issues),summary:rect(bar),
+      drawer:rect(root),viewport:{width:innerWidth,height:innerHeight}}
+  })
+  expect(Math.abs(positions.technical.left-positions.issues.left)).toBeLessThanOrEqual(3)
+  expect(Math.abs(positions.technical.right-positions.issues.right)).toBeLessThanOrEqual(3)
+  expect(positions.issues.top).toBeGreaterThanOrEqual(positions.technical.bottom-3)
+  expect(positions.technical.top).toBeGreaterThanOrEqual(positions.summary.bottom-3)
+  expect(positions.drawer.left).toBeGreaterThanOrEqual(-2)
+  expect(positions.drawer.right).toBeLessThanOrEqual(positions.viewport.width+2)
+  expect(positions.drawer.bottom).toBeLessThanOrEqual(positions.viewport.height+2)
+  await test.info().attach('sphere-sap-checks-v13520',{body:await page.screenshot({animations:'disabled'}),contentType:'image/png'})
+})
