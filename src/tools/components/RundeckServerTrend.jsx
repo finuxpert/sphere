@@ -283,7 +283,9 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
            const intervalEnd = (typeof bucketAt === 'number' ? bucketAt : Date.parse(bucketAt)) + intervalMs
            const intervalLabel = Number.isFinite(intervalEnd) && Number.isFinite(intervalMs)
              ? ` – ${formatWib(intervalEnd, true)} WIB` : ' WIB'
-           const lines = [`<b>Bucket ${formatWib(bucketAt, true)}${intervalLabel} · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
+            const lines = [trend?.range === 'custom'
+              ? `<b>Saved sample · ${formatWib(bucketAt, true)} WIB</b>`
+              : `<b>Bucket ${formatWib(bucketAt, true)}${intervalLabel} · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
           visible.forEach(point => {
             const name = String(point.seriesName || '').replace(/[&<>"']/g, character => ({
               '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
