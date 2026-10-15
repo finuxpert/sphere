@@ -336,18 +336,26 @@ export default function RundeckSource({ onCollection }) {
         ? Math.max(0, Math.floor((Date.now() - reportAvailabilityTs) / 60000))
         : null
       const reportAvailabilityStale = Number.isFinite(reportAvailabilityAgeMinutes) && reportAvailabilityAgeMinutes >= 20
+      // Missing, invalid or stale timestamps never qualify a service as currently UP.
+      const reportAvailabilityUnverified = !availabilityResult || !Number.isFinite(reportAvailabilityTs) || reportAvailabilityStale
+      const availabilitySnapshotLabel = [
+        `SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} LAST UP` : 'UNKNOWN'}`,
+        `HANA Primary LAST ${availabilityStatus(hanaRows, 'PRIMARY')}`,
+        `Secondary LAST ${availabilityStatus(hanaRows, 'SECONDARY')}`,
+        `Replication LAST ${availabilityStatus(hanaRows, 'DR')}`,
+      ].join(' · ')
       const reportQuality = assessRundeckDataQuality({
         latest, health, platform, availability: availabilityResult,
         refreshFailed: Boolean(error) || metaRefreshFailed,
       })
       const reportPerformanceStale = !reportQuality.performanceValid || reportQuality.collectorBad
       const status = systemHealthState(operationalHosts.filter(() => !reportPerformanceStale), {
-        availabilityState: reportAvailabilityStale ? 'UNKNOWN' : availabilityState,
-        serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult),
+        availabilityState: reportAvailabilityUnverified ? 'UNKNOWN' : availabilityState,
+        serviceCritical: !reportAvailabilityUnverified && availabilityServiceImpact(availabilityResult),
         stale: reportPerformanceStale,
-        availabilityStale: reportAvailabilityStale,
+        availabilityStale: reportAvailabilityUnverified,
       })
-      const reportDataAlignment = collectionAligned && reportSkewMinutes !== null && reportSkewMinutes <= 15 && !reportPerformanceStale && !reportAvailabilityStale ? 'ALIGNED' : 'PARTIAL'
+      const reportDataAlignment = collectionAligned && reportSkewMinutes !== null && reportSkewMinutes <= 15 && !reportPerformanceStale && !reportAvailabilityUnverified ? 'ALIGNED' : 'PARTIAL'
       const [sr, sg, sb] = pdfStatusColor(status)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(6.5)
@@ -392,11 +400,20 @@ export default function RundeckSource({ onCollection }) {
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7.5)
       pdf.setTextColor(22, 31, 38)
-      pdf.text(
-        `SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · HANA Primary ${availabilityStatus(hanaRows, 'PRIMARY')} · Secondary ${availabilityStatus(hanaRows, 'SECONDARY')} · Replication ${availabilityStatus(hanaRows, 'DR')}`,
-        margin,
-        48,
-      )
+      if (reportAvailabilityUnverified) {
+        // Keep historical check results visible without claiming present SAP availability.
+        pdf.setFontSize(7)
+        pdf.text(availabilitySnapshotLabel, margin, 47)
+        const recordedAt = reportAvailabilityAt ? formatTime(reportAvailabilityAt) + ' WIB' : 'not recorded'
+        const ageLabel = reportAvailabilityAgeMinutes === null ? '' : ` · ${reportAvailabilityAgeMinutes} min old`
+        pdf.setTextColor(128, 87, 32)
+        pdf.text(`Last check: ${recordedAt}${ageLabel} · Current service status unverified`, margin, 50.3)
+      } else {
+        pdf.text(
+          `SAP APP ${availabilityApps.length ? `${availabilityAppUp}/${availabilityApps.length} UP` : 'UNKNOWN'} · HANA Primary ${availabilityStatus(hanaRows, 'PRIMARY')} · Secondary ${availabilityStatus(hanaRows, 'SECONDARY')} · Replication ${availabilityStatus(hanaRows, 'DR')}`,
+          margin, 48,
+        )
+      }
       pdf.line(margin, 52, W - margin, 52)
 
       let y = 59
