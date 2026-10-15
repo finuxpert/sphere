@@ -287,17 +287,17 @@
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(1),
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(1){width:7%!important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(2),
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(2){width:35%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(2){width:32%!important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(3),
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(3){width:13%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(3){width:12%!important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(4),
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(4){width:13%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(4){width:11%!important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(5),
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(5){width:10%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(5){width:9%!important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(6),
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(6){width:12%!important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload th:nth-child(7),
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(7){width:10%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(7){width:17%!important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadHead.is-embedded{
   justify-content:flex-start!important;
   min-height:25px!important;
@@ -357,4 +357,11 @@
   line-height:1.1;
   white-space:nowrap;
   color:var(--sphere-text-muted,#8d9aa3);
+}
+
+/* Latest collection: preserve full observed-time column in the existing one-screen grid. */
+@media (min-width:1200px) {
+  .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload :is(th,td):nth-child(7){
+    white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
+  }
 }

@@ -140,11 +140,11 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     {loading && <div className="rundeckReviewState" role="status">Checking SAP source data…</div>}
     {failedSources.length>0 && <div className="rundeckReviewState is-error" role="status">Unavailable: {failedSources.map(name=>SAP_ISSUE_SOURCE_LABELS[name]).join(', ')}. Successful checks remain visible; failed sources are UNKNOWN.</div>}
     <div className="rundeckSapIssuesSummaryStrip">
-      <span><b>Non-normal</b><strong>{reviewIndicators.length}</strong></span>
+      <span title="Non-normal source indicators exclude SAP SM37 readiness, which is shown separately."><b>Non-normal</b><strong>{reviewIndicators.length}</strong></span>
       <span><b>Critical</b><strong>{criticalCount}</strong></span>
       <span><b>Attention</b><strong>{warningCount}</strong></span>
       <span><b>Unknown</b><strong>{unknownCount}</strong></span>
-      <span><b>Active issues</b><strong>{activeCount === null || !Number.isFinite(activeCount) ? '—' : activeCount}</strong></span>
+      <span title="Retained active incidents, distinct from current non-normal indicators."><b>Active issues</b><strong>{activeCount === null || !Number.isFinite(activeCount) ? '—' : activeCount}</strong></span>
     </div>
 
     <section className="rundeckIssueIndicatorSection">
@@ -193,8 +193,10 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
           const latestHost=hosts.find(host=>shortHost(host.host)===shortHost(row.host))
           const currentVerified=latestHost && sapIssueSampleFreshness(data.hosts,latestHost,nowMs)==='FRESH'
           const severity=!currentVerified?'UNKNOWN':row.code==='WP_CRITICAL'?sapWorkloadState(latestHost):String(row.current_severity||row.severity||'UNKNOWN').toUpperCase()
-          return <tr key={row.id} className={row.host?'is-investigable':''} onClick={row.host?()=>inspect({host:row.host,indicator:issueLabel(row.signal||row.code),status:severity}):undefined}>
-            <td><strong>{shortHost(row.host||'APP')}</strong></td><td>{issueLabel(row.signal||row.code)}</td><td><Status value={severity}/></td><td>{valueText(row.peak_value,row.unit||'')}</td><td>{durationText(row.duration_seconds)}</td>
+          return <tr key={row.id} className={row.host?'is-investigable':''}>
+            <td>{row.host
+              ? <button type="button" className="rundeckIssueInspect" onClick={()=>inspect({host:row.host,indicator:issueLabel(row.signal||row.code),status:severity})} aria-label={`Inspect ${shortHost(row.host)} ${issueLabel(row.signal||row.code)} incident`}>{shortHost(row.host)} <span aria-hidden="true">↗</span></button>
+              : <strong>{shortHost(row.host||'APP')}</strong>}</td><td>{issueLabel(row.signal||row.code)}</td><td><Status value={severity}/></td><td>{valueText(row.peak_value,row.unit||'')}</td><td>{durationText(row.duration_seconds)}</td>
           </tr>
         })}</tbody>
       </table></div>

@@ -131,12 +131,11 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   const ssh = roleMap(sshRows)
   const appSsh = sshRows.filter((row) => /^APP\d+$/i.test(String(row.name || '')))
   const otherSsh = sshRows.filter((row) => !/^(PRIMARY|SECONDARY|DR|APP\d+)$/i.test(String(row.name || '')))
-  const technicalDownCount = Number(data?.summary?.technical_down_count ?? [
-    ...Object.values(replication),
-    ssh.PRIMARY,
-    ssh.SECONDARY,
-    ssh.DR,
-  ].filter(Boolean).filter((row) => String(row?.status || '').toUpperCase() === 'DOWN').length)
+  // Report only verified positive technical states as PASS, never infer from absent DOWN.
+  const technicalRows = [...Object.values(replication).filter(Boolean), ...sshRows]
+  const technicalCheckCount = technicalRows.length
+  const technicalPassCount = technicalRows.filter((row) =>
+    ['UP', 'PASS', 'OK', 'NORMAL', 'ACTIVE'].includes(String(row?.status || '').toUpperCase())).length
   const serviceState = String(data?.summary?.service_state || data?.summary?.sap_state || (error ? 'UNKNOWN' : 'LOADING')).toUpperCase()
   const issueText = String(data?.summary?.issue_text || '').replace(/\bDr\b/g, 'DR').trim()
   const availabilityAge = ageMinutes(data?.collected_at)
@@ -169,9 +168,9 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   const healthyApps = apps.length > 0 && appsUp === apps.length
   const healthyHana = hanaRows.length > 0 && hanaUp === hanaRows.length
   const healthyWeb = webRows.length > 0 && webUp === webRows.length
-  const technicalCheckCount = Object.values(replication).filter(Boolean).length + sshRows.length
-
-  const healthySummary = healthyApps && healthyHana && healthyWeb && technicalDownCount === 0 && !showDataTrust
+  const healthySummary = healthyApps && healthyHana && healthyWeb &&
+    technicalCheckCount > 0 && technicalPassCount === technicalCheckCount &&
+    availabilityAge !== null && !stale && !showDataTrust
 
   if (compact) {
     return <button type="button" className="rundeckEvidenceCard rundeckAvailabilityCard" onClick={onOpen} aria-label="Open SAP Availability details">
@@ -209,7 +208,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
         <span><b>SAP APP</b><strong>{apps.length ? `${appsUp}/${apps.length} UP` : '—'}</strong></span>
         <span><b>HANA</b><strong>{hanaRows.length ? `${hanaUp}/${hanaRows.length} UP` : '—'}</strong></span>
         <span><b>WEB</b><strong>{webRows.length ? `${webUp}/${webRows.length} UP` : '—'}</strong></span>
-        <span><b>TECHNICAL</b><strong>{technicalDownCount > 0 ? `${technicalCheckCount - technicalDownCount}/${technicalCheckCount} PASS` : `${technicalCheckCount}/${technicalCheckCount} PASS`}</strong></span>
+        <span title="PASS counts only verified positive technical checks. UNKNOWN, absent, or failed checks do not count as PASS."><b>TECHNICAL</b><strong>{technicalCheckCount ? `${technicalPassCount}/${technicalCheckCount} ${stale || availabilityAge === null ? 'LAST PASS' : 'PASS'}` : '—'}</strong></span>
       </div>
 
       <div className="rundeckAvailabilityDetailSections">

@@ -253,7 +253,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap" ref={tableWrapRef}>
       <table>
-        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓<small className="rundeckWorkloadCpuUnit">multi-core</small></th><th title="Proportional Set Size; workload memory in gigabytes, not APP host RAM">PSS (GB)</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed At</th></tr></thead>
+        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓<small className="rundeckWorkloadCpuUnit">multi-core</small></th><th title="Proportional Set Size; workload memory in gigabytes, not APP host RAM">PSS (GB)</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed</th></tr></thead>
         <tbody>
           {pageRows.map((row) => {
             const details = row.details || {}
@@ -279,7 +279,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
               <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>
               <td>{processes === null ? '—' : numberText(processes, 0)}</td>
               <td>{wpText(details)}</td>
-               <td title="Last saved workload observation, not job end time">{row.collected_at ? `${formatWib(row.collected_at,true)} WIB` : '—'}</td>
+               <td title={row.collected_at ? `Saved observation: ${formatWib(row.collected_at,true)} WIB, not job completion` : 'Observation time unavailable'}>{row.collected_at ? formatWib(row.collected_at,true) : '—'}</td>
             </tr>
           })}
           {!visible.length && <tr><td colSpan="7">{query
