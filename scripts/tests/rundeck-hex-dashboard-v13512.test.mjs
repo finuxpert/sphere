@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { workloadDotLayout } from '../../src/tools/components/rundeckWorkloadGrid.js'
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
 test('hexagon APP selection, source provenance and modal behavior', () => {
@@ -32,13 +33,15 @@ test('four operational modal shortcuts moved below APP and above trends', () => 
   assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/)
 })
 
-test('saved job/program evaluation retains full validation and an accessible status bar', () => {
+test('Workload Health keeps validated 1D identities and adds hexagon title icon', () => {
   const health=read('RundeckWorkloadHealth.jsx')
-  assert.match(health,/<SphereIcon name="activity" \/>/)
+  assert.match(health,/<SphereIcon name="hexagon" \/>/)
+  assert.match(health,/Job &amp; Program Evaluation/)
+  assert.match(health,/1 hexagon = 1 saved evaluation/)
+  assert.match(health,/label: 'Data limited'/)
+  assert.match(read('SphereIcon.jsx'),/hexagon: <>/)
   assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
-  assert.match(health,/className="rundeckWorkloadDistribution"/)
-  assert.match(health,/onClick=\{\(\) => onReview\?\.\(level\.health\)\}/)
-  assert.doesNotMatch(health,/className="rundeckWorkloadDot/)
+  assert.match(health,/onClick=\{\(\) => openWorkload\(row\)\}/)
 })
 
 test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity', () => {
@@ -55,26 +58,39 @@ test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity
   assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\); openAppAnalysis\(host\) \}\}/)
 })
 
-test('status distribution is proportional to verified saved counts, not first-page estimates', () => {
+test('saved workload honeycomb capacity reserves stagger offset and never hides excess records', () => {
   const health=read('RundeckWorkloadHealth.jsx')
   const css=read('RundeckCockpitHexV13512.css')
-  assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
-  assert.match(health,/const count = Number\(preview\.health\[level\.key\]\) \|\| 0/)
-  assert.match(health,/style=\{\{ flexGrow: count \}\}/)
-  assert.match(css,/\.rundeckWorkloadDistribution button \{/)
-  for (const category of ['review','attention','unknown','normal']) {
-    assert.ok(css.includes('.rundeckWorkloadDistribution .is-' + category))
-  }
+  const fitted=workloadDotLayout({count:395,width:640,height:145})
+  assert.equal(fitted.fits,true)
+  assert.ok(fitted.columns>1)
+  assert.ok(fitted.rows>1)
+  assert.ok(fitted.capacity>=395)
+  assert.ok(fitted.rows*(fitted.size+fitted.gap)-fitted.gap+2<=145)
+  const maxX=(fitted.columns-1)*(fitted.size+fitted.gap)+fitted.size+(fitted.size+fitted.gap)/2+2
+  assert.ok(maxX<=640,'last staggered hexagon must fit inside panel')
+  assert.equal(workloadDotLayout({count:395,width:90,height:42}).fits,false)
+  assert.match(health,/Math\.floor\(index \/ dotLayout\.columns\) % 2/)
+  assert.match(health,/dotLayout\.fits \? rows : \[\]/)
+  assert.match(health,/open Review/)
+  assert.match(css,/\.rundeckWorkloadDot\.is-staggered-row/)
+  assert.match(css,/grid-template-columns:repeat\(var\(--workload-columns,1\)/)
 })
 
-test('compact evaluation panel keeps the five SAP APP hexagons and avoids hundreds of rendered buttons', () => {
-  const health=read('RundeckWorkloadHealth.jsx')
+test('v1.35.17 Workload Health uses available vertical room without changing one-evaluation-per-dot identity', () => {
   const css=read('RundeckCockpitHexV13512.css')
-  assert.match(health,/aria-label="Proportion of saved evaluations by category"/)
-  assert.match(health,/onClick=\{\(\) => onReview\?\.\(level\.health\)\}/)
-  assert.doesNotMatch(health,/dotGridRef|dotLayout|is-staggered-row/)
-  assert.ok(css.includes('height:24px'))
-  assert.match(css,/\.rundeckAppHexSelector:nth-child\(4\)/)
+  const health=read('RundeckWorkloadHealth.jsx')
+  const dense=workloadDotLayout({count:423,width:650,height:180})
+  assert.equal(dense.fits,true)
+  assert.ok(dense.size>10,'larger panel should grow verified hexagons')
+  assert.equal(dense.rows*dense.columns>=423,true)
+  assert.equal(workloadDotLayout({count:423,width:90,height:42}).fits,false)
+  assert.ok(css.includes('max-width:350px!important'))
+  assert.ok(css.includes('height:100%!important'))
+  assert.ok(css.includes('align-items:stretch!important'))
+  assert.ok(css.includes('justify-content:center!important'))
+  assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
+  assert.match(health,/onClick=\{\(\) => openWorkload\(row\)\}/)
 })
 
 test('v1.35.17 chart Focus is explicit, reversible, and preserves threshold references', () => {
@@ -122,14 +138,20 @@ test('v1.35.19 APP and Infrastructure source times are named independently',()=>
   assert.match(css,/\.rundeckSelectedAppSource small/)
 })
 
-test('v1.35.21 evaluation summary has bounded categories, verified counts and navigation', () => {
+test('v1.35.19 Workload Health has bounded header, categories, measured grid and footer',()=>{
   const css=read('RundeckCockpitHexV13512.css')
   const ui=read('RundeckWorkloadHealth.jsx')
   assert.match(css,/DEV v1\.35\.19 — final cockpit polish layer/)
+  assert.match(css,/grid-template-rows:auto auto minmax\(54px,1fr\) auto!important/)
+  assert.match(css,/grid-template-rows:auto auto minmax\(25px,1fr\) auto!important/)
   assert.match(css,/\.rundeckWorkloadHealthFooter :is\(span,small\)/)
-  assert.match(ui,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
-  assert.match(ui,/className="rundeckWorkloadDistribution"/)
-  assert.match(ui,/aria-label=\{level\.label \+ ': ' \+ count/)
-  assert.match(ui,/onClick=\{\(\) => onReview\?\.\(level\.health\)\}/)
-  assert.match(ui,/not SAP SM37 job status/)
+  assert.match(css,/\.rundeckWorkloadCategory:focus-visible/)
+  assert.match(ui,/const statusNote = rows\.length && dotLayout\.fits/)
+  assert.match(ui,/dotLayout\.fits \? rows : \[\]/)
+  assert.match(ui,/aria-label=\{`Open \$\{preview/)
+  assert.match(ui,/onClick=\{\(\) => openWorkload\(row\)\}/)
+  const fit=workloadDotLayout({count:414,width:620,height:135})
+  assert.equal(fit.fits,true)
+  assert.ok(fit.capacity>=414)
+  assert.equal(workloadDotLayout({count:414,width:88,height:32}).fits,false)
 })
