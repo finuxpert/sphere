@@ -978,3 +978,16 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm input {width:160px;}
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeSummary {font-size:10px;}
 }
+
+/* Custom picker floats over the charts while editing; opening it does not grow the page. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendV13457{position:relative}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm{
+  position:absolute;z-index:35;top:70px;left:0;
+  max-width:calc(100% - 16px);
+  box-shadow:0 10px 26px rgba(0,0,0,.28);
+}
+@media(max-width:899px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm{
+    left:3px;top:76px;max-width:calc(100% - 12px);
+  }
+}
