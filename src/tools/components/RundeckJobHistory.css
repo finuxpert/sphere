@@ -1703,3 +1703,17 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
     overflow-x:auto!important;overflow-y:visible!important;
   }
 }
+
+/* A single retained observation is a compact reading, not a 470px trend. */
+.rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas:has(.rundeckSingleSample){
+  min-height:0!important;
+  height:auto!important;
+  align-self:start!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckSingleSample{
+  min-height:0!important;
+  padding:6px 0 4px!important;
+}
+.rundeckWorkspaceDrawer.is-performance .rundeckSingleSampleAxis{
+  margin-top:6px!important;
+}
