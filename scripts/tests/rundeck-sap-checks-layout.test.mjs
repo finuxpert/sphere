@@ -8,14 +8,16 @@ const source=(name)=>readFileSync(new URL('../../src/tools/components/'+name,imp
 test('SAP Checks uses a two-column desktop overview and one-column narrow layout',()=>{
  const css=source('RundeckSapChecksLayout.css')
  const ui=source('RundeckMonitoringHistory.jsx')
- assert.match(css,/v1\.35\.21 — SAP Checks compact two-column desktop overview/)
- assert.match(css,/grid-template-columns:minmax\(280px,\.88fr\) minmax\(0,1\.12fr\)!important/)
+ assert.match(css,/v1\.35\.22 — concise source-backed SAP Checks overview/)
+ assert.match(css,/grid-template-columns:minmax\(295px,\.90fr\) minmax\(0,1\.10fr\)!important/)
  assert.match(css,/grid-template-columns:minmax\(0,1fr\)!important/)
  assert.match(css,/\.rundeckAvailabilityDetailSections/)
  assert.match(css,/\.rundeckIssueIndicatorTableWrap/)
  assert.match(css,/@media\(max-width:1040px\)/)
  assert.match(ui,/Technical checks <small>Service Availability source<\/small>/)
  assert.match(ui,/Current Issues <small>APP signals and retained incidents<\/small>/)
+ assert.match(ui,/ref=\{setIncidentHistoryRoot\}/)
+ assert.match(ui,/historyRoot=\{incidentHistoryRoot\}/)
 })
 
 test('SAP Checks preserves independent sources, source timestamps, retained incidents and drilldown',()=>{
@@ -34,6 +36,13 @@ test('SAP Checks preserves independent sources, source timestamps, retained inci
  assert.match(issues,/incidentItems\.map/)
  assert.match(issues,/displayedIndicators\.map/)
  assert.match(issues,/rundeckSapChecksHistoryDisclosure/)
+ assert.match(issues,/createPortal\(historyContent, historyRoot\)/)
+ assert.match(issues,/visibleIndicators\.slice\(0,5\)/)
+ assert.match(issues,/filtersExpanded && <div className="rundeckIssueFilters"/)
+ assert.match(issues,/APP Critical WP: Attention 1–2/)
+ assert.match(issues,/!paired && <th>Basis Check<\/th>/)
+ assert.match(issues,/!paired && <td>\{row\.reason\}<\/td>/)
+ assert.match(issues,/row\.status==='UNKNOWN'/)
  assert.doesNotMatch(issues,/row\.current_severity\|\|row\.severity/)
 })
 
