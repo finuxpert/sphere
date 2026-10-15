@@ -68,7 +68,7 @@ def app_network_trend(
         sql = common + """
             SELECT collected_at AS bucket, host, source_host, interface AS peak_interface,
                    collection_id AS peak_collection_id, collected_at AS peak_at,
-                   value AS avg_value, value AS max_value, value AS min_value,
+                   collected_at AS latest_at, value AS avg_value, value AS max_value, value AS min_value,
                    1::integer AS samples
             FROM sampled ORDER BY bucket,host
         """
@@ -89,6 +89,7 @@ def app_network_trend(
                    MAX(interface) FILTER (WHERE peak_rank=1) AS peak_interface,
                    MAX(collection_id) FILTER (WHERE peak_rank=1) AS peak_collection_id,
                    MAX(collected_at) FILTER (WHERE peak_rank=1) AS peak_at,
+                   MAX(collected_at) AS latest_at,
                    AVG(value) AS avg_value, MAX(value) AS max_value,
                    MIN(value) AS min_value, COUNT(value) AS samples
             FROM ranked_bucket GROUP BY bucket,host ORDER BY bucket,host
@@ -99,7 +100,8 @@ def app_network_trend(
 
     with engine.connect() as conn:
         items = [dict(row._mapping) for row in conn.execute(text(sql), params)]
-    latest = max((row["peak_at"] for row in items if row.get("peak_at")), default=None)
+    # Freshness uses the last retained observation, not the earlier peak in a bucket.
+    latest = max((row["latest_at"] for row in items if row.get("latest_at")), default=None)
     return {
         "since": since,
         "window_end": until if range_key == "custom" else None,
