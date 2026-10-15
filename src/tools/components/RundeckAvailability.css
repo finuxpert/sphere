@@ -442,3 +442,13 @@ html[data-theme="light"] .rundeckAvailabilityDataTrust.is-running-info .rundeckA
 .rundeckWorkspaceDrawer.is-availability .rundeckAvailabilityInfra{
   line-height:1.7!important;
 }
+
+/* A stale success is historical evidence, never a green current UP. */
+.rundeckAvailabilityStatus.is-historical {
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-weight: 650;
+}
+.rundeckAvailabilityStatus.is-historical::before {
+  background: transparent;
+  border: 1px solid currentColor;
+}
