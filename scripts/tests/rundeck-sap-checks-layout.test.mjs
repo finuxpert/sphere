@@ -1,23 +1,24 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { sapWorkloadState } from '../../src/tools/components/rundeckStatusSemantics.js'
 
 const source=(name)=>readFileSync(new URL('../../src/tools/components/'+name,import.meta.url),'utf8')
 
-test('SAP Checks uses one full-width issue workspace below a compact technical strip',()=>{
+test('SAP Checks uses a two-column desktop overview and one-column narrow layout',()=>{
  const css=source('RundeckSapChecksLayout.css')
  const ui=source('RundeckMonitoringHistory.jsx')
- assert.match(css,/DEV v1\.35\.20 — SAP Checks is one investigation/)
+ assert.match(css,/v1\.35\.21 — SAP Checks compact two-column desktop overview/)
+ assert.match(css,/grid-template-columns:minmax\(280px,\.88fr\) minmax\(0,1\.12fr\)!important/)
  assert.match(css,/grid-template-columns:minmax\(0,1fr\)!important/)
- assert.match(css,/grid-template-columns:minmax\(285px,1\.5fr\) minmax\(0,1\.6fr\) minmax\(120px,\.7fr\)!important/)
  assert.match(css,/\.rundeckAvailabilityDetailSections/)
  assert.match(css,/\.rundeckIssueIndicatorTableWrap/)
- assert.match(css,/@media \(max-width:1040px\)/)
+ assert.match(css,/@media\(max-width:1040px\)/)
  assert.match(ui,/Technical checks <small>Service Availability source<\/small>/)
  assert.match(ui,/Current Issues <small>APP signals and retained incidents<\/small>/)
 })
 
-test('SAP Checks preserves independent sources, incident history, SM37 unknown state and host drilldown',()=>{
+test('SAP Checks preserves independent sources, source timestamps, retained incidents and drilldown',()=>{
  const ui=source('RundeckMonitoringHistory.jsx')
  const availability=source('RundeckAvailability.jsx')
  const issues=source('RundeckSapIssues.jsx')
@@ -25,9 +26,21 @@ test('SAP Checks preserves independent sources, incident history, SM37 unknown s
  assert.match(ui,/readinessRoot=\{readinessSummaryRoot\}/)
  assert.match(ui,/setActiveOverlay\(\{ type: 'app', app: context/)
  assert.match(availability,/data\?\.execution_id/)
- assert.match(issues,/FULL_EVALUATED_POPULATION|Current SAP issues|Current indicator status/)
+ assert.match(availability,/lastSnapshot = stale \|\| unverified/)
+ assert.match(availability,/HANA DB/)
+ assert.match(availability,/WEB HTTP/)
  assert.match(issues,/sapIssueSampleFreshness\(data\.hosts,latestHost,nowMs\)/)
  assert.match(issues,/SM37 readiness/)
  assert.match(issues,/incidentItems\.map/)
- assert.match(issues,/visibleIndicators\.map/)
+ assert.match(issues,/displayedIndicators\.map/)
+ assert.match(issues,/rundeckSapChecksHistoryDisclosure/)
+ assert.doesNotMatch(issues,/row\.current_severity\|\|row\.severity/)
+})
+
+test('Critical WP severity follows the same current sample and threshold',()=>{
+ assert.equal(sapWorkloadState({wp_critical:0}),'NORMAL')
+ assert.equal(sapWorkloadState({wp_critical:1}),'ATTENTION')
+ assert.equal(sapWorkloadState({wp_critical:2}),'ATTENTION')
+ assert.equal(sapWorkloadState({wp_critical:3}),'CRITICAL')
+ assert.equal(sapWorkloadState({wp_critical:null}),'UNKNOWN')
 })
