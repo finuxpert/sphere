@@ -317,6 +317,8 @@ grep -q 'sphere_rundeck_execution_stuck' /tmp/sphere-dev-metrics.txt
 fetch_json 'https://sphere.astraotoparts.co.id/dev/api/watchdog/events?limit=5' /tmp/sphere-dev-watchdog-events.json
 grep -q '"items"' /tmp/sphere-dev-watchdog-events.json
 bash "$RELEASE/ops/rundeck/smoke-watchdog-dev.sh" 'https://sphere.astraotoparts.co.id/dev'
+# Ensure the DEV API and public proxy both accept the new network trend metrics.
+bash "$RELEASE/ops/rundeck/smoke-network-trends-dev.sh" 'http://127.0.0.1:8091' 'https://sphere.astraotoparts.co.id/dev/api'
 
 # Cross-environment contract: a DEV deploy is not successful unless the existing
 # production Rundeck routes still return JSON. This specifically prevents the
