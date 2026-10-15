@@ -292,7 +292,7 @@ export default function RundeckMonitoringHistory(props) {
                 </section>
               </div>
             </div>
-          </RundeckWorkspaceDrawer>
+          </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
             title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}
