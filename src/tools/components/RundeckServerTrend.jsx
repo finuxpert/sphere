@@ -536,7 +536,7 @@ function MiniTrendContext({ trend, selected, range }) {
       <div className="rundeckTrendMiniSummary">
         <small>Range {numberText(model.rawMin,1)}–{numberText(model.rawMax,1)}{model.unit}</small>
         <small>{selected?.mode === 'max' ? 'Peak' : 'Highest average'} {model.peakValue == null ? '—' : `${numberText(model.peakValue,1)}${model.unit}`}{model.peakObservedAt ? ` · observed ${formatWib(model.peakObservedAt,true)} WIB` : model.peakBucketAt ? ` · bucket ${formatWib(model.peakBucketAt,true)} WIB` : ''}</small>
-        {(model.warning !== null || model.critical !== null) && <small className="rundeckTrendMiniThresholdKey">{model.warning !== null ? `Warn ${numberText(model.warning,0)}${model.unit}` : ''}{model.warning !== null && model.critical !== null ? ' · ' : ''}{model.critical !== null ? `Critical ${numberText(model.critical,0)}${model.unit}` : ''}</small>
+        {(model.warning !== null || model.critical !== null) && <small className="rundeckTrendMiniThresholdKey">{model.warning !== null ? `Warn ${numberText(model.warning,0)}${model.unit}` : ''}{model.warning !== null && model.critical !== null ? ' · ' : ''}{model.critical !== null ? `Critical ${numberText(model.critical,0)}${model.unit}` : ''}</small>}
       </div>
     </header>
     <svg viewBox="0 0 520 112" role="img" aria-label="History with thresholds and selected point">
