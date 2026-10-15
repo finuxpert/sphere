@@ -896,3 +896,98 @@
     line-height:1.22!important;
   }
 }
+
+/* Custom WIB range — one compact control rail, detail in accessible modal. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeToggle {
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.28));
+  border-radius:4px;background:transparent;color:var(--sphere-text-secondary,#a9b5bb);
+  font:inherit;font-size:10px;font-weight:650;padding:4px 7px;cursor:pointer;white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeToggle.is-active,
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeToggle:focus-visible {
+  color:var(--sphere-accent,#4fc6c8);border-color:var(--sphere-accent,#4fc6c8);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeRaw {
+  color:var(--sphere-text-secondary,#a9b5bb);font-size:10px;white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm {
+  display:flex;align-items:end;flex-wrap:wrap;gap:8px;
+  padding:5px 8px;margin:3px 0;
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.22));
+  border-radius:4px;background:var(--sphere-surface-1,#141d23);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm label {
+  display:flex;flex-direction:column;gap:3px;min-width:0;
+  font-size:10px;color:var(--sphere-text-secondary,#a9b5bb);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm input {
+  width:210px;max-width:100%;box-sizing:border-box;
+  color:var(--sphere-text,#e7edf0);color-scheme:dark;
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.4));
+  border-radius:4px;background:var(--sphere-surface-1,#141d23);
+  padding:5px 7px;font:inherit;font-size:12px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm button,
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeSummary button {
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.4));border-radius:4px;
+  background:transparent;color:var(--sphere-text,#e7edf0);
+  font:inherit;font-size:11px;padding:5px 9px;cursor:pointer;white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm button[type="submit"] {
+  color:var(--sphere-accent,#4fc6c8);border-color:var(--sphere-accent,#4fc6c8);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeSummary {
+  display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;
+  border-bottom:1px solid var(--sphere-design-edge,rgba(126,147,158,.2));
+  padding:5px 0;font-size:11px;line-height:1.35;
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeSummary strong {
+  color:var(--sphere-text,#e7edf0);font-weight:650;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeSummary small {
+  font-size:10px;flex-basis:100%;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeSummary button:disabled {
+  cursor:default;opacity:.5;
+}
+.rundeckCustomWindowModal .rundeckCustomWindowBody {
+  overflow:auto;overscroll-behavior:contain;max-height:calc(85dvh - 95px);
+  font-size:12px;line-height:1.4;
+}
+.rundeckCustomWindowBody h4 {
+  font-size:13px;font-weight:650;margin:11px 0 6px;
+}
+.rundeckCustomWindowBody table {
+  width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;
+}
+.rundeckCustomWindowBody th,.rundeckCustomWindowBody td {
+  text-align:left;padding:5px 8px;vertical-align:top;
+  border-bottom:1px solid var(--sphere-design-edge,rgba(126,147,158,.2));
+}
+.rundeckCustomWindowBody th {
+  color:var(--sphere-text-secondary,#a9b5bb);white-space:nowrap;font-size:10px;
+}
+.rundeckCustomWindowBody td {font-size:11px;}
+.rundeckCustomWindowBody td button {
+  max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--sphere-accent,#4fc6c8);background:transparent;border:0;cursor:pointer;
+  font:inherit;padding:0;
+}
+@media(max-width:899px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm input {width:160px;}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeSummary {font-size:10px;}
+}
+
+/* Custom picker floats over the charts while editing; opening it does not grow the page. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendV13457{position:relative}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm{
+  position:absolute;z-index:35;top:70px;left:0;
+  max-width:calc(100% - 16px);
+  box-shadow:0 10px 26px rgba(0,0,0,.28);
+}
+@media(max-width:899px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCustomRangeForm{
+    left:3px;top:76px;max-width:calc(100% - 12px);
+  }
+}

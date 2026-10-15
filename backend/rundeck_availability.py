@@ -467,18 +467,36 @@ def latest_availability() -> dict:
     return payload
 
 
-def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> dict:
-    if range_key not in RANGE_HOURS:
+def availability_history(
+    range_key: str = "24h", category: str = "SAP_APP",
+    start_at: datetime | None = None, end_at: datetime | None = None,
+) -> dict:
+    if range_key != "custom" and range_key not in RANGE_HOURS:
         raise ValueError("Unsupported availability range")
     category = str(category or "SAP_APP").upper()
     if category not in ALLOWED_CATEGORIES:
         raise ValueError("Unsupported availability category")
 
-    latest_availability()
-    requested_since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
-    snapshots = _history_snapshots(RANGE_HOURS[range_key])
+    if range_key == "custom":
+        if start_at is None or end_at is None:
+            raise ValueError("Custom availability requires start and end")
+        requested_since = start_at
+        lookback_hours = max(24, (datetime.now(timezone.utc) - start_at).total_seconds() / 3600 + 1)
+        snapshots = [
+            row for row in _history_snapshots(lookback_hours)
+            if (stamp := _parse_timestamp(row.get("collected_at"))) is not None
+            and start_at <= stamp.astimezone(timezone.utc) < end_at
+        ]
+        cadence_hours = 24
+    else:
+        if start_at is not None or end_at is not None:
+            raise ValueError("Explicit dates require range=custom")
+        latest_availability()
+        requested_since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
+        snapshots = _history_snapshots(RANGE_HOURS[range_key])
+        cadence_hours = max(24, RANGE_HOURS[range_key])
     category_snapshots = _category_snapshots(snapshots, category)
-    cadence_history = _category_snapshots(_history_snapshots(max(24, RANGE_HOURS[range_key])), category)
+    cadence_history = _category_snapshots(_history_snapshots(cadence_hours), category)
     profile = availability_observation_profile(
         category_snapshots,
         requested_since=requested_since,
@@ -520,6 +538,7 @@ def availability_history(range_key: str = "24h", category: str = "SAP_APP") -> d
 
     return {
         "range": range_key,
+        "window_end": end_at if range_key == "custom" else None,
         "category": category,
         "metric": "availability",
         "metric_label": CATEGORY_METRIC_LABEL.get(category, "Availability"),

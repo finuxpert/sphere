@@ -35,6 +35,7 @@ from backend.rundeck_trends import (
     collection_timeline_at,
     resolve_range,
     trend_series,
+    validate_custom_window,
 )
 
 app = FastAPI(title="SPHERE Rundeck Development", docs_url=None, redoc_url=None)
@@ -208,16 +209,28 @@ def history_hosts_latest():
 
 @app.get("/history/trend")
 def history_trend(
-    range_key: str = Query("24h", alias="range", pattern="^(30m|1h|3h|6h|24h|7d|30d|90d)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d)$"),
     bucket: str = Query("auto", pattern="^(auto|10m|30m|1h|6h|1d)$"),
     metric: str = Query("cpu", pattern="^(cpu|ram|load|iowait|swap|wp)$"),
+    from_at: str | None = Query(None, max_length=64),
+    to_at: str | None = Query(None, max_length=64),
 ):
     try:
         range_config = resolve_range(range_key)
-        since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
+        until = None
+        if range_key == "custom":
+            if not from_at or not to_at or bucket != "auto":
+                raise ValueError("Custom requires from_at, to_at and bucket=auto")
+            from_ts = datetime.fromisoformat(from_at.replace("Z", "+00:00"))
+            to_ts = datetime.fromisoformat(to_at.replace("Z", "+00:00"))
+            since, until = validate_custom_window(from_ts, to_ts)
+        else:
+            if from_at or to_at:
+                raise ValueError("Explicit dates require range=custom")
+            since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
         latest_row = _latest_ready()
         return {
-            **trend_series(since, range_key, bucket, metric),
+            **trend_series(since, range_key, bucket, metric, until=until),
             "timezone": "Asia/Jakarta",
             "latest_collection_at": (latest_row or {}).get("finished_at"),
             "stale_after_minutes": STALE_MINUTES,

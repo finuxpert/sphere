@@ -8,6 +8,8 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
 import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
+import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
+import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 
@@ -120,7 +122,8 @@ function resolvedGapIntervalMs(trend) {
 function trendGaps(trend) {
   const rows = trend?.items || []
   const rangeStart = Date.parse(trend?.since || trend?.range_started_at || '')
-  const rangeEnd = Date.now()
+  const customEnd = Date.parse(trend?.window_end || '')
+  const rangeEnd = Number.isFinite(customEnd) ? customEnd - 1 : Date.now()
   const intervalMs = resolvedGapIntervalMs(trend)
 
   if (trend?.metric === 'availability' && Array.isArray(trend?.observation_gaps)) {
@@ -195,7 +198,7 @@ function AvailabilityObservationSummary({ trend }) {
 
 function TrendFreshness({ trend }) {
   // Availability age is shown inline next to the saved-check percentages.
-  if (trend?.metric === 'availability') return null
+  if (trend?.metric === 'availability' || trend?.range === 'custom') return null
   const latest = Date.parse(trend?.latest_collection_at || '')
   const staleMinutes = Math.max(1, Number(trend?.stale_after_minutes || 20))
   if (!Number.isFinite(latest) || Date.now() - latest < staleMinutes * 60 * 1000) return null
@@ -231,7 +234,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     // Focus changes only the visual Y range, never samples, severity thresholds, or source evidence.
     const percentTrend = !availabilityMode && trend?.unit === '%'
     const focusAxisMax = percentTrend ? trendPercentAxisMax(rows, valueKey, scaleMode) : 100
-    const compactPoints = ['30m', '1h', '3h', '6h'].includes(range)
+    const compactPoints = ['custom', '30m', '1h', '3h', '6h'].includes(range)
     const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
     const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
@@ -280,7 +283,9 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
            const intervalEnd = (typeof bucketAt === 'number' ? bucketAt : Date.parse(bucketAt)) + intervalMs
            const intervalLabel = Number.isFinite(intervalEnd) && Number.isFinite(intervalMs)
              ? ` – ${formatWib(intervalEnd, true)} WIB` : ' WIB'
-           const lines = [`<b>Bucket ${formatWib(bucketAt, true)}${intervalLabel} · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
+            const lines = [trend?.range === 'custom'
+              ? `<b>Saved sample · ${formatWib(bucketAt, true)} WIB</b>`
+              : `<b>Bucket ${formatWib(bucketAt, true)}${intervalLabel} · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
           visible.forEach(point => {
             const name = String(point.seriesName || '').replace(/[&<>"']/g, character => ({
               '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -701,6 +706,15 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [])
   const initialServerMetrics = React.useMemo(() => resolveServerTrendMetrics(saved), [saved])
   const [range, setRange] = React.useState(RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
+  const [customOpen, setCustomOpen] = React.useState(false)
+  const [customStart, setCustomStart] = React.useState(() => wibMinuteInput(new Date(Date.now() - 15 * 60000)))
+  const [customEnd, setCustomEnd] = React.useState(() => wibMinuteInput(new Date(Date.now() - 5 * 60000)))
+  const [customWindow, setCustomWindow] = React.useState(null)
+  const [customError, setCustomError] = React.useState('')
+  const [windowEvidence, setWindowEvidence] = React.useState(null)
+  const [windowError, setWindowError] = React.useState('')
+  const [windowLoading, setWindowLoading] = React.useState(false)
+  const [windowModal, setWindowModal] = React.useState(false)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
@@ -726,22 +740,36 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const modalRef = React.useRef(null)
   const restoreFocusRef = React.useRef(null)
 
+  const applyCustom = React.useCallback(event => {
+    event.preventDefault()
+    const next = validateCustomRange(customStart, customEnd)
+    if (next.error) { setCustomError(next.error); return }
+    setCustomError('')
+    setCustomWindow(next)
+    setRange('custom')
+    setBucket('auto')
+    setCustomOpen(false)
+    setWindowModal(false)
+  }, [customStart, customEnd])
+
   const loadTrend = React.useCallback((metric, setter, setLoading, setError, signal) => {
+    if (range === 'custom' && !customWindow) return Promise.resolve()
     const category = AVAILABILITY_CATEGORIES[metric]
+    const windowQuery = range === 'custom' ? '&' + customRangeSearch(customWindow) : ''
     const url = category
-      ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}`
-      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(bucket)}&metric=${encodeURIComponent(metric)}`
+      ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}${windowQuery}`
+      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(range === 'custom' ? 'auto' : bucket)}&metric=${encodeURIComponent(metric)}${windowQuery}`
     setLoading(true)
     setError('')
     return json(url, signal)
       .then((result) => setter(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result))
       .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message || 'Unable to load trend.') })
       .finally(() => { if (!signal.aborted) setLoading(false) })
-  }, [bucket, range])
+  }, [bucket, customWindow, range])
 
   React.useEffect(() => {
-    onTrendContext?.({ metric: serverMetric1, metricLabel: serverTrend1?.metric_label || metricLabel(serverMetric1), range, rangeLabel: rangeLabel(range), mode })
-  }, [mode, onTrendContext, range, serverMetric1, serverTrend1?.metric_label])
+    onTrendContext?.({ metric: serverMetric1, metricLabel: serverTrend1?.metric_label || metricLabel(serverMetric1), range, rangeLabel: range === 'custom' ? customRangeCaption(customWindow) : rangeLabel(range), mode })
+  }, [customWindow, mode, onTrendContext, range, serverMetric1, serverTrend1?.metric_label])
 
   React.useEffect(() => {
     try {
@@ -779,9 +807,27 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     setTimeline(null)
     setTimelineLoading(false)
     setTimelineError('')
-  }, [bucket, mode, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, customWindow, mode, range, serverMetric1, serverMetric2, technicalMetric])
+
+  React.useEffect(() => {
+    if (range !== 'custom' || !customWindow || !databaseEnabled) return undefined
+    const controller = new AbortController()
+    setWindowLoading(true)
+    setWindowError('')
+    setWindowEvidence(null)
+    json(`${API}/history/window?${customRangeSearch(customWindow)}`, controller.signal)
+      .then(result => { if (!controller.signal.aborted) setWindowEvidence(result) })
+      .catch(failure => { if (!controller.signal.aborted && failure.name !== 'AbortError') setWindowError(failure.message || 'Window evidence unavailable') })
+      .finally(() => { if (!controller.signal.aborted) setWindowLoading(false) })
+    return () => controller.abort()
+  }, [customWindow, databaseEnabled, range, refreshToken])
 
   const selectPoint = React.useCallback((point, sourceTrend) => {
+    // The normal point timeline spans ±5 minutes. Custom must never show outside-window rows.
+    if (range === 'custom') {
+      if (windowEvidence) setWindowModal(true)
+      return
+    }
     timelineRequestSequence.current += 1
     const requestSequence = timelineRequestSequence.current
     setSelected(point)
@@ -796,7 +842,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       .then((result) => { if (timelineRequestSequence.current === requestSequence) setTimeline(result) })
       .catch((failure) => { if (timelineRequestSequence.current === requestSequence) setTimelineError(failure.message || 'Unable to load saved history.') })
       .finally(() => { if (timelineRequestSequence.current === requestSequence) setTimelineLoading(false) })
-  }, [])
+  }, [range, windowEvidence])
 
   const closeTrendDetails = React.useCallback(() => {
     timelineRequestSequence.current += 1
@@ -847,7 +893,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityObservationSummary trend={trend} />
       <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} />
     </>
-    return trend ? <div className="rundeckHistoryState">No stored data in this range yet.</div> : null
+    return trend ? <div className="rundeckHistoryState">{range === 'custom' ? 'No retained sample in the selected WIB interval. This is a collection gap / unknown observation, not evidence of SAP downtime.' : 'No stored data in this range yet.'}</div> : null
   }
 
   const focusOptions = trendFocusHosts(sourceHosts, [
@@ -875,8 +921,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       >APP % Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
     </div>
     <div className="rundeckTrendSharedControls">
-      <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={setRange} ariaLabel="Shared trend period" /></div>
-      <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span><Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" /></div>
+      <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }} ariaLabel="Shared trend period" />
+        <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')} aria-pressed={range === 'custom'} aria-expanded={customOpen} onClick={() => setCustomOpen(value => !value)}>Custom</button></div>
+      <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span>{range === 'custom' ? <strong className="rundeckCustomRangeRaw">Raw · observed</strong> : <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div>
       <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
         <span>APP Focus</span>
@@ -894,7 +941,20 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </div>
     </div>
 
-    {serverTrend1?.items?.length > 0 && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
+    {customOpen && <form className="rundeckCustomRangeForm" onSubmit={applyCustom} aria-label="Custom time range in WIB">
+      <label>From · WIB<input type="datetime-local" step="60" required value={customStart} onChange={event => { setCustomStart(event.target.value); setCustomError('') }} /></label>
+      <label>To · WIB<input type="datetime-local" step="60" required value={customEnd} onChange={event => { setCustomEnd(event.target.value); setCustomError('') }} /></label>
+      <button type="submit">Apply</button><button type="button" onClick={() => { setCustomOpen(false); setCustomError('') }}>Cancel</button>
+      {customError && <span className="is-error" role="alert">{customError}</span>}
+    </form>}
+    {range === 'custom' && customWindow && <div className="rundeckCustomRangeSummary" role="status">
+      <strong>Custom · {customRangeCaption(customWindow)}</strong>
+      <span>{windowLoading ? 'Loading saved observations…' : windowError ? windowError :
+        windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
+      <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
+      <small>Jobs &amp; Programs Current below shows latest collection, not this history window</small>
+    </div>}
+    {serverTrend1?.items?.length > 0 && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
       <CollectionGapBand trend={serverTrend1} />
     </div>}
 
@@ -937,6 +997,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </section>
     </div>
 
+    {windowModal && windowEvidence && customWindow && <RundeckCustomWindowDetails
+      data={windowEvidence} selectedWindow={customWindow}
+      onClose={() => setWindowModal(false)} onSelectJob={onSelectJob} />}
     {selected && createPortal(<div className="rundeckTrendPointModalBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeTrendDetails() }}>
       <section ref={modalRef} className="rundeckTrendPointModal" role="dialog" aria-modal="true" aria-label="Trend details">
         <header className="rundeckTrendPointModalHeader">
