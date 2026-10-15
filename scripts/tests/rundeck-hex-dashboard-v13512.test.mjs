@@ -1,7 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { workloadDotLayout } from '../../src/tools/components/rundeckWorkloadGrid.js'
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
 test('hexagon APP selection, source provenance and modal behavior', () => {
@@ -33,12 +32,13 @@ test('four operational modal shortcuts moved below APP and above trends', () => 
   assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/)
 })
 
-test('Workload Health keeps validated 1D identities and adds hexagon title icon', () => {
+test('saved job/program evaluation retains full validation and an accessible status bar', () => {
   const health=read('RundeckWorkloadHealth.jsx')
-  assert.match(health,/<SphereIcon name="hexagon" \/>/)
-  assert.match(read('SphereIcon.jsx'),/hexagon: <>/)
+  assert.match(health,/<SphereIcon name="activity" \/>/)
   assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
-  assert.match(health,/onClick=\{\(\) => openWorkload\(row\)\}/)
+  assert.match(health,/className="rundeckWorkloadDistribution"/)
+  assert.match(health,/onClick=\{\(\) => onReview\?\.\(level\.health\)\}/)
+  assert.doesNotMatch(health,/className="rundeckWorkloadDot/)
 })
 
 test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity', () => {
@@ -55,39 +55,26 @@ test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity
   assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\); openAppAnalysis\(host\) \}\}/)
 })
 
-test('saved workload honeycomb capacity reserves stagger offset and never hides excess records', () => {
+test('status distribution is proportional to verified saved counts, not first-page estimates', () => {
   const health=read('RundeckWorkloadHealth.jsx')
   const css=read('RundeckCockpitHexV13512.css')
-  const fitted=workloadDotLayout({count:395,width:640,height:145})
-  assert.equal(fitted.fits,true)
-  assert.ok(fitted.columns>1)
-  assert.ok(fitted.rows>1)
-  assert.ok(fitted.capacity>=395)
-  assert.ok(fitted.rows*(fitted.size+fitted.gap)-fitted.gap+2<=145)
-  const maxX=(fitted.columns-1)*(fitted.size+fitted.gap)+fitted.size+(fitted.size+fitted.gap)/2+2
-  assert.ok(maxX<=640,'last staggered hexagon must fit inside panel')
-  assert.equal(workloadDotLayout({count:395,width:90,height:42}).fits,false)
-  assert.match(health,/Math\.floor\(index \/ dotLayout\.columns\) % 2/)
-  assert.match(health,/dotLayout\.fits \? rows : \[\]/)
-  assert.match(health,/open Review/)
-  assert.match(css,/\.rundeckWorkloadDot\.is-staggered-row/)
-  assert.match(css,/grid-template-columns:repeat\(var\(--workload-columns,1\)/)
+  assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
+  assert.match(health,/const count = Number\(preview\.health\[level\.key\]\) \|\| 0/)
+  assert.match(health,/style=\{\{ flexGrow: count \}\}/)
+  assert.match(css,/\.rundeckWorkloadDistribution button \{/)
+  for (const category of ['review','attention','unknown','normal']) {
+    assert.ok(css.includes('.rundeckWorkloadDistribution .is-' + category))
+  }
 })
 
-test('v1.35.17 Workload Health uses available vertical room without changing one-evaluation-per-dot identity', () => {
-  const css=read('RundeckCockpitHexV13512.css')
+test('compact evaluation panel keeps the five SAP APP hexagons and avoids hundreds of rendered buttons', () => {
   const health=read('RundeckWorkloadHealth.jsx')
-  const dense=workloadDotLayout({count:423,width:650,height:180})
-  assert.equal(dense.fits,true)
-  assert.ok(dense.size>10,'larger panel should grow verified hexagons')
-  assert.equal(dense.rows*dense.columns>=423,true)
-  assert.equal(workloadDotLayout({count:423,width:90,height:42}).fits,false)
-  assert.ok(css.includes('max-width:350px!important'))
-  assert.ok(css.includes('height:100%!important'))
-  assert.ok(css.includes('align-items:stretch!important'))
-  assert.ok(css.includes('justify-content:center!important'))
-  assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
-  assert.match(health,/onClick=\{\(\) => openWorkload\(row\)\}/)
+  const css=read('RundeckCockpitHexV13512.css')
+  assert.match(health,/aria-label="Proportion of saved evaluations by category"/)
+  assert.match(health,/onClick=\{\(\) => onReview\?\.\(level\.health\)\}/)
+  assert.doesNotMatch(health,/dotGridRef|dotLayout|is-staggered-row/)
+  assert.ok(css.includes('height:24px'))
+  assert.match(css,/\.rundeckAppHexSelector:nth-child\(4\)/)
 })
 
 test('v1.35.17 chart Focus is explicit, reversible, and preserves threshold references', () => {
@@ -135,7 +122,9 @@ test('v1.35.19 APP and Infrastructure source times are named independently',()=>
   assert.match(css,/\.rundeckSelectedAppSource small/)
 })
 
-test('v1.35.19 Workload Health has bounded header, categories, measured grid and footer',()=>{
+
+
+ bounded header, categories, measured grid and footer',()=>{
   const css=read('RundeckCockpitHexV13512.css')
   const ui=read('RundeckWorkloadHealth.jsx')
   assert.match(css,/DEV v1\.35\.19 — final cockpit polish layer/)
