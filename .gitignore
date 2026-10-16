@@ -51,3 +51,14 @@ runtime-status/
 
 # Local GitHub Actions/backend virtualenv
 .venv-github-actions/
+
+# Disposable local QA/compiler caches
+coverage/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.eslintcache
+*.tsbuildinfo
+*.bak
+*.orig
+*.rej
