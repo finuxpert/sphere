@@ -21,7 +21,6 @@
     min-width:0!important;
     margin:0!important;
     padding:0!important;
-    will-change:transform;
     transition:filter .21s cubic-bezier(.22,1,.36,1)!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-sphere-orbit>.rundeckAppHexSelector:is(.is-active,:focus-visible,:hover){
@@ -169,5 +168,31 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody td:nth-child(3),
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody td:nth-child(4){
     font-variant-numeric:tabular-nums;
+  }
+}
+
+
+/* DEV: finite motion and accessible, compact operator finishing. */
+@media (min-width:1200px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory span {
+    font-size:10px!important;
+    line-height:1.2!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppMetrics strong,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload td {
+    font-variant-numeric:tabular-nums;
+  }
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot:focus-visible {
+  position:relative;
+  z-index:4;
+  outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+  outline-offset:2px!important;
+  filter:brightness(1.2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDot,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelector {
+    transition:none!important;
   }
 }
