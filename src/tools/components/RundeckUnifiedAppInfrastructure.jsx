@@ -160,7 +160,7 @@ export default function RundeckUnifiedAppInfrastructure({
           </div>
           <div className={'rundeckSelectedAppMetric is-' + String(selectedInfra?.state || 'UNKNOWN').toLowerCase()} title={fsDetails}>
             <small>Highest FS</small><strong>{fsFresh && selectedInfra?.topFs ? metric(selectedInfra.topFs.used_pct, '%') : '—'}</strong>
-            <span className="rundeckSelectedAppFsMeta">{fsFresh ? `FS ${selectedInfra.state} · FRESH` : fsHistorical ? `Last ${metric(selectedInfra.topFs.used_pct, '%')} · ${selectedInfra?.freshness || 'UNKNOWN'}` : `FS ${selectedInfra?.state || 'UNKNOWN'}`}</span>
+            <span className="rundeckSelectedAppFsMeta">{fsFresh ? `FS ${selectedInfra.state} · FRESH` : fsHistorical ? `Last observed ${metric(selectedInfra.topFs.used_pct, '%')} · ${selectedInfra?.freshness || 'UNKNOWN'}` : `FS ${selectedInfra?.state || 'UNKNOWN'}`}</span>
           </div>
         </div>
         <div className="rundeckSelectedAppSource" title={fsDetails}>
