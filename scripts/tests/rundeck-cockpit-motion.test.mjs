@@ -175,3 +175,34 @@ test('DEV final polish keeps saved data truthful and ambient motion bounded', ()
   assert.match(status, /<span>Monitoring Status<\/span>/)
   assert.match(css, /\.rundeckWorkloadDot:focus-visible/)
 })
+
+
+test('DEV final finishing leaves saved ECharts readable and incident records discoverable', () => {
+  const trendStyle = source('RundeckTrendAmbient.css')
+  const issue = source('RundeckSapIssues.jsx')
+  const checksStyle = source('RundeckSapChecksLayout.css')
+  const workload = source('RundeckCurrentWorkload.jsx')
+  const infra = source('RundeckInfrastructure.jsx')
+  const cockpitStyle = source('RundeckCockpitHexV13512.css')
+
+  // Original chart remains mounted and visible; braid is only translucent decoration.
+  assert.match(trendStyle, /data-vortex-ready="true"\]::before\{display:none!important;\}/)
+  assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas\{opacity:\.12\}/)
+  assert.doesNotMatch(trendStyle, /var\(--sphere-surface-1,#141d23\);\s*opacity:1;transition:opacity/)
+  assert.match(source('RundeckServerTrend.jsx'), /connectNulls: false/)
+  assert.match(source('RundeckServerTrend.jsx'), /\{ value: \[at, null\], gap: true \}/)
+
+  // Short retained-incident histories are visible without a hidden disclosure.
+  assert.match(issue, /open=\{!paired \|\| \(incidentItems\.length > 0 && incidentItems\.length <= 5\)\}/)
+  assert.match(issue, /separateWarningCount/)
+  assert.match(checksStyle, /\.rundeckSapChecksHistoryDisclosure\[open\]>summary::after/)
+  assert.match(checksStyle, /max-height:min\(194px,26dvh\)/)
+
+  // Manual marker list must never be confused with APP Critical WP warning.
+  assert.match(workload, />Marked Workloads <b>\{attentionRows\.length\}<\/b>/)
+  assert.match(workload, /latest collection · observed/)
+  assert.match(infra, /<b>Collector sample<\/b>/)
+  assert.match(infra, /Latest collected readings/)
+  assert.match(infra, /Last retained readings/)
+  assert.match(cockpitStyle, /font-size:10\.5px!important/)
+})
