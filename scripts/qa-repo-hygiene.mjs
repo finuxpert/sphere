@@ -18,7 +18,11 @@ const generatedFile = (p) => /(^|\/)(?:node_modules|dist|dist-ssr|coverage|test-
 const generatedTracked = tracked.filter(generatedFile)
 const cssReferenced = new Set()
 const unresolvedCssImports = []
-const sourceFiles = tracked.filter((p) => /\.(?:css|jsx?|mjs|tsx?|html)$/.test(p))
+// Only scan runtime application source: QA scripts contain literal CSS paths for assertions,
+// not imports resolved relative to the QA file itself.
+const sourceFiles = tracked.filter((p) =>
+  (p.startsWith('src/') && /\.(?:css|jsx?|mjs|tsx?)$/.test(p)) || p === 'index.html'
+)
 for (const file of sourceFiles) {
   const contents = readFileSync(join(root, file), 'utf8')
   // Scan quoted CSS paths from imports; do not infer usage from class names.
