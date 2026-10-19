@@ -80,6 +80,8 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
         if(points.length>1)groups.push({metric,host,color:row.color,points})
       })
     })
+    // If any channel is missing, retain original charts rather than fading them.
+    grid.dataset.vortexReady = String([0,1,2].every(metric => groups.some(row => row.metric === metric)))
   }
   const fit=()=>{
     const rect=grid.getBoundingClientRect()
@@ -100,6 +102,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
   const paint=time=>{
     raf=0
     if(stopped||disabled||!intersecting||document.hidden||!grid.isConnected)return
+    if(grid.dataset.vortexReady !== 'true') { ctx.clearRect(0,0,width,height); return }
     if(last && time-last<38){wake();return}
     const dt=last?Math.min((time-last)/1000,.085):.04
     last=time
@@ -200,6 +203,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
       document.removeEventListener('visibilitychange',onVisible)
       reduce?.removeEventListener?.('change',onMedia)
       compact?.removeEventListener?.('change',onMedia)
+      delete grid.dataset.vortexReady
       ctx.clearRect(0,0,width,height)
     }
   }

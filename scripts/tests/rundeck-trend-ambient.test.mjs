@@ -42,6 +42,8 @@ test('single shared grid motion keeps original ECharts tools, statuses and sourc
   assert.match(layer,/ResizeObserver/)
   assert.match(layer,/max-width:899px/)
   assert.match(layer,/convertToPixel/)
+  assert.match(layer,/vortexReady/)
+  assert.match(css,/data-vortex-ready="true"/)
   assert.match(layer,/datazoom/)
   assert.doesNotMatch(layer,/fetch\(/)
 })
