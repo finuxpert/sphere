@@ -53,7 +53,7 @@ export default function RundeckUnifiedAppInfrastructure({
     let last = 0
     let phase = -0.7
     const positions = buttons.map(() => ({ x: NaN, y: NaN, scale: 1 }))
-    const expandedLocations = [[.19, .29], [.5, .29], [.81, .29], [.345, .77], [.655, .77]]
+    const expandedLocations = [[.14, .25], [.5, .25], [.86, .25], [.32, .77], [.68, .77]]
     const tick = time => {
       raf = 0
       if (document.hidden || !stage.isConnected) return
@@ -63,8 +63,8 @@ export default function RundeckUnifiedAppInfrastructure({
       if (!expanded) phase += delta * .28
       const width = stage.clientWidth
       const height = stage.clientHeight
-      const rx = Math.min(width * .30, 104)
-      const ry = Math.min(height * .25, 34)
+      const rx = Math.min(width * .35, 118)
+      const ry = Math.min(height * .34, 40)
       const blend = 1 - Math.exp(-delta * 8)
       buttons.forEach((button, index) => {
         const theta = phase + index * 2 * Math.PI / 5

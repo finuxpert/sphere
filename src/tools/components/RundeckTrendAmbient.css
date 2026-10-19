@@ -63,3 +63,29 @@
   .rundeckTripleTrendGrid.is-unified-vortex>:is(.rundeckUnifiedVortexCanvas,.rundeckUnifiedVortexCore,.rundeckUnifiedVortexLabels){display:none!important}
   .rundeckTripleTrendGrid.is-unified-vortex::before{display:none!important}
 }
+
+/* Three bucket-scoped metrics stay visible while the charts merge into a globe.
+ * Retain a compact header row and avoid shrinking operational typography. */
+@media(min-width:1281px) and (prefers-reduced-motion:no-preference){
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels{
+    top:9px;left:22px;right:22px;column-gap:22px;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span{
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
+    gap:2px;white-space:normal;overflow:hidden;font-size:11px;line-height:1.3;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span:nth-child(2){align-items:center}
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span:nth-child(3){align-items:flex-end}
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span>span{
+    display:flex;gap:6px;align-items:baseline;min-width:0;white-space:nowrap;max-width:100%;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span>strong{
+    font-size:15px;line-height:1.2;font-weight:780;font-variant-numeric:tabular-nums;
+    color:var(--sphere-text,#e2e9ec);
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span>small{
+    font-size:9.5px;line-height:1.25;
+    color:var(--sphere-text-secondary,#8fa0a9);
+    white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  }
+}

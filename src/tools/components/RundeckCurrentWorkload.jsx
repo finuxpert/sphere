@@ -210,14 +210,31 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
         tableTop: wrap.getBoundingClientRect().top,
         headerHeight: header.getBoundingClientRect().height,
         rowHeight: firstRow.getBoundingClientRect().height,
-        reserveBelow: 44,
+        reserveBelow: 90,
         maxRows: defaultPageSize,
       })
       setFittedRows(old => old === next ? old : next)
     }
+    // Re-measure when the three-trend area or workload geometry changes after
+    // async data loading. Keep pager + footer visible without hiding real rows.
+    let frame = 0
+    const scheduleMeasure = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(measure)
+    }
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(scheduleMeasure)
+    const trendPanel = document.querySelector('.rundeckTripleTrendV13457')
+    resizeObserver?.observe(wrap)
+    if (trendPanel) resizeObserver?.observe(trendPanel)
     measure()
-    window.addEventListener('resize', measure, { passive: true })
-    return () => window.removeEventListener('resize', measure)
+    window.addEventListener('resize', scheduleMeasure, { passive: true })
+    window.visualViewport?.addEventListener('resize', scheduleMeasure, { passive: true })
+    return () => {
+      window.cancelAnimationFrame(frame)
+      resizeObserver?.disconnect()
+      window.removeEventListener('resize', scheduleMeasure)
+      window.visualViewport?.removeEventListener('resize', scheduleMeasure)
+    }
   }, [visible.length, viewportHeight, defaultPageSize, layoutKey])
   const pageSize = fittedRows === null ? defaultPageSize : Math.min(defaultPageSize, fittedRows)
   const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
