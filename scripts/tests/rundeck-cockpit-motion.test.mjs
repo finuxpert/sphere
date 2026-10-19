@@ -145,3 +145,28 @@ test('v1.34.86 unifies analysis modal geometry and preserves unresolved SAP iden
   assert.match(workload, /observedWorkloadName\(row.consumer_key, details\)/)
   assert.match(identity, /export const observedWorkloadName/)
 })
+
+
+test('DEV final operator polish keeps saved data truthful and motion finite', () => {
+  const app = source('RundeckUnifiedAppInfrastructure.jsx')
+  const globe = source('RundeckEvaluationGlobe.jsx')
+  const trendAmbient = source('rundeckTrendAmbient.js')
+  const health = source('RundeckWorkloadHealth.jsx')
+  const status = source('RundeckSystemHealth.jsx')
+  const css = source('RundeckSphereMotion.css')
+
+  assert.match(app, /const attentionCount = visibleStates\.filter\(value => value === 'ATTENTION'\)/)
+  assert.match(app, /const warningCount = visibleStates\.filter\(value => value === 'WARNING'\)/)
+  assert.match(app, /SAP APP sample · \{appKey\}/)
+  assert.match(app, /if \(moving\) raf = window\.requestAnimationFrame\(tick\)/)
+  assert.doesNotMatch(app, /phase \+= delta/)
+  assert.match(globe, /if \(morph !== target\) raf = requestAnimationFrame\(paint\)/)
+  assert.doesNotMatch(globe, /phase \+= dt/)
+  assert.match(trendAmbient, /if\(morph!==target\)wake\(\)/)
+  assert.doesNotMatch(trendAmbient, /angle\+=dt/)
+  assert.match(health, /tabIndex=\{index === activeDotIndex \? 0 : -1\}/)
+  assert.match(health, /onKeyDown=\{event => handleDotNavigation\(event, index\)\}/)
+  assert.match(health, /Saved 24h/)
+  assert.match(status, /<span>Monitoring Status<\/span>/)
+  assert.match(css, /\.rundeckWorkloadDot:focus-visible/)
+})
