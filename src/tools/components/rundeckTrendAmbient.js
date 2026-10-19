@@ -188,7 +188,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     const target=expandedRef?.current?1:0
     morph+=(target-morph)*(1-Math.exp(-dt*(target?7.2:3.6)))
     if(Math.abs(target-morph)<.003)morph=target
-    if(!target)angle+=dt*.14
+    // No idle rotation: the saved-evidence visualization stays still until interacted with.
     ctx.clearRect(0,0,width,height)
     const p=morph*morph*morph*(morph*(morph*6-15)+10)
     const ambientAlpha=(1-p)
@@ -237,7 +237,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     }
     ctx.globalAlpha=1
     // Hold the finished expanded form until interaction, instead of perpetual motion.
-    if(target===0||morph!==target)wake()
+    if(morph!==target)wake()
   }
   function wake(){
     if(!raf && !stopped && !disabled && intersecting && !document.hidden)raf=window.requestAnimationFrame(paint)
