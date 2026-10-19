@@ -29,6 +29,7 @@ export default function RundeckUnifiedAppInfrastructure({
   const [orbitEnabled, setOrbitEnabled] = React.useState(false)
   const [orbitExpanded, setOrbitExpanded] = React.useState(false)
   const orbitStageRef = React.useRef(null)
+  const orbitWakeRef = React.useRef(null)
   const orbitExpandedRef = React.useRef(false)
   orbitExpandedRef.current = orbitExpanded
 
@@ -44,6 +45,8 @@ export default function RundeckUnifiedAppInfrastructure({
     return () => query.removeEventListener?.('change', sync)
   }, [hosts.length])
 
+  React.useEffect(() => { orbitWakeRef.current?.() }, [orbitExpanded])
+
   React.useEffect(() => {
     if (!orbitEnabled || hosts.length !== 5) return undefined
     const stage = orbitStageRef.current
@@ -51,8 +54,10 @@ export default function RundeckUnifiedAppInfrastructure({
     if (!stage || buttons.length !== 5) return undefined
     let raf = 0
     let last = 0
-    let phase = -0.7
     const positions = buttons.map(() => ({ x: NaN, y: NaN, scale: 1 }))
+    // Keep the five real APP hosts in a stable 3+2 honeycomb.
+    // Hover/focus expands the arrangement once; no continuous orbit on an idle dashboard.
+    const idleLocations = [[.14, .31], [.5, .23], [.86, .31], [.32, .77], [.68, .77]]
     const expandedLocations = [[.14, .25], [.5, .25], [.86, .25], [.32, .77], [.68, .77]]
     const tick = time => {
       raf = 0
@@ -60,37 +65,42 @@ export default function RundeckUnifiedAppInfrastructure({
       const delta = last ? Math.min((time - last) / 1000, .07) : .016
       last = time
       const expanded = orbitExpandedRef.current
-      if (!expanded) phase += delta * .22
+      const locations = expanded ? expandedLocations : idleLocations
       const width = stage.clientWidth
       const height = stage.clientHeight
-      const rx = Math.min(width * .35, 118)
-      const ry = Math.min(height * .34, 40)
-      // Settle into stable 3+2 targets faster, return to idle more gently.
-      // Phase pauses while expanded so a focused APP never orbits away.
-      const blend = 1 - Math.exp(-delta * (expanded ? 7 : 4.6))
+      const blend = 1 - Math.exp(-delta * (expanded ? 9 : 7))
+      let moving = false
       buttons.forEach((button, index) => {
-        const theta = phase + index * 2 * Math.PI / 5
-        const depth = Math.sin(theta)
         const position = positions[index]
-        const targetX = expanded ? width * expandedLocations[index][0] : width / 2 + Math.cos(theta) * rx
-        const targetY = expanded ? height * expandedLocations[index][1] : height / 2 + depth * ry
-        const targetScale = expanded ? 1 : .88 + .1 * (depth + 1) / 2
+        const targetX = width * locations[index][0]
+        const targetY = height * locations[index][1]
+        const targetScale = expanded ? 1 : .94
         position.x = Number.isFinite(position.x) ? position.x + (targetX - position.x) * blend : targetX
         position.y = Number.isFinite(position.y) ? position.y + (targetY - position.y) * blend : targetY
         position.scale += (targetScale - position.scale) * blend
+        moving = moving || Math.abs(position.x - targetX) > .12 ||
+          Math.abs(position.y - targetY) > .12 || Math.abs(position.scale - targetScale) > .003
         button.style.left = position.x + 'px'
         button.style.top = position.y + 'px'
         button.style.transform = 'translate(-50%,-50%) scale(' + position.scale + ')'
-        button.style.zIndex = expanded ? '2' : String(depth > .15 ? 3 : 1)
+        button.style.zIndex = expanded ? '2' : '1'
       })
-      raf = window.requestAnimationFrame(tick)
+      // Render only while settling. A static dashboard performs zero idle animation frames.
+      if (moving) raf = window.requestAnimationFrame(tick)
     }
-    const wake = () => { if (!raf && !document.hidden) { last = 0; raf = window.requestAnimationFrame(tick) } }
+    const wake = () => {
+      if (!raf && !document.hidden) {
+        last = 0
+        raf = window.requestAnimationFrame(tick)
+      }
+    }
+    orbitWakeRef.current = wake
     document.addEventListener('visibilitychange', wake)
-    raf = window.requestAnimationFrame(tick)
+    wake()
     return () => {
       window.cancelAnimationFrame(raf)
       document.removeEventListener('visibilitychange', wake)
+      if (orbitWakeRef.current === wake) orbitWakeRef.current = null
       buttons.forEach(button => { button.style.left = ''; button.style.top = ''; button.style.transform = ''; button.style.zIndex = '' })
     }
   }, [orbitEnabled, hosts.length])
@@ -126,7 +136,9 @@ export default function RundeckUnifiedAppInfrastructure({
   const appKey = chooseUnifiedApp(hosts, focusHost, manualSelection, contextToken, preferredHost)
   const performanceVerified = sourceQuality?.performanceValid === true && !sourceQuality?.collectorBad
   const visibleStates = hosts.map(host => appSignalState(host, performanceVerified))
-  const attentionCount = visibleStates.filter(value => value === 'ATTENTION' || value === 'WARNING').length
+  const attentionCount = visibleStates.filter(value => value === 'ATTENTION').length
+  const warningCount = visibleStates.filter(value => value === 'WARNING').length
+  const unknownCount = visibleStates.filter(value => value === 'UNKNOWN').length
   const criticalCount = visibleStates.filter(value => value === 'CRITICAL').length
   const highest = field => [...hosts].filter(host => host[field] != null && Number.isFinite(Number(host[field])))
     .sort((a, b) => Number(b[field]) - Number(a[field]))[0] || null
@@ -184,8 +196,8 @@ export default function RundeckUnifiedAppInfrastructure({
     <header className="rundeckUnifiedAppInfraHead">
       <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
       <div>
-        <span title="Counts describe APP health classifications, not the number of Critical Work Processes. APP Critical WP is displayed separately below.">{performanceVerified ? 'APP status · ' + hosts.length + ' total · ' + attentionCount + ' attention · ' + criticalCount + ' critical' : 'SAP snapshot unverified'}</span>
-        {performanceVerified && <span title={`Highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · Highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`}>SAP APP sample · {selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'time unverified'}</span>}
+        <span title="Counts describe APP health classifications, not the number of Critical Work Processes. APP Critical WP is displayed separately below.">{performanceVerified ? 'APP ' + hosts.length + ' · WP attention ' + attentionCount + ' · Resource warning ' + warningCount + ' · Critical ' + criticalCount + (unknownCount ? ' · Unknown ' + unknownCount : '') : 'SAP snapshot unverified'}</span>
+        {performanceVerified && <span title={`Across verified APP samples: highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}. Timestamp below refers only to the selected APP.`}>SAP APP sample · {appKey} · {selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'time unverified'}</span>}
         {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
       </div>
     </header>
