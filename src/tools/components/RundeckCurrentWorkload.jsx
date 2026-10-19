@@ -190,7 +190,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const availableHosts = [...new Set(rows.map(row => row.host).filter(Boolean))].sort()
   const allLoaded = workloadMeta.total === rows.length
   const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
-    ? 'current run · observed'
+    ? 'latest collection · observed'
     : workloadMeta.coverageScope === 'TOP_CONSUMERS_ONLY'
       ? 'top consumers only'
       : 'coverage unverified'
@@ -264,7 +264,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <button type="button" className="sphereAttentionTrigger" onClick={()=>setAttentionOpen(true)} aria-label={`Open manual Attention List, ${attentionRows.length} marked workloads`}>Attention List <b>{attentionRows.length}</b></button>
+      <button type="button" className="sphereAttentionTrigger" onClick={()=>setAttentionOpen(true)} aria-label={`Open manually marked workloads, ${attentionRows.length} marked observations`} title="Manual marked workload list; independent of SAP Critical WP Attention and saved 24h evaluations">Marked Workloads <b>{attentionRows.length}</b></button>
        <span className="rundeckCurrentWorkloadCount" title="Workload observations for the latest collection only. This count is not the saved 1D evaluation population in Workload Health. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved · ${coverageLabel}` : `${rows.length}/${workloadMeta.total} loaded · ${coverageLabel}`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
