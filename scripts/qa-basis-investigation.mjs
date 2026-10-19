@@ -669,7 +669,7 @@ const checks = [
     files.unifiedApp.includes('const mountPoint = String(selectedInfra?.topFs?.mount_point') &&
     files.unifiedApp.includes('filesystemMountSource(selectedInfra.topFs)') &&
     files.unifiedApp.includes('const mountNote = mountPoint') &&
-    files.unifiedApp.includes(''Device ' + (String(selectedInfra?.topFs?.device') &&
+    files.unifiedApp.includes("'Device ' + (String(selectedInfra?.topFs?.device") &&
     files.unifiedState.includes('export function filesystemMountSource(') &&
     files.unifiedApp.includes('filesystemCapacitySummary(selectedInfra?.topFs)') &&
     files.unifiedApp.includes('formatWib(selectedInfra.topFs.collected_at, true)') &&
