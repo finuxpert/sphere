@@ -46,7 +46,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
   const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')
   const compact=window.matchMedia?.('(max-width:899px)')
   let disabled=Boolean(reduce?.matches||compact?.matches)
-  let raf=0, stopped=false, intersecting=true, hovering=false
+  let raf=0, stopped=false, intersecting=true
   let last=0, angle=.18, morph=0, width=1, height=1
   let groups=[]
   const onZoom=()=>{ collect();wake() }
