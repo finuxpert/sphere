@@ -1,0 +1,12 @@
+/* Subtle temporal motion for saved ECharts traces.
+   A transparent, low-contrast layer. Never owns interaction or values. */
+.rundeckTrendPlot { position:relative; isolation:isolate; }
+.rundeckTrendPlot > .rundeckTrendChart { position:relative; z-index:1; }
+.rundeckTrendPlot > .rundeckTrendAmbientCanvas {
+  position:absolute; inset:0; width:100%; height:100%;
+  display:block; z-index:2; pointer-events:none!important;
+  contain:paint;
+}
+@media(prefers-reduced-motion:reduce),screen and (max-width:899px) {
+  .rundeckTrendPlot > .rundeckTrendAmbientCanvas { display:none!important; }
+}

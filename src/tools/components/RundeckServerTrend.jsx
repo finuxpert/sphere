@@ -11,9 +11,11 @@ import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
 import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
+import { attachTrendAmbient } from './rundeckTrendAmbient.js'
 import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
+import './RundeckTrendAmbient.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const DEFAULT_RANGE = '6h'
@@ -217,8 +219,9 @@ function TrendFreshness({ trend }) {
   return <div className="rundeckHistoryState">Last {source} {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
 }
 
-function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null }) {
+function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null, motionPaused = false }) {
   const ref = React.useRef(null)
+  const ambientRef = React.useRef(null)
   const chartRef = React.useRef(null)
   const activeCallbackRef = React.useRef(null)
   const optionSchemaRef = React.useRef('')
@@ -435,9 +438,17 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     })
   }, [mode, option, range, reduceMotion, scaleMode, technicalAxisMax, trend?.metric])
 
+  // Decorative layer only. It reads the exact ECharts series coordinates and
+  // cannot intercept hover, click, saved-bucket selection, or threshold marks.
+  React.useEffect(() => attachTrendAmbient({
+    canvas: ambientRef.current, chartNode: ref.current, chart: chartRef.current,
+    series: option.series, focusedHost, disabled: reduceMotion || motionPaused,
+  }), [option, focusedHost, reduceMotion, motionPaused])
+
   return <div className="rundeckTrendPlot">
     <div ref={ref} className="rundeckTrendChart" role="img"
       aria-label={`Saved ${trend?.metric_label || metricLabel(trend?.metric)} trend; select an APP to highlight its existing observations`} />
+    <canvas ref={ambientRef} className="rundeckTrendAmbientCanvas" aria-hidden="true" />
   </div>
 }
 
@@ -922,7 +933,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityCoverageBand trend={trend} />
       {showGap && <CollectionGapBand trend={trend} />}
       <AvailabilityObservationSummary trend={trend} />
-      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} motionPaused={Boolean(selected || windowModal || customOpen)} />
     </>
     return trend ? <div className="rundeckHistoryState">{trend.network_source ? 'No saved Infrastructure network samples for APP1–APP5 in this time range. Traffic is unknown, not zero.' : range === 'custom' ? 'No retained sample in the selected WIB interval. This is a collection gap / unknown observation, not evidence of SAP downtime.' : 'No stored data in this range yet.'}</div> : null
   }
