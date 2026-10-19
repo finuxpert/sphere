@@ -12,7 +12,7 @@
 @media(min-width:1281px) and (prefers-reduced-motion:no-preference){
   .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]::before{
     content:"";position:absolute;inset:0;z-index:3;pointer-events:none!important;
-    background:radial-gradient(ellipse 34% 76% at 50% 65%,rgba(67,115,124,.09),transparent 100%),
+    background:radial-gradient(ellipse 31% 78% at 50% 65%,rgba(67,115,124,.075),transparent 100%),
                var(--sphere-surface-1,#141d23);
     opacity:1;transition:opacity .74s cubic-bezier(.22,1,.36,1);
   }

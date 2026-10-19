@@ -37,7 +37,7 @@
     z-index:0;
     pointer-events:none;
     opacity:.64;
-    transition:opacity .65s ease;
+    transition:opacity .7s cubic-bezier(.22,1,.36,1);
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionRings i{
     position:absolute;
@@ -75,7 +75,7 @@
     align-items:center;
     justify-content:center;
     box-shadow:0 0 14px color-mix(in srgb,var(--sphere-accent,#4fc6c8) 16%,transparent);
-    transition:opacity .35s ease, transform .35s ease;
+    transition:opacity .42s cubic-bezier(.22,1,.36,1), transform .48s cubic-bezier(.22,1,.36,1);
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionRings span small{
     display:block;

@@ -65,7 +65,9 @@ export default function RundeckUnifiedAppInfrastructure({
       const height = stage.clientHeight
       const rx = Math.min(width * .35, 118)
       const ry = Math.min(height * .34, 40)
-      const blend = 1 - Math.exp(-delta * 6.2)
+      // Settle into stable 3+2 targets faster, return to idle more gently.
+      // Phase pauses while expanded so a focused APP never orbits away.
+      const blend = 1 - Math.exp(-delta * (expanded ? 7 : 4.6))
       buttons.forEach((button, index) => {
         const theta = phase + index * 2 * Math.PI / 5
         const depth = Math.sin(theta)
@@ -192,10 +194,14 @@ export default function RundeckUnifiedAppInfrastructure({
         className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '') + (orbitEnabled ? ' is-sphere-orbit' + (orbitExpanded ? ' is-expanded' : '') : '')}
         role="group" aria-label="Select APP server"
         onPointerEnter={event => { if (orbitEnabled && event.pointerType !== 'touch') setOrbitExpanded(true) }}
-        onPointerLeave={event => { if (event.pointerType !== 'touch') setOrbitExpanded(false) }}
+        onPointerLeave={event => {
+          if (event.pointerType !== 'touch' && !event.currentTarget.contains(document.activeElement)) setOrbitExpanded(false)
+        }}
         onPointerDown={event => { if (orbitEnabled && event.pointerType === 'touch') setOrbitExpanded(true) }}
         onFocusCapture={() => setOrbitExpanded(true)}
-        onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOrbitExpanded(false) }}>
+        onBlurCapture={event => {
+          if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(':hover')) setOrbitExpanded(false)
+        }}>
         {hosts.length === 5 && orbitEnabled && <div className="rundeckAppMotionRings" aria-hidden="true"><i /><i /><span>SPHERE<small>APP1–APP5</small></span></div>}
         {hosts.map(host => {
           const key = shortHost(host.host)

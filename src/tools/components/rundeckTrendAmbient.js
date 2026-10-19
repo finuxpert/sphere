@@ -96,8 +96,8 @@ export function unifiedVortexOrigin({ width, height, t, metric, host, phase = 0 
   const reach = .08 + Math.pow(progress, 1.16) * .92
   const theta = phase + progress * Math.PI * 5.4 + metric * 2.03 + host * Math.PI * 2 / 5
   return {
-    x: width * .5 + Math.cos(theta) * width * .255 * reach,
-    y: height * .64 + Math.sin(theta) * height * .265 * reach,
+    x: width * .5 + Math.cos(theta) * width * .225 * reach,
+    y: height * .64 + Math.sin(theta) * height * .29 * reach,
   }
 }
 
@@ -195,8 +195,8 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
         ctx.beginPath()
         for(let k=0;k<6;k++){
           const theta=angle*.22+j*.12+k*Math.PI/3
-          const x=cx+Math.cos(theta)*width*.255*reach
-          const y=cy+Math.sin(theta)*height*.265*reach
+          const x=cx+Math.cos(theta)*width*.225*reach
+          const y=cy+Math.sin(theta)*height*.29*reach
           if(k)ctx.lineTo(x,y);else ctx.moveTo(x,y)
         }
         ctx.closePath()
