@@ -69,6 +69,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const [dotLayout, setDotLayout] = React.useState({ size: 10, gap: 2, columns: 1, fits: true })
   const [globeEnabled, setGlobeEnabled] = React.useState(false)
   const [globeExpanded, setGlobeExpanded] = React.useState(false)
+  const [activeDotIndex, setActiveDotIndex] = React.useState(0)
   React.useEffect(() => {
     if (typeof window.matchMedia !== 'function') return undefined
     const query = window.matchMedia('(min-width:900px) and (prefers-reduced-motion: no-preference)')
@@ -107,6 +108,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       SEVERITY_ORDER[workloadHealthLevel(left)] - SEVERITY_ORDER[workloadHealthLevel(right)] ||
       String(left.consumer_key).localeCompare(String(right.consumer_key))) : [],
   [data, preview])
+  React.useEffect(() => { setActiveDotIndex(0) }, [rows])
   React.useLayoutEffect(() => {
     const grid = dotGridRef.current
     if (!grid) return undefined
@@ -145,6 +147,26 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const openWorkload = row => onSelectWorkload?.(row, {
     period: '1d', days: 1, start: data?.start || '', end: data?.end || '',
   })
+  // A single Tab enters the entire 1:1 saved-evaluation population.
+  // Arrow keys navigate real buttons; Enter/Space open the same verified detail.
+  const handleDotNavigation = (event, index) => {
+    const buttons = dotGridRef.current?.querySelectorAll('button.rundeckWorkloadDot')
+    const count = buttons?.length || 0
+    if (!count) return
+    let next = index
+    const columns = Math.max(1, dotLayout.columns)
+    if (event.key === 'ArrowRight') next = index + 1
+    else if (event.key === 'ArrowLeft') next = index - 1
+    else if (event.key === 'ArrowDown') next = index + columns
+    else if (event.key === 'ArrowUp') next = index - columns
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = count - 1
+    else return
+    event.preventDefault()
+    next = Math.max(0, Math.min(count - 1, next))
+    setActiveDotIndex(next)
+    buttons[next]?.focus({ preventScroll: true })
+  }
   const statusNote = rows.length && dotLayout.fits
     ? '1 hexagon = 1 saved evaluation (not an OS process)'
     : 'Open Review to inspect individual evaluations'
@@ -153,7 +175,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
-      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Job &amp; Program Evaluation</strong></span><small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Last 1D · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small></span>
+      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Job &amp; Program Evaluation</strong></span><small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Saved 24h · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small></span>
       <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
         aria-label="Open Jobs & Programs Review">Open Review</button>
     </header>
@@ -193,6 +215,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
             (dotLayout.columns > 0 && Math.floor(index / dotLayout.columns) % 2 ? ' is-staggered-row' : '') +
             (preview?.limited ? ' is-limited' : '')}
           title={detail} aria-label={description + ' · open saved 1D evaluation'}
+          tabIndex={index === activeDotIndex ? 0 : -1}
+          onFocus={() => setActiveDotIndex(index)}
+          onKeyDown={event => handleDotNavigation(event, index)}
           onClick={() => openWorkload(row)} />
       })}
       {(!rows.length || !dotLayout.fits) && <span className="rundeckWorkloadDotEmpty" role="status">
