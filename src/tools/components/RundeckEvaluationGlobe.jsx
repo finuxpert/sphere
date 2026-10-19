@@ -1,5 +1,6 @@
 import React from 'react'
 import { workloadHealthLevel } from './rundeckWorkloadHealthState.js'
+import { globeVisualOrder, nearestEvaluationHex } from './rundeckEvaluationGlobeLayout.js'
 
 const COLORS = {
   review: '#d66973', attention: '#d5ad55', unknown: '#828f9b', normal: '#65ba7f',
@@ -8,9 +9,10 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
 
 // This canvas only animates the source-verified button population underneath it.
 // Counts, category, actions and accessibility remain owned by RundeckWorkloadHealth.
-export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
+export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelectIndex }) {
   const canvasRef = React.useRef(null)
   const wakeRef = React.useRef(null)
+  const hitPositionsRef = React.useRef([])
   const expandedRef = React.useRef(expanded)
   expandedRef.current = expanded
   const levels = React.useMemo(() => rows.map(row => workloadHealthLevel(row)), [rows])
@@ -28,11 +30,11 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
     let width = 0
     let height = 0
     let visible = true
-    const points = levels.map((level, index) => {
-      const y = 1 - 2 * (index + .5) / levels.length
+    const points = globeVisualOrder(levels.length).map((index, position) => {
+      const y = 1 - 2 * (position + .5) / levels.length
       const radius = Math.sqrt(Math.max(0, 1 - y * y))
-      const azimuth = index * GOLDEN_ANGLE
-      return { x: Math.cos(azimuth) * radius, y, z: Math.sin(azimuth) * radius, color: COLORS[level] || COLORS.unknown, index }
+      const azimuth = position * GOLDEN_ANGLE
+      return { x: Math.cos(azimuth) * radius, y, z: Math.sin(azimuth) * radius, color: COLORS[levels[index]] || COLORS.unknown, index }
     })
     const measure = () => {
       const rect = stage.getBoundingClientRect()
@@ -72,7 +74,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
       const blend = morph * morph * (3 - 2 * morph)
       const cx = width / 2
       const cy = height / 2
-      const radius = Math.min(width * .24, height * .46, 100)
+      const radius = Math.min(width * .28, height * .485, 112)
       const columnCount = Math.max(1, columns)
       const rowCount = Math.ceil(points.length / columnCount)
       const pitch = size + gap
@@ -99,9 +101,11 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
           depth,
           size: (size * (.60 + .24 * (depth + 1) / 2)) * (1 - blend) + size * .59 * blend,
           color: point.color,
-          alpha: (.4 + .6 * (depth + 1) / 2) * (1 - blend) + blend,
+          alpha: (.32 + .68 * (depth + 1) / 2) * (1 - blend) + blend,
+          index: point.index,
         }
       })
+      hitPositionsRef.current = plotted
       plotted.sort((a, b) => a.depth - b.depth)
       for (const point of plotted) drawHex(point.x, point.y, point.size, point.color, point.alpha)
       ctx.globalAlpha = 1
@@ -136,9 +140,20 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
       viewportObserver?.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
       if (wakeRef.current === wake) wakeRef.current = null
+      hitPositionsRef.current = []
     }
   }, [levels, size, gap, columns, fits])
 
   React.useEffect(() => { wakeRef.current?.() }, [expanded])
-  return <canvas ref={canvasRef} className="rundeckEvaluationGlobeCanvas" aria-hidden="true" />
+  const selectFromIdleTouch = event => {
+    if (event.pointerType !== 'touch' || expandedRef.current) return
+    const box = event.currentTarget.getBoundingClientRect()
+    const index = nearestEvaluationHex(hitPositionsRef.current, event.clientX - box.left, event.clientY - box.top)
+    if (index !== null) {
+      event.stopPropagation()
+      onSelectIndex?.(index)
+    }
+  }
+  return <canvas ref={canvasRef} className="rundeckEvaluationGlobeCanvas"
+    aria-hidden="true" onPointerDown={selectFromIdleTouch} />
 }

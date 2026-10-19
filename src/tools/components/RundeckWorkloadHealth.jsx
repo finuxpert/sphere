@@ -176,7 +176,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setGlobeExpanded(false) }}
       style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
       {globeEnabled && dotLayout.fits && rows.length > 0 &&
-        <RundeckEvaluationGlobe rows={rows} layout={dotLayout} expanded={globeExpanded} />}
+        <RundeckEvaluationGlobe rows={rows} layout={dotLayout} expanded={globeExpanded}
+          onSelectIndex={index => { if (rows[index]) openWorkload(rows[index]) }} />}
       {(dotLayout.fits ? rows : []).map((row, index) => {
         const level = workloadHealthLevel(row)
         const type = String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'

@@ -141,3 +141,16 @@
     font-size:8px;opacity:.75;
   }
 }
+
+/* Idle globe is pointer-hit-testable on touch; keyboard and mouse still use
+   the original 1:1 source-backed buttons after focus/hover expansion. */
+@media (min-width:900px) and (prefers-reduced-motion:no-preference) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491
+  .rundeckWorkloadDotGrid.is-sphere-globe:not(.is-expanded)>.rundeckEvaluationGlobeCanvas {
+    pointer-events:auto!important;touch-action:manipulation;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491
+  .rundeckWorkloadDotGrid.is-sphere-globe.is-expanded>.rundeckEvaluationGlobeCanvas{
+    pointer-events:none!important;
+  }
+}

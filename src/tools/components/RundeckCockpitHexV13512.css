@@ -1068,3 +1068,12 @@
   outline:none!important;
   box-shadow:none!important;
 }
+
+/* Increase the verified-evaluation sphere only when desktop viewport has room.
+   Keep the Current pager and footer inside the screen on shorter displays. */
+@media (min-width:1281px) and (min-height:820px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491
+  .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth {
+    min-height:210px!important;
+  }
+}
