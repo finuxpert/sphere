@@ -53,15 +53,17 @@ test('vortex interpolation preserves destinations and never adjusts chart values
   assert.deepEqual(vortexDestination(point,.5),{x:141.5,y:76})
 })
 
-test('idle vortex is centered and leaves a header lane for all three trends',()=>{
+test('idle braid uses three interlaced ribbons within one horizontal field',()=>{
   const width=1320,height=200
-  const points=Array.from({length:3},(_,metric)=>
-    Array.from({length:5},(_,host)=>
-      unifiedVortexOrigin({width,height,t:1,metric,host,phase:.18}))).flat()
+  const times=Array.from({length:41},(_,i)=>i/40)
+  const points=times.flatMap(t=>Array.from({length:3},(_,metric)=>
+    unifiedVortexOrigin({width,height,t,metric,host:2,phase:.18})))
   assert.ok(Math.min(...points.map(point=>point.x)) > width*.20)
   assert.ok(Math.max(...points.map(point=>point.x)) < width*.80)
-  assert.ok(Math.max(...points.map(point=>point.x))-Math.min(...points.map(point=>point.x)) > width*.40)
-  assert.ok(points.every(point=>point.y>height*.35&&point.y<height*.93))
+  assert.ok(Math.max(...points.map(point=>point.x))-Math.min(...points.map(point=>point.x)) > width*.48)
+  assert.ok(points.every(point=>point.y>height*.38&&point.y<height*.94))
+  assert.equal(new Set(Array.from({length:3},(_,metric)=>
+    Math.round(unifiedVortexOrigin({width,height,t:.28,metric,host:2,phase:.18}).y))).size,3)
 })
 
 test('single shared grid motion keeps original ECharts tools, statuses and source provenance',()=>{

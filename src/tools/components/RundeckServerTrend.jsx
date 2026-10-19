@@ -1102,7 +1102,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           </span>)}
         </div>
         <div className="rundeckUnifiedVortexCore" aria-hidden="true">
-          <strong>SPHERE</strong><small>Saved APP trends</small>
+          <strong>SPHERE</strong><small>Temporal Data Braid · saved APP trends</small>
         </div>
       </>}
     </div>

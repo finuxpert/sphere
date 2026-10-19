@@ -1,4 +1,4 @@
-// A single decorative 3-channel vortex, driven exclusively by existing ECharts samples.
+// A single decorative 3-channel Temporal Data Braid, driven only by existing ECharts samples.
 // No SAP fetching, synthetic telemetry, threshold changes, or event interception.
 // Preserve every explicit null, APP-specific missing bucket and collection gap.
 export function retainedVortexSamples(series = [], limit = 36) {
@@ -89,15 +89,17 @@ export function savedVortexPeak(trend, mode = 'max', focusedHost = '') {
   return peak
 }
 
-// Compact elliptical 3-panel composition. All channels share one visible core,
-// leaving room for clearly identified CPU/RAM/Technical labels above it.
+// Three interlaced time ribbons share one central field, with space for
+// real CPU/RAM/Technical labels. No fabricated y-values: this is presentation.
 export function unifiedVortexOrigin({ width, height, t, metric, host, phase = 0 }) {
   const progress = Math.min(1, Math.max(0, Number(t) || 0))
-  const reach = .08 + Math.pow(progress, 1.16) * .92
-  const theta = phase + progress * Math.PI * 5.4 + metric * 2.03 + host * Math.PI * 2 / 5
+  const edge = Math.sin(progress * Math.PI)
+  const lane = Number.isFinite(Number(host)) ? Number(host) - 2 : 0
+  const theta = phase + progress * Math.PI * 5.2 + metric * Math.PI * 2 / 3 + lane * .12
   return {
-    x: width * .5 + Math.cos(theta) * width * .225 * reach,
-    y: height * .64 + Math.sin(theta) * height * .29 * reach,
+    x: width * (.245 + .51 * progress) + Math.cos(theta) * width * .009 * edge,
+    y: height * .665 + Math.sin(theta) * height * (.19 + .055 * edge) +
+      lane * height * .006,
   }
 }
 
@@ -188,42 +190,41 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     const p=morph*morph*morph*(morph*(morph*6-15)+10)
     const ambientAlpha=(1-p)
     if(ambientAlpha>.015){
-      // A centered, proportionate vortex sits below three persistent metric labels.
-      const cx=width*.5,cy=height*.64
-      for(let j=1;j<=9;j++){
-        const reach=j/9
+      // Three quiet helical guides, rather than flattened concentric rings.
+      // The guides trace presentation coordinates only, not extra measurements.
+      const channelColors=['#78b6a4','#98aac9','#c2a57b']
+      for(let metric=0;metric<3;metric++){
         ctx.beginPath()
-        for(let k=0;k<6;k++){
-          const theta=angle*.22+j*.12+k*Math.PI/3
-          const x=cx+Math.cos(theta)*width*.225*reach
-          const y=cy+Math.sin(theta)*height*.29*reach
-          if(k)ctx.lineTo(x,y);else ctx.moveTo(x,y)
+        for(let k=0;k<72;k++){
+          const at=unifiedVortexOrigin({ width, height, t:k/71, metric, host:2, phase:angle })
+          if(k)ctx.lineTo(at.x,at.y);else ctx.moveTo(at.x,at.y)
         }
-        ctx.closePath()
-        ctx.globalAlpha=ambientAlpha*(j%3===0?.22:.105)
-        ctx.strokeStyle='#638d98';ctx.lineWidth=.85;ctx.stroke()
+        ctx.globalAlpha=ambientAlpha*.24
+        ctx.strokeStyle=channelColors[metric]
+        ctx.lineWidth=.8
+        ctx.stroke()
       }
-      hex(cx,cy,7,'#81adb3',ambientAlpha*.30)
     }
     for(const row of groups){
       const placed=row.points.map(point=>{
         const origin=makeOrigin(point.t,row.metric,row.host)
         return vortexDestination({originX:origin.x,originY:origin.y,destX:point.destX,destY:point.destY},p)
       })
+      const channelInk=['#78b6a4','#98aac9','#c2a57b'][row.metric] || '#90aab7'
       if(placed.length>1){
         ctx.beginPath()
         for(let i=0;i<placed.length;i++){
           const pt=placed[i]
           if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
         }
-        ctx.strokeStyle=row.color
-        ctx.globalAlpha=(.22*(1-p)+.065*p)
-        ctx.lineWidth=.85;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
+        ctx.strokeStyle=p>.95?row.color:channelInk
+        ctx.globalAlpha=(.42*(1-p)+.055*p)
+        ctx.lineWidth=1.05;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
       }
       const stride=p>.95?4:2
       for(let i=0;i<placed.length;i+=stride){
         const pt=placed[i]
-        hex(pt.x,pt.y,2.3*(1-p)+1.4*p,row.color,.40*(1-p)+.12*p)
+        hex(pt.x,pt.y,2.15*(1-p)+1.4*p,p>.95?row.color:channelInk,.39*(1-p)+.10*p)
       }
     }
     ctx.globalAlpha=1

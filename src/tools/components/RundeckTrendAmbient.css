@@ -1,4 +1,4 @@
-/* SPHERE DEV / Performance Trends: one balanced, source-driven idle field.
+/* SPHERE DEV / Performance Trends: one source-driven Temporal Data Braid.
  * Inactive ECharts remain mounted. Hover/focus reveals all original chart controls. */
 .rundeckTripleTrendGrid.is-unified-vortex{position:relative;isolation:isolate}
 .rundeckTripleTrendGrid.is-unified-vortex>.rundeckUnifiedVortexCanvas{
@@ -12,7 +12,7 @@
 @media(min-width:1281px) and (prefers-reduced-motion:no-preference){
   .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]::before{
     content:"";position:absolute;inset:0;z-index:3;pointer-events:none!important;
-    background:radial-gradient(ellipse 31% 78% at 50% 65%,rgba(67,115,124,.075),transparent 100%),
+    background:radial-gradient(ellipse 32% 72% at 50% 66%,rgba(67,115,124,.065),transparent 100%),
                var(--sphere-surface-1,#141d23);
     opacity:1;transition:opacity .74s cubic-bezier(.22,1,.36,1);
   }
@@ -64,7 +64,7 @@
   .rundeckTripleTrendGrid.is-unified-vortex::before{display:none!important}
 }
 
-/* Three bucket-scoped metrics stay visible while the charts merge into a globe.
+/* Three bucket-scoped metrics stay visible while the charts merge into a braid.
  * Retain a compact header row and avoid shrinking operational typography. */
 @media(min-width:1281px) and (prefers-reduced-motion:no-preference){
   .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels{
