@@ -11,7 +11,7 @@ import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
 import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
-import { attachTrendAmbient } from './rundeckTrendAmbient.js'
+import { attachUnifiedVortex } from './rundeckTrendAmbient.js'
 import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
@@ -219,9 +219,8 @@ function TrendFreshness({ trend }) {
   return <div className="rundeckHistoryState">Last {source} {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
 }
 
-function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null, motionPaused = false }) {
+function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null }) {
   const ref = React.useRef(null)
-  const ambientRef = React.useRef(null)
   const chartRef = React.useRef(null)
   const activeCallbackRef = React.useRef(null)
   const optionSchemaRef = React.useRef('')
@@ -438,17 +437,9 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     })
   }, [mode, option, range, reduceMotion, scaleMode, technicalAxisMax, trend?.metric])
 
-  // Decorative layer only. It reads the exact ECharts series coordinates and
-  // cannot intercept hover, click, saved-bucket selection, or threshold marks.
-  React.useEffect(() => attachTrendAmbient({
-    canvas: ambientRef.current, chartNode: ref.current, chart: chartRef.current,
-    series: option.series, focusedHost, disabled: reduceMotion || motionPaused,
-  }), [option, focusedHost, reduceMotion, motionPaused])
-
   return <div className="rundeckTrendPlot">
     <div ref={ref} className="rundeckTrendChart" role="img"
       aria-label={`Saved ${trend?.metric_label || metricLabel(trend?.metric)} trend; select an APP to highlight its existing observations`} />
-    <canvas ref={ambientRef} className="rundeckTrendAmbientCanvas" aria-hidden="true" />
   </div>
 }
 
@@ -769,6 +760,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const timelineRequestSequence = React.useRef(0)
   const modalRef = React.useRef(null)
   const restoreFocusRef = React.useRef(null)
+  const unifiedGridRef = React.useRef(null)
+  const unifiedCanvasRef = React.useRef(null)
+  const unifiedWakeRef = React.useRef(null)
+  const unifiedExpandedRef = React.useRef(false)
+  const [unifiedHovered, setUnifiedHovered] = React.useState(false)
 
   const applyCustom = React.useCallback(event => {
     event.preventDefault()
@@ -933,7 +929,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityCoverageBand trend={trend} />
       {showGap && <CollectionGapBand trend={trend} />}
       <AvailabilityObservationSummary trend={trend} />
-      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} motionPaused={Boolean(selected || windowModal || customOpen)} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} />
     </>
     return trend ? <div className="rundeckHistoryState">{trend.network_source ? 'No saved Infrastructure network samples for APP1–APP5 in this time range. Traffic is unknown, not zero.' : range === 'custom' ? 'No retained sample in the selected WIB interval. This is a collection gap / unknown observation, not evidence of SAP downtime.' : 'No stored data in this range yet.'}</div> : null
   }
@@ -944,6 +940,31 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     ...(technicalTrend?.items || []),
   ])
   const activeFocus = shortHost(focusedHost || '')
+  const temporalReady = Boolean(
+    databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
+    !serverError1 && !serverError2 && !technicalError &&
+    serverTrend1?.items?.length && serverTrend2?.items?.length && technicalTrend?.items?.length &&
+    serverTrend1?.metric !== 'availability' && serverTrend2?.metric !== 'availability' &&
+    technicalTrend?.metric !== 'availability'
+  )
+  const temporalPaused = Boolean(selected || windowModal || customOpen)
+  const temporalExpanded = unifiedHovered || temporalPaused
+  unifiedExpandedRef.current = temporalExpanded
+  React.useEffect(() => { unifiedWakeRef.current?.() }, [temporalExpanded])
+  React.useEffect(() => {
+    if (!temporalReady) return undefined
+    const layer = attachUnifiedVortex({
+      canvas: unifiedCanvasRef.current,
+      grid: unifiedGridRef.current,
+      getChart: node => echarts.getInstanceByDom?.(node),
+      expandedRef: unifiedExpandedRef,
+    })
+    unifiedWakeRef.current = layer?.wake || null
+    return () => {
+      layer?.dispose?.()
+      if (unifiedWakeRef.current === layer?.wake) unifiedWakeRef.current = null
+    }
+  }, [temporalReady, serverTrend1, serverTrend2, technicalTrend, range, mode, scaleMode, loadScaleMode, focusedHost])
   const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
   const technicalNetwork = technicalMetric === 'network'
   const loadScale = React.useMemo(() => technicalLoadScale(technicalTrend?.items, mode), [technicalTrend, mode])
@@ -1003,7 +1024,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <CollectionGapBand trend={serverTrend1} />
     </div>}
 
-    <div className="rundeckTripleTrendGrid">
+    <div ref={unifiedGridRef}
+      className={'rundeckTripleTrendGrid' + (temporalReady ? ' is-unified-vortex' + (temporalExpanded ? ' is-expanded' : '') : '')}
+      onPointerEnter={event => { if (event.pointerType !== 'touch') setUnifiedHovered(true) }}
+      onPointerLeave={event => { if (event.pointerType !== 'touch') setUnifiedHovered(false) }}
+      onFocusCapture={() => setUnifiedHovered(true)}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setUnifiedHovered(false) }}>
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
         <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend <small>· APP host</small></h3></div>
         <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric" value={serverMetric1} onChange={event => setServerMetric1(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
@@ -1051,6 +1077,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint, { showGap: false,
           technicalAxisMax: typicalLoadActive ? loadScale.axisMax : null })}
       </section>
+      {temporalReady && <canvas ref={unifiedCanvasRef} className="rundeckUnifiedVortexCanvas" aria-hidden="true" />}
     </div>
 
     {windowModal && windowEvidence && customWindow && <RundeckCustomWindowDetails

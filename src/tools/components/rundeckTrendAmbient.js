@@ -1,166 +1,206 @@
-// Presentation-only animation. Never creates or modifies SAP telemetry samples.
-export function retainedAmbientPoints(series = [], maxPerSeries = 5) {
+// A single decorative 3-channel vortex, driven exclusively by existing ECharts samples.
+// No SAP fetching, synthetic telemetry, threshold changes, or event interception.
+export function retainedVortexSamples(series = [], limit = 36) {
   if (!Array.isArray(series)) return []
-  const limit = Math.max(1, Math.min(8, Math.floor(Number(maxPerSeries) || 5)))
-  return series.flatMap((entry, seriesIndex) => {
+  const max = Math.max(2, Math.min(48, Math.floor(Number(limit) || 36)))
+  return series.map((entry, seriesIndex) => {
     const observed = (Array.isArray(entry?.data) ? entry.data : []).filter(item => {
       const value = item?.value
-      const measured = value?.[1]
       return !item?.gap && Array.isArray(value) && value.length >= 2 &&
-        measured !== null && measured !== undefined && measured !== '' &&
-        Number.isFinite(Number(measured)) && value[0] !== null && value[0] !== undefined
+        value[0] !== null && value[0] !== undefined &&
+        value[1] !== null && value[1] !== undefined &&
+        value[1] !== '' && Number.isFinite(Number(value[1]))
     })
-    if (!observed.length) return []
-    const count = Math.min(limit, observed.length)
-    const indices = [...new Set(Array.from({ length: count }, (_, index) =>
-      count === 1 ? 0 : Math.round(index * (observed.length - 1) / (count - 1))))]
-    return indices.map(index => ({ seriesIndex, value: observed[index].value }))
-  })
+    const size = Math.min(max, observed.length)
+    const indices = size <= 1 ? (size ? [0] : []) :
+      [...new Set(Array.from({ length:size }, (_, i) => Math.round(i*(observed.length-1)/(size-1))))]
+    return {
+      seriesIndex, name: String(entry?.name || ''),
+      color: typeof entry?.lineStyle?.color === 'string' ? entry.lineStyle.color : '#8298a3',
+      values: indices.map(i => observed[i].value),
+    }
+  }).filter(row => row.values.length > 1)
 }
 
-export function attachTrendAmbient({ canvas, chartNode, chart, series = [], focusedHost = '', disabled = false } = {}) {
-  if (!canvas || !chartNode || !chart || disabled || typeof window === 'undefined') return undefined
-  const media = window.matchMedia?.('(prefers-reduced-motion: reduce)')
-  const compact = window.matchMedia?.('(max-width:899px)')
-  const ctx = canvas.getContext('2d')
+export function vortexDestination(vortex, progress) {
+  const r = Math.min(1, Math.max(0, Number(progress) || 0))
+  return { x: vortex.originX * (1-r) + vortex.destX * r, y: vortex.originY * (1-r) + vortex.destY * r }
+}
+
+export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}) {
+  if (!canvas || !grid || typeof getChart !== 'function' || typeof window === 'undefined') return undefined
+  const ctx=canvas.getContext('2d')
   if (!ctx) return undefined
-  const anchors = retainedAmbientPoints(series, 5)
-  if (!anchors.length) return undefined
-
-  const token = name => window.getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  const color = token('--sphere-text-secondary') || '#93a5af'
-  const accent = token('--sphere-accent') || '#668f99'
-  const focused = Boolean(focusedHost)
-  let width = 0
-  let height = 0
-  let hovered = false
-  let visible = true
-  let stopped = false
-  let phase = 0
-  let progress = 0
-  let lastPaint = 0
-  let raf = 0
-  let reduced = Boolean(media?.matches || compact?.matches)
-
-  const drawHex = (x, y, radius, ink, alpha) => {
+  const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')
+  const compact=window.matchMedia?.('(max-width:899px)')
+  let disabled=Boolean(reduce?.matches||compact?.matches)
+  let raf=0, stopped=false, intersecting=true, hovering=false
+  let last=0, angle=.18, morph=0, width=1, height=1
+  let groups=[]
+  const onZoom=()=>{ collect();wake() }
+  const registrations=[]
+  const hex=(x,y,r,color,alpha)=>{
+    if(r<.3)return
     ctx.beginPath()
-    for (let corner = 0; corner < 6; corner++) {
-      const angle = -Math.PI / 2 + corner * Math.PI / 3
-      const px = x + Math.cos(angle) * radius
-      const py = y + Math.sin(angle) * radius
-      if (corner) ctx.lineTo(px, py)
-      else ctx.moveTo(px, py)
+    for(let k=0;k<6;k++){
+      const a=-Math.PI/2+k*Math.PI/3
+      const xx=x+Math.cos(a)*r, yy=y+Math.sin(a)*r
+      if(k)ctx.lineTo(xx,yy);else ctx.moveTo(xx,yy)
     }
-    ctx.closePath()
-    ctx.fillStyle = ink
-    ctx.globalAlpha = Math.max(0, Math.min(.26, alpha))
-    ctx.fill()
+    ctx.closePath();ctx.fillStyle=color
+    ctx.globalAlpha=Math.max(0,Math.min(.65,alpha));ctx.fill()
   }
-  const wake = () => {
-    if (!raf && !stopped && !reduced && visible && !document.hidden) {
-      raf = window.requestAnimationFrame(paint)
-    }
+  const collect=()=>{
+    groups=[]
+    const nodes=[...grid.querySelectorAll('.rundeckTrendChart')]
+    if(nodes.length!==3)return
+    const origin=grid.getBoundingClientRect()
+    nodes.forEach((node,metric)=>{
+      const chart=getChart(node)
+      if(!chart || chart.isDisposed?.()) return
+      let option
+      try{option=chart.getOption?.()}catch{return}
+      const series=retainedVortexSamples(option?.series)
+      if(!series.length)return
+      const box=node.getBoundingClientRect()
+      const left=box.left-origin.left, top=box.top-origin.top
+      series.forEach((row,host)=>{
+        const points=[]
+        row.values.forEach((value,i)=>{
+          let xy
+          try{xy=chart.convertToPixel({seriesIndex:row.seriesIndex},value)}catch{return}
+          if(!Array.isArray(xy)||!Number.isFinite(xy[0])||!Number.isFinite(xy[1]))return
+          if(xy[0]<0||xy[1]<0||xy[0]>box.width||xy[1]>box.height)return
+          const t=(i+.8)/Math.max(2,row.values.length)
+          points.push({
+            t,originX:0,originY:0,
+            destX:left+xy[0],destY:top+xy[1],
+          })
+        })
+        if(points.length>1)groups.push({metric,host,color:row.color,points})
+      })
+    })
   }
-  const measure = () => {
-    const box = chartNode.getBoundingClientRect()
-    width = Math.max(1, Math.round(box.width))
-    height = Math.max(1, Math.round(box.height))
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5)
-    canvas.width = Math.max(1, Math.round(width * pixelRatio))
-    canvas.height = Math.max(1, Math.round(height * pixelRatio))
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
-    lastPaint = 0
+  const fit=()=>{
+    const rect=grid.getBoundingClientRect()
+    width=Math.max(1,Math.round(rect.width))
+    height=Math.max(1,Math.round(rect.height))
+    const dpr=Math.min(window.devicePixelRatio||1,1.6)
+    canvas.width=Math.max(1,Math.round(width*dpr))
+    canvas.height=Math.max(1,Math.round(height*dpr))
+    ctx.setTransform(dpr,0,0,dpr,0,0)
+    collect()
     wake()
   }
-  function paint(time) {
-    raf = 0
-    if (stopped || reduced || !visible || document.hidden || !chartNode.isConnected) return
-    const target = hovered ? 1 : 0
-    // Idle redraws <= 12 FPS; hover fades once and then freezes.
-    if (!hovered && lastPaint && time - lastPaint < 84) { wake(); return }
-    const elapsed = lastPaint ? Math.min((time - lastPaint) / 1000, .12) : .084
-    lastPaint = time
-    progress += (target - progress) * (1 - Math.exp(-elapsed * 8))
-    if (Math.abs(progress - target) < .015) progress = target
-    if (!hovered) phase += elapsed * .32
-    ctx.clearRect(0, 0, width, height)
-
-    // Low-contrast, background-feeling hexagon orbit; charts stay readable at idle.
-    const cx = width * .53
-    const cy = height * .51
-    const radius = Math.min(width * .19, height * .30, 36)
-    for (let i = 0; i < 21; i++) {
-      const theta = (i / 21) * Math.PI * 2 + phase
-      const depth = .5 + .5 * Math.sin(theta)
-      const ring = i % 3 === 0 ? .6 : 1
-      drawHex(cx + Math.cos(theta) * radius * ring,
-        cy + Math.sin(theta) * radius * .48 * ring,
-        1.9 + 1.2 * depth, i % 4 ? color : accent,
-        (.055 + .085 * depth) * (1 - progress))
+  const makeOrigin=(t,metric,host)=>{
+    const radius=9+Math.pow(t,1.3)*Math.min(width*.36,height*.53)
+    const theta=angle + t*Math.PI*5.4 + metric*2.03 + host*Math.PI*2/5
+    return {x:width*.5+Math.cos(theta)*radius*1.48,y:height*.54+Math.sin(theta)*radius*.61}
+  }
+  const paint=time=>{
+    raf=0
+    if(stopped||disabled||!intersecting||document.hidden||!grid.isConnected)return
+    if(last && time-last<38){wake();return}
+    const dt=last?Math.min((time-last)/1000,.085):.04
+    last=time
+    const target=Boolean(expandedRef?.current)?1:0
+    morph+=(target-morph)*(1-Math.exp(-dt*6))
+    if(Math.abs(target-morph)<.003)morph=target
+    if(!target)angle+=dt*.32
+    ctx.clearRect(0,0,width,height)
+    const p=morph*morph*(3-2*morph)
+    const ambientAlpha=(1-p)
+    if(ambientAlpha>.015){
+      // Nested hexagonal rings make one connected field across all three panels.
+      const cx=width*.5,cy=height*.54
+      for(let j=1;j<=10;j++){
+        const radius=j/10*Math.min(width*.36,height*.54)
+        ctx.beginPath()
+        for(let k=0;k<6;k++){
+          const theta=angle*.22+j*.12+k*Math.PI/3
+          const x=cx+Math.cos(theta)*radius*1.48
+          const y=cy+Math.sin(theta)*radius*.62
+          if(k)ctx.lineTo(x,y);else ctx.moveTo(x,y)
+        }
+        ctx.closePath()
+        ctx.globalAlpha=ambientAlpha*(j%3===0?.20:.09)
+        ctx.strokeStyle='#638d98';ctx.lineWidth=.85;ctx.stroke()
+      }
+      hex(cx,cy,6,'#81adb3',ambientAlpha*.28)
     }
-
-    // During examination, subdued hexes sit on actual retained chart samples.
-    // ECharts supplies the coordinates, so axis zoom and missing buckets agree.
-    if (progress > .02) {
-      for (const point of anchors) {
-        const xy = chart.convertToPixel({ seriesIndex: point.seriesIndex }, point.value)
-        if (!Array.isArray(xy) || !Number.isFinite(xy[0]) || !Number.isFinite(xy[1])) continue
-        if (xy[0] < 60 || xy[0] > width - 70 || xy[1] < 26 || xy[1] > height - 30) continue
-        drawHex(xy[0], xy[1], focused ? 2.8 : 2.2, accent, (focused ? .22 : .13) * progress)
+    for(const row of groups){
+      const placed=row.points.map(point=>{
+        const origin=makeOrigin(point.t,row.metric,row.host)
+        return vortexDestination({originX:origin.x,originY:origin.y,destX:point.destX,destY:point.destY},p)
+      })
+      if(placed.length<2)continue
+      ctx.beginPath()
+      for(let i=0;i<placed.length;i++){
+        const pt=placed[i]
+        if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
+      }
+      ctx.strokeStyle=row.color
+      ctx.globalAlpha=(.35*(1-p)+.10*p)
+      ctx.lineWidth=1.1;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
+      const stride=p>.95?4:1
+      for(let i=0;i<placed.length;i+=stride){
+        const pt=placed[i]
+        hex(pt.x,pt.y,2.1*(1-p)+1.4*p,row.color,.64*(1-p)+.16*p)
       }
     }
-    ctx.globalAlpha = 1
-    if (!hovered || progress !== 1) wake()
+    ctx.globalAlpha=1
+    // Hold the finished expanded form until interaction, instead of perpetual motion.
+    if(target===0||morph!==target)wake()
   }
-  const enter = event => {
-    if (event.pointerType === 'touch') return
-    hovered = true
-    lastPaint = 0
-    wake()
+  function wake(){
+    if(!raf && !stopped && !disabled && intersecting && !document.hidden)raf=window.requestAnimationFrame(paint)
   }
-  const leave = () => { hovered = false; lastPaint = 0; wake() }
-  const focusIn = () => { hovered = true; lastPaint = 0; wake() }
-  const focusOut = () => { hovered = false; lastPaint = 0; wake() }
-  const visibility = () => {
-    if (document.hidden) { window.cancelAnimationFrame(raf); raf = 0 }
-    else wake()
+  const onVisible=()=>{
+    if(document.hidden){window.cancelAnimationFrame(raf);raf=0;return}
+    collect();wake()
   }
-  const mediaChanged = () => {
-    reduced = Boolean(media?.matches || compact?.matches)
-    if (reduced) { window.cancelAnimationFrame(raf); raf = 0; ctx.clearRect(0, 0, width, height) }
-    else wake()
+  const onMedia=()=>{
+    disabled=Boolean(reduce?.matches||compact?.matches)
+    if(disabled){window.cancelAnimationFrame(raf);raf=0;ctx.clearRect(0,0,width,height)}
+    else{collect();wake()}
   }
-  const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
-  const intersection = typeof IntersectionObserver === 'undefined' ? null :
-    new IntersectionObserver(entries => {
-      visible = entries.some(item => item.isIntersecting)
-      if (visible) wake()
-      else { window.cancelAnimationFrame(raf); raf = 0 }
-    }, { threshold: 0 })
-  chartNode.addEventListener('pointerenter', enter)
-  chartNode.addEventListener('pointerleave', leave)
-  chartNode.addEventListener('focusin', focusIn)
-  chartNode.addEventListener('focusout', focusOut)
-  chart.on('datazoom', wake)
-  document.addEventListener('visibilitychange', visibility)
-  media?.addEventListener?.('change', mediaChanged)
-  compact?.addEventListener?.('change', mediaChanged)
-  observer?.observe(chartNode)
-  intersection?.observe(chartNode)
-  measure()
-  return () => {
-    stopped = true
-    window.cancelAnimationFrame(raf)
-    observer?.disconnect()
-    intersection?.disconnect()
-    chartNode.removeEventListener('pointerenter', enter)
-    chartNode.removeEventListener('pointerleave', leave)
-    chartNode.removeEventListener('focusin', focusIn)
-    chartNode.removeEventListener('focusout', focusOut)
-    chart.off('datazoom', wake)
-    document.removeEventListener('visibilitychange', visibility)
-    media?.removeEventListener?.('change', mediaChanged)
-    compact?.removeEventListener?.('change', mediaChanged)
-    ctx.clearRect(0, 0, width, height)
+  const resize=typeof ResizeObserver==='undefined'?null:new ResizeObserver(fit)
+  const observer=typeof IntersectionObserver==='undefined'?null:new IntersectionObserver(entries=>{
+    intersecting=entries.some(item=>item.isIntersecting)
+    if(intersecting){collect();wake()}
+    else{window.cancelAnimationFrame(raf);raf=0}
+  },{threshold:0})
+  const register=()=>{
+    for(const node of grid.querySelectorAll('.rundeckTrendChart')){
+      const chart=getChart(node)
+      if(!chart)continue
+      chart.on('datazoom',onZoom)
+      registrations.push(chart)
+    }
+  }
+  const initialize=()=>{
+    if(stopped)return
+    fit()
+    register()
+  }
+  const initId=window.requestAnimationFrame(initialize)
+  resize?.observe(grid)
+  observer?.observe(grid)
+  document.addEventListener('visibilitychange',onVisible)
+  reduce?.addEventListener?.('change',onMedia)
+  compact?.addEventListener?.('change',onMedia)
+  return {
+    wake,
+    dispose:()=>{
+      stopped=true
+      window.cancelAnimationFrame(initId)
+      window.cancelAnimationFrame(raf)
+      resize?.disconnect();observer?.disconnect()
+      registrations.forEach(chart=>chart.off('datazoom',onZoom))
+      document.removeEventListener('visibilitychange',onVisible)
+      reduce?.removeEventListener?.('change',onMedia)
+      compact?.removeEventListener?.('change',onMedia)
+      ctx.clearRect(0,0,width,height)
+    }
   }
 }
