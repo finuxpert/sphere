@@ -51,7 +51,7 @@ test('single shared grid motion keeps original ECharts tools, statuses and sourc
   assert.match(css,/prefers-reduced-motion/)
   assert.match(layer,/IntersectionObserver/)
   assert.match(layer,/ResizeObserver/)
-  assert.match(layer,/max-width:899px/)
+  assert.match(layer,/max-width:1280px/)
   assert.match(layer,/convertToPixel/)
   assert.match(layer,/vortexReady/)
   assert.match(css,/data-vortex-ready="true"/)
