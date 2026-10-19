@@ -22,7 +22,7 @@
     margin:0!important;
     padding:0!important;
     will-change:transform;
-    transition:filter .28s ease!important;
+    transition:filter .21s cubic-bezier(.22,1,.36,1)!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-sphere-orbit>.rundeckAppHexSelector:is(.is-active,:focus-visible,:hover){
     z-index:8!important;
@@ -133,12 +133,12 @@
    Host status, Critical WP and click handlers are unchanged. */
 @media (min-width:900px) and (prefers-reduced-motion:no-preference){
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionRings span{
-    width:48px;height:40px;font-size:8.5px;opacity:.66;
+    width:48px;height:40px;font-size:9.5px;opacity:.82;
     border-color:color-mix(in srgb,var(--sphere-accent,#4fc6c8) 22%,transparent);
     box-shadow:none;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionRings span small{
-    font-size:8px;opacity:.75;
+    font-size:8.5px;opacity:.86;
   }
 }
 
@@ -152,5 +152,22 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491
   .rundeckWorkloadDotGrid.is-sphere-globe.is-expanded>.rundeckEvaluationGlobeCanvas{
     pointer-events:none!important;
+  }
+}
+
+/* Quiet, stable micro-interactions. No changes to row geometry or SAP severity. */
+@media(min-width:1200px) and (prefers-reduced-motion:no-preference){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody tr{
+    transition:background-color .18s ease,box-shadow .18s ease;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody tr:focus-within{
+    background:rgba(78,148,164,.09)!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody tr.is-selected{
+    box-shadow:inset 2px 0 0 var(--sphere-accent,#4fc6c8);
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody td:nth-child(3),
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckCurrentWorkload tbody td:nth-child(4){
+    font-variant-numeric:tabular-nums;
   }
 }

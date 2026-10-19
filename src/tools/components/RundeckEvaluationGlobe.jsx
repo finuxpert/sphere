@@ -1,9 +1,9 @@
 import React from 'react'
 import { workloadHealthLevel } from './rundeckWorkloadHealthState.js'
-import { globeVisualOrder, nearestEvaluationHex } from './rundeckEvaluationGlobeLayout.js'
+import { globeVisualOrder, globeStatusOpacity, globeFrontHitPoints, nearestEvaluationHex } from './rundeckEvaluationGlobeLayout.js'
 
 const COLORS = {
-  review: '#d66973', attention: '#d5ad55', unknown: '#828f9b', normal: '#65ba7f',
+  review: '#c77983', attention: '#bd9f69', unknown: '#7d8d9b', normal: '#79a990',
 }
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
 
@@ -34,7 +34,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
       const y = 1 - 2 * (position + .5) / levels.length
       const radius = Math.sqrt(Math.max(0, 1 - y * y))
       const azimuth = position * GOLDEN_ANGLE
-      return { x: Math.cos(azimuth) * radius, y, z: Math.sin(azimuth) * radius, color: COLORS[levels[index]] || COLORS.unknown, index }
+      return { x: Math.cos(azimuth) * radius, y, z: Math.sin(azimuth) * radius, color: COLORS[levels[index]] || COLORS.unknown, level: levels[index], index }
     })
     const measure = () => {
       const rect = stage.getBoundingClientRect()
@@ -65,13 +65,13 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
       if (document.hidden || !visible || !stage.isConnected) return
       const dt = last ? Math.min((time - last) / 1000, .07) : .016
       // Cap redraws at approximately 30 FPS for large verified populations.
-      if (last && time - last < 32) { raf = requestAnimationFrame(paint); return }
+      if (last && time - last < 40) { raf = requestAnimationFrame(paint); return }
       last = time
       const target = expandedRef.current ? 1 : 0
-      morph += (target - morph) * (1 - Math.exp(-dt * 5.5))
+      morph += (target - morph) * (1 - Math.exp(-dt * (target ? 6.2 : 3.8)))
       if (Math.abs(morph - target) < .002) morph = target
-      if (!expandedRef.current) phase += dt * .19
-      const blend = morph * morph * (3 - 2 * morph)
+      if (!expandedRef.current) phase += dt * .17
+      const blend = morph * morph * morph * (morph * (morph * 6 - 15) + 10)
       const cx = width / 2
       const cy = height / 2
       const radius = Math.min(width * .28, height * .485, 112)
@@ -99,13 +99,13 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
           x: orbX * (1 - blend) + gridX * blend,
           y: orbY * (1 - blend) + gridY * blend,
           depth,
-          size: (size * (.60 + .24 * (depth + 1) / 2)) * (1 - blend) + size * .59 * blend,
+          size: (size * (.57 + .25 * (depth + 1) / 2)) * (1 - blend) + size * .59 * blend,
           color: point.color,
-          alpha: (.32 + .68 * (depth + 1) / 2) * (1 - blend) + blend,
+          alpha: globeStatusOpacity(point.level, depth) * (1 - blend) + blend,
           index: point.index,
         }
       })
-      hitPositionsRef.current = plotted
+      hitPositionsRef.current = globeFrontHitPoints(plotted)
       plotted.sort((a, b) => a.depth - b.depth)
       for (const point of plotted) drawHex(point.x, point.y, point.size, point.color, point.alpha)
       ctx.globalAlpha = 1
@@ -150,6 +150,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
     const box = event.currentTarget.getBoundingClientRect()
     const index = nearestEvaluationHex(hitPositionsRef.current, event.clientX - box.left, event.clientY - box.top)
     if (index !== null) {
+      event.preventDefault()
       event.stopPropagation()
       onSelectIndex?.(index)
     }

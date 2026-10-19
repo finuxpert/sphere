@@ -21,3 +21,16 @@ export function nearestEvaluationHex(points, x, y) {
   }
   return nearest
 }
+
+// Presentation-only depth attenuation; the underlying severity and row ID are stable.
+export function globeStatusOpacity(level, depth) {
+  const face = Math.max(0, Math.min(1, (Number(depth) + 1) / 2))
+  const strength = { review: 1, attention: .86, unknown: .65, normal: .83 }[level] ?? .65
+  return Math.min(.92, (.18 + .70 * face) * strength)
+}
+// Only visible-facing hexagons can be selected on the spherical idle canvas.
+export function globeFrontHitPoints(points = []) {
+  return Array.isArray(points) ? points.filter(point =>
+    point && Number.isFinite(point.depth) && point.depth >= -.08 &&
+    Number.isFinite(point.x) && Number.isFinite(point.y)) : []
+}

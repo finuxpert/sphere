@@ -177,13 +177,13 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     raf=0
     if(stopped||disabled||!intersecting||document.hidden||!grid.isConnected)return
     if(grid.dataset.vortexReady !== 'true') { ctx.clearRect(0,0,width,height); return }
-    if(last && time-last<32){wake();return}
+    if(last && time-last<39){wake();return}
     const dt=last?Math.min((time-last)/1000,.085):.04
     last=time
     const target=expandedRef?.current?1:0
-    morph+=(target-morph)*(1-Math.exp(-dt*5.2))
+    morph+=(target-morph)*(1-Math.exp(-dt*(target?6.1:3.2)))
     if(Math.abs(target-morph)<.003)morph=target
-    if(!target)angle+=dt*.23
+    if(!target)angle+=dt*.19
     ctx.clearRect(0,0,width,height)
     const p=morph*morph*morph*(morph*(morph*6-15)+10)
     const ambientAlpha=(1-p)
@@ -217,13 +217,13 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
           if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
         }
         ctx.strokeStyle=row.color
-        ctx.globalAlpha=(.33*(1-p)+.08*p)
-        ctx.lineWidth=1.1;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
+        ctx.globalAlpha=(.22*(1-p)+.065*p)
+        ctx.lineWidth=.85;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
       }
-      const stride=p>.95?4:1
+      const stride=p>.95?4:2
       for(let i=0;i<placed.length;i+=stride){
         const pt=placed[i]
-        hex(pt.x,pt.y,2.4*(1-p)+1.4*p,row.color,.46*(1-p)+.14*p)
+        hex(pt.x,pt.y,2.3*(1-p)+1.4*p,row.color,.40*(1-p)+.12*p)
       }
     }
     ctx.globalAlpha=1

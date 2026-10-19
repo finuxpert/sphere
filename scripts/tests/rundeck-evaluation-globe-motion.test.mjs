@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { globeVisualOrder, nearestEvaluationHex } from '../../src/tools/components/rundeckEvaluationGlobeLayout.js'
+import { globeVisualOrder, globeStatusOpacity, globeFrontHitPoints, nearestEvaluationHex } from '../../src/tools/components/rundeckEvaluationGlobeLayout.js'
 
 test('404 actual evaluation identities are preserved exactly once in the decorative globe', () => {
   const positions = globeVisualOrder(404)
@@ -36,4 +36,27 @@ test('globe preserves existing source-backed selection and reduced-motion fallba
   assert.match(globe, /nearestEvaluationHex/)
   assert.match(css, /prefers-reduced-motion:reduce/)
   assert.match(css, /pointer-events:auto!important/)
+})
+
+test('depth shading makes backside hexagons calmer while keeping severity categories', () => {
+  for (const level of ['review', 'attention', 'unknown', 'normal']) {
+    assert.ok(globeStatusOpacity(level, -1) < globeStatusOpacity(level, 1))
+    assert.ok(globeStatusOpacity(level, 1) <= .92)
+  }
+  assert.ok(globeStatusOpacity('review', 1) > globeStatusOpacity('unknown', 1))
+  assert.deepEqual(globeFrontHitPoints([
+    { index: 0, depth: -.5, x: 4, y: 2 }, { index: 1, depth: .4, x: 9, y: 5 },
+  ]).map(point => point.index), [1])
+  assert.deepEqual(globeFrontHitPoints([{ index: 0, depth: NaN, x: 0, y: 0 }]), [])
+})
+test('calm sphere only samples visible source-backed evaluation hexagons', () => {
+  const read = file => readFileSync(new URL('../../src/tools/components/' + file, import.meta.url), 'utf8')
+  const globe = read('RundeckEvaluationGlobe.jsx')
+  const style = read('RundeckSphereMotion.css')
+  assert.match(globe, /globeFrontHitPoints\(plotted\)/)
+  assert.match(globe, /globeStatusOpacity\(point\.level, depth\)/)
+  assert.match(globe, /time - last < 40/)
+  assert.match(globe, /event\.preventDefault\(\)/)
+  assert.match(style, /prefers-reduced-motion:reduce/)
+  assert.match(style, /font-variant-numeric:tabular-nums/)
 })

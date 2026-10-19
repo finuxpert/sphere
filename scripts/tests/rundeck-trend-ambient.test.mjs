@@ -169,3 +169,14 @@ test('many collection gaps retain first and last historical segments without con
   assert.ok(result.segments[12][0].t > .30 && result.segments[12][0].t < .70)
   assert.ok(result.segments.every(part => part.length === 1))
 })
+
+test('restrained vortex motion keeps real ECharts and asymmetric hover return', () => {
+  const read = file => readFileSync(new URL('../../src/tools/components/' + file, import.meta.url), 'utf8')
+  const motion = read('rundeckTrendAmbient.js')
+  const style = read('RundeckTrendAmbient.css')
+  assert.match(motion, /target\?6\.1:3\.2/)
+  assert.match(motion, /const stride=p>\.95\?4:2/)
+  assert.match(style, /transition-duration:\.4s/)
+  assert.match(style, /prefers-reduced-motion:reduce/)
+  assert.doesNotMatch(motion, /fetch\(/)
+})
