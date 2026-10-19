@@ -21,7 +21,7 @@ export function retainedAmbientPoints(series = [], maxPerSeries = 5) {
 export function attachTrendAmbient({ canvas, chartNode, chart, series = [], focusedHost = '', disabled = false } = {}) {
   if (!canvas || !chartNode || !chart || disabled || typeof window === 'undefined') return undefined
   const media = window.matchMedia?.('(prefers-reduced-motion: reduce)')
-  if (media?.matches) return undefined
+  const compact = window.matchMedia?.('(max-width:899px)')
   const ctx = canvas.getContext('2d')
   if (!ctx) return undefined
   const anchors = retainedAmbientPoints(series, 5)
@@ -40,7 +40,7 @@ export function attachTrendAmbient({ canvas, chartNode, chart, series = [], focu
   let progress = 0
   let lastPaint = 0
   let raf = 0
-  let reduced = false
+  let reduced = Boolean(media?.matches || compact?.matches)
 
   const drawHex = (x, y, radius, ink, alpha) => {
     ctx.beginPath()
@@ -126,7 +126,7 @@ export function attachTrendAmbient({ canvas, chartNode, chart, series = [], focu
     else wake()
   }
   const mediaChanged = () => {
-    reduced = Boolean(media?.matches)
+    reduced = Boolean(media?.matches || compact?.matches)
     if (reduced) { window.cancelAnimationFrame(raf); raf = 0; ctx.clearRect(0, 0, width, height) }
     else wake()
   }
@@ -144,6 +144,7 @@ export function attachTrendAmbient({ canvas, chartNode, chart, series = [], focu
   chart.on('datazoom', wake)
   document.addEventListener('visibilitychange', visibility)
   media?.addEventListener?.('change', mediaChanged)
+  compact?.addEventListener?.('change', mediaChanged)
   observer?.observe(chartNode)
   intersection?.observe(chartNode)
   measure()
@@ -159,6 +160,7 @@ export function attachTrendAmbient({ canvas, chartNode, chart, series = [], focu
     chart.off('datazoom', wake)
     document.removeEventListener('visibilitychange', visibility)
     media?.removeEventListener?.('change', mediaChanged)
+    compact?.removeEventListener?.('change', mediaChanged)
     ctx.clearRect(0, 0, width, height)
   }
 }

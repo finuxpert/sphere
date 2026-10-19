@@ -29,6 +29,8 @@ test('motion is decorative, bounded, and preserves source ECharts interaction', 
   assert.match(css, /pointer-events:none!important/)
   assert.match(css, /prefers-reduced-motion:reduce/)
   assert.match(layer, /IntersectionObserver/)
+  assert.match(layer, /max-width:899px/)
+  assert.match(layer, /prefers-reduced-motion: reduce/)
   assert.match(layer, /datazoom/)
   assert.match(layer, /chart\.convertToPixel/)
   assert.doesNotMatch(layer, /fetch\(/)
