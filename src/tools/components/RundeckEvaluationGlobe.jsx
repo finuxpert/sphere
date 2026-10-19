@@ -70,7 +70,8 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
       const target = expandedRef.current ? 1 : 0
       morph += (target - morph) * (1 - Math.exp(-dt * (target ? 6.2 : 3.8)))
       if (Math.abs(morph - target) < .002) morph = target
-      // Hold the source-backed sphere at a fixed orientation when idle.
+      // A subtle saved-evaluation rotation runs only while idle and visible.
+      if (!expandedRef.current) phase += dt * .12
       const blend = morph * morph * morph * (morph * (morph * 6 - 15) + 10)
       const cx = width / 2
       const cy = height / 2
@@ -109,7 +110,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
       plotted.sort((a, b) => a.depth - b.depth)
       for (const point of plotted) drawHex(point.x, point.y, point.size, point.color, point.alpha)
       ctx.globalAlpha = 1
-      if (morph !== target) raf = requestAnimationFrame(paint)
+      if (!expandedRef.current || morph !== target) raf = requestAnimationFrame(paint)
     }
     const wake = () => {
       if (!raf && !document.hidden && visible) {
