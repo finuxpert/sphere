@@ -3,6 +3,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib } from './sapUiFormat.js'
 import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } from './rundeckWorkloadHealthState.js'
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
+import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
 
 const API = import.meta.env.BASE_URL + 'api'
 const MIN_REFRESH_MS = 5 * 60 * 1000
@@ -66,6 +67,16 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const loadedRefreshToken = React.useRef(null)
   const dotGridRef = React.useRef(null)
   const [dotLayout, setDotLayout] = React.useState({ size: 10, gap: 2, columns: 1, fits: true })
+  const [globeEnabled, setGlobeEnabled] = React.useState(false)
+  const [globeExpanded, setGlobeExpanded] = React.useState(false)
+  React.useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined
+    const query = window.matchMedia('(min-width:900px) and (prefers-reduced-motion: no-preference)')
+    const sync = () => setGlobeEnabled(query.matches)
+    sync()
+    query.addEventListener?.('change', sync)
+    return () => query.removeEventListener?.('change', sync)
+  }, [])
 
   React.useEffect(() => {
     if (loadedAt.current > 0 && loadedRefreshToken.current === refreshToken &&
@@ -156,7 +167,15 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         <span>{level.label}</span>
       </button>)}
     </div>
-    <div ref={dotGridRef} className="rundeckWorkloadDotGrid" role="group" aria-label="Individual saved workload evaluations" style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
+    <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
+      role="group" aria-label="Individual saved workload evaluations"
+      onPointerEnter={event => { if (globeEnabled && event.pointerType !== 'touch') setGlobeExpanded(true) }}
+      onPointerLeave={event => { if (event.pointerType !== 'touch') setGlobeExpanded(false) }}
+      onFocusCapture={() => setGlobeExpanded(true)}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setGlobeExpanded(false) }}
+      style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
+      {globeEnabled && dotLayout.fits && rows.length > 0 &&
+        <RundeckEvaluationGlobe rows={rows} layout={dotLayout} expanded={globeExpanded} />}
       {(dotLayout.fits ? rows : []).map((row, index) => {
         const level = workloadHealthLevel(row)
         const type = String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'

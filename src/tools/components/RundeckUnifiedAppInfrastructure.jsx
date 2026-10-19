@@ -26,6 +26,72 @@ export default function RundeckUnifiedAppInfrastructure({
   const [infraSnapshot, setInfraSnapshot] = React.useState({ hosts: [], filesystems: [], hostsError: '', filesystemsError: '' })
   const [infraRetry, setInfraRetry] = React.useState(0)
   const [nowMs, setNowMs] = React.useState(() => Date.now())
+  const [orbitEnabled, setOrbitEnabled] = React.useState(false)
+  const [orbitExpanded, setOrbitExpanded] = React.useState(false)
+  const orbitStageRef = React.useRef(null)
+  const orbitExpandedRef = React.useRef(false)
+  orbitExpandedRef.current = orbitExpanded
+
+  React.useEffect(() => {
+    if (hosts.length !== 5 || typeof window.matchMedia !== 'function') {
+      setOrbitEnabled(false)
+      return undefined
+    }
+    const query = window.matchMedia('(min-width:900px) and (prefers-reduced-motion: no-preference)')
+    const sync = () => setOrbitEnabled(query.matches)
+    sync()
+    query.addEventListener?.('change', sync)
+    return () => query.removeEventListener?.('change', sync)
+  }, [hosts.length])
+
+  React.useEffect(() => {
+    if (!orbitEnabled || hosts.length !== 5) return undefined
+    const stage = orbitStageRef.current
+    const buttons = [...(stage?.querySelectorAll('.rundeckAppHexSelector') || [])]
+    if (!stage || buttons.length !== 5) return undefined
+    let raf = 0
+    let last = 0
+    let phase = -0.7
+    const positions = buttons.map(() => ({ x: NaN, y: NaN, scale: 1 }))
+    const expandedLocations = [[.19, .29], [.5, .29], [.81, .29], [.345, .77], [.655, .77]]
+    const tick = time => {
+      raf = 0
+      if (document.hidden || !stage.isConnected) return
+      const delta = last ? Math.min((time - last) / 1000, .07) : .016
+      last = time
+      const expanded = orbitExpandedRef.current
+      if (!expanded) phase += delta * .28
+      const width = stage.clientWidth
+      const height = stage.clientHeight
+      const rx = Math.min(width * .30, 104)
+      const ry = Math.min(height * .25, 34)
+      const blend = 1 - Math.exp(-delta * 8)
+      buttons.forEach((button, index) => {
+        const theta = phase + index * 2 * Math.PI / 5
+        const depth = Math.sin(theta)
+        const position = positions[index]
+        const targetX = expanded ? width * expandedLocations[index][0] : width / 2 + Math.cos(theta) * rx
+        const targetY = expanded ? height * expandedLocations[index][1] : height / 2 + depth * ry
+        const targetScale = expanded ? 1 : .88 + .1 * (depth + 1) / 2
+        position.x = Number.isFinite(position.x) ? position.x + (targetX - position.x) * blend : targetX
+        position.y = Number.isFinite(position.y) ? position.y + (targetY - position.y) * blend : targetY
+        position.scale += (targetScale - position.scale) * blend
+        button.style.left = position.x + 'px'
+        button.style.top = position.y + 'px'
+        button.style.transform = 'translate(-50%,-50%) scale(' + position.scale + ')'
+        button.style.zIndex = expanded ? '2' : String(depth > .15 ? 3 : 1)
+      })
+      raf = window.requestAnimationFrame(tick)
+    }
+    const wake = () => { if (!raf && !document.hidden) { last = 0; raf = window.requestAnimationFrame(tick) } }
+    document.addEventListener('visibilitychange', wake)
+    raf = window.requestAnimationFrame(tick)
+    return () => {
+      window.cancelAnimationFrame(raf)
+      document.removeEventListener('visibilitychange', wake)
+      buttons.forEach(button => { button.style.left = ''; button.style.top = ''; button.style.transform = ''; button.style.zIndex = '' })
+    }
+  }, [orbitEnabled, hosts.length])
 
   React.useEffect(() => {
     const update = () => setNowMs(Date.now())
@@ -122,8 +188,14 @@ export default function RundeckUnifiedAppInfrastructure({
       </div>
     </header>
     <div className="rundeckAppHexMain">
-      <div className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '')}
-        role="group" aria-label="Select APP server">
+      <div ref={orbitStageRef}
+        className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '') + (orbitEnabled ? ' is-sphere-orbit' + (orbitExpanded ? ' is-expanded' : '') : '')}
+        role="group" aria-label="Select APP server"
+        onPointerEnter={event => { if (orbitEnabled && event.pointerType !== 'touch') setOrbitExpanded(true) }}
+        onPointerLeave={event => { if (event.pointerType !== 'touch') setOrbitExpanded(false) }}
+        onFocusCapture={() => setOrbitExpanded(true)}
+        onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOrbitExpanded(false) }}>
+        {hosts.length === 5 && <div className="rundeckAppMotionRings" aria-hidden="true"><i /><i /><span>SPHERE<small>APP1–APP5</small></span></div>}
         {hosts.map(host => {
           const key = shortHost(host.host)
           const state = appSignalState(host, performanceVerified)
