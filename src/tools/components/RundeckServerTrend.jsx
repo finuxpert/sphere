@@ -940,9 +940,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     ...(technicalTrend?.items || []),
   ])
   const activeFocus = shortHost(focusedHost || '')
-  const savedPeak1 = React.useMemo(() => savedVortexPeak(serverTrend1, mode), [serverTrend1, mode])
-  const savedPeak2 = React.useMemo(() => savedVortexPeak(serverTrend2, mode), [serverTrend2, mode])
-  const savedTechnicalPeak = React.useMemo(() => savedVortexPeak(technicalTrend, mode), [technicalTrend, mode])
+  const savedPeak1 = React.useMemo(() => savedVortexPeak(serverTrend1, mode, activeFocus), [serverTrend1, mode, activeFocus])
+  const savedPeak2 = React.useMemo(() => savedVortexPeak(serverTrend2, mode, activeFocus), [serverTrend2, mode, activeFocus])
+  const savedTechnicalPeak = React.useMemo(() => savedVortexPeak(technicalTrend, mode, activeFocus), [technicalTrend, mode, activeFocus])
   const temporalReady = Boolean(
     databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
     !serverError1 && !serverError2 && !technicalError &&
@@ -1090,8 +1090,14 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           ].map(item => <span key={item.id}>
             <span><b>{item.id}</b> {item.label} <small>{item.description}</small></span>
             <strong>{item.peak ? numberText(item.peak.value, 1) + (item.peak.unit === '%' ? '%' : item.peak.unit ? ' ' + item.peak.unit : '') : '—'}</strong>
-            <small title={item.peak?.bucket ? 'Peak from saved aggregation bucket, not a current host measurement' : 'No retained peak'}>
-              {item.peak?.bucket ? 'Saved peak · bucket ' + formatWib(item.peak.bucket, true) + ' WIB' : 'No retained observation'}
+            <small title={item.peak?.bucket
+              ? 'Historical ' + (mode === 'avg' ? 'highest bucket average' : 'saved bucket peak') + ' for ' +
+                (activeFocus || 'all APP servers') + '; not a current host measurement'
+              : 'No saved observation for the selected APP and time range'}>
+              {item.peak?.bucket
+                ? (mode === 'avg' ? 'Highest bucket avg' : 'Saved peak') + ' · ' +
+                  (activeFocus || item.peak.host || 'All APP') + ' · ' + formatWib(item.peak.bucket, true) + ' WIB'
+                : 'No matching saved observation'}
             </small>
           </span>)}
         </div>

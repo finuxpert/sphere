@@ -19,16 +19,35 @@ export function retainedVortexSamples(series = [], limit = 36) {
       segment.push({ value, t: raw.length <= 1 ? 0 : index / (raw.length - 1) })
     })
     flush()
-    // Bound draw cost while retaining the latest observed segments. A missing
-    // interval never becomes an invented connector, even after decimation.
-    const shown = contiguous.slice(-Math.max(1, Math.floor(max / 2)))
-    const perSegment = Math.max(2, Math.floor(max / Math.max(1, shown.length)))
-    const segments = shown.map(points => {
-      const size = Math.min(perSegment, points.length)
-      if (size === 1) return [points[0]]
-      const indices = [...new Set(Array.from({ length: size }, (_, i) =>
-        Math.round(i * (points.length - 1) / (size - 1))))]
-      return indices.map(i => points[i])
+    // A bounded, time-spread representation: keep the first and last segment
+    // even when gaps are numerous. Never draw a connector across discarded gaps.
+    const groupCount = Math.min(max, contiguous.length)
+    const groupIndices = groupCount <= 1
+      ? (groupCount ? [0] : [])
+      : Array.from({ length: groupCount }, (_, i) =>
+        Math.round(i * (contiguous.length - 1) / (groupCount - 1)))
+    const shown = groupIndices.map(i => contiguous[i])
+    const counts = shown.map(() => 1)
+    let budget = max - shown.length
+    // Allocate remaining samples by segment density, with a hard upper bound.
+    while (budget > 0) {
+      let chosen = -1
+      let priority = -1
+      shown.forEach((points, i) => {
+        if (counts[i] >= points.length) return
+        const score = points.length / counts[i]
+        if (score > priority) { chosen = i; priority = score }
+      })
+      if (chosen < 0) break
+      counts[chosen]++
+      budget--
+    }
+    const segments = shown.map((points, i) => {
+      const size = counts[i]
+      if (size === 1) return [points[Math.floor((points.length - 1) / 2)]]
+      const indices = Array.from({ length: size }, (_, index) =>
+        Math.round(index * (points.length - 1) / (size - 1)))
+      return indices.map(index => points[index])
     })
     return {
       seriesIndex, name: String(entry?.name || ''),
@@ -38,16 +57,33 @@ export function retainedVortexSamples(series = [], limit = 36) {
   }).filter(row => row.values.length > 0)
 }
 
-// Aggregated highest retained bucket only. No inference about "current" SAP state.
-export function savedVortexPeak(trend, mode = 'max') {
+// Normalize the two host identities exposed by SAP APP traces and history rows.
+export function vortexAppLabel(host) {
+  const raw = String(host || '').trim().toUpperCase()
+  const full = /^AOPH([1-5])PAPPDC$/.exec(raw)
+  if (full) return 'APP' + full[1]
+  const short = /^APP([1-5])$/.exec(raw)
+  return short ? 'APP' + short[1] : ''
+}
+
+// Bucket-scoped highest observation, never live SAP state. Focus is fail-closed:
+// an APP-specific peak must have an explicitly matching host identity.
+export function savedVortexPeak(trend, mode = 'max', focusedHost = '') {
   if (!Array.isArray(trend?.items)) return null
+  const selected = vortexAppLabel(focusedHost)
+  if (focusedHost && !selected) return null
   const key = mode === 'avg' ? 'avg_value' : 'max_value'
   let peak = null
   for (const item of trend.items) {
+    const host = vortexAppLabel(item?.host || item?.source_host || item?.app)
+    if (selected && host !== selected) continue
     const value = item?.[key]
     if (value === null || value === undefined || value === '' || !Number.isFinite(Number(value))) continue
     if (!peak || Number(value) > peak.value) {
-      peak = { value: Number(value), bucket: String(item.bucket || ''), unit: String(trend.unit || '') }
+      peak = {
+        value: Number(value), bucket: String(item.bucket || ''),
+        unit: String(trend.unit || ''), host,
+      }
     }
   }
   return peak

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { retainedVortexSamples, savedVortexPeak, unifiedVortexOrigin, vortexDestination } from '../../src/tools/components/rundeckTrendAmbient.js'
+import { retainedVortexSamples, savedVortexPeak, vortexAppLabel, unifiedVortexOrigin, vortexDestination } from '../../src/tools/components/rundeckTrendAmbient.js'
 
 test('unified vortex only uses exact retained numeric ECharts samples', () => {
   const inputs=[{ name:'APP1',data:[
@@ -40,7 +40,7 @@ test('idle peak summaries use saved buckets, not fabricated current host state',
     { bucket: '2026-10-17T04:00:00Z', max_value: 0, avg_value: 0 },
     { bucket: '2026-10-17T05:00:00Z', max_value: 76, avg_value: 18 },
     { bucket: '2026-10-17T06:00:00Z', max_value: null, avg_value: null },
-  ] }, 'max'), { value: 76, bucket: '2026-10-17T05:00:00Z', unit: '%' })
+  ] }, 'max'), { value: 76, bucket: '2026-10-17T05:00:00Z', unit: '%', host: '' })
   assert.equal(savedVortexPeak({ items: [{ max_value: null }] }), null)
   assert.equal(savedVortexPeak({ items: [] }), null)
   assert.equal(savedVortexPeak({ items: [{ max_value: 0, bucket: 'abc' }] }).value, 0)
@@ -89,7 +89,8 @@ test('single shared grid motion keeps original ECharts tools, statuses and sourc
   assert.match(trend,/rundeckUnifiedVortexCore/)
   assert.match(trend,/rundeckUnifiedVortexLabels/)
   assert.match(trend,/savedVortexPeak\(/)
-  assert.match(trend,/Saved peak · bucket/)
+  assert.match(trend,/Highest bucket avg/)
+  assert.match(trend,/activeFocus \|\| item\.peak\.host/)
   assert.match(layer,/row\.segments\.forEach/)
   assert.match(layer,/if\(placed\.length>1\)/)
   assert.match(trend,/technicalMetric === 'load' \? 'Host Load'/)
@@ -116,7 +117,7 @@ test('cockpit finishing reserves pager and expands APP spacing without modifying
   assert.match(orbit, /openAppAnalysis\(host\)/)
   assert.match(motion, /\.rundeckAppMotionRings span/)
   assert.match(css, /font-variant-numeric:tabular-nums/)
-  assert.match(read('RundeckServerTrend.jsx'), /Saved peak · bucket/)
+  assert.match(read('RundeckServerTrend.jsx'), /Highest bucket avg/)
 })
 
 test('motion refinements preserve lint-safe hooks and non-blocking graph interactions', () => {
@@ -133,4 +134,37 @@ test('motion refinements preserve lint-safe hooks and non-blocking graph interac
   assert.match(ambient, /morph\*morph\*morph/)
   assert.match(orbit, /openAppAnalysis\(host\)/)
   assert.match(styles, /prefers-reduced-motion:reduce/)
+})
+
+test('APP Focus constrains historical peaks; Avg is the highest bucket average', () => {
+  const trend = { unit: '%', items: [
+    { host: 'AOPH1PAPPDC', bucket: '2026-10-18T00:00:00Z', max_value: 97, avg_value: 55 },
+    { host: 'AOPH3PAPPDC', bucket: '2026-10-18T01:00:00Z', max_value: 21, avg_value: 16 },
+    { host: 'AOPH3PAPPDC', bucket: '2026-10-18T02:00:00Z', max_value: 70, avg_value: 45 },
+    { host: 'APP4', bucket: '2026-10-18T03:00:00Z', max_value: 81, avg_value: 60 },
+    { host: '', bucket: '2026-10-18T04:00:00Z', max_value: 120, avg_value: 75 },
+  ] }
+  assert.equal(vortexAppLabel('AOPH3PAPPDC'), 'APP3')
+  assert.equal(vortexAppLabel('APP3'), 'APP3')
+  assert.equal(savedVortexPeak(trend, 'max', 'APP3')?.value, 70)
+  assert.equal(savedVortexPeak(trend, 'avg', 'AOPH3PAPPDC')?.value, 45)
+  assert.equal(savedVortexPeak(trend, 'avg', 'APP2'), null)
+  assert.equal(savedVortexPeak(trend, 'max', 'APP4')?.host, 'APP4')
+  assert.equal(savedVortexPeak(trend, 'max')?.value, 120)
+  assert.equal(savedVortexPeak(trend, 'avg', 'UNVERIFIED'), null)
+})
+
+test('many collection gaps retain first and last historical segments without connectors', () => {
+  const items = []
+  for (let i = 0; i < 95; i++) {
+    items.push({ value: [i * 2000, i] })
+    items.push({ value: [i * 2000 + 1000, null], gap: true })
+  }
+  const result = retainedVortexSamples([{ name: 'APP3', data: items }], 26)[0]
+  assert.equal(result.segments.length, 26)
+  assert.equal(result.values.length, 26)
+  assert.equal(result.segments[0][0].value[0], 0)
+  assert.equal(result.segments.at(-1)[0].value[0], 94 * 2000)
+  assert.ok(result.segments[12][0].t > .30 && result.segments[12][0].t < .70)
+  assert.ok(result.segments.every(part => part.length === 1))
 })
