@@ -1030,9 +1030,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     <div ref={unifiedGridRef}
       className={'rundeckTripleTrendGrid' + (temporalReady ? ' is-unified-vortex' + (temporalExpanded ? ' is-expanded' : '') : '')}
       onPointerEnter={event => { if (event.pointerType !== 'touch') setUnifiedHovered(true) }}
-      onPointerLeave={event => { if (event.pointerType !== 'touch') setUnifiedHovered(false) }}
+      onPointerLeave={event => {
+        if (event.pointerType !== 'touch' && !event.currentTarget.contains(document.activeElement)) setUnifiedHovered(false)
+      }}
       onFocusCapture={() => setUnifiedHovered(true)}
-      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setUnifiedHovered(false) }}>
+      onBlurCapture={event => {
+        if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(':hover')) setUnifiedHovered(false)
+      }}>
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
         <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend <small>· APP host</small></h3></div>
         <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric" value={serverMetric1} onChange={event => setServerMetric1(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>

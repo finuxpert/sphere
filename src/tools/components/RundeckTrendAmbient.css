@@ -16,7 +16,7 @@
                var(--sphere-surface-1,#141d23);
     opacity:1;transition:opacity .74s cubic-bezier(.22,1,.36,1);
   }
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded::before{opacity:0;transition-duration:.4s}
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded::before{opacity:0;transition-duration:.36s}
   .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels{
     position:absolute;z-index:5;top:8px;left:20px;right:20px;
     display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
@@ -39,13 +39,13 @@
   .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCore{
     position:absolute;left:50%;top:64%;transform:translate(-50%,-50%);
     z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;padding:7px 13px;
-    background:radial-gradient(ellipse at center,var(--sphere-surface-1,#141d23) 28%,transparent 96%);
+    gap:4px;padding:13px 27px;border-radius:999px;
+    background:radial-gradient(ellipse at center,rgba(12,25,34,.98) 18%,rgba(12,25,34,.95) 45%,rgba(12,25,34,.50) 74%,transparent 100%);
     opacity:.94;transition:opacity .38s ease,transform .7s cubic-bezier(.22,1,.36,1);
     white-space:nowrap;text-align:center;
   }
   .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCore strong{
-    font-size:12px;font-weight:800;letter-spacing:.12em;
+    font-size:12px;font-weight:800;letter-spacing:.10em;
     color:var(--sphere-text,#dbe7eb);
   }
   .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCore small{
@@ -59,7 +59,7 @@
     transform:translate(-50%,-50%) scale(.82);
   }
 }
-@media(max-width:1280px),(prefers-reduced-motion:reduce){
+@media(max-width:1280px),(prefers-reduced-motion:reduce),(hover:none),(pointer:coarse){
   .rundeckTripleTrendGrid.is-unified-vortex>:is(.rundeckUnifiedVortexCanvas,.rundeckUnifiedVortexCore,.rundeckUnifiedVortexLabels){display:none!important}
   .rundeckTripleTrendGrid.is-unified-vortex::before{display:none!important}
 }

@@ -95,11 +95,11 @@ export function unifiedVortexOrigin({ width, height, t, metric, host, phase = 0 
   const progress = Math.min(1, Math.max(0, Number(t) || 0))
   const edge = Math.sin(progress * Math.PI)
   const lane = Number.isFinite(Number(host)) ? Number(host) - 2 : 0
-  const theta = phase + progress * Math.PI * 5.2 + metric * Math.PI * 2 / 3 + lane * .12
+  const theta = phase + progress * Math.PI * 3.6 + metric * Math.PI * 2 / 3 + lane * .095
   return {
-    x: width * (.245 + .51 * progress) + Math.cos(theta) * width * .009 * edge,
-    y: height * .665 + Math.sin(theta) * height * (.19 + .055 * edge) +
-      lane * height * .006,
+    x: width * (.245 + .51 * progress) + Math.cos(theta) * width * .006 * edge,
+    y: height * .64 + Math.sin(theta) * height * (.205 + .025 * edge) +
+      lane * height * .009,
   }
 }
 
@@ -114,7 +114,8 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
   if (!ctx) return undefined
   const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')
   const compact=window.matchMedia?.('(max-width:1280px)')
-  let disabled=Boolean(reduce?.matches||compact?.matches)
+  const coarse=window.matchMedia?.('(hover: none), (pointer: coarse)')
+  let disabled=Boolean(reduce?.matches||compact?.matches||coarse?.matches)
   let raf=0, stopped=false, intersecting=true
   let last=0, angle=.18, morph=0, width=1, height=1
   let groups=[]
@@ -133,6 +134,8 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
   }
   const collect=()=>{
     groups=[]
+    // A partial or replaced ECharts source must never leave the idle mask active.
+    grid.dataset.vortexReady = 'false'
     const nodes=[...grid.querySelectorAll('.rundeckTrendChart')]
     if(nodes.length!==3)return
     const origin=grid.getBoundingClientRect()
@@ -183,9 +186,9 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     const dt=last?Math.min((time-last)/1000,.085):.04
     last=time
     const target=expandedRef?.current?1:0
-    morph+=(target-morph)*(1-Math.exp(-dt*(target?6.1:3.2)))
+    morph+=(target-morph)*(1-Math.exp(-dt*(target?7.2:3.6)))
     if(Math.abs(target-morph)<.003)morph=target
-    if(!target)angle+=dt*.19
+    if(!target)angle+=dt*.14
     ctx.clearRect(0,0,width,height)
     const p=morph*morph*morph*(morph*(morph*6-15)+10)
     const ambientAlpha=(1-p)
@@ -199,9 +202,9 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
           const at=unifiedVortexOrigin({ width, height, t:k/71, metric, host:2, phase:angle })
           if(k)ctx.lineTo(at.x,at.y);else ctx.moveTo(at.x,at.y)
         }
-        ctx.globalAlpha=ambientAlpha*.24
+        ctx.globalAlpha=ambientAlpha*.12
         ctx.strokeStyle=channelColors[metric]
-        ctx.lineWidth=.8
+        ctx.lineWidth=.72
         ctx.stroke()
       }
     }
@@ -212,19 +215,24 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
       })
       const channelInk=['#78b6a4','#98aac9','#c2a57b'][row.metric] || '#90aab7'
       if(placed.length>1){
+        // Midpoint quadratic interpolation rounds corners without bridging gaps:
+        // each row is one verified contiguous collection segment.
         ctx.beginPath()
-        for(let i=0;i<placed.length;i++){
-          const pt=placed[i]
-          if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
+        ctx.moveTo(placed[0].x,placed[0].y)
+        for(let i=1;i<placed.length-1;i++){
+          const point=placed[i],next=placed[i+1]
+          ctx.quadraticCurveTo(point.x,point.y,(point.x+next.x)*.5,(point.y+next.y)*.5)
         }
+        const tail=placed[placed.length-1]
+        ctx.lineTo(tail.x,tail.y)
         ctx.strokeStyle=p>.95?row.color:channelInk
-        ctx.globalAlpha=(.42*(1-p)+.055*p)
-        ctx.lineWidth=1.05;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
+        ctx.globalAlpha=(.25*(1-p)+.055*p)
+        ctx.lineWidth=.90;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
       }
-      const stride=p>.95?4:2
+      const stride=p>.95?4:3
       for(let i=0;i<placed.length;i+=stride){
         const pt=placed[i]
-        hex(pt.x,pt.y,2.15*(1-p)+1.4*p,p>.95?row.color:channelInk,.39*(1-p)+.10*p)
+        hex(pt.x,pt.y,1.9*(1-p)+1.4*p,p>.95?row.color:channelInk,.26*(1-p)+.10*p)
       }
     }
     ctx.globalAlpha=1
@@ -239,7 +247,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     collect();wake()
   }
   const onMedia=()=>{
-    disabled=Boolean(reduce?.matches||compact?.matches)
+    disabled=Boolean(reduce?.matches||compact?.matches||coarse?.matches)
     if(disabled){window.cancelAnimationFrame(raf);raf=0;ctx.clearRect(0,0,width,height)}
     else{collect();wake()}
   }
@@ -268,6 +276,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
   document.addEventListener('visibilitychange',onVisible)
   reduce?.addEventListener?.('change',onMedia)
   compact?.addEventListener?.('change',onMedia)
+  coarse?.addEventListener?.('change',onMedia)
   return {
     wake,
     dispose:()=>{
@@ -279,6 +288,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
       document.removeEventListener('visibilitychange',onVisible)
       reduce?.removeEventListener?.('change',onMedia)
       compact?.removeEventListener?.('change',onMedia)
+      coarse?.removeEventListener?.('change',onMedia)
       delete grid.dataset.vortexReady
       ctx.clearRect(0,0,width,height)
     }
