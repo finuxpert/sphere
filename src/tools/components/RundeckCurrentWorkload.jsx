@@ -5,6 +5,8 @@ import './RundeckCurrentWorkload.css'
 import { processCount, workloadCpuSignal } from './rundeckWorkloadMetrics.js'
 import { workloadRowsThatFit, workloadPagerReserve } from './rundeckWorkloadViewport.js'
 import { combineCurrentWorkloadResponses } from './rundeckCurrentWorkloadCoverage.js'
+import RundeckManualAttention from './RundeckManualAttention.jsx'
+import {attentionKey,attentionSnapshot} from './rundeckManualAttention.js'
 
 const API = `${import.meta.env.BASE_URL}api`
 const CPU_HINT = 'Workload CPU Total (%) is a grouped multi-core observation and can exceed 100%. It is not APP host CPU (%); SAP execution status is verified separately in SM37.'
@@ -107,6 +109,15 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const [fittedRows, setFittedRows] = React.useState(null)
   const tableWrapRef = React.useRef(null)
   const pagerRef = React.useRef(null)
+  const [attentionRows,setAttentionRows] = React.useState([])
+  const [attentionPreview,setAttentionPreview] = React.useState(null)
+  const [attentionOpen,setAttentionOpen] = React.useState(false)
+  const closeAttention=React.useCallback(()=>setAttentionOpen(false),[])
+  const markAttention=(snapshot,checked)=>{
+    if(!snapshot)return
+    setAttentionRows(items=>checked?[...items.filter(r=>r.id!==snapshot.id),snapshot]:items.filter(r=>r.id!==snapshot.id))
+    if(checked){setAttentionPreview(snapshot);setAttentionOpen(true)}
+  }
 
   React.useEffect(() => {
     const onResize = () => setViewportHeight(window.innerHeight)
@@ -253,7 +264,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <span className="rundeckCurrentWorkloadCount" title="Workload observations for the latest collection only. This count is not the saved 1D evaluation population in Workload Health. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved · ${coverageLabel}` : `${rows.length}/${workloadMeta.total} loaded · ${coverageLabel}`}</span>
+      <button type="button" className="sphereAttentionTrigger" onClick={()=>setAttentionOpen(true)} aria-label={`Open manual Attention List, ${attentionRows.length} marked workloads`}>Attention List <b>{attentionRows.length}</b></button>
+       <span className="rundeckCurrentWorkloadCount" title="Workload observations for the latest collection only. This count is not the saved 1D evaluation population in Workload Health. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved · ${coverageLabel}` : `${rows.length}/${workloadMeta.total} loaded · ${coverageLabel}`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APP · global</option>
@@ -284,12 +296,23 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
             const processes = processCount(details)
             const identity = identitySummary(row)
             const fullIdentity = identityTitle(row)
+            const attentionId=attentionKey(row)
+            const marked=attentionId&&attentionRows.some(item=>item.id===attentionId)
+            const snapshot=attentionSnapshot(row,context,observedWorkloadName(row.consumer_key,details),fullIdentity)
             return <tr
               key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`}
-              className={active ? 'is-selected' : ''}
+              className={[active?'is-selected':'',marked?'is-manually-marked':''].filter(Boolean).join(' ')}
               onClick={context ? () => onSelectJob?.(context) : undefined}
+              onMouseEnter={()=>snapshot&&setAttentionPreview(snapshot)}
+              onFocusCapture={()=>snapshot&&setAttentionPreview(snapshot)}
             >
-              <td title={row.host}>{shortHost(row.host)}</td>
+              <td title={row.host}><label className="sphereAttentionMark" title="Manual attention, not SAP job status">
+                <input type="checkbox" disabled={!snapshot} checked={Boolean(marked)}
+                  aria-label={`Mark ${snapshot?.name||row.consumer_key} on ${shortHost(row.host)} for manual attention`}
+                  onClick={event=>event.stopPropagation()}
+                  onChange={event=>{event.stopPropagation();markAttention(snapshot,event.target.checked)}} />
+                {shortHost(row.host)}
+              </label></td>
               <td className="rundeckCurrentWorkloadName">
                 <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }} title={row.consumer_key}>{observedWorkloadName(row.consumer_key, details)}</button>
                 <small title={fullIdentity || identity}>{identity}</small>
@@ -319,5 +342,9 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       <button type="button" disabled={currentPage===0} onClick={()=>setListPage(n=>Math.max(0,n-1))}>Previous</button>
       <button type="button" disabled={currentPage>=totalPages-1} onClick={()=>setListPage(n=>Math.min(totalPages-1,n+1))}>Next</button>
     </nav>}
+    <RundeckManualAttention open={attentionOpen} rows={attentionRows} preview={attentionPreview}
+      onClose={closeAttention} onRemove={id=>setAttentionRows(items=>items.filter(row=>row.id!==id))}
+      onClear={()=>setAttentionRows([])}
+      onOpenJob={entry=>entry.context&&onSelectJob?.(entry.context)} />
   </section>
 }
