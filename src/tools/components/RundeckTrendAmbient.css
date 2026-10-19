@@ -1,46 +1,65 @@
-/* A single shared temporal field replaces the three visible plots at idle.
- * Source ECharts always remain mounted and fully interactive underneath. */
-.rundeckTripleTrendGrid.is-unified-vortex { position:relative; isolation:isolate; }
-.rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCanvas {
-  position:absolute; inset:0; z-index:4; width:100%; height:100%;
-  display:block; pointer-events:none!important; opacity:0; contain:paint;
+/* SPHERE DEV / Performance Trends: one balanced, source-driven idle field.
+ * Inactive ECharts remain mounted. Hover/focus reveals all original chart controls. */
+.rundeckTripleTrendGrid.is-unified-vortex{position:relative;isolation:isolate}
+.rundeckTripleTrendGrid.is-unified-vortex>.rundeckUnifiedVortexCanvas{
+  position:absolute;inset:0;z-index:4;width:100%;height:100%;
+  display:block;pointer-events:none!important;opacity:0;contain:paint;
 }
-.rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCanvas { opacity:1; }
-.rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCore {
-  display:none; pointer-events:none;
+.rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCanvas{opacity:1}
+.rundeckTripleTrendGrid.is-unified-vortex>:is(.rundeckUnifiedVortexCore,.rundeckUnifiedVortexLabels){
+  display:none;pointer-events:none!important;
 }
-@media (min-width:900px) and (prefers-reduced-motion:no-preference) {
-  /* One continuous dark field across CPU, RAM and Technical (not three small swirls).
-     Hover/focus immediately returns the original charts and all their controls. */
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]::before {
-    content:""; position:absolute; inset:0; z-index:3;
-    background:var(--sphere-surface-1,#141d23);
-    opacity:1; pointer-events:none!important;
-    transition:opacity .65s cubic-bezier(.2,.8,.2,1);
+@media(min-width:1281px) and (prefers-reduced-motion:no-preference){
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]::before{
+    content:"";position:absolute;inset:0;z-index:3;pointer-events:none!important;
+    background:radial-gradient(ellipse 34% 76% at 50% 65%,rgba(67,115,124,.09),transparent 100%),
+               var(--sphere-surface-1,#141d23);
+    opacity:1;transition:opacity .65s cubic-bezier(.2,.8,.2,1);
   }
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded::before {
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded::before{opacity:0}
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels{
+    position:absolute;z-index:5;top:8px;left:20px;right:20px;
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    align-items:start;column-gap:16px;opacity:1;transition:opacity .35s ease;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span{
+    min-width:0;display:flex;align-items:baseline;gap:6px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-size:10.5px;font-weight:700;
+    color:var(--sphere-text,#dbe7eb);
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span:nth-child(2){justify-content:center}
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels>span:nth-child(3){justify-content:flex-end}
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels b{
+    font-size:9px;font-weight:650;color:var(--sphere-accent,#78b9bb);opacity:.85
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexLabels small{
+    font-size:9px;font-weight:450;color:var(--sphere-text-secondary,#839aa5);
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCore{
+    position:absolute;left:50%;top:64%;transform:translate(-50%,-50%);
+    z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;padding:7px 13px;
+    background:radial-gradient(ellipse at center,var(--sphere-surface-1,#141d23) 28%,transparent 96%);
+    opacity:.94;transition:opacity .35s ease,transform .6s ease;
+    white-space:nowrap;text-align:center;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCore strong{
+    font-size:12px;font-weight:800;letter-spacing:.12em;
+    color:var(--sphere-text,#dbe7eb);
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCore small{
+    font-size:8.5px;font-weight:550;letter-spacing:.045em;
+    color:var(--sphere-text-secondary,#839aa5);
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded>:is(.rundeckUnifiedVortexCore,.rundeckUnifiedVortexLabels){
     opacity:0;
   }
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCore {
-    position:absolute; left:50%; top:52%; transform:translate(-50%,-50%);
-    z-index:5; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:3px; opacity:.9; transition:opacity .4s ease, transform .6s ease;
-    white-space:nowrap; text-align:center; pointer-events:none!important;
-  }
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCore strong {
-    font-size:13px; letter-spacing:.13em; font-weight:800;
-    color:var(--sphere-text,#e0e8eb);
-  }
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCore small {
-    font-size:9px; font-weight:600; letter-spacing:.055em;
-    color:var(--sphere-text-secondary,#92a3ac);
-  }
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded > .rundeckUnifiedVortexCore {
-    opacity:0; transform:translate(-50%,-50%) scale(.8);
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded>.rundeckUnifiedVortexCore{
+    transform:translate(-50%,-50%) scale(.82);
   }
 }
-@media (max-width:899px),(prefers-reduced-motion:reduce) {
-  .rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCanvas,
-  .rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCore { display:none!important; }
-  .rundeckTripleTrendGrid.is-unified-vortex::before { display:none!important; }
+@media(max-width:1280px),(prefers-reduced-motion:reduce){
+  .rundeckTripleTrendGrid.is-unified-vortex>:is(.rundeckUnifiedVortexCanvas,.rundeckUnifiedVortexCore,.rundeckUnifiedVortexLabels){display:none!important}
+  .rundeckTripleTrendGrid.is-unified-vortex::before{display:none!important}
 }

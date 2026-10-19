@@ -1079,8 +1079,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </section>
       {temporalReady && <>
         <canvas ref={unifiedCanvasRef} className="rundeckUnifiedVortexCanvas" aria-hidden="true" />
+        <div className="rundeckUnifiedVortexLabels" aria-hidden="true">
+          <span><b>01</b> {metricLabel(serverMetric1)} <small>APP host</small></span>
+          <span><b>02</b> {metricLabel(serverMetric2)} <small>APP host</small></span>
+          <span><b>03</b> {technicalMetric === 'load' ? 'Host Load' : technicalNetwork ? 'Network ' + networkDirection.toUpperCase() : metricLabel(technicalMetric)} <small>Technical</small></span>
+        </div>
         <div className="rundeckUnifiedVortexCore" aria-hidden="true">
-          <strong>SPHERE</strong><small>CPU · RAM · TECHNICAL</small>
+          <strong>SPHERE</strong><small>Saved APP trends</small>
         </div>
       </>}
     </div>

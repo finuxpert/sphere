@@ -22,15 +22,15 @@ export function retainedVortexSamples(series = [], limit = 36) {
   }).filter(row => row.values.length > 1)
 }
 
-// Elliptical 3-panel projection. Independent X/Y radii keep the idle field
-// spanning CPU, RAM and Technical, rather than collapsing inside RAM.
+// Compact elliptical 3-panel composition. All channels share one visible core,
+// leaving room for clearly identified CPU/RAM/Technical labels above it.
 export function unifiedVortexOrigin({ width, height, t, metric, host, phase = 0 }) {
   const progress = Math.min(1, Math.max(0, Number(t) || 0))
   const reach = .08 + Math.pow(progress, 1.16) * .92
   const theta = phase + progress * Math.PI * 5.4 + metric * 2.03 + host * Math.PI * 2 / 5
   return {
-    x: width * .5 + Math.cos(theta) * width * .435 * reach,
-    y: height * .53 + Math.sin(theta) * height * .39 * reach,
+    x: width * .5 + Math.cos(theta) * width * .255 * reach,
+    y: height * .64 + Math.sin(theta) * height * .265 * reach,
   }
 }
 
@@ -44,7 +44,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
   const ctx=canvas.getContext('2d')
   if (!ctx) return undefined
   const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')
-  const compact=window.matchMedia?.('(max-width:899px)')
+  const compact=window.matchMedia?.('(max-width:1280px)')
   let disabled=Boolean(reduce?.matches||compact?.matches)
   let raf=0, stopped=false, intersecting=true
   let last=0, angle=.18, morph=0, width=1, height=1
@@ -72,7 +72,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
       if(!chart || chart.isDisposed?.()) return
       let option
       try{option=chart.getOption?.()}catch{return}
-      const series=retainedVortexSamples(option?.series)
+      const series=retainedVortexSamples(option?.series, 26)
       if(!series.length)return
       const box=node.getBoundingClientRect()
       const left=box.left-origin.left, top=box.top-origin.top
@@ -123,19 +123,19 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     const p=morph*morph*(3-2*morph)
     const ambientAlpha=(1-p)
     if(ambientAlpha>.015){
-      // Concentric time rings span all three existing trend panels.
-      const cx=width*.5,cy=height*.53
-      for(let j=1;j<=12;j++){
-        const reach=j/12
+      // A centered, proportionate vortex sits below three persistent metric labels.
+      const cx=width*.5,cy=height*.64
+      for(let j=1;j<=9;j++){
+        const reach=j/9
         ctx.beginPath()
         for(let k=0;k<6;k++){
           const theta=angle*.22+j*.12+k*Math.PI/3
-          const x=cx+Math.cos(theta)*width*.435*reach
-          const y=cy+Math.sin(theta)*height*.39*reach
+          const x=cx+Math.cos(theta)*width*.255*reach
+          const y=cy+Math.sin(theta)*height*.265*reach
           if(k)ctx.lineTo(x,y);else ctx.moveTo(x,y)
         }
         ctx.closePath()
-        ctx.globalAlpha=ambientAlpha*(j%3===0?.23:.11)
+        ctx.globalAlpha=ambientAlpha*(j%3===0?.22:.105)
         ctx.strokeStyle='#638d98';ctx.lineWidth=.85;ctx.stroke()
       }
       hex(cx,cy,7,'#81adb3',ambientAlpha*.30)
@@ -152,12 +152,12 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
         if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
       }
       ctx.strokeStyle=row.color
-      ctx.globalAlpha=(.40*(1-p)+.08*p)
+      ctx.globalAlpha=(.33*(1-p)+.08*p)
       ctx.lineWidth=1.1;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
       const stride=p>.95?4:1
       for(let i=0;i<placed.length;i+=stride){
         const pt=placed[i]
-        hex(pt.x,pt.y,2.6*(1-p)+1.4*p,row.color,.53*(1-p)+.14*p)
+        hex(pt.x,pt.y,2.4*(1-p)+1.4*p,row.color,.46*(1-p)+.14*p)
       }
     }
     ctx.globalAlpha=1

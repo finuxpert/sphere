@@ -24,14 +24,15 @@ test('vortex interpolation preserves destinations and never adjusts chart values
   assert.deepEqual(vortexDestination(point,.5),{x:141.5,y:76})
 })
 
-test('idle vortex spans the width of three panels, not merely the middle one',()=>{
+test('idle vortex is centered and leaves a header lane for all three trends',()=>{
   const width=1320,height=200
   const points=Array.from({length:3},(_,metric)=>
     Array.from({length:5},(_,host)=>
       unifiedVortexOrigin({width,height,t:1,metric,host,phase:.18}))).flat()
-  assert.ok(Math.min(...points.map(point=>point.x)) < width*.25)
-  assert.ok(Math.max(...points.map(point=>point.x)) > width*.75)
-  assert.ok(points.every(point=>point.x>0&&point.x<width&&point.y>0&&point.y<height))
+  assert.ok(Math.min(...points.map(point=>point.x)) > width*.20)
+  assert.ok(Math.max(...points.map(point=>point.x)) < width*.80)
+  assert.ok(Math.max(...points.map(point=>point.x))-Math.min(...points.map(point=>point.x)) > width*.40)
+  assert.ok(points.every(point=>point.y>height*.35&&point.y<height*.93))
 })
 
 test('single shared grid motion keeps original ECharts tools, statuses and source provenance',()=>{
@@ -57,6 +58,11 @@ test('single shared grid motion keeps original ECharts tools, statuses and sourc
   assert.match(css,/\.is-unified-vortex\[data-vortex-ready="true"\]::before/)
   assert.match(css,/\.is-expanded::before/)
   assert.match(trend,/rundeckUnifiedVortexCore/)
+  assert.match(trend,/rundeckUnifiedVortexLabels/)
+  assert.match(trend,/technicalMetric === 'load' \? 'Host Load'/)
+  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/)
+  assert.match(css,/min-width:1281px/)
+  assert.match(layer,/max-width:1280px/)
   assert.match(css,/z-index:3/)
   assert.match(css,/pointer-events:none!important/)
   assert.match(layer,/datazoom/)
