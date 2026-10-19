@@ -54,27 +54,34 @@ export default function RundeckUnifiedAppInfrastructure({
     if (!stage || buttons.length !== 5) return undefined
     let raf = 0
     let last = 0
+    let phase = -.7
+    let visible = true
     const positions = buttons.map(() => ({ x: NaN, y: NaN, scale: 1 }))
-    // Keep the five real APP hosts in a stable 3+2 honeycomb.
-    // Hover/focus expands the arrangement once; no continuous orbit on an idle dashboard.
-    const idleLocations = [[.14, .31], [.5, .23], [.86, .31], [.32, .77], [.68, .77]]
+    // Quiet, continuous APP orbit when idle; hover/focus settles into a fixed 3+2
+    // selection layout so the host never moves away from the pointer.
     const expandedLocations = [[.14, .25], [.5, .25], [.86, .25], [.32, .77], [.68, .77]]
     const tick = time => {
       raf = 0
-      if (document.hidden || !stage.isConnected) return
-      const delta = last ? Math.min((time - last) / 1000, .07) : .016
+      if (document.hidden || !visible || !stage.isConnected) return
+      // About 25 render updates/s are sufficient for this deliberately slow orbit.
+      if (last && time - last < 40) { raf = window.requestAnimationFrame(tick); return }
+      const delta = last ? Math.min((time - last) / 1000, .08) : .04
       last = time
       const expanded = orbitExpandedRef.current
-      const locations = expanded ? expandedLocations : idleLocations
+      if (!expanded) phase += delta * .15
       const width = stage.clientWidth
       const height = stage.clientHeight
+      const rx = Math.min(width * .35, 118)
+      const ry = Math.min(height * .34, 40)
       const blend = 1 - Math.exp(-delta * (expanded ? 9 : 7))
       let moving = false
       buttons.forEach((button, index) => {
         const position = positions[index]
-        const targetX = width * locations[index][0]
-        const targetY = height * locations[index][1]
-        const targetScale = expanded ? 1 : .94
+        const theta = phase + index * 2 * Math.PI / 5
+        const depth = Math.sin(theta)
+        const targetX = expanded ? width * expandedLocations[index][0] : width / 2 + Math.cos(theta) * rx
+        const targetY = expanded ? height * expandedLocations[index][1] : height / 2 + depth * ry
+        const targetScale = expanded ? 1 : .88 + .1 * (depth + 1) / 2
         position.x = Number.isFinite(position.x) ? position.x + (targetX - position.x) * blend : targetX
         position.y = Number.isFinite(position.y) ? position.y + (targetY - position.y) * blend : targetY
         position.scale += (targetScale - position.scale) * blend
@@ -83,22 +90,30 @@ export default function RundeckUnifiedAppInfrastructure({
         button.style.left = position.x + 'px'
         button.style.top = position.y + 'px'
         button.style.transform = 'translate(-50%,-50%) scale(' + position.scale + ')'
-        button.style.zIndex = expanded ? '2' : '1'
+        button.style.zIndex = expanded ? '2' : String(depth > .15 ? 3 : 1)
       })
-      // Render only while settling. A static dashboard performs zero idle animation frames.
-      if (moving) raf = window.requestAnimationFrame(tick)
+      // Idle keeps breathing slowly; interaction settles to stable targets.
+      if (!expanded || moving) raf = window.requestAnimationFrame(tick)
     }
     const wake = () => {
-      if (!raf && !document.hidden) {
+      if (!raf && !document.hidden && visible) {
         last = 0
         raf = window.requestAnimationFrame(tick)
       }
     }
     orbitWakeRef.current = wake
+    const viewportObserver = typeof IntersectionObserver === 'undefined' ? null :
+      new IntersectionObserver(entries => {
+        visible = entries.some(entry => entry.isIntersecting)
+        if (visible) wake()
+        else { window.cancelAnimationFrame(raf); raf = 0 }
+      }, { threshold: 0 })
+    viewportObserver?.observe(stage)
     document.addEventListener('visibilitychange', wake)
     wake()
     return () => {
       window.cancelAnimationFrame(raf)
+      viewportObserver?.disconnect()
       document.removeEventListener('visibilitychange', wake)
       if (orbitWakeRef.current === wake) orbitWakeRef.current = null
       buttons.forEach(button => { button.style.left = ''; button.style.top = ''; button.style.transform = ''; button.style.zIndex = '' })
