@@ -1086,7 +1086,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           {[
             { id: '01', label: metricLabel(serverMetric1), description: 'APP host', peak: savedPeak1 },
             { id: '02', label: metricLabel(serverMetric2), description: 'APP host', peak: savedPeak2 },
-            { id: '03', label: technicalMetric === 'load' ? 'Host Load' : technicalNetwork ? 'Network ' + networkDirection.toUpperCase() : metricLabel(technicalMetric), description: 'Technical', peak: savedTechnicalPeak },
+            { id: '03', label: technicalMetric === 'load' ? 'Host Load' : technicalNetwork ? 'Network ' + networkDirection.toUpperCase() : metricLabel(technicalMetric), description: technicalMetric === 'load' ? 'Linux load avg · not %' : 'Technical', peak: savedTechnicalPeak },
           ].map(item => <span key={item.id}>
             <span><b>{item.id}</b> {item.label} <small>{item.description}</small></span>
             <strong>{item.peak ? numberText(item.peak.value, 1) + (item.peak.unit === '%' ? '%' : item.peak.unit ? ' ' + item.peak.unit : '') : '—'}</strong>

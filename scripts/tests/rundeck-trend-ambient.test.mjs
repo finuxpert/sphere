@@ -94,6 +94,7 @@ test('single shared grid motion keeps original ECharts tools, statuses and sourc
   assert.match(layer,/row\.segments\.forEach/)
   assert.match(layer,/if\(placed\.length>1\)/)
   assert.match(trend,/technicalMetric === 'load' \? 'Host Load'/)
+  assert.match(trend,/Linux load avg · not %/)
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/)
   assert.match(css,/min-width:1281px/)
   assert.match(layer,/max-width:1280px/)
