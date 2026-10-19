@@ -848,27 +848,27 @@
     min-height:26px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthFooter :is(span,small){
-    font-size:8.5px!important;
+    font-size:9.5px!important;
   }
 }
 @media(min-width:900px){
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppSource small{
-    font-size:10px!important;
-    line-height:1.25!important;
+    font-size:11px!important;
+    line-height:1.28!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppMetric small{
-    font-size:10px!important;
+    font-size:11px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckSelectedAppFsMeta{
-    font-size:9.5px!important;
+    font-size:10.5px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button:is(:hover,:focus-visible){
     background:rgba(79,198,200,.065)!important;
     border-left-color:var(--sphere-accent,#4fc6c8)!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions>button small{
-    font-size:10.5px!important;
-    line-height:1.2!important;
+    font-size:11px!important;
+    line-height:1.25!important;
   }
 }
 /* Full/Typical switches retain their separate, descriptive focus targets. */
