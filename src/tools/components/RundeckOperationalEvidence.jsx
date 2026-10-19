@@ -49,12 +49,12 @@ export default function RundeckOperationalEvidence({
       </button>
   // Four distinct destinations; related data shares a popup rather than duplicated links.
   return <nav className="rundeckAnalysisLaunchers" aria-label="Operational analysis">
-    <div className="rundeckAnalysisLaunchersHead"><h3>Operational Analysis</h3></div>
+    <div className="rundeckAnalysisLaunchersHead"><h3>Operational Checks</h3></div>
     <div className="rundeckAnalysisActions" role="group" aria-label="Investigation shortcuts">
       {evidence}
       <button type="button" className="rundeckAnalysisSecondary" onClick={onOpenIssues} aria-label="Open SAP Checks">
         <span><SphereIcon name="activity" />SAP Checks</span>
-        <small>System availability · SAP issues</small>
+        <small>Service availability · SAP issues</small>
       </button>
       <button type="button" className="rundeckAnalysisInfrastructure" onClick={onOpenInfrastructure} aria-label="Open Infrastructure Analysis">
         <span><SphereIcon name="server" />Infrastructure</span><small>{infrastructureLabel || 'Host metrics'}</small>
