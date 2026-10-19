@@ -188,7 +188,8 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     const target=expandedRef?.current?1:0
     morph+=(target-morph)*(1-Math.exp(-dt*(target?7.2:3.6)))
     if(Math.abs(target-morph)<.003)morph=target
-    // No idle rotation: the saved-evidence visualization stays still until interacted with.
+    // Ambient braid follows verified chart paths at a slow idle pace only.
+    if(!target)angle+=dt*.10
     ctx.clearRect(0,0,width,height)
     const p=morph*morph*morph*(morph*(morph*6-15)+10)
     const ambientAlpha=(1-p)
@@ -236,8 +237,8 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
       }
     }
     ctx.globalAlpha=1
-    // Hold the finished expanded form until interaction, instead of perpetual motion.
-    if(morph!==target)wake()
+    // Idle animates gently; hover/focus settles on the original source charts.
+    if(target===0||morph!==target)wake()
   }
   function wake(){
     if(!raf && !stopped && !disabled && intersecting && !document.hidden)raf=window.requestAnimationFrame(paint)
