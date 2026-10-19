@@ -324,7 +324,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     <div className="rundeckInfraFreshness">
       <span><b>Last collected</b> {formatTime(observedAt)} WIB</span>
       <span><b>Freshness</b> {freshness==='UNKNOWN'?'UNKNOWN':`${ageText(observedAt)} · ${freshness}`}</span>
-      <span title="Infrastructure collector sampling interval, not historical graph bucket resolution."><b>Sample interval</b> {metric(hostRow?.sample_seconds,'s')}</span>
+      <span title="Infrastructure collector sampling interval in seconds; not the aggregation bucket of the history chart."><b>Collector sample</b> {metric(hostRow?.sample_seconds,'s')}</span>
       <span><b>State</b> <strong className={`is-${overall.toLowerCase()}`}>{overall}</strong></span>
       <span title={`${host} · snapshot ${hostRow?.snapshot_ts || 'unknown'}`}><b>Collection</b> {hostRow?.collection_id || '—'}</span>
     </div>
@@ -333,7 +333,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     {stale&&<div className="rundeckInfraHistoricalNote" role="status">Infrastructure sample: {freshness} · host and collection checked separately</div>}
     <div className="rundeckInfraWorkspace">
       <div className="rundeckInfraCurrent">
-        <div className="rundeckInfraCurrentLabel">{stale?'Last collected readings':'Current readings'}</div>
+        <div className="rundeckInfraCurrentLabel">{stale?'Last retained readings':'Latest collected readings'}</div>
         <div className="rundeckInfraGrid">
       <article><div className="cardHead"><div><h4>Filesystem</h4><small>Capacity · {observedData.fs.length} mount(s)</small></div><div className="rundeckInfraFsPager"><button type="button" aria-label="Previous filesystem mounts" disabled={effectiveFsPage===0} onClick={()=>setFsPage(n=>Math.max(0,n-1))}>‹</button><small title={`Filesystem page ${effectiveFsPage+1} of ${fsPageCount}`}>{fsRows.length ? effectiveFsPage*fsPerPage+1 : 0}–{Math.min(observedData.fs.length,(effectiveFsPage+1)*fsPerPage)} / {observedData.fs.length}</small><button type="button" aria-label="Next filesystem mounts" disabled={effectiveFsPage>=fsPageCount-1} onClick={()=>setFsPage(n=>Math.min(fsPageCount-1,n+1))}>›</button><span className={`is-${fsState.toLowerCase()}`}>{fsState}</span></div></div><table><thead><tr><th>Mount</th><th>Used</th><th>State</th></tr></thead><tbody>{fsRows.map(row=><tr key={row.mount_point} className={`is-clickable ${trendMetric==='filesystem'&&selectedSeries===row.mount_point?'is-history-selected':''}`} tabIndex={0} onClick={()=>openTrend('filesystem',row.mount_point)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTrend('filesystem',row.mount_point)}}}><td title={`${row.host} · ${row.device || 'device unknown'} · collection ${row.collection_id || 'unknown'} · ${row.collected_at || 'time unknown'}`}>{row.mount_point}</td><td>{metric(row.used_pct,'%')}</td><td><b className={`is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}`}>{observedStatus(statusFs(row.used_pct))}</b></td></tr>)}{!observedData.fs.length&&<tr><td colSpan="3">No filesystem sample.</td></tr>}</tbody></table></article>
       <article>
@@ -400,7 +400,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
 
       <section className="rundeckInfraTrend rundeckInfraTrendWorkspace">
         <div className="rundeckInfraTrendWorkspaceHead">
-          <div><b>Infrastructure History</b><small>{host}</small></div>
+          <div><b>Infrastructure History</b><small>{host} · historical measurements</small></div>
         </div>
         <header><div/><div className="controls">
         <div>{['1h','6h','24h','7d','30d'].map(v=><button key={v} type="button" className={range===v?'is-active':''} onClick={()=>setRange(v)}>{v.toUpperCase()}</button>)}</div>
