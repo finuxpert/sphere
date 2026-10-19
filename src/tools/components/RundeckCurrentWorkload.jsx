@@ -116,7 +116,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const markAttention=(snapshot,checked)=>{
     if(!snapshot)return
     setAttentionRows(items=>checked?[...items.filter(r=>r.id!==snapshot.id),snapshot]:items.filter(r=>r.id!==snapshot.id))
-    if(checked){setAttentionPreview(snapshot);setAttentionOpen(true)}
+    if(checked)setAttentionPreview(snapshot)
   }
 
   React.useEffect(() => {

@@ -40,3 +40,24 @@
 .sphereAttentionDrawer footer{border-top:1px solid rgba(121,152,169,.2)}
 .sphereAttentionDrawer footer>span{display:block;color:var(--sphere-accent,#64cac8);font-size:11px;margin-top:6px}
 @media(prefers-reduced-motion:reduce){.sphereAttentionDrawer{animation:none!important}}
+
+/* Manual Attention: keep the one-screen table stationary while marks accumulate. */
+.rundeckCurrentWorkloadHead .sphereAttentionTrigger{
+  transition:background-color .2s cubic-bezier(.22,1,.36,1),border-color .2s ease;
+}
+.rundeckCurrentWorkloadHead .sphereAttentionTrigger:focus-visible{
+  outline:2px solid var(--sphere-accent,#64cac8);outline-offset:2px;
+}
+.rundeckCurrentWorkload .sphereAttentionMark input{
+  transition:background-color .18s ease,border-color .18s ease;
+}
+.rundeckCurrentWorkload tbody tr.is-manually-marked{
+  background:rgba(58,132,137,.07);
+}
+.sphereAttentionItem{
+  transition:background-color .18s ease,border-color .18s ease;
+}
+@media(prefers-reduced-motion:reduce){
+  .rundeckCurrentWorkloadHead .sphereAttentionTrigger,
+  .rundeckCurrentWorkload .sphereAttentionMark input,.sphereAttentionItem{transition:none!important}
+}
