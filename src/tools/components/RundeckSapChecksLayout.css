@@ -276,9 +276,14 @@
   font-variant-numeric:tabular-nums;color:var(--sphere-text-secondary,#a9b5bb);
 }
 .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure>summary>small{
-  margin-left:auto;font-size:10.5px;font-weight:400;
+  margin-left:auto;font-size:11px;font-weight:400;
   color:var(--sphere-text-muted,#8d9aa3);
 }
+/* Visible disclosure affordance even when native summary marker is suppressed by flex. */
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure>summary::after{
+  content:'▾';color:var(--sphere-info,#77bcc6);font-size:14px;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDisclosure[open]>summary::after{content:'▴';}
 .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksSampleTime{
   display:inline-block;margin-left:9px;font-size:10px!important;font-weight:450;
   color:var(--sphere-text-secondary,#a9b5bb);
@@ -320,7 +325,7 @@
     padding:9px 0!important;
   }
   .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckAvailabilityDetailSections :is(h4,b,span){
-    font-size:11px!important;
+    font-size:12px!important;
   }
   .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip{
     grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -393,7 +398,13 @@
   font-variant-numeric:tabular-nums;
 }
 .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDock .rundeckSapIssuesTableWrap{
-  max-width:100%;overflow-x:auto;
+  max-width:100%;
+  max-height:min(194px,26dvh);
+  overflow-x:auto;overflow-y:auto;overscroll-behavior:contain;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDock .rundeckSapIssuesTableWrap :is(th,td){
+  font-size:11.5px;line-height:1.35;
+  padding:7px 6px;
 }
 @media(min-width:1041px){
   .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid{
