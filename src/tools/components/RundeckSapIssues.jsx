@@ -128,6 +128,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const unknownCount=reviewIndicators.filter((row)=>row.status==='UNKNOWN').length
   const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
   const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
+  const separateWarningCount=reviewIndicators.filter((row)=>row.status==='WARNING').length
   const baseIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
   const normalizedQuery=indicatorQuery.trim().toLocaleLowerCase()
   const visibleIndicators=baseIndicators.filter(row=>
@@ -151,8 +152,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
 
   const inspect=(row)=>row.host&&onInspectApp?.({host:row.host,source:'sap-issues',issue:row.indicator,severity:row.status})
 
-  const historyContent = data.incidents ? <details className="rundeckSapChecksHistoryDisclosure" open={!paired || (incidentItems.length > 0 && incidentItems.length <= 2)}>
-      <summary>Incident history <span>{retainedIncidentCount ?? '—'}</span><small>Saved records · peak and duration</small></summary>
+  const historyContent = data.incidents ? <details className="rundeckSapChecksHistoryDisclosure" open={!paired || (incidentItems.length > 0 && incidentItems.length <= 5)}>
+      <summary>Incident history <span>{retainedIncidentCount ?? '—'}</span><small>{incidentItems.length > 5 ? 'Expand saved records' : 'Saved incident details · peak and duration'}</small></summary>
       <section className="rundeckIssueIndicatorSection is-history">
       <div className="rundeckIssueSectionTitle"><h4>Saved incidents</h4><small>Peak Critical WP {peakCriticalWp||'—'} · APP status from latest verified sample</small></div>
       {incidentItems.length > 0 ? <div className="rundeckSapIssuesTableWrap"><table className="rundeckSapIssuesTableV1231">
@@ -186,8 +187,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     <div className="rundeckSapIssuesSummaryStrip" aria-label="Current indicator status">
       <span title="Non-normal indicators exclude SAP SM37 readiness."><b>Non-normal</b><strong>{reviewIndicators.length}</strong></span>
       <span><b>Critical</b><strong>{criticalCount}</strong></span>
-      <span><b>Attention</b><strong>{warningCount}</strong></span>
-      <span><b>Unknown</b><strong>{unknownCount}</strong></span>
+      <span title={separateWarningCount ? `${warningCount - separateWarningCount} Attention · ${separateWarningCount} Warning` : 'Attention indicates threshold reached; not automatically SAP DOWN'}><b>{separateWarningCount ? 'Attention / Warning' : 'Attention'}</b><strong>{warningCount}</strong></span>
+      <span title="No verified recent evidence. UNKNOWN is not a confirmed SAP service failure."><b>Unknown</b><strong>{unknownCount}</strong></span>
     </div>
 
     <section className="rundeckIssueIndicatorSection">
