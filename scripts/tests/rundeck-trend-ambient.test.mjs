@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { retainedVortexSamples, unifiedVortexOrigin, vortexDestination } from '../../src/tools/components/rundeckTrendAmbient.js'
+import { retainedVortexSamples, savedVortexPeak, unifiedVortexOrigin, vortexDestination } from '../../src/tools/components/rundeckTrendAmbient.js'
 
 test('unified vortex only uses exact retained numeric ECharts samples', () => {
   const inputs=[{ name:'APP1',data:[
@@ -15,6 +15,35 @@ test('unified vortex only uses exact retained numeric ECharts samples', () => {
   assert.deepEqual(retainedVortexSamples(null),[])
   assert.deepEqual(retainedVortexSamples([]),[])
   assert.ok(retainedVortexSamples([{data:Array.from({length:200},(_,i)=>({value:[i,i]}))}],36)[0].values.length<=36)
+})
+
+
+test('unified vortex disconnects traces at every explicit or APP-specific gap', () => {
+  const data = [{ name: 'APP1', data: [
+    { value: [1000, 0] }, { value: [2000, 12] },
+    { value: [3000, null], gap: true, appGap: true },
+    { value: [4000, 40] }, { value: [5000, 45] },
+    { value: [6000, null], gap: true },
+    { value: [7000, 55] },
+  ] }]
+  const rows = retainedVortexSamples(data, 48)
+  assert.equal(rows.length, 1)
+  assert.deepEqual(rows[0].segments.map(part => part.map(item => item.value[0])),
+    [[1000, 2000], [4000, 5000], [7000]])
+  assert.equal(rows[0].segments[0][0].value[1], 0)
+  assert.ok(rows[0].segments[1][0].t > rows[0].segments[0][1].t)
+  assert.ok(rows[0].segments.every(part => part.length <= 48))
+})
+
+test('idle peak summaries use saved buckets, not fabricated current host state', () => {
+  assert.deepEqual(savedVortexPeak({ unit: '%', items: [
+    { bucket: '2026-10-17T04:00:00Z', max_value: 0, avg_value: 0 },
+    { bucket: '2026-10-17T05:00:00Z', max_value: 76, avg_value: 18 },
+    { bucket: '2026-10-17T06:00:00Z', max_value: null, avg_value: null },
+  ] }, 'max'), { value: 76, bucket: '2026-10-17T05:00:00Z', unit: '%' })
+  assert.equal(savedVortexPeak({ items: [{ max_value: null }] }), null)
+  assert.equal(savedVortexPeak({ items: [] }), null)
+  assert.equal(savedVortexPeak({ items: [{ max_value: 0, bucket: 'abc' }] }).value, 0)
 })
 
 test('vortex interpolation preserves destinations and never adjusts chart values',()=>{
@@ -59,6 +88,10 @@ test('single shared grid motion keeps original ECharts tools, statuses and sourc
   assert.match(css,/\.is-expanded::before/)
   assert.match(trend,/rundeckUnifiedVortexCore/)
   assert.match(trend,/rundeckUnifiedVortexLabels/)
+  assert.match(trend,/savedVortexPeak\(/)
+  assert.match(trend,/Saved peak · bucket/)
+  assert.match(layer,/row\.segments\.forEach/)
+  assert.match(layer,/if\(placed\.length>1\)/)
   assert.match(trend,/technicalMetric === 'load' \? 'Host Load'/)
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/)
   assert.match(css,/min-width:1281px/)

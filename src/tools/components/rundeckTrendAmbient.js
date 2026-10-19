@@ -1,25 +1,56 @@
 // A single decorative 3-channel vortex, driven exclusively by existing ECharts samples.
 // No SAP fetching, synthetic telemetry, threshold changes, or event interception.
+// Preserve every explicit null, APP-specific missing bucket and collection gap.
 export function retainedVortexSamples(series = [], limit = 36) {
   if (!Array.isArray(series)) return []
   const max = Math.max(2, Math.min(48, Math.floor(Number(limit) || 36)))
   return series.map((entry, seriesIndex) => {
-    const observed = (Array.isArray(entry?.data) ? entry.data : []).filter(item => {
-      const value = item?.value
-      return !item?.gap && Array.isArray(value) && value.length >= 2 &&
+    const raw = Array.isArray(entry?.data) ? entry.data : []
+    const contiguous = []
+    let segment = []
+    const flush = () => { if (segment.length) contiguous.push(segment); segment = [] }
+    raw.forEach((item, index) => {
+      const value = Array.isArray(item) ? item : item?.value
+      const valid = !item?.gap && Array.isArray(value) && value.length >= 2 &&
         value[0] !== null && value[0] !== undefined &&
-        value[1] !== null && value[1] !== undefined &&
-        value[1] !== '' && Number.isFinite(Number(value[1]))
+        value[1] !== null && value[1] !== undefined && value[1] !== '' &&
+        Number.isFinite(Number(value[1]))
+      if (!valid) { flush(); return }
+      segment.push({ value, t: raw.length <= 1 ? 0 : index / (raw.length - 1) })
     })
-    const size = Math.min(max, observed.length)
-    const indices = size <= 1 ? (size ? [0] : []) :
-      [...new Set(Array.from({ length:size }, (_, i) => Math.round(i*(observed.length-1)/(size-1))))]
+    flush()
+    // Bound draw cost while retaining the latest observed segments. A missing
+    // interval never becomes an invented connector, even after decimation.
+    const shown = contiguous.slice(-Math.max(1, Math.floor(max / 2)))
+    const perSegment = Math.max(2, Math.floor(max / Math.max(1, shown.length)))
+    const segments = shown.map(points => {
+      const size = Math.min(perSegment, points.length)
+      if (size === 1) return [points[0]]
+      const indices = [...new Set(Array.from({ length: size }, (_, i) =>
+        Math.round(i * (points.length - 1) / (size - 1))))]
+      return indices.map(i => points[i])
+    })
     return {
       seriesIndex, name: String(entry?.name || ''),
       color: typeof entry?.lineStyle?.color === 'string' ? entry.lineStyle.color : '#8298a3',
-      values: indices.map(i => observed[i].value),
+      segments, values: segments.flatMap(points => points.map(point => point.value)),
     }
-  }).filter(row => row.values.length > 1)
+  }).filter(row => row.values.length > 0)
+}
+
+// Aggregated highest retained bucket only. No inference about "current" SAP state.
+export function savedVortexPeak(trend, mode = 'max') {
+  if (!Array.isArray(trend?.items)) return null
+  const key = mode === 'avg' ? 'avg_value' : 'max_value'
+  let peak = null
+  for (const item of trend.items) {
+    const value = item?.[key]
+    if (value === null || value === undefined || value === '' || !Number.isFinite(Number(value))) continue
+    if (!peak || Number(value) > peak.value) {
+      peak = { value: Number(value), bucket: String(item.bucket || ''), unit: String(trend.unit || '') }
+    }
+  }
+  return peak
 }
 
 // Compact elliptical 3-panel composition. All channels share one visible core,
@@ -76,20 +107,18 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
       if(!series.length)return
       const box=node.getBoundingClientRect()
       const left=box.left-origin.left, top=box.top-origin.top
-      series.forEach((row,host)=>{
-        const points=[]
-        row.values.forEach((value,i)=>{
-          let xy
-          try{xy=chart.convertToPixel({seriesIndex:row.seriesIndex},value)}catch{return}
-          if(!Array.isArray(xy)||!Number.isFinite(xy[0])||!Number.isFinite(xy[1]))return
-          if(xy[0]<0||xy[1]<0||xy[0]>box.width||xy[1]>box.height)return
-          const t=(i+.8)/Math.max(2,row.values.length)
-          points.push({
-            t,originX:0,originY:0,
-            destX:left+xy[0],destY:top+xy[1],
+      series.forEach(row => {
+        row.segments.forEach(segment => {
+          const points = []
+          segment.forEach(({ value, t }) => {
+            let xy
+            try { xy = chart.convertToPixel({ seriesIndex: row.seriesIndex }, value) } catch { return }
+            if (!Array.isArray(xy) || !Number.isFinite(xy[0]) || !Number.isFinite(xy[1])) return
+            if (xy[0] < 0 || xy[1] < 0 || xy[0] > box.width || xy[1] > box.height) return
+            points.push({ t, destX: left + xy[0], destY: top + xy[1] })
           })
+          if (points.length) groups.push({ metric, host: row.seriesIndex, color: row.color, points })
         })
-        if(points.length>1)groups.push({metric,host,color:row.color,points})
       })
     })
     // If any channel is missing, retain original charts rather than fading them.
@@ -145,15 +174,16 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
         const origin=makeOrigin(point.t,row.metric,row.host)
         return vortexDestination({originX:origin.x,originY:origin.y,destX:point.destX,destY:point.destY},p)
       })
-      if(placed.length<2)continue
-      ctx.beginPath()
-      for(let i=0;i<placed.length;i++){
-        const pt=placed[i]
-        if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
+      if(placed.length>1){
+        ctx.beginPath()
+        for(let i=0;i<placed.length;i++){
+          const pt=placed[i]
+          if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
+        }
+        ctx.strokeStyle=row.color
+        ctx.globalAlpha=(.33*(1-p)+.08*p)
+        ctx.lineWidth=1.1;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
       }
-      ctx.strokeStyle=row.color
-      ctx.globalAlpha=(.33*(1-p)+.08*p)
-      ctx.lineWidth=1.1;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
       const stride=p>.95?4:1
       for(let i=0;i<placed.length;i+=stride){
         const pt=placed[i]

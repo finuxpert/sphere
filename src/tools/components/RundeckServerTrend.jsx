@@ -11,7 +11,7 @@ import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
 import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
-import { attachUnifiedVortex } from './rundeckTrendAmbient.js'
+import { attachUnifiedVortex, savedVortexPeak } from './rundeckTrendAmbient.js'
 import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
@@ -940,6 +940,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     ...(technicalTrend?.items || []),
   ])
   const activeFocus = shortHost(focusedHost || '')
+  const savedPeak1 = React.useMemo(() => savedVortexPeak(serverTrend1, mode), [serverTrend1, mode])
+  const savedPeak2 = React.useMemo(() => savedVortexPeak(serverTrend2, mode), [serverTrend2, mode])
+  const savedTechnicalPeak = React.useMemo(() => savedVortexPeak(technicalTrend, mode), [technicalTrend, mode])
   const temporalReady = Boolean(
     databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
     !serverError1 && !serverError2 && !technicalError &&
@@ -1080,9 +1083,17 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       {temporalReady && <>
         <canvas ref={unifiedCanvasRef} className="rundeckUnifiedVortexCanvas" aria-hidden="true" />
         <div className="rundeckUnifiedVortexLabels" aria-hidden="true">
-          <span><b>01</b> {metricLabel(serverMetric1)} <small>APP host</small></span>
-          <span><b>02</b> {metricLabel(serverMetric2)} <small>APP host</small></span>
-          <span><b>03</b> {technicalMetric === 'load' ? 'Host Load' : technicalNetwork ? 'Network ' + networkDirection.toUpperCase() : metricLabel(technicalMetric)} <small>Technical</small></span>
+          {[
+            { id: '01', label: metricLabel(serverMetric1), description: 'APP host', peak: savedPeak1 },
+            { id: '02', label: metricLabel(serverMetric2), description: 'APP host', peak: savedPeak2 },
+            { id: '03', label: technicalMetric === 'load' ? 'Host Load' : technicalNetwork ? 'Network ' + networkDirection.toUpperCase() : metricLabel(technicalMetric), description: 'Technical', peak: savedTechnicalPeak },
+          ].map(item => <span key={item.id}>
+            <span><b>{item.id}</b> {item.label} <small>{item.description}</small></span>
+            <strong>{item.peak ? numberText(item.peak.value, 1) + (item.peak.unit === '%' ? '%' : item.peak.unit ? ' ' + item.peak.unit : '') : '—'}</strong>
+            <small title={item.peak?.bucket ? 'Peak from saved aggregation bucket, not a current host measurement' : 'No retained peak'}>
+              {item.peak?.bucket ? 'Saved peak · bucket ' + formatWib(item.peak.bucket, true) + ' WIB' : 'No retained observation'}
+            </small>
+          </span>)}
         </div>
         <div className="rundeckUnifiedVortexCore" aria-hidden="true">
           <strong>SPHERE</strong><small>Saved APP trends</small>
