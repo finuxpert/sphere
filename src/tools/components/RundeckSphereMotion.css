@@ -22,13 +22,13 @@
     margin:0!important;
     padding:0!important;
     will-change:transform;
-    transition:filter .2s ease!important;
+    transition:filter .28s ease!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-sphere-orbit>.rundeckAppHexSelector:is(.is-active,:focus-visible,:hover){
     z-index:8!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexSelectors.is-sphere-orbit>.rundeckAppHexSelector.is-active{
-    filter:brightness(1.17) drop-shadow(0 0 4px var(--sphere-accent,#4fc6c8));
+    filter:brightness(1.08) drop-shadow(0 0 2px color-mix(in srgb,var(--sphere-accent,#4fc6c8) 45%,transparent));
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionRings{
     display:block;
@@ -36,8 +36,8 @@
     inset:0;
     z-index:0;
     pointer-events:none;
-    opacity:.75;
-    transition:opacity .55s ease;
+    opacity:.64;
+    transition:opacity .65s ease;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionRings i{
     position:absolute;
@@ -98,7 +98,7 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid.is-sphere-globe>.rundeckWorkloadDot{
     opacity:0;
     pointer-events:none;
-    transition:opacity .55s ease,filter .16s ease!important;
+    transition:opacity .68s cubic-bezier(.22,1,.36,1),filter .22s ease!important;
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid.is-sphere-globe.is-expanded>.rundeckWorkloadDot{
     opacity:1;
@@ -116,7 +116,7 @@
     display:block;
     pointer-events:none;
     opacity:1;
-    transition:opacity .55s ease;
+    transition:opacity .68s cubic-bezier(.22,1,.36,1);
   }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid.is-sphere-globe.is-expanded>.rundeckEvaluationGlobeCanvas{
     opacity:0;

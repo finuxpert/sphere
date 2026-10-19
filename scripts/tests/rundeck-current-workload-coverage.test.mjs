@@ -48,7 +48,9 @@ test('live pagination measures space for pager rather than using only viewport b
   const parent = readFileSync(new URL('../../src/tools/components/RundeckSource.jsx',import.meta.url),'utf8')
   assert.match(src,/workloadRowsThatFit\(/)
   assert.match(src,/tableWrapRef\.current/)
-  assert.match(src,/reserveBelow: 44/)
+  assert.match(src,/reserveBelow: 90/)
+  assert.match(src,/const wrap = tableWrapRef\.current/)
+  assert.match(src,/if \(wrap\) resizeObserver\?\.observe\(wrap\)/)
   assert.match(parent,/layoutKey=\{/)
 })
 

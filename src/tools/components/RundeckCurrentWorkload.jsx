@@ -195,12 +195,12 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const defaultPageSize = viewportHeight <= 720 ? 2 : viewportHeight <= 940 ? 3 : viewportHeight <= 1100 ? 4 : 5
   React.useLayoutEffect(() => {
     if (typeof window === 'undefined') return undefined
+    const wrap = tableWrapRef.current
     const measure = () => {
       if (window.innerWidth < 1200 || !visible.length) {
         setFittedRows(null)
         return
       }
-      const wrap = tableWrapRef.current
       if (!wrap) return
       const header = wrap.querySelector('thead tr')
       const firstRow = wrap.querySelector('tbody tr')
@@ -224,7 +224,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     }
     const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(scheduleMeasure)
     const trendPanel = document.querySelector('.rundeckTripleTrendV13457')
-    resizeObserver?.observe(wrap)
+    if (wrap) resizeObserver?.observe(wrap)
     if (trendPanel) resizeObserver?.observe(trendPanel)
     measure()
     window.addEventListener('resize', scheduleMeasure, { passive: true })

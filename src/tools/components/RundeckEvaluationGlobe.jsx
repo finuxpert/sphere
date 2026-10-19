@@ -14,12 +14,13 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
   const expandedRef = React.useRef(expanded)
   expandedRef.current = expanded
   const levels = React.useMemo(() => rows.map(row => workloadHealthLevel(row)), [rows])
+  const { columns, size, gap, fits } = layout
 
   React.useEffect(() => {
     const canvas = canvasRef.current
     const stage = canvas?.parentElement
     const ctx = canvas?.getContext('2d', { alpha: true })
-    if (!ctx || !stage || !levels.length || !layout.fits) return undefined
+    if (!ctx || !stage || !levels.length || !fits) return undefined
     let raf = 0
     let last = 0
     let phase = .25
@@ -65,14 +66,13 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
       if (last && time - last < 32) { raf = requestAnimationFrame(paint); return }
       last = time
       const target = expandedRef.current ? 1 : 0
-      morph += (target - morph) * (1 - Math.exp(-dt * 7))
+      morph += (target - morph) * (1 - Math.exp(-dt * 5.5))
       if (Math.abs(morph - target) < .002) morph = target
-      if (!expandedRef.current) phase += dt * .25
+      if (!expandedRef.current) phase += dt * .19
       const blend = morph * morph * (3 - 2 * morph)
       const cx = width / 2
       const cy = height / 2
       const radius = Math.min(width * .24, height * .46, 100)
-      const { columns, size, gap } = layout
       const columnCount = Math.max(1, columns)
       const rowCount = Math.ceil(points.length / columnCount)
       const pitch = size + gap
@@ -137,7 +137,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded }) {
       document.removeEventListener('visibilitychange', onVisibility)
       if (wakeRef.current === wake) wakeRef.current = null
     }
-  }, [levels, layout.size, layout.gap, layout.columns, layout.fits])
+  }, [levels, size, gap, columns, fits])
 
   React.useEffect(() => { wakeRef.current?.() }, [expanded])
   return <canvas ref={canvasRef} className="rundeckEvaluationGlobeCanvas" aria-hidden="true" />

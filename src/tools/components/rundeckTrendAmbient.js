@@ -141,15 +141,15 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     raf=0
     if(stopped||disabled||!intersecting||document.hidden||!grid.isConnected)return
     if(grid.dataset.vortexReady !== 'true') { ctx.clearRect(0,0,width,height); return }
-    if(last && time-last<38){wake();return}
+    if(last && time-last<32){wake();return}
     const dt=last?Math.min((time-last)/1000,.085):.04
     last=time
-    const target=Boolean(expandedRef?.current)?1:0
-    morph+=(target-morph)*(1-Math.exp(-dt*6))
+    const target=expandedRef?.current?1:0
+    morph+=(target-morph)*(1-Math.exp(-dt*5.2))
     if(Math.abs(target-morph)<.003)morph=target
-    if(!target)angle+=dt*.32
+    if(!target)angle+=dt*.23
     ctx.clearRect(0,0,width,height)
-    const p=morph*morph*(3-2*morph)
+    const p=morph*morph*morph*(morph*(morph*6-15)+10)
     const ambientAlpha=(1-p)
     if(ambientAlpha>.015){
       // A centered, proportionate vortex sits below three persistent metric labels.

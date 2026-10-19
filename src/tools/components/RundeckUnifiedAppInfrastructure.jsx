@@ -60,12 +60,12 @@ export default function RundeckUnifiedAppInfrastructure({
       const delta = last ? Math.min((time - last) / 1000, .07) : .016
       last = time
       const expanded = orbitExpandedRef.current
-      if (!expanded) phase += delta * .28
+      if (!expanded) phase += delta * .22
       const width = stage.clientWidth
       const height = stage.clientHeight
       const rx = Math.min(width * .35, 118)
       const ry = Math.min(height * .34, 40)
-      const blend = 1 - Math.exp(-delta * 8)
+      const blend = 1 - Math.exp(-delta * 6.2)
       buttons.forEach((button, index) => {
         const theta = phase + index * 2 * Math.PI / 5
         const depth = Math.sin(theta)
