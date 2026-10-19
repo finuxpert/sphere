@@ -541,7 +541,10 @@ const checks = [
   ['Theme selector supports Dark Light and System with persistent preference', files.navbar.includes("sphere.theme") && files.navbar.includes('<option value="light">Light</option>') && files.navbar.includes('<option value="system">System</option>')],
   ['Final theme override removes active nav underline and raises font floor', files.accessibilityThemeFinal.includes('border-bottom:0!important') && files.accessibilityThemeFinal.includes('font-size:11.5px!important') && files.main.includes('accessibility-theme-v13412.css')],
   ['Historical drilldown is consolidated into Review search and shared Performance Analysis', !files.wrapper.includes('const openJobFromHistory = React.useCallback') && !files.wrapper.includes("activeOverlay?.type === 'history-job'") && files.performanceReview.includes('totalMatching') && files.performanceReview.includes('appliedQuery') && files.wrapper.includes("setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })")],
-  ['Job Performance owns Current 3H 6H 24H 7D 30D ranges', files.jobHistory.includes("['current','Current']") && files.jobHistory.includes("['30d','30D']") && files.jobHistory.includes('HistoricalRangeChart')],
+  ['Job Performance owns Selected 3H 6H 24H 7D 30D ranges', ['current:Selected', '3h:3H', '6h:6H', '24h:24H', '7d:7D', '30d:30D'].every(pair => {
+    const [key, label] = pair.split(':')
+    return files.jobHistory.includes("['" + key + "','" + label + "']")
+  }) && files.jobHistory.includes('HistoricalRangeChart')],
   ['Historical Job Performance supports Avg and Peak aggregation', files.jobHistory.includes("rangeMode==='avg'") && files.jobHistory.includes("rangeMode==='peak'")],
   ['Job Performance separates selected period from retained-range analysis', files.jobHistory.includes('Selected Period') && files.jobHistory.includes('Performance Analysis') && files.jobHistory.includes('Current = selected workload episode')],
   ['Job Performance uses observation wording instead of claiming authoritative SAP execution state', files.jobHistory.includes('Observation Span') && files.jobHistory.includes('CURRENTLY OBSERVED') && files.jobHistory.includes('NO LONGER OBSERVED') && !files.jobHistory.includes("'RUNNING'")],
