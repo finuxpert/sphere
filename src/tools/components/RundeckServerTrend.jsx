@@ -1077,7 +1077,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint, { showGap: false,
           technicalAxisMax: typicalLoadActive ? loadScale.axisMax : null })}
       </section>
-      {temporalReady && <canvas ref={unifiedCanvasRef} className="rundeckUnifiedVortexCanvas" aria-hidden="true" />}
+      {temporalReady && <>
+        <canvas ref={unifiedCanvasRef} className="rundeckUnifiedVortexCanvas" aria-hidden="true" />
+        <div className="rundeckUnifiedVortexCore" aria-hidden="true">
+          <strong>SPHERE</strong><small>CPU · RAM · TECHNICAL</small>
+        </div>
+      </>}
     </div>
 
     {windowModal && windowEvidence && customWindow && <RundeckCustomWindowDetails

@@ -1,24 +1,46 @@
-/* Unified temporal vortex: one canvas spanning the three existing ECharts.
- * Source charts remain mounted, including their axes, thresholds, tooltip and click handlers. */
+/* A single shared temporal field replaces the three visible plots at idle.
+ * Source ECharts always remain mounted and fully interactive underneath. */
 .rundeckTripleTrendGrid.is-unified-vortex { position:relative; isolation:isolate; }
 .rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCanvas {
-  position:absolute; inset:0; z-index:2; width:100%; height:100%;
-  display:block; pointer-events:none!important; opacity:0;
-  contain:paint;
+  position:absolute; inset:0; z-index:4; width:100%; height:100%;
+  display:block; pointer-events:none!important; opacity:0; contain:paint;
 }
-.rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCanvas {
-  opacity:1;
+.rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCanvas { opacity:1; }
+.rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCore {
+  display:none; pointer-events:none;
 }
 @media (min-width:900px) and (prefers-reduced-motion:no-preference) {
-  /* Keep chart headings and controls legible; only the plots gather into the shared field. */
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]:not(.is-expanded) .rundeckTrendChart {
-    opacity:.055; transition:opacity .65s ease;
+  /* One continuous dark field across CPU, RAM and Technical (not three small swirls).
+     Hover/focus immediately returns the original charts and all their controls. */
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]::before {
+    content:""; position:absolute; inset:0; z-index:3;
+    background:var(--sphere-surface-1,#141d23);
+    opacity:1; pointer-events:none!important;
+    transition:opacity .65s cubic-bezier(.2,.8,.2,1);
   }
-  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded .rundeckTrendChart {
-    opacity:1; transition:opacity .45s ease;
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded::before {
+    opacity:0;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCore {
+    position:absolute; left:50%; top:52%; transform:translate(-50%,-50%);
+    z-index:5; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; opacity:.9; transition:opacity .4s ease, transform .6s ease;
+    white-space:nowrap; text-align:center; pointer-events:none!important;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCore strong {
+    font-size:13px; letter-spacing:.13em; font-weight:800;
+    color:var(--sphere-text,#e0e8eb);
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"] > .rundeckUnifiedVortexCore small {
+    font-size:9px; font-weight:600; letter-spacing:.055em;
+    color:var(--sphere-text-secondary,#92a3ac);
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded > .rundeckUnifiedVortexCore {
+    opacity:0; transform:translate(-50%,-50%) scale(.8);
   }
 }
-@media(max-width:899px),(prefers-reduced-motion:reduce) {
-  .rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCanvas { display:none!important; }
-  .rundeckTripleTrendGrid.is-unified-vortex .rundeckTrendChart { opacity:1!important;transition:none!important; }
+@media (max-width:899px),(prefers-reduced-motion:reduce) {
+  .rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCanvas,
+  .rundeckTripleTrendGrid.is-unified-vortex > .rundeckUnifiedVortexCore { display:none!important; }
+  .rundeckTripleTrendGrid.is-unified-vortex::before { display:none!important; }
 }

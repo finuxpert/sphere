@@ -22,6 +22,18 @@ export function retainedVortexSamples(series = [], limit = 36) {
   }).filter(row => row.values.length > 1)
 }
 
+// Elliptical 3-panel projection. Independent X/Y radii keep the idle field
+// spanning CPU, RAM and Technical, rather than collapsing inside RAM.
+export function unifiedVortexOrigin({ width, height, t, metric, host, phase = 0 }) {
+  const progress = Math.min(1, Math.max(0, Number(t) || 0))
+  const reach = .08 + Math.pow(progress, 1.16) * .92
+  const theta = phase + progress * Math.PI * 5.4 + metric * 2.03 + host * Math.PI * 2 / 5
+  return {
+    x: width * .5 + Math.cos(theta) * width * .435 * reach,
+    y: height * .53 + Math.sin(theta) * height * .39 * reach,
+  }
+}
+
 export function vortexDestination(vortex, progress) {
   const r = Math.min(1, Math.max(0, Number(progress) || 0))
   return { x: vortex.originX * (1-r) + vortex.destX * r, y: vortex.originY * (1-r) + vortex.destY * r }
@@ -94,11 +106,8 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     collect()
     wake()
   }
-  const makeOrigin=(t,metric,host)=>{
-    const radius=9+Math.pow(t,1.3)*Math.min(width*.36,height*.53)
-    const theta=angle + t*Math.PI*5.4 + metric*2.03 + host*Math.PI*2/5
-    return {x:width*.5+Math.cos(theta)*radius*1.48,y:height*.54+Math.sin(theta)*radius*.61}
-  }
+  const makeOrigin=(t,metric,host)=>
+    unifiedVortexOrigin({ width, height, t, metric, host, phase: angle })
   const paint=time=>{
     raf=0
     if(stopped||disabled||!intersecting||document.hidden||!grid.isConnected)return
@@ -114,22 +123,22 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     const p=morph*morph*(3-2*morph)
     const ambientAlpha=(1-p)
     if(ambientAlpha>.015){
-      // Nested hexagonal rings make one connected field across all three panels.
-      const cx=width*.5,cy=height*.54
-      for(let j=1;j<=10;j++){
-        const radius=j/10*Math.min(width*.36,height*.54)
+      // Concentric time rings span all three existing trend panels.
+      const cx=width*.5,cy=height*.53
+      for(let j=1;j<=12;j++){
+        const reach=j/12
         ctx.beginPath()
         for(let k=0;k<6;k++){
           const theta=angle*.22+j*.12+k*Math.PI/3
-          const x=cx+Math.cos(theta)*radius*1.48
-          const y=cy+Math.sin(theta)*radius*.62
+          const x=cx+Math.cos(theta)*width*.435*reach
+          const y=cy+Math.sin(theta)*height*.39*reach
           if(k)ctx.lineTo(x,y);else ctx.moveTo(x,y)
         }
         ctx.closePath()
-        ctx.globalAlpha=ambientAlpha*(j%3===0?.20:.09)
+        ctx.globalAlpha=ambientAlpha*(j%3===0?.23:.11)
         ctx.strokeStyle='#638d98';ctx.lineWidth=.85;ctx.stroke()
       }
-      hex(cx,cy,6,'#81adb3',ambientAlpha*.28)
+      hex(cx,cy,7,'#81adb3',ambientAlpha*.30)
     }
     for(const row of groups){
       const placed=row.points.map(point=>{
@@ -143,12 +152,12 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
         if(i)ctx.lineTo(pt.x,pt.y);else ctx.moveTo(pt.x,pt.y)
       }
       ctx.strokeStyle=row.color
-      ctx.globalAlpha=(.35*(1-p)+.10*p)
+      ctx.globalAlpha=(.40*(1-p)+.08*p)
       ctx.lineWidth=1.1;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()
       const stride=p>.95?4:1
       for(let i=0;i<placed.length;i+=stride){
         const pt=placed[i]
-        hex(pt.x,pt.y,2.1*(1-p)+1.4*p,row.color,.64*(1-p)+.16*p)
+        hex(pt.x,pt.y,2.6*(1-p)+1.4*p,row.color,.53*(1-p)+.14*p)
       }
     }
     ctx.globalAlpha=1

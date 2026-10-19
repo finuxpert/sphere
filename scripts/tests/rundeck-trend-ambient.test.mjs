@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { retainedVortexSamples, vortexDestination } from '../../src/tools/components/rundeckTrendAmbient.js'
+import { retainedVortexSamples, unifiedVortexOrigin, vortexDestination } from '../../src/tools/components/rundeckTrendAmbient.js'
 
 test('unified vortex only uses exact retained numeric ECharts samples', () => {
   const inputs=[{ name:'APP1',data:[
@@ -24,6 +24,16 @@ test('vortex interpolation preserves destinations and never adjusts chart values
   assert.deepEqual(vortexDestination(point,.5),{x:141.5,y:76})
 })
 
+test('idle vortex spans the width of three panels, not merely the middle one',()=>{
+  const width=1320,height=200
+  const points=Array.from({length:3},(_,metric)=>
+    Array.from({length:5},(_,host)=>
+      unifiedVortexOrigin({width,height,t:1,metric,host,phase:.18}))).flat()
+  assert.ok(Math.min(...points.map(point=>point.x)) < width*.25)
+  assert.ok(Math.max(...points.map(point=>point.x)) > width*.75)
+  assert.ok(points.every(point=>point.x>0&&point.x<width&&point.y>0&&point.y<height))
+})
+
 test('single shared grid motion keeps original ECharts tools, statuses and source provenance',()=>{
   const read=file=>readFileSync(new URL('../../src/tools/components/'+file,import.meta.url),'utf8')
   const trend=read('RundeckServerTrend.jsx')
@@ -44,6 +54,11 @@ test('single shared grid motion keeps original ECharts tools, statuses and sourc
   assert.match(layer,/convertToPixel/)
   assert.match(layer,/vortexReady/)
   assert.match(css,/data-vortex-ready="true"/)
+  assert.match(css,/\.is-unified-vortex\[data-vortex-ready="true"\]::before/)
+  assert.match(css,/\.is-expanded::before/)
+  assert.match(trend,/rundeckUnifiedVortexCore/)
+  assert.match(css,/z-index:3/)
+  assert.match(css,/pointer-events:none!important/)
   assert.match(layer,/datazoom/)
   assert.doesNotMatch(layer,/fetch\(/)
 })
