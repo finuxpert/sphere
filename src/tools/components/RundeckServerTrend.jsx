@@ -137,6 +137,11 @@ function trendGaps(trend) {
       .filter(([from, to]) => Number.isFinite(from) && Number.isFinite(to) && to > from)
     return { gaps, rangeStart, rangeEnd, intervalMs, historyStartedAt: null }
   }
+  // Missing availability observation metadata cannot establish a missing check.
+  // Never infer its gaps using the generic performance collection cadence.
+  if (trend?.metric === 'availability') {
+    return { gaps: [], rangeStart, rangeEnd, intervalMs, historyStartedAt: null }
+  }
 
   const gapThresholdMs = intervalMs * 2
   const buckets = Array.from(new Set(rows.map((row) => Date.parse(row.bucket)).filter(Number.isFinite))).sort((a, b) => a - b)
