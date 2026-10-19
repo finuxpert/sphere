@@ -3,7 +3,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel, observedWorkloadName, isUnresolvedSapIdentity } from './sapUiFormat.js'
 import './RundeckCurrentWorkload.css'
 import { processCount, workloadCpuSignal } from './rundeckWorkloadMetrics.js'
-import { workloadRowsThatFit } from './rundeckWorkloadViewport.js'
+import { workloadRowsThatFit, workloadPagerReserve } from './rundeckWorkloadViewport.js'
 import { combineCurrentWorkloadResponses } from './rundeckCurrentWorkloadCoverage.js'
 
 const API = `${import.meta.env.BASE_URL}api`
@@ -106,6 +106,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 768 : window.innerHeight)
   const [fittedRows, setFittedRows] = React.useState(null)
   const tableWrapRef = React.useRef(null)
+  const pagerRef = React.useRef(null)
 
   React.useEffect(() => {
     const onResize = () => setViewportHeight(window.innerHeight)
@@ -210,7 +211,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
         tableTop: wrap.getBoundingClientRect().top,
         headerHeight: header.getBoundingClientRect().height,
         rowHeight: firstRow.getBoundingClientRect().height,
-        reserveBelow: 90,
+        reserveBelow: workloadPagerReserve(pagerRef.current?.getBoundingClientRect().height),
         maxRows: defaultPageSize,
       })
       setFittedRows(old => old === next ? old : next)
@@ -225,6 +226,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(scheduleMeasure)
     const trendPanel = document.querySelector('.rundeckTripleTrendV13457')
     if (wrap) resizeObserver?.observe(wrap)
+    if (pagerRef.current) resizeObserver?.observe(pagerRef.current)
     if (trendPanel) resizeObserver?.observe(trendPanel)
     measure()
     window.addEventListener('resize', scheduleMeasure, { passive: true })
@@ -305,7 +307,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
         </tbody>
       </table>
     </div>}
-    {!loading&&!error&&visible.length>0&&<nav className="rundeckWorkloadPager" aria-label="Current collection workload pages">
+    {!loading&&!error&&visible.length>0&&<nav ref={pagerRef} className="rundeckWorkloadPager" aria-label="Current collection workload pages">
       <small>{query || hostFilter !== 'ALL' ? `${visible.length} matches · ${rows.length} loaded` : `Showing ${currentPage * pageSize + 1}–${Math.min((currentPage + 1) * pageSize, visible.length)} of ${visible.length}`}</small>
       <label className="rundeckWorkloadPageJump">
         <span>Page</span>

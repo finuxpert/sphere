@@ -10,3 +10,12 @@ export function workloadRowsThatFit({
   const available = height - top - header - reserve
   return Math.max(1, Math.min(Math.floor(max), Math.floor(available / row)))
 }
+
+/** Include actual pager height, a breathing gap, and a conservative floor.
+ * Viewport row fitting must not reserve arbitrary 90px on every desktop. */
+export function workloadPagerReserve(pagerHeight, gap = 16) {
+  const measured = Number(pagerHeight)
+  const safeHeight = Number.isFinite(measured) && measured > 0 ? measured : 30
+  const safeGap = Number.isFinite(Number(gap)) && Number(gap) >= 0 ? Number(gap) : 16
+  return Math.max(44, Math.ceil(safeHeight + safeGap))
+}

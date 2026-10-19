@@ -109,7 +109,7 @@ test('cockpit finishing reserves pager and expands APP spacing without modifying
   const orbit = read('RundeckUnifiedAppInfrastructure.jsx')
   const motion = read('RundeckSphereMotion.css')
   const css = read('RundeckTrendAmbient.css')
-  assert.match(pager, /reserveBelow: 90/)
+  assert.match(pager, /reserveBelow: workloadPagerReserve\(pagerRef\.current\?\.getBoundingClientRect\(\)\.height\)/)
   assert.match(pager, /resizeObserver\?\.observe\(trendPanel\)/)
   assert.match(pager, /window\.visualViewport\?\.addEventListener\('resize'/)
   assert.match(orbit, /const rx = Math\.min\(width \* \.35, 118\)/)
