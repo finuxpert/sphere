@@ -191,7 +191,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
     </button>
   }
 
-  return <section className={`rundeckAvailability ${serviceState === 'CRITICAL' ? 'has-down' : serviceState === 'ATTENTION' ? 'has-attention' : ''} ${healthySummary ? 'is-healthy-compact' : ''}`} aria-label="Current SAP service availability">
+  return <section className={`rundeckAvailability ${displayState === 'CRITICAL' ? 'has-down' : displayState === 'ATTENTION' ? 'has-attention' : ''} ${healthySummary ? 'is-healthy-compact' : ''}`} aria-label="Current SAP service availability">
     <div className="rundeckAvailabilityHead">
       <div>
         {!paired && <h3><SphereIcon name="server" /> SAP Availability</h3>}
