@@ -132,9 +132,12 @@ def workload_evaluation(
     period: str = Query("1d", pattern="^(1d|7d|30d)$"),
     consumer_type: str = Query("ALL", alias="type", pattern="^(ALL|JOB|PROGRAM)$"),
     limit: int = Query(30, ge=1, le=100),
+    offset: int = Query(0, ge=0, le=100000),
+    q: str = Query("", max_length=512),
+    health: str = Query("ALL", pattern="^(ALL|REVIEW|ATTENTION|NORMAL|UNKNOWN)$"),
 ):
     try:
-        return evaluation_report(period=period, consumer_type=consumer_type, limit=limit)
+        return evaluation_report(period=period, consumer_type=consumer_type, limit=limit, offset=offset, query=q, health=health)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:
