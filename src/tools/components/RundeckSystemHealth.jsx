@@ -103,18 +103,18 @@ export default function RundeckSystemHealth({ sourceQuality = null, sourceCollec
     : collectorUnreliable && !performanceEvidenceStale
       ? { level: 'WARNING', text: 'Collector: NOT VERIFIED', detail: `Poller: ${collector.poller_status || 'UNKNOWN'} · Watchdog: ${collector.watchdog_status || 'UNKNOWN'}` }
       : primaryHealthSignal(observedHosts, observedAvailability, observedImpact, performanceEvidenceStale, availabilityEvidenceStale, availabilityAge)
-  const title = `SAP status: ${state} · Availability: ${observedAvailability}${availabilityEvidenceStale ? ' (old or missing)' : ''} · Performance: ${performanceEvidenceStale ? 'STALE' : 'FRESH'} · Collector: ${collector.status || 'UNKNOWN'}`
+  const title = `SAP monitoring: ${state} · Service Availability: ${observedAvailability}${availabilityEvidenceStale ? ' (not verified; not proof of SAP DOWN)' : ''} · Host Performance: ${performanceEvidenceStale ? 'STALE' : 'FRESH'} · Collector: ${collector.status || 'UNKNOWN'}`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
       <div className="rundeckSystemHealthPrimary">
-        <span>System Health</span>
+        <span>Monitoring Status</span>
         <StatusPill value={state} title={title} />
         {primarySignal && <span className={`rundeckSystemHealthReasonV132 is-${String(primarySignal.level || 'attention').toLowerCase()}`} title={primarySignal.detail}>{primarySignal.text}</span>}
       </div>
       <details className="rundeckCollectorHealthV131">
         <summary title={collectorTitle(collector)}>
-          <span>Collector Health</span>
+          <span>Data Collector</span>
           <StatusPill value={collector.status || 'UNKNOWN'} />
         </summary>
         <div className="rundeckCollectorHealthPopover">
