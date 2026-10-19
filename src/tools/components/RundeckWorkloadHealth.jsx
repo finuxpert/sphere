@@ -171,6 +171,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       role="group" aria-label="Individual saved workload evaluations"
       onPointerEnter={event => { if (globeEnabled && event.pointerType !== 'touch') setGlobeExpanded(true) }}
       onPointerLeave={event => { if (event.pointerType !== 'touch') setGlobeExpanded(false) }}
+      onPointerDown={event => { if (globeEnabled && event.pointerType === 'touch') setGlobeExpanded(true) }}
       onFocusCapture={() => setGlobeExpanded(true)}
       onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setGlobeExpanded(false) }}
       style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>

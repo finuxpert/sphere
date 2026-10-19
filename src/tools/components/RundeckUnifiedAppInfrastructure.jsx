@@ -193,9 +193,10 @@ export default function RundeckUnifiedAppInfrastructure({
         role="group" aria-label="Select APP server"
         onPointerEnter={event => { if (orbitEnabled && event.pointerType !== 'touch') setOrbitExpanded(true) }}
         onPointerLeave={event => { if (event.pointerType !== 'touch') setOrbitExpanded(false) }}
+        onPointerDown={event => { if (orbitEnabled && event.pointerType === 'touch') setOrbitExpanded(true) }}
         onFocusCapture={() => setOrbitExpanded(true)}
         onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOrbitExpanded(false) }}>
-        {hosts.length === 5 && <div className="rundeckAppMotionRings" aria-hidden="true"><i /><i /><span>SPHERE<small>APP1–APP5</small></span></div>}
+        {hosts.length === 5 && orbitEnabled && <div className="rundeckAppMotionRings" aria-hidden="true"><i /><i /><span>SPHERE<small>APP1–APP5</small></span></div>}
         {hosts.map(host => {
           const key = shortHost(host.host)
           const state = appSignalState(host, performanceVerified)

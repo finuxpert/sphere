@@ -104,6 +104,9 @@
     opacity:1;
     pointer-events:auto;
   }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid.is-sphere-globe.is-expanded>.rundeckWorkloadDot.is-limited{
+    opacity:.55;
+  }
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadDotGrid.is-sphere-globe>.rundeckEvaluationGlobeCanvas{
     position:absolute;
     inset:0;
