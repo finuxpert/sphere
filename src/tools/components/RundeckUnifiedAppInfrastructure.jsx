@@ -17,7 +17,7 @@ async function readJson(path, signal) {
 
 export default function RundeckUnifiedAppInfrastructure({
   hosts = [], sourceQuality = null, refreshToken = '', selectedJob = null,
-  focusRequest = null, onInspectApp = null, onSelectApp = null,
+  focusRequest = null, onInspectApp = null, onSelectApp = null, operationalChecks = null,
 }) {
   const [preferredHost, setPreferredHost] = React.useState(() => {
     try { return window.localStorage.getItem(KEY) || '' } catch { return '' }
@@ -215,8 +215,10 @@ export default function RundeckUnifiedAppInfrastructure({
         {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
       </div>
     </header>
-    <div className="rundeckAppHexMain">
-      <div ref={orbitStageRef}
+    <div className="rundeckAppHexMain rundeckAppThreePanels">
+      <section className="rundeckAppMotionPanel" aria-label="APP Motion">
+        <h4 className="rundeckAppPanelHeading"><SphereIcon name="hexagon" /> APP Motion <small>Choose a server</small></h4>
+        <div ref={orbitStageRef}
         className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '') + (orbitEnabled ? ' is-sphere-orbit' + (orbitExpanded ? ' is-expanded' : '') : '')}
         role="group" aria-label="Select APP server"
         onPointerEnter={event => { if (orbitEnabled && event.pointerType !== 'touch') setOrbitExpanded(true) }}
@@ -237,7 +239,7 @@ export default function RundeckUnifiedAppInfrastructure({
             aria-label={key + ' SAP ' + state + ' · Critical WP ' + metric(host.wp_critical) + ' · Open processes and Infrastructure analysis'}
             title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + ' · click to open processes and Infrastructure'}
             aria-pressed={appKey === key}
-            onClick={() => { selectApp(key); onSelectApp?.(host.host); openAppAnalysis(host) }}>
+            onClick={() => { selectApp(key); onSelectApp?.(host.host) }}>
             <span className="rundeckAppHexShape" aria-hidden="true">
               <strong>{key}</strong>
               <small>{state === 'ATTENTION' ? 'ATTN' : state === 'WARNING' ? 'WARN' : state}</small>
@@ -246,8 +248,11 @@ export default function RundeckUnifiedAppInfrastructure({
           </button>
         })}
         {!hosts.length && <span className="rundeckHistoryState">No aligned APP performance snapshot.</span>}
-      </div>
-      {selectedHost && <div className="rundeckSelectedAppDetail" aria-label={'Selected APP ' + appKey}>
+        </div>
+      </section>
+      <section className="rundeckAppDetailPanel" aria-label="APP Detail">
+        <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Detail <small>{selectedHost ? appKey + ' selected' : 'No verified selection'}</small></h4>
+        {selectedHost && <div className="rundeckSelectedAppDetail" aria-label={'Selected APP ' + appKey}>
         <div className="rundeckSelectedAppIdentity">
           <strong>{appKey}</strong>
           <small className={'is-' + sapState.toLowerCase()}>SAP {sapState}</small>
@@ -274,7 +279,12 @@ export default function RundeckUnifiedAppInfrastructure({
         </div>
         <button type="button" className="rundeckSelectedAppOpen" onClick={openSelectedAnalysis}
           aria-label={'Open ' + appKey + ' SAP and Infrastructure full analysis'}>Process / Infra <span aria-hidden="true">↗</span></button>
-      </div>}
+        </div>}
+        {!selectedHost && <p className="rundeckHistoryState">APP detail unavailable until a server sample is present.</p>}
+      </section>
+      <aside className="rundeckAppChecksPanel" aria-label="Operational Checks">
+        {operationalChecks}
+      </aside>
     </div>
   </section>
 }
