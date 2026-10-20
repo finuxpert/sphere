@@ -845,7 +845,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
 
     {history && <div key={contentKey} className="rundeckJobHistoryContent">
       <section className="rundeckJobEpisodeMatrix" aria-label="Selected period and performance summary">
-        <div className="rundeckJobEpisodeGroupLabel is-episode">Selected Observation Period</div>
+        <div className="rundeckJobEpisodeGroupLabel is-episode">Selected Period · Saved Observations</div>
         <div className="rundeckJobEpisodeGroupLabel is-performance">Workload Performance Summary</div>
         <div className="rundeckJobEpisodeMetrics">
           <span><b>{historyTruncated ? 'First Loaded' : 'First Seen'}</b>{formatWib(stats.firstSeen, true)} WIB</span>
