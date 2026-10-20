@@ -16,11 +16,16 @@ import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import './RundeckWorkloadExplorer.css'
 import './RundeckTrendAmbient.css'
+import './RundeckHistoryRange.css'
 
 const API = `${import.meta.env.BASE_URL}api`
 const DEFAULT_RANGE = '6h'
 const TREND_STORAGE_KEY = 'sphere.live.trend'
-const RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H'], ['24h', '24H'], ['7d', '7D'], ['30d', '30D']]
+const SHORT_RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H']]
+const RANGES = [['24h', '1D'], ['7d', '7D'], ['30d', '30D']]
+const HISTORY_RANGES = [['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M']]
+const ALL_RANGES = [...SHORT_RANGES, ...RANGES, ...HISTORY_RANGES]
+const LONG_RANGES = new Set(HISTORY_RANGES.map(([key]) => key))
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
 const METRICS = [['cpu', 'CPU'], ['ram', 'RAM'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
@@ -34,14 +39,14 @@ const BUCKET_INTERVAL_MS = {
 }
 
 const metricLabel = (value) => ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability', network: 'Network', network_rx: 'Network RX', network_tx: 'Network TX' })[value] || 'Metric'
-const rangeLabel = (value) => RANGES.find(([key]) => key === value)?.[1] || (value === '90d' ? '90D' : String(value || '').toUpperCase())
+const rangeLabel = value => ALL_RANGES.find(([key]) => key === value)?.[1] || String(value || '').toUpperCase()
 const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
 
 function formatTrendAxis(value, range) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
   const base = { timeZone: 'Asia/Jakarta', hour12: false }
-  if (range === '30d' || range === '7d') {
+  if (['7d', '30d', 'last_month', '90d', '180d'].includes(range)) {
     return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
   }
   if (range === '24h') {
@@ -68,7 +73,7 @@ function formatSavedBucketWindow(trend, bucket) {
   return `Bucket ${fromLabel}–${sameDate ? formatWib(end) : endLabel} WIB`
 }
 function trendAxisSplitNumber(range) {
-  if (range === '30d') return 6
+  if (['30d', 'last_month', '90d', '180d'].includes(range)) return 6
   if (range === '7d') return 6
   if (range === '24h') return 6
   if (range === '6h') return 6
@@ -725,7 +730,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
   const initialServerMetrics = React.useMemo(() => resolveServerTrendMetrics(saved), [saved])
-  const [range, setRange] = React.useState(saved.range !== 'custom' && RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
+  const [range, setRange] = React.useState(saved.range !== 'custom' && ALL_RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [customOpen, setCustomOpen] = React.useState(false)
   const [customStart, setCustomStart] = React.useState(() => wibMinuteInput(new Date(Date.now() - 15 * 60000)))
   const [customEnd, setCustomEnd] = React.useState(() => wibMinuteInput(new Date(Date.now() - 5 * 60000)))
@@ -736,6 +741,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [windowLoading, setWindowLoading] = React.useState(false)
   const [windowModal, setWindowModal] = React.useState(false)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
+  const longHistoricalRange = LONG_RANGES.has(range)
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','network','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
@@ -781,11 +787,17 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const loadTrend = React.useCallback((metric, setter, setLoading, setError, signal, direction = 'rx') => {
     if (range === 'custom' && !customWindow) return Promise.resolve()
     const category = AVAILABILITY_CATEGORIES[metric]
+    if (category && LONG_RANGES.has(range)) {
+      setter(null)
+      setLoading(false)
+      setError('This SAP availability source has no verified daily summary for ' + rangeLabel(range) + '. Use 30D or a shorter period.')
+      return Promise.resolve()
+    }
     const queriedMetric = metric === 'network' ? 'network_' + direction : metric
     const windowQuery = range === 'custom' ? '&' + customRangeSearch(customWindow) : ''
     const url = category
       ? `${API}/availability/history?range=${encodeURIComponent(range)}&category=${encodeURIComponent(category)}${windowQuery}`
-      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(range === 'custom' ? 'auto' : bucket)}&metric=${encodeURIComponent(queriedMetric)}${windowQuery}`
+      : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(range === 'custom' || LONG_RANGES.has(range) ? 'auto' : bucket)}&metric=${encodeURIComponent(queriedMetric)}${windowQuery}`
     setLoading(true)
     setError('')
     return json(url, signal, queriedMetric)
@@ -994,6 +1006,18 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <Segmented options={RANGES} value={range}
             onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }}
             ariaLabel="Shared trend period" />
+          <select className="rundeckTrendHistoricalSelect" aria-label="Short performance range"
+            value={SHORT_RANGES.some(([key]) => key === range) ? range : ''}
+            onChange={event => { setRange(event.target.value); setCustomOpen(false); setWindowModal(false) }}>
+            <option value="" disabled>Short</option>
+            {SHORT_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+          </select>
+          <select className="rundeckTrendHistoricalSelect" aria-label="Historical analysis period"
+            value={LONG_RANGES.has(range) ? range : ''}
+            onChange={event => { setRange(event.target.value); setBucket('auto'); setCustomOpen(false); setWindowModal(false) }}>
+            <option value="" disabled>History</option>
+            {HISTORY_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+          </select>
           <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')}
             aria-pressed={range === 'custom'} aria-expanded={customOpen}
             onClick={() => { setCustomError(''); setCustomOpen(value => !value) }}
@@ -1008,7 +1032,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
               title={bucket === 'auto' && serverTrend1?.bucket
                 ? `Automatic bucket · source resolved ${String(serverTrend1.bucket).toUpperCase()}`
                 : 'Aggregation bucket for saved trend samples'}
-              value={bucket} onChange={event => setBucket(event.target.value)}>
+              value={longHistoricalRange ? 'auto' : bucket} disabled={longHistoricalRange} onChange={event => setBucket(event.target.value)}>
               {BUCKETS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
             </select>}
       </div>
@@ -1034,6 +1058,15 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </div>
     </div>
 
+    {longHistoricalRange && <div className="rundeckHistoricalCoverage" role="status">
+      <strong>{rangeLabel(range)} · Daily historical buckets</strong>
+      <span>{serverTrend1?.range === range && serverTrend1?.configured_retention_days != null
+        ? 'Configured retention ' + serverTrend1.configured_retention_days + 'D' +
+          (Number(serverTrend1.configured_retention_days) + 0.1 < Number(serverTrend1.requested_days || 0)
+            ? ' · requested period exceeds retention; earlier observations may be unavailable' : ' · check actual observation coverage')
+        : 'Historical coverage depends on retained source samples; missing data is not zero'}</span>
+      <small>Job & Program evaluations remain 1D / 7D / 30D. Dates without saved samples remain unknown.</small>
+    </div>}
     {customOpen && <RundeckCustomRangeDialog
       start={customStart} end={customEnd} error={customError}
       activeLabel={range === 'custom' ? customRangeCaption(customWindow) : rangeLabel(range)}
@@ -1047,7 +1080,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <span>{windowLoading ? 'Loading saved observations…' : windowError ? windowError :
         windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
       <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
-      <small>Jobs &amp; Programs Current below shows latest collection, not this history window</small>
+      <small>Jobs &amp; Programs Current uses latest collection, not this historical window</small>
     </div>}
     {serverTrend1?.items?.length > 0 && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
       <CollectionGapBand trend={serverTrend1} />
