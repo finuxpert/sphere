@@ -283,7 +283,7 @@
     min-height: 185px !important;
   }
   .rundeckWorkspaceDrawer.is-jobs-programs {
-    width: min(100vw - 16px,850px);
+    width: min(calc(100vw - 16px),850px);
     max-height: 94dvh;
   }
 }
