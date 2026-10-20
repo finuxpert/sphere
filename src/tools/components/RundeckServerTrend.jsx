@@ -987,14 +987,40 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         title="Focus rescales percent-based APP charts to observed samples. SAP Warning/Critical thresholds do not change; markers above the zoomed axis are not plotted. Full restores 0–100%."
       >APP % Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
     </div>
-    <div className="rundeckTrendSharedControls">
-      <div className="rundeckTrendSharedGroup"><span>Time Range</span><Segmented options={RANGES} value={range} onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }} ariaLabel="Shared trend period" />
-        <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')} aria-pressed={range === 'custom'} aria-expanded={customOpen} onClick={() => { setCustomError(''); setCustomOpen(value => !value) }} aria-haspopup="dialog">Custom</button></div>
-      <div className="rundeckTrendSharedGroup"><span>Interval{bucket === 'auto' && serverTrend1?.bucket ? ` · Auto → ${String(serverTrend1.bucket).toUpperCase()}` : ''}</span>{range === 'custom' ? <strong className="rundeckCustomRangeRaw">Raw · observed</strong> : <Segmented options={BUCKETS} value={bucket} onChange={setBucket} ariaLabel="Trend interval" />}</div>
-      <div className="rundeckTrendSharedGroup"><span>Server View</span><Segmented options={[["avg","Avg"],["max","Peak"]]} value={mode} onChange={setMode} ariaLabel="Server trend view" /></div>
-      <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts">
-        <span>APP Focus</span>
-        {selectedJob?.host && shortHost(selectedJob.host) !== (shortHost(focusedHost) || '') && <small className="rundeckTrendFocusIdentity">Job {shortHost(selectedJob.host)} · Focus {shortHost(focusedHost) || 'All'}</small>}
+    <div className="rundeckTrendSharedControls" role="toolbar" aria-label="Performance trend controls">
+      <div className="rundeckTrendSharedGroup rundeckTrendControlRange" role="group" aria-label="Time range">
+        <span>Time Range</span>
+        <div className="rundeckTrendControlInline">
+          <Segmented options={RANGES} value={range}
+            onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }}
+            ariaLabel="Shared trend period" />
+          <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')}
+            aria-pressed={range === 'custom'} aria-expanded={customOpen}
+            onClick={() => { setCustomError(''); setCustomOpen(value => !value) }}
+            aria-haspopup="dialog">Custom</button>
+        </div>
+      </div>
+      <div className="rundeckTrendSharedGroup rundeckTrendControlBucket" role="group" aria-label="Bucket interval">
+        <span>Bucket Interval</span>
+        {range === 'custom'
+          ? <strong className="rundeckCustomRangeRaw" title="Custom range uses unaggregated observations">Raw · observed</strong>
+          : <select className="rundeckTrendBucketSelect" aria-label="Bucket interval"
+              title={bucket === 'auto' && serverTrend1?.bucket
+                ? `Automatic bucket · source resolved ${String(serverTrend1.bucket).toUpperCase()}`
+                : 'Aggregation bucket for saved trend samples'}
+              value={bucket} onChange={event => setBucket(event.target.value)}>
+              {BUCKETS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </select>}
+      </div>
+      <div className="rundeckTrendSharedGroup rundeckTrendControlMode" role="group" aria-label="Server trend values">
+        <span title="Average or Peak for supported APP host measurements; technical availability states remain unchanged">Server Values</span>
+        <Segmented options={[['avg', 'Avg'], ['max', 'Peak']]} value={mode}
+          onChange={setMode} ariaLabel="Server trend view" />
+      </div>
+      <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts" role="group" aria-label="Highlight APP">
+        <span>Highlight APP</span>
+        {selectedJob?.host && shortHost(selectedJob.host) !== (shortHost(focusedHost) || '') &&
+          <small className="rundeckTrendFocusIdentity">Job {shortHost(selectedJob.host)} · Focus {shortHost(focusedHost) || 'All'}</small>}
         <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
           <button type="button" aria-pressed={!activeFocus} className={!activeFocus ? 'is-focused' : ''} onClick={() => onFocusHost?.('')}>All</button>
           {focusOptions.map((label, index) => <button key={label} type="button"
