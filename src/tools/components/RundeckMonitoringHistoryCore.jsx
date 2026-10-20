@@ -42,6 +42,7 @@ export default function RundeckMonitoringHistoryCore(props) {
           refreshToken={props.refreshToken}
           performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
           onSelectWorkload={props.onOpenEvaluatedWorkload}
+          onOpenApp={props.onOpenAppJobs}
           viewMode="by-app"
           onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
         />
