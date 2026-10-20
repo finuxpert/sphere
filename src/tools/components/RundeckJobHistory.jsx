@@ -92,8 +92,8 @@ function rowMetric(row, key) {
   if (key === 'pss') return numeric(details.total_pss_gb ?? details.pss_gb)
   if (key === 'read') return numeric(details.total_read_mib_s ?? details.read_mib_s)
   if (key === 'write') return numeric(details.total_write_mib_s ?? details.write_mib_s)
-  if (key === 'processes') return numeric(details.process_count) ?? numeric(details.pids?.length) ?? 1
-  if (key === 'wp') return numeric(details.wps?.length) ?? 1
+  if (key === 'processes') return numeric(details.process_count) ?? (Array.isArray(details.pids) ? details.pids.length : null)
+  if (key === 'wp') return Array.isArray(details.wps) ? details.wps.length : details.wp ? 1 : null
   return null
 }
 
@@ -435,6 +435,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, de
               ...yBase,
               gridIndex: index,
               name: '',
+              ...(lane.id === 'cpu' ? { max: Math.max(100, Math.ceil(Math.max(0, ...rows.map(row => rowMetric(row, 'cpu') || 0)) / 25) * 25) } : {}),
               splitLine: lane.id === 'wp' && !profile.wpVariable ? { show: false } : yBase.splitLine,
               splitNumber: lane.id === 'wp' ? 1 : 2,
               axisLabel: lane.id === 'wp'
@@ -458,7 +459,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, de
               `CPU Usage <b>${numberText(rowMetric(row, 'cpu'), 1)}%</b>`,
               profile.hasPss ? `PSS Memory <b>${numberText(rowMetric(row, 'pss'), 2)} GB</b>` : '',
               `Processes <b>${numberText(rowMetric(row, 'processes'), 0)}</b>`,
-              profile.hasIo ? `I/O Read <b>${numberText(rowMetric(row, 'read'), 2)} MiB/s</b>` : 'I/O <b>0 MiB/s</b>',
+              profile.hasIo ? `I/O Read <b>${numberText(rowMetric(row, 'read'), 2)} MiB/s</b>` : 'I/O <b>not captured</b>',
               profile.hasIo ? `I/O Write <b>${numberText(rowMetric(row, 'write'), 2)} MiB/s</b>` : '',
               profile.hasWp ? `WP <b>${numberText(rowMetric(row, 'wp'), 0)}</b>` : '',
               critical > 0 ? `APP Critical WP <b>${critical}</b>` : '',
@@ -496,7 +497,7 @@ function UnifiedJobPerformanceChart({ items, incidentStart, expanded = false, de
   }, [chartConfig, onSelectObservation])
 
   return <div className="rundeckJobPerformanceWrap">
-    {!chartConfig.profile.hasIo && <div className="rundeckHiddenMetric">I/O 0 MiB/s</div>}
+    {!chartConfig.profile.hasIo && <div className="rundeckHiddenMetric">I/O not captured</div>}
     <div ref={ref} className="rundeckJobPerformanceChart" style={{ height: `${chartConfig.height}px`, '--sphere-job-chart-height': `${chartConfig.height}px` }} role="img" aria-label="Job or program CPU usage, memory, I/O, work process and Critical WP timeline with WIB time axis" />
   </div>
 }
@@ -813,6 +814,9 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const visibleWpSignals=filteredWpSignals.slice(safeWpPage*wpPageSize,(safeWpPage+1)*wpPageSize)
   const snapshotErrorCount = wpSignals.filter((item) => String(item?.error_at_snapshot || '').trim()).length
   const retainedTraceErrorCount = wpSignals.filter((item) => String(item?.latest_trace_error || '').trim()).length
+  const memoryTraceRetained = wpSignals.some(item => /TSV_TNEW_PAGE_ALLOC_FAILED|SYSTEM_NO_ROLL|TSV_TNEW_BLOCKS_NO_ROLL_MEMORY/i.test(String(item?.latest_trace_error || '')))
+  const traceTimestamp = item => item?.latest_trace_error_at || item?.trace_error_at || item?.last_error_at || ''
+  const historicalErrorCount = wpSignals.filter(item => String(item?.latest_trace_error || '').trim() && String(item?.error_recency || '').toUpperCase() !== 'AT_SNAPSHOT').length
   const wpSignalObservedAt = signalObservation?.collected_at || observedAt
   const oldestLoadedAt = [...(history?.items || [])]
     .map((row) => Date.parse(row?.collected_at || ''))
@@ -841,14 +845,14 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
 
     {history && <div key={contentKey} className="rundeckJobHistoryContent">
       <section className="rundeckJobEpisodeMatrix" aria-label="Selected period and performance summary">
-        <div className="rundeckJobEpisodeGroupLabel is-episode">Selected Period</div>
-        <div className="rundeckJobEpisodeGroupLabel is-performance">Performance Summary</div>
+        <div className="rundeckJobEpisodeGroupLabel is-episode">Selected Observation Period</div>
+        <div className="rundeckJobEpisodeGroupLabel is-performance">Workload Performance Summary</div>
         <div className="rundeckJobEpisodeMetrics">
           <span><b>{historyTruncated ? 'First Loaded' : 'First Seen'}</b>{formatWib(stats.firstSeen, true)} WIB</span>
           <span><b>Last Seen</b>{formatWib(stats.lastSeen, true)} WIB</span>
           <span><b>{historyTruncated ? 'Loaded Span' : 'Observation Span'}</b>{observed}</span>
           <span title={historyTruncated ? `History response is limited: ${history.loaded_observations || episodeItems.length} of ${history.observation_count || 'more'} observations loaded.` : undefined}><b>Observations</b>{historyTruncated ? `${episodeItems.length} loaded` : episodeItems.length}</span>
-          <span title={CPU_HINT}><b>Avg CPU</b>{numberText(stats.avgCpu)}%</span>
+          <span title={CPU_HINT}><b>Avg CPU · multicore</b>{numberText(stats.avgCpu)}%</span>
           <span title={CPU_HINT}><b>Peak CPU</b>{numberText(stats.peakCpu)}%{stats.peakCpuAt ? ` at ${formatWib(stats.peakCpuAt, true)} WIB` : ''}</span>
           <span><b>Avg PSS</b>{stats.avgPss === null ? '—' : `${numberText(stats.avgPss, 2)} GB`}</span>
           <span><b>Avg Processes</b>{stats.avgProcesses === null ? '—' : numberText(stats.avgProcesses, 1)}</span>
@@ -949,8 +953,8 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             <small>{wpSignalObservedAt ? `${formatWib(wpSignalObservedAt, true)} WIB` : 'Selected observation'} · {wpSignals.length} process row{wpSignals.length === 1 ? '' : 's'}</small>
           </div>
           <div className="rundeckWpSignalSummary">
-            <span className={snapshotErrorCount ? 'is-attention' : ''}>Error at Snapshot: {snapshotErrorCount}</span>
-            <span>Trace Error Retained: {retainedTraceErrorCount}</span>
+            <span className={snapshotErrorCount ? 'is-attention' : ''} title="Present in the selected WP-SCOUT observation only">Snapshot errors: {snapshotErrorCount}</span>
+            <span title="Retained historical traces may originate earlier than the selected snapshot">Retained trace rows: {retainedTraceErrorCount} · historical: {historicalErrorCount}</span>
           </div>
         </div>
         <div className="rundeckWpSignalFilters" role="group" aria-label="Filter WP trace signals">
@@ -967,7 +971,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
               <th>Program</th>
               <th title="Collector CPU resource classification only; not overall SAP or job health.">CPU Signal</th>
               <th>Error at Snapshot</th>
-              <th>Latest Trace Error</th>
+              <th>Retained Trace Error</th>
               <th title="RABAX / RXMSG counters observed in the retained WP trace sample.">RABAX / RXMSG</th>
               <th title="SXPG / JobStart counters observed in the retained WP trace sample.">SXPG / JobStart</th>
             </tr></thead>
@@ -983,7 +987,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
                   <td title={item?.program || 'Program was not captured for this WP row'}>{isUnresolvedSapIdentity(item?.program) ? 'SAP name unresolved' : (item?.program || 'Not captured')}</td>
                   <td>{item?.cpu_class || '—'}</td>
                   <td className={currentError ? 'is-attention' : ''}>{currentError || '—'}</td>
-                  <td>{latestError || '—'}{latestError && <small>{recency === 'AT_SNAPSHOT' ? 'AT SNAPSHOT' : 'HISTORICAL'}</small>}</td>
+                  <td>{latestError || '—'}{latestError && <small>{recency === 'AT_SNAPSHOT' ? 'AT SNAPSHOT' : 'HISTORICAL'} · {traceTimestamp(item) ? formatWib(traceTimestamp(item), true) + ' WIB' : 'error time not captured'}</small>}</td>
                   <td>{numberText(item?.rabax ?? 0, 0)} / {numberText(item?.rxmsg ?? 0, 0)}</td>
                   <td>{numberText(item?.sxpg ?? 0, 0)} / {numberText(item?.job_counter ?? 0, 0)}</td>
                 </tr>
@@ -993,6 +997,11 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
           </table>
         </div>
         {wpSignals.length > wpPageSize && !normalizedWpSearch && !wpErrorsOnly && <small className="rundeckWpSignalMore">Showing saved WP/Trace observations by page, prioritized by snapshot error, retained trace error and RABAX count.</small>}
+        <div className="rundeckJobInvestigationContext" role="note">
+          <strong>Investigation Context · Cause not established</strong>
+          <span>Workload PSS is not HANA RAM. APP Critical WP is host evidence, not proof that this program caused the issue. {memoryTraceRetained ? 'Memory-allocation trace retained; verify ST22 and SM21 at the corresponding timestamp.' : 'Retained WP/trace rows require SAP-side verification.'}</span>
+          <small>WP count follows saved observations; missing values are not substituted with zero. Trace history does not establish a current error or SAP job failure. Verify execution in SM37.</small>
+        </div>
         <details className="rundeckWpSignalNotes"><summary>About WP/Trace evidence</summary><p className="rundeckWpSignalNote">Source: retained WP-SCOUT observation. “Error at Snapshot” is shown only when the collector marks the error AT_SNAPSHOT. “Latest Trace Error” can be historical and does not mean the SAP job failed. CPU Signal is only the collector CPU classification. Counters are observation values from the WP trace sample. SM37 remains the authority for SAP job execution status.</p></details>
       </section> : <section className="rundeckWpSignalPanel is-empty" aria-label="WP trace signal coverage">
         <div className="rundeckWpSignalHead"><div><strong>Observed SAP WP / Trace Signals</strong><small>{wpSignalObservedAt ? `${formatWib(wpSignalObservedAt, true)} WIB` : 'Selected observation'}</small></div></div>
@@ -1044,7 +1053,8 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
             <span><b>Program</b>{detailView.item?.program || 'Not captured'}</span>
             <span><b>CPU Signal</b>{detailView.item?.cpu_class || '—'}</span>
             <span><b>Error at Snapshot</b>{detailView.item?.error_at_snapshot || '—'}</span>
-            <span><b>Latest Trace Error</b>{detailView.item?.latest_trace_error || '—'}</span>
+            <span><b>Retained Trace Error</b>{detailView.item?.latest_trace_error || '—'}</span>
+            <span><b>Trace Error At</b>{traceTimestamp(detailView.item) ? formatWib(traceTimestamp(detailView.item), true) + ' WIB' : 'Not captured'}</span>
             <span><b>Error Recency</b>{String(detailView.item?.error_recency || '—').replaceAll('_', ' ')}</span>
             <span><b>RABAX / RXMSG</b>{numberText(detailView.item?.rabax ?? 0, 0)} / {numberText(detailView.item?.rxmsg ?? 0, 0)}</span>
             <span><b>SXPG / JobStart</b>{numberText(detailView.item?.sxpg ?? 0, 0)} / {numberText(detailView.item?.job_counter ?? 0, 0)}</span>
