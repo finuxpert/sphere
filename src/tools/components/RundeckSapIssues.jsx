@@ -129,6 +129,8 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
   const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
   const separateWarningCount=reviewIndicators.filter((row)=>row.status==='WARNING').length
+  const activeFindings = criticalCount + warningCount
+  const normalCount=indicators.filter((row)=>row.status==='NORMAL' && row.scope!=='SAP Job Source').length
   const baseIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
   const normalizedQuery=indicatorQuery.trim().toLocaleLowerCase()
   const visibleIndicators=baseIndicators.filter(row=>
@@ -185,15 +187,15 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     {failedSources.length>0 && <div className="rundeckReviewState is-error" role="status">Unavailable: {failedSources.map(name=>SAP_ISSUE_SOURCE_LABELS[name]).join(', ')}. Successful checks remain visible; failed sources are UNKNOWN.</div>}
     {paired && readinessRoot ? createPortal(readinessSummary, readinessRoot) : readinessSummary}
     <div className="rundeckSapIssuesSummaryStrip" aria-label="Current indicator status">
-      <span title="Non-normal indicators exclude SAP SM37 readiness."><b>Non-normal</b><strong>{reviewIndicators.length}</strong></span>
-      <span><b>Critical</b><strong>{criticalCount}</strong></span>
-      <span title={separateWarningCount ? `${warningCount - separateWarningCount} Attention · ${separateWarningCount} Warning` : 'Attention indicates threshold reached; not automatically SAP DOWN'}><b>{separateWarningCount ? 'Attention / Warning' : 'Attention'}</b><strong>{warningCount}</strong></span>
-      <span title="No verified recent evidence. UNKNOWN is not a confirmed SAP service failure."><b>Unknown</b><strong>{unknownCount}</strong></span>
+      <span title={`${criticalCount} Critical · ${warningCount} Attention/Warning; does not include Unknown or SM37`}><b>Active findings</b><strong>{activeFindings}</strong></span>
+      <span title="Verified critical indicators"><b>Critical</b><strong>{criticalCount}</strong></span>
+      <span title="Unavailable or stale evidence. UNKNOWN is not a confirmed SAP service failure."><b>Data unavailable</b><strong>{unknownCount}</strong></span>
+      <span title="Indicators normal on a fresh verified source; excludes SM37 readiness"><b>Normal</b><strong>{normalCount}</strong></span>
     </div>
 
     <section className="rundeckIssueIndicatorSection">
       <div className="rundeckIssueSectionTitle">
-        <h4>Current indicators{appSampleTime && <small className="rundeckSapChecksSampleTime" title="APP host collection sample">APP sample {formatWib(appSampleTime,true)} WIB</small>}</h4>
+        <h4>SAP indicators{appSampleTime && <small className="rundeckSapChecksSampleTime" title="APP host collection sample">APP sample {formatWib(appSampleTime,true)} WIB</small>}</h4>
         <SphereOperatorTabs
           className="rundeckIssueViewSwitch"
           label="Indicator view"
@@ -205,6 +207,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
           onChange={setIndicatorView}
         />
       </div>
+      <p className="rundeckSapIssueBreakdown">Verified findings: {criticalCount} Critical · {warningCount} Attention/Warning · {unknownCount} Unknown. Unknown is missing or stale evidence, not confirmed SAP downtime.</p>
       {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37SourceFailed ? 'SM37 readiness unavailable' : sm37 === 'UNKNOWN' ? 'SM37 readiness unverified' : `SM37 not connected · ${sm37}`}. Confirm job execution status in SAP SM37.</p>}
       {paired && indicatorView==='review' && <button type="button" className="rundeckSapChecksFilterToggle" aria-expanded={filtersExpanded} onClick={()=>{ if(filtersExpanded){ setIndicatorQuery(''); setAppFilter('ALL'); setShowFilters(false) } else setShowFilters(true) }}>{filtersExpanded ? 'Clear and hide filters' : 'Filter indicators'}</button>}
       {filtersExpanded && <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
