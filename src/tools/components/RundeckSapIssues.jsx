@@ -128,7 +128,6 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const unknownCount=reviewIndicators.filter((row)=>row.status==='UNKNOWN').length
   const criticalCount=reviewIndicators.filter((row)=>row.status==='CRITICAL').length
   const warningCount=reviewIndicators.filter((row)=>row.status==='WARNING'||row.status==='ATTENTION').length
-  const separateWarningCount=reviewIndicators.filter((row)=>row.status==='WARNING').length
   const activeFindings = criticalCount + warningCount
   const normalCount=indicators.filter((row)=>row.status==='NORMAL' && row.scope!=='SAP Job Source').length
   const baseIndicators=indicatorView==='all' ? sortedIndicators : reviewIndicators
