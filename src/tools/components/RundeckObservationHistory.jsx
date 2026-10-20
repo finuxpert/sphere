@@ -119,7 +119,7 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
       {criticalValues.length > 0 && <span><b>Critical WP Range</b><strong>{Math.min(...criticalValues)}–{Math.max(...criticalValues)}</strong></span>}
     </div>}
     {!error && <div className="rundeckObservationHistoryTableWrap"><table>
-      <thead><tr><th>Time (WIB)</th><th>Rundeck run ref</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th>Critical WP</th></tr></thead>
+      <thead><tr><th>Observed (WIB)</th><th>Rundeck collection ref</th><th>APP</th><th>CPU</th><th>PSS Memory</th><th title="Host-level Critical WP at this collection time; not attributable to this program">Host Critical WP</th></tr></thead>
       <tbody>{visibleRows.map((row) => {
         const details = row.details || {}
         const pss = rowMetric(row, 'pss')
@@ -147,10 +147,14 @@ export default function RundeckObservationHistory({ job = null, refreshToken = '
           <td title={`Processes ${rowMetric(row, 'processes') ?? 'unknown'} · WP ${wp}`}>{numberText(row.host_wp_critical, 0)}</td>
         </tr>
       })}{!rows.length && <tr><td colSpan="6">No saved performance records for this job or program.</td></tr>}</tbody>
-    </table><p className="rundeckIssueSourceNote">Performance samples and Rundeck collections are not SAP job executions. Verify job execution in SM37.</p>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
+    </table><div className="rundeckCollectionEvidenceSummary" role="note" aria-label="Historical collection context">
+      <strong>Collection Summary</strong>
+      <span>{identity.performanceObservations} performance observations · {identity.rundeckCollections ?? '—'} Rundeck collections · {timeSpan}</span>
+      <small>Host Critical WP refers to APP evidence at each sample. CPU is grouped multi-core workload usage, PSS is workload memory. These observations are not SAP job executions; verify execution in SM37.</small>
+    </div><p className="rundeckIssueSourceNote">Performance samples and Rundeck collections are not SAP job executions. Verify job execution in SM37.</p>{rows.length > 8 && <div className="rundeckObservationHistoryMore"><button type="button" onClick={() => setShowAll((value) => !value)}>{showAll ? 'Show latest 8' : `View all ${rows.length}`}</button></div>}</div>}
   </>
 
-  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Run history">{content}</section>
+  if (embedded) return <section className="rundeckJobExecutionHistory rundeckObservationHistoryV1234 is-embedded" aria-label="Rundeck collection history">{content}</section>
 
   return <details className="rundeckJobExecutionHistory rundeckObservationHistoryV1234">
     <summary>
