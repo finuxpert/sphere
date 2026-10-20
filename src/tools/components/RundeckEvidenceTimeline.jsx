@@ -110,7 +110,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const alignmentHint = `Issue: ${issueAt ? `${formatWib(issueAt,true)} WIB` : '—'} · Workload: ${pair.workloadAt ? `${formatWib(pair.workloadAt,true)} WIB` : '—'} · Window: ${hasThreshold ? `${threshold}m` : '—'}`
   const workloadGapMinutes = Number(alignment.workload_gap_minutes)
   const hasWorkloadGap = alignment.workload_gap_minutes != null && Number.isFinite(workloadGapMinutes)
-  const outsideCount = events.filter(event => hasThreshold && eventRelation(event.at, issueAt, threshold, event.source) !== 'WITHIN WINDOW' &&
+  const outsideCount = events.filter(event => hasThreshold && Number.isFinite(Date.parse(issueAt || '')) && eventRelation(event.at, issueAt, threshold, event.source) !== 'WITHIN WINDOW' &&
     !['ISSUE START','SAP SIGNAL'].includes(String(event.source || '').toUpperCase())).length
   const firstWorkload = pair.firstSeen || pair.workloadAt || ''
   const issueTime = Date.parse(issueAt || '')
