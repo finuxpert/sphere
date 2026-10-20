@@ -1,5 +1,6 @@
 import React from 'react'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
+import RundeckJobsProgramsWorkspace from './RundeckJobsProgramsWorkspace.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
@@ -24,6 +25,7 @@ import './RundeckOperatorFlatV1354.css'
 import './RundeckCockpitHexV13512.css'
 import './RundeckSphereMotion.css'
 import './RundeckSapChecksLayout.css'
+import './RundeckAppThreePanel.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -76,7 +78,7 @@ export default function RundeckMonitoringHistory(props) {
     if (!job?.key) return
     onSelectJob?.(job)
     setManualAppFocus({ contextHost: '', host: null })
-    setActiveOverlay({ type: 'job' })
+    setActiveOverlay(previous => ({ type: 'job', returnTo: previous?.type === 'jobs-programs' ? previous : null }))
   }, [onSelectJob])
 
   const inspectApp = React.useCallback((context = {}) => {
@@ -101,6 +103,7 @@ export default function RundeckMonitoringHistory(props) {
     selectedJob={selectedJob}
     onOpenEvidence={(job, scope) => setActiveOverlay({ type: 'evidence', job, scope, returnTo: { type: 'selected' } })}
     onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
+    onOpenJobsPrograms={() => setActiveOverlay({ type: 'jobs-programs', mode: 'live', category: 'REVIEW' })}
     onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', sapHost: focusedOperationalHost?.host || '', returnTo: { type: 'selected' } })}
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
     systemDataSummary={systemDataSummary}
@@ -132,7 +135,7 @@ export default function RundeckMonitoringHistory(props) {
       },
     }
     onSelectJob?.(reviewJob)
-    setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })
+    setActiveOverlay(previous => ({ type: 'job', reviewRow: row, reviewContext, returnTo: previous?.type === 'jobs-programs' ? previous : null }))
   }, [onSelectJob])
 
   const performanceReviewContent = <RundeckPerformanceReview
@@ -155,6 +158,7 @@ export default function RundeckMonitoringHistory(props) {
             onOpenInfrastructureMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })}
             operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
+            onOpenJobsPrograms={(mode = 'live', category = 'REVIEW') => setActiveOverlay({ type: 'jobs-programs', mode, category })}
             onOpenEvaluatedWorkload={openEvaluatedWorkload}
             appFocusRequest={appFocusRequest}
             onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
@@ -164,6 +168,27 @@ export default function RundeckMonitoringHistory(props) {
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
+
+          {activeOverlay?.type === 'jobs-programs' && <RundeckWorkspaceDrawer
+            title="Jobs & Programs"
+            subtitle="Current collection · Saved evaluation Review · Search"
+            size="wide"
+            mountInAppShell
+            onClose={() => setActiveOverlay(null)}
+          >
+            <div className="rundeckCockpitV13491 rundeckJobsProgramsModalScope">
+              <RundeckJobsProgramsWorkspace
+                initialMode={activeOverlay.mode || 'live'}
+                initialHealth={activeOverlay.category || 'REVIEW'}
+                showHealth={false}
+                refreshToken={refreshToken}
+                performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+                currentContent={currentWorkloadContent}
+                reviewContent={performanceReviewContent}
+                onOpenEvaluatedWorkload={openEvaluatedWorkload}
+              />
+            </div>
+          </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'job' && selectedJob?.key && <RundeckWorkspaceDrawer
             title={selectedJob.key}
@@ -186,7 +211,7 @@ export default function RundeckMonitoringHistory(props) {
             })}>Review Result</button> : null}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'app'
+            backLabel={activeOverlay.returnTo?.type === 'jobs-programs' ? 'Back to Jobs & Programs' : activeOverlay.returnTo?.type === 'app'
               ? `Back to ${activeOverlay.returnTo.app?.host ? activeOverlay.returnTo.app.host.split('.').shift() : 'APP Server'}`
               : activeOverlay.returnTo?.type === 'review'
                 ? 'Back to Review'
