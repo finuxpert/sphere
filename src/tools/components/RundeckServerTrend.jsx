@@ -770,6 +770,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const firstSavedBucket = React.useMemo(() => {
     if (!longHistoricalRange || serverTrend1?.range !== range) return ''
     const timestamps = (serverTrend1.items || [])
+      .filter(item => Number(item?.samples) > 0 && (item?.avg_value != null || item?.max_value != null))
       .map(item => Date.parse(item?.bucket || ''))
       .filter(Number.isFinite)
     return timestamps.length ? new Date(Math.min(...timestamps)).toISOString() : ''
