@@ -77,7 +77,7 @@ def app_network_trend(
         sql = common + """
             , bucketed AS (
               SELECT *, date_bin(CAST(:stride AS interval),collected_at,
-                TIMESTAMPTZ '2000-01-01 00:00:00+00') AS bucket
+                CAST(:origin AS timestamptz)) AS bucket
               FROM sampled
             ), ranked_bucket AS (
               SELECT *, ROW_NUMBER() OVER (
@@ -94,7 +94,8 @@ def app_network_trend(
                    MIN(value) AS min_value, COUNT(value) AS samples
             FROM ranked_bucket GROUP BY bucket,host ORDER BY bucket,host
         """
-        params = {"since": since, "stride": stride}
+        params = {"since": since, "stride": stride,
+                  "origin": "2000-01-01 17:00:00+00" if resolved == "1d" else "2000-01-01 00:00:00+00"}
     if until is not None:
         params["until"] = until
 
