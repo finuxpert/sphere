@@ -1,0 +1,62 @@
+/* SPHERE DEV — compact historical preset controls.
+ * Only source-backed daily aggregates may be shown for Last Month, 3M and 6M.
+ */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendHistoricalSelect {
+  appearance:auto;
+  box-sizing:border-box;
+  min-height:27px;
+  max-width:116px;
+  min-width:67px;
+  padding:3px 7px;
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.32));
+  border-radius:5px;
+  background:var(--sphere-surface-1,#141d23);
+  color:var(--sphere-text,#e7edf0);
+  font:inherit;
+  font-size:10.5px;
+  font-weight:650;
+  cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendHistoricalSelect:focus-visible {
+  outline:2px solid var(--sphere-accent,#4fc6c8);
+  outline-offset:2px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckHistoricalCoverage {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:3px 13px;
+  padding:6px 8px;
+  margin:3px 0;
+  border-top:1px solid var(--sphere-design-edge,rgba(126,147,158,.2));
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:10.5px;
+  line-height:1.35;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckHistoricalCoverage strong {
+  color:var(--sphere-text,#e7edf0);
+  font-size:11px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckHistoricalCoverage small {
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:10px;
+}
+@media(min-width:1400px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTripleTrendV13457 .rundeckTrendSharedControls {
+    grid-template-columns:minmax(350px,1.18fr) minmax(112px,.39fr) minmax(95px,.32fr) minmax(270px,1fr)!important;
+  }
+}
+@media(max-width:1399px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckTrendControlInline {
+    flex-wrap:wrap!important;
+  }
+}
+@media(max-width:520px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendHistoricalSelect {
+    min-width:72px;
+    font-size:10px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendHistoricalSelect {transition:none!important}
+}
