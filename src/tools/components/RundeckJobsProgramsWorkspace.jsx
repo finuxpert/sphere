@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 
-export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false, onOpenEvaluatedWorkload = null, initialMode = 'live', initialHealth = 'REVIEW', showHealth = true }) {
+export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false, onOpenEvaluatedWorkload = null, initialMode = 'live', initialHealth = 'REVIEW', showHealth = true, onModeChange = null }) {
   const [mode, setMode] = React.useState(() => ['live', 'review', 'search'].includes(initialMode) ? initialMode : 'live')
   const [reviewVisited, setReviewVisited] = React.useState(initialMode !== 'live')
   const [reviewJumpToken, setReviewJumpToken] = React.useState(initialMode !== 'live' ? 1 : 0)
@@ -12,6 +12,7 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
   const tabRefs = React.useRef({})
   const selectMode = (next) => {
     setMode(next)
+    onModeChange?.(next)
     if (next !== 'live') setReviewVisited(true)
   }
   const handleTabKeyDown = (event) => {
