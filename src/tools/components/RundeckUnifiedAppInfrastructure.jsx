@@ -236,8 +236,8 @@ export default function RundeckUnifiedAppInfrastructure({
           const state = appSignalState(host, performanceVerified)
           return <button key={host.host} type="button"
             className={'rundeckAppHexSelector is-sap-' + state.toLowerCase() + (appKey === key ? ' is-active' : '')}
-            aria-label={key + ' SAP ' + state + ' · Critical WP ' + metric(host.wp_critical) + ' · Open processes and Infrastructure analysis'}
-            title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + ' · click to open processes and Infrastructure'}
+            aria-label={key + ' SAP ' + state + ' · Critical WP ' + metric(host.wp_critical) + ' · Select APP to see details'}
+            title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + ' · select APP to see details'}
             aria-pressed={appKey === key}
             onClick={() => { selectApp(key); onSelectApp?.(host.host) }}>
             <span className="rundeckAppHexShape" aria-hidden="true">
