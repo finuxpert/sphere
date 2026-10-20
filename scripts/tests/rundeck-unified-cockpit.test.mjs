@@ -62,8 +62,8 @@ test('Operational Checks connects five investigation destinations with paired hi
     assert.ok(wrapper.includes(name+'='),'Missing connected modal: '+name)
   }
   assert.match(evidence,/Open Related Events and Run History/)
-  assert.match(wrapper,/title="Related Events & Run History"/)
-  assert.match(wrapper,/aria-label="Run history"/)
+  assert.match(wrapper,/title="Related Events & Rundeck Collection History"/)
+  assert.match(wrapper,/aria-label="Rundeck collection history"/)
   assert.match(wrapper,/RundeckObservationHistory/)
   assert.match(wrapper,/title="SAP Checks"/)
   assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/)
