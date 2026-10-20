@@ -229,6 +229,8 @@
   width: 100%;
   min-width: 0;
   min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -242,6 +244,15 @@
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody {
   min-width: 0;
   width: 100%;
+}
+/* The desktop cockpit previously clips the workspace and content panes.
+   In the modal, the drawer body is the one scroll owner, not the Current table. */
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody.is-live,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkload {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 /* Current is already paginated: never put a second scrollbar inside its table.
    A horizontally scrolling wrapper computes overflow-y:visible as auto, so both
