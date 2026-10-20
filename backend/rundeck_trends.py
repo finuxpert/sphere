@@ -233,7 +233,7 @@ def trend_series(
                     date_bin(
                         CAST(:stride AS interval),
                         COALESCE(c.started_at, c.finished_at, h.collected_at),
-                        TIMESTAMPTZ '2000-01-01 00:00:00+00'
+                        CAST(:origin AS timestamptz)
                     ) AS bucket,
                     h.collection_id,
                     COALESCE(c.started_at, c.finished_at, h.collected_at) AS collection_at,
@@ -275,7 +275,8 @@ def trend_series(
             GROUP BY bucket, host
             ORDER BY bucket ASC, host ASC
         """)
-        params = {"since": since, "stride": stride, "warning": metric["warning"]}
+        params = {"since": since, "stride": stride, "warning": metric["warning"],
+                  "origin": "2000-01-01 17:00:00+00" if resolved_bucket == "1d" else "2000-01-01 00:00:00+00"}
         if until is not None:
             params["until"] = until
 
