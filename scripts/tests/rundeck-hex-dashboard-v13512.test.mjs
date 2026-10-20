@@ -14,23 +14,27 @@ test('hexagon APP selection, source provenance and modal behavior', () => {
   assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
   assert.match(app,/selectedInfra\?\.topFs\?\.mount_point/)
   assert.match(app,/onClick=\{openSelectedAnalysis\}/)
-  assert.match(app,/openAppAnalysis\(host\)/)
+  assert.match(app,/const openSelectedAnalysis = \(\) => openAppAnalysis\(selectedHost\)/)
   assert.match(app,/infraHostVerified: Boolean\(infraHost\)/)
   assert.match(css,/clip-path:polygon\(50% 0%/)
   assert.match(css,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/)
   assert.match(css,/@media \(max-width:430px\)/)
 })
 
-test('four operational modal shortcuts moved below APP and above trends', () => {
+test('five operational checks reside inside APP overview; trends and evaluation follow', () => {
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const wrapper=read('RundeckMonitoringHistory.jsx')
-  const css=read('RundeckCockpitHexV13512.css')
-  assert.ok(core.indexOf('rundeckTopBandV13454') < core.indexOf('rundeckAnalysisRailV13456'))
-  assert.ok(core.indexOf('rundeckAnalysisRailV13456') < core.indexOf('rundeckTrendBandV13454'))
-  assert.ok(core.indexOf('rundeckTrendBandV13454') < core.indexOf('<RundeckJobsProgramsWorkspace'))
+  const evidence=read('RundeckOperationalEvidence.jsx')
+  assert.ok(core.indexOf('rundeckTopBandV13454') < core.indexOf('rundeckTrendBandV13454'))
+  assert.ok(core.indexOf('rundeckTrendBandV13454') < core.indexOf('rundeckJobsProgramsOverview'))
+  assert.match(core,/operationalChecks=\{props\.operationalEvidenceContent\}/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
+  assert.match(core,/<RundeckWorkloadHealth/)
+  assert.match(wrapper,/onOpenJobsPrograms=/)
   assert.match(wrapper,/focusedOperationalHost/)
-  assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/)
+  for (const action of ['Jobs &amp; Programs', 'Related Events', 'SAP Checks', 'Infrastructure', 'System Data']) {
+    assert.ok(evidence.includes(action), 'Operational Checks missing ' + action)
+  }
 })
 
 test('Workload Health keeps validated 1D identities and adds hexagon title icon', () => {
@@ -55,7 +59,8 @@ test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity
   assert.match(css,/nth-child\(4\)\{grid-column:2 \/ span 2;grid-row:2\}/)
   assert.match(css,/nth-child\(5\)\{grid-column:4 \/ span 2;grid-row:2\}/)
   assert.match(css,/@media \(max-width:899px\)/)
-  assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\); openAppAnalysis\(host\) \}\}/)
+  assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
+  assert.match(app,/onClick=\{openSelectedAnalysis\}/)
 })
 
 test('saved workload honeycomb capacity reserves stagger offset and never hides excess records', () => {
