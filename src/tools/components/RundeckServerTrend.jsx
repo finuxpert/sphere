@@ -742,6 +742,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [windowModal, setWindowModal] = React.useState(false)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
   const longHistoricalRange = LONG_RANGES.has(range)
+  const firstSavedBucket = React.useMemo(() => {
+    if (!longHistoricalRange || serverTrend1?.range !== range) return ''
+    const timestamps = (serverTrend1.items || [])
+      .map(item => Date.parse(item?.bucket || ''))
+      .filter(Number.isFinite)
+    return timestamps.length ? new Date(Math.min(...timestamps)).toISOString() : ''
+  }, [longHistoricalRange, range, serverTrend1])
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','network','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
@@ -1064,7 +1071,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         ? 'Configured retention ' + serverTrend1.configured_retention_days + 'D' +
           (Number(serverTrend1.configured_retention_days) + 0.1 < Number(serverTrend1.requested_days || 0)
             ? ' · requested period exceeds retention; earlier observations may be unavailable' : ' · check actual observation coverage')
-        : 'Historical coverage depends on retained source samples; missing data is not zero'}</span>
+        : 'Historical coverage depends on retained source samples; missing data is not zero'}{firstSavedBucket ? ' · first stored bucket ' + formatWib(firstSavedBucket, true) + ' WIB' : ''}</span>
       <small>Job & Program evaluations remain 1D / 7D / 30D. Dates without saved samples remain unknown.</small>
     </div>}
     {customOpen && <RundeckCustomRangeDialog
