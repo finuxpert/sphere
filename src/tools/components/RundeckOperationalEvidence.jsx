@@ -17,7 +17,7 @@ function jobContext(workload, host, source) {
 
 export default function RundeckOperationalEvidence({
   refreshToken = '', selectedJob = null, onOpenEvidence, onOpenIssues,
-  onOpenInfrastructure, onOpenSystemData, systemDataSummary = '', infrastructureLabel = '', focusedHost = '',
+  onOpenInfrastructure, onOpenSystemData, onOpenJobsPrograms, systemDataSummary = '', infrastructureLabel = '', focusedHost = '',
 }) {
   const [summary, setSummary] = React.useState(null)
   const [error, setError] = React.useState('')
@@ -47,10 +47,14 @@ export default function RundeckOperationalEvidence({
         <span className="rundeckEvidenceCardTitle"><SphereIcon name="history" /> Related Events · {evidenceScope}</span>
         <strong>{error ? 'Evidence unverified' : !summary ? 'Loading evidence' : 'No current event'}</strong>
       </button>
-  // Four distinct destinations; related data shares a popup rather than duplicated links.
+  // All investigation destinations share the existing analysis modals.
   return <nav className="rundeckAnalysisLaunchers" aria-label="Operational analysis">
     <div className="rundeckAnalysisLaunchersHead"><h3>Operational Checks</h3></div>
     <div className="rundeckAnalysisActions" role="group" aria-label="Investigation shortcuts">
+      <button type="button" className="rundeckAnalysisSecondary" onClick={onOpenJobsPrograms} aria-label="Open Jobs and Programs" disabled={!onOpenJobsPrograms}>
+        <span><SphereIcon name="workload" />Jobs &amp; Programs</span>
+        <small>Current · Review · Search</small>
+      </button>
       {evidence}
       <button type="button" className="rundeckAnalysisSecondary" onClick={onOpenIssues} aria-label="Open SAP Checks">
         <span><SphereIcon name="activity" />SAP Checks</span>
