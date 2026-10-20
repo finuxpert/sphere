@@ -19,6 +19,8 @@ test('paginated Current table has no nested scrollbar, Review/Search remain unto
   const modalCss = read('RundeckAppThreePanel.css')
   // The later modal CSS must not re-introduce overflow-x:auto, which also
   // computes overflow-y:visible as auto and creates a nested vertical scroller.
+  assert.match(modalCss, /\.rundeckJobsProgramsModalScope \.rundeckJobsProgramsWorkspace \{[\s\S]*?overflow: visible !important/)
+  assert.match(modalCss, /\.rundeckJobsProgramsWorkspaceBody\.is-live \.rundeckCurrentWorkload \{[\s\S]*?overflow: visible !important/)
   assert.match(modalCss, /\.rundeckJobsProgramsWorkspaceBody\.is-live \.rundeckCurrentWorkloadTableWrap \{[\s\S]*?overflow: visible !important/)
   assert.match(modalCss, /\.rundeckJobsProgramsWorkspaceBody :is\(\.rundeckReviewTableWrapV1231\) \{[\s\S]*?overflow-x: auto !important/)
   assert.doesNotMatch(modalCss, /:is\(\.rundeckCurrentWorkloadTableWrap,\.rundeckReviewTableWrapV1231\)/)
