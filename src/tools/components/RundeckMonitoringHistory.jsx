@@ -160,6 +160,7 @@ export default function RundeckMonitoringHistory(props) {
             operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
             onOpenJobsPrograms={(mode = 'live', category = 'REVIEW') => setActiveOverlay({ type: 'jobs-programs', mode, category })}
+            onOpenAppJobs={(hostKey) => setActiveOverlay({ type: 'jobs-programs', mode: 'live', category: 'REVIEW', hostKey })}
             onOpenEvaluatedWorkload={openEvaluatedWorkload}
             appFocusRequest={appFocusRequest}
             onOpenSelectedAnalysis={() => selectedJob?.key && setActiveOverlay({ type: 'job' })}
@@ -182,6 +183,7 @@ export default function RundeckMonitoringHistory(props) {
                 initialMode={activeOverlay.mode || 'live'}
                 onModeChange={(mode) => setActiveOverlay(previous => previous?.type === 'jobs-programs' ? { ...previous, mode } : previous)}
                 initialHealth={activeOverlay.category || 'REVIEW'}
+                initialAppHost={activeOverlay.hostKey || ''}
                 showHealth={false}
                 refreshToken={refreshToken}
                 performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
