@@ -1,0 +1,303 @@
+/* DEV: APP Motion / selected APP detail / Operational Checks.
+ * Layout-only layer: severity, timestamps, evaluation records and APIs stay source-backed.
+ */
+.appShell:has(.rundeckPanel) .rundeckMonitoring.rundeckCockpitV13491 {
+  grid-template-areas: "apps" "trends" "workloads" !important;
+  grid-template-rows: auto auto auto !important;
+  gap: 8px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 > .rundeckJobsProgramsOverview {
+  grid-area: workloads !important;
+  width: 100%;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexMain.rundeckAppThreePanels {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.48fr) minmax(0, 1.22fr) !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppThreePanels > :is(.rundeckAppMotionPanel,.rundeckAppDetailPanel,.rundeckAppChecksPanel) {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 169px;
+  padding: 9px 12px;
+  border: 1px solid var(--sphere-design-edge,rgba(126,147,158,.22));
+  border-radius: 7px;
+  background: var(--sphere-design-panel,rgba(40,58,66,.13));
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionPanel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppPanelHeading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 5px !important;
+  color: var(--sphere-text,#e7edf0);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 720;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppPanelHeading small {
+  margin-left: auto;
+  max-width: 55%;
+  color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppPanelHeading .sphereIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--sphere-accent,#4fc6c8);
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionPanel .rundeckAppHexSelectors.rundeckUnifiedAppCards {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 125px !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  align-self: stretch;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppDetail {
+  flex: 1;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  grid-template-rows: auto auto 1fr !important;
+  align-items: start !important;
+  gap: 9px 12px !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 4px 0 0 !important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppIdentity {
+  grid-column: 1;
+  grid-row: 1;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppIdentity > span {
+  max-width: 310px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppMetrics {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  min-width: 0;
+  gap: 7px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppMetric {
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppMetric small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppSource {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: end;
+  gap: 3px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppOpen {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  min-height: 30px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel {
+  display: flex;
+  flex-direction: column;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisLaunchers {
+  display: flex !important;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisLaunchersHead {
+  display: flex !important;
+  align-items: center;
+  min-height: 19px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisLaunchersHead h3 {
+  margin: 0 !important;
+  font-size: 12px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 5px !important;
+  align-content: start;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions > button {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  min-width: 0;
+  min-height: 40px !important;
+  padding: 5px 7px !important;
+  gap: 2px !important;
+  border: 1px solid transparent !important;
+  border-radius: 5px !important;
+  background: var(--sphere-flat-hover,rgba(82,165,187,.045)) !important;
+  color: var(--sphere-text,#e7edf0);
+  text-align: left;
+  cursor: pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions > button:is(:hover,:focus-visible) {
+  border-color: var(--sphere-accent,#4fc6c8) !important;
+  background: rgba(74,172,184,.11) !important;
+  outline-offset: 1px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions > button :is(span,strong) {
+  display: block;
+  max-width: 100%;
+  font-size: 10.5px !important;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions > button small {
+  display: block !important;
+  max-width: 100%;
+  font-size: 9px !important;
+  line-height: 1.2;
+  color: var(--sphere-text-secondary,#a9b5bb);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions > button .rundeckEvidenceCardTitle .sphereIcon {
+  display: inline-block;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckJobsProgramsHealthSide {
+  position: static !important;
+  box-sizing: border-box;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckWorkloadHealth {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 185px !important;
+  max-height: 265px !important;
+  padding: 10px 14px !important;
+  display: grid !important;
+  grid-template-rows: auto auto minmax(74px,1fr) auto !important;
+  gap: 7px !important;
+}
+/* The standalone evaluation is still the verified, full 1:1 saved population. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckWorkloadDotGrid {
+  min-height: 90px !important;
+  width: 100%;
+}
+.rundeckWorkspaceDrawer.is-jobs-programs {
+  width: min(1260px,94vw);
+  max-height: min(92dvh,920px);
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope {
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspace {
+  width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceHead {
+  padding: 7px 0 10px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsSplit {
+  display: block !important;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody {
+  min-width: 0;
+  width: 100%;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody :is(.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231) {
+  overflow-x: auto !important;
+}
+@media(max-width:1399px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexMain.rundeckAppThreePanels {
+    grid-template-columns: minmax(0,1fr) minmax(0,1.45fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel {
+    grid-column: 1 / -1;
+    min-height: 80px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions {
+    grid-template-columns: repeat(5,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:899px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppHexMain.rundeckAppThreePanels {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppThreePanels > :is(.rundeckAppMotionPanel,.rundeckAppDetailPanel,.rundeckAppChecksPanel) {
+    min-height: 0;
+    padding: 8px 10px;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppMotionPanel .rundeckAppHexSelectors.rundeckUnifiedAppCards {
+    min-height: 105px !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppSource {
+    display: flex !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel {
+    grid-column: auto;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppChecksPanel .rundeckAnalysisActions {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckWorkloadHealth {
+    max-height: none !important;
+    min-height: 185px !important;
+  }
+  .rundeckWorkspaceDrawer.is-jobs-programs {
+    width: min(100vw - 16px,850px);
+    max-height: 94dvh;
+  }
+}
+@media(max-width:430px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppMetrics {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppDetailPanel .rundeckSelectedAppOpen {
+    font-size: 10px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppThreePanels :is(button,.rundeckSelectedAppDetail) {
+    transition: none !important;
+    animation: none !important;
+  }
+}
