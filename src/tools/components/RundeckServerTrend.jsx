@@ -22,9 +22,9 @@ const API = `${import.meta.env.BASE_URL}api`
 const DEFAULT_RANGE = '6h'
 const TREND_STORAGE_KEY = 'sphere.live.trend'
 const SHORT_RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H']]
-const RANGES = [['24h', '1D'], ['7d', '7D'], ['30d', '30D']]
+const RANGES = [['24h', '1D'], ['7d', '7D'], ['30d', '30D'], ['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M']]
 const HISTORY_RANGES = [['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M']]
-const MORE_RANGES = [...SHORT_RANGES, ...HISTORY_RANGES]
+const MORE_RANGES = [...SHORT_RANGES]
 const ALL_RANGES = [...RANGES, ...MORE_RANGES]
 const LONG_RANGES = new Set(HISTORY_RANGES.map(([key]) => key))
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
@@ -1029,16 +1029,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <Segmented options={RANGES} value={range}
             onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }}
             ariaLabel="Shared trend period" />
-          <select className="rundeckTrendHistoricalSelect" aria-label="Additional time ranges"
-            value={MORE_RANGES.some(([key]) => key === range) ? range : ''}
+          <select className="rundeckTrendHistoricalSelect" aria-label="Short performance ranges"
+            value={SHORT_RANGES.some(([key]) => key === range) ? range : ''}
             onChange={event => { setRange(event.target.value); setBucket('auto'); setCustomOpen(false); setWindowModal(false) }}>
-            <option value="" disabled>More ranges</option>
-            <optgroup label="Short range">
-              {SHORT_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-            </optgroup>
-            <optgroup label="Historical">
-              {HISTORY_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-            </optgroup>
+            <option value="" disabled>Short</option>
+            {SHORT_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
           </select>
           <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')}
             aria-pressed={range === 'custom'} aria-expanded={customOpen}
