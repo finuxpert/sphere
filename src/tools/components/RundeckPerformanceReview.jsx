@@ -1,6 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
-import { formatWib, numberText, workloadTypeLabel } from './sapUiFormat.js'
+import { formatWib, numberText, workloadTypeLabel, shortHost } from './sapUiFormat.js'
 import { evaluationReasonParts } from './rundeckEvaluationExplain.js'
 
 const RundeckReviewQuickAnalysis = React.lazy(() => import('./RundeckReviewQuickAnalysis.jsx'))
@@ -143,6 +143,10 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const changeType = value => { setType(value); setPageIndex(0) }
   const changeGroup = value => { setHealthGroup(value); setPageIndex(0) }
 
+  const reviewHosts = (row) => {
+    const names = Array.isArray(row?.hosts) ? row.hosts : (row?.host ? [row.host] : [])
+    return [...new Set(names.map(host => typeof host === 'string' ? host : host?.host).filter(Boolean))]
+  }
   const openQuick = (row) => {
     if (onOpenQuickAnalysis) {
       setQuickRow(null)
@@ -234,9 +238,9 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
               >
                 <td className="rundeckReviewWorkloadV1231" title={title}>
                   <button type="button" title={row.consumer_key} onClick={(event) => { event.stopPropagation(); openQuick(row) }}>{row.consumer_key}</button>
-                  <small>{workloadTypeLabel(row.consumer_type)}</small>
+                  <small>{workloadTypeLabel(row.consumer_type)} · {reviewHosts(row).length ? reviewHosts(row).map(host => shortHost(host)).join(', ') : 'APP evidence unavailable'}</small>
                 </td>
-                <td><div className="rundeckReviewReasonChips">{reasonParts.length ? reasonParts.map((part) => <span key={part}>{part}</span>) : <span>{row.status || 'Review'}</span>}</div></td>
+                <td title={[row.assessment_reason || '', row.baseline_status ? 'Baseline: ' + row.baseline_status : ''].filter(Boolean).join(' · ') || 'Evaluation reason not provided'}><div className="rundeckReviewReasonChips">{reasonParts.length ? reasonParts.map((part) => <span key={part}>{part}</span>) : <span>{row.status || 'Review'}</span>}</div></td>
                 <td title={CPU_HINT}>{pct(row.avg_cpu_pct)}</td>
                 <td title={CPU_HINT}>{pct(row.peak_cpu_pct)}</td>
                 <td>{gb(row.avg_pss_gb)}</td>
