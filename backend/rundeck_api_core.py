@@ -24,6 +24,7 @@ from backend.rundeck_monitoring import (
     collection_history,
     disk_status,
     host_history,
+    RETENTION_DAYS,
     timescale_status,
     top_consumer_history,
 )
@@ -34,6 +35,7 @@ from backend.rundeck_network_trends import app_network_trend
 from backend.rundeck_trends import (
     collection_timeline,
     collection_timeline_at,
+    previous_calendar_month,
     resolve_range,
     trend_series,
     validate_custom_window,
@@ -210,7 +212,7 @@ def history_hosts_latest():
 
 @app.get("/history/trend")
 def history_trend(
-    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d|180d|last_month)$"),
     bucket: str = Query("auto", pattern="^(auto|10m|30m|1h|6h|1d)$"),
     metric: str = Query("cpu", pattern="^(cpu|ram|load|iowait|swap|wp|network_rx|network_tx)$"),
     from_at: str | None = Query(None, max_length=64),
@@ -228,7 +230,10 @@ def history_trend(
         else:
             if from_at or to_at:
                 raise ValueError("Explicit dates require range=custom")
-            since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
+            if range_key == "last_month":
+                since, until = previous_calendar_month()
+            else:
+                since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
         network = metric in {"network_rx", "network_tx"}
         series = (app_network_trend(since, range_key, bucket, metric, until=until)
                   if network else trend_series(since, range_key, bucket, metric, until=until))
@@ -236,6 +241,10 @@ def history_trend(
         return {
             **series,
             "timezone": "Asia/Jakarta",
+            "requested_window_start": since,
+            "requested_window_end": until or datetime.now(timezone.utc),
+            "configured_retention_days": RETENTION_DAYS,
+            "requested_days": round(((until or datetime.now(timezone.utc)) - since).total_seconds() / 86400, 2),
             "latest_collection_at": (series.get("last_observed_at") if network else (latest_row or {}).get("finished_at")),
             "stale_after_minutes": STALE_MINUTES,
             "collection_cadence_seconds": max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600"))),
