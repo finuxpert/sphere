@@ -179,6 +179,7 @@ export default function RundeckMonitoringHistory(props) {
             <div className="rundeckCockpitV13491 rundeckJobsProgramsModalScope">
               <RundeckJobsProgramsWorkspace
                 initialMode={activeOverlay.mode || 'live'}
+                onModeChange={(mode) => setActiveOverlay(previous => previous?.type === 'jobs-programs' ? { ...previous, mode } : previous)}
                 initialHealth={activeOverlay.category || 'REVIEW'}
                 showHealth={false}
                 refreshToken={refreshToken}
