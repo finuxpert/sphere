@@ -37,7 +37,7 @@ def app_network_trend(
         raise RuntimeError("Infrastructure database history is not enabled")
 
     field, label = DIRECTIONS[metric_key]
-    bounds = "AND s.collected_at < :until" if range_key == "custom" else ""
+    bounds = "AND s.collected_at < :until" if until is not None else ""
     # All SQL identifiers are chosen from server-controlled constants, never inputs.
     common = f"""
         WITH base AS (
@@ -95,7 +95,7 @@ def app_network_trend(
             FROM ranked_bucket GROUP BY bucket,host ORDER BY bucket,host
         """
         params = {"since": since, "stride": stride}
-    if range_key == "custom":
+    if until is not None:
         params["until"] = until
 
     with engine.connect() as conn:
@@ -104,7 +104,7 @@ def app_network_trend(
     latest = max((row["latest_at"] for row in items if row.get("latest_at")), default=None)
     return {
         "since": since,
-        "window_end": until if range_key == "custom" else None,
+        "window_end": until,
         "range": range_key,
         "bucket": resolved,
         "requested_bucket": bucket_key,
