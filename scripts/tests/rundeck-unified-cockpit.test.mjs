@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 
 const read = filename => readFileSync(new URL('../../src/tools/components/' + filename, import.meta.url),'utf8')
 
-test('APP hexagon opens combined modal in one click and Full Analysis remains a fallback', () => {
+test('APP hexagon selects host; Process / Infra opens verified combined modal', () => {
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const core=read('RundeckMonitoringHistoryCore.jsx')
   assert.match(app,/className=\{'rundeckAppHexSelectors rundeckUnifiedAppCards' \+ \(hosts\.length === 5 \? ' is-honeycomb'/)
@@ -12,7 +12,8 @@ test('APP hexagon opens combined modal in one click and Full Analysis remains a 
   assert.match(app,/aria-pressed=\{appKey === key\}/)
   assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
   assert.match(app,/onClick=\{openSelectedAnalysis\}/)
-  assert.match(app,/openAppAnalysis\(host\)/)
+  assert.match(app,/const openSelectedAnalysis = \(\) => openAppAnalysis\(selectedHost\)/)
+  assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
   assert.doesNotMatch(app,/<select/)
 })
@@ -50,13 +51,13 @@ test('every analysis overlay is modal, traps focus, handles Escape and restores 
   assert.match(geometry,/transform:translate\(-50%,-50%\)!important/)
 })
 
-test('flat analysis navigation connects four real destinations with paired history and SAP checks',()=>{
+test('Operational Checks connects five investigation destinations with paired history and SAP checks',()=>{
   const evidence=read('RundeckOperationalEvidence.jsx')
   const css=read('RundeckOperatorFlatV1354.css')
   const wrapper=read('RundeckMonitoringHistory.jsx')
   assert.match(evidence,/className="rundeckAnalysisActions"/)
   assert.doesNotMatch(evidence,/className="rundeckAnalysisGroup"/)
-  for(const name of ['onOpenEvidence','onOpenIssues','onOpenInfrastructure','onOpenSystemData']){
+  for(const name of ['onOpenEvidence','onOpenIssues','onOpenInfrastructure','onOpenSystemData','onOpenJobsPrograms']){
     assert.ok(evidence.includes(name),'Missing action: '+name)
     assert.ok(wrapper.includes(name+'='),'Missing connected modal: '+name)
   }
@@ -93,7 +94,7 @@ test('center modal has a dedicated 220ms keyframe and keeps per-APP host provena
  assert.match(app,/sample time UNKNOWN/)
 })
 
-test('Workload Health is a full sibling with verified 1D selectable hexagons without 400+1 pagination',()=>{
+test('Workload Health remains a standalone validated 1D overview and Jobs modal retains its tabs',()=>{
   const workspace=read('RundeckJobsProgramsWorkspace.jsx')
   const state=read('rundeckWorkloadHealthState.js')
   const ui=read('RundeckWorkloadHealth.jsx')
@@ -110,6 +111,8 @@ test('Workload Health is a full sibling with verified 1D selectable hexagons wit
   assert.match(ui,/onClick=\{\(\) => openWorkload\(row\)\}/)
   assert.ok(workspace.indexOf('className="rundeckJobsProgramsWorkspaceBody') < workspace.indexOf('className="rundeckJobsProgramsHealthSide'))
   assert.match(core,/performanceVerified=\{props.sourceQuality\?\.performanceValid/)
+  assert.match(core,/viewMode="by-app"/)
+  assert.match(core,/<RundeckWorkloadHealth/)
   assert.match(ui,/API \+ '\/evaluation\/workloads\?' \+ params\.toString\(\)/)
   assert.match(ui,/workloadHealthPreview\(first\)/)
   assert.match(ui,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
@@ -156,7 +159,7 @@ test('operational shortcuts disclose exact evidence and bounded collector scope'
   const source=read('RundeckSource.jsx')
   assert.match(evidence,/evidenceScope/)
   assert.match(evidence,/Incident \$\{incidentHost\}/)
-  assert.match(evidence,/System availability · SAP issues/)
+  assert.match(evidence,/Service availability · SAP issues/)
   assert.match(wrapper,/scopeLabel=\{activeOverlay\.scope \|\| ''\}/)
   assert.match(source,/Last \$\{collectionCount\} collector runs · 90D/)
   assert.match(source,/historyRefreshFailed \? 'Collector history unverified'/)
