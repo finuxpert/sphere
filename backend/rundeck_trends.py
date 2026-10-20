@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import text
 
@@ -21,6 +22,8 @@ RANGES = {
     "7d": {"hours": 24 * 7, "auto_bucket": "1h"},
     "30d": {"hours": 24 * 30, "auto_bucket": "6h"},
     "90d": {"hours": 24 * 90, "auto_bucket": "1d"},
+    "180d": {"hours": 24 * 180, "auto_bucket": "1d"},
+    "last_month": {"hours": None, "auto_bucket": "1d"},
 }
 
 BUCKETS = {
@@ -102,6 +105,18 @@ def validate_custom_window(start: datetime, end: datetime, now: datetime | None 
     return start, end
 
 
+def previous_calendar_month(now: datetime | None = None) -> tuple[datetime, datetime]:
+    """Last completed calendar month in WIB, returned as UTC [start, end)."""
+    instant = now or datetime.now(timezone.utc)
+    if instant.tzinfo is None:
+        raise ValueError("Calendar month reference requires a timezone")
+    local = instant.astimezone(ZoneInfo("Asia/Jakarta"))
+    current_month = local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month_end = current_month
+    last_month_start = (current_month - timedelta(days=1)).replace(day=1)
+    return last_month_start.astimezone(timezone.utc), last_month_end.astimezone(timezone.utc)
+
+
 def resolve_range(range_key: str) -> dict:
     try:
         return RANGES[range_key]
@@ -112,6 +127,8 @@ def resolve_range(range_key: str) -> dict:
 def resolve_bucket(range_key: str, bucket_key: str) -> tuple[str, str]:
     range_config = resolve_range(range_key)
     resolved = range_config["auto_bucket"] if bucket_key == "auto" else bucket_key
+    if range_key in {"90d", "180d", "last_month"} and resolved != "1d":
+        raise ValueError("Historical ranges 3M, 6M and Last Month require daily buckets")
     try:
         return resolved, BUCKETS[resolved]
     except KeyError as error:
@@ -160,7 +177,7 @@ def trend_series(
         raise ValueError("Custom range requires raw samples and an end time")
     column = metric["column"]
     sample_time = "h.collected_at" if range_key == "custom" else "COALESCE(c.started_at, c.finished_at, h.collected_at)"
-    end_clause = "AND h.collected_at < :until" if range_key == "custom" else ""
+    end_clause = f"AND {sample_time} < :until" if until is not None else ""
 
     if resolved_bucket == "raw":
         query = text(f"""
@@ -268,7 +285,7 @@ def trend_series(
 
     return {
         "since": since,
-        "window_end": until if range_key == "custom" else None,
+        "window_end": until,
         "observation_time_basis": "host_sample" if range_key == "custom" else "collection",
         "range": range_key,
         "bucket": resolved_bucket,
