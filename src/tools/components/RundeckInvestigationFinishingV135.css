@@ -1,0 +1,161 @@
+/* SPHERE DEV finishing package — source semantics are owned by data components.
+   Flat controls, legible evidence, no nested vertical scroll. Imported last. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckTrendControlInline {
+  display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented {
+  background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;gap:2px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented>button {
+  appearance:none;border:0!important;background:transparent!important;box-shadow:none!important;
+  border-radius:0!important;padding:5px 7px 7px!important;min-height:29px!important;
+  color:var(--sphere-text-secondary,#9faeb5)!important;font-size:11px!important;
+  text-shadow:none!important;transition:color .16s ease!important;position:relative;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented>button.is-active {
+  color:var(--sphere-text,#e7edf0)!important;font-weight:750!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented>button.is-active::after {
+  content:"";position:absolute;bottom:0;left:7px;right:7px;height:2px;border-radius:2px;
+  background:var(--sphere-info,#69b5bc);box-shadow:none;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented>button:hover {color:var(--sphere-text,#e7edf0)!important;}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange :is(.rundeckTrendHistoricalSelect,.rundeckCustomRangeToggle) {
+  min-height:27px!important;background:transparent!important;border:1px solid transparent!important;
+  box-shadow:none!important;color:var(--sphere-text-secondary,#a9b5bb)!important;border-radius:4px!important;
+  font-size:11px!important;font-weight:600!important;padding:3px 5px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange :is(.rundeckTrendHistoricalSelect,.rundeckCustomRangeToggle):hover {
+  color:var(--sphere-text,#e7edf0)!important;background:rgba(120,158,170,.06)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckCustomRangeToggle.is-active {
+  color:var(--sphere-text,#e7edf0)!important;border-bottom:2px solid var(--sphere-info,#69b5bc)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange :is(button,select):focus-visible {
+  outline:2px solid var(--sphere-info,#69b5bc)!important;outline-offset:2px;
+}
+/* Review modal: the main modal title owns the heading; tabs use flat focusable actions. */
+.rundeckWorkspacePortal .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceHead .rundeckJobsProgramsIdentity>h3,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceHead .rundeckJobsProgramsIdentity>h3 {
+  display:none!important;
+}
+.rundeckWorkspacePortal .rundeckJobsProgramsModalScope .rundeckJobsProgramsModes,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsModes {
+  border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.rundeckWorkspacePortal .rundeckJobsProgramsModalScope .rundeckJobsProgramsModes button,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsModes button {
+  background:transparent!important;border:0!important;box-shadow:none!important;position:relative;
+  padding:8px 10px!important;color:var(--sphere-text-secondary,#9faeb5);
+}
+.rundeckWorkspacePortal .rundeckJobsProgramsModalScope .rundeckJobsProgramsModes button.is-active::after,
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsModes button.is-active::after{
+  content:"";position:absolute;bottom:0;left:10px;right:10px;height:2px;background:var(--sphere-info,#69b5bc);
+}
+.rundeckJobsProgramsModalScope .rundeckReviewReasonChips>span{
+  color:var(--sphere-text-secondary,#c4ced2)!important;border-color:rgba(142,166,176,.30)!important;
+  background:rgba(142,166,176,.05)!important;
+}
+.rundeckJobsProgramsModalScope .rundeckReviewWorkloadV1231 small{
+  display:block;max-width:100%;color:var(--sphere-text-secondary,#a9b5bb);font-size:11px;line-height:1.4;
+  overflow-wrap:anywhere;
+}
+.rundeckJobsProgramsModalScope .rundeckReviewTableV1231 tbody tr:is(:hover,:focus-within) {
+  background:rgba(105,181,188,.07)!important;
+}
+.rundeckJobsProgramsModalScope .rundeckReviewControlsV1231 :is(button,select){
+  box-shadow:none!important;transition:background .16s ease,color .16s ease;
+}
+.rundeckJobsProgramsModalScope .rundeckReviewTableWrapV1231{
+  overflow-x:auto!important;overflow-y:visible!important;max-height:none!important;
+}
+.rundeckJobsProgramsModalScope .rundeckReviewPager{position:sticky;bottom:0;background:var(--sphere-surface-1,#141d23);z-index:1;}
+/* Timeline: distinguish correlation evidence from causality. */
+.rundeckWorkspacePortal .rundeckEvidenceAssessment {
+  display:flex;flex-direction:column;gap:5px;margin:8px 0 10px;padding:9px 12px;
+  border-left:2px solid var(--sphere-info,#69b5bc);border-radius:3px;
+  background:rgba(92,170,184,.035);color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckWorkspacePortal .rundeckEvidenceAssessment strong{color:var(--sphere-text,#e7edf0);font-size:12px;}
+.rundeckWorkspacePortal .rundeckEvidenceAssessment span{font-size:11px;line-height:1.4;}
+.rundeckWorkspacePortal .rundeckEvidenceAssessment small{font-size:10.5px;line-height:1.5;}
+.rundeckWorkspacePortal .rundeckEvidenceSummary{flex-wrap:wrap;gap:6px 9px;}
+.rundeckWorkspacePortal .rundeckEvidenceSummary .rundeckEvidenceAlignment{font-size:10px;white-space:normal;}
+.rundeckWorkspacePortal .rundeckCollectionEvidenceSummary {
+  margin:9px 0;padding:8px 10px;border-top:1px solid rgba(126,147,158,.18);
+  display:flex;flex-direction:column;gap:4px;
+}
+.rundeckWorkspacePortal .rundeckCollectionEvidenceSummary strong{font-size:12px;color:var(--sphere-text,#e7edf0);}
+.rundeckWorkspacePortal .rundeckCollectionEvidenceSummary :is(span,small){font-size:11px;line-height:1.4;color:var(--sphere-text-secondary,#a9b5bb);}
+.rundeckWorkspacePortal .rundeckObservationHistoryTableWrap th:last-child{
+  min-width:110px;white-space:normal;
+}
+.rundeckWorkspacePortal .rundeckObservationHistoryTableWrap td:nth-child(n+4){font-variant-numeric:tabular-nums;text-align:right;}
+/* SAP Checks: two explanatory panes followed by one full-width history. */
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksLayout {
+  grid-template-rows:auto auto auto!important;align-content:start!important;gap:12px!important;
+  overflow-y:auto;min-height:0;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid{
+  display:grid!important;grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr)!important;
+  align-items:start!important;gap:15px!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDock {
+  margin-top:0!important;padding-top:8px;min-width:0;width:100%;grid-column:1/-1;
+  border-top:1px solid rgba(126,147,158,.18);
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDock .rundeckSapIssuesTableWrap {
+  max-height:none!important;overflow-y:visible!important;overflow-x:auto!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksHistoryDock .rundeckSapIssuesTableV1231{
+  width:100%;table-layout:auto;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapIssueBreakdown,
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckAvailabilityEvidenceNote{
+  font-size:10.5px;line-height:1.45;color:var(--sphere-text-secondary,#a9b5bb);
+  padding:6px 0;margin:2px 0 6px;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid .rundeckIssueIndicatorTableWrap{
+  max-height:none!important;overflow-y:visible!important;
+}
+/* Performance: preserve exact source labels, distinguish retained traces. */
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-performance .rundeckJobEpisodeMatrix {
+  min-width:0;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalPanel .rundeckWpSignalTable td{
+  overflow-wrap:anywhere;line-height:1.4;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-performance .rundeckJobInvestigationContext{
+  display:flex;flex-direction:column;gap:5px;padding:10px 12px;margin:9px 0;
+  border-top:1px solid rgba(126,147,158,.24);background:rgba(120,150,160,.045);
+  color:var(--sphere-text-secondary,#a9b5bb);
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-performance .rundeckJobInvestigationContext strong{
+  color:var(--sphere-text,#e7edf0);font-size:12px;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-performance .rundeckJobInvestigationContext :is(span,small){
+  font-size:10.5px;line-height:1.5;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalFilters{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTableWrap{overflow-x:auto;}
+@media(max-width:1000px){
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented>button{
+    padding-left:4px!important;padding-right:4px!important;font-size:10px!important;
+  }
+}
+@media(max-width:650px){
+  .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksSummaryRail{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .rundeckWorkspacePortal .rundeckEvidenceAssessment{padding:8px;}
+  .rundeckJobsProgramsModalScope .rundeckReviewWorkloadV1231 small{font-size:10px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange :is(button,select),
+  .rundeckJobsProgramsModalScope .rundeckReviewControlsV1231 :is(button,select){transition:none!important;}
+}
