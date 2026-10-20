@@ -840,7 +840,10 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const snapshotErrorCount = wpSignals.filter((item) => String(item?.error_at_snapshot || '').trim()).length
   const retainedTraceErrorCount = wpSignals.filter((item) => String(item?.latest_trace_error || '').trim()).length
   const memoryTraceRetained = wpSignals.some(item => /TSV_TNEW_PAGE_ALLOC_FAILED|SYSTEM_NO_ROLL|TSV_TNEW_BLOCKS_NO_ROLL_MEMORY/i.test(String(item?.latest_trace_error || '')))
-  const traceTimestamp = item => item?.latest_trace_error_at || item?.trace_error_at || item?.last_error_at || ''
+  const traceTimestamp = item => {
+    const at = item?.latest_trace_error_at || item?.trace_error_at || item?.last_error_at || ''
+    return at && Number.isFinite(Date.parse(at)) ? at : ''
+  }
   const historicalErrorCount = wpSignals.filter(item => String(item?.latest_trace_error || '').trim() && String(item?.error_recency || '').toUpperCase() !== 'AT_SNAPSHOT').length
   const wpSignalObservedAt = signalObservation?.collected_at || observedAt
   const oldestLoadedAt = [...(history?.items || [])]
