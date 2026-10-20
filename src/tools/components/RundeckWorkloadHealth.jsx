@@ -4,6 +4,7 @@ import { formatWib } from './sapUiFormat.js'
 import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } from './rundeckWorkloadHealthState.js'
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
+import RundeckWorkloadAppLanes from './RundeckWorkloadAppLanes.jsx'
 
 const API = import.meta.env.BASE_URL + 'api'
 const MIN_REFRESH_MS = 5 * 60 * 1000
@@ -58,7 +59,7 @@ async function readVerifiedPopulation(signal) {
 }
 
 /** One saved 1D evaluation = one selectable hexagon, without 400+1 pagination. */
-export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload }) {
+export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, viewMode = 'globe' }) {
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
@@ -168,10 +169,12 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     buttons[next]?.focus({ preventScroll: true })
   }
   const statusNote = rows.length && dotLayout.fits
-    ? '1 hexagon = 1 saved evaluation (not an OS process)'
+    ? viewMode === 'by-app'
+      ? '1 hexagon = 1 saved evaluation–APP link (not an OS process)'
+      : '1 hexagon = 1 saved evaluation (not an OS process)'
     : 'Open Review to inspect individual evaluations'
 
-  return <section className="rundeckWorkloadHealth"
+  return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : '')}
     data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
@@ -189,7 +192,11 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         <span>{level.label}</span>
       </button>)}
     </div>
-    <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
+    {viewMode === 'by-app'
+      ? rows.length > 0
+        ? <RundeckWorkloadAppLanes rows={rows} onSelectWorkload={openWorkload} period={period} />
+        : <div className="rundeckAppEvalState" role="status">{outcome}</div>
+      : <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
       role="group" aria-label="Individual saved workload evaluations"
       onPointerEnter={event => { if (globeEnabled && event.pointerType !== 'touch') setGlobeExpanded(true) }}
       onPointerLeave={event => { if (event.pointerType !== 'touch') setGlobeExpanded(false) }}
@@ -223,7 +230,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       {(!rows.length || !dotLayout.fits) && <span className="rundeckWorkloadDotEmpty" role="status">
         {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
       </span>}
-    </div>
+    </div>}
     <footer className="rundeckWorkloadHealthFooter">
       <span className={'is-' + state} title="Evaluation priority is based on saved evidence, not SAP SM37 execution status.">{statusNote} · not SAP SM37 job status</span>
       {preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
