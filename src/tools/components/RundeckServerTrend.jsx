@@ -24,7 +24,8 @@ const TREND_STORAGE_KEY = 'sphere.live.trend'
 const SHORT_RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H']]
 const RANGES = [['24h', '1D'], ['7d', '7D'], ['30d', '30D']]
 const HISTORY_RANGES = [['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M']]
-const ALL_RANGES = [...SHORT_RANGES, ...RANGES, ...HISTORY_RANGES]
+const MORE_RANGES = [...SHORT_RANGES, ...HISTORY_RANGES]
+const ALL_RANGES = [...RANGES, ...MORE_RANGES]
 const LONG_RANGES = new Set(HISTORY_RANGES.map(([key]) => key))
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
 const METRICS = [['cpu', 'CPU'], ['ram', 'RAM'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
@@ -758,6 +759,14 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
+  // Coverage is specific to the first APP metric; it is not a global data-completeness claim.
+  const observedDailyBuckets = React.useMemo(() => {
+    if (!longHistoricalRange || serverTrend1?.range !== range) return 0
+    return new Set((serverTrend1?.items || [])
+      .filter(item => item?.bucket && item?.value !== null && item?.value !== undefined &&
+        (item?.avg_value != null || item?.max_value != null))
+      .map(item => String(item.bucket))).size
+  }, [longHistoricalRange, range, serverTrend1])
   const firstSavedBucket = React.useMemo(() => {
     if (!longHistoricalRange || serverTrend1?.range !== range) return ''
     const timestamps = (serverTrend1.items || [])
@@ -1019,17 +1028,16 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <Segmented options={RANGES} value={range}
             onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }}
             ariaLabel="Shared trend period" />
-          <select className="rundeckTrendHistoricalSelect" aria-label="Short performance range"
-            value={SHORT_RANGES.some(([key]) => key === range) ? range : ''}
-            onChange={event => { setRange(event.target.value); setCustomOpen(false); setWindowModal(false) }}>
-            <option value="" disabled>Short</option>
-            {SHORT_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-          </select>
-          <select className="rundeckTrendHistoricalSelect" aria-label="Historical analysis period"
-            value={LONG_RANGES.has(range) ? range : ''}
+          <select className="rundeckTrendHistoricalSelect" aria-label="Additional time ranges"
+            value={MORE_RANGES.some(([key]) => key === range) ? range : ''}
             onChange={event => { setRange(event.target.value); setBucket('auto'); setCustomOpen(false); setWindowModal(false) }}>
-            <option value="" disabled>History</option>
-            {HISTORY_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            <option value="" disabled>More ranges</option>
+            <optgroup label="Short range">
+              {SHORT_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </optgroup>
+            <optgroup label="Historical">
+              {HISTORY_RANGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </optgroup>
           </select>
           <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')}
             aria-pressed={range === 'custom'} aria-expanded={customOpen}
@@ -1073,12 +1081,14 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
 
     {longHistoricalRange && <div className="rundeckHistoricalCoverage" role="status">
       <strong>{rangeLabel(range)} · Daily historical buckets</strong>
-      <span>{serverTrend1?.range === range && serverTrend1?.configured_retention_days != null
+      <span>{serverTrend1?.range === range ? 'APP metric daily buckets with observations: ' + observedDailyBuckets +
+        ' / approximately ' + (Math.ceil(Number(serverTrend1.requested_days) || 0) || 'unknown') + ' days · ' : ''}
+        {serverTrend1?.range === range && serverTrend1?.configured_retention_days != null
         ? 'Configured retention ' + serverTrend1.configured_retention_days + 'D' +
           (Number(serverTrend1.configured_retention_days) + 0.1 < Number(serverTrend1.requested_days || 0)
             ? ' · requested period exceeds retention; earlier observations may be unavailable' : ' · check actual observation coverage')
         : 'Historical coverage depends on retained source samples; missing data is not zero'}{firstSavedBucket ? ' · first stored bucket ' + formatWib(firstSavedBucket, true) + ' WIB' : ''}</span>
-      <small>Job & Program evaluations remain 1D / 7D / 30D. Dates without saved samples remain unknown.</small>
+      <small>Coverage applies to the first APP metric only, not all collectors. Missing dates are unknown, not zero. Job &amp; Program evaluation remains 1D / 7D / 30D.</small>
     </div>}
     {customOpen && <RundeckCustomRangeDialog
       start={customStart} end={customEnd} error={customError}
