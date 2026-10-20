@@ -763,7 +763,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const observedDailyBuckets = React.useMemo(() => {
     if (!longHistoricalRange || serverTrend1?.range !== range) return 0
     return new Set((serverTrend1?.items || [])
-      .filter(item => item?.bucket && item?.value !== null && item?.value !== undefined &&
+      .filter(item => item?.bucket && Number(item?.samples) > 0 &&
         (item?.avg_value != null || item?.max_value != null))
       .map(item => String(item.bucket))).size
   }, [longHistoricalRange, range, serverTrend1])
