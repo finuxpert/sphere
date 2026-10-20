@@ -243,7 +243,18 @@
   min-width: 0;
   width: 100%;
 }
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody :is(.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231) {
+/* Current is already paginated: never put a second scrollbar inside its table.
+   A horizontally scrolling wrapper computes overflow-y:visible as auto, so both
+   axes must remain visible here. Review/Search retain their own history viewport. */
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  scrollbar-gutter: auto !important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModalScope .rundeckJobsProgramsWorkspaceBody :is(.rundeckReviewTableWrapV1231) {
   overflow-x: auto !important;
 }
 @media(max-width:1399px) {
