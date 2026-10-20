@@ -96,7 +96,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], layoutKey = '', embedded = false }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], layoutKey = '', embedded = false, initialAppHost = '' }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
@@ -188,6 +188,12 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const sortedRows = [...rows].sort((left, right) => Number(right.cpu_pct || 0) - Number(left.cpu_pct || 0))
   const loaded = sortedRows
   const availableHosts = [...new Set(rows.map(row => row.host).filter(Boolean))].sort()
+  const availableHostKey = availableHosts.join(',')
+  React.useEffect(() => {
+    if (!initialAppHost || !availableHostKey) return
+    const resolvedHost = availableHosts.find(host => shortHost(host).toUpperCase() === String(initialAppHost).toUpperCase())
+    if (resolvedHost) { setHostFilter(resolvedHost); setListPage(0) }
+  }, [initialAppHost, availableHostKey])
   const allLoaded = workloadMeta.total === rows.length
   const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
     ? 'latest collection · observed'
