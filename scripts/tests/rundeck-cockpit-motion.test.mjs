@@ -168,7 +168,7 @@ test('DEV motion restoration keeps source data correct and animation interactive
   assert.match(trendAmbient, /if\(!target\)angle\+=dt\*\.14/)
   assert.match(trendAmbient, /if\(target===0\|\|morph!==target\)wake\(\)/)
   assert.match(trendAmbient, /reduce\?\.matches\|\|compact\?\.matches\|\|coarse\?\.matches/)
-  assert.match(trendAmbient, /if\(stopped\|\|disabled\|\|!intersecting\|\|document\.hidden\)return/)
+  assert.match(trendAmbient, /if\(stopped\|\|disabled\|\|!intersecting\|\|document\.hidden\|\|!grid\.isConnected\)return/)
   assert.match(health, /tabIndex=\{index === activeDotIndex \? 0 : -1\}/)
   assert.match(health, /onKeyDown=\{event => handleDotNavigation\(event, index\)\}/)
   assert.match(health, /Saved 24h/)
@@ -187,10 +187,10 @@ test('DEV restored braid keeps verified ECharts accessible on focus and incident
 
   // Full ambient mode returns at idle; original ECharts still exist and
   // their controls are revealed by hover/focus without changing samples.
-  assert.match(trendStyle, />\\.rundeckUnifiedVortexCanvas\\{opacity:1\\}/)
-  assert.match(trendStyle, /\\.is-expanded::before\\{opacity:0/)
-  assert.match(trendStyle, /var\\(--sphere-surface-1,#141d23\\)/)
-  assert.match(source('RundeckServerTrend.jsx'), /onFocusCapture=\\{\\(\\) => setUnifiedHovered\\(true\\)\\}/)
+  assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas\{opacity:1\}/)
+  assert.match(trendStyle, /\.is-expanded::before\{opacity:0/)
+  assert.match(trendStyle, /var\(--sphere-surface-1,#141d23\)/)
+  assert.match(source('RundeckServerTrend.jsx'), /onFocusCapture=\{\(\) => setUnifiedHovered\(true\)\}/)
   assert.match(source('RundeckServerTrend.jsx'), /connectNulls: false/)
   assert.match(source('RundeckServerTrend.jsx'), /\{ value: \[at, null\], gap: true \}/)
 
