@@ -177,7 +177,7 @@ test('DEV motion restoration keeps source data correct and animation interactive
 })
 
 
-test('DEV restored braid keeps verified ECharts accessible on focus and incidents visible', () => {
+test('DEV keeps verified ECharts primary at idle, subtle braid motion and incident history visible', () => {
   const trendStyle = source('RundeckTrendAmbient.css')
   const issue = source('RundeckSapIssues.jsx')
   const checksStyle = source('RundeckSapChecksLayout.css')
@@ -185,20 +185,25 @@ test('DEV restored braid keeps verified ECharts accessible on focus and incident
   const infra = source('RundeckInfrastructure.jsx')
   const cockpitStyle = source('RundeckCockpitHexV13512.css')
 
-  // Full ambient mode returns at idle; original ECharts still exist and
-  // their controls are revealed by hover/focus without changing samples.
-  assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas\{opacity:1\}/)
-  assert.match(trendStyle, /\.is-expanded::before\{opacity:0/)
-  assert.match(trendStyle, /var\(--sphere-surface-1,#141d23\)/)
+  // Actual ECharts remains fully readable at idle. Retained braid motion
+  // is subtle and pointer-transparent; keyboard focus still reveals chart tools.
+  assert.match(trendStyle, /ECharts is the primary source-backed data surface at rest/)
+  assert.match(trendStyle, /data-vortex-ready="true"\]::before \{\s*display:none!important/)
+  assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas \{\s*opacity:\.13!important;\s*pointer-events:none!important/)
+  assert.match(trendStyle, /\.is-expanded>\.rundeckUnifiedVortexCanvas \{\s*opacity:0!important/)
   assert.match(source('RundeckServerTrend.jsx'), /onFocusCapture=\{\(\) => setUnifiedHovered\(true\)\}/)
   assert.match(source('RundeckServerTrend.jsx'), /connectNulls: false/)
   assert.match(source('RundeckServerTrend.jsx'), /\{ value: \[at, null\], gap: true \}/)
 
   // Short retained-incident histories are visible without a hidden disclosure.
   assert.match(issue, /open=\{!paired \|\| \(incidentItems\.length > 0 && incidentItems\.length <= 5\)\}/)
-  assert.match(issue, /separateWarningCount/)
+  assert.match(issue, /const activeFindings = criticalCount \+ warningCount/)
+  assert.match(issue, /<b>Data unavailable<\/b>/)
+  assert.match(issue, /Unknown is missing or stale evidence, not confirmed SAP downtime/)
   assert.match(checksStyle, /\.rundeckSapChecksHistoryDisclosure\[open\]>summary::after/)
-  assert.match(checksStyle, /max-height:min\(194px,26dvh\)/)
+  // The final style wins over legacy 194px scroll caps.
+  const finalStyle = source('RundeckInvestigationFinishingV135.css')
+  assert.match(finalStyle, /\.rundeckSapChecksHistoryDock \.rundeckSapIssuesTableWrap \{[\s\S]*?max-height:none!important;overflow-y:visible!important/)
 
   // Manual marker list must never be confused with APP Critical WP warning.
   assert.match(workload, />Marked Workloads <b>\{attentionRows\.length\}<\/b>/)
