@@ -2,7 +2,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import './RundeckWorkspaceDrawer.css'
 
-export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, footer = null, navigation = null, size = 'default' }) {
+export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, onBack = null, backLabel = 'Back', children, footer = null, navigation = null, size = 'default', mountInAppShell = false }) {
   const drawerRef = React.useRef(null)
   const portalRef = React.useRef(null)
   const isModal = true // All analysis overlays now share one accessible modal/focus contract.
@@ -97,5 +97,5 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
       <div className="rundeckWorkspaceDrawerBody">{children}</div>
       {footer && <footer className="rundeckWorkspaceFooter">{footer}</footer>}
     </aside>
-  </div>, document.body)
+  </div>, (mountInAppShell ? document.querySelector('.appShell:has(.rundeckPanel)') : null) || document.body)
 }
