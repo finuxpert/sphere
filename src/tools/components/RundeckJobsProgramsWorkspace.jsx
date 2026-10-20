@@ -2,11 +2,11 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 
-export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false, onOpenEvaluatedWorkload = null }) {
-  const [mode, setMode] = React.useState('live')
-  const [reviewVisited, setReviewVisited] = React.useState(false)
-  const [reviewJumpToken, setReviewJumpToken] = React.useState(0)
-  const [reviewJumpHealth, setReviewJumpHealth] = React.useState('REVIEW')
+export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false, onOpenEvaluatedWorkload = null, initialMode = 'live', initialHealth = 'REVIEW', showHealth = true }) {
+  const [mode, setMode] = React.useState(() => ['live', 'review', 'search'].includes(initialMode) ? initialMode : 'live')
+  const [reviewVisited, setReviewVisited] = React.useState(initialMode !== 'live')
+  const [reviewJumpToken, setReviewJumpToken] = React.useState(initialMode !== 'live' ? 1 : 0)
+  const [reviewJumpHealth, setReviewJumpHealth] = React.useState(initialHealth)
   const tabId = React.useId()
   const tabs = ['live', 'review', 'search']
   const tabRefs = React.useRef({})
@@ -55,13 +55,13 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
         {/* Load history on first use, then preserve its filter and search state as well. */}
         {reviewVisited && <div className="rundeckReviewPersistentPane" style={{ display: mode === 'live' ? 'none' : 'contents' }} aria-hidden={mode === 'live'}>{review}</div>}
       </div>
-      <aside className="rundeckJobsProgramsHealthSide" aria-label="Workload health overview">
+      {showHealth && <aside className="rundeckJobsProgramsHealthSide" aria-label="Workload health overview">
         <RundeckWorkloadHealth refreshToken={refreshToken} performanceVerified={performanceVerified} onSelectWorkload={onOpenEvaluatedWorkload} onReview={(category = 'REVIEW') => {
           setReviewJumpHealth(['REVIEW','ATTENTION','UNKNOWN','NORMAL'].includes(category) ? category : 'REVIEW')
           setReviewJumpToken(token => token + 1)
           selectMode('review')
         }} />
-      </aside>
+      </aside>}
     </div>
   </section>
 }
