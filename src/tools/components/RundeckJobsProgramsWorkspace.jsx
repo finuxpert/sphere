@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 
-export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false, onOpenEvaluatedWorkload = null, initialMode = 'live', initialHealth = 'REVIEW', showHealth = true, onModeChange = null }) {
+export default function RundeckJobsProgramsWorkspace({ currentContent = null, reviewContent = null, refreshToken = '', performanceVerified = false, onOpenEvaluatedWorkload = null, initialMode = 'live', initialHealth = 'REVIEW', initialAppHost = '', showHealth = true, onModeChange = null }) {
   const [mode, setMode] = React.useState(() => ['live', 'review', 'search'].includes(initialMode) ? initialMode : 'live')
   const [reviewVisited, setReviewVisited] = React.useState(initialMode !== 'live')
   const [reviewJumpToken, setReviewJumpToken] = React.useState(initialMode !== 'live' ? 1 : 0)
@@ -26,7 +26,7 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
     tabRefs.current[next]?.focus()
   }
   const live = React.isValidElement(currentContent)
-    ? React.cloneElement(currentContent, { embedded: true })
+    ? React.cloneElement(currentContent, { embedded: true, initialAppHost })
     : currentContent
   const review = React.isValidElement(reviewContent)
     ? React.cloneElement(reviewContent, {
@@ -49,6 +49,7 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
         </div>
       </div>
     </header>
+    {initialAppHost && <p className="rundeckJobsProgramsAppScope" role="status">Current collection · {initialAppHost} filter. Review and Search remain global evaluations.</p>}
     <div className="rundeckJobsProgramsSplit">
       <div role="tabpanel" id={`${tabId}-panel`} aria-labelledby={`${tabId}-${mode}`} className={`rundeckJobsProgramsWorkspaceBody is-${mode}`}>
         {/* Keep Current mounted while Review/Search is open, retaining APP, query and page context. */}
