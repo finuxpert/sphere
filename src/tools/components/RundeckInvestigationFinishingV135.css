@@ -94,7 +94,7 @@
 /* SAP Checks: two explanatory panes followed by one full-width history. */
 .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksLayout {
   grid-template-rows:auto auto auto!important;align-content:start!important;gap:12px!important;
-  overflow-y:auto;min-height:0;
+  overflow:visible;min-height:0;
 }
 .rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-issues .rundeckSapChecksDetailGrid{
   display:grid!important;grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr)!important;
