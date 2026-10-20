@@ -189,7 +189,7 @@ export function attachUnifiedVortex({ canvas, grid, getChart, expandedRef } = {}
     morph+=(target-morph)*(1-Math.exp(-dt*(target?7.2:3.6)))
     if(Math.abs(target-morph)<.003)morph=target
     // Ambient braid follows verified chart paths at a slow idle pace only.
-    if(!target)angle+=dt*.10
+    if(!target)angle+=dt*.14
     ctx.clearRect(0,0,width,height)
     const p=morph*morph*morph*(morph*(morph*6-15)+10)
     const ambientAlpha=(1-p)
