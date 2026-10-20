@@ -742,13 +742,6 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [windowModal, setWindowModal] = React.useState(false)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
   const longHistoricalRange = LONG_RANGES.has(range)
-  const firstSavedBucket = React.useMemo(() => {
-    if (!longHistoricalRange || serverTrend1?.range !== range) return ''
-    const timestamps = (serverTrend1.items || [])
-      .map(item => Date.parse(item?.bucket || ''))
-      .filter(Number.isFinite)
-    return timestamps.length ? new Date(Math.min(...timestamps)).toISOString() : ''
-  }, [longHistoricalRange, range, serverTrend1])
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','network','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
@@ -759,6 +752,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
+  const firstSavedBucket = React.useMemo(() => {
+    if (!longHistoricalRange || serverTrend1?.range !== range) return ''
+    const timestamps = (serverTrend1.items || [])
+      .map(item => Date.parse(item?.bucket || ''))
+      .filter(Number.isFinite)
+    return timestamps.length ? new Date(Math.min(...timestamps)).toISOString() : ''
+  }, [longHistoricalRange, range, serverTrend1])
   const [serverLoading1, setServerLoading1] = React.useState(false)
   const [serverLoading2, setServerLoading2] = React.useState(false)
   const [technicalLoading, setTechnicalLoading] = React.useState(false)
