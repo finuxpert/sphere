@@ -1220,8 +1220,8 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendHostLegend{flex-wrap:wrap!important;overflow-x:visible!important}
 }
 @media(max-width:430px) {
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlInline{flex-wrap:wrap}
-  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented{flex-wrap:wrap}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendSharedGroup .rundeckTrendControlInline{flex-wrap:wrap!important}
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented{flex-wrap:wrap!important}
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTrendControlRange .rundeckSegmented button{padding:3px 5px!important}
 }
 @media(prefers-reduced-motion:reduce) {
