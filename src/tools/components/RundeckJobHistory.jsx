@@ -632,6 +632,31 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
   const [rangeError, setRangeError] = React.useState('')
   const [evidenceAlignment, setEvidenceAlignment] = React.useState(null)
   const [detailView, setDetailView] = React.useState(null)
+  const detailDialogRef = React.useRef(null)
+  React.useEffect(() => {
+    if (!detailView || typeof window === 'undefined') return undefined
+    const returnFocus = document.activeElement
+    const frame = window.requestAnimationFrame(() => detailDialogRef.current?.querySelector('button[aria-label="Close detail"]')?.focus({ preventScroll: true }))
+    const keys = event => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
+        event.stopImmediatePropagation?.()
+        setDetailView(null)
+      } else if (event.key === 'Tab') {
+        // The selected point has its own detail layer; do not tab behind it.
+        event.preventDefault()
+        detailDialogRef.current?.querySelector('button[aria-label="Close detail"]')?.focus({ preventScroll: true })
+      }
+    }
+    window.addEventListener('keydown', keys, true)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('keydown', keys, true)
+      returnFocus?.focus?.({ preventScroll: true })
+    }
+  }, [detailView])
+
   const [wpSearch,setWpSearch] = React.useState('')
   const [wpErrorsOnly,setWpErrorsOnly] = React.useState(false)
   const [wpPage,setWpPage] = React.useState(0)
@@ -1009,7 +1034,7 @@ export default function RundeckJobHistory({ job = null, refreshToken = '', incid
       </section>}
 
       {detailView && <div className="rundeckPointDetailBackdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDetailView(null) }}>
-        <section className="rundeckPointDetailModal" role="dialog" aria-modal="true" aria-label={detailView.type === 'wp' ? 'WP signal details' : detailView.type === 'bucket' ? 'Historical bucket details' : 'Observation details'}>
+        <section ref={detailDialogRef} className="rundeckPointDetailModal" role="dialog" aria-modal="true" aria-label={detailView.type === 'wp' ? 'WP signal details' : detailView.type === 'bucket' ? 'Historical bucket details' : 'Observation details'}>
           <header>
             <div>
               <span>SPHERE ANALYSIS</span>
