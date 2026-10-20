@@ -316,6 +316,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           })
           if (valid.length && visible.length < hosts.length) lines.push(`${hosts.length - visible.length} APP without samples in this bucket`)
           if (!valid.length) lines.push('No retained sample in bucket')
+          if (trend?.requested_bucket === 'auto' && trend?.range !== 'custom') {
+            const resolvedLabel = trend?.bucket === 'raw'
+              ? 'Raw (collector samples)'
+              : (BUCKETS.find(([key]) => key === trend?.bucket)?.[1] || 'Unknown')
+            lines.push('Bucket interval: Auto → ' + resolvedLabel)
+          }
           return lines.join('<br/>')
         },
       },
