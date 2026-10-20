@@ -126,11 +126,14 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   }, [])
 
   const hostKey = sourceHosts.map(row => String(row?.host || '').trim().toUpperCase()).filter(Boolean).sort().join(',')
+  const requestedHost = initialAppHost
+    ? hostKey.split(',').find(host => shortHost(host).toUpperCase() === String(initialAppHost).toUpperCase()) || String(initialAppHost).toUpperCase()
+    : 'ALL'
   React.useEffect(() => {
     if (!collectionId) {
       setRows([])
       setWorkloadMeta({ total: 0, coverageScope: '' })
-      setHostFilter('ALL')
+      setHostFilter(requestedHost)
       return undefined
     }
     const controller = new AbortController()
@@ -140,7 +143,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       `${API}/history/jobs/current?collection_id=${encodeURIComponent(collectionId)}&host=${encodeURIComponent(host)}&limit=${limit}`
     ) : [`${API}/history/jobs/current?collection_id=${encodeURIComponent(collectionId)}&limit=${limit}`]
     setRows([])
-    setHostFilter('ALL')
+    setHostFilter(requestedHost)
     setListPage(0)
     setLoading(true)
     setError('')
@@ -164,7 +167,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [collectionId, compactLimit, hostKey])
+  }, [collectionId, compactLimit, hostKey, requestedHost])
   React.useEffect(() => {
     if (!rows.length) return undefined
     const timer = window.setInterval(() => setNowMs(Date.now()), 30000)
@@ -190,10 +193,11 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const availableHosts = [...new Set(rows.map(row => row.host).filter(Boolean))].sort()
   const availableHostKey = availableHosts.join(',')
   React.useEffect(() => {
-    if (!initialAppHost || !availableHostKey) return
-    const resolvedHost = availableHostKey.split(',').find(host => shortHost(host).toUpperCase() === String(initialAppHost).toUpperCase())
-    if (resolvedHost) { setHostFilter(resolvedHost); setListPage(0) }
-  }, [initialAppHost, availableHostKey])
+    if (!initialAppHost) return
+    const resolvedHost = availableHostKey.split(',').find(host => shortHost(host).toUpperCase() === String(initialAppHost).toUpperCase()) || requestedHost
+    setHostFilter(resolvedHost)
+    setListPage(0)
+  }, [initialAppHost, availableHostKey, requestedHost])
   const allLoaded = workloadMeta.total === rows.length
   const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
     ? 'latest collection · observed'
@@ -276,6 +280,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APP · global</option>
           {availableHosts.map(host => <option key={host} value={host}>{shortHost(host)}</option>)}
+          {hostFilter !== 'ALL' && !availableHosts.includes(hostFilter) &&
+            <option value={hostFilter}>{shortHost(hostFilter)} · no saved current observation</option>}
         </select>
         <label className="rundeckCurrentWorkloadSearch">
           <span>Search {rows.length} observations</span>
@@ -332,7 +338,9 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
           })}
           {!visible.length && <tr><td colSpan="7">{query
             ? <>No matching job or program in {rows.length} loaded observations. {!allLoaded ? 'Some observations are not loaded; use historical Search.' : ''}</>
-            : 'No job or program observed in this collection.'}</td></tr>}
+            : hostFilter !== 'ALL'
+              ? 'No matching job or program among loaded latest-collection observations for ' + shortHost(hostFilter) + '. This does not describe 24h saved evaluations.'
+              : 'No job or program observed in this collection.'}</td></tr>}
         </tbody>
       </table>
     </div>}
