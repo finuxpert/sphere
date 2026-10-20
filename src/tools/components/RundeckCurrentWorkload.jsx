@@ -191,7 +191,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const availableHostKey = availableHosts.join(',')
   React.useEffect(() => {
     if (!initialAppHost || !availableHostKey) return
-    const resolvedHost = availableHosts.find(host => shortHost(host).toUpperCase() === String(initialAppHost).toUpperCase())
+    const resolvedHost = availableHostKey.split(',').find(host => shortHost(host).toUpperCase() === String(initialAppHost).toUpperCase())
     if (resolvedHost) { setHostFilter(resolvedHost); setListPage(0) }
   }, [initialAppHost, availableHostKey])
   const allLoaded = workloadMeta.total === rows.length
