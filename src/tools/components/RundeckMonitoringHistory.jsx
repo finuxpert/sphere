@@ -172,7 +172,7 @@ export default function RundeckMonitoringHistory(props) {
           {activeOverlay?.type === 'jobs-programs' && <RundeckWorkspaceDrawer
             title="Jobs & Programs"
             subtitle="Current collection · Saved evaluation Review · Search"
-            size="wide"
+            size="jobs-programs"
             mountInAppShell
             onClose={() => setActiveOverlay(null)}
           >
