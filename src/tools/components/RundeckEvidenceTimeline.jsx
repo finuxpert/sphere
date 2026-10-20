@@ -110,6 +110,17 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
   const alignmentHint = `Issue: ${issueAt ? `${formatWib(issueAt,true)} WIB` : '—'} · Workload: ${pair.workloadAt ? `${formatWib(pair.workloadAt,true)} WIB` : '—'} · Window: ${hasThreshold ? `${threshold}m` : '—'}`
   const workloadGapMinutes = Number(alignment.workload_gap_minutes)
   const hasWorkloadGap = alignment.workload_gap_minutes != null && Number.isFinite(workloadGapMinutes)
+  const outsideCount = events.filter(event => hasThreshold && eventRelation(event.at, issueAt, threshold, event.source) !== 'WITHIN WINDOW' &&
+    !['ISSUE START','SAP SIGNAL'].includes(String(event.source || '').toUpperCase())).length
+  const firstWorkload = pair.firstSeen || pair.workloadAt || ''
+  const issueTime = Date.parse(issueAt || '')
+  const workloadTime = Date.parse(firstWorkload)
+  const summaryNote = !Number.isFinite(issueTime) || !Number.isFinite(workloadTime) || workloadTime > issueTime
+    ? 'Cause not established. The issue was observed before this workload, or the first retained workload time is not verified.'
+    : 'Cause not established. Workload was observed before the issue, but timing alone does not prove causation.'
+  const issueDelay = Number.isFinite(workloadTime) && Number.isFinite(issueTime)
+    ? formatDurationMinutes(Math.round(Math.abs(workloadTime - issueTime) / 60000))
+    : 'unverified'
 
   if (compact) {
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
@@ -126,8 +137,8 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     <div className="rundeckEvidenceSummary">
       <span className="rundeckEvidenceTitle"><SphereIcon name="history" /> Related Events</span>
       {!paired && <span className="rundeckEvidenceScope">Selected job</span>}
-      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state}</span>
-      <small>{events.length ? `${events.length} event${events.length === 1 ? '' : 's'}` : 'No events'}</small>
+      <span className={`rundeckEvidenceAlignment ${alignmentClass(state)}`} title={alignmentHint}>{state === 'OUTSIDE WINDOW' ? 'OUTSIDE CORRELATION WINDOW' : state}</span>
+      <small title="Timeline event count is separate from source-pair correlation status">{events.length ? `${events.length} timeline events · ${hasThreshold ? outsideCount + ' outside ±' + threshold + 'm' : 'correlation window unavailable'}` : 'No events'}</small>
     </div>
 
     <div className={`rundeckEvidenceTimingStrip ${alignmentClass(state)}`}>
@@ -137,6 +148,11 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
       {pair.workloadAt && <small>Workload sample ({pair.referenceSource} anchor): {formatWib(pair.workloadAt, true)} WIB</small>}
     </div>
 
+    <div className="rundeckEvidenceAssessment" role="note" aria-label="Investigation context">
+      <strong>Investigation Summary · Cause not established</strong>
+      <span>Issue first observed: {issueAt ? formatWib(issueAt, true) + ' WIB' : 'unavailable'} · Workload first retained: {firstWorkload ? formatWib(firstWorkload, true) + ' WIB' : 'unavailable'} · Gap: {issueDelay}</span>
+      <small>{summaryNote} APP Critical WP is host evidence; use SM37 for SAP job execution and SM50/SM66 for WP checks.</small>
+    </div>
     <div className="rundeckEvidenceBody">
       {loading && !data && <div className="rundeckEvidenceState">Loading events…</div>}
       {error && !data && <div className="rundeckEvidenceState is-error">{error}</div>}
