@@ -219,3 +219,81 @@
     transform:none!important;
   }
 }
+
+
+/* Evaluation per-host finishing: readable hexagons and explicit status columns. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalColumnHead {
+  display:grid;
+  grid-template-columns:minmax(90px,112px) minmax(0,1fr) minmax(212px,248px);
+  gap:8px;
+  align-items:end;
+  min-width:0;
+  padding:0 9px 2px;
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:10px;
+  line-height:1.2;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalColumnHead > div {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:3px;
+  padding-left:10px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalColumnHead > div > span {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:9px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalHostButton {
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  width:fit-content;
+  padding:1px 0;
+  margin:0;
+  border:0;
+  border-radius:3px;
+  background:transparent;
+  color:var(--sphere-text,#e7edf0);
+  font-size:12px;
+  font-weight:750;
+  line-height:1.25;
+  cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalHostButton:hover,
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalHostButton:focus-visible {
+  color:var(--sphere-accent,#4fc6c8);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalHostButton span {
+  opacity:.68;
+  font-size:10px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalLane {
+  min-height:39px;
+  padding-top:6px;
+  padding-bottom:6px;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalHex {
+  min-width:var(--lane-hex-size,10px);
+  min-height:var(--lane-hex-size,10px);
+}
+@media(max-width:1199px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalColumnHead {
+    grid-template-columns:minmax(75px,90px) minmax(0,1fr) minmax(188px,210px);
+    gap:6px;
+    padding-left:7px;
+    padding-right:7px;
+  }
+}
+@media(max-width:899px) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalColumnHead {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalColumnHead > :nth-child(2),
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalColumnHead > div {
+    display:none;
+  }
+}
