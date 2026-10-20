@@ -147,7 +147,7 @@ test('v1.34.86 unifies analysis modal geometry and preserves unresolved SAP iden
 })
 
 
-test('DEV final polish keeps saved data truthful and ambient motion bounded', () => {
+test('DEV motion restoration keeps source data correct and animation interactive', () => {
   const app = source('RundeckUnifiedAppInfrastructure.jsx')
   const globe = source('RundeckEvaluationGlobe.jsx')
   const trendAmbient = source('rundeckTrendAmbient.js')
@@ -158,14 +158,14 @@ test('DEV final polish keeps saved data truthful and ambient motion bounded', ()
   assert.match(app, /const attentionCount = visibleStates\.filter\(value => value === 'ATTENTION'\)/)
   assert.match(app, /const warningCount = visibleStates\.filter\(value => value === 'WARNING'\)/)
   assert.match(app, /SAP APP sample · \{appKey\}/)
-  assert.match(app, /if \(!expanded\) phase \+= delta \* \.15/)
+  assert.match(app, /if \(!expanded\) phase \+= delta \* \.22/)
   assert.match(app, /if \(!expanded \|\| moving\) raf = window\.requestAnimationFrame\(tick\)/)
   assert.match(app, /const viewportObserver = typeof IntersectionObserver/)
   assert.match(app, /prefers-reduced-motion: no-preference/)
-  assert.match(globe, /if \(!expandedRef\.current\) phase \+= dt \* \.12/)
+  assert.match(globe, /if \(!expandedRef\.current\) phase \+= dt \* \.17/)
   assert.match(globe, /if \(!expandedRef\.current \|\| morph !== target\) raf = requestAnimationFrame\(paint\)/)
   assert.match(globe, /if \(document\.hidden \|\| !visible/)
-  assert.match(trendAmbient, /if\(!target\)angle\+=dt\*\.10/)
+  assert.match(trendAmbient, /if\(!target\)angle\+=dt\*\.14/)
   assert.match(trendAmbient, /if\(target===0\|\|morph!==target\)wake\(\)/)
   assert.match(trendAmbient, /reduce\?\.matches\|\|compact\?\.matches\|\|coarse\?\.matches/)
   assert.match(trendAmbient, /if\(stopped\|\|disabled\|\|!intersecting\|\|document\.hidden\)return/)
@@ -177,7 +177,7 @@ test('DEV final polish keeps saved data truthful and ambient motion bounded', ()
 })
 
 
-test('DEV final finishing leaves saved ECharts readable and incident records discoverable', () => {
+test('DEV restored braid keeps verified ECharts accessible on focus and incidents visible', () => {
   const trendStyle = source('RundeckTrendAmbient.css')
   const issue = source('RundeckSapIssues.jsx')
   const checksStyle = source('RundeckSapChecksLayout.css')
@@ -185,10 +185,12 @@ test('DEV final finishing leaves saved ECharts readable and incident records dis
   const infra = source('RundeckInfrastructure.jsx')
   const cockpitStyle = source('RundeckCockpitHexV13512.css')
 
-  // Original chart remains mounted and visible; braid is only translucent decoration.
-  assert.match(trendStyle, /data-vortex-ready="true"\]::before\{display:none!important;\}/)
-  assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas\{opacity:\.12\}/)
-  assert.doesNotMatch(trendStyle, /var\(--sphere-surface-1,#141d23\);\s*opacity:1;transition:opacity/)
+  // Full ambient mode returns at idle; original ECharts still exist and
+  // their controls are revealed by hover/focus without changing samples.
+  assert.match(trendStyle, />\\.rundeckUnifiedVortexCanvas\\{opacity:1\\}/)
+  assert.match(trendStyle, /\\.is-expanded::before\\{opacity:0/)
+  assert.match(trendStyle, /var\\(--sphere-surface-1,#141d23\\)/)
+  assert.match(source('RundeckServerTrend.jsx'), /onFocusCapture=\\{\\(\\) => setUnifiedHovered\\(true\\)\\}/)
   assert.match(source('RundeckServerTrend.jsx'), /connectNulls: false/)
   assert.match(source('RundeckServerTrend.jsx'), /\{ value: \[at, null\], gap: true \}/)
 
