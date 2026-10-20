@@ -71,7 +71,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
       morph += (target - morph) * (1 - Math.exp(-dt * (target ? 6.2 : 3.8)))
       if (Math.abs(morph - target) < .002) morph = target
       // A subtle saved-evaluation rotation runs only while idle and visible.
-      if (!expandedRef.current) phase += dt * .12
+      if (!expandedRef.current) phase += dt * .17
       const blend = morph * morph * morph * (morph * (morph * 6 - 15) + 10)
       const cx = width / 2
       const cy = height / 2
