@@ -246,7 +246,7 @@ export default function RundeckMonitoringHistory(props) {
           </RundeckWorkspaceDrawer>}
 
           {['evidence', 'history'].includes(activeOverlay?.type) && <RundeckWorkspaceDrawer
-            title="Related Events & Run History"
+            title="Related Events & Rundeck Collection History"
             size="evidence"
             subtitle={(activeOverlay.job || selectedJob)?.key
               ? `${(activeOverlay.job || selectedJob).key} · ${(activeOverlay.job || selectedJob).host ? shortHost((activeOverlay.job || selectedJob).host) + ' · ' : ''}${selectedContextTime}`
@@ -268,8 +268,8 @@ export default function RundeckMonitoringHistory(props) {
                   />
                 </React.Suspense>
               </section>
-              <section className="rundeckOperatorPairedPane" aria-label="Run history">
-                <h3>Run History</h3>
+              <section className="rundeckOperatorPairedPane" aria-label="Rundeck collection history">
+                <h3>Rundeck Collection History <small>Saved samples · not SM37 job runs</small></h3>
                 {(activeOverlay.job || selectedJob)?.key
                   ? <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading saved runs…</div>}>
                     <RundeckObservationHistory
@@ -284,7 +284,7 @@ export default function RundeckMonitoringHistory(props) {
                       }}
                     />
                   </React.Suspense>
-                  : <p className="rundeckOperatorPairedEmpty">Select a job or program to view saved runs.</p>}
+                  : <p className="rundeckOperatorPairedEmpty">Select a job or program to view saved collection observations.</p>}
               </section>
             </div>
           </RundeckWorkspaceDrawer>}
@@ -306,10 +306,9 @@ export default function RundeckMonitoringHistory(props) {
                 <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
                   <h3>Technical checks <small>Service Availability source</small></h3>
                   <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
-                  <div className="rundeckSapChecksHistoryDock" ref={setIncidentHistoryRoot} aria-label="SAP incident history" />
                 </section>
                 <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
-                  <h3>Current Issues <small>APP signals and retained incidents</small></h3>
+                  <h3>SAP Indicators <small>Latest verified APP signals · unavailable sources separate</small></h3>
                   <RundeckSapIssues
                     paired
                     readinessRoot={readinessSummaryRoot}
@@ -324,6 +323,7 @@ export default function RundeckMonitoringHistory(props) {
                   />
                 </section>
               </div>
+              <div className="rundeckSapChecksHistoryDock" ref={setIncidentHistoryRoot} aria-label="SAP incident history" />
             </div>
           </RundeckWorkspaceDrawer>}
 
