@@ -1,6 +1,6 @@
 import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
-import RundeckJobsProgramsWorkspace from './RundeckJobsProgramsWorkspace.jsx'
+import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   return <section className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491">
@@ -14,12 +14,11 @@ export default function RundeckMonitoringHistoryCore(props) {
         onInspectApp={props.onInspectApp}
         onSelectApp={props.onFocusAppHost}
         onOpenMetric={props.onOpenInfrastructureMetric}
+        operationalChecks={props.operationalEvidenceContent}
       />
     </section>
 
-    {props.operationalEvidenceContent && <section className="rundeckAnalysisRailV13456" aria-label="Analysis shortcuts">
-      {props.operationalEvidenceContent}
-    </section>}
+
 
 
     <section className="rundeckTrendBandV13454">
@@ -37,12 +36,15 @@ export default function RundeckMonitoringHistoryCore(props) {
       />
     </section>
 
-    <RundeckJobsProgramsWorkspace
-      refreshToken={props.refreshToken}
-      performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
-      currentContent={props.currentWorkloadContent}
-      reviewContent={props.performanceReviewContent}
-      onOpenEvaluatedWorkload={props.onOpenEvaluatedWorkload}
-    />
+    <section className="rundeckJobsProgramsOverview" aria-label="Job & Program Evaluation">
+      <div className="rundeckJobsProgramsHealthSide">
+        <RundeckWorkloadHealth
+          refreshToken={props.refreshToken}
+          performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+          onSelectWorkload={props.onOpenEvaluatedWorkload}
+          onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
+        />
+      </div>
+    </section>
   </section>
 }
