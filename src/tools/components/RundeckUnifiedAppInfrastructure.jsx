@@ -63,17 +63,16 @@ export default function RundeckUnifiedAppInfrastructure({
     const tick = time => {
       raf = 0
       if (document.hidden || !visible || !stage.isConnected) return
-      // About 25 render updates/s are sufficient for this deliberately slow orbit.
-      if (last && time - last < 40) { raf = window.requestAnimationFrame(tick); return }
-      const delta = last ? Math.min((time - last) / 1000, .08) : .04
+      // Restore original responsive APP orbit; 5 nodes use a lightweight animation frame.
+      const delta = last ? Math.min((time - last) / 1000, .07) : .016
       last = time
       const expanded = orbitExpandedRef.current
-      if (!expanded) phase += delta * .15
+      if (!expanded) phase += delta * .22
       const width = stage.clientWidth
       const height = stage.clientHeight
       const rx = Math.min(width * .35, 118)
       const ry = Math.min(height * .34, 40)
-      const blend = 1 - Math.exp(-delta * (expanded ? 9 : 7))
+      const blend = 1 - Math.exp(-delta * (expanded ? 7 : 4.6))
       let moving = false
       buttons.forEach((button, index) => {
         const position = positions[index]
