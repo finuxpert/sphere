@@ -89,3 +89,26 @@
     white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;
   }
 }
+
+
+/* Finishing: ECharts is the primary source-backed data surface at rest.
+   Braid stays a quiet, pointer-transparent ornament; never hide chart
+   axes, threshold lines, observation gaps or exact-sample click targets. */
+@media(min-width:1281px) and (prefers-reduced-motion:no-preference) and (hover:hover) and (pointer:fine) {
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]::before {
+    display:none!important;
+    opacity:0!important;
+    background:none!important;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>.rundeckUnifiedVortexCanvas {
+    opacity:.13!important;
+    pointer-events:none!important;
+    transition:opacity .24s ease;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"].is-expanded>.rundeckUnifiedVortexCanvas {
+    opacity:0!important;
+  }
+  .rundeckTripleTrendGrid.is-unified-vortex[data-vortex-ready="true"]>:is(.rundeckUnifiedVortexCore,.rundeckUnifiedVortexLabels) {
+    display:none!important;
+  }
+}
