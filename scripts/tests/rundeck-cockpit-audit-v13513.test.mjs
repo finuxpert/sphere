@@ -16,9 +16,18 @@ test('paginated Current table has no nested scrollbar, Review/Search remain unto
   const css = read('RundeckCockpitHexV13512.css')
   assert.match(css, /\.rundeckJobsProgramsWorkspaceBody\.is-live \.rundeckCurrentWorkloadTableWrap\{[\s\S]*?overflow:visible!important/)
   assert.doesNotMatch(css, /\.rundeckJobsProgramsWorkspaceBody\.is-review \.rundeckReviewTableWrap/)
+  const modalCss = read('RundeckAppThreePanel.css')
+  // The later modal CSS must not re-introduce overflow-x:auto, which also
+  // computes overflow-y:visible as auto and creates a nested vertical scroller.
+  assert.match(modalCss, /\.rundeckJobsProgramsWorkspaceBody\.is-live \.rundeckCurrentWorkloadTableWrap \{[\s\S]*?overflow: visible !important/)
+  assert.match(modalCss, /\.rundeckJobsProgramsWorkspaceBody :is\(\.rundeckReviewTableWrapV1231\) \{[\s\S]*?overflow-x: auto !important/)
+  assert.doesNotMatch(modalCss, /:is\(\.rundeckCurrentWorkloadTableWrap,\.rundeckReviewTableWrapV1231\)/)
   const current = read('RundeckCurrentWorkload.jsx')
   assert.match(current, /workloadRowsThatFit\(/)
-  assert.match(current, /reserveBelow: 44/)
+  // Reserve the actual pager height: a hardcoded 44px clips pages on
+  // shorter windows and when labels wrap.
+  assert.match(current, /reserveBelow: workloadPagerReserve\(pagerRef\.current\?\.getBoundingClientRect\(\)\.height\)/)
+  assert.match(current, /if \(pagerRef\.current\) resizeObserver\?\.observe\(pagerRef\.current\)/)
   assert.match(current, /Showing \$\{currentPage \* pageSize \+ 1\}/)
 })
 
