@@ -29,8 +29,8 @@ const processIdentity = (details = {}) => {
   const wp = wps.length ? (details.wp_type ? details.wp_type + ' ' : '') + wps.join(', ') :
     String(details.wp_type || '').trim()
   const full = [wp && 'WP ' + wp, pids.length && 'PID ' + pids.join(', ')].filter(Boolean).join(' · ')
-  const short = [wp && 'WP ' + wp, pids.length && 'PID ' + pids.slice(0, 2).join(', ') + (pids.length > 2 ? ' +' + (pids.length - 2) : '')].filter(Boolean).join(' · ')
-  return { short: short || '—', full: full || 'Process identifiers not retained' }
+  // Display all retained WP/PID identifiers. A condensed +N preview hides evidence.
+  return { full: full || 'Process identifiers not retained' }
 }
 
 const durationText = (seconds) => {
@@ -161,7 +161,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
               <td>{metric(row.cpu_pct,'%')}</td>
               <td>{pssText(row)}</td>
               <td>{processText(row)}</td>
-              <td title={identity.full}><span className="rundeckAppWpIdentity">{identity.short}</span></td>
+              <td title={identity.full}><span className="rundeckAppWpIdentity">{identity.full}</span></td>
               <td title={row.collected_at ? `Saved workload observation ${formatWib(row.collected_at,true)} WIB; not job completion or APP host sample time` : 'Sample time unverified'}>{row.collected_at
                   ? <time dateTime={row.collected_at} className="rundeckAppObservedAt"><span>{formatWib(row.collected_at,true).split(', ')[0]}</span><span>{formatWib(row.collected_at)} WIB</span></time>
                   : '—'}</td>
