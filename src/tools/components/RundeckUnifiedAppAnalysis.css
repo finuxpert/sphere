@@ -125,15 +125,19 @@
   width:100%;
   table-layout:fixed;
 }
-.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(1){width:31%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(1){width:35%}
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(2){width:11%}
-.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(3){width:11%}
-.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(4){width:9%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(3){width:12%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(4){width:8%}
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(5){width:20%}
-.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(6){width:18%}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap th:nth-child(6){width:14%}
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap :is(th,td) {
   overflow-wrap:anywhere;
   white-space:normal;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap td:first-child :is(strong,small) {
+  display:block;max-width:100%;white-space:normal!important;overflow:visible!important;
+  text-overflow:clip!important;overflow-wrap:anywhere!important;line-height:1.45;
 }
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap td:nth-child(5) {
   color:var(--sphere-text-secondary,#a9b5bb);
@@ -149,15 +153,14 @@
   line-height:1.45;
 }
 
-/* APP workload observations: two-line timestamp and bounded WP identity, not broken words. */
+/* APP workload observations: full source identities remain readable; long names wrap without clipping. */
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap thead th:nth-child(4),
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap thead th:nth-child(6){
   white-space:nowrap!important;overflow-wrap:normal!important;
 }
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppWpIdentity{
-  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
-  line-clamp:3;overflow:hidden;overflow-wrap:normal;word-break:normal;
-  line-height:1.35;color:var(--sphere-text-secondary,#a9b5bb);
+  display:block;white-space:normal;overflow:visible;overflow-wrap:anywhere;
+  word-break:normal;line-height:1.4;color:var(--sphere-text-secondary,#a9b5bb);
 }
 .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppObservedAt{
   display:grid;gap:1px;white-space:nowrap;font-variant-numeric:tabular-nums;
