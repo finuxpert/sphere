@@ -4,13 +4,17 @@ import { readFileSync } from 'node:fs'
 
 const load = file => readFileSync(new URL('../../src/tools/components/' + file, import.meta.url), 'utf8')
 
-test('source ECharts is visible at rest, braid stays subtle and never owns pointer events', () => {
+test('idle source braid remains non-intercepting and exposes original ECharts on interaction', () => {
   const css = load('RundeckTrendAmbient.css')
   const chart = load('RundeckServerTrend.jsx')
-  assert.match(css, /ECharts is the primary source-backed data surface at rest/)
-  assert.match(css, /data-vortex-ready="true"\]::before \{\s*display:none!important/)
-  assert.match(css, />\.rundeckUnifiedVortexCanvas \{\s*opacity:\.13!important;\s*pointer-events:none!important/)
-  assert.match(css, /\.is-expanded>\.rundeckUnifiedVortexCanvas \{\s*opacity:0!important/)
+  const core = load('RundeckMonitoringHistoryCore.jsx')
+  assert.match(core, /<RundeckServerTrend\s+ambientBraid/)
+  assert.match(chart, /ambientBraid && databaseEnabled/)
+  assert.match(css, /:not\(\.is-expanded\)::before \{\s*opacity:1;/)
+  assert.match(css, /data-vortex-ready="true"\]\.is-expanded::before\{opacity:0/)
+  assert.match(css, />\.rundeckUnifiedVortexCanvas \{\s*opacity:1;\s*pointer-events:none!important/)
+  assert.match(css, /\.is-expanded>\.rundeckUnifiedVortexCanvas \{\s*opacity:0;/)
+  assert.match(css, /@media\(max-width:1280px\),\(prefers-reduced-motion:reduce\),\(hover:none\),\(pointer:coarse\)/)
   assert.match(chart, /connectNulls: false/)
   assert.match(chart, /onFocusCapture=\{\(\) => setUnifiedHovered\(true\)\}/)
 })
