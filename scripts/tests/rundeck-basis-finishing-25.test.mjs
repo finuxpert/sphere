@@ -15,8 +15,10 @@ test('time ranges remain source-backed; idle braid yields to interactive ECharts
   }
   assert.match(trend, /aria-label="Short performance ranges"/)
   assert.match(trend, /aria-pressed=\{range === 'custom'\}/)
-  assert.match(trend, /observedDailyBuckets/)
-  assert.match(trend, /Number\(item\?\.samples\) > 0/)
+  assert.match(trend, /longHistoricalRange \? 'auto' : bucket/)
+  assert.match(trend, /title=\{longHistoricalRange && serverTrend1\?\.range === range/)
+  assert.match(trend, /Missing days are unknown, not zero/)
+  assert.doesNotMatch(trend, /rundeckHistoricalCoverage/)
   assert.match(style, /\.rundeckTrendControlRange \.rundeckSegmented>button\.is-active::after/)
   assert.match(style, /prefers-reduced-motion:reduce/)
   // The idle summary is a presentation of retained chart evidence, not new data.
