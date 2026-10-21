@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 
 const read = filename => readFileSync(new URL('../../src/tools/components/' + filename, import.meta.url),'utf8')
 
-test('APP hexagon selects host; Process / Infra opens verified combined modal', () => {
+test('APP hexagon opens verified combined modal for clicked host; Process / Infra remains accessible', () => {
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const core=read('RundeckMonitoringHistoryCore.jsx')
   assert.match(app,/className=\{'rundeckAppHexSelectors rundeckUnifiedAppCards' \+ \(hosts\.length === 5 \? ' is-honeycomb'/)
@@ -13,7 +13,10 @@ test('APP hexagon selects host; Process / Infra opens verified combined modal', 
   assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
   assert.match(app,/onClick=\{openSelectedAnalysis\}/)
   assert.match(app,/const openSelectedAnalysis = \(\) => openAppAnalysis\(selectedHost\)/)
-  assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
+  assert.match(app,/onClick=\{\(\) => \{ openAppAnalysis\(host\); selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
+  assert.match(app,/matchedInfrastructureHost\(host, infraSnapshot\.hosts\)/)
+  assert.match(app,/onInspectApp\?\.\(\{ \.\.\.host, infraHost, infraHostVerified: Boolean\(infraHost\) \}\)/)
+  assert.match(core,/onInspectApp=\{props\.onInspectApp\}/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
   assert.doesNotMatch(app,/<select/)
 })
