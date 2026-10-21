@@ -297,3 +297,33 @@
     display:none;
   }
 }
+
+
+/* Presentation only: the saved evaluation colors and counts never animate or
+   change classification. A gentle sheen moves behind the hexagons while idle. */
+@media (prefers-reduced-motion: no-preference) {
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalDots {
+    border-radius: 4px;
+    background-image: linear-gradient(102deg,
+      transparent 0%, transparent 40%,
+      rgba(102, 195, 203, .095) 49%,
+      rgba(154, 216, 213, .14) 50%,
+      rgba(102, 195, 203, .095) 51%,
+      transparent 60%, transparent 100%);
+    background-size: 230% 100%;
+    animation: sphere-evaluation-idle-sweep 16s linear infinite;
+  }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalLane:nth-of-type(2) .rundeckAppEvalDots { animation-delay: -3.2s; }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalLane:nth-of-type(3) .rundeckAppEvalDots { animation-delay: -6.4s; }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalLane:nth-of-type(4) .rundeckAppEvalDots { animation-delay: -9.6s; }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalLane:nth-of-type(5) .rundeckAppEvalDots { animation-delay: -12.8s; }
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalLane:hover .rundeckAppEvalDots,
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalLane:focus-within .rundeckAppEvalDots {
+    animation-play-state: paused;
+    background-image: none;
+  }
+}
+@keyframes sphere-evaluation-idle-sweep {
+  0%, 16% { background-position: 105% 0; }
+  64%, 100% { background-position: -105% 0; }
+}
