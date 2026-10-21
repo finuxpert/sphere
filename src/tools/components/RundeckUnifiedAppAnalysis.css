@@ -225,3 +225,88 @@
     min-width:630px;
   }
 }
+
+
+/* Full-width identity header per observed workload.
+   The source key and optional related program are no longer restricted to
+   the 35% metric column. One tbody = one verified observation. */
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppObservationGroup .rundeckAppWorkloadIdentityRow > th {
+  position:static!important;
+  top:auto!important;
+  width:auto!important;
+  padding:8px 7px 3px!important;
+  text-transform:none!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  background:transparent!important;
+  vertical-align:top!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppFullIdentity {
+  box-sizing:border-box;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--sphere-text,#e7edf0)!important;
+  font:inherit;
+  text-align:left!important;
+  cursor:pointer;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppFullIdentity > :is(strong,small) {
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  padding:0!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  line-height:1.4!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppFullIdentity > strong {
+  font-size:11px!important;
+  font-weight:750!important;
+  color:var(--sphere-text,#e7edf0)!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppFullIdentity > small {
+  margin-top:2px;
+  font-size:10px!important;
+  font-weight:450!important;
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppFullIdentity:focus-visible {
+  outline:2px solid var(--sphere-accent,#4fc6c8)!important;
+  outline-offset:2px;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppWorkloadMetricsRow > td {
+  padding-top:3px!important;
+  padding-bottom:7px!important;
+  vertical-align:top!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app
+.rundeckAppServerTableWrap .rundeckAppObservationGroup .rundeckAppWorkloadMetricsRow > td {
+  border-bottom:1px solid rgba(126,147,158,.16)!important;
+}
