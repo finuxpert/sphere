@@ -4,10 +4,12 @@ import { readFileSync } from 'node:fs'
 
 const source = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
-test('time ranges and historical evidence remain source-backed and visually subordinate', () => {
+test('time ranges remain source-backed; idle braid yields to interactive ECharts', () => {
   const trend = source('RundeckServerTrend.jsx')
   const style = source('RundeckInvestigationFinishingV135.css')
   const ambient = source('RundeckTrendAmbient.css')
+  const braid = source('rundeckTrendAmbient.js')
+  const cockpit = source('RundeckMonitoringHistoryCore.jsx')
   for (const key of ['24h', '7d', '30d', 'last_month', '90d', '180d']) {
     assert.ok(trend.includes("'" + key + "'"), 'missing trend range ' + key)
   }
@@ -17,7 +19,17 @@ test('time ranges and historical evidence remain source-backed and visually subo
   assert.match(trend, /Number\(item\?\.samples\) > 0/)
   assert.match(style, /\.rundeckTrendControlRange \.rundeckSegmented>button\.is-active::after/)
   assert.match(style, /prefers-reduced-motion:reduce/)
-  assert.match(ambient, /ECharts is the primary source-backed data surface at rest/)
+  // The idle summary is a presentation of retained chart evidence, not new data.
+  // Original charts remain mounted for interaction and every data-quality fallback.
+  assert.match(cockpit, /<RundeckServerTrend\\s+ambientBraid/)
+  assert.match(trend, /ambientBraid && databaseEnabled && !serverLoading1/)
+  assert.match(trend, /serverTrend1\\?\\.items\\?\\.length && serverTrend2\\?\\.items\\?\\.length && technicalTrend\\?\\.items\\?\\.length/)
+  assert.match(ambient, /:not\\(\\.is-expanded\\)::before \\{\\s*opacity:1;/)
+  assert.match(ambient, /\\.is-expanded::before\\{opacity:0/)
+  assert.match(ambient, /pointer-events:none!important/)
+  assert.match(ambient, /\\(prefers-reduced-motion:reduce\\)/)
+  assert.match(braid, /grid\\.dataset\\.vortexReady = String\\(\\[0,1,2\\]\\.every\\(metric => groups\\.some\\(row => row\\.metric === metric\\)\\)\\)/)
+  assert.doesNotMatch(braid, /fetch\\(/)
 })
 
 test('Review retains verified APP evidence, reason context, true pagination and modal navigation', () => {
