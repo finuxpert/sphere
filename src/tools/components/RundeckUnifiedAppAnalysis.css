@@ -209,3 +209,19 @@
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerFilters{flex-wrap:wrap}
   .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerFilters label{width:100%}
 }
+
+
+/* Narrow screens retain every identifier: scroll this six-column table
+   horizontally rather than clipping names inside the modal pane. */
+@media(max-width:760px){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap{
+    max-width:100%;
+    overflow-x:auto!important;
+    overflow-y:auto!important;
+    max-height:none!important;
+    overscroll-behavior-x:contain;
+  }
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckAppServerTableWrap table{
+    min-width:630px;
+  }
+}
