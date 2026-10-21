@@ -59,7 +59,9 @@ test('five SAP APP hexagons use fixed 3+2 positions and preserve status identity
   assert.match(css,/nth-child\(4\)\{grid-column:2 \/ span 2;grid-row:2\}/)
   assert.match(css,/nth-child\(5\)\{grid-column:4 \/ span 2;grid-row:2\}/)
   assert.match(css,/@media \(max-width:899px\)/)
-  assert.match(app,/onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
+  assert.match(app,/onClick=\{\(\) => \{ openAppAnalysis\(host\); selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
+  assert.match(app,/matchedInfrastructureHost\(host, infraSnapshot\.hosts\)/)
+  assert.match(app,/infraHostVerified: Boolean\(infraHost\)/)
   assert.match(app,/onClick=\{openSelectedAnalysis\}/)
 })
 
