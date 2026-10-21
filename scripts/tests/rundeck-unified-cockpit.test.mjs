@@ -197,6 +197,8 @@ test('APP analysis shows complete job names, program names and retained WP/PID e
   assert.match(modalCss,/\.rundeckAppWpIdentity\{[^}]*overflow:visible;overflow-wrap:anywhere/)
   assert.doesNotMatch(modalCss,/\b(?:-webkit-)?line-clamp\s*:/)
   assert.match(modalCss,/\.rundeckAppServerTableWrap th:nth-child\(6\)\{width:14%\}/)
+  assert.match(modalCss,/@media\(max-width:760px\)/)
+  assert.match(modalCss,/\.rundeckAppServerTableWrap table\{\s*min-width:630px/)
   assert.match(view,/APP_ROWS_PER_PAGE = 6/)
 })
 
