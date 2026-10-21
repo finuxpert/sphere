@@ -57,8 +57,9 @@ export default function RundeckUnifiedAppInfrastructure({
     let phase = -.7
     let visible = true
     const positions = buttons.map(() => ({ x: NaN, y: NaN, scale: 1 }))
-    // Quiet, continuous APP orbit when idle; hover/focus settles into a fixed 3+2
-    // selection layout so the host never moves away from the pointer.
+    // The orbit moves only while idle. Freeze the rendered hit targets immediately
+    // on pointer entry/focus; moving a button during pointerdown/up can open a
+    // different APP than the hexagon the operator intended to click.
     const expandedLocations = [[.14, .25], [.5, .25], [.86, .25], [.32, .77], [.68, .77]]
     const tick = time => {
       raf = 0
@@ -76,6 +77,9 @@ export default function RundeckUnifiedAppInfrastructure({
       let moving = false
       buttons.forEach((button, index) => {
         const position = positions[index]
+        // Do not morph to another layout under an interacting pointer.
+        // This preserves the exact host/button the operator started clicking.
+        if (expanded && Number.isFinite(position.x) && Number.isFinite(position.y)) return
         const theta = phase + index * 2 * Math.PI / 5
         const depth = Math.sin(theta)
         const targetX = expanded ? width * expandedLocations[index][0] : width / 2 + Math.cos(theta) * rx
@@ -221,14 +225,28 @@ export default function RundeckUnifiedAppInfrastructure({
         <div ref={orbitStageRef}
         className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '') + (orbitEnabled ? ' is-sphere-orbit' + (orbitExpanded ? ' is-expanded' : '') : '')}
         role="group" aria-label="Select APP server"
-        onPointerEnter={event => { if (orbitEnabled && event.pointerType !== 'touch') setOrbitExpanded(true) }}
-        onPointerLeave={event => {
-          if (event.pointerType !== 'touch' && !event.currentTarget.contains(document.activeElement)) setOrbitExpanded(false)
+        onPointerEnter={event => {
+          if (orbitEnabled && event.pointerType !== 'touch') {
+            orbitExpandedRef.current = true
+            setOrbitExpanded(true)
+          }
         }}
-        onPointerDown={event => { if (orbitEnabled && event.pointerType === 'touch') setOrbitExpanded(true) }}
-        onFocusCapture={() => setOrbitExpanded(true)}
+        onPointerLeave={event => {
+          if (event.pointerType !== 'touch' && !event.currentTarget.contains(document.activeElement)) {
+            orbitExpandedRef.current = false
+            setOrbitExpanded(false)
+          }
+        }}
+        onPointerDown={event => { if (orbitEnabled && event.pointerType === 'touch') {
+          orbitExpandedRef.current = true
+          setOrbitExpanded(true)
+        } }}
+        onFocusCapture={() => { orbitExpandedRef.current = true; setOrbitExpanded(true) }}
         onBlurCapture={event => {
-          if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(':hover')) setOrbitExpanded(false)
+          if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(':hover')) {
+            orbitExpandedRef.current = false
+            setOrbitExpanded(false)
+          }
         }}>
         {hosts.length === 5 && orbitEnabled && <div className="rundeckAppMotionRings" aria-hidden="true"><i /><i /><span>SPHERE<small>APP1–APP5</small></span></div>}
         {hosts.map(host => {
