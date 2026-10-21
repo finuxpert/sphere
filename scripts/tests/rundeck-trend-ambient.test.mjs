@@ -122,7 +122,7 @@ test('cockpit finishing reserves pager and expands APP spacing without modifying
   assert.match(orbit, /const rx = Math\.min\(width \* \.35, 118\)/)
   assert.match(orbit, /const ry = Math\.min\(height \* \.34, 40\)/)
   assert.match(orbit, /const openSelectedAnalysis = \(\) => openAppAnalysis\(selectedHost\)/)
-  assert.match(orbit, /onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
+  assert.match(orbit, /onClick=\{\(\) => \{ openAppAnalysis\(host\); selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
   assert.match(motion, /\.rundeckAppMotionRings span/)
   assert.match(css, /font-variant-numeric:tabular-nums/)
   assert.match(read('RundeckServerTrend.jsx'), /Highest bucket avg/)
@@ -141,7 +141,7 @@ test('motion refinements preserve lint-safe hooks and non-blocking graph interac
   assert.doesNotMatch(ambient, /Boolean\(expandedRef\?\.current\)/)
   assert.match(ambient, /morph\*morph\*morph/)
   assert.match(orbit, /const openSelectedAnalysis = \(\) => openAppAnalysis\(selectedHost\)/)
-  assert.match(orbit, /onClick=\{\(\) => \{ selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
+  assert.match(orbit, /onClick=\{\(\) => \{ openAppAnalysis\(host\); selectApp\(key\); onSelectApp\?\.\(host\.host\) \}\}/)
   assert.match(styles, /prefers-reduced-motion:reduce/)
 })
 
