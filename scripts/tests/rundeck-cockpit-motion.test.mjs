@@ -177,7 +177,7 @@ test('DEV motion restoration keeps source data correct and animation interactive
 })
 
 
-test('DEV keeps verified ECharts primary at idle, subtle braid motion and incident history visible', () => {
+test('DEV idle braid reveals full verified ECharts on hover/focus and keeps incident history visible', () => {
   const trendStyle = source('RundeckTrendAmbient.css')
   const issue = source('RundeckSapIssues.jsx')
   const checksStyle = source('RundeckSapChecksLayout.css')
@@ -185,12 +185,15 @@ test('DEV keeps verified ECharts primary at idle, subtle braid motion and incide
   const infra = source('RundeckInfrastructure.jsx')
   const cockpitStyle = source('RundeckCockpitHexV13512.css')
 
-  // Actual ECharts remains fully readable at idle. Retained braid motion
-  // is subtle and pointer-transparent; keyboard focus still reveals chart tools.
-  assert.match(trendStyle, /ECharts is the primary source-backed data surface at rest/)
-  assert.match(trendStyle, /data-vortex-ready="true"\]::before \{\s*display:none!important/)
-  assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas \{\s*opacity:\.13!important;\s*pointer-events:none!important/)
-  assert.match(trendStyle, /\.is-expanded>\.rundeckUnifiedVortexCanvas \{\s*opacity:0!important/)
+  // Saved-data Braid appears only with a complete verified three-channel chart.
+  // Hover/focus returns the untouched ECharts, controls and exact point clicks.
+  assert.match(source('RundeckMonitoringHistoryCore.jsx'), /<RundeckServerTrend\s+ambientBraid/)
+  assert.match(source('RundeckServerTrend.jsx'), /ambientBraid && databaseEnabled/)
+  assert.match(trendStyle, /:not\(\.is-expanded\)::before \{\s*opacity:1;/)
+  assert.match(trendStyle, /data-vortex-ready="true"\]\.is-expanded::before\{opacity:0/)
+  assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas \{\s*opacity:1;\s*pointer-events:none!important/)
+  assert.match(trendStyle, /\.is-expanded>\.rundeckUnifiedVortexCanvas \{\s*opacity:0;/)
+  assert.match(trendStyle, /@media\(max-width:1280px\),\(prefers-reduced-motion:reduce\),\(hover:none\),\(pointer:coarse\)/)
   assert.match(source('RundeckServerTrend.jsx'), /onFocusCapture=\{\(\) => setUnifiedHovered\(true\)\}/)
   assert.match(source('RundeckServerTrend.jsx'), /connectNulls: false/)
   assert.match(source('RundeckServerTrend.jsx'), /\{ value: \[at, null\], gap: true \}/)
