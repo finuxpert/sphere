@@ -137,7 +137,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
       {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Coverage: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'All observed workloads' :
-  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample and SM37 status</div>
+  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample. Job / Program names are RCA-WP observed identities, not SM37 execution status; verify job execution in SM37.</div>
       <div className="rundeckAppServerFilters">
         <label><span>Find job / program</span><input type="search" value={search} onChange={event => { setSearch(event.target.value); setPage(0) }} placeholder="Program, job or PID" /></label>
         <small>{query ? `${filteredRows.length} matches in loaded data` : 'Search loaded observations'}</small>
@@ -158,7 +158,8 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
             <tr className="rundeckAppWorkloadIdentityRow">
               <th scope="rowgroup" colSpan={6}>
                 <button type="button" className="rundeckAppFullIdentity" onClick={openWorkload}
-                  aria-label={`Analyze ${type} ${workloadName}`}>
+                  aria-label={`Analyze ${type} ${workloadName}`}
+                  title={`Observed identity: ${row.details?.identity_source || 'unverified'} · Authority: ${row.details?.identity_authority || 'unverified'} · not SM37 execution status`}>
                   <strong title={row.consumer_key}>{workloadName}</strong>
                   {relatedName && relatedName !== workloadName && <small title={`Related SAP name: ${relatedName}`}>Program: {relatedName}</small>}
                 </button>
