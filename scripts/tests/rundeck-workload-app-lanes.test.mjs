@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { evaluationAppKey, evaluationHostKeys, groupEvaluationsByApp } from '../../src/tools/components/rundeckWorkloadAppLanes.js'
 
 test('only explicitly verified AOP APP names are accepted', () => {
@@ -50,4 +51,20 @@ test('missing APP host evidence never turns into an invented APP status', () => 
   assert.equal(result.linkedUnique, 0)
   assert.equal(result.memberships, 0)
   assert.equal(groupEvaluationsByApp([]).unverified, 0)
+})
+
+test('APP evaluation cockpit hides redundant metadata strips but retains actionable evidence and warnings', () => {
+  const read = file => readFileSync(new URL('../../src/tools/components/' + file, import.meta.url), 'utf8')
+  const lanes = read('RundeckWorkloadAppLanes.jsx')
+  const health = read('RundeckWorkloadHealth.jsx')
+  const css = read('RundeckWorkloadAppLanes.css')
+  assert.doesNotMatch(lanes, /rundeckAppEvalProvenance|APP rows:|Lane colors reflect/)
+  assert.match(lanes, /groupEvaluationsByApp\(rows\)/)
+  assert.match(lanes, /lane\.counts\[level\.key\]/)
+  assert.match(lanes, /onSelectWorkload\?\.\(row\)/)
+  assert.match(health, /viewMode !== 'by-app' && <span/)
+  assert.match(health, /Data limited \{preview\.health\.unknown\}/)
+  assert.match(health, /Host data unverified/)
+  assert.match(css, /grid-template-rows:auto auto auto!important/)
+  assert.doesNotMatch(css, /\.rundeckAppEvalProvenance\{/)
 })
