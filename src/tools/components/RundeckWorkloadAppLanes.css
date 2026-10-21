@@ -5,7 +5,7 @@
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app{
   box-sizing:border-box;
   display:grid!important;
-  grid-template-rows:auto auto auto auto!important;
+  grid-template-rows:auto auto auto!important;
   align-content:start!important;
   gap:8px!important;
   width:100%!important;
@@ -150,16 +150,6 @@
   grid-row:2;
   color:var(--sphere-text-secondary,#a9b5bb);
   font-size:9px;
-}
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalProvenance{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:3px 12px;
-  color:var(--sphere-text-secondary,#a9b5bb);
-  font-size:9px;
-  line-height:1.2;
-  padding:3px 2px 0;
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAppEvalState {
   min-height:100px;
