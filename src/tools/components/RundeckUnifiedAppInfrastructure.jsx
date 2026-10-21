@@ -239,7 +239,7 @@ export default function RundeckUnifiedAppInfrastructure({
             aria-label={key + ' SAP ' + state + ' · Critical WP ' + metric(host.wp_critical) + ' · Select APP to see details'}
             title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + ' · select APP to see details'}
             aria-pressed={appKey === key}
-            onClick={() => { selectApp(key); onSelectApp?.(host.host) }}>
+            onClick={() => { selectApp(key); onSelectApp?.(host.host); openAppAnalysis(host) }}>
             <span className="rundeckAppHexShape" aria-hidden="true">
               <strong>{key}</strong>
               <small>{state === 'ATTENTION' ? 'ATTN' : state === 'WARNING' ? 'WARN' : state}</small>
