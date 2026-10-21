@@ -164,7 +164,10 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
                 </button>
               </th>
             </tr>
-            <tr className="rundeckAppWorkloadMetricsRow" onClick={openWorkload}>
+            <tr className="rundeckAppWorkloadMetricsRow" role="button" tabIndex={0}
+              aria-label={`Analyze observation metrics for ${workloadName}`}
+              onClick={openWorkload}
+              onKeyDown={event=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();openWorkload()}}>
               <td><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{type}</span></td>
               <td>{metric(row.cpu_pct,'%')}</td>
               <td>{pssText(row)}</td>
