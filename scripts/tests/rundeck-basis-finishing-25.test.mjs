@@ -21,15 +21,15 @@ test('time ranges remain source-backed; idle braid yields to interactive ECharts
   assert.match(style, /prefers-reduced-motion:reduce/)
   // The idle summary is a presentation of retained chart evidence, not new data.
   // Original charts remain mounted for interaction and every data-quality fallback.
-  assert.match(cockpit, /<RundeckServerTrend\\s+ambientBraid/)
+  assert.match(cockpit, /<RundeckServerTrend\s+ambientBraid/)
   assert.match(trend, /ambientBraid && databaseEnabled && !serverLoading1/)
-  assert.match(trend, /serverTrend1\\?\\.items\\?\\.length && serverTrend2\\?\\.items\\?\\.length && technicalTrend\\?\\.items\\?\\.length/)
-  assert.match(ambient, /:not\\(\\.is-expanded\\)::before \\{\\s*opacity:1;/)
-  assert.match(ambient, /\\.is-expanded::before\\{opacity:0/)
+  assert.match(trend, /serverTrend1\?\.items\?\.length && serverTrend2\?\.items\?\.length && technicalTrend\?\.items\?\.length/)
+  assert.match(ambient, /:not\(\.is-expanded\)::before \{\s*opacity:1;/)
+  assert.match(ambient, /\.is-expanded::before\{opacity:0/)
   assert.match(ambient, /pointer-events:none!important/)
-  assert.match(ambient, /\\(prefers-reduced-motion:reduce\\)/)
-  assert.match(braid, /grid\\.dataset\\.vortexReady = String\\(\\[0,1,2\\]\\.every\\(metric => groups\\.some\\(row => row\\.metric === metric\\)\\)\\)/)
-  assert.doesNotMatch(braid, /fetch\\(/)
+  assert.match(ambient, /\(prefers-reduced-motion:reduce\)/)
+  assert.match(braid, /grid\.dataset\.vortexReady = String\(\[0,1,2\]\.every\(metric => groups\.some\(row => row\.metric === metric\)\)\)/)
+  assert.doesNotMatch(braid, /fetch\(/)
 })
 
 test('Review retains verified APP evidence, reason context, true pagination and modal navigation', () => {
