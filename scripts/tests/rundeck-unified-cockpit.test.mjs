@@ -182,3 +182,21 @@ test('tab switching retains Current/Review state and labels technical scope',()=
   assert.match(trend,/APP % Axis/)
   assert.match(trend,/Host load average \(not %\)/)
 })
+
+test('APP analysis shows complete job names, program names and retained WP/PID evidence', () => {
+  const view=read('RundeckAppServerAnalysis.jsx')
+  const tableCss=read('RundeckAppServerAnalysis.css')
+  const modalCss=read('RundeckUnifiedAppAnalysis.css')
+  assert.match(view,/observedWorkloadName\(row\.consumer_key, row\.details\)/)
+  assert.match(view,/observedWorkloadName\(row\.details\?\.program \|\| row\.details\?\.job_name \|\| '', row\.details\)/)
+  assert.match(view,/className="rundeckAppWpIdentity">\{identity\.full\}/)
+  assert.doesNotMatch(view,/identity\.short|pids\.slice\(0,\s*2\)/)
+  assert.match(tableCss,/\.rundeckAppServerTableWrap td:first-child strong\{[^}]*white-space:normal;[^}]*overflow-wrap:anywhere/)
+  assert.match(tableCss,/\.rundeckAppServerTableWrap td:first-child small\{[^}]*white-space:normal;[^}]*overflow-wrap:anywhere/)
+  assert.match(modalCss,/\.rundeckAppServerTableWrap td:first-child :is\(strong,small\)/)
+  assert.match(modalCss,/\.rundeckAppWpIdentity\{[^}]*overflow:visible;overflow-wrap:anywhere/)
+  assert.doesNotMatch(modalCss,/\b(?:-webkit-)?line-clamp\s*:/)
+  assert.match(modalCss,/\.rundeckAppServerTableWrap th:nth-child\(6\)\{width:14%\}/)
+  assert.match(view,/APP_ROWS_PER_PAGE = 6/)
+})
+
