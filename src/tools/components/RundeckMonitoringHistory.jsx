@@ -329,6 +329,7 @@ export default function RundeckMonitoringHistory(props) {
           </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
+            key={String(activeOverlay.app.host).trim().toUpperCase()}
             title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}
             subtitle={`${activeOverlay.app.host || 'UNKNOWN host'} · SAP ${props.sourceQuality?.performanceValid && !props.sourceQuality?.collectorBad ? (props.latestCollectionAt ? formatWib(props.latestCollectionAt, true) + ' WIB' : 'sample time UNKNOWN') : 'UNVERIFIED'} · Infra data checked separately`}
             size="unified-app"
