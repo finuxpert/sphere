@@ -148,27 +148,35 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
           <th title="Proportional Set Size, grouped workload memory in GB">PSS</th>
           <th title="Process count">Proc.</th><th>WP / PID</th><th title="Workload sample time in WIB; not the time of the APP host snapshot">Observed</th>
         </tr></thead>
-        <tbody>
-          {visibleRows.map(row=>{
-            const identity=processIdentity(row.details || {})
-            return <tr key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`} tabIndex={0} role="button"
-              onClick={()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}
-              onKeyDown={(event)=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})}}>
-              <td>
-                <strong title={row.consumer_key}>{observedWorkloadName(row.consumer_key, row.details)}</strong>
-                <small title={`Observed identity: ${row.details?.identity_source || 'SAP workload observation'}; not SM37 execution status`}><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{String(row.consumer_type||'—').toUpperCase()}</span> {observedWorkloadName(row.details?.program || row.details?.job_name || '', row.details) || ''}</small>
-              </td>
+        {visibleRows.map(row=>{
+          const identity=processIdentity(row.details || {})
+          const workloadName=observedWorkloadName(row.consumer_key, row.details)
+          const relatedName=observedWorkloadName(row.details?.program || row.details?.job_name || '', row.details)
+          const type=String(row.consumer_type||'—').toUpperCase()
+          const openWorkload=()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})
+          return <tbody key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`} className="rundeckAppObservationGroup">
+            <tr className="rundeckAppWorkloadIdentityRow">
+              <th scope="rowgroup" colSpan={6}>
+                <button type="button" className="rundeckAppFullIdentity" onClick={openWorkload}
+                  aria-label={`Analyze ${type} ${workloadName}`}>
+                  <strong title={row.consumer_key}>{workloadName}</strong>
+                  {relatedName && relatedName !== workloadName && <small title={`Related SAP name: ${relatedName}`}>Program: {relatedName}</small>}
+                </button>
+              </th>
+            </tr>
+            <tr className="rundeckAppWorkloadMetricsRow" onClick={openWorkload}>
+              <td><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{type}</span></td>
               <td>{metric(row.cpu_pct,'%')}</td>
               <td>{pssText(row)}</td>
               <td>{processText(row)}</td>
               <td title={identity.full}><span className="rundeckAppWpIdentity">{identity.full}</span></td>
               <td title={row.collected_at ? `Saved workload observation ${formatWib(row.collected_at,true)} WIB; not job completion or APP host sample time` : 'Sample time unverified'}>{row.collected_at
-                  ? <time dateTime={row.collected_at} className="rundeckAppObservedAt"><span>{formatWib(row.collected_at,true).split(', ')[0]}</span><span>{formatWib(row.collected_at)} WIB</span></time>
-                  : '—'}</td>
+                ? <time dateTime={row.collected_at} className="rundeckAppObservedAt"><span>{formatWib(row.collected_at,true).split(', ')[0]}</span><span>{formatWib(row.collected_at)} WIB</span></time>
+                : '—'}</td>
             </tr>
-          })}
-          {!filteredRows.length&&<tr><td colSpan="6">{query ? 'No matching job or program in loaded observations.' : 'No job or program observed for this APP in the verified collection.'}</td></tr>}
-        </tbody>
+          </tbody>
+        })}
+        {!filteredRows.length&&<tbody><tr><td colSpan={6}>{query ? 'No matching job or program in loaded observations.' : 'No job or program observed for this APP in the verified collection.'}</td></tr></tbody>}
       </table></div>
       {filteredRows.length > 0 && <nav className="rundeckAppServerPager" aria-label="APP job and program pages">
         <small>Showing {safePage * APP_ROWS_PER_PAGE + 1}–{Math.min(filteredRows.length, (safePage + 1) * APP_ROWS_PER_PAGE)} of {filteredRows.length} · Page {safePage + 1}/{pageCount}</small>
