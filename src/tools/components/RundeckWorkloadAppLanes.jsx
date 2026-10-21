@@ -92,11 +92,5 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
         </span>)}
       </div>
     </section>)}
-    <div className="rundeckAppEvalProvenance">
-      <span>APP rows: {model.memberships} host links across {model.linkedUnique} unique evaluations</span>
-      {model.multiHost > 0 && <span>{model.multiHost} evaluations linked to multiple APPs; counted once globally</span>}
-      {model.unverified > 0 && <span>{model.unverified} evaluations have no verified APP host</span>}
-      <span>Lane colors reflect global evaluation status, not per-host performance</span>
-    </div>
   </div>
 }
