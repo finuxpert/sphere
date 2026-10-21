@@ -14,12 +14,15 @@ test('performance history has distinct rolling and calendar presets', () => {
   assert.match(trend, /\['180d', '6M'\]/)
   assert.match(trend, /aria-label="Short performance ranges"/)
   assert.match(trend, /\['180d', '6M'\]/)
-  assert.match(trend, /observedDailyBuckets/)
+  assert.match(trend, /Saved APP and technical measurements/)
+  assert.match(trend, /connectNulls: false/)
   assert.match(trend, /Number\(item\?\.samples\) > 0/)
   assert.match(trend, /const longHistoricalRange = LONG_RANGES\.has\(range\)/)
   assert.match(trend, /longHistoricalRange \? 'auto' : bucket/)
   assert.match(trend, /configured_retention_days/)
-  assert.match(trend, /first stored bucket/)
+  assert.match(trend, /title=\{longHistoricalRange && serverTrend1\?\.range === range/)
+  assert.match(trend, /Missing days are unknown, not zero/)
+  assert.doesNotMatch(trend, /rundeckHistoricalCoverage/)
 })
 
 test('long-range queries are bounded and unsupported SAP availability is explicit', () => {
