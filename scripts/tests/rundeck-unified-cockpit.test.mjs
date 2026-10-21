@@ -18,6 +18,8 @@ test('APP hexagon opens verified combined modal for clicked host; Process / Infr
   assert.match(app,/onInspectApp\?\.\(\{ \.\.\.host, infraHost, infraHostVerified: Boolean\(infraHost\) \}\)/)
   assert.match(core,/onInspectApp=\{props\.onInspectApp\}/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
+  assert.match(app,/if \(expanded && Number\.isFinite\(position\.x\) && Number\.isFinite\(position\.y\)\) return/)
+  assert.match(read('RundeckMonitoringHistory.jsx'),/key=\{String\(activeOverlay\.app\.host\)\.trim\(\)\.toUpperCase\(\)\}/)
   assert.doesNotMatch(app,/<select/)
 })
 
