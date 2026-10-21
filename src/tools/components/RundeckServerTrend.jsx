@@ -732,7 +732,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
   </section>
 }
 
-export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, focusedHost = '', onFocusHost, sourceHosts = [], onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence }) {
+export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, selectedJob = null, focusedHost = '', onFocusHost, sourceHosts = [], onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence, ambientBraid = false }) {
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
@@ -979,7 +979,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const savedPeak2 = React.useMemo(() => savedVortexPeak(serverTrend2, mode, activeFocus), [serverTrend2, mode, activeFocus])
   const savedTechnicalPeak = React.useMemo(() => savedVortexPeak(technicalTrend, mode, activeFocus), [technicalTrend, mode, activeFocus])
   const temporalReady = Boolean(
-    databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
+    ambientBraid && databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
     !serverError1 && !serverError2 && !technicalError &&
     serverTrend1?.items?.length && serverTrend2?.items?.length && technicalTrend?.items?.length &&
     serverTrend1?.metric !== 'availability' && serverTrend2?.metric !== 'availability' &&
@@ -1116,13 +1116,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(':hover')) setUnifiedHovered(false)
       }}>
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label="Server Trend 1">
-        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend <small>· APP host</small></h3></div>
+        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> Server Trend 1 <small>· {metricLabel(serverMetric1)} · APP host</small></h3></div>
         <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric" value={serverMetric1} onChange={event => setServerMetric1(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
         {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label="Server Trend 2">
-        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from workload PSS and CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric2)} Trend <small>· APP host</small></h3></div>
+        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from workload PSS and CPU"><SphereIcon name="trend" /> Server Trend 2 <small>· {metricLabel(serverMetric2)} · APP host</small></h3></div>
         <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 2 metric" value={serverMetric2} onChange={event => setServerMetric2(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
         {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
       </section>
