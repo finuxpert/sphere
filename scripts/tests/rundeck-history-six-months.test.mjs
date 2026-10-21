@@ -16,7 +16,7 @@ test('performance history has distinct rolling and calendar presets', () => {
   assert.match(trend, /\['180d', '6M'\]/)
   assert.match(trend, /Saved APP and technical measurements/)
   assert.match(trend, /connectNulls: false/)
-  assert.match(trend, /Number\(item\?\.samples\) > 0/)
+  assert.match(trend, /serverTrend1\?\.items\?\.length > 0/)
   assert.match(trend, /const longHistoricalRange = LONG_RANGES\.has\(range\)/)
   assert.match(trend, /longHistoricalRange \? 'auto' : bucket/)
   assert.match(trend, /configured_retention_days/)
