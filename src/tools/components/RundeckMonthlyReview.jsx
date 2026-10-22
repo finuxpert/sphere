@@ -120,6 +120,38 @@ function PressureEpisodes({ metric, pressure }) {
   </section>
 }
 
+function AbapTuningCandidates({ rows = [] }) {
+  return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyTuning" aria-label="ABAP tuning candidates">
+    <div className="sphereMonthlyTableHead">
+      <div><h4>ABAP Tuning Candidates</h4>
+        <small>Source: SPHERE historical workload observations · Priority: Review Required · Not confirmed errors or root cause</small>
+      </div>
+      <span className="sphereMonthlyErrorCounter">{fmt(rows.length, 0)} candidates</span>
+    </div>
+    <div className="sphereMonthlyTableScroll"><table><thead><tr>
+      <th>Job / Program</th><th>Observed APP</th><th>CPU Avg / Peak</th>
+      <th>PSS Avg / Peak</th><th>Checks</th><th>CPU / RAM Pressure Checks</th><th>Review Signal</th>
+    </tr></thead><tbody>
+      {rows.map(row => <tr key={id(row)}>
+        <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {row.status}</small></td>
+        <td>{hostsFor(row) || '—'}</td>
+        <td>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</td>
+        <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td>
+        <td>{fmt(row.occurrences,0)}</td>
+        <td>{fmt(row.cpu_pressure_host_checks,0)} / {fmt(row.ram_pressure_host_checks,0)}</td>
+        <td>{[
+          row.signals?.sustained_high_cpu && 'High CPU',
+          row.signals?.high_memory && 'High PSS',
+          row.signals?.cpu_spike && 'CPU spike',
+          row.signals?.baseline_anomaly && 'Above baseline',
+        ].filter(Boolean).join(', ') || 'Review Required'}</td>
+      </tr>)}
+      {!rows.length && <tr><td colSpan="7">No Review Required workloads observed for this reporting period.</td></tr>}
+    </tbody></table></div>
+    <p>These Jobs and Programs are performance tuning candidates, not confirmed failures. CPU is sampled workload process CPU (100% approximately one CPU core); PSS is program process memory. APP Pressure correlation is co-observation only.</p>
+  </section>
+}
+
 function MonthlyErrorAnalysis({ evidence }) {
   const errors = evidence || {}
   const rows = errors.top_errors || []
@@ -242,6 +274,7 @@ export default function RundeckMonthlyReview() {
   const summary=data?.summary||{}
   const evidence=data?.monthly_pressure||{}
   const errors=data?.monthly_errors||{}
+  const tuningCandidates=data?.monthly_abap_candidates||[]
   const hosts=evidence.hosts||[]
   const chosen=Object.values(selected)
   const total=Number(data?.page?.total||0)
@@ -414,6 +447,7 @@ export default function RundeckMonthlyReview() {
         <PressureRows label="Jobs / Programs During CPU Pressure" evidence={evidence} metric="cpu"/>
         <PressureRows label="Jobs / Programs During RAM Pressure" evidence={evidence} metric="ram"/>
         <MonthlyErrorAnalysis evidence={errors}/>
+        <AbapTuningCandidates rows={tuningCandidates}/>
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
@@ -426,11 +460,11 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyReportOverview">
           <div><strong>Reporting period</strong><span>{month} · Asia/Jakarta</span></div>
           <div><strong>CPU / RAM pressure</strong><span>{fmt(evidence.cpu?.episodes,0)} / {fmt(evidence.ram?.episodes,0)} observed episodes</span></div>
-          <div><strong>Workload evidence</strong><span>Top 5 each pressure type · {chosen.length} selected for appendix</span></div>
+          <div><strong>Workload evidence</strong><span>Top 5 per pressure type · {tuningCandidates.length} ABAP tuning candidates · {chosen.length} selected for appendix</span></div>
           <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
-          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Sumber error WP belum tersimpan; jumlah kejadian tidak diketahui':<>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</>}</span></div>
+          <div><strong>ABAP Error Analysis</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Sumber error WP belum tersimpan; jumlah kejadian tidak diketahui':<>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</>}</span></div>
         </div>
-        <h4>Optional technical appendix ({chosen.length})</h4>
+        <h4>Selected Workload Appendix ({chosen.length})</h4>
         {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
           <strong>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)||'APP not recorded'}</small>
           <button type="button" onClick={()=>selectRow(row)}>Remove</button>
