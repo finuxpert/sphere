@@ -196,6 +196,7 @@ export default function RundeckMonthlyReview() {
   const [pdfError,setPdfError]=React.useState('')
   const [pdfUrl,setPdfUrl]=React.useState('')
   const pdfRef=React.useRef('')
+  const pdfGenerationRef=React.useRef(0)
   React.useEffect(()=>()=>{if(pdfRef.current) URL.revokeObjectURL(pdfRef.current)},[])
   React.useEffect(()=>{
     const timer=window.setTimeout(()=>setAppliedSearch(search.trim()),300)
@@ -207,6 +208,9 @@ export default function RundeckMonthlyReview() {
       month,type:kind,health,pressure:pressureFilter,flag:signalFilter,q:appliedSearch,
       limit:String(PAGE_SIZE),offset:String(page*PAGE_SIZE),
     })
+    pdfGenerationRef.current += 1
+    if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
+    pdfRef.current='';setPdfUrl('')
     setLoading(true);setError('');setData(null)
     fetch(API+'/evaluation/workloads/monthly?'+params.toString(),{cache:'no-store',signal:controller.signal})
       .then(async response=>{
@@ -216,7 +220,7 @@ export default function RundeckMonthlyReview() {
       .then(payload=>{
         if(controller.signal.aborted)return
         if(payload.month!==month||payload.period!=='month'||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid monthly evidence contract')
-        if(!payload.monthly_pressure)throw Error('Monthly CPU/RAM evidence is unavailable on this backend')
+        if(!payload.monthly_pressure||!payload.monthly_errors)throw Error('Monthly pressure or error evidence is unavailable on this backend')
         setData(payload)
       })
       .catch(failure=>{if(!controller.signal.aborted)setError(failure.message||'Historical evidence unavailable')})
@@ -253,14 +257,16 @@ export default function RundeckMonthlyReview() {
   }
   const previewPdf=async()=>{
     if(!data||loading||pdfBusy)return
+    const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
     try{
       const blob=await buildMonthlyPdf({month,data,selections:chosen})
+      if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
       pdfRef.current=url
       setPdfUrl(url)
-    }catch(failure){setPdfError(failure.message||'PDF could not be generated')}
+    }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{setPdfBusy(false)}
   }
   const limited=Number(quality.coverage_pct??0)<95||quality.confidence==='LOW'||Number(quality.partial_or_incomplete_checks||0)>0
@@ -285,7 +291,7 @@ export default function RundeckMonthlyReview() {
     {data&&!loading&&<>
       <div className="sphereMonthlyProvenance">
         <span>Window: {when(data.start)} - {when(data.end)} (exclusive)</span>
-        <span>Coverage <b>{pct(quality.coverage_pct)}</b></span>
+        <span>Estimasi cakupan <b>{pct(quality.coverage_pct)}</b></span>
         <span>Confidence <b>{quality.confidence||'UNKNOWN'}</b></span>
         <span>Complete <b>{fmt(quality.complete_checks,0)}</b></span>
         <span>Incomplete <b>{fmt(quality.partial_or_incomplete_checks,0)}</b></span>
@@ -296,7 +302,7 @@ export default function RundeckMonthlyReview() {
           {[
             ['CPU Pressure',fmt(evidence.cpu?.episodes,0),'episodes · peak '+pct(evidence.cpu?.peak?.peak_pct)],
             ['RAM Pressure',fmt(evidence.ram?.episodes,0),'episodes · peak '+pct(evidence.ram?.peak?.peak_pct)],
-            ['Critical WP',fmt(hosts.reduce((sum,row)=>sum+(row.critical_wp_host_checks||0),0),0),'APP host-checks, not failures'],
+            ['Observasi Critical WP',fmt(hosts.reduce((sum,row)=>sum+(row.critical_wp_host_checks||0),0),0),'APP teramati dengan WP critical; bukan insiden'],
             ['Review Required',fmt(summary.review_required,0),fmt(summary.workloads,0)+' observed workloads'],
           ].map(([label,value,detail])=><div className="sphereMonthlyStat" key={label}>
             <span>{label}</span><strong>{value}</strong><small>{detail}</small>
@@ -360,7 +366,7 @@ export default function RundeckMonthlyReview() {
           </div>
         </div>
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
-          <th>Job / Program</th><th>APP</th><th>Avg / Peak CPU</th><th>Avg / Peak PSS</th>
+          <th>Job / Program</th><th>APP teramati</th><th>Avg / Peak CPU</th><th>Avg / Peak PSS</th>
           <th>Checks</th><th>CPU / RAM High Host-Checks</th><th>Critical WP Host-Checks</th><th>Report</th>
         </tr></thead><tbody>
           {items.map(row=><React.Fragment key={id(row)}>
@@ -378,7 +384,7 @@ export default function RundeckMonthlyReview() {
               <strong>Saved monthly workload evidence</strong>
               <span>First observed {when(row.first_seen)} · Last observed {when(row.last_seen)}</span>
               <span>Host observations {fmt(row.host_observations,0)} · Prev-month avg CPU {pct(row.previous?.avg_cpu_pct)} · Peak processes {fmt(row.peak_process_count,0)}</span>
-              <span>Pressure correlation: CPU {fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)}, RAM {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}, WP {fmt(row.pressure_overlap?.wp_host_checks,0)} APP host-checks</span>
+              <span>Korelasi waktu: CPU {fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} pada {pressureHostsFor(row,'cpu')||'—'}; RAM {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)} pada {pressureHostsFor(row,'ram')||'—'}; WP {fmt(row.pressure_overlap?.wp_host_checks,0)} pemeriksaan APP</span>
               <span>Collection counts are not SM37 executions. Same-host overlap does not prove causation.</span>
             </div></td></tr>}
           </React.Fragment>)}
@@ -417,8 +423,8 @@ export default function RundeckMonthlyReview() {
           <div><strong>Reporting period</strong><span>{month} · Asia/Jakarta</span></div>
           <div><strong>CPU / RAM pressure</strong><span>{fmt(evidence.cpu?.episodes,0)} / {fmt(evidence.ram?.episodes,0)} observed episodes</span></div>
           <div><strong>Workload evidence</strong><span>Top 5 each pressure type · {chosen.length} selected for appendix</span></div>
-          <div><strong>Cakupan data monitoring</strong><span>{pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'}</span></div>
-          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Belum ada bukti error':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot</span></div>
+          <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
+          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</span></div>
         </div>
         <h4>Optional technical appendix ({chosen.length})</h4>
         {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
@@ -428,6 +434,7 @@ export default function RundeckMonthlyReview() {
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
           <div className="sphereMonthlyPager"><small>PDF preview · Generated using current month evidence</small>
             <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Download PDF</a>
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Buka layar penuh</a>
             <button type="button" onClick={()=>{if(pdfRef.current)URL.revokeObjectURL(pdfRef.current);pdfRef.current='';setPdfUrl('')}}>Close preview</button>
           </div>
           <iframe title="SPHERE monthly PDF preview" src={pdfUrl}/>
