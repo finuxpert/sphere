@@ -6,7 +6,7 @@ import './RundeckMonthlyReview.css'
 const API = import.meta.env.BASE_URL + 'api'
 const PAGE_SIZE = 25
 const fmt = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
-  ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
+  ? '—' : Number(value).toLocaleString('id-ID', { maximumFractionDigits: digits })
 const pct = value => fmt(value) === '—' ? '—' : fmt(value) + '%'
 const id = row => String(row.consumer_type || '') + ':' + String(row.consumer_key || '')
 const hostLabel = host => shortHost(typeof host === 'string' ? host : host?.host || '').toUpperCase()
@@ -131,7 +131,8 @@ function MonthlyErrorAnalysis({ evidence }) {
         <small>Histori SPHERE · Tidak menggantikan ST22 atau SM37</small>
       </div>
       <span className="sphereMonthlyErrorCounter">
-        {state === 'TRUNCATED' ? 'Data error sebagian' : state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Tidak ditemukan kode error' :
+        {state === 'TRUNCATED' ? 'Data error sebagian' : state === 'ERROR_SOURCE_NOT_RETAINED' ? 'Sumber error belum tersimpan' :
+        state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Tidak ditemukan kode error' :
         state === 'WP_SIGNALS_ONLY' ? 'Ada sinyal diagnostik WP' :
         state === 'SNAPSHOT_ONLY' ? 'Hanya observasi snapshot' :
         state === 'UNTIMED_TRACE_ONLY' ? 'Trace tanpa waktu kejadian' : fmt(errors.timestamped_events, 0) + ' kejadian berwaktu'}
@@ -141,7 +142,7 @@ function MonthlyErrorAnalysis({ evidence }) {
       <span>Kejadian berwaktu: {state === 'TRUNCATED' ? 'Data parsial' : fmt(errors.timestamped_events, 0)}</span>
       <span>Observasi error saat snapshot: {fmt(errors.snapshot_host_checks, 0)}</span>
       <span>Kategori teridentifikasi: {fmt((errors.categories || []).length, 0)}</span>
-      <span>Sinyal RABAX dan RXMSG: {fmt(errors.wp_signal_host_checks, 0)} observasi WP</span>
+      <span>Sinyal RABAX dan RXMSG: {fmt(errors.wp_signal_host_checks, 0)} pemeriksaan sinyal WP</span>
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
       <th>Program terkait</th><th>Kategori</th><th>Kode Error</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
@@ -424,7 +425,7 @@ export default function RundeckMonthlyReview() {
           <div><strong>CPU / RAM pressure</strong><span>{fmt(evidence.cpu?.episodes,0)} / {fmt(evidence.ram?.episodes,0)} observed episodes</span></div>
           <div><strong>Workload evidence</strong><span>Top 5 each pressure type · {chosen.length} selected for appendix</span></div>
           <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
-          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</span></div>
+          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Sumber error belum tersimpan':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</span></div>
         </div>
         <h4>Optional technical appendix ({chosen.length})</h4>
         {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
