@@ -642,6 +642,40 @@ def _calendar_month_collection_anchor(conn, start: datetime, end: datetime) -> s
     return value.isoformat() if value is not None else "NO_COMPLETE_COLLECTION"
 
 
+def _monthly_abap_tuning_candidates(evaluated: list[dict], limit: int = 25) -> list[dict]:
+    """Priority workload observations for ABAP review; not confirmed errors."""
+    candidates = []
+    for item in evaluated:
+        if item.get("status") != "REVIEW REQUIRED":
+            continue
+        overlap = item.get("pressure_overlap") or {}
+        signals = item.get("signals") or {}
+        candidates.append({
+            "consumer_type": item.get("consumer_type"),
+            "consumer_key": item.get("consumer_key"),
+            "status": item.get("status"),
+            "occurrences": item.get("occurrences"),
+            "hosts": item.get("hosts") or [],
+            "avg_cpu_pct": item.get("avg_cpu_pct"),
+            "peak_cpu_pct": item.get("peak_cpu_pct"),
+            "avg_pss_gb": item.get("avg_pss_gb"),
+            "peak_pss_gb": item.get("peak_pss_gb"),
+            "confidence": item.get("overall_confidence"),
+            "cpu_pressure_host_checks": overlap.get("cpu_pressure_host_checks", 0),
+            "ram_pressure_host_checks": overlap.get("ram_pressure_host_checks", 0),
+            "cpu_pressure_hosts": overlap.get("cpu_pressure_hosts") or [],
+            "ram_pressure_hosts": overlap.get("ram_pressure_hosts") or [],
+            "signals": {
+                "sustained_high_cpu": bool(signals.get("sustained_high_cpu")),
+                "high_memory": bool(signals.get("high_memory")),
+                "cpu_spike": bool(signals.get("cpu_spike")),
+                "baseline_anomaly": bool(signals.get("baseline_anomaly")),
+            },
+            "error_attribution": "NOT_ESTABLISHED",
+        })
+    return candidates[:max(0, limit)]
+
+
 def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str, pressure: str = "ALL", flag: str = "ALL", consumer_type: str = "ALL") -> dict:
     """Filter the FULL evaluated population, then slice; leave all-population summary intact."""
     normalized_query = query.strip().casefold()
@@ -991,39 +1025,10 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             ),
         )[:5]
 
-    # Independent from table filters: actionable workload *candidates* are drawn
-    # from the full evaluated monthly population, not from current pagination.
-    # A candidate is NOT a confirmed ABAP dump, failed SM37 job or root cause.
-    monthly_abap_candidates = []
-    if period_key == "month":
-        for item in evaluated:
-            if item.get("status") != "REVIEW REQUIRED":
-                continue
-            overlap = item.get("pressure_overlap") or {}
-            monthly_abap_candidates.append({
-                "consumer_type": item.get("consumer_type"),
-                "consumer_key": item.get("consumer_key"),
-                "status": item.get("status"),
-                "occurrences": item.get("occurrences"),
-                "hosts": item.get("hosts") or [],
-                "avg_cpu_pct": item.get("avg_cpu_pct"),
-                "peak_cpu_pct": item.get("peak_cpu_pct"),
-                "avg_pss_gb": item.get("avg_pss_gb"),
-                "peak_pss_gb": item.get("peak_pss_gb"),
-                "confidence": item.get("overall_confidence"),
-                "cpu_pressure_host_checks": overlap.get("cpu_pressure_host_checks", 0),
-                "ram_pressure_host_checks": overlap.get("ram_pressure_host_checks", 0),
-                "cpu_pressure_hosts": overlap.get("cpu_pressure_hosts") or [],
-                "ram_pressure_hosts": overlap.get("ram_pressure_hosts") or [],
-                "signals": {
-                    "sustained_high_cpu": bool(item.get("signals", {}).get("sustained_high_cpu")),
-                    "high_memory": bool(item.get("signals", {}).get("high_memory")),
-                    "cpu_spike": bool(item.get("signals", {}).get("cpu_spike")),
-                    "baseline_anomaly": bool(item.get("signals", {}).get("baseline_anomaly")),
-                },
-                "error_attribution": "NOT_ESTABLISHED",
-            })
-        monthly_abap_candidates = monthly_abap_candidates[:25]
+    # Source-backed full-month ranking; independent of per-page filters.
+    monthly_abap_candidates = (
+        _monthly_abap_tuning_candidates(evaluated) if period_key == "month" else []
+    )
 
     result = {
         "period": period_key,
