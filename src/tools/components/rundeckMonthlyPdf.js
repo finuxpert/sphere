@@ -223,7 +223,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   drawTopTable(pdf, 'JOB DAN PROGRAM SAAT RAM TINGGI', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
   drawTopTable(pdf, 'JOB DAN PROGRAM SAAT CPU TINGGI', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
   const errorEvidence = data.monthly_errors || {}
-  const errorRows = (errorEvidence.top_errors || []).filter(row => row.event_count || row.snapshot_host_checks)
+  const errorRows = (errorEvidence.top_errors || []).filter(row => row.event_count || row.snapshot_host_checks || row.untimed_trace_checks)
   pdf.setDrawColor(215, 225, 230)
   pdf.line(margin, 183, W - margin, 183)
   pdf.setFont('helvetica', 'bold')
@@ -286,7 +286,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       const program = pdf.splitTextToSize(String(row.program || 'Belum teridentifikasi'), 88)
       const resource = row.snapshot_host_checks > 0 && (row.cpu_snapshot_pct !== null || row.pss_snapshot_gb !== null)
         ? 'CPU saat snapshot ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
-        : ''
+        : row.untimed_trace_checks > 0 ? 'Jejak error tanpa waktu: ' + format(row.untimed_trace_checks, 0) + ' observasi' : ''
       const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length) + 1.8 + (resource ? 3.3 : 0))
       if (ey + rowH > H - 17) {
         pdf.addPage()
