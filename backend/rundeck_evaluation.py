@@ -626,7 +626,7 @@ def _anchor_time(conn) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
-def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str) -> dict:
+def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str, pressure: str = "ALL") -> dict:
     """Filter the FULL evaluated population, then slice; leave all-population summary intact."""
     normalized_query = query.strip().casefold()
     group = health.upper().strip()
@@ -636,6 +636,9 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
         raise ValueError("offset must be between 0 and 100000")
     if len(normalized_query) > 512:
         raise ValueError("q must contain at most 512 characters")
+    pressure_key = pressure.upper().strip()
+    if pressure_key not in {"ALL", "CPU", "RAM", "WP"}:
+        raise ValueError("pressure must be ALL, CPU, RAM or WP")
     full = report["items"]
     def search_text(row: dict) -> str:
         details = row.get("details")
@@ -652,6 +655,13 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
     matching = [
         row for row in full
         if (group == "ALL" or _evaluation_health(row) == group)
+        and (pressure_key == "ALL" or (
+            pressure_key == "CPU" and row.get("pressure_overlap", {}).get("cpu_pressure_host_checks", 0) > 0
+        ) or (
+            pressure_key == "RAM" and row.get("pressure_overlap", {}).get("ram_pressure_host_checks", 0) > 0
+        ) or (
+            pressure_key == "WP" and row.get("pressure_overlap", {}).get("wp_host_checks", 0) > 0
+        ))
         and (not normalized_query or normalized_query in search_text(row))
     ]
     return {
@@ -740,15 +750,15 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
     } for row in rows]
 
 
-def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None) -> dict:
+def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None, pressure: str = "ALL") -> dict:
     """Serialize cold full-population computations; cached pages use the same source anchor."""
     with _EVALUATION_COMPUTE_LOCK:
         if month is None:
             return _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
-        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month)
+        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure)
 
 
-def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None) -> dict:
+def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None, pressure: str = "ALL") -> dict:
     started = time.perf_counter()
     period_key = str(period or "1d").lower()
     if period_key not in PERIOD_DAYS and period_key != "month":
@@ -790,7 +800,9 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             cache_key = (period_key, type_key, anchor_key)
         cached = _cache_get(cache_key)
         if cached:
-            return _runtime_payload(_evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key), cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
+            page = _evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key,
+                                    pressure=pressure if period_key == "month" else "ALL")
+            return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
         current_quality = _collection_quality(conn, start, end)
         previous_quality = _collection_quality(conn, previous_start, start)
         current_rows = _aggregate_window(conn, start, end, type_key)
@@ -985,4 +997,6 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         "method": "Deterministic complete-collection evaluation with workload-specific median and P95 baseline, recent CPU shift detection and App Server normalized Critical WP overlap. Investigation signal only; not root-cause proof.",
     }
     _cache_put(cache_key, result)
-    return _runtime_payload(_evaluation_page(result, limit=limit_key, offset=offset_key, query=query_key, health=health_key), cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)
+    return _runtime_payload(_evaluation_page(result, limit=limit_key, offset=offset_key, query=query_key,
+                                             health=health_key, pressure=pressure if period_key == "month" else "ALL"),
+                            cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)
