@@ -247,6 +247,8 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     ? 'Histori error sebagian; jumlah kejadian belum lengkap'
     : !data.monthly_errors
       ? 'Pembacaan data error tidak tersedia pada hasil laporan'
+      : errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
+        ? 'Kolom evidence error WP tidak tersimpan pada histori yang terbaca'
       : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE'
         ? 'Tidak ditemukan kode error pada sumber histori SPHERE yang terbaca'
       : errorEvidence.status === 'WP_SIGNALS_ONLY'
@@ -404,7 +406,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     selections.forEach((row, index) => {
       const overlap = row.pressure_overlap || {}
       addText((index + 1) + '. ' + String(row.consumer_key || 'UNKNOWN') + '  (' + row.consumer_type + ')', 9, true)
-      addText('APP ' + (row.hosts || []).map(labelHost).join(', ') +
+      addText('APP teramati: ' + (row.hosts || []).map(labelHost).join(', ') +
         ' | CPU rerata dan puncak ' + pct(row.avg_cpu_pct) + ', ' + pct(row.peak_cpu_pct) +
         ' | PSS rerata dan puncak ' + format(row.avg_pss_gb, 2) + ', ' + format(row.peak_pss_gb, 2) + ' GB')
       addText('Observasi tersimpan ' + format(row.occurrences, 0) +
