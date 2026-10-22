@@ -81,8 +81,18 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
             "first_at": None, "last_at": None,
             "sample_workload": str(row.get("consumer_key") or ""),
             "program_link": "EXPLICIT_ERROR_PROGRAM" if explicit_program else "CONTEXT_ONLY",
+            "cpu_snapshot_pct": None, "pss_snapshot_gb": None,
         })
         if row.get("error_at_snapshot"):
+            # Resource values describe the collection snapshot, not the
+            # historical time at which a retained trace error may have started.
+            for source_key, result_key in (("cpu_pct", "cpu_snapshot_pct"), ("pss_gb", "pss_snapshot_gb")):
+                try:
+                    value = float(row[source_key]) if row.get(source_key) is not None else None
+                except (TypeError, ValueError):
+                    value = None
+                if value is not None:
+                    item[result_key] = max(value, item[result_key]) if item[result_key] is not None else value
             key = (host, str(row.get("collection_id") or ""), pid, code)
             if key not in snapshot_checks:
                 snapshot_checks.add(key)
@@ -150,6 +160,8 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
                signal.value->>'error_program' AS error_program,
                signal.value->>'error_recency' AS error_recency,
                signal.value->>'latest_error_ts' AS latest_error_ts,
+               MAX(tc.cpu_pct) AS cpu_pct,
+               MAX(NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision) AS pss_gb,
                COUNT(DISTINCT tc.collection_id) AS collection_checks
           FROM {source} tc
           JOIN rundeck_collections c ON c.collection_id = tc.collection_id
