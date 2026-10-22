@@ -119,6 +119,45 @@ function PressureEpisodes({ metric, pressure }) {
   </section>
 }
 
+function MonthlyErrorAnalysis({ evidence }) {
+  const errors = evidence || {}
+  const rows = errors.top_errors || []
+  const state = errors.status || 'NO_RETAINED_ERROR_EVIDENCE'
+  return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyErrors" aria-label="Evaluasi error program ABAP">
+    <div className="sphereMonthlyTableHead">
+      <div>
+        <h4>Evaluasi Error Program ABAP</h4>
+        <small>Histori SPHERE · Tidak menggantikan ST22 atau SM37</small>
+      </div>
+      <span className="sphereMonthlyErrorCounter">
+        {state === 'TRUNCATED' ? 'Data error sebagian' : state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Belum ada bukti error' :
+        state === 'SNAPSHOT_ONLY' ? 'Hanya observasi snapshot' : fmt(errors.timestamped_events, 0) + ' kejadian berwaktu'}
+      </span>
+    </div>
+    <div className="sphereMonthlyStatStrip">
+      <span>Kejadian berwaktu: {state === 'TRUNCATED' ? 'Data parsial' : fmt(errors.timestamped_events, 0)}</span>
+      <span>Observasi error saat snapshot: {fmt(errors.snapshot_host_checks, 0)}</span>
+      <span>Kategori teridentifikasi: {fmt((errors.categories || []).length, 0)}</span>
+    </div>
+    <div className="sphereMonthlyTableScroll"><table><thead><tr>
+      <th>Program terkait</th><th>Kategori</th><th>Kode Error</th><th>APP</th>
+      <th>Kejadian berwaktu</th><th>Observasi snapshot</th><th>Hubungan program</th>
+    </tr></thead><tbody>
+      {rows.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
+        <td className="sphereMonthlyName"><strong>{row.program || 'Belum teridentifikasi'}</strong>
+          {row.sample_workload && <small>Workload saat observasi: {row.sample_workload}</small>}</td>
+        <td>{row.category_label}</td><td>{row.error_code}</td><td>{hostLabel(row.host)}</td>
+        <td>{fmt(row.event_count,0)}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
+        <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat pada trace' : 'Hanya konteks workload'}</td>
+      </tr>)}
+      {!rows.length && <tr><td colSpan="7">Tidak ada error dengan bukti yang cukup pada histori bulan ini. Kondisi SAP tidak otomatis dinyatakan bebas error.</td></tr>}
+    </tbody></table></div>
+    <p>{state === 'TRUNCATED' ? 'Histori yang dapat diperiksa melebihi batas proses. Jumlah dan ranking tidak dinyatakan lengkap. ' : ''}
+      Error tanpa timestamp valid tidak dihitung sebagai kejadian bulanan. Trace yang terulang dalam beberapa collector tidak dihitung berkali-kali.
+      Program yang tampil hanya sebagai konteks tidak otomatis menjadi penyebab error.</p>
+  </section>
+}
+
 export default function RundeckMonthlyReview() {
   const [month,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
   const [tab,setTab]=React.useState('overview')
@@ -178,6 +217,7 @@ export default function RundeckMonthlyReview() {
   const quality=data?.quality||{}
   const summary=data?.summary||{}
   const evidence=data?.monthly_pressure||{}
+  const errors=data?.monthly_errors||{}
   const hosts=evidence.hosts||[]
   const chosen=Object.values(selected)
   const total=Number(data?.page?.total||0)
@@ -346,6 +386,7 @@ export default function RundeckMonthlyReview() {
         <PressureEpisodes metric="ram" pressure={evidence}/>
         <PressureRows label="Jobs / Programs During CPU Pressure" evidence={evidence} metric="cpu"/>
         <PressureRows label="Jobs / Programs During RAM Pressure" evidence={evidence} metric="ram"/>
+        <MonthlyErrorAnalysis evidence={errors}/>
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
@@ -359,7 +400,8 @@ export default function RundeckMonthlyReview() {
           <div><strong>Reporting period</strong><span>{month} · Asia/Jakarta</span></div>
           <div><strong>CPU / RAM pressure</strong><span>{fmt(evidence.cpu?.episodes,0)} / {fmt(evidence.ram?.episodes,0)} observed episodes</span></div>
           <div><strong>Workload evidence</strong><span>Top 5 each pressure type · {chosen.length} selected for appendix</span></div>
-          <div><strong>Data quality</strong><span>{pct(quality.coverage_pct)} coverage · {quality.confidence||'UNKNOWN'}</span></div>
+          <div><strong>Cakupan data monitoring</strong><span>{pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'}</span></div>
+          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Belum ada bukti error':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot</span></div>
         </div>
         <h4>Optional technical appendix ({chosen.length})</h4>
         {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
@@ -373,7 +415,7 @@ export default function RundeckMonthlyReview() {
           </div>
           <iframe title="SPHERE monthly PDF preview" src={pdfUrl}/>
         </div>}
-        <p className="sphereMonthlyReportDisclaimer">Historical observation report only. Workload activity during host pressure is not proof that the workload caused SAP slowness. No external uploads or manual T-code data.</p>
+        <p className="sphereMonthlyReportDisclaimer">Laporan berdasarkan histori SPHERE. Aktivitas program pada waktu penggunaan resource tinggi merupakan bahan evaluasi, bukan keputusan penyebab gangguan.</p>
       </div>}
     </>}
   </section>
