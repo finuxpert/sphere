@@ -112,7 +112,7 @@ function PressureEpisodes({ metric, pressure }) {
         <td>{hostLabel(row.host)}</td><td>{when(row.first_at)}</td><td>{when(row.last_at)}</td>
         <td>{pct(row.peak_pct)}</td><td>{fmt(row.observed_host_checks,0)}</td>
       </tr>)}
-      {!evidence.recent_episodes?.length && <tr><td colSpan="5">No threshold exceedance in retained observations.</td></tr>}
+      {!evidence.recent_episodes?.length && <tr><td colSpan="5">{evidence.episodes === null ? "No verified host samples for this month." : "No threshold exceedance in retained observations."}</td></tr>}
       </tbody>
     </table></div>
     <p>Episode boundaries are first/last saved observations, not actual incident duration.</p>
