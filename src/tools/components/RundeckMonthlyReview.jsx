@@ -229,12 +229,13 @@ export default function RundeckMonthlyReview() {
     return ()=>controller.abort()
   },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page])
   const changeMonth=value=>{
+    pdfGenerationRef.current += 1
     setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
     setSearch('');setAppliedSearch('');setSelected({});setExpanded(null);setPdfError('')
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
   }
-  const changeFilter=(setter,value)=>{setter(value);setPage(0);setExpanded(null)}
+  const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0);setExpanded(null)}
   const items=data?.items||[]
   const quality=data?.quality||{}
   const summary=data?.summary||{}
@@ -245,6 +246,7 @@ export default function RundeckMonthlyReview() {
   const total=Number(data?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
   const selectRow=row=>{
+    pdfGenerationRef.current += 1
     // A previously previewed PDF must not survive changes to selected evidence.
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current=''
@@ -346,7 +348,7 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyTableHead">
           <div><h4>Observed Jobs & Programs</h4><small>{total} matches · Page {page+1}/{pages} · {chosen.length} selected</small></div>
           <div className="sphereMonthlyFilters">
-            <input type="search" value={search} onChange={event=>{setSearch(event.target.value);setPage(0)}}
+            <input type="search" value={search} onChange={event=>{pdfGenerationRef.current+=1;setSearch(event.target.value);setPage(0)}}
               placeholder="Search full job / program name" aria-label="Search job and program"/>
             <select aria-label="Workload type" value={kind} onChange={event=>changeFilter(setKind,event.target.value)}>
               <option value="ALL">All types</option><option value="JOB">Jobs</option><option value="PROGRAM">Programs</option>
