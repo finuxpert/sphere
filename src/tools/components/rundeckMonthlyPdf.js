@@ -9,7 +9,7 @@ const labelHost = value => {
   return app ? 'APP' + (app[1] || app[2]) : raw
 }
 const format = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
-  ? 'N/A' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
+  ? 'N/A' : Number(value).toLocaleString('id-ID', { maximumFractionDigits: digits })
 const pct = value => format(value) === 'N/A' ? 'N/A' : format(value) + '%'
 const dateWib = value => value ? new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric',
@@ -99,7 +99,7 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
     pdf.setFont('helvetica', 'normal')
     pdf.setTextColor(110, 121, 129)
     pdf.text('Tidak ada program yang terpantau bersama tekanan resource bulan ini.', x, ry + 5)
-    return
+    return ry + 8
   }
   rows.slice(0, 5).forEach(row => {
     const overlap = row.pressure_overlap || {}
@@ -118,6 +118,7 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
     pdf.setDrawColor(225, 232, 236)
     pdf.line(x, ry, x + width, ry)
   })
+  return ry
 }
 
 async function loadLogo() {
@@ -141,7 +142,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   const summary = data.summary || {}
   const hosts = pressure.hosts || []
   const trends = pressure.daily_hosts || []
-  const limited = Number(quality.coverage_pct ?? 0) < 95 || quality.confidence === 'LOW'
+  const limited = Number(quality.coverage_pct ?? 0) < 95 || quality.confidence === 'LOW' || Number(quality.partial_or_incomplete_checks || 0) > 0
   pdf.setFillColor(248, 250, 251)
   pdf.rect(0, 0, W, H, 'F')
   pdf.setFillColor(15, 21, 26)
@@ -178,9 +179,9 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   const kpis = [
     ['TEKANAN CPU', String(pressure.cpu?.episodes ?? 'N/A') + ' kejadian', 'Puncak ' + pct(pressure.cpu?.peak?.peak_pct)],
     ['TEKANAN RAM', String(pressure.ram?.episodes ?? 'N/A') + ' kejadian', 'Puncak ' + pct(pressure.ram?.peak?.peak_pct)],
-    ['OBSERVASI WP', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' observasi' : 'N/A', 'WP berstatus critical'],
+    ['CRITICAL WP TERAMATI', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' observasi' : 'N/A', 'APP-check dengan WP critical'],
     ['JOB DAN PROGRAM', format(summary.workloads, 0) + ' terpantau', format(summary.review_required, 0) + ' perlu evaluasi'],
-    ['CAKUPAN DATA', pct(quality.coverage_pct), format(quality.complete_checks, 0) + ' pemeriksaan'],
+    ['ESTIMASI CAKUPAN', pct(quality.coverage_pct), format(quality.complete_checks, 0) + ' lengkap; ' + format(quality.partial_or_incomplete_checks, 0) + ' belum'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -220,34 +221,47 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'Tren CPU  |  Puncak harian APP', margin, 91, chartW, 35, month)
   drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'Tren RAM  |  Puncak harian APP', margin + chartW + 6, 91, chartW, 35, month)
 
-  drawTopTable(pdf, 'JOB DAN PROGRAM SAAT RAM TINGGI', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
-  drawTopTable(pdf, 'JOB DAN PROGRAM SAAT CPU TINGGI', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  const ramBottom = drawTopTable(pdf, 'JOB DAN PROGRAM SAAT RAM TINGGI', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
+  const cpuBottom = drawTopTable(pdf, 'JOB DAN PROGRAM SAAT CPU TINGGI', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  let errorLineY = Math.max(183, ramBottom + 2, cpuBottom + 2)
+  if (errorLineY > H - 27) {
+    pdf.addPage()
+    pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
+    pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
+    pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
+    pdf.text('SPHERE  |  Ringkasan Evaluasi Error ABAP', margin + 4, 18)
+    errorLineY = 35
+  }
   const errorEvidence = data.monthly_errors || {}
   const errorRows = (errorEvidence.top_errors || []).filter(row => row.event_count || row.snapshot_host_checks || row.untimed_trace_checks)
   pdf.setDrawColor(215, 225, 230)
-  pdf.line(margin, 183, W - margin, 183)
+  pdf.line(margin, errorLineY, W - margin, errorLineY)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(36, 52, 62)
-  pdf.text('EVALUASI ERROR UNTUK TUNING ABAP', margin, 189)
+  pdf.text('EVALUASI ERROR UNTUK TUNING ABAP', margin, errorLineY + 6)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7)
   pdf.setTextColor(78, 98, 108)
   const errorSummary = errorEvidence.truncated
     ? 'Histori error sebagian; jumlah kejadian belum lengkap'
-    : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE' || !data.monthly_errors
-      ? 'Data error dari histori SPHERE belum tersedia'
+    : !data.monthly_errors
+      ? 'Pembacaan data error tidak tersedia pada hasil laporan'
+      : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE'
+        ? 'Tidak ditemukan kode error pada sumber histori SPHERE yang terbaca'
+      : errorEvidence.status === 'WP_SIGNALS_ONLY'
+        ? 'Ada sinyal WP RABAX atau RXMSG; bukan jumlah kejadian error terkonfirmasi'
       : errorEvidence.status === 'SNAPSHOT_ONLY'
         ? 'Ada observasi error saat snapshot; waktu kejadian belum terverifikasi'
         : errorEvidence.status === 'UNTIMED_TRACE_ONLY'
           ? 'Ada jejak error tanpa timestamp; jumlah kejadian bulanan tidak diketahui'
           : format(errorEvidence.timestamped_events, 0) + ' kejadian berwaktu dan ' +
           format(errorEvidence.snapshot_host_checks, 0) + ' observasi error saat snapshot'
-  pdf.text(errorSummary, margin, 193.6)
+  pdf.text(errorSummary, margin, errorLineY + 10.6)
   pdf.setFontSize(6.7)
   pdf.text(errorRows.length
     ? 'Rincian kode error, APP, dan program terkait tersedia pada halaman berikutnya.'
-    : 'Data tidak tersedia tidak berarti SAP bebas dari error.', margin, 198)
+    : 'Data yang tidak teramati tidak dinyatakan bebas error.', margin, errorLineY + 15)
 
   // Detailed error section is sourced only from timestamped trace evidence or
   // separately labeled WP snapshot observations. It is not a ST22 dump count.
