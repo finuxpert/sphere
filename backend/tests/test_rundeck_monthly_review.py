@@ -67,6 +67,22 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(len(episodes), 2)
         self.assertEqual([row["observed_host_checks"] for row in episodes], [1, 1])
 
+    def test_monthly_high_cpu_memory_and_recurring_signal_filters(self):
+        report = {
+            "items": [
+                {"consumer_type": "PROGRAM", "consumer_key": "CPU", "signals": {"cpu_spike": True}},
+                {"consumer_type": "PROGRAM", "consumer_key": "MEM", "signals": {"high_memory": True}},
+                {"consumer_type": "JOB", "consumer_key": "REPEAT", "signals": {"recurring": True}},
+                {"consumer_type": "PROGRAM", "consumer_key": "UNFLAGGED", "signals": {}},
+            ],
+            "summary": {"workloads": 4},
+        }
+        for flag, expected in [("HIGH_CPU", "CPU"), ("HIGH_MEMORY", "MEM"), ("RECURRING", "REPEAT")]:
+            result = _evaluation_page(report, limit=1, offset=0, query="", health="ALL", flag=flag)
+            self.assertEqual(result["page"]["total"], 1)
+            self.assertEqual(result["items"][0]["consumer_key"], expected)
+        self.assertEqual(report["summary"]["workloads"], 4)
+
     def test_monthly_pressure_filter_applies_before_server_pagination(self):
         def workload(key, cpu=0, ram=0):
             return {
