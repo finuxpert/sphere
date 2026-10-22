@@ -3,7 +3,11 @@
 import { APP_DISPLAY_VERSION } from '../../app/version.js'
 
 const HEX = [[35, 166, 183], [93, 134, 201], [155, 110, 199], [201, 142, 76], [84, 160, 123]]
-const labelHost = value => String(value || '').split('.')[0].toUpperCase()
+const labelHost = value => {
+  const raw = String(value || '').split('.')[0].toUpperCase()
+  const app = raw.match(/(?:AOPH([1-5])PAPPDC|^APP([1-5])$)/)
+  return app ? 'APP' + (app[1] || app[2]) : raw
+}
 const format = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
   ? 'N/A' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
 const pct = value => format(value) === 'N/A' ? 'N/A' : format(value) + '%'
@@ -27,7 +31,7 @@ function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month) {
   const [year, monthNum] = month.split('-').map(Number)
   const days = new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
   pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(5.6)
+  pdf.setFontSize(6.2)
   ;[0, 50, 100].forEach(level => {
     const yy = top + plotH * (1 - level / 100)
     pdf.setDrawColor(58, 74, 85)
@@ -61,7 +65,7 @@ function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month) {
       pdf.circle(xx, yy, .48, 'F')
     })
   })
-  pdf.setFontSize(5.6)
+  pdf.setFontSize(6.2)
   let lx = x + 2
   hosts.forEach((host, i) => {
     pdf.setFillColor(...HEX[i])
@@ -80,21 +84,21 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6)
   pdf.setTextColor(100, 115, 125)
-  pdf.text('Workload seen during same-APP pressure samples', x, y + 3.3)
+  pdf.text('Terpantau pada APP dan collection yang sama; bukan bukti penyebab', x, y + 3.3)
   const baseY = y + 8
   pdf.setDrawColor(215, 225, 230)
   pdf.line(x, baseY, x + width, baseY)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(6.5)
   pdf.setTextColor(56, 72, 82)
-  pdf.text('JOB / PROGRAM', x, baseY + 3.3)
-  pdf.text('HOST-CHECKS', x + width - 42, baseY + 3.3)
-  pdf.text(metric === 'ram' ? 'PSS PEAK' : 'CPU PEAK', x + width - 6, baseY + 3.3, { align: 'right' })
+  pdf.text('JOB DAN PROGRAM', x, baseY + 3.3)
+  pdf.text('OBSERVASI', x + width - 42, baseY + 3.3)
+  pdf.text(metric === 'ram' ? 'PSS PUNCAK' : 'CPU PUNCAK', x + width - 6, baseY + 3.3, { align: 'right' })
   let ry = baseY + 6
   if (!rows.length) {
     pdf.setFont('helvetica', 'normal')
     pdf.setTextColor(110, 121, 129)
-    pdf.text('No recorded pressure-workload overlap for this month.', x, ry + 5)
+    pdf.text('Tidak ada program yang terpantau bersama tekanan resource bulan ini.', x, ry + 5)
     return
   }
   rows.slice(0, 5).forEach(row => {
@@ -158,25 +162,25 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
   pdf.setTextColor(239, 247, 249)
-  pdf.text('SAP Monthly Performance & Job Impact', headerX, 18)
+  pdf.text('Laporan Evaluasi Performa SAP Bulanan', headerX, 18)
   pdf.setFillColor(limited ? 180 : 61, limited ? 124 : 132, limited ? 45 : 100)
   pdf.roundedRect(W - margin - 34, 11, 30, 9, 1, 1, 'F')
   pdf.setFontSize(7)
   pdf.setTextColor(255, 255, 255)
-  pdf.text(limited ? 'LIMITED DATA' : 'HISTORICAL', W - margin - 19, 16.7, { align: 'center' })
+  pdf.text(limited ? 'DATA TERBATAS' : 'HISTORI SAP', W - margin - 19, 16.7, { align: 'center' })
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
-  pdf.text('Reporting month ' + month + ' (WIB)  |  Source: saved SPHERE observations  |  Generated: ' + dateWib(new Date().toISOString()), margin, 29.5)
-  pdf.text('Window: ' + dateWib(data.start) + ' - ' + dateWib(data.end) + ' (exclusive end)', margin, 33.8)
+  pdf.text('Periode ' + month + ' WIB  |  Sumber: histori SPHERE  |  Dicetak: ' + dateWib(new Date().toISOString()), margin, 29.5)
+  pdf.text('Rentang data: ' + dateWib(data.start) + ' sampai sebelum ' + dateWib(data.end), margin, 33.8)
 
   const kpis = [
-    ['CPU PRESSURE', String(pressure.cpu?.episodes ?? 'N/A') + ' observed episodes', 'Peak ' + pct(pressure.cpu?.peak?.peak_pct)],
-    ['RAM PRESSURE', String(pressure.ram?.episodes ?? 'N/A') + ' observed episodes', 'Peak ' + pct(pressure.ram?.peak?.peak_pct)],
-    ['CRITICAL WP', format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' host-checks', 'Not job failures'],
-    ['JOB / PROGRAM', format(summary.workloads, 0) + ' identities', format(summary.review_required, 0) + ' review required'],
-    ['DATA COVERAGE', pct(quality.coverage_pct), format(quality.complete_checks, 0) + ' complete checks'],
+    ['TEKANAN CPU', String(pressure.cpu?.episodes ?? 'N/A') + ' kejadian', 'Puncak ' + pct(pressure.cpu?.peak?.peak_pct)],
+    ['TEKANAN RAM', String(pressure.ram?.episodes ?? 'N/A') + ' kejadian', 'Puncak ' + pct(pressure.ram?.peak?.peak_pct)],
+    ['OBSERVASI WP', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' observasi' : 'N/A', 'WP berstatus critical'],
+    ['JOB DAN PROGRAM', format(summary.workloads, 0) + ' terpantau', format(summary.review_required, 0) + ' perlu evaluasi'],
+    ['CAKUPAN DATA', pct(quality.coverage_pct), format(quality.complete_checks, 0) + ' pemeriksaan'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -195,29 +199,29 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(35, 51, 61)
-  pdf.text('SAP APP SERVER  |  Monthly observed resource profile', margin, 62)
-  const cols = [0, 48, 87, 122, 160, 198, 232]
+  pdf.text('SERVER APLIKASI SAP  |  Ringkasan resource bulanan', margin, 62)
+  const cols = [0, 40, 73, 108, 143, 182, 218, 249]
   pdf.setFontSize(6.6)
-  ;['APP', 'CPU AVG', 'CPU PEAK', 'RAM AVG', 'RAM PEAK', 'CPU HIGH', 'RAM HIGH'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
+  ;['APP', 'CPU RERATA', 'CPU PUNCAK', 'RAM RERATA', 'RAM PUNCAK', 'CPU TINGGI', 'RAM TINGGI', 'WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6.8)
   hosts.slice(0, 5).forEach((row, i) => {
     const y = 71 + i * 3.7
     const vals = [labelHost(row.host), pct(row.avg_cpu_pct), pct(row.peak_cpu_pct), pct(row.avg_ram_pct),
-      pct(row.peak_ram_pct), String(row.cpu_warning_host_checks), String(row.ram_warning_host_checks)]
+      pct(row.peak_ram_pct), String(row.cpu_warning_host_checks), String(row.ram_warning_host_checks), String(row.critical_wp_host_checks)]
     vals.forEach((v, index) => pdf.text(v, margin + cols[index], y))
   })
   if (!hosts.length) {
     pdf.setFont('helvetica', 'italic')
-    pdf.text('No historical APP host evidence in the month.', margin, 74)
+    pdf.text('Data APP belum tersedia pada periode ini.', margin, 74)
   }
 
   const chartW = (contentW - 6) / 2
-  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'Server Trend 1 - CPU  |  Daily APP peak (observed)', margin, 91, chartW, 35, month)
-  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'Server Trend 2 - RAM  |  Daily APP peak (observed)', margin + chartW + 6, 91, chartW, 35, month)
+  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'Tren CPU  |  Puncak harian APP', margin, 91, chartW, 35, month)
+  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'Tren RAM  |  Puncak harian APP', margin + chartW + 6, 91, chartW, 35, month)
 
-  drawTopTable(pdf, 'JOB / PROGRAM SAAT RAM TINGGI', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
-  drawTopTable(pdf, 'JOB / PROGRAM SAAT CPU TINGGI', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  drawTopTable(pdf, 'JOB DAN PROGRAM SAAT RAM TINGGI', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
+  drawTopTable(pdf, 'JOB DAN PROGRAM SAAT CPU TINGGI', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
   pdf.setDrawColor(215, 225, 230)
   pdf.line(margin, 191, W - margin, 191)
   pdf.setFont('helvetica', 'bold')
