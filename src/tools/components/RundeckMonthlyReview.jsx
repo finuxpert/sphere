@@ -11,6 +11,7 @@ const pct = value => fmt(value) === '—' ? '—' : fmt(value) + '%'
 const id = row => String(row.consumer_type || '') + ':' + String(row.consumer_key || '')
 const hostLabel = host => shortHost(typeof host === 'string' ? host : host?.host || '').toUpperCase()
 const hostsFor = row => (Array.isArray(row.hosts) ? row.hosts : []).map(hostLabel).filter(Boolean).join(', ')
+const pressureHostsFor = (row, metric) => (row.pressure_overlap?.[metric + '_pressure_hosts'] || []).map(hostLabel).filter(Boolean).join(', ')
 const when = value => {
   if (!value) return '—'
   const date = new Date(value)
@@ -87,7 +88,7 @@ function PressureRows({ label, evidence, metric }) {
     <div className="sphereMonthlyTableScroll">
       <table><thead><tr><th>Job / Program</th><th>APP host-checks</th><th>{metric === 'ram' ? 'Peak PSS' : 'Peak CPU'}</th></tr></thead>
         <tbody>{rows.map(row => <tr key={id(row)}>
-          <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)}</small></td>
+          <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · APP saat tekanan: {pressureHostsFor(row, metric) || '—'}</small></td>
           <td>{fmt(row.pressure_overlap?.[metric + '_pressure_host_checks'],0)}</td>
           <td>{metric === 'ram' ? fmt(row.pressure_overlap?.pss_peak_during_ram_pressure,2)+' GB'
             : pct(row.pressure_overlap?.cpu_peak_during_cpu_pressure)}</td>
@@ -130,7 +131,8 @@ function MonthlyErrorAnalysis({ evidence }) {
         <small>Histori SPHERE · Tidak menggantikan ST22 atau SM37</small>
       </div>
       <span className="sphereMonthlyErrorCounter">
-        {state === 'TRUNCATED' ? 'Data error sebagian' : state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Belum ada bukti error' :
+        {state === 'TRUNCATED' ? 'Data error sebagian' : state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Tidak ditemukan kode error' :
+        state === 'WP_SIGNALS_ONLY' ? 'Ada sinyal diagnostik WP' :
         state === 'SNAPSHOT_ONLY' ? 'Hanya observasi snapshot' :
         state === 'UNTIMED_TRACE_ONLY' ? 'Trace tanpa waktu kejadian' : fmt(errors.timestamped_events, 0) + ' kejadian berwaktu'}
       </span>
@@ -139,6 +141,7 @@ function MonthlyErrorAnalysis({ evidence }) {
       <span>Kejadian berwaktu: {state === 'TRUNCATED' ? 'Data parsial' : fmt(errors.timestamped_events, 0)}</span>
       <span>Observasi error saat snapshot: {fmt(errors.snapshot_host_checks, 0)}</span>
       <span>Kategori teridentifikasi: {fmt((errors.categories || []).length, 0)}</span>
+      <span>Sinyal RABAX dan RXMSG: {fmt(errors.wp_signal_host_checks, 0)} observasi WP</span>
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
       <th>Program terkait</th><th>Kategori</th><th>Kode Error</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
@@ -153,8 +156,19 @@ function MonthlyErrorAnalysis({ evidence }) {
         <td>{fmt(row.event_count,0)}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
         <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat pada trace' : 'Hanya konteks workload'}</td>
       </tr>)}
-      {!rows.length && <tr><td colSpan="8">Tidak ada error dengan bukti yang cukup pada histori bulan ini. Kondisi SAP tidak otomatis dinyatakan bebas error.</td></tr>}
+      {!rows.length && <tr><td colSpan="8">Belum ditemukan kode error pada sumber histori yang dapat dibaca untuk periode ini. Ini tidak membuktikan SAP bebas dari error.</td></tr>}
     </tbody></table></div>
+    {(errors.wp_diagnostics || []).length > 0 && <div className="sphereMonthlyWpDiagnostics">
+      <h4>Sinyal WP untuk investigasi ABAP</h4>
+      <small>RABAX dan RXMSG berasal dari hitungan trace collector. Bukan jumlah dump ST22 atau kejadian error terkonfirmasi.</small>
+      <div className="sphereMonthlyTableScroll"><table><thead><tr><th>Sinyal</th><th>APP</th><th>Program terkait</th><th>Pemeriksaan WP</th><th>Nilai trace tertinggi</th></tr></thead>
+        <tbody>{errors.wp_diagnostics.map((item,index)=><tr key={item.signal+item.host+item.program+index}>
+          <td>{item.signal}</td><td>{hostLabel(item.host)}</td><td className="sphereMonthlyName"><strong>{item.program}</strong>
+            <small>{item.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat eksplisit' : 'Hanya konteks workload: '+(item.sample_workload || 'tidak tersedia')}</small></td>
+          <td>{fmt(item.observed_checks,0)}</td><td>{fmt(item.peak_tail_count,0)}</td>
+        </tr>)}</tbody>
+      </table></div>
+    </div>}
     <p>{state === 'TRUNCATED' ? 'Histori yang dapat diperiksa melebihi batas proses. Jumlah dan ranking tidak dinyatakan lengkap. ' : ''}
       Error tanpa timestamp valid tidak dihitung sebagai kejadian bulanan. Trace yang terulang dalam beberapa collector tidak dihitung berkali-kali.
       Program yang tampil hanya sebagai konteks tidak otomatis menjadi penyebab error.</p>
