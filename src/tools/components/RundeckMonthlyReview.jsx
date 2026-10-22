@@ -146,7 +146,8 @@ function MonthlyErrorAnalysis({ evidence }) {
     </tr></thead><tbody>
       {rows.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
         <td className="sphereMonthlyName"><strong>{row.program || 'Belum teridentifikasi'}</strong>
-          {row.sample_workload && <small>Workload saat observasi: {row.sample_workload}</small>}</td>
+          {row.sample_workload && <small>Workload saat observasi: {row.sample_workload}</small>}
+          {row.untimed_trace_checks>0 && <small>Trace tanpa timestamp: {fmt(row.untimed_trace_checks,0)} observasi</small>}</td>
         <td>{row.category_label}</td><td>{row.error_code}</td><td>{hostLabel(row.host)}</td>
         <td>{row.snapshot_host_checks > 0 ? pct(row.cpu_snapshot_pct) + ' · ' + fmt(row.pss_snapshot_gb,2) + ' GB' : '—'}</td>
         <td>{fmt(row.event_count,0)}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
