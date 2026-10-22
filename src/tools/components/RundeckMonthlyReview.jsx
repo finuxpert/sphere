@@ -451,7 +451,7 @@ export default function RundeckMonthlyReview() {
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Monthly Performance Report</h4><small>SPHERE landscape style · CPU/RAM · Workloads · Coverage</small></div>
+          <div><h4>Monthly Performance Report</h4><small>A4 landscape · APP CPU and RAM · ABAP Tuning Candidates · Error Evidence</small></div>
           <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
             {pdfBusy?'Preparing report…':'Preview PDF'}
           </button>
@@ -464,11 +464,11 @@ export default function RundeckMonthlyReview() {
           <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
           <div><strong>ABAP Error Analysis</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Sumber error WP belum tersimpan; jumlah kejadian tidak diketahui':<>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</>}</span></div>
         </div>
-        <h4>Selected Workload Appendix ({chosen.length})</h4>
+        <h4>Optional Selected Workload Appendix ({chosen.length})</h4>
         {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
           <strong>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)||'APP not recorded'}</small>
           <button type="button" onClick={()=>selectRow(row)}>Remove</button>
-        </div>):<p>No manual selection. The one-page monthly summary still includes source-backed top CPU/RAM workloads.</p>}
+        </div>):<p>No selection required. The PDF automatically lists ABAP Tuning Candidates from Review Required workloads. Confirmed WP errors appear in a separate appendix only when source evidence is retained.</p>}
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
           <div className="sphereMonthlyPager"><small>PDF preview · Generated using current month evidence</small>
             <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Download PDF</a>
