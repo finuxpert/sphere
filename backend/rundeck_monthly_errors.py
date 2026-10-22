@@ -49,95 +49,129 @@ def parse_explicit_error_time(value: Any) -> datetime | None:
     return parsed.astimezone(timezone.utc) if parsed.tzinfo else None
 
 
+def _positive_signal(value: Any) -> bool:
+    try:
+        return float(value or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
 def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime, *, truncated: bool = False) -> dict:
-    """Aggregate candidate WP signals without converting trace rereads to new errors."""
+    """Keep explicitly dated errors, snapshot errors and untimed WP signals distinct."""
     events: set[tuple] = set()
-    categories: dict[tuple, dict] = {}
-    untimed = 0
     snapshot_checks: set[tuple] = set()
+    untimed_checks: set[tuple] = set()
+    diagnostic_checks: set[tuple] = set()
+    categories: dict[tuple, dict] = {}
+    diagnostics: dict[tuple, dict] = {}
+
     for row in rows:
-        snapshot_code = str(row.get("error_at_snapshot") or "").strip()
-        trace_code = str(row.get("latest_trace_error") or "").strip()
-        code = snapshot_code or trace_code
-        if not code or code == "?":
-            continue
         host = str(row.get("host") or "").strip().upper()
         pid = str(row.get("pid") or "").strip()
+        collection_id = str(row.get("collection_id") or "")
         explicit_program = str(row.get("error_program") or "").strip()
-        # A nearby JOB / PROGRAM observation is not proof it owns the trace.
         program = explicit_program or "Belum teridentifikasi"
+        context_workload = str(row.get("consumer_key") or "")
+        program_link = "EXPLICIT_ERROR_PROGRAM" if explicit_program else "CONTEXT_ONLY"
+
+        # RABAX and RXMSG tail counts are diagnostic evidence, NOT unique dumps
+        # or events. Never assign their snapshot date as the error event date.
+        for source_key, label in (("rabax", "RABAX"), ("rxmsg", "RXMSG")):
+            if not _positive_signal(row.get(source_key)):
+                continue
+            signal_key = (host, collection_id, pid, label)
+            diagnostic_checks.add(signal_key)
+            key = (label, host, program)
+            item = diagnostics.setdefault(key, {
+                "signal": label, "host": host, "program": program,
+                "program_link": program_link, "sample_workload": context_workload,
+                "checks": set(), "peak_tail_count": 0.0,
+            })
+            item["checks"].add((collection_id, host, pid))
+            item["peak_tail_count"] = max(item["peak_tail_count"], float(row[source_key]))
+
+        raw_code = str(row.get("error_code") or "").strip()
+        recency = str(row.get("error_recency") or "").upper().strip()
+        snapshot_code = str(row.get("error_at_snapshot") or "").strip()
+        if not snapshot_code and recency == "AT_SNAPSHOT":
+            snapshot_code = raw_code
+        trace_code = str(row.get("latest_trace_error") or raw_code).strip()
         timestamp = parse_explicit_error_time(row.get("latest_error_ts"))
-        # latest_error_ts belongs to the latest trace, not necessarily the
-        # error_at_snapshot. Never assign the trace timestamp to a different
-        # snapshot code and accidentally manufacture a verified event.
-        if snapshot_code and trace_code and snapshot_code != trace_code:
-            timestamp = None
-        category, label = classify_error(code)
-        group_key = (category, code, program, host)
-        item = categories.setdefault(group_key, {
-            "category": category, "category_label": label,
-            "error_code": code, "program": program, "host": host,
-            "events": set(), "snapshot_checks": set(), "untimed_checks": set(),
-            "first_at": None, "last_at": None,
-            "sample_workload": str(row.get("consumer_key") or ""),
-            "program_link": "EXPLICIT_ERROR_PROGRAM" if explicit_program else "CONTEXT_ONLY",
-            "cpu_snapshot_pct": None, "pss_snapshot_gb": None,
-        })
-        if row.get("error_at_snapshot"):
-            # Resource values describe the collection snapshot, not the
-            # historical time at which a retained trace error may have started.
-            for source_key, result_key in (("cpu_pct", "cpu_snapshot_pct"), ("pss_gb", "pss_snapshot_gb")):
-                try:
-                    value = float(row[source_key]) if row.get(source_key) is not None else None
-                except (TypeError, ValueError):
-                    value = None
-                if value is not None:
-                    item[result_key] = max(value, item[result_key]) if item[result_key] is not None else value
-            key = (host, str(row.get("collection_id") or ""), pid, code)
-            if key not in snapshot_checks:
-                snapshot_checks.add(key)
-            item["snapshot_checks"].add(key)
-        if timestamp is None:
-            untimed += int(row.get("collection_checks") or 1)
-            item["untimed_checks"].add((host, str(row.get("collection_id") or ""), pid, code))
-            continue
-        if not start <= timestamp < end:
-            # Historical trace from another month is not an error of this month.
-            continue
-        # Same retained trace seen in multiple collector runs counts once.
-        event_key = (host, pid, code, timestamp.isoformat())
-        events.add(event_key)
-        item["events"].add(event_key)
-        for field, fn in (("first_at", min), ("last_at", max)):
-            current = item[field]
-            item[field] = fn(current, timestamp) if current else timestamp
+
+        # Snapshot and latest trace can contain DIFFERENT error codes.
+        # Evaluate separately: a trace timestamp must never be borrowed by
+        # a different snapshot error, but the dated trace remains visible.
+        for origin, code in (("snapshot", snapshot_code), ("trace", trace_code)):
+            if not code or code == "?":
+                continue
+            category, label = classify_error(code)
+            group_key = (category, code, program, host)
+            item = categories.setdefault(group_key, {
+                "category": category, "category_label": label,
+                "error_code": code, "program": program, "host": host,
+                "events": set(), "snapshot_checks": set(), "untimed_checks": set(),
+                "first_at": None, "last_at": None,
+                "sample_workload": context_workload,
+                "program_link": program_link,
+                "cpu_snapshot_pct": None, "pss_snapshot_gb": None,
+            })
+            signal_key = (host, collection_id, pid, code)
+            if origin == "snapshot":
+                snapshot_checks.add(signal_key)
+                item["snapshot_checks"].add(signal_key)
+                for source_key, target_key in (("cpu_pct", "cpu_snapshot_pct"), ("pss_gb", "pss_snapshot_gb")):
+                    try:
+                        value = float(row[source_key]) if row.get(source_key) is not None else None
+                    except (TypeError, ValueError):
+                        value = None
+                    if value is not None:
+                        prior = item[target_key]
+                        item[target_key] = max(value, prior) if prior is not None else value
+                continue
+            if timestamp is None:
+                untimed_checks.add(signal_key)
+                item["untimed_checks"].add(signal_key)
+                continue
+            if start <= timestamp < end:
+                event_key = (host, pid, code, timestamp.isoformat())
+                events.add(event_key)
+                item["events"].add(event_key)
+                for field, fn in (("first_at", min), ("last_at", max)):
+                    prior = item[field]
+                    item[field] = fn(prior, timestamp) if prior else timestamp
+
     result = []
     for item in categories.values():
         count = len(item["events"])
         observed = len(item["snapshot_checks"])
-        untimed_checks = len(item["untimed_checks"])
-        # An untimed trace stays visible as a signal for ABAP investigation.
-        if not count and not observed and not untimed_checks:
+        untimed_count = len(item["untimed_checks"])
+        if not (count or observed or untimed_count):
             continue
         result.append({
             **{key: value for key, value in item.items() if key not in {"events", "snapshot_checks", "untimed_checks"}},
             "event_count": count,
             "snapshot_host_checks": observed,
-            "untimed_trace_checks": untimed_checks,
-            "first_at": item["first_at"],
-            "last_at": item["last_at"],
+            "untimed_trace_checks": untimed_count,
         })
     result.sort(key=lambda row: (-row["event_count"], -row["snapshot_host_checks"], row["error_code"], row["program"]))
     count_by_category: dict[str, int] = defaultdict(int)
     for item in result:
         count_by_category[item["category_label"]] += item["event_count"]
+    diagnostic_rows = [{
+        **{key: value for key, value in item.items() if key != "checks"},
+        "observed_checks": len(item["checks"]),
+    } for item in diagnostics.values()]
+    diagnostic_rows.sort(key=lambda item: (-item["observed_checks"], item["signal"], item["host"], item["program"]))
     return {
         "status": ("TRUNCATED" if truncated else "TIMESTAMPED_TRACE" if events
                    else "SNAPSHOT_ONLY" if snapshot_checks
-                   else "UNTIMED_TRACE_ONLY" if untimed else "NO_RETAINED_ERROR_EVIDENCE"),
+                   else "UNTIMED_TRACE_ONLY" if untimed_checks
+                   else "WP_SIGNALS_ONLY" if diagnostic_checks else "NO_RETAINED_ERROR_EVIDENCE"),
         "timestamped_events": len(events),
         "snapshot_host_checks": len(snapshot_checks),
-        "untimed_trace_observations": untimed,
+        "untimed_trace_observations": len(untimed_checks),
+        "wp_signal_host_checks": len(diagnostic_checks),
+        "wp_diagnostics": diagnostic_rows[:20],
         "groups": len(result),
         "top_errors": result[:20],
         "categories": [
@@ -149,43 +183,56 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         "definition": (
             "Timestamped events are unique host/PID/error/timestamp combinations. "
             "Error at Snapshot is a collector observation, not a confirmed dump. "
+            "RABAX and RXMSG are diagnostic tail signals, not incident counts. "
             "Missing event time is not included in monthly event counts."
         ),
     }
 
 
 def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, complete_clause: str) -> dict:
-    """Only query normalized, retained and complete in-month SPHERE observations."""
+    """Read complete SPHERE collections, including legacy scalar WP error details."""
     rows = [dict(row) for row in conn.execute(text(f"""
         SELECT tc.collection_id, tc.host, tc.consumer_type, tc.consumer_key,
                signal.value->>'pid' AS pid,
                signal.value->>'error_at_snapshot' AS error_at_snapshot,
                signal.value->>'latest_trace_error' AS latest_trace_error,
+               signal.value->>'error_code' AS error_code,
                signal.value->>'error_program' AS error_program,
                signal.value->>'error_recency' AS error_recency,
                signal.value->>'latest_error_ts' AS latest_error_ts,
+               COALESCE(signal.value->>'rabax', signal.value->>'rabax_tail_count') AS rabax,
+               COALESCE(signal.value->>'rxmsg', signal.value->>'rxmsg_tail_count') AS rxmsg,
                MAX(tc.cpu_pct) AS cpu_pct,
-               MAX(NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision) AS pss_gb,
-               COUNT(DISTINCT tc.collection_id) AS collection_checks
+               MAX(NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision) AS pss_gb
           FROM {source} tc
           JOIN rundeck_collections c ON c.collection_id = tc.collection_id
           CROSS JOIN LATERAL jsonb_array_elements(
-            CASE WHEN jsonb_typeof(tc.details->'wp_signals') = 'array'
-                 THEN tc.details->'wp_signals' ELSE '[]'::jsonb END
+              CASE WHEN jsonb_typeof(tc.details->'wp_signals') = 'array'
+                   THEN CASE WHEN jsonb_array_length(tc.details->'wp_signals') > 0
+                             THEN tc.details->'wp_signals'
+                             ELSE jsonb_build_array(tc.details) END
+                   WHEN jsonb_typeof(tc.details) = 'object' THEN jsonb_build_array(tc.details)
+                   ELSE '[]'::jsonb END
           ) AS signal(value)
          WHERE {complete_clause}
            AND COALESCE(c.finished_at, c.started_at) >= :start
            AND COALESCE(c.finished_at, c.started_at) < :end
            AND tc.collected_at >= :start AND tc.collected_at < :end
-           AND tc.consumer_type IN ('JOB', 'PROGRAM')
+           AND tc.consumer_type IN ('JOB', 'PROGRAM', 'PROCESS')
            AND (
-             NULLIF(signal.value->>'error_at_snapshot', '') IS NOT NULL
-             OR NULLIF(signal.value->>'latest_trace_error', '') IS NOT NULL
+                NULLIF(signal.value->>'error_at_snapshot', '') IS NOT NULL
+                OR NULLIF(signal.value->>'latest_trace_error', '') IS NOT NULL
+                OR NULLIF(signal.value->>'error_code', '') IS NOT NULL
+                OR COALESCE(signal.value->>'rabax', signal.value->>'rabax_tail_count', '0') ~ '^[0-9]*[1-9][0-9]*$'
+                OR COALESCE(signal.value->>'rxmsg', signal.value->>'rxmsg_tail_count', '0') ~ '^[0-9]*[1-9][0-9]*$'
            )
          GROUP BY tc.collection_id, tc.host, tc.consumer_type, tc.consumer_key,
                   signal.value->>'pid', signal.value->>'error_at_snapshot',
-                  signal.value->>'latest_trace_error', signal.value->>'error_program',
-                  signal.value->>'error_recency', signal.value->>'latest_error_ts'
+                  signal.value->>'latest_trace_error', signal.value->>'error_code',
+                  signal.value->>'error_program', signal.value->>'error_recency',
+                  signal.value->>'latest_error_ts',
+                  COALESCE(signal.value->>'rabax', signal.value->>'rabax_tail_count'),
+                  COALESCE(signal.value->>'rxmsg', signal.value->>'rxmsg_tail_count')
          ORDER BY tc.host, tc.consumer_key
          LIMIT :max_groups
     """), {"start": start, "end": end, "max_groups": MAX_ERROR_GROUPS + 1}).mappings().all()]
