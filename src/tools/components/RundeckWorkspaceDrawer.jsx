@@ -54,7 +54,7 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
 
     const trapFocus = (event) => {
       if (event.key !== 'Tab' || !drawerRef.current) return
-      const focusable = [...drawerRef.current.querySelectorAll('button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex="-1"])')]
+      const focusable = [...drawerRef.current.querySelectorAll('button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')]
         .filter((element) => element.getClientRects().length > 0)
       if (!focusable.length) {
         event.preventDefault()
