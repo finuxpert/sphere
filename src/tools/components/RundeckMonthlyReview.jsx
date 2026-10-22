@@ -140,17 +140,18 @@ function MonthlyErrorAnalysis({ evidence }) {
       <span>Kategori teridentifikasi: {fmt((errors.categories || []).length, 0)}</span>
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
-      <th>Program terkait</th><th>Kategori</th><th>Kode Error</th><th>APP</th>
+      <th>Program terkait</th><th>Kategori</th><th>Kode Error</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
       <th>Kejadian berwaktu</th><th>Observasi snapshot</th><th>Hubungan program</th>
     </tr></thead><tbody>
       {rows.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
         <td className="sphereMonthlyName"><strong>{row.program || 'Belum teridentifikasi'}</strong>
           {row.sample_workload && <small>Workload saat observasi: {row.sample_workload}</small>}</td>
         <td>{row.category_label}</td><td>{row.error_code}</td><td>{hostLabel(row.host)}</td>
+        <td>{row.snapshot_host_checks > 0 ? pct(row.cpu_snapshot_pct) + ' · ' + fmt(row.pss_snapshot_gb,2) + ' GB' : '—'}</td>
         <td>{fmt(row.event_count,0)}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
         <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat pada trace' : 'Hanya konteks workload'}</td>
       </tr>)}
-      {!rows.length && <tr><td colSpan="7">Tidak ada error dengan bukti yang cukup pada histori bulan ini. Kondisi SAP tidak otomatis dinyatakan bebas error.</td></tr>}
+      {!rows.length && <tr><td colSpan="8">Tidak ada error dengan bukti yang cukup pada histori bulan ini. Kondisi SAP tidak otomatis dinyatakan bebas error.</td></tr>}
     </tbody></table></div>
     <p>{state === 'TRUNCATED' ? 'Histori yang dapat diperiksa melebihi batas proses. Jumlah dan ranking tidak dinyatakan lengkap. ' : ''}
       Error tanpa timestamp valid tidak dihitung sebagai kejadian bulanan. Trace yang terulang dalam beberapa collector tidak dihitung berkali-kali.
