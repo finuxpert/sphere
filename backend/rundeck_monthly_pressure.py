@@ -123,20 +123,23 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "host": host, "complete_host_checks": 0,
             "cpu_values": [], "ram_values": [], "critical_wp_host_checks": 0,
             "cpu_warning_host_checks": 0, "ram_warning_host_checks": 0,
+            "_seen_check_ids": set(), "_critical_check_ids": set(),
+            "_cpu_warning_ids": set(), "_ram_warning_ids": set(),
         })
-        values["complete_host_checks"] += 1
+        check_id = str(row["collection_id"])
+        values["_seen_check_ids"].add(check_id)
         if row.get("cpu_pct") is not None:
             cpu = float(row["cpu_pct"])
             values["cpu_values"].append(cpu)
             if cpu >= CPU_WARNING:
-                values["cpu_warning_host_checks"] += 1
+                values["_cpu_warning_ids"].add(check_id)
         if row.get("ram_pct") is not None:
             ram = float(row["ram_pct"])
             values["ram_values"].append(ram)
             if ram >= RAM_WARNING:
-                values["ram_warning_host_checks"] += 1
+                values["_ram_warning_ids"].add(check_id)
         if row.get("wp_critical") is not None and row["wp_critical"] > 0:
-            values["critical_wp_host_checks"] += 1
+            values["_critical_check_ids"].add(check_id)
 
     # Daily APP-host peak/average (not global daily averages). Missing days stay absent.
     host_days: dict[tuple[str, str], dict] = {}
@@ -164,6 +167,10 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
 
     host_summary = []
     for values in hosts.values():
+        values["complete_host_checks"] = len(values.pop("_seen_check_ids"))
+        values["critical_wp_host_checks"] = len(values.pop("_critical_check_ids"))
+        values["cpu_warning_host_checks"] = len(values.pop("_cpu_warning_ids"))
+        values["ram_warning_host_checks"] = len(values.pop("_ram_warning_ids"))
         cpu, ram = values.pop("cpu_values"), values.pop("ram_values")
         values.update({
             "avg_cpu_pct": _rounded(sum(cpu) / len(cpu)) if cpu else None,
