@@ -313,10 +313,11 @@ export async function buildMonthlyPdf({ month, data, selections }) {
         ? 'Snapshot CPU ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
         : row.untimed_trace_checks > 0 ? 'Untimed trace: ' + format(row.untimed_trace_checks, 0) + ' observations' : ''
       const provenance = row.program_link === 'EXPLICIT_ERROR_PROGRAM'
-        ? 'Explicit program in WP trace' : 'Workload context only; not causation'
+        ? 'Explicit error program in WP trace' : 'Workload context only; not causation'
+      const workloadContext = row.sample_workload ? 'Observed Job/Program: ' + row.sample_workload : ''
       const timing = row.first_at
         ? 'First ' + dateWib(row.first_at) + '; last ' + dateWib(row.last_at) : ''
-      const detailLines = pdf.splitTextToSize([provenance, timing, resource].filter(Boolean).join(' | '), 88)
+      const detailLines = pdf.splitTextToSize([provenance, workloadContext, timing, resource].filter(Boolean).join(' | '), 88)
       const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length + detailLines.length) + 1.8)
       if (ey + rowH > H - 17) {
         pdf.addPage()
@@ -351,6 +352,72 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.setFontSize(6.6)
     pdf.text('Event: unique APP, PID, error code and explicit event timestamp; not an ST22 dump total.', margin, ey + 5)
     pdf.text('Snapshot: error signal when collected. A workload context is not proof of the failing ABAP program.', margin, ey + 9)
+  }
+
+  // Automatically include source-backed tuning candidates. These entries are
+  // observed workloads selected for review, NEVER confirmed ABAP errors.
+  if (tuningCandidates.length) {
+    let ty = 48
+    const tuningHeader = (continued = false) => {
+      pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
+      pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
+      pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
+      pdf.text('SPHERE  |  ABAP Tuning Candidates' + (continued ? ' (cont.)' : ''), margin + 4, 18)
+      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
+      pdf.text('Period ' + month + ' WIB  |  Review Required workloads from SPHERE history', margin, 30)
+      pdf.setFontSize(6.5)
+      pdf.text('Performance investigation only; no confirmed Job failure, ST22 dump or root-cause attribution.', margin, 35)
+      pdf.setFont('helvetica', 'bold');pdf.setFontSize(6.6);pdf.setTextColor(47, 64, 76)
+      pdf.text('JOB / PROGRAM', margin + 2, 42)
+      pdf.text('CPU AVG / PEAK', margin + 160, 42, {align:'right'})
+      pdf.text('PSS AVG / PEAK', margin + 211, 42, {align:'right'})
+      pdf.text('CHECKS', margin + 238, 42, {align:'right'})
+      pdf.text('CPU / RAM', margin + 279, 42, {align:'right'})
+      pdf.setDrawColor(204, 216, 224);pdf.line(margin, 44, W - margin, 44)
+      ty = 48
+    }
+    pdf.addPage()
+    tuningHeader()
+    tuningCandidates.forEach((row, index) => {
+      const names = pdf.splitTextToSize(
+        (index + 1) + '. ' + String(row.consumer_key || 'UNKNOWN') + ' [' + String(row.consumer_type || 'WORKLOAD') + ']',
+        119,
+      )
+      const observedApps = (row.hosts || []).map(labelHost).join(', ') || 'N/A'
+      const cpuApps = (row.cpu_pressure_hosts || []).map(labelHost).join(', ') || 'none'
+      const ramApps = (row.ram_pressure_hosts || []).map(labelHost).join(', ') || 'none'
+      const signals = [
+        row.signals?.sustained_high_cpu && 'High CPU',
+        row.signals?.high_memory && 'High PSS',
+        row.signals?.cpu_spike && 'CPU spike',
+        row.signals?.baseline_anomaly && 'Above baseline',
+      ].filter(Boolean).join(', ') || 'Review Required'
+      const detail = pdf.splitTextToSize(
+        'Observed APP: ' + observedApps +
+        '  |  CPU pressure APP: ' + cpuApps +
+        '  |  RAM pressure APP: ' + ramApps +
+        '  |  Review signals: ' + signals +
+        '  |  Confidence: ' + String(row.confidence || 'UNKNOWN'),
+        contentW - 5,
+      )
+      const rowH = names.length * 3.25 + detail.length * 3.0 + 4.4
+      if (ty + rowH > H - 16) {
+        pdf.addPage()
+        tuningHeader(true)
+      }
+      pdf.setFont('helvetica','bold');pdf.setFontSize(7);pdf.setTextColor(34, 49, 59)
+      pdf.text(names, margin + 2, ty + 2.5)
+      pdf.setFont('helvetica','normal');pdf.setFontSize(6.6)
+      pdf.text(pct(row.avg_cpu_pct) + ' / ' + pct(row.peak_cpu_pct), margin + 160, ty + 2.5, {align:'right'})
+      pdf.text(format(row.avg_pss_gb,2) + ' / ' + format(row.peak_pss_gb,2) + ' GB', margin + 211, ty + 2.5, {align:'right'})
+      pdf.text(format(row.occurrences,0), margin + 238, ty + 2.5, {align:'right'})
+      pdf.text(format(row.cpu_pressure_host_checks,0) + ' / ' +
+        format(row.ram_pressure_host_checks,0), margin + 279, ty + 2.5, {align:'right'})
+      pdf.setFontSize(6.3);pdf.setTextColor(92, 108, 118)
+      pdf.text(detail, margin + 2, ty + names.length * 3.25 + 2)
+      ty += rowH
+      pdf.setDrawColor(224, 232, 236);pdf.line(margin, ty, W - margin, ty)
+    })
   }
 
   // RABAX/RXMSG are WP diagnostics, not ST22 dump counts. Detail appears
