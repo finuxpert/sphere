@@ -303,7 +303,12 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       const resource = row.snapshot_host_checks > 0 && (row.cpu_snapshot_pct !== null || row.pss_snapshot_gb !== null)
         ? 'CPU saat snapshot ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
         : row.untimed_trace_checks > 0 ? 'Jejak error tanpa waktu: ' + format(row.untimed_trace_checks, 0) + ' observasi' : ''
-      const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length) + 1.8 + (resource ? 3.3 : 0))
+      const provenance = row.program_link === 'EXPLICIT_ERROR_PROGRAM'
+        ? 'Program tercatat eksplisit pada trace' : 'Workload hanya konteks, bukan bukti penyebab'
+      const timing = row.first_at
+        ? 'Pertama ' + dateWib(row.first_at) + '; terakhir ' + dateWib(row.last_at) : ''
+      const detailLines = pdf.splitTextToSize([provenance, timing, resource].filter(Boolean).join(' | '), 88)
+      const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length + detailLines.length) + 1.8)
       if (ey + rowH > H - 17) {
         pdf.addPage()
         header(true)
@@ -314,10 +319,10 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.text(cat, margin, ey + 3)
       pdf.text(code, margin + 40, ey + 3)
       pdf.text(program, margin + 106, ey + 3)
-      if (resource) {
+      if (detailLines.length) {
         pdf.setFontSize(6)
         pdf.setTextColor(100, 116, 125)
-        pdf.text(resource, margin + 106, ey + 3 + 3.3 * program.length)
+        pdf.text(detailLines, margin + 106, ey + 3 + 3.3 * program.length)
         pdf.setFontSize(7)
         pdf.setTextColor(34, 49, 59)
       }
