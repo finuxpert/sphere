@@ -240,3 +240,29 @@
     gap:3px!important;
   }
 }
+
+.sphereMonthlyReview button.sphereMonthlyJobDetailToggle{
+  display:block;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  text-align:left;
+  padding:0;
+  margin:0;
+  font-weight:700;
+  line-height:1.5;
+  font-size:11px;
+  width:100%;
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+.sphereMonthlyReview button.sphereMonthlyJobDetailToggle:hover:not(:disabled){
+  color:#7ed4df;
+  background:transparent;
+  border:0;
+  text-decoration:underline;
+}
+.sphereMonthlyEvidenceDetail td{background:#102733!important}
+.sphereMonthlyEvidenceDetail td>div{display:grid;gap:6px;min-width:0}
+.sphereMonthlyEvidenceDetail strong{font-size:12px}
+.sphereMonthlyEvidenceDetail span{font-size:11px;color:var(--mr-muted);overflow-wrap:anywhere}
