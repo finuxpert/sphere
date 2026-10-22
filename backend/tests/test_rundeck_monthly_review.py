@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 import unittest
 
-from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page
+from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page, _monthly_abap_tuning_candidates
 from backend.rundeck_monthly_pressure import detect_pressure_episodes, monthly_pressure_observations
 from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time
 
@@ -187,6 +187,30 @@ class CalendarMonthReviewTests(unittest.TestCase):
 
 
 
+
+    def test_abap_candidates_do_not_invent_error_evidence(self):
+        rows = [
+            {"consumer_type": "JOB", "consumer_key": "Z_BATCH_A",
+             "status": "REVIEW REQUIRED", "occurrences": 20, "hosts": ["APP1"],
+             "avg_cpu_pct": 125.4, "peak_cpu_pct": 270.0,
+             "avg_pss_gb": 1.2, "peak_pss_gb": 3.8, "overall_confidence": "MEDIUM",
+             "signals": {"sustained_high_cpu": True},
+             "pressure_overlap": {"cpu_pressure_host_checks": 2,
+                                  "cpu_pressure_hosts": ["APP1"]}},
+            {"consumer_type": "PROGRAM", "consumer_key": "Z_REPORT_B",
+             "status": "REVIEW REQUIRED", "occurrences": 5,
+             "signals": {"high_memory": True}},
+            {"consumer_type": "PROGRAM", "consumer_key": "Z_OK",
+             "status": "NORMAL", "occurrences": 10},
+        ]
+        results = _monthly_abap_tuning_candidates(rows)
+        self.assertEqual([row["consumer_key"] for row in results],
+                         ["Z_BATCH_A", "Z_REPORT_B"])
+        self.assertEqual(results[0]["cpu_pressure_hosts"], ["APP1"])
+        self.assertEqual(results[0]["error_attribution"], "NOT_ESTABLISHED")
+        self.assertEqual(results[0]["avg_cpu_pct"], 125.4)
+        self.assertEqual(results[1]["error_attribution"], "NOT_ESTABLISHED")
+        self.assertEqual(len(_monthly_abap_tuning_candidates(rows, limit=1)), 1)
 
     def test_monthly_type_filter_does_not_change_official_summary(self):
         report = {
