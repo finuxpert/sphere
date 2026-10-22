@@ -738,6 +738,8 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
 def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None) -> dict:
     """Serialize cold full-population computations; cached pages use the same source anchor."""
     with _EVALUATION_COMPUTE_LOCK:
+        if month is None:
+            return _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
         return _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month)
 
 
