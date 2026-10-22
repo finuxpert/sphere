@@ -366,7 +366,7 @@ def _workload_source_relation(conn) -> tuple[str, str]:
         SELECT tc.collection_id, tc.collected_at, tc.host, tc.consumer_type, tc.consumer_key,
                tc.rank, tc.cpu_pct, tc.ram_pct, tc.details
           FROM rundeck_top_consumers tc
-         WHERE tc.consumer_type IN ('JOB', 'PROGRAM')
+         WHERE tc.consumer_type IN ('JOB', 'PROGRAM', 'PROCESS')
            AND NOT EXISTS (
                SELECT 1
                  FROM rundeck_workload_observations wo
@@ -575,6 +575,8 @@ def _collection_quality(conn, start: datetime, end: datetime) -> dict:
         "partial_or_incomplete_checks": len(partial),
         "expected_checks": expected_checks,
         "coverage_pct": coverage_pct,
+        "coverage_method": "ESTIMATED_FROM_OBSERVED_MEDIAN_CADENCE_AND_MONTH_SPAN",
+        "expected_checks_is_estimate": True,
         "observed_span_hours": round(observed_span_seconds / 3600.0, 1),
         "window_hours": round(window_seconds / 3600.0, 1),
         "cadence_minutes": round(cadence_seconds / 60.0, 1) if cadence_seconds else None,
@@ -639,7 +641,7 @@ def _calendar_month_collection_anchor(conn, start: datetime, end: datetime) -> s
     return value.isoformat() if value is not None else "NO_COMPLETE_COLLECTION"
 
 
-def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str, pressure: str = "ALL", flag: str = "ALL") -> dict:
+def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str, pressure: str = "ALL", flag: str = "ALL", consumer_type: str = "ALL") -> dict:
     """Filter the FULL evaluated population, then slice; leave all-population summary intact."""
     normalized_query = query.strip().casefold()
     group = health.upper().strip()
@@ -670,7 +672,8 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
 
     matching = [
         row for row in full
-        if (group == "ALL" or _evaluation_health(row) == group)
+        if (consumer_type == "ALL" or row.get("consumer_type") == consumer_type)
+        and (group == "ALL" or _evaluation_health(row) == group)
         and (pressure_key == "ALL" or (
             pressure_key == "CPU" and row.get("pressure_overlap", {}).get("cpu_pressure_host_checks", 0) > 0
         ) or (
@@ -692,6 +695,7 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
     ]
     return {
         **report,
+        "type": consumer_type if report.get("period") == "month" else report.get("type"),
         "items": matching[offset:offset + limit],
         "page": {
             "offset": offset, "limit": limit,
@@ -797,6 +801,12 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     if type_key not in {"ALL", "JOB", "PROGRAM"}:
         raise ValueError("type must be ALL, JOB or PROGRAM")
 
+    requested_type_key = type_key
+    # Monthly data quality, pressure rankings and official report always use the
+    # full population. Type-specific browsing is applied only at paging time.
+    if period_key == "month":
+        type_key = "ALL"
+
     limit_key = max(1, min(int(limit), 100))
     offset_key = int(offset)
     query_key = str(query or '').strip()
@@ -828,7 +838,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         if cached:
             page = _evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key,
                                     pressure=pressure if period_key == "month" else "ALL",
-                                    flag=flag if period_key == "month" else "ALL")
+                                    flag=flag if period_key == "month" else "ALL", consumer_type=requested_type_key)
             return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
         current_quality = _collection_quality(conn, start, end)
         previous_quality = _collection_quality(conn, previous_start, start)
@@ -1030,5 +1040,5 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     _cache_put(cache_key, result)
     return _runtime_payload(_evaluation_page(result, limit=limit_key, offset=offset_key, query=query_key,
                                              health=health_key, pressure=pressure if period_key == "month" else "ALL",
-                                             flag=flag if period_key == "month" else "ALL"),
+                                             flag=flag if period_key == "month" else "ALL", consumer_type=requested_type_key),
                             cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)
