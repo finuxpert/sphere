@@ -239,7 +239,9 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       ? 'Data error dari histori SPHERE belum tersedia'
       : errorEvidence.status === 'SNAPSHOT_ONLY'
         ? 'Ada observasi error saat snapshot; waktu kejadian belum terverifikasi'
-        : format(errorEvidence.timestamped_events, 0) + ' kejadian berwaktu dan ' +
+        : errorEvidence.status === 'UNTIMED_TRACE_ONLY'
+          ? 'Ada jejak error tanpa timestamp; jumlah kejadian bulanan tidak diketahui'
+          : format(errorEvidence.timestamped_events, 0) + ' kejadian berwaktu dan ' +
           format(errorEvidence.snapshot_host_checks, 0) + ' observasi error saat snapshot'
   pdf.text(errorSummary, margin, 193.6)
   pdf.setFontSize(6.7)
