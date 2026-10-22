@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import unittest
 
 from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page
-from backend.rundeck_monthly_pressure import detect_pressure_episodes
+from backend.rundeck_monthly_pressure import detect_pressure_episodes, monthly_pressure_observations
 from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time
 
 
@@ -237,6 +237,49 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(result["timestamped_events"], 0)
         self.assertEqual(result["snapshot_host_checks"], 1)
         self.assertEqual(result["untimed_trace_observations"], 1)
+
+
+
+    def test_duplicate_host_metrics_are_one_critical_wp_host_check(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        times = [
+            datetime(2026, 9, 10, 10, 0, tzinfo=timezone.utc),
+            datetime(2026, 9, 10, 10, 1, tzinfo=timezone.utc),
+        ]
+        samples = [
+            {"collection_id": "run-one", "host": "APP1", "collected_at": at,
+             "cpu_pct": 80, "ram_pct": 85, "wp_critical": 2}
+            for at in times
+        ]
+
+        class FakeResult:
+            def __init__(self, rows):
+                self.rows = rows
+
+            def mappings(self):
+                return self
+
+            def all(self):
+                return self.rows
+
+        class FakeConn:
+            def execute(self, statement, parameters):
+                if "SELECT hm.collection_id" in str(statement):
+                    return FakeResult(samples)
+                self.assert_no_extra = True
+                return FakeResult([])
+
+        report = monthly_pressure_observations(
+            FakeConn(), start, end, "rundeck_top_consumers", "c.status = 'READY'"
+        )
+        host = report["hosts"][0]
+        self.assertEqual(host["critical_wp_host_checks"], 1)
+        self.assertEqual(host["cpu_warning_host_checks"], 1)
+        self.assertEqual(host["ram_warning_host_checks"], 1)
+        self.assertEqual(host["complete_host_checks"], 1)
+        self.assertEqual(report["cpu"]["episodes"], 1)
+        self.assertEqual(report["ram"]["episodes"], 1)
 
 
 if __name__ == "__main__":
