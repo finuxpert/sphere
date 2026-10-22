@@ -20,6 +20,7 @@ from sqlalchemy import text
 from backend.db.session import get_engine
 from backend.rundeck_consumers import TOP_CONSUMERS_PER_HOST
 from backend.rundeck_monthly_pressure import monthly_pressure_observations
+from backend.rundeck_monthly_errors import monthly_error_evidence
 
 PERIOD_DAYS = {"1d": 1, "7d": 7, "30d": 30}
 CPU_HIGH_AVG = float(os.getenv("SPHERE_EVAL_CPU_HIGH_AVG_PCT", "70"))
@@ -840,6 +841,9 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         monthly_pressure = (monthly_pressure_observations(
             conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
         ) if period_key == "month" else None)
+        monthly_errors = (monthly_error_evidence(
+            conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
+        ) if period_key == "month" else None)
 
     current_checks = int(current_quality["complete_checks"])
     previous_checks = int(previous_quality["complete_checks"])
@@ -993,6 +997,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         "sampling": sampling,
         "daily_host_trend": monthly_daily,
         "monthly_pressure": monthly_pressure,
+        "monthly_errors": monthly_errors,
         "baseline": {
             "days": HISTORICAL_BASELINE_DAYS,
             "min_observations": HISTORICAL_BASELINE_MIN_OBSERVATIONS,
