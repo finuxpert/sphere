@@ -16,6 +16,12 @@ const dateWib = value => value ? new Intl.DateTimeFormat('en-GB', {
   hour: '2-digit', minute: '2-digit', hour12: false,
 }).format(new Date(value)) + ' WIB' : 'Not observed'
 
+const errorCategoryLabel = (category, fallback) => ({
+  MEMORY: 'Memory', LOCK: 'Lock / Deadlock', DATABASE: 'Database',
+  RUNTIME: 'Runtime / Timeout', RFC: 'RFC / Network',
+  APPLICATION: 'ABAP Application', ABAP_DATA: 'ABAP Data', OTHER: 'Other',
+})[category] || fallback || 'Other'
+
 function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month) {
   pdf.setFont('helvetica', 'bold')
   pdf.setTextColor(22, 35, 43)
@@ -203,7 +209,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.text('SAP APP SERVERS  |  MONTHLY HOST RESOURCE SUMMARY', margin, 62)
   const cols = [0, 40, 73, 108, 143, 182, 218, 249]
   pdf.setFontSize(6.6)
-  ;['APP', 'CPU RERATA', 'PEAK CPU', 'RAM RERATA', 'RAM PUNCAK', 'CPU TINGGI', 'RAM TINGGI', 'WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
+  ;['APP', 'AVG CPU', 'PEAK CPU', 'AVG RAM', 'PEAK RAM', 'CPU HIGH', 'RAM HIGH', 'CRITICAL WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6.8)
   hosts.slice(0, 5).forEach((row, i) => {
@@ -232,6 +238,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.text('SPHERE  |  ABAP ERROR REVIEW', margin + 4, 18)
     errorLineY = 35
   }
+  const tuningCandidates = data.monthly_abap_candidates || []
   const errorEvidence = data.monthly_errors || {}
   const errorRows = (errorEvidence.top_errors || []).filter(row => row.event_count || row.snapshot_host_checks || row.untimed_trace_checks)
   pdf.setDrawColor(215, 225, 230)
@@ -244,26 +251,28 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFontSize(7)
   pdf.setTextColor(78, 98, 108)
   const errorSummary = errorEvidence.truncated
-    ? 'Histori error sebagian; jumlah kejadian belum lengkap'
-    : !data.monthly_errors
-      ? 'Pembacaan data error tidak tersedia pada hasil laporan'
-      : errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
-        ? 'Kolom evidence error WP tidak tersimpan pada histori yang terbaca'
+    ? 'Error history is partial; event totals cannot be confirmed'
+    : !data.monthly_errors || errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
+      ? 'WP error evidence not retained for this period; verified error count unavailable'
       : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE'
-        ? 'Tidak ditemukan kode error pada sumber histori SPHERE yang terbaca'
-      : errorEvidence.status === 'WP_SIGNALS_ONLY'
-        ? 'Ada sinyal WP RABAX atau RXMSG; bukan jumlah kejadian error terkonfirmasi'
-      : errorEvidence.status === 'SNAPSHOT_ONLY'
-        ? 'Ada observasi error saat snapshot; waktu kejadian belum terverifikasi'
-        : errorEvidence.status === 'UNTIMED_TRACE_ONLY'
-          ? 'Ada jejak error tanpa timestamp; jumlah kejadian bulanan tidak diketahui'
-          : format(errorEvidence.timestamped_events, 0) + ' kejadian berwaktu dan ' +
-          format(errorEvidence.snapshot_host_checks, 0) + ' observasi error saat snapshot'
+        ? 'No error code found in retained SPHERE WP evidence; coverage is limited'
+        : errorEvidence.status === 'WP_SIGNALS_ONLY'
+          ? 'RABAX/RXMSG diagnostic signals found; not confirmed ST22 dump events'
+          : errorEvidence.status === 'SNAPSHOT_ONLY'
+            ? 'WP errors observed at snapshot; exact event time is not confirmed'
+            : errorEvidence.status === 'UNTIMED_TRACE_ONLY'
+              ? 'Untimed WP trace found; monthly error event count remains unknown'
+              : format(errorEvidence.timestamped_events, 0) + ' timestamped error events; ' +
+                format(errorEvidence.snapshot_host_checks, 0) + ' snapshot error observations'
   pdf.text(errorSummary, margin, errorLineY + 10.6)
   pdf.setFontSize(6.7)
-  pdf.text(errorRows.length
-    ? 'Rincian kode error, APP, dan program terkait tersedia pada halaman berikutnya.'
-    : 'Data yang tidak teramati tidak dinyatakan bebas error.', margin, errorLineY + 15)
+  const tuningSummary = tuningCandidates.length
+    ? 'ABAP Tuning: ' + format(tuningCandidates.length, 0) +
+      ' review-priority Jobs/Programs in the technical appendix; not confirmed errors.'
+    : errorRows.length
+      ? 'Error codes, APP and program context are listed in the technical appendix.'
+      : 'Missing error evidence is not proof of an error-free SAP system.'
+  pdf.text(tuningSummary, margin, errorLineY + 15)
 
   // Detailed error section is sourced only from timestamped trace evidence or
   // separately labeled WP snapshot observations. It is not a ST22 dump count.
@@ -297,12 +306,12 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.addPage()
     header()
     errorRows.forEach(row => {
-      const cat = pdf.splitTextToSize(String(row.category_label || 'Lainnya'), 37)
+      const cat = pdf.splitTextToSize(String(errorCategoryLabel(row.category, row.category_label)), 37)
       const code = pdf.splitTextToSize(String(row.error_code || 'Not available'), 61)
       const program = pdf.splitTextToSize(String(row.program || 'Not identified'), 88)
       const resource = row.snapshot_host_checks > 0 && (row.cpu_snapshot_pct !== null || row.pss_snapshot_gb !== null)
         ? 'Snapshot CPU ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
-        : row.untimed_trace_checks > 0 ? 'Untimed trace: ' + format(row.untimed_trace_checks, 0) + ' observasi' : ''
+        : row.untimed_trace_checks > 0 ? 'Untimed trace: ' + format(row.untimed_trace_checks, 0) + ' observations' : ''
       const provenance = row.program_link === 'EXPLICIT_ERROR_PROGRAM'
         ? 'Explicit program in WP trace' : 'Workload context only; not causation'
       const timing = row.first_at
@@ -357,7 +366,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
       pdf.text('RABAX and RXMSG are collector trace indicators, not ST22 dump counts.', margin, 30)
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(7)
-      ;[['SIGNAL',0], ['APP',32], ['ERROR PROGRAM',60], ['CHECKS',219], ['PEAK TRACE',260]]
+      ;[['SIGNAL',0], ['APP',32], ['PROGRAM CONTEXT',60], ['CHECKS',219], ['PEAK TRACE',260]]
         .forEach(([name, position]) => pdf.text(name, margin + position, 38))
       pdf.setDrawColor(204, 216, 224);pdf.line(margin, 40, W - margin, 40)
       signalY = 43
