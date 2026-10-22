@@ -599,6 +599,7 @@ def _sampling_quality(conn, start: datetime, end: datetime) -> dict:
          WHERE {_complete_collection_clause('c')}
            AND tc.collected_at >= :start
            AND tc.collected_at < :end
+           AND tc.consumer_type IN ('JOB', 'PROGRAM')
     """), {"start": start, "end": end}).mappings().one()
     observations = int(row.get("observations") or 0)
     aggregate_observations = int(row.get("aggregate_observations") or 0)
