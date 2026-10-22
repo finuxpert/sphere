@@ -175,6 +175,7 @@ export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = 
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
   const [selected, setSelected] = React.useState({})
+  const [expanded, setExpanded] = React.useState(null)
   const [assessment, setAssessment] = React.useState(() => readAssessment(MONTHS[1]?.value || MONTHS[0].value))
   const [pdfBusy, setPdfBusy] = React.useState(false)
   const [pdfError, setPdfError] = React.useState('')
@@ -221,6 +222,7 @@ export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = 
     setAppliedSearch('')
     setKind('ALL')
     setSelected({})
+    setExpanded(null)
     setAssessment(readAssessment(value))
     setSavedLocal('')
     setPdfError('')
@@ -326,12 +328,26 @@ export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = 
         </div>
         <div className="sphereMonthlyTableScroll"><table>
           <thead><tr><th>Job / Program</th><th>APP</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th><th>Prev Avg CPU</th><th>Observed checks</th><th>WP overlap</th><th>Report</th></tr></thead>
-          <tbody>{currentItems.map(row => <tr key={identity(row)}>
-            <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {row.assessment || row.status || 'Unclassified'}</small></td>
-            <td>{hostNames(row).join(', ') || '—'}</td><td>{percent(row.avg_cpu_pct)}</td><td>{percent(row.peak_cpu_pct)}</td>
-            <td>{fmt(row.avg_pss_gb, 2)} GB</td><td>{percent(row.previous?.avg_cpu_pct)}</td><td>{fmt(row.occurrences, 0)}</td><td>{fmt(row.critical_wp_host_checks, 0)}</td>
-            <td><button className={selected[identity(row)] ? 'is-selected' : ''} type="button" onClick={() => addSelection(row)} aria-pressed={Boolean(selected[identity(row)])}>{selected[identity(row)] ? 'Selected' : 'Select'}</button></td>
-          </tr>)}
+          <tbody>{currentItems.map(row => <React.Fragment key={identity(row)}>
+            <tr>
+              <td className="sphereMonthlyName">
+                <button className="sphereMonthlyJobDetailToggle" type="button" aria-expanded={expanded === identity(row)}
+                  onClick={() => setExpanded(previous => previous === identity(row) ? null : identity(row))}>{row.consumer_key}</button>
+                <small>{row.consumer_type} · {row.assessment || row.status || 'Unclassified'}</small>
+              </td>
+              <td>{hostNames(row).join(', ') || '—'}</td><td>{percent(row.avg_cpu_pct)}</td><td>{percent(row.peak_cpu_pct)}</td>
+              <td>{fmt(row.avg_pss_gb, 2)} GB</td><td>{percent(row.previous?.avg_cpu_pct)}</td><td>{fmt(row.occurrences, 0)}</td><td>{fmt(row.critical_wp_host_checks, 0)}</td>
+              <td><button className={selected[identity(row)] ? 'is-selected' : ''} type="button" onClick={() => addSelection(row)} aria-pressed={Boolean(selected[identity(row)])}>{selected[identity(row)] ? 'Selected' : 'Select'}</button></td>
+            </tr>
+            {expanded === identity(row) && <tr className="sphereMonthlyEvidenceDetail"><td colSpan="9">
+              <div><strong>Saved workload evidence</strong>
+                <span>First observed: {when(row.first_seen)} · Last observed: {when(row.last_seen)}</span>
+                <span>Host observations: {fmt(row.host_observations, 0)} · Average processes: {fmt(row.avg_process_count)} · Peak PSS: {fmt(row.peak_pss_gb, 2)} GB</span>
+                <span>Reason: {row.assessment_reason || 'No reason provided by evaluation'}</span>
+                <span>Critical WP overlap is temporal evidence only. SPHERE observations do not establish job execution status or direct root cause.</span>
+              </div>
+            </td></tr>}
+          </React.Fragment>)}
           {!currentItems.length && <tr><td colSpan="9">No observed workloads match the selected month/filter.</td></tr>}
           </tbody>
         </table></div>
