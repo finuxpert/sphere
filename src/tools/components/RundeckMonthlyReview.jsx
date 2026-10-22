@@ -123,7 +123,8 @@ function PressureEpisodes({ metric, pressure }) {
 function MonthlyErrorAnalysis({ evidence }) {
   const errors = evidence || {}
   const rows = errors.top_errors || []
-  const state = errors.status || 'NO_RETAINED_ERROR_EVIDENCE'
+  const state = errors.status || 'ERROR_SOURCE_NOT_RETAINED'
+  const unknownSource = state === 'ERROR_SOURCE_NOT_RETAINED'
   return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyErrors" aria-label="Evaluasi error program ABAP">
     <div className="sphereMonthlyTableHead">
       <div>
@@ -139,10 +140,10 @@ function MonthlyErrorAnalysis({ evidence }) {
       </span>
     </div>
     <div className="sphereMonthlyStatStrip">
-      <span>Kejadian berwaktu: {state === 'TRUNCATED' ? 'Data parsial' : fmt(errors.timestamped_events, 0)}</span>
-      <span>Observasi error saat snapshot: {fmt(errors.snapshot_host_checks, 0)}</span>
-      <span>Kategori teridentifikasi: {fmt((errors.categories || []).length, 0)}</span>
-      <span>Sinyal RABAX dan RXMSG: {fmt(errors.wp_signal_host_checks, 0)} pemeriksaan sinyal WP</span>
+      <span>Kejadian berwaktu: {unknownSource ? 'Tidak tersedia' : state === 'TRUNCATED' ? 'Data parsial' : fmt(errors.timestamped_events, 0)}</span>
+      <span>Observasi error saat snapshot: {unknownSource ? 'Tidak tersedia' : fmt(errors.snapshot_host_checks, 0)}</span>
+      <span>Kategori teridentifikasi: {unknownSource ? 'Tidak tersedia' : fmt((errors.categories || []).length, 0)}</span>
+      <span>Sinyal RABAX dan RXMSG: {unknownSource ? 'Tidak tersedia' : fmt(errors.wp_signal_host_checks, 0) + ' pemeriksaan sinyal WP'}</span>
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
       <th>Program terkait</th><th>Kategori</th><th>Kode Error</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
@@ -157,7 +158,7 @@ function MonthlyErrorAnalysis({ evidence }) {
         <td>{fmt(row.event_count,0)}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
         <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat pada trace' : 'Hanya konteks workload'}</td>
       </tr>)}
-      {!rows.length && <tr><td colSpan="8">Belum ditemukan kode error pada sumber histori yang dapat dibaca untuk periode ini. Ini tidak membuktikan SAP bebas dari error.</td></tr>}
+      {!rows.length && <tr><td colSpan="8">{unknownSource ? 'Kolom evidence error WP tidak tersedia pada histori yang dapat dibaca. Jumlah error tidak dapat dinyatakan nol.' : 'Belum ditemukan kode error pada sumber histori yang dapat dibaca untuk periode ini. Ini tidak membuktikan SAP bebas dari error.'}</td></tr>}
     </tbody></table></div>
     {(errors.wp_diagnostics || []).length > 0 && <div className="sphereMonthlyWpDiagnostics">
       <h4>Sinyal WP untuk investigasi ABAP</h4>
