@@ -237,4 +237,34 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
          LIMIT :max_groups
     """), {"start": start, "end": end, "max_groups": MAX_ERROR_GROUPS + 1}).mappings().all()]
     truncated = len(rows) > MAX_ERROR_GROUPS
-    return summarize_monthly_wp_errors(rows[:MAX_ERROR_GROUPS], start, end, truncated=truncated)
+    report = summarize_monthly_wp_errors(rows[:MAX_ERROR_GROUPS], start, end, truncated=truncated)
+    # A zero error result is not authoritative when the retained source never
+    # stored error-capable WP fields. Distinguish this case without a full scan
+    # of every WP signal: EXISTS can short-circuit on the first matching row.
+    if not rows:
+        source_present = bool(conn.execute(text(f"""
+            SELECT EXISTS (
+                SELECT 1 FROM {source} tc
+                JOIN rundeck_collections c ON c.collection_id = tc.collection_id
+                WHERE {complete_clause}
+                  AND COALESCE(c.finished_at, c.started_at) >= :start
+                  AND COALESCE(c.finished_at, c.started_at) < :end
+                  AND tc.collected_at >= :start AND tc.collected_at < :end
+                  AND tc.consumer_type IN ('JOB', 'PROGRAM', 'PROCESS')
+                  AND (
+                    jsonb_typeof(tc.details->'wp_signals') = 'array'
+                    OR tc.details ? 'error_code'
+                    OR tc.details ? 'latest_trace_error'
+                    OR tc.details ? 'error_at_snapshot'
+                    OR tc.details ? 'rabax_tail_count'
+                    OR tc.details ? 'rxmsg_tail_count'
+                  )
+                LIMIT 1
+            )
+        """), {"start": start, "end": end}).scalar())
+        report["error_fields_retained"] = source_present
+        if not source_present:
+            report["status"] = "ERROR_SOURCE_NOT_RETAINED"
+    else:
+        report["error_fields_retained"] = True
+    return report
