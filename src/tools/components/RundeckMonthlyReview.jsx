@@ -189,13 +189,13 @@ export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = 
   React.useEffect(() => {
     const controller = new AbortController()
     const params = new URLSearchParams({
-      period: 'month', month, type: kind, limit: String(PAGE_SIZE),
+      month, type: kind, limit: String(PAGE_SIZE),
       offset: String(page * PAGE_SIZE), q: appliedSearch, health: 'ALL',
     })
     setLoading(true)
     setError('')
     setData(null)
-    fetch(API + '/evaluation/workloads?' + params.toString(), { signal: controller.signal, cache: 'no-store' })
+    fetch(API + '/evaluation/workloads/monthly?' + params.toString(), { signal: controller.signal, cache: 'no-store' })
       .then(async response => {
         if (!response.ok) {
           const body = await response.json().catch(() => ({}))
