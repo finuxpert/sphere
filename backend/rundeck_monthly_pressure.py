@@ -212,16 +212,16 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         "hosts": host_summary,
         "daily_hosts": daily_hosts,
         "cpu": {
-            "episodes": len(cpu_episodes),
+            "episodes": len(cpu_episodes) if samples else None,
             "peak": cpu_episodes[0] if cpu_episodes else None,
             "recent_episodes": cpu_episodes[:20],
-            "observed_pressure_host_checks": sum(row["cpu_warning_host_checks"] for row in host_summary),
+            "observed_pressure_host_checks": sum(row["cpu_warning_host_checks"] for row in host_summary) if samples else None,
         },
         "ram": {
-            "episodes": len(ram_episodes),
+            "episodes": len(ram_episodes) if samples else None,
             "peak": ram_episodes[0] if ram_episodes else None,
             "recent_episodes": ram_episodes[:20],
-            "observed_pressure_host_checks": sum(row["ram_warning_host_checks"] for row in host_summary),
+            "observed_pressure_host_checks": sum(row["ram_warning_host_checks"] for row in host_summary) if samples else None,
         },
         "correlation": correlation,
         "method": (
