@@ -133,22 +133,44 @@ def performance_analysis():
 
 @app.get("/evaluation/workloads")
 def workload_evaluation(
-    period: str = Query("1d", pattern="^(1d|7d|30d|month)$"),
+    period: str = Query("1d", pattern="^(1d|7d|30d)$"),
     consumer_type: str = Query("ALL", alias="type", pattern="^(ALL|JOB|PROGRAM)$"),
     limit: int = Query(30, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100000),
     q: str = Query("", max_length=512),
     health: str = Query("ALL", pattern="^(ALL|REVIEW|ATTENTION|NORMAL|UNKNOWN)$"),
-    month: str | None = Query(None, max_length=7),
 ):
     try:
-        return evaluation_report(period=period, consumer_type=consumer_type, limit=limit, offset=offset, query=q, health=health, month=month)
+        return evaluation_report(period=period, consumer_type=consumer_type, limit=limit, offset=offset, query=q, health=health)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:
         raise HTTPException(503, str(error)) from None
     except Exception as error:
         raise HTTPException(503, f"Performance evaluation unavailable: {type(error).__name__}") from None
+
+
+@app.get("/evaluation/workloads/monthly")
+def monthly_workload_evaluation(
+    month: str = Query(..., pattern=r"^20[0-9]{2}-(0[1-9]|1[0-2])$"),
+    consumer_type: str = Query("ALL", alias="type", pattern="^(ALL|JOB|PROGRAM)$"),
+    limit: int = Query(25, ge=1, le=100),
+    offset: int = Query(0, ge=0, le=100000),
+    q: str = Query("", max_length=512),
+    health: str = Query("ALL", pattern="^(ALL|REVIEW|ATTENTION|NORMAL|UNKNOWN)$"),
+):
+    """Calendar-month workload observations for the SPHERE-only manual Basis report."""
+    try:
+        return evaluation_report(
+            period="month", consumer_type=consumer_type, limit=limit,
+            offset=offset, query=q, health=health, month=month,
+        )
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Monthly performance evaluation unavailable: {type(error).__name__}") from None
 
 
 @app.get("/collections")
