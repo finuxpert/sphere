@@ -131,7 +131,8 @@ function MonthlyErrorAnalysis({ evidence }) {
       </div>
       <span className="sphereMonthlyErrorCounter">
         {state === 'TRUNCATED' ? 'Data error sebagian' : state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Belum ada bukti error' :
-        state === 'SNAPSHOT_ONLY' ? 'Hanya observasi snapshot' : fmt(errors.timestamped_events, 0) + ' kejadian berwaktu'}
+        state === 'SNAPSHOT_ONLY' ? 'Hanya observasi snapshot' :
+        state === 'UNTIMED_TRACE_ONLY' ? 'Trace tanpa waktu kejadian' : fmt(errors.timestamped_events, 0) + ' kejadian berwaktu'}
       </span>
     </div>
     <div className="sphereMonthlyStatStrip">
@@ -402,7 +403,7 @@ export default function RundeckMonthlyReview() {
           <div><strong>CPU / RAM pressure</strong><span>{fmt(evidence.cpu?.episodes,0)} / {fmt(evidence.ram?.episodes,0)} observed episodes</span></div>
           <div><strong>Workload evidence</strong><span>Top 5 each pressure type · {chosen.length} selected for appendix</span></div>
           <div><strong>Cakupan data monitoring</strong><span>{pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'}</span></div>
-          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Belum ada bukti error':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot</span></div>
+          <div><strong>Evaluasi error ABAP</strong><span>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Belum ada bukti error':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot</span></div>
         </div>
         <h4>Optional technical appendix ({chosen.length})</h4>
         {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
