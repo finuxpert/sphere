@@ -130,7 +130,8 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         count_by_category[item["category_label"]] += item["event_count"]
     return {
         "status": ("TRUNCATED" if truncated else "TIMESTAMPED_TRACE" if events
-                   else "SNAPSHOT_ONLY" if snapshot_checks else "NO_RETAINED_ERROR_EVIDENCE"),
+                   else "SNAPSHOT_ONLY" if snapshot_checks
+                   else "UNTIMED_TRACE_ONLY" if untimed else "NO_RETAINED_ERROR_EVIDENCE"),
         "timestamped_events": len(events),
         "snapshot_host_checks": len(snapshot_checks),
         "untimed_trace_observations": untimed,
