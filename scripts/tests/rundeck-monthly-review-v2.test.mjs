@@ -120,6 +120,6 @@ test('ABAP tuning candidates are source-backed and never treated as confirmed er
   assert.match(pdf, /ABAP Tuning Candidates/)
   assert.match(pdf, /tuningHeader\(true\)/)
   assert.match(pdf, /no confirmed Job failure, ST22 dump/i)
-  assert.match(pdf, /WP error evidence not retained/)
+  assert.match(pdf, /WP error fields not found in stored workload history/)
   assert.doesNotMatch(pdf, /EVALUASI ERROR UNTUK TUNING ABAP|Laporan Evaluasi Performa SAP Bulanan/)
 })
