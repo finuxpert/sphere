@@ -1,418 +1,366 @@
 import React from 'react'
 import { shortHost } from './sapUiFormat.js'
+import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import './RundeckMonthlyReview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
 const PAGE_SIZE = 25
-const EMPTY_ASSESSMENT = { reviewer: '', summary: '', impact: '', analysis: '', actions: '' }
-
+const fmt = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
+  ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
+const pct = value => fmt(value) === '—' ? '—' : fmt(value) + '%'
+const id = row => String(row.consumer_type || '') + ':' + String(row.consumer_key || '')
+const hostLabel = host => shortHost(typeof host === 'string' ? host : host?.host || '').toUpperCase()
+const hostsFor = row => (Array.isArray(row.hosts) ? row.hosts : []).map(hostLabel).filter(Boolean).join(', ')
+const when = value => {
+  if (!value) return '—'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit',
+    minute: '2-digit', hour12: false,
+  }).format(date) + ' WIB'
+}
 function monthOptions() {
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'numeric' }).formatToParts(new Date())
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'numeric' })
+    .formatToParts(new Date())
   const year = Number(parts.find(part => part.type === 'year')?.value)
   const month = Number(parts.find(part => part.type === 'month')?.value)
   return Array.from({ length: 7 }, (_, index) => {
     const date = new Date(Date.UTC(year, month - 1 - index, 1))
     return {
       value: date.toISOString().slice(0, 7),
-      label: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date) + (index === 0 ? ' · ongoing' : ''),
+      label: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+        .format(date) + (index === 0 ? ' · ongoing' : ''),
     }
   })
 }
-
 const MONTHS = monthOptions()
-const fmt = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
-  ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
-const percent = value => fmt(value) === '—' ? '—' : fmt(value) + '%'
-const when = value => {
-  if (!value) return '—'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
-  }).format(date) + ' WIB'
-}
-const identity = row => String(row.consumer_type || '') + ':' + String(row.consumer_key || '')
-const hostNames = row => (Array.isArray(row?.hosts) ? row.hosts : []).map(host => shortHost(typeof host === 'string' ? host : host?.host)).filter(Boolean)
+const CHART_COLORS = ['#3dd6dc', '#839af4', '#af90e7', '#e7a364', '#7ac59c']
+const PRESSURE_FILTERS = [
+  ['ALL', 'All observations'], ['CPU', 'CPU Pressure'], ['RAM', 'RAM Pressure'], ['WP', 'Critical WP'],
+]
 
-function readAssessment(month) {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem('sphere.monthly-review.draft.v1:' + month) || 'null')
-    return saved && typeof saved === 'object'
-      ? Object.fromEntries(Object.keys(EMPTY_ASSESSMENT).map(field => [field, String(saved[field] || '')]))
-      : { ...EMPTY_ASSESSMENT }
-  } catch {
-    return { ...EMPTY_ASSESSMENT }
-  }
-}
-
-function DailyTrend({ rows = [], period }) {
-  const [year, month] = period.split('-').map(Number)
-  const days = new Date(Date.UTC(year, month, 0)).getUTCDate()
-  const byDay = new Map(rows.map(row => [Number(String(row.day).slice(8, 10)), row]))
-  const barWidth = 8
-  const step = 16
-  const width = days * step + 30
-  return <div className="sphereMonthlyTrend" role="img" aria-label="Daily observed APP host CPU average in percent; empty days have no retained complete observations">
-    <svg viewBox={'0 0 ' + width + ' 144'} preserveAspectRatio="xMidYMid meet">
-      {[25, 50, 75, 100].map(level => <g key={level}>
-        <line x1="25" x2={width - 5} y1={119 - level} y2={119 - level} stroke="currentColor" strokeOpacity=".12" strokeDasharray="3 4"/>
-        <text x="2" y={122 - level} fontSize="9" fill="currentColor" opacity=".65">{level}</text>
+function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL' }) {
+  const field = (mode === 'avg' ? 'avg_' : 'peak_') + metric + '_pct'
+  const [year, monthNum] = month.split('-').map(Number)
+  const days = new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
+  const names = [...new Set(rows.map(row => hostLabel(row.host)))].sort().filter(name => host === 'ALL' || name === host)
+  const width = 620; const left = 36; const plotW = 566; const top = 12; const plotH = 124
+  const xFor = day => left + (day - 1) * plotW / Math.max(1, days - 1)
+  const yFor = val => top + plotH * (1 - Math.max(0, Math.min(100, Number(val))) / 100)
+  return <div className="sphereMonthlyTrend" role="group" aria-label={metric.toUpperCase() + ' daily APP ' + mode + ' trend'}>
+    <svg viewBox={'0 0 ' + width + ' 164'} preserveAspectRatio="xMidYMid meet" role="img"
+      aria-label={'Saved daily ' + mode + ' host ' + metric + ' percent; missing days are not zero'}>
+      {[0,25,50,75,100].map(level => <g key={level}>
+        <line x1={left} x2={left + plotW} y1={yFor(level)} y2={yFor(level)} stroke="currentColor" strokeOpacity=".11" strokeDasharray="3 4"/>
+        <text x="5" y={yFor(level)+3} fontSize="9" fill="currentColor" opacity=".6">{level}%</text>
       </g>)}
-      {Array.from({ length: days }, (_, index) => {
-        const day = index + 1
-        const point = byDay.get(day)
-        const value = point?.avg_host_cpu_pct
-        const height = value === null || value === undefined ? 0 : Math.max(1, Math.min(100, Number(value)))
-        const x = 25 + index * step
-        return <g key={day}>
-          <title>{period + '-' + String(day).padStart(2, '0') + ': ' + (value === null || value === undefined ? 'No complete observation' : percent(value) + ' average host CPU · ' + point.complete_checks + ' complete checks')}</title>
-          {height ? <rect x={x} y={119 - height} width={barWidth} height={height} rx="2" fill={height >= 80 ? '#e1a162' : '#32a6b7'}/>
-            : <rect x={x} y="116" width={barWidth} height="3" rx="1" fill="#617a88" opacity=".4"/>}
-          {(day === 1 || day % 5 === 0) && <text x={x + 3} y="135" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{day}</text>}
+      {[1,5,10,15,20,25,days].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".65" textAnchor="middle">{day}</text>)}
+      {names.map((name,i) => {
+        const points = rows.filter(row => hostLabel(row.host) === name && row[field] !== null && row[field] !== undefined)
+          .map(row => ({day:Number(String(row.day).slice(-2)),value:row[field]})).sort((a,b)=>a.day-b.day)
+        return <g key={name}>
+          {points.map((point,k) => <g key={point.day}>
+            {k>0 && point.day===points[k-1].day+1 && <line
+              x1={xFor(points[k-1].day)} y1={yFor(points[k-1].value)}
+              x2={xFor(point.day)} y2={yFor(point.value)}
+              stroke={CHART_COLORS[i%CHART_COLORS.length]} strokeWidth="2.3" strokeLinecap="round"/>}
+            <circle cx={xFor(point.day)} cy={yFor(point.value)} r="2.9" fill={CHART_COLORS[i%CHART_COLORS.length]}>
+              <title>{name} · {month}-{String(point.day).padStart(2,'0')} · {pct(point.value)} {mode} {metric.toUpperCase()}</title>
+            </circle>
+          </g>)}
         </g>
       })}
     </svg>
-    <small>Daily average host CPU · Complete observations only · Missing days are not zero</small>
+    <div className="sphereMonthlyTrendLegend">
+      {names.map((name,i)=><span key={name}><i style={{background:CHART_COLORS[i%CHART_COLORS.length]}}/>{name}</span>)}
+    </div>
+    <small>Saved {mode === 'avg' ? 'average' : 'peak'} values per APP/day · Missing intervals are gaps, not zero</small>
   </div>
 }
 
-async function generateReportPdf({ month, data, selections, assessment }) {
-  const { jsPDF } = await import('jspdf')
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
-  const width = pdf.internal.pageSize.getWidth()
-  let y = 20
-  let page = 1
-  const margin = 17
-  const max = width - margin * 2
-  const addPage = () => { pdf.addPage(); page += 1; y = 20 }
-  const ensure = height => { if (y + height > 278) addPage() }
-  const line = (label, size = 10, bold = false, color = [42, 58, 69]) => {
-    pdf.setFont('helvetica', bold ? 'bold' : 'normal')
-    pdf.setFontSize(size)
-    pdf.setTextColor(...color)
-    const lines = pdf.splitTextToSize(String(label || '—'), max)
-    ensure(lines.length * size * .43 + 4)
-    pdf.text(lines, margin, y)
-    y += lines.length * size * .43 + 4
-  }
-  const section = title => {
-    ensure(18)
-    y += 3
-    pdf.setDrawColor(205, 218, 225)
-    pdf.line(margin, y, width - margin, y)
-    y += 8
-    line(title, 12, true)
-  }
-  pdf.setFillColor(13, 34, 47)
-  pdf.rect(0, 0, width, 42, 'F')
-  pdf.setTextColor(255, 255, 255)
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(19)
-  pdf.text('SAP Performance & Job Impact Review', margin, 23)
-  pdf.setFontSize(10)
-  pdf.setFont('helvetica', 'normal')
-  pdf.text('SPHERE · Monthly Basis Assessment · ' + month, margin, 32)
-  y = 53
-  line('STATUS: DRAFT · Manual assessment · SPHERE historical evidence only', 10, true)
-  line('Period: ' + month + ' (Asia/Jakarta) | Saved window [start, exclusive end): ' + when(data.start) + ' to ' + when(data.end), 9)
-  line('Generated: ' + when(new Date().toISOString()) + ' | Basis reviewer: ' + (assessment.reviewer || 'Not provided'), 9)
-  section('Executive indicators')
-  line('Observed JOB/PROGRAM identities: ' + fmt(data.summary?.workloads, 0)
-    + ' | Jobs: ' + fmt(data.summary?.jobs, 0) + ' | Programs: ' + fmt(data.summary?.programs, 0), 10)
-  line('Review required: ' + fmt(data.summary?.review_required, 0)
-    + ' | Critical WP association (temporal): ' + fmt(data.summary?.wp_signal_overlap, 0), 10)
-  line('Complete checks: ' + fmt(data.quality?.complete_checks, 0)
-    + ' | Incomplete checks: ' + fmt(data.quality?.partial_or_incomplete_checks, 0)
-    + ' | Coverage: ' + percent(data.quality?.coverage_pct)
-    + ' | Confidence: ' + (data.quality?.confidence || 'UNKNOWN'), 9)
-  line('Sampling scope: ' + (data.sampling?.coverage_scope || 'UNKNOWN')
-    + '. Workload observations are not SM37 execution counts.', 9)
-  section('SAP host performance observations')
-  const daily = data.daily_host_trend || []
-  if (!daily.length) line('No daily host trend in the selected month.', 10)
-  else {
-    const sorted = [...daily].sort((a, b) => (b.peak_host_cpu_pct ?? -1) - (a.peak_host_cpu_pct ?? -1))
-    line('Daily host samples: ' + daily.length + ' day(s); highest observed host CPU:', 10)
-    sorted.slice(0, 5).forEach(row => line(row.day + ' | Peak ' + percent(row.peak_host_cpu_pct) + ' | Avg ' + percent(row.avg_host_cpu_pct)
-      + ' | Critical WP host-checks ' + fmt(row.critical_wp_host_checks, 0), 9))
-  }
-  section('Selected Job & Program evidence')
-  if (!selections.length) line('No workloads selected for the report.', 10)
-  selections.forEach((row, index) => {
-    ensure(30)
-    line((index + 1) + '. ' + row.consumer_key + ' (' + row.consumer_type + ')', 10, true)
-    line('APP: ' + (hostNames(row).join(', ') || 'Not observed') + ' | Avg CPU: ' + percent(row.avg_cpu_pct)
-      + ' | Peak CPU: ' + percent(row.peak_cpu_pct) + ' | Avg PSS: ' + fmt(row.avg_pss_gb, 2) + ' GB', 9)
-    line('Previous month avg CPU: ' + percent(row.previous?.avg_cpu_pct) + ' | Observed checks: ' + fmt(row.occurrences, 0) + ' | APP Critical WP overlap: '
-      + fmt(row.critical_wp_host_checks ?? row.critical_wp_checks, 0)
-      + ' | First: ' + when(row.first_seen) + ' | Last: ' + when(row.last_seen), 8)
-  })
-  section('Manual SAP Basis assessment')
-  ;[['Summary', assessment.summary], ['Operational impact', assessment.impact], ['Technical analysis', assessment.analysis], ['Action plan', assessment.actions]]
-    .forEach(([heading, value]) => { line(heading, 10, true); line(value || 'Not assessed', 10) })
-  section('Evidence interpretation & limitations')
-  line('SPHERE records saved collection observations. Job/Program frequency is a count of observed collection checks, not completed SM37 executions. CPU may exceed 100% for grouped processes. PSS is process workload memory, not host RAM.', 9)
-  line('Critical WP overlap means the workload and APP signal were seen on the same host in the same collection. It is not proof that the workload caused slow SAP response. No transaction response-time KPI is inferred.', 9)
-  line('Coverage below 100%, incomplete checks, and collector gaps are retained as missing evidence. The reviewer is responsible for conclusions and follow-up actions.', 9)
-  for (let number = 1; number <= page; number += 1) {
-    pdf.setPage(number)
-    pdf.setDrawColor(220, 230, 234)
-    pdf.line(margin, 285, width - margin, 285)
-    pdf.setTextColor(103, 122, 134)
-    pdf.setFontSize(8)
-    pdf.text('SPHERE MONTHLY REVIEW  /  DRAFT  /  SOURCE: SPHERE', margin, 290)
-    pdf.text('Page ' + number + '/' + page, width - margin, 290, { align: 'right' })
-  }
-  pdf.save('SPHERE-Monthly-Performance-' + month + '-DRAFT.pdf')
+function PressureRows({ label, evidence, metric }) {
+  const rows = metric === 'ram' ? evidence.top_ram_workloads || [] : evidence.top_cpu_workloads || []
+  return <section className="sphereMonthlyPanel sphereMonthlyRank">
+    <div className="sphereMonthlyTableHead">
+      <div><h4>{label}</h4><small>Top 5 workload identities · same APP + collection</small></div>
+    </div>
+    <div className="sphereMonthlyTableScroll">
+      <table><thead><tr><th>Job / Program</th><th>APP host-checks</th><th>{metric === 'ram' ? 'Peak PSS' : 'Peak CPU'}</th></tr></thead>
+        <tbody>{rows.map(row => <tr key={id(row)}>
+          <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)}</small></td>
+          <td>{fmt(row.pressure_overlap?.[metric + '_pressure_host_checks'],0)}</td>
+          <td>{metric === 'ram' ? fmt(row.pressure_overlap?.pss_peak_during_ram_pressure,2)+' GB'
+            : pct(row.pressure_overlap?.cpu_peak_during_cpu_pressure)}</td>
+        </tr>)}
+        {!rows.length && <tr><td colSpan="3">No correlated workload recorded during {metric.toUpperCase()} pressure.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  </section>
 }
 
-export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = [] }) {
-  const [month, setMonth] = React.useState(MONTHS[1]?.value || MONTHS[0].value)
-  const [tab, setTab] = React.useState('overview')
-  const [kind, setKind] = React.useState('ALL')
-  const [search, setSearch] = React.useState('')
-  const [page, setPage] = React.useState(0)
-  const [data, setData] = React.useState(null)
-  const [loading, setLoading] = React.useState(true)
-  const [error, setError] = React.useState('')
-  const [selected, setSelected] = React.useState({})
-  const [expanded, setExpanded] = React.useState(null)
-  const [assessment, setAssessment] = React.useState(() => readAssessment(MONTHS[1]?.value || MONTHS[0].value))
-  const [pdfBusy, setPdfBusy] = React.useState(false)
-  const [pdfError, setPdfError] = React.useState('')
-  const [savedLocal, setSavedLocal] = React.useState('')
-  const searchInput = search.trim()
-  const [appliedSearch, setAppliedSearch] = React.useState('')
-  React.useEffect(() => {
-    const timer = window.setTimeout(() => setAppliedSearch(searchInput), 300)
-    return () => window.clearTimeout(timer)
-  }, [searchInput])
-  React.useEffect(() => {
-    const controller = new AbortController()
-    const params = new URLSearchParams({
-      month, type: kind, limit: String(PAGE_SIZE),
-      offset: String(page * PAGE_SIZE), q: appliedSearch, health: 'ALL',
+function PressureEpisodes({ metric, pressure }) {
+  const evidence = pressure?.[metric] || {}
+  return <section className="sphereMonthlyPanel">
+    <div className="sphereMonthlyTableHead">
+      <div><h4>{metric.toUpperCase()} Pressure Episodes</h4>
+        <small>{fmt(evidence.episodes,0)} observed episodes · peak {pct(evidence.peak?.peak_pct)}</small></div>
+    </div>
+    <div className="sphereMonthlyTableScroll"><table>
+      <thead><tr><th>APP</th><th>First observed</th><th>Last observed</th><th>Peak</th><th>Host-checks</th></tr></thead>
+      <tbody>{(evidence.recent_episodes || []).map((row,index)=><tr key={row.host+String(row.first_at)+index}>
+        <td>{hostLabel(row.host)}</td><td>{when(row.first_at)}</td><td>{when(row.last_at)}</td>
+        <td>{pct(row.peak_pct)}</td><td>{fmt(row.observed_host_checks,0)}</td>
+      </tr>)}
+      {!evidence.recent_episodes?.length && <tr><td colSpan="5">No threshold exceedance in retained observations.</td></tr>}
+      </tbody>
+    </table></div>
+    <p>Episode boundaries are first/last saved observations, not actual incident duration.</p>
+  </section>
+}
+
+export default function RundeckMonthlyReview() {
+  const [month,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
+  const [tab,setTab]=React.useState('overview')
+  const [kind,setKind]=React.useState('ALL')
+  const [health,setHealth]=React.useState('REVIEW')
+  const [pressureFilter,setPressureFilter]=React.useState('ALL')
+  const [search,setSearch]=React.useState('')
+  const [appliedSearch,setAppliedSearch]=React.useState('')
+  const [page,setPage]=React.useState(0)
+  const [data,setData]=React.useState(null)
+  const [loading,setLoading]=React.useState(true)
+  const [error,setError]=React.useState('')
+  const [selected,setSelected]=React.useState({})
+  const [expanded,setExpanded]=React.useState(null)
+  const [chartMode,setChartMode]=React.useState('peak')
+  const [chartHost,setChartHost]=React.useState('ALL')
+  const [pdfBusy,setPdfBusy]=React.useState(false)
+  const [pdfError,setPdfError]=React.useState('')
+  const [pdfUrl,setPdfUrl]=React.useState('')
+  const pdfRef=React.useRef('')
+  React.useEffect(()=>()=>{if(pdfRef.current) URL.revokeObjectURL(pdfRef.current)},[])
+  React.useEffect(()=>{
+    const timer=window.setTimeout(()=>setAppliedSearch(search.trim()),300)
+    return ()=>window.clearTimeout(timer)
+  },[search])
+  React.useEffect(()=>{
+    const controller=new AbortController()
+    const params=new URLSearchParams({
+      month,type:kind,health,pressure:pressureFilter,q:appliedSearch,
+      limit:String(PAGE_SIZE),offset:String(page*PAGE_SIZE),
     })
-    setLoading(true)
-    setError('')
-    setData(null)
-    fetch(API + '/evaluation/workloads/monthly?' + params.toString(), { signal: controller.signal, cache: 'no-store' })
-      .then(async response => {
-        if (!response.ok) {
-          const body = await response.json().catch(() => ({}))
-          throw new Error(body.detail || 'Monthly evaluation unavailable (HTTP ' + response.status + ')')
-        }
+    setLoading(true);setError('');setData(null)
+    fetch(API+'/evaluation/workloads/monthly?'+params.toString(),{cache:'no-store',signal:controller.signal})
+      .then(async response=>{
+        if(!response.ok){const body=await response.json().catch(()=>({}));throw Error(body.detail||'Monthly evidence unavailable (HTTP '+response.status+')')}
         return response.json()
       })
-      .then(payload => {
-        if (controller.signal.aborted) return
-        if (payload.page?.scope !== 'FULL_EVALUATED_POPULATION' || payload.period !== 'month' || payload.month !== month) {
-          throw new Error('Monthly full-population evidence contract unavailable')
-        }
+      .then(payload=>{
+        if(controller.signal.aborted)return
+        if(payload.month!==month||payload.period!=='month'||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid monthly evidence contract')
+        if(!payload.monthly_pressure)throw Error('Monthly CPU/RAM evidence is unavailable on this backend')
         setData(payload)
       })
-      .catch(failure => { if (!controller.signal.aborted) setError(failure.message || 'Monthly history unavailable') })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => controller.abort()
-  }, [month, kind, page, appliedSearch, refreshToken])
-
-  const selectMonth = value => {
-    setMonth(value)
-    setPage(0)
-    setSearch('')
-    setAppliedSearch('')
-    setKind('ALL')
-    setSelected({})
-    setExpanded(null)
-    setAssessment(readAssessment(value))
-    setSavedLocal('')
-    setPdfError('')
+      .catch(failure=>{if(!controller.signal.aborted)setError(failure.message||'Historical evidence unavailable')})
+      .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
+    return ()=>controller.abort()
+  },[month,kind,health,pressureFilter,appliedSearch,page])
+  const changeMonth=value=>{
+    setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL')
+    setSearch('');setAppliedSearch('');setSelected({});setExpanded(null);setPdfError('')
+    if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
+    pdfRef.current='';setPdfUrl('')
   }
-  const updateAssessment = (key, value) => setAssessment(previous => ({ ...previous, [key]: value }))
-  const saveDraft = () => {
-    try {
-      window.localStorage.setItem('sphere.monthly-review.draft.v1:' + month, JSON.stringify(assessment))
-      setSavedLocal('Saved in this browser only · not server-backed')
-    } catch {
-      setSavedLocal('Browser storage unavailable; draft remains in this open modal')
-    }
-  }
-  const currentItems = data?.items || []
-  const chosen = Object.values(selected)
-  const addSelection = row => setSelected(previous => {
-    const next = { ...previous }
-    if (next[identity(row)]) delete next[identity(row)]
-    else next[identity(row)] = row
-    return next
+  const changeFilter=(setter,value)=>{setter(value);setPage(0);setExpanded(null)}
+  const items=data?.items||[]
+  const quality=data?.quality||{}
+  const summary=data?.summary||{}
+  const evidence=data?.monthly_pressure||{}
+  const hosts=evidence.hosts||[]
+  const chosen=Object.values(selected)
+  const total=Number(data?.page?.total||0)
+  const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
+  const selectRow=row=>setSelected(previous=>{
+    const copy={...previous}
+    if(copy[id(row)])delete copy[id(row)]
+    else copy[id(row)]=row
+    return copy
   })
-  const report = async () => {
-    if (!data || loading) return
-    setPdfBusy(true)
-    setPdfError('')
-    try {
-      await generateReportPdf({ month, data, selections: chosen, assessment })
-    } catch (failure) {
-      setPdfError(failure.message || 'PDF export failed')
-    } finally {
-      setPdfBusy(false)
-    }
+  const previewPdf=async()=>{
+    if(!data||loading||pdfBusy)return
+    setPdfBusy(true);setPdfError('')
+    try{
+      const blob=await buildMonthlyPdf({month,data,selections:chosen})
+      const url=URL.createObjectURL(blob)
+      if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
+      pdfRef.current=url
+      setPdfUrl(url)
+    }catch(failure){setPdfError(failure.message||'PDF could not be generated')}
+    finally{setPdfBusy(false)}
   }
-  const daily = data?.daily_host_trend || []
-  const coverage = data?.quality || {}
-  const summary = data?.summary || {}
-  const total = Number(data?.page?.total || 0)
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const impact = [...currentItems].sort((left, right) => (right.critical_wp_host_checks || 0) - (left.critical_wp_host_checks || 0))
-
-  return <section className="sphereMonthlyReview" aria-label="Monthly SAP Performance and Job Impact Review">
+  const limited=Number(quality.coverage_pct??0)<95||quality.confidence==='LOW'||Number(quality.partial_or_incomplete_checks||0)>0
+  return <section className="sphereMonthlyReview is-v2" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
-      <div><strong>Monthly SAP Performance & Job Impact Review</strong><small>SPHERE historical data only · Manual SAP Basis evaluation · Times in WIB</small></div>
+      <div><strong>SAP Performance & Job Impact</strong><small>Monthly observations · SPHERE data only · Asia/Jakarta</small></div>
       <div className="sphereMonthlyPicker">
         <label htmlFor="sphere-month-choice">Reporting month</label>
-        <select id="sphere-month-choice" value={month} onChange={event => selectMonth(event.target.value)}>
-          {MONTHS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+        <select id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
+          {MONTHS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </div>
     </div>
     <div className="sphereMonthlyTabs" role="tablist" aria-label="Monthly report sections">
-      {[
-        ['overview', 'Overview'], ['jobs', 'Jobs & Programs'], ['impact', 'Performance Impact'],
-        ['assessment', 'Basis Assessment'], ['report', 'Report'],
-      ].map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id}
-        className={tab === id ? 'is-active' : ''} onClick={() => setTab(id)}>{label}</button>)}
+      {[['overview','Overview'],['jobs','Jobs & Programs'],['impact','Performance Impact'],['report','Report']]
+        .map(([value,label])=><button key={value} type="button" role="tab"
+          aria-selected={tab===value} className={tab===value?'is-active':''}
+          onClick={()=>setTab(value)}>{label}</button>)}
     </div>
-    {loading && <div className="sphereMonthlyState" role="status">Loading saved month evidence…</div>}
-    {error && <div className="sphereMonthlyState is-error" role="alert">{error}. No substitute values or simulated evidence are shown.</div>}
-    {data && !loading && <>
+    {loading&&<div className="sphereMonthlyState" role="status">Loading historical CPU, RAM and workload evidence…</div>}
+    {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
+    {data&&!loading&&<>
       <div className="sphereMonthlyProvenance">
-        <span>Period [start, end): {when(data.start)} – {when(data.end)} (exclusive)</span>
-        <span>Data confidence: <b>{coverage.confidence || 'UNKNOWN'}</b></span>
-        <span>Coverage: <b>{percent(coverage.coverage_pct)}</b></span>
-        <span>Complete checks: <b>{fmt(coverage.complete_checks, 0)}</b></span>
-        <span>Incomplete: <b>{fmt(coverage.partial_or_incomplete_checks, 0)}</b></span>
+        <span>Window: {when(data.start)} - {when(data.end)} (exclusive)</span>
+        <span>Coverage <b>{pct(quality.coverage_pct)}</b></span>
+        <span>Confidence <b>{quality.confidence||'UNKNOWN'}</b></span>
+        <span>Complete <b>{fmt(quality.complete_checks,0)}</b></span>
+        <span>Incomplete <b>{fmt(quality.partial_or_incomplete_checks,0)}</b></span>
       </div>
-      {(coverage.confidence === 'LOW' || Number(coverage.coverage_pct ?? 0) < 95 || Number(coverage.partial_or_incomplete_checks || 0) > 0) && <div className="sphereMonthlyWarning" role="status">
-        Historical evidence is limited or incomplete. Unobserved intervals are not counted as normal. Verify findings before reporting.
-      </div>}
-      {tab === 'overview' && <div className="sphereMonthlyLayout">
+      {limited&&<div className="sphereMonthlyWarning" role="status">Limited historical coverage. Unobserved intervals are unknown, not zero. Pressure episode counts represent saved observations only.</div>}
+      {tab==='overview'&&<div className="sphereMonthlyLayout">
         <div className="sphereMonthlyStats">
           {[
-            ['Observed workloads', fmt(summary.workloads, 0), 'Unique observed job/program identities'],
-            ['Review required', fmt(summary.review_required, 0), 'Evaluation signal, not confirmed incident'],
-            ['Programs / Jobs', fmt(summary.programs, 0) + ' / ' + fmt(summary.jobs, 0), 'Observed types'],
-            ['WP overlap', fmt(summary.wp_signal_overlap, 0), 'Workloads co-observed with Critical WP'],
-          ].map(([title, value, detail]) => <div className="sphereMonthlyStat" key={title}>
-            <span>{title}</span><strong>{value}</strong><small>{detail}</small>
+            ['CPU Pressure',fmt(evidence.cpu?.episodes,0),'episodes · peak '+pct(evidence.cpu?.peak?.peak_pct)],
+            ['RAM Pressure',fmt(evidence.ram?.episodes,0),'episodes · peak '+pct(evidence.ram?.peak?.peak_pct)],
+            ['Critical WP',fmt(hosts.reduce((sum,row)=>sum+(row.critical_wp_host_checks||0),0),0),'APP host-checks, not failures'],
+            ['Review Required',fmt(summary.review_required,0),fmt(summary.workloads,0)+' observed workloads'],
+          ].map(([label,value,detail])=><div className="sphereMonthlyStat" key={label}>
+            <span>{label}</span><strong>{value}</strong><small>{detail}</small>
           </div>)}
         </div>
-        <div className="sphereMonthlyPanel">
-          <h4>Host CPU Trend <small>WIB calendar day</small></h4>
-          {daily.length ? <DailyTrend rows={daily} period={month}/> : <p className="sphereMonthlyEmpty">No retained daily host samples in this period.</p>}
+        <div className="sphereMonthlyPanel sphereMonthlyWide">
+          <div className="sphereMonthlyTableHead">
+            <div><h4>APP Performance Trends</h4><small>CPU and RAM are host utilisation, not program PSS</small></div>
+            <div className="sphereMonthlyFilters">
+              <select aria-label="Trend statistic" value={chartMode} onChange={event=>setChartMode(event.target.value)}>
+                <option value="peak">Daily peak</option><option value="avg">Daily average</option>
+              </select>
+              <select aria-label="Select APP trend" value={chartHost} onChange={event=>setChartHost(event.target.value)}>
+                <option value="ALL">All APP</option>
+                {hosts.map(row=><option key={row.host} value={hostLabel(row.host)}>{hostLabel(row.host)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="sphereMonthlyTrendDuo">
+            <div><h4>CPU <small>{chartMode==='peak'?'Peak':'Average'}</small></h4>
+              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="cpu" mode={chartMode} host={chartHost}/></div>
+            <div><h4>RAM <small>{chartMode==='peak'?'Peak':'Average'}</small></h4>
+              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="ram" mode={chartMode} host={chartHost}/></div>
+          </div>
         </div>
-        <div className="sphereMonthlyPanel">
-          <h4>Reporting scope</h4>
-          <div className="sphereMonthlyHosts">{sourceHosts.map(row => row?.host).filter(Boolean).map(host =>
-            <span key={host} title={host}>{shortHost(host)}</span>)}</div>
-          <p>Monthly evaluation uses persisted complete Rundeck collection checks. APP host chips show the monitored infrastructure scope, not monthly job execution totals.</p>
-          <p>Job/process CPU may exceed 100% across cores. PSS is workload memory. SAP transaction response time and HANA SQL are not inferred unless retained as separate SPHERE evidence.</p>
+        <div className="sphereMonthlyPanel sphereMonthlyWide">
+          <h4>APP1–APP5 Resource Summary</h4>
+          <div className="sphereMonthlyTableScroll"><table><thead><tr>
+            <th>APP</th><th>CPU Avg</th><th>CPU Peak</th><th>RAM Avg</th><th>RAM Peak</th>
+            <th>CPU High Host-Checks</th><th>RAM High Host-Checks</th><th>Critical WP Host-Checks</th>
+          </tr></thead><tbody>
+            {hosts.map(row=><tr key={row.host}><td>{hostLabel(row.host)}</td>
+              <td>{pct(row.avg_cpu_pct)}</td><td>{pct(row.peak_cpu_pct)}</td><td>{pct(row.avg_ram_pct)}</td><td>{pct(row.peak_ram_pct)}</td>
+              <td>{fmt(row.cpu_warning_host_checks,0)}</td><td>{fmt(row.ram_warning_host_checks,0)}</td><td>{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
+            {!hosts.length&&<tr><td colSpan="8">No historical host samples available.</td></tr>}
+          </tbody></table></div>
         </div>
       </div>}
-      {tab === 'jobs' && <div className="sphereMonthlyPanel">
+      {tab==='jobs'&&<div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Observed Jobs & Programs</h4><small>Full-population server evaluation · page {page + 1}/{pageCount} · {total} match(es)</small></div>
+          <div><h4>Observed Jobs & Programs</h4><small>{total} matches · Page {page+1}/{pages} · {chosen.length} selected</small></div>
           <div className="sphereMonthlyFilters">
-            <input type="search" value={search} onChange={event => { setSearch(event.target.value); setPage(0) }} placeholder="Search job / program" aria-label="Search job and program"/>
-            <select value={kind} onChange={event => { setKind(event.target.value); setPage(0) }} aria-label="Workload type">
+            <input type="search" value={search} onChange={event=>{setSearch(event.target.value);setPage(0)}}
+              placeholder="Search full job / program name" aria-label="Search job and program"/>
+            <select aria-label="Workload type" value={kind} onChange={event=>changeFilter(setKind,event.target.value)}>
               <option value="ALL">All types</option><option value="JOB">Jobs</option><option value="PROGRAM">Programs</option>
+            </select>
+            <select aria-label="Evaluation group" value={health} onChange={event=>changeFilter(setHealth,event.target.value)}>
+              <option value="REVIEW">Review required</option><option value="ATTENTION">Watch</option>
+              <option value="ALL">All evaluations</option><option value="NORMAL">Normal</option><option value="UNKNOWN">Limited/Unknown</option>
+            </select>
+            <select aria-label="Resource pressure filter" value={pressureFilter} onChange={event=>changeFilter(setPressureFilter,event.target.value)}>
+              {PRESSURE_FILTERS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
             </select>
           </div>
         </div>
-        <div className="sphereMonthlyTableScroll"><table>
-          <thead><tr><th>Job / Program</th><th>APP</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th><th>Prev Avg CPU</th><th>Observed checks</th><th>WP overlap</th><th>Report</th></tr></thead>
-          <tbody>{currentItems.map(row => <React.Fragment key={identity(row)}>
-            <tr>
-              <td className="sphereMonthlyName">
-                <button className="sphereMonthlyJobDetailToggle" type="button" aria-expanded={expanded === identity(row)}
-                  onClick={() => setExpanded(previous => previous === identity(row) ? null : identity(row))}>{row.consumer_key}</button>
-                <small>{row.consumer_type} · {row.assessment || row.status || 'Unclassified'}</small>
-              </td>
-              <td>{hostNames(row).join(', ') || '—'}</td><td>{percent(row.avg_cpu_pct)}</td><td>{percent(row.peak_cpu_pct)}</td>
-              <td>{fmt(row.avg_pss_gb, 2)} GB</td><td>{percent(row.previous?.avg_cpu_pct)}</td><td>{fmt(row.occurrences, 0)}</td><td>{fmt(row.critical_wp_host_checks, 0)}</td>
-              <td><button className={selected[identity(row)] ? 'is-selected' : ''} type="button" onClick={() => addSelection(row)} aria-pressed={Boolean(selected[identity(row)])}>{selected[identity(row)] ? 'Selected' : 'Select'}</button></td>
+        <div className="sphereMonthlyTableScroll"><table><thead><tr>
+          <th>Job / Program</th><th>APP</th><th>Avg / Peak CPU</th><th>Avg / Peak PSS</th>
+          <th>Checks</th><th>CPU / RAM High Host-Checks</th><th>Critical WP Host-Checks</th><th>Report</th>
+        </tr></thead><tbody>
+          {items.map(row=><React.Fragment key={id(row)}>
+            <tr><td className="sphereMonthlyName"><button type="button" className="sphereMonthlyJobDetailToggle" aria-expanded={expanded===id(row)}
+                onClick={()=>setExpanded(value=>value===id(row)?null:id(row))}>{row.consumer_key}</button>
+                <small>{row.consumer_type} · {row.assessment||'Observed'}</small></td>
+              <td>{hostsFor(row)||'—'}</td><td>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</td>
+              <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td><td>{fmt(row.occurrences,0)}</td>
+              <td>{fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} / {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}</td>
+              <td>{fmt(row.pressure_overlap?.wp_host_checks,0)}</td>
+              <td><button type="button" aria-pressed={Boolean(selected[id(row)])} className={selected[id(row)]?'is-selected':''}
+                onClick={()=>selectRow(row)}>{selected[id(row)]?'Selected':'Select'}</button></td>
             </tr>
-            {expanded === identity(row) && <tr className="sphereMonthlyEvidenceDetail"><td colSpan="9">
-              <div><strong>Saved workload evidence</strong>
-                <span>First observed: {when(row.first_seen)} · Last observed: {when(row.last_seen)}</span>
-                <span>Host observations: {fmt(row.host_observations, 0)} · Average processes: {fmt(row.avg_process_count)} · Peak PSS: {fmt(row.peak_pss_gb, 2)} GB</span>
-                <span>Reason: {row.assessment_reason || 'No reason provided by evaluation'}</span>
-                <span>Critical WP overlap is temporal evidence only. SPHERE observations do not establish job execution status or direct root cause.</span>
-              </div>
-            </td></tr>}
+            {expanded===id(row)&&<tr className="sphereMonthlyEvidenceDetail"><td colSpan="8"><div>
+              <strong>Saved monthly workload evidence</strong>
+              <span>First observed {when(row.first_seen)} · Last observed {when(row.last_seen)}</span>
+              <span>Host observations {fmt(row.host_observations,0)} · Prev-month avg CPU {pct(row.previous?.avg_cpu_pct)} · Peak processes {fmt(row.peak_process_count,0)}</span>
+              <span>Pressure correlation: CPU {fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)}, RAM {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}, WP {fmt(row.pressure_overlap?.wp_host_checks,0)} APP host-checks</span>
+              <span>Collection counts are not SM37 executions. Same-host overlap does not prove causation.</span>
+            </div></td></tr>}
           </React.Fragment>)}
-          {!currentItems.length && <tr><td colSpan="9">No observed workloads match the selected month/filter.</td></tr>}
-          </tbody>
-        </table></div>
-        <div className="sphereMonthlyPager"><small>Selected for report: {chosen.length} · Observations are not SM37 run counts</small>
-          <button type="button" disabled={page === 0} onClick={() => setPage(n => n - 1)}>Previous</button>
-          <button type="button" disabled={page >= pageCount - 1} onClick={() => setPage(n => n + 1)}>Next</button>
+          {!items.length&&<tr><td colSpan="8">No workloads match the selected month and filters.</td></tr>}
+        </tbody></table></div>
+        <div className="sphereMonthlyPager"><small>Full population is filtered on the server · {chosen.length} evidence selected</small>
+          <button type="button" disabled={page===0} onClick={()=>setPage(n=>n-1)}>Previous</button>
+          <button type="button" disabled={page+1>=pages} onClick={()=>setPage(n=>n+1)}>Next</button>
         </div>
       </div>}
-      {tab === 'impact' && <div className="sphereMonthlyLayout">
-        <div className="sphereMonthlyPanel">
-          <h4>Host workload pressure <small>Daily APP CPU · not SAP response time</small></h4>
-          {daily.length ? <DailyTrend rows={daily} period={month}/> : <p className="sphereMonthlyEmpty">No daily trend available.</p>}
+      {tab==='impact'&&<div className="sphereMonthlyImpact">
+        <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>Observed resource pressure</h4>
+          <div className="sphereMonthlyStatStrip">
+            <span>CPU warning ≥ {pct(evidence.thresholds?.cpu_warning_pct)}</span>
+            <span>RAM warning ≥ {pct(evidence.thresholds?.ram_warning_pct)}</span>
+            <span>CPU episodes {fmt(evidence.cpu?.episodes,0)}</span>
+            <span>RAM episodes {fmt(evidence.ram?.episodes,0)}</span>
+          </div>
+          <p>Pressure episodes are based on saved APP host samples; unknown time gaps break episodes. Correlation requires the same collection and APP host.</p>
         </div>
-        <div className="sphereMonthlyPanel">
-          <h4>Job-to-APP Critical WP overlap <small>Current page, sorted by host-check overlap</small></h4>
-          <div className="sphereMonthlyTableScroll"><table><thead><tr><th>Job / Program</th><th>APP</th><th>WP host-checks</th><th>Observation</th></tr></thead>
-            <tbody>{impact.map(row => <tr key={identity(row)}>
-              <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong></td><td>{hostNames(row).join(', ') || '—'}</td>
-              <td>{fmt(row.critical_wp_host_checks, 0)}</td><td>{(row.critical_wp_host_checks || 0) > 0 ? 'Same-host temporal overlap' : 'No recorded overlap'}</td>
-            </tr>)}
-            {!impact.length && <tr><td colSpan="4">No evidence in this page.</td></tr>}
-            </tbody></table></div>
-          <p>Temporal co-observation does not establish root cause. Review server/resource evidence and write the conclusion in Basis Assessment.</p>
-        </div>
+        <PressureEpisodes metric="cpu" pressure={evidence}/>
+        <PressureEpisodes metric="ram" pressure={evidence}/>
+        <PressureRows label="Jobs / Programs During CPU Pressure" evidence={evidence} metric="cpu"/>
+        <PressureRows label="Jobs / Programs During RAM Pressure" evidence={evidence} metric="ram"/>
       </div>}
-      {tab === 'assessment' && <div className="sphereMonthlyAssessment">
-        <div className="sphereMonthlyPanel">
-          <h4>Manual SAP Basis Assessment</h4>
-          {[
-            ['reviewer', 'Reviewed by', 'SAP Basis engineer'],
-            ['summary', 'Monthly summary', 'Overall job and program performance evaluation'],
-            ['impact', 'Business / SAP performance impact', 'Which observed periods affected operational work, and what supports that conclusion?'],
-            ['analysis', 'Technical findings', 'Workload, APP Critical WP overlap, resource pressure, limitations'],
-            ['actions', 'Recommendation and follow-up', 'Actions, PIC, priority and target date'],
-          ].map(([key, label, placeholder]) => <label key={key} className="sphereMonthlyField">
-            <span>{label}</span>{key === 'reviewer'
-              ? <input value={assessment[key]} onChange={event => updateAssessment(key, event.target.value)} placeholder={placeholder}/>
-              : <textarea rows={key === 'analysis' ? 4 : 3} value={assessment[key]} onChange={event => updateAssessment(key, event.target.value)} placeholder={placeholder}/>}
-          </label>)}
-          <div className="sphereMonthlyActions"><button type="button" onClick={saveDraft}>Save local draft</button><small>{savedLocal || 'Notes remain in this modal until saved to this browser.'}</small></div>
-        </div>
-        <aside className="sphereMonthlyPanel">
-          <h4>Included evidence ({chosen.length})</h4>
-          {chosen.length ? chosen.map(row => <div key={identity(row)} className="sphereMonthlySelectedRow">
-            <strong>{row.consumer_key}</strong><small>{row.consumer_type} · {hostNames(row).join(', ') || 'APP unverified'}</small>
-            <button type="button" onClick={() => addSelection(row)}>Remove</button>
-          </div>) : <p className="sphereMonthlyEmpty">Go to Jobs & Programs and select the evidence to include.</p>}
-          <p>Draft notes are stored in this browser only. No server approval or shared archive is claimed.</p>
-        </aside>
-      </div>}
-      {tab === 'report' && <div className="sphereMonthlyPanel sphereMonthlyReportPreview">
+      {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Report Preview</h4><small>Monthly Basis Review · {month} · DRAFT</small></div>
-          <button type="button" className="is-primary" disabled={pdfBusy} onClick={report}>{pdfBusy ? 'Generating PDF…' : 'Export Draft PDF'}</button>
+          <div><h4>Monthly Performance Report</h4><small>SPHERE landscape style · CPU/RAM · Workloads · Coverage</small></div>
+          <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
+            {pdfBusy?'Preparing report…':'Preview PDF'}
+          </button>
         </div>
-        {pdfError && <p role="alert" className="sphereMonthlyWarning">{pdfError}</p>}
-        <h3>SAP Performance & Job Impact Review</h3>
-        <p><b>Period:</b> {month} WIB · <b>Reviewer:</b> {assessment.reviewer || 'Not supplied'} · <b>Status:</b> Draft</p>
-        <p><b>Evidence:</b> {fmt(summary.workloads, 0)} observed workloads; {percent(coverage.coverage_pct)} coverage; {chosen.length} selected job/program entries.</p>
-        <h4>Selected workload evidence</h4>
-        {chosen.map(row => <p className="sphereMonthlyReportItem" key={identity(row)}><b>{row.consumer_key}</b> · {row.consumer_type} · Avg CPU {percent(row.avg_cpu_pct)} · Avg PSS {fmt(row.avg_pss_gb, 2)} GB · WP overlap {fmt(row.critical_wp_host_checks, 0)}</p>)}
-        {!chosen.length && <p>No workload selected yet.</p>}
-        {[['Monthly summary', 'summary'], ['Operational impact', 'impact'], ['Technical findings', 'analysis'], ['Recommendation / action plan', 'actions']].map(([label, key]) =>
-          <div key={key}><h4>{label}</h4><p>{assessment[key] || 'Not assessed'}</p></div>)}
-        <p className="sphereMonthlyReportDisclaimer">Source: SPHERE retained complete collections. Temporal correlations do not prove causation. Collection observations are not SM37 execution totals. Incomplete periods remain unobserved.</p>
+        {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
+        <div className="sphereMonthlyReportOverview">
+          <div><strong>Reporting period</strong><span>{month} · Asia/Jakarta</span></div>
+          <div><strong>CPU / RAM pressure</strong><span>{fmt(evidence.cpu?.episodes,0)} / {fmt(evidence.ram?.episodes,0)} observed episodes</span></div>
+          <div><strong>Workload evidence</strong><span>Top 5 each pressure type · {chosen.length} selected for appendix</span></div>
+          <div><strong>Data quality</strong><span>{pct(quality.coverage_pct)} coverage · {quality.confidence||'UNKNOWN'}</span></div>
+        </div>
+        <h4>Optional technical appendix ({chosen.length})</h4>
+        {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
+          <strong>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)||'APP not recorded'}</small>
+          <button type="button" onClick={()=>selectRow(row)}>Remove</button>
+        </div>):<p>No manual selection. The one-page monthly summary still includes source-backed top CPU/RAM workloads.</p>}
+        {pdfUrl&&<div className="sphereMonthlyPdfFrame">
+          <div className="sphereMonthlyPager"><small>PDF preview · Generated using current month evidence</small>
+            <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Download PDF</a>
+            <button type="button" onClick={()=>{if(pdfRef.current)URL.revokeObjectURL(pdfRef.current);pdfRef.current='';setPdfUrl('')}}>Close preview</button>
+          </div>
+          <iframe title="SPHERE monthly PDF preview" src={pdfUrl}/>
+        </div>}
+        <p className="sphereMonthlyReportDisclaimer">Historical observation report only. Workload activity during host pressure is not proof that the workload caused SAP slowness. No external uploads or manual T-code data.</p>
       </div>}
     </>}
   </section>
