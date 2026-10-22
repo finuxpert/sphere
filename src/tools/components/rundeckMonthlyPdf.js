@@ -282,7 +282,10 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       const cat = pdf.splitTextToSize(String(row.category_label || 'Lainnya'), 37)
       const code = pdf.splitTextToSize(String(row.error_code || 'Tidak tersedia'), 61)
       const program = pdf.splitTextToSize(String(row.program || 'Belum teridentifikasi'), 88)
-      const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length) + 1.8)
+      const resource = row.snapshot_host_checks > 0 && (row.cpu_snapshot_pct !== null || row.pss_snapshot_gb !== null)
+        ? 'CPU saat snapshot ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
+        : ''
+      const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length) + 1.8 + (resource ? 3.3 : 0))
       if (ey + rowH > H - 17) {
         pdf.addPage()
         header(true)
@@ -293,6 +296,13 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.text(cat, margin, ey + 3)
       pdf.text(code, margin + 40, ey + 3)
       pdf.text(program, margin + 106, ey + 3)
+      if (resource) {
+        pdf.setFontSize(6)
+        pdf.setTextColor(100, 116, 125)
+        pdf.text(resource, margin + 106, ey + 3 + 3.3 * program.length)
+        pdf.setFontSize(7)
+        pdf.setTextColor(34, 49, 59)
+      }
       pdf.text(labelHost(row.host), margin + 201, ey + 3)
       pdf.text(String(row.event_count ?? 'N/A'), margin + 229, ey + 3, {align: 'right'})
       pdf.text(String(row.snapshot_host_checks ?? 'N/A'), margin + 258, ey + 3, {align: 'right'})
