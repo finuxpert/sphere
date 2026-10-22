@@ -322,7 +322,7 @@ const checks = [
     files.jobsPrograms.includes('>Current</button>') &&
     files.jobsPrograms.includes('>Review</button>') &&
     files.jobsPrograms.includes('>Search</button>')],
-  ['Flat cockpit preserves five operational checks inside the APP workspace',
+  ['Flat cockpit preserves six operational checks with the monthly review inside the APP workspace',
     files.monitoringCore.includes('operationalChecks={props.operationalEvidenceContent}') &&
     files.operationalEvidence.includes('rundeckAnalysisActions') &&
     files.operationalEvidence.includes('Jobs &amp; Programs') &&
@@ -330,6 +330,9 @@ const checks = [
     files.operationalEvidence.includes('SAP Checks') &&
     files.operationalEvidence.includes('Infrastructure') &&
     files.operationalEvidence.includes('System Data') &&
+    files.operationalEvidence.includes('Monthly Review') &&
+    files.wrapper.includes('onOpenMonthlyReview=') &&
+    files.wrapper.includes('size="monthly-review"') &&
     files.wrapper.includes('onOpenJobsPrograms=') &&
     files.wrapper.includes('onOpenEvidence=') &&
     files.wrapper.includes('onOpenInfrastructure=') &&
