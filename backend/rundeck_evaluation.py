@@ -638,7 +638,7 @@ def _calendar_month_collection_anchor(conn, start: datetime, end: datetime) -> s
     return value.isoformat() if value is not None else "NO_COMPLETE_COLLECTION"
 
 
-def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str, pressure: str = "ALL") -> dict:
+def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str, pressure: str = "ALL", flag: str = "ALL") -> dict:
     """Filter the FULL evaluated population, then slice; leave all-population summary intact."""
     normalized_query = query.strip().casefold()
     group = health.upper().strip()
@@ -651,6 +651,9 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
     pressure_key = pressure.upper().strip()
     if pressure_key not in {"ALL", "CPU", "RAM", "WP"}:
         raise ValueError("pressure must be ALL, CPU, RAM or WP")
+    flag_key = flag.upper().strip()
+    if flag_key not in {"ALL", "HIGH_CPU", "HIGH_MEMORY", "RECURRING"}:
+        raise ValueError("flag must be ALL, HIGH_CPU, HIGH_MEMORY or RECURRING")
     full = report["items"]
     def search_text(row: dict) -> str:
         details = row.get("details")
@@ -673,6 +676,16 @@ def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, healt
             pressure_key == "RAM" and row.get("pressure_overlap", {}).get("ram_pressure_host_checks", 0) > 0
         ) or (
             pressure_key == "WP" and row.get("pressure_overlap", {}).get("wp_host_checks", 0) > 0
+        ))
+        and (flag_key == "ALL" or (
+            flag_key == "HIGH_CPU" and (
+                (row.get("signals") or {}).get("sustained_high_cpu")
+                or (row.get("signals") or {}).get("cpu_spike")
+            )
+        ) or (
+            flag_key == "HIGH_MEMORY" and (row.get("signals") or {}).get("high_memory")
+        ) or (
+            flag_key == "RECURRING" and (row.get("signals") or {}).get("recurring")
         ))
         and (not normalized_query or normalized_query in search_text(row))
     ]
@@ -762,15 +775,15 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
     } for row in rows]
 
 
-def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None, pressure: str = "ALL") -> dict:
+def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None, pressure: str = "ALL", flag: str = "ALL") -> dict:
     """Serialize cold full-population computations; cached pages use the same source anchor."""
     with _EVALUATION_COMPUTE_LOCK:
         if month is None:
             return _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
-        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure)
+        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure, flag)
 
 
-def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None, pressure: str = "ALL") -> dict:
+def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None, pressure: str = "ALL", flag: str = "ALL") -> dict:
     started = time.perf_counter()
     period_key = str(period or "1d").lower()
     if period_key not in PERIOD_DAYS and period_key != "month":
@@ -813,7 +826,8 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         cached = _cache_get(cache_key)
         if cached:
             page = _evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key,
-                                    pressure=pressure if period_key == "month" else "ALL")
+                                    pressure=pressure if period_key == "month" else "ALL",
+                                    flag=flag if period_key == "month" else "ALL")
             return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
         current_quality = _collection_quality(conn, start, end)
         previous_quality = _collection_quality(conn, previous_start, start)
@@ -1010,5 +1024,6 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     }
     _cache_put(cache_key, result)
     return _runtime_payload(_evaluation_page(result, limit=limit_key, offset=offset_key, query=query_key,
-                                             health=health_key, pressure=pressure if period_key == "month" else "ALL"),
+                                             health=health_key, pressure=pressure if period_key == "month" else "ALL",
+                                             flag=flag if period_key == "month" else "ALL"),
                             cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)
