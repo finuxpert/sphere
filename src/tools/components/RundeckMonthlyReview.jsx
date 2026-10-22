@@ -125,6 +125,7 @@ export default function RundeckMonthlyReview() {
   const [kind,setKind]=React.useState('ALL')
   const [health,setHealth]=React.useState('REVIEW')
   const [pressureFilter,setPressureFilter]=React.useState('ALL')
+  const [signalFilter,setSignalFilter]=React.useState('ALL')
   const [search,setSearch]=React.useState('')
   const [appliedSearch,setAppliedSearch]=React.useState('')
   const [page,setPage]=React.useState(0)
@@ -147,7 +148,7 @@ export default function RundeckMonthlyReview() {
   React.useEffect(()=>{
     const controller=new AbortController()
     const params=new URLSearchParams({
-      month,type:kind,health,pressure:pressureFilter,q:appliedSearch,
+      month,type:kind,health,pressure:pressureFilter,flag:signalFilter,q:appliedSearch,
       limit:String(PAGE_SIZE),offset:String(page*PAGE_SIZE),
     })
     setLoading(true);setError('');setData(null)
@@ -165,9 +166,9 @@ export default function RundeckMonthlyReview() {
       .catch(failure=>{if(!controller.signal.aborted)setError(failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
-  },[month,kind,health,pressureFilter,appliedSearch,page])
+  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page])
   const changeMonth=value=>{
-    setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL')
+    setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
     setSearch('');setAppliedSearch('');setSelected({});setExpanded(null);setPdfError('')
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
@@ -289,6 +290,12 @@ export default function RundeckMonthlyReview() {
             <select aria-label="Evaluation group" value={health} onChange={event=>changeFilter(setHealth,event.target.value)}>
               <option value="REVIEW">Review required</option><option value="ATTENTION">Watch</option>
               <option value="ALL">All evaluations</option><option value="NORMAL">Normal</option><option value="UNKNOWN">Limited/Unknown</option>
+            </select>
+            <select aria-label="Workload signal" value={signalFilter} onChange={event=>changeFilter(setSignalFilter,event.target.value)}>
+              <option value="ALL">All signals</option>
+              <option value="HIGH_CPU">High CPU</option>
+              <option value="HIGH_MEMORY">High memory</option>
+              <option value="RECURRING">Recurring</option>
             </select>
             <select aria-label="Resource pressure filter" value={pressureFilter} onChange={event=>changeFilter(setPressureFilter,event.target.value)}>
               {PRESSURE_FILTERS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
