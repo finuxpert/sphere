@@ -1137,3 +1137,128 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard>small{
   max-width:100%!important;
 }
+
+
+/* SPHERE v1.34.72 — direct Infrastructure Analysis drilldown. */
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink{
+  width:100%;
+  min-width:0;
+  padding:1px 0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 10px;
+  align-items:center;
+  gap:7px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricPair .rundeckLiveMetricLink{
+  grid-template-columns:minmax(0,1fr) auto 10px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink em,
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary em{
+  color:transparent;
+  font-style:normal;
+  font-size:11px;
+  transition:color 120ms ease,transform 120ms ease;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:hover,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:focus-visible{
+  background:rgba(79,198,200,.035);
+  outline:none;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:hover em,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink:focus-visible em,
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary.is-clickable:hover em,
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary.is-clickable:focus-visible em{
+  color:var(--sphere-accent,#4fc6c8);
+  transform:translateX(2px);
+}
+.appShell:has(.rundeckPanel) .rundeckLiveExceptionSummary.is-clickable{
+  width:100%;
+  border:0;
+  cursor:pointer;
+  grid-template-columns:auto minmax(0,1fr) 10px;
+  text-align:left;
+}
+
+
+/* SPHERE v1.34.73 — final flat Infrastructure overview. */
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveExceptionSummary{
+  border:0!important;
+  border-left:2px solid rgba(216,179,95,.48)!important;
+  border-radius:0!important;
+  background:rgba(216,179,95,.012)!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid{
+  border-top:0!important;
+  border-bottom:0!important;
+  column-gap:14px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
+  min-height:72px!important;
+  padding:5px 10px 5px 0!important;
+  border:0!important;
+  border-right:1px solid rgba(126,147,158,.035)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article:last-child{
+  border-right:0!important;
+  padding-right:0!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricLink{
+  min-height:17px!important;
+  padding:1px 2px!important;
+  border-radius:3px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricLink:hover,
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveMetricLink:focus-visible{
+  background:rgba(79,198,200,.025)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveJobSource{
+  margin-top:3px!important;
+  padding:4px 1px 2px!important;
+  border-top:1px solid rgba(126,147,158,.045)!important;
+  border-bottom:0!important;
+  background:transparent!important;
+}
+
+/* Infrastructure freshness: historical capacity is evidence, not live CRITICAL. */
+.appShell:has(.rundeckPanel) .rundeckLiveDataDelayed{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:28px;
+  margin:0 0 4px;
+  padding:3px 7px;
+  border-left:2px solid rgba(216,179,95,.6);
+  background:rgba(216,179,95,.018);
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font-size:9px;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDataDelayed strong{
+  flex:none;
+  color:var(--sphere-warning,#d8b35f);
+  font-weight:700;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveDataDelayed span{
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.appShell:has(.rundeckPanel) .rundeckLiveStatus.is-stale,
+.appShell:has(.rundeckPanel) .rundeckLiveStatus.is-unknown,
+.appShell:has(.rundeckPanel) .rundeckLiveMetricLink strong.is-historical{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:600;
+}
+@media(max-width:760px){
+  .appShell:has(.rundeckPanel) .rundeckLiveDataDelayed{flex-wrap:wrap;gap:2px 8px}
+  .appShell:has(.rundeckPanel) .rundeckLiveDataDelayed span{white-space:normal}
+}

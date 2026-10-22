@@ -20,7 +20,15 @@ const files = {
   quickAnalysisCss: read('src/tools/components/RundeckReviewQuickAnalysis.css'),
   monitoringCss: read('src/tools/components/RundeckMonitoringHistory.css'),
   liveOverview: read('src/tools/components/RundeckLiveOverview.jsx'),
+  unifiedApp: read('src/tools/components/RundeckUnifiedAppInfrastructure.jsx'),
+  unifiedAnalysis: read('src/tools/components/RundeckUnifiedAppAnalysis.jsx'),
+  unifiedAnalysisCss: read('src/tools/components/RundeckUnifiedAppAnalysis.css'),
+  unifiedState: read('src/tools/components/rundeckUnifiedHost.js'),
+  infraFreshness: read('src/tools/components/infrastructureFreshness.js'),
+  dataQuality: read('src/tools/components/rundeckDataQuality.js'),
   liveOverviewCss: read('src/tools/components/RundeckLiveOverview.css'),
+  operatorMotion: read('src/tools/components/RundeckOperatorMotion.css'),
+  cockpitPolish: read('src/tools/components/RundeckCockpitPolish.css'),
   closingBackend: read('backend/rundeck_closing.py'),
   closingMigration: read('backend/db/migrations/versions/20260929_0007_rundeck_analysis_closures.py'),
   evaluationBackend: read('backend/rundeck_evaluation.py'),
@@ -69,6 +77,11 @@ const files = {
   migration: read('backend/db/migrations/versions/20260916_0004_sap_job_executions.py'),
   importer: read('ops/rundeck/import-sm37.py'),
   smoke: read('ops/rundeck/smoke-job-intelligence-dev.sh'),
+  watchdogSmoke: read('ops/rundeck/smoke-watchdog-dev.sh'),
+  watchdogReadiness: read('ops/rundeck/prod-readiness-check.sh'),
+  watchdogDiagnosis: read('ops/rundeck/diagnose-watchdog-dev.sh'),
+  rundeckAuthProbe: read('ops/rundeck/diagnose-rundeck-auth-dev.py'),
+  rundeckAuthProbeTests: read('backend/tests/test_rundeck_auth_diagnostic.py'),
   envExample: read('ops/rundeck/rundeck-dev.env.example'),
   watchdog: read('backend/rundeck_watchdog.py'),
   metrics: read('backend/rundeck_metrics.py'),
@@ -77,7 +90,73 @@ const files = {
 }
 
 const checks = [
-  ['monitoring flow version is v1.34.71', files.version.includes("APP_VERSION = '1.34.71'") && files.version.includes('monitoring-flow-ui-v1.34.71')],
+  ['Rundeck HTTP 403 diagnostic is GET-only and credential-safe',
+    files.rundeckAuthProbe.includes('method="GET"') &&
+    files.rundeckAuthProbe.includes('NoRedirect') &&
+    files.rundeckAuthProbe.includes('ProxyHandler({})') &&
+    files.rundeckAuthProbe.includes('X-Rundeck-Auth-Token') &&
+    files.rundeckAuthProbe.includes('Poller executions') &&
+    files.rundeckAuthProbe.includes('Watchdog running executions') &&
+    files.rundeckAuthProbe.includes('READER_CREDENTIAL=PRESENT (not displayed)') &&
+    !files.rundeckAuthProbe.includes('method="POST"') &&
+    !files.rundeckAuthProbe.includes('print(token)') &&
+    files.rundeckAuthProbeTests.includes('test_only_get_and_same_reader_token_for_every_request') &&
+    files.rundeckAuthProbeTests.includes('test_403_is_returned_as_code_without_printing_body')],
+  ['Watchdog ERROR remains a blocker with actionable safe diagnostics',
+    files.watchdogSmoke.includes('watchdog unhealthy: {status}') &&
+    files.watchdogSmoke.includes('last_recorded_exception=') &&
+    files.watchdogSmoke.includes('history, not confirmed cause') &&
+    files.watchdogReadiness.includes('if ! bash ops/rundeck/smoke-watchdog-dev.sh') &&
+    files.watchdogReadiness.includes('bash ops/rundeck/diagnose-watchdog-dev.sh || true') &&
+    files.watchdogReadiness.includes('exit 1') &&
+    files.watchdogDiagnosis.includes('READ ONLY') &&
+    files.watchdogDiagnosis.includes('ALLOWLIST FIELDS') &&
+    !files.watchdogDiagnosis.includes('systemctl restart') &&
+    !files.watchdogDiagnosis.includes('systemctl start')],
+  ['Operator motion is scoped, accessible, and passive',
+    files.wrapper.includes("import './RundeckOperatorMotion.css'") &&
+    files.wrapper.includes("import './RundeckCockpitPolish.css'") &&
+    files.operatorMotion.includes('@keyframes sphereCockpitEnter') &&
+    files.operatorMotion.includes('@keyframes sphereDrawerEnter') &&
+    files.operatorMotion.includes('.rundeckInfraChartWrap .series.is-selected') &&
+    files.operatorMotion.includes('prefers-reduced-motion: reduce') &&
+    files.cockpitPolish.includes('prefers-reduced-motion: reduce') &&
+    files.cockpitPolish.includes('.rundeckTripleTrendGrid .rundeckTrendChart') &&
+    files.cockpitPolish.includes('.rundeckWorkspaceDrawer.is-system-data') &&
+    !/animation(?:-iteration-count)?:[^;\n]*\binfinite\b/.test(files.operatorMotion + '\n' + files.cockpitPolish) &&
+    files.serverTrend.includes('animationDuration: reduceMotion ? 0 : 300') &&
+    files.serverTrend.includes('animationDurationUpdate: reduceMotion ? 0 : 200') &&
+    files.serverTrend.includes('window.matchMedia?.') &&
+    files.workspaceDrawer.includes('aria-modal={isModal}') &&
+    files.workspaceDrawer.includes("event.key !== 'Tab'")],
+  ['Data quality separates SAP health from collector trust and retained gaps',
+    files.dataQuality.includes('assessRundeckDataQuality') &&
+    files.dataQuality.includes('retainedReadyCollectionGaps') &&
+    files.dataQuality.includes("state = 'STALE'") &&
+    files.dataQuality.includes("state = 'DEGRADED'") &&
+    files.dataQuality.includes("state = 'UNKNOWN'") &&
+    files.dataQuality.includes("row?.status === 'READY'") &&
+    files.dataQuality.includes('cadenceMs * 2.2') &&
+    files.source.includes('rundeckDataQualityNotice') &&
+    files.source.includes('Data current · historical gap retained') &&
+    files.source.includes('NO COMPLETE READY OBSERVATION') &&
+    files.source.includes('Collection <b>LAST READY</b>') &&
+    files.source.includes('reportQuality') &&
+    files.source.includes('metaRefreshFailed') &&
+    files.sourceCss.includes('.rundeckDataQualityNotice')],
+  ['System Health and PDF cannot derive current CRITICAL from old host data',
+    files.wrapper.includes('sourceQuality={props.sourceQuality}') &&
+    files.wrapper.includes('sourceCollector={props.sourceCollector}') &&
+    files.source.includes('sourceQuality={quality}') &&
+    files.source.includes('sourceCollector={platform?.collector || null}') &&
+    files.systemHealthState.includes('observedHosts = performanceEvidenceStale || collectorUnreliable ? [] : hosts') &&
+    files.systemHealth.includes("sourceQuality.state === 'UNKNOWN'") &&
+    files.source.includes('systemHealthState(operationalHosts.filter(() => !reportPerformanceStale)') &&
+    files.source.includes("availabilityState: reportAvailabilityStale ? 'UNKNOWN' : availabilityState") &&
+    files.source.includes('serviceCritical: !reportAvailabilityStale && availabilityServiceImpact(availabilityResult)')],
+  ['Infrastructure stale source semantics are shared by overview and analysis', files.infraFreshness.includes('INFRA_FRESHNESS_LIMIT_MS = 15 * 60 * 1000') && files.infraFreshness.includes('infrastructureTelemetryFreshness(hostTimestamp, collectionId, rows') && files.infraFreshness.includes("return nowMs - collectedMs > INFRA_FRESHNESS_LIMIT_MS ? 'STALE' : 'FRESH'") && files.liveOverview.includes('infrastructureObservationStatus(fsOverall, snapshotFreshness)') && files.infrastructure.includes('observedStatus(statusFs(row.used_pct))') && files.liveOverview.includes('rundeckLiveDataDelayed') && files.liveOverview.includes('hostRow?.collection_id, telemetryRows, clockNow') && files.infrastructure.includes('hostRow?.collection_id,telemetryRows,clockNow') && files.infrastructure.includes('rundeckInfraHistoricalNote')],
+  ['Infrastructure auto refreshes on 60-second tick without claiming stale alerts', files.liveOverview.includes('setRefreshCycle((value) => value + 1)') && files.liveOverview.includes("snapshotFreshness === 'FRESH' && fsOverall !== 'NORMAL'") && files.infrastructure.includes("const overall=stale?freshness:[fsState,netState,storageState].includes('UNKNOWN')?'UNKNOWN':worst")],
+  ['monitoring flow version is v1.34.83', files.version.includes("APP_VERSION = '1.34.83'") && files.version.includes("APP_PREVIOUS_VERSION = '1.34.82'") && files.version.includes('monitoring-flow-v1.34.83') && files.version.includes('monitoring-flow-ui-v1.34.83')],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('forceSearch ? (searchActive ? searchRows : [])') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
@@ -95,7 +174,7 @@ const checks = [
   ['PDF follows the current Basis workflow with compact APP trends and recurring high-resource workloads', files.source.includes('SAP APP SERVER') && files.source.includes('AVAILABILITY') && files.source.includes('JOB/PROGRAM SAAT RAM / CPU TINGGI') && files.source.includes('thresholdEpisodes') && files.source.includes('buildThresholdSummary') && files.source.includes('history/timeline?at=')],
 
   ['Selected workload identity is carried by Current Jobs row highlight and shared Performance Analysis', files.currentWorkload.includes("className={active ? 'is-selected' : ''}") && files.wrapper.includes('React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })') && files.wrapper.includes('Job / Program Performance Analysis')],
-  ['Server Trend distinguishes retained-history start from real collection gaps', files.serverTrend.includes("fontSize: 10.2") && files.serverTrend.includes('gapDurationText(from, to)') && files.serverTrend.includes("'Collection Gap'") && files.serverTrend.includes('Data tersimpan mulai') && files.serverTrend.includes('historyStartedAt')],
+  ['Server Trend distinguishes retained-history start from real collection gaps', files.serverTrend.includes("fontSize: 11.2") && files.serverTrend.includes('gapDurationText(from, to)') && files.serverTrend.includes("'Collection Gap'") && files.serverTrend.includes('Data tersimpan mulai') && files.serverTrend.includes('historyStartedAt')],
   ['PDF one-page report ranks top five workloads across high RAM and CPU events', files.source.includes("pdf.text('CATATAN'") && files.source.includes('JOB/PROGRAM SAAT RAM / CPU TINGGI') && files.source.includes('slice(0, 5)') && files.source.includes("'MUNCUL'") && !files.source.includes("pdf.text('CHECK SUMMARY'")],  ['Trend Details exposes APP CPU Memory IO Wait Critical WP and workload WP evidence without causal verdicts', files.serverTrend.includes('<b>CPU</b>') && files.serverTrend.includes('<b>RAM</b>') && files.serverTrend.includes('<b>I/O Wait</b>') && files.serverTrend.includes('<b>APP Critical WP</b>') && files.serverTrend.includes('does not prove workload causation') && files.serverTrend.includes('workloadWp(consumer)')],
   ['Availability running refresh is informational rather than warning-styled', files.availability.includes("is-running-info") && files.availabilityCss.includes('SPHERE v1.34.49 — running availability refresh is informational')],
   ['Performance Analysis v1.34.49 keeps controls compact without changing range semantics', files.jobHistoryCss.includes('SPHERE v1.34.49 — final compact Performance Analysis control rail') && files.jobHistoryCss.includes('min-height:36px!important')],
@@ -141,8 +220,34 @@ const checks = [
 
   ['SAP Job Source renders as a visible neutral integrity strip', files.accessibilityThemeFinal.includes('.rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
-  ['Top cockpit row uses compact 42/58 APP and Infrastructure geometry', files.monitoringCore.includes('rundeckTopBandV13454') && files.monitoringCore.includes('is-infrastructure-overview') && files.workspace.includes('grid-template-columns:minmax(0,42fr) minmax(0,58fr)!important') && files.workspace.includes('height:auto!important')],
-  ['Infrastructure overview is embedded in the top row instead of rendered as a standalone block', files.wrapper.includes('infrastructureContent={<RundeckLiveOverview refreshToken={refreshToken} embedded />}') && files.liveOverview.includes("embedded = false") && files.liveOverviewCss.includes('SPHERE v1.34.54 — Infrastructure beside SAP App Servers')],
+  ['Top cockpit merges SAP APP and Infrastructure into one host-card workspace',
+    files.monitoringCore.includes('rundeckTopBandV13454 is-unified-app-infra') &&
+    files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure') &&
+    !files.monitoringCore.includes('<RundeckAppServers') &&
+    files.unifiedApp.includes('Select APP server') &&
+    !files.unifiedApp.includes('Inspect SAP') &&
+    !files.unifiedApp.includes('rundeckUnifiedAppInfraDetail') &&
+    files.unifiedApp.includes('onInspectApp?.({') &&
+    files.unifiedApp.includes('Highest CPU') && files.unifiedApp.includes('Critical WP') &&
+    files.unifiedAnalysis.includes('RundeckAppServerAnalysis') &&
+    files.unifiedAnalysis.includes('RundeckInfrastructure') &&
+    files.unifiedAnalysis.includes('lockedHost') && files.unifiedAnalysis.includes('hideHostCards') &&
+    files.infrastructure.includes('const target=lockedHost ? selectedHost') &&
+    files.unifiedState.includes('infrastructureTelemetryFreshness') &&
+    files.cockpitPolish.includes('.rundeckUnifiedAppCards')],
+  ['Shared APP context drills into Infrastructure Analysis without another host selector',
+    files.wrapper.includes('onOpenInfrastructureMetric=') &&
+    files.liveOverview.includes("initialHost = ''") &&
+    files.liveOverview.includes('rundeckLiveMetricLink') &&
+    files.wrapper.includes('infraContext: context') &&
+    files.infrastructure.includes('initialContext=null') &&
+    files.infrastructure.includes('rundeckInfraHostCards') &&
+    files.infrastructure.includes('rundeckInfraOtherHosts') &&
+    files.infrastructure.includes('controller.abort()') &&
+    files.infrastructure.includes('trendData.scope===trendScope?trendData.items:[]') &&
+    files.unifiedState.includes('splitInfrastructureHosts') &&
+    files.liveOverview.includes('sourceInfraHost = null') &&
+    !files.infrastructure.includes('aria-label="Infrastructure host"')],
   ['Merged Jobs and Programs workspace uses one bounded scroll area per active mode', files.monitoringCore.includes('RundeckJobsProgramsWorkspace') && files.jobsPrograms.includes("mode === 'live'") && files.jobsPrograms.includes("mode === 'review'") && files.jobsPrograms.includes("mode === 'search'") && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadTableWrap') && files.monitoringCss.includes('.rundeckJobsProgramsWorkspaceBody .rundeckReviewTableWrapV1231') && files.monitoringCss.includes('overflow-y:auto!important')],
   ['Compact Review table keeps Job Reason and Peak CPU visible', files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(3)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(5)') && files.workspace.includes('.rundeckReviewTableV1231 th:nth-child(4){width:18%!important}')],
   ['Middle trend row provides two Server Trends plus Technical Trend with shared controls', files.monitoringCore.includes('rundeckTrendBandV13454') && files.serverTrend.includes('rundeckTripleTrendV13457') && files.serverTrend.includes('Server Trend 1') && files.serverTrend.includes('Server Trend 2') && files.serverTrend.includes('Technical Trend') && files.serverTrend.includes('Shared trend period') && files.monitoringCss.includes('grid-template-columns:minmax(0,35fr) minmax(0,35fr) minmax(0,30fr)')],
@@ -169,7 +274,17 @@ const checks = [
   ['Compact Correlated Events summary avoids long timing text truncation', files.evidenceTimeline.includes('No overlap · ${Math.round(workloadGapMinutes)}m gap') && files.evidenceTimeline.includes('${Math.round(Number(skew))}m difference')],
   ['issues review 35/65 layout is preserved', files.workspace.includes('.rundeckIssuesReviewBand') && files.workspace.includes('grid-template-columns: minmax(0, 35fr) minmax(0, 65fr)')],
   ['workload cross-focus remains highlight-only without APP auto-expand or scroll', files.appServers.includes('if (!focusRequest?.highlightOnly') && files.appServers.includes('if (focusRequest?.highlightOnly) return') && files.appServers.indexOf('if (focusRequest?.highlightOnly) return') < files.appServers.indexOf("document.querySelectorAll('.rundeckServerTable tr[data-app-key]')")],
-  ['APP server detail moved from inline expansion to workspace drawer', !files.appServers.includes('rundeckWpInlinePanel') && files.core.includes('onInspectApp={props.onInspectApp}') && files.wrapper.includes("activeOverlay?.type === 'app'")],
+  ['APP card opens one modal with SAP and independent Infrastructure evidence', files.unifiedApp.includes('onInspectApp?.({') &&
+    files.core.includes('onInspectApp={props.onInspectApp}') &&
+    files.wrapper.includes("activeOverlay?.type === 'app'") &&
+    files.wrapper.includes('size="unified-app"') &&
+    files.wrapper.includes('RundeckUnifiedAppAnalysis') &&
+    files.workspaceDrawer.includes("size === 'unified-app'") &&
+    files.unifiedAnalysis.includes('<strong>SAP Performance</strong>') &&
+    files.unifiedAnalysis.includes('<strong>Infrastructure</strong>') &&
+    files.unifiedAnalysis.includes("shortHost(infraKey) === shortHost(appKey)") &&
+    files.unifiedAnalysis.includes("'UNKNOWN · APP identity mismatch'") &&
+    files.unifiedAnalysis.includes('lockedHost')],
   ['Performance Review exposes loaded review rows and historical search matches through the cockpit scroll list', files.performanceReview.includes('const visibleRows = forceSearch ? (searchActive ? searchRows : []) : (searchActive ? searchRows : reviewRows)') && files.performanceReview.includes('is-scroll-list') && !files.performanceReview.includes("is-top4")],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.performanceReview.includes("' is-updating'")],
     ['Performance Review controls preserve long-range loading state in the scroll-list layout', files.performanceReview.includes('Updating {periodLabel}') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.workspace.includes('.rundeckReviewControlsV1231')],
@@ -182,7 +297,13 @@ const checks = [
   ['Correlated events use APP Server and Job Program terms', read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'Job / Program'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes("return 'APP Server'") && read('src/tools/components/RundeckEvidenceTimeline.jsx').includes('SAME TIME WINDOW')],
   ['Correlated events can anchor timing to the selected observation', files.evidenceTimeline.includes("params.set('at', anchorAt)") && files.api.includes('anchor_at: str | None = Query(None, alias="at"') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot')],
   ['Issue correlation compares nearest retained observations instead of unrelated latest snapshots', files.evidenceBackend.includes('correlation_anchor') && files.evidenceBackend.includes('Issue Start') && files.evidenceBackend.includes('_nearest_item') && files.evidenceBackend.includes('_nearest_snapshot') && files.evidenceBackend.includes('Timing alignment uses retained timestamps')],
-  ['Current workload count distinguishes observed total from loaded rows while list scrolls', read('src/tools/components/RundeckCurrentWorkload.jsx').includes('observed · showing ${rows.length}') && files.source.includes('compactLimit={50}') && read('src/tools/components/RundeckCurrentWorkload.jsx').includes('slice(0, visibleLimit)')],
+  ['Current workload count distinguishes total observations and loaded rows while preserving table scroll',
+    files.currentWorkload.includes('observed · ${rows.length} loaded') &&
+    files.currentWorkload.includes('workloadMeta.total > rows.length') &&
+    files.currentWorkload.includes('const visible = sortedRows.slice(0, visibleLimit)') &&
+    files.currentWorkload.includes('rundeckCurrentWorkloadTableWrap') &&
+    files.source.includes('compactLimit={50}') &&
+    files.cockpitPolish.includes('overflow-y:auto!important')],
   ['Performance summary labels averaged process count and observations precisely', files.jobHistory.includes('Avg Processes') && files.jobHistory.includes('<b>Observations</b>') && files.jobHistory.includes('<b>Checks</b>')],
   ['Closing workflow stores finding recommendation owner and follow-up', files.quickAnalysis.includes('closing_status') && files.quickAnalysis.includes('Analysis Summary') && files.quickAnalysis.includes('Suggested Check') && files.quickAnalysis.includes('Validation / Follow-up')],
   ['Closing API supports get save and history', files.api.includes('@app.get("/analysis/closing")') && files.api.includes('@app.post("/analysis/closing")') && files.api.includes('@app.get("/analysis/closings")')],
@@ -205,10 +326,25 @@ const checks = [
   ['Trend point selection ignores distant clicks', files.serverTrend.includes('distance > 900')],
   ['Trend modal explains multicore CPU and uses GB Processes labels', files.serverTrend.includes('<span>Processes</span>') && files.serverTrend.includes('<span>PSS Memory</span>') && files.serverTrend.includes('Grouped workload CPU can exceed 100%') && files.serverTrend.includes(' GB')],
   ['Trend modal distinguishes actual sample time from aggregation bucket time', files.serverTrend.includes('selectedActualAt') && files.serverTrend.includes('selectedBucketAt') && files.serverTrend.includes('Actual ') && files.serverTrend.includes('Bucket ')],
-  ['Trend mini history anchors marker to clicked bucket while preserving exact selected value', files.serverTrend.includes("const selectedBucketAt = Date.parse(selected?.bucket || '')") && files.serverTrend.includes('selectedValue:Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value') && files.serverTrend.includes('<MiniTrendContext')],
+  ['Trend mini history anchors marker to clicked bucket while preserving exact selected value', files.serverTrend.includes("const selectedBucketAt = Date.parse(selected?.bucket || '')") && files.serverTrend.includes('Math.abs(row.at-selectedBucketAt)') && files.serverTrend.includes('const resolvedSelectedValue = Number.isFinite(selectedValue) ? selectedValue : selectedRow?.value') && files.serverTrend.includes('selectedValue:resolvedSelectedValue') && files.serverTrend.includes('<MiniTrendContext')],
   ['Peak tooltip separates aggregation bucket from exact peak timestamp', files.serverTrend.includes('Bucket: ${formatWib(bucketAt, true)} WIB') && files.serverTrend.includes('Peak at ${formatWib(point.data.peakAt, true)} WIB')],
   ['Trend point selection prefers exact ECharts data before nearest-point fallback', files.serverTrend.includes("chart.on('click', exactClick)") && files.serverTrend.includes("chart.getZr().on('click', fallbackClick)") && files.serverTrend.includes('Date.now() - lastExactClickAt < 80')],
-  ['Trend Details header exposes selected value exact sample time and bucket separately', files.serverTrend.includes("selected?.mode === 'max' ? 'Peak at' : 'Observed at'") && files.serverTrend.includes('selected?.bucket ? ` · Bucket')],
+  ['Trend Details header distinguishes historical value, exact observation time and bucket',
+    files.serverTrend.includes('SPHERE ANALYSIS · HISTORICAL OBSERVATION') &&
+    files.serverTrend.includes("selected?.mode === 'max' ? 'Historical peak at' : 'Historical observation at'") &&
+    files.serverTrend.includes("selected?.value == null ? '—'") &&
+    files.serverTrend.includes("formatWib(selected.at, true)") &&
+    files.serverTrend.includes('selected?.bucket ? ` · Bucket')],
+  ['Trend Details history mirrors dashboard context with axes thresholds selected marker and peak summary', files.serverTrend.includes('rundeckTrendMiniAxisLabel') && files.serverTrend.includes('Warn ') && files.serverTrend.includes('Crit ') && files.serverTrend.includes('Selected ') && files.serverTrend.includes('Peak ') && files.serverTrend.includes('Actual ') && files.serverTrend.includes('Bucket ')],
+  ['Technical Trend points reuse the same Trend Details drilldown', files.serverTrend.includes('renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint)') && files.serverTrend.includes('SelectedTime selected={selected}')],
+  ['Infrastructure summary metrics open the existing analysis at requested host metric and series', files.liveOverview.includes("openMetric('filesystem'") && files.liveOverview.includes("openMetric('network'") && files.liveOverview.includes("openMetric('storage'") && files.infrastructure.includes('initialContext.metric') && files.infrastructure.includes('initialContext.series')],
+  ['Trend Details final polish removes nested-card weight while preserving interaction', read('src/tools/components/RundeckWorkloadExplorer.css').includes('SPHERE v1.34.73 — final flat Trend Details hierarchy') && read('src/tools/components/RundeckWorkloadExplorer.css').includes('border-bottom:1px solid rgba(126,147,158,.045)') && read('src/tools/components/RundeckWorkloadExplorer.css').includes('.rundeckTrendWorkloadRow:hover')],
+  ['Infrastructure overview final polish removes outer scan-box lines while keeping metric drilldown', files.liveOverviewCss.includes('SPHERE v1.34.73 — final flat Infrastructure overview') && files.liveOverviewCss.includes('border-top:0!important') && files.liveOverviewCss.includes('rundeckLiveMetricLink:hover')],
+  ['APP Server Analysis uses a single flat metric strip instead of nested metric cards', files.appServerAnalysisCss.includes('SPHERE v1.34.74 — APP Server Analysis uses one metric strip') && files.appServerAnalysisCss.includes('.rundeckAppServerSummary span') && files.appServerAnalysisCss.includes('border-right:1px solid rgba(126,147,158,.035)')],
+  ['Infrastructure Analysis final pass keeps history and snapshot in one flat investigation flow', files.infrastructureCss.includes('SPHERE v1.34.74 — final flat Infrastructure Analysis investigation flow') && files.infrastructureCss.includes('.rundeckInfraFreshness') && files.infrastructureCss.includes('border-bottom:0!important')],
+  ['Performance Analysis final pass flattens summary timing evidence and chart workspace', files.jobHistoryCss.includes('SPHERE v1.34.74 — final flat Performance Analysis hierarchy') && files.jobHistoryCss.includes('.rundeckJobEpisodeMatrix') && files.jobHistoryCss.includes('.rundeckJobTimeline') && files.jobHistoryCss.includes('.rundeckWpSignalPanel')],
+  ['Performance related analysis launchers render as compact flat links', files.monitoringCss.includes('SPHERE v1.34.74 — Performance drawer related analysis uses compact links') && files.monitoringCss.includes('.rundeckPerformanceDrawerEvidence .rundeckEvidenceCard') && files.monitoringCss.includes('.rundeckPerformanceDrawerActions button')],
+  ['Shared analysis drawers use one restrained outer visual contract', files.workspaceDrawerCss.includes('SPHERE v1.34.74 — one restrained visual contract for analysis drawers') && files.workspaceDrawerCss.includes('.rundeckDrawerAnalysisMenu>button') && files.workspaceDrawerCss.includes('border-bottom:1px solid rgba(126,147,158,.035)')],
   ['Trend snapshot preserves bucket and selected trend value provenance', files.serverTrend.includes("trendBucket: selected?.bucket || ''") && files.serverTrend.includes('trendValue: selected?.value ?? null')],
   ['Workload evidence exposes NO OVERLAP when an episode ended before the issue window', files.evidenceBackend.includes('"state": "NO OVERLAP"') && files.evidenceBackend.includes('workload_gap_minutes') && files.jobHistory.includes("timingState === 'NO OVERLAP'") && files.evidenceTimeline.includes("state === 'NO OVERLAP'")],
   ['Evidence timing accepts exact selected episode boundaries and suppresses current-incident NO OVERLAP for historical anchors', files.api.includes('episode_start: str | None') && files.api.includes('episode_end: str | None') && files.evidenceBackend.includes('workload_first_seen = _dt(episode_start)') && files.evidenceBackend.includes('workload_last_seen = _dt(episode_end)') && files.evidenceBackend.includes('if not selected_anchor and issue_start')],
@@ -231,7 +367,15 @@ const checks = [
 
   ['History empty states use stronger intentional visual hierarchy', files.workloadExplorerCss.includes('min-height:235px') && files.workloadExplorerCss.includes('.rundeckExplorerEmptyState strong')],
   ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
-  ['APP analysis and selected job/program contexts are explicitly named', files.wrapper.includes('SAP App Server Analysis') && files.appServerAnalysis.includes('Jobs & Programs on') && files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
+  ['Unified APP analysis names SAP and Infrastructure while preserving selected job/program context',
+    files.wrapper.includes("shortHost(activeOverlay.app.host) + ' Analysis'") &&
+    files.wrapper.includes("props.latestCollectionAt ? formatWib(props.latestCollectionAt, true)") &&
+    files.wrapper.includes("performanceCollectedAt={props.latestCollectionAt || ''}") &&
+    files.wrapper.includes('size="unified-app"') &&
+    files.unifiedAnalysis.includes('aria-label="SAP performance evidence"') &&
+    files.unifiedAnalysis.includes('aria-label="Infrastructure evidence"') &&
+    files.appServerAnalysis.includes('Jobs & Programs on') &&
+    files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
   ['Observation History defaults to eight rows with explicit expansion', files.observationHistory.includes('rows.slice(0, 8)') && files.observationHistory.includes('View all ${rows.length}')],
   ['Observation History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],
   ['Selected job performance opens directly without nested disclosure', files.jobHistory.includes('rundeckJobPerformanceDisclosure is-direct') && !files.jobHistory.includes('className="rundeckJobPerformanceDisclosure" open')],
@@ -262,7 +406,7 @@ const checks = [
   ['Performance issue marker label is short and horizontal', files.jobHistory.includes("formatter: `Issue · ${formatWib(incidentStart, false)}`") && files.jobHistory.includes('rotate: 0')],
   ['Infrastructure chart uses expanded internal plot geometry and range-aware WIB axis labels', files.infrastructure.includes('const width=920,height=380') && files.infrastructure.includes('formatAxisTime') && files.infrastructure.includes("range==='30d'?7") && files.infrastructure.includes('range={range}')],
   ['Infrastructure analysis fixes Network Storage split and prevents clipped metric columns', files.infrastructureCss.includes('grid-template-columns:minmax(0,40fr) minmax(0,60fr)!important') && files.infrastructureCss.includes('table-layout:fixed') && files.infrastructureCss.includes('nth-child(4)')],
-  ['Infrastructure history uses structured current min max change and secondary metric stats', files.infrastructure.includes('rundeckInfraTrendStats') && files.infrastructure.includes('<b>Current</b>') && files.infrastructure.includes('<b>Peak TX</b>') && files.infrastructure.includes('<b>Peak Drop Delta</b>')],
+  ['Infrastructure history uses structured current min max change and secondary metric stats', files.infrastructure.includes('rundeckInfraTrendStats') && files.infrastructure.includes("stale?'Last in range':'Current'") && files.infrastructure.includes('<b>Peak TX</b>') && files.infrastructure.includes('<b>Peak Drop Delta</b>')],
   ['Performance Analysis preserves missing versus observed APP Critical WP semantics', files.jobHistory.includes('APP Critical WP') && files.currentWorkload.includes('criticalWp: row.host_wp_critical')],
   ['Selected Job evidence keeps primary cards stronger than flat secondary launchers', files.monitoringCss.includes('grid-auto-rows:76px!important') && files.monitoringCss.includes('grid-auto-rows:48px!important')],
   ['Performance charts break retained-history gaps instead of drawing missing time as zero', files.jobHistory.includes('current - previous > GAP_MS') && files.jobHistory.includes('data.push([new Date(previous + 1).toISOString(), null])')],
@@ -274,7 +418,7 @@ const checks = [
   ['Review drawer keeps evidence compact and closing summary readable at short desktop height', files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckEvidenceEvent') && files.quickAnalysisCss.includes('max-height:220px') && files.quickAnalysisCss.includes('.rundeckQuickAnalysisDrawer .rundeckClosingPreview p') && files.quickAnalysisCss.includes('line-height:1.38')],
   ['Performance Review delegates its drawer to the central overlay manager', files.performanceReview.includes('onOpenQuickAnalysis') && files.performanceReview.includes('externalQuickKey') && files.performanceReview.includes('!onOpenQuickAnalysis && quickRow')],
   ['Opening a new analysis replaces the previous overlay instead of stacking', !files.wrapper.includes('detailDrawer') && files.wrapper.includes("setActiveOverlay({ type: 'job' })") && files.wrapper.includes("setActiveOverlay({ type: 'job', reviewRow: row, reviewContext })")],
-  ['APP Server Analysis uses the same single-overlay manager', files.wrapper.includes("setActiveOverlay({ type: 'app', app: context })") && files.wrapper.includes('<RundeckAppServerAnalysis') && files.wrapper.includes("returnTo: { type: 'app', app: activeOverlay.app")],
+  ['APP Server Analysis uses the same single-overlay manager', files.wrapper.includes("setActiveOverlay({ type: 'app', app: context })") && files.wrapper.includes('<RundeckUnifiedAppAnalysis') && files.wrapper.includes("returnTo: { type: 'app', app: activeOverlay.app")],
   ['APP Server drawer resolves latest host metrics and lists current jobs/programs', files.appServerAnalysis.includes('/history/hosts/latest') && files.appServerAnalysis.includes('/history/jobs/current') && files.appServerAnalysis.includes('Jobs & Programs on') && files.appServerAnalysis.includes('Critical WP')],
   ['APP Server job/program rows transition into Job Performance Analysis', files.appServerAnalysis.includes("source:'app-server-analysis'") && files.wrapper.includes('onSelectJob?.(job)')],
   ['Selected job opens detail-on-demand drawer instead of page scroll', files.wrapper.includes("setActiveOverlay({ type: 'job' })") && !files.wrapper.includes('scrollToSelectedWorkload')],
@@ -331,7 +475,7 @@ const checks = [
   ['Timing correlation follows backend evidence state and preserves RCA boundary', files.jobHistory.includes('loadEvidenceAlignment') && files.jobHistory.includes("timingState === 'ALIGNED'") && files.jobHistory.includes('nearest observations') && files.jobHistory.includes('cause not confirmed')],
   ['SAP Availability drawer shows technical checks directly without nested details', files.availability.includes('rundeckAvailabilitySummaryStrip') && files.availability.includes('Landscape Checks') && !files.availability.includes('<details className="rundeckAvailabilityMore"')],
   ['Drawer widths are content-aware for performance and operational detail', files.workspaceDrawer.includes("size = 'default'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-wide') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-medium')],
-  ['Performance and APP detail drawers use viewport-capped content-aware geometry', files.wrapper.includes('size="performance"') && files.wrapper.includes('size="app-detail"') && files.workspaceDrawerCss.includes('width:min(1160px,76vw)') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 94px)') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-app-detail')],
+  ['Performance and unified APP modal preserve viewport-capped content-aware geometry', files.wrapper.includes('size="performance"') && files.wrapper.includes('size="unified-app"') && files.workspaceDrawerCss.includes('max-height:calc(100vh - 94px)') && files.cockpitPolish.includes('.rundeckWorkspaceDrawer.is-unified-app') && files.cockpitPolish.includes('max-height:calc(100dvh - 32px)')],
   ['Availability and Analysis Menu use content-aware drawer modes', files.wrapper.includes('size="availability"') && files.wrapper.includes('size="menu"') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-availability') && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer.is-menu')],
   ['Floating analysis drawers use four-side radius and restrained shadow', files.workspaceDrawerCss.includes('border-radius:10px') && files.workspaceDrawerCss.includes('box-shadow:-8px 10px 28px')],
   ['Job charts use adaptive WIB labels and explicit operator-friendly performance lane labels', files.jobHistory.includes('chartAxisText') && files.jobHistory.includes("type:'text'") && files.jobHistory.includes("name: 'CPU'") && files.jobHistory.includes("name: 'PSS Memory'") && files.jobHistory.includes("name: 'APP Critical WP'") && files.jobHistory.includes("'WP Count'")],
@@ -404,17 +548,47 @@ const checks = [
   ['HANA and technical availability preserve category-specific labels', files.availabilityBackend.includes('HANA System DB Availability') && files.availabilityBackend.includes('HANA Replication Availability') && files.availabilityBackend.includes('Web Dispatcher Availability')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
-  ['System Health exposes collector watchdog and auto-healing context', files.systemHealth.includes('/platform/health') && files.systemHealth.includes('Auto-healing') && files.systemHealth.includes('Last Recovery')],
+  ['System Health exposes collector watchdog and auto-healing context',
+    files.source.includes('json(`${API}/platform/health`)') &&
+    files.source.includes('sourceCollector={platform?.collector || null}') &&
+    files.wrapper.includes('sourceCollector={props.sourceCollector}') &&
+    files.systemHealth.includes('sourceCollector = null') &&
+    files.systemHealth.includes('<span>Watchdog</span>') &&
+    files.systemHealth.includes('<span>Auto-healing</span>') &&
+    files.systemHealth.includes('<span>Last Recovery</span>') &&
+    !files.systemHealth.includes('fetch(')],
   ['System Health exposes concrete Critical WP signal instead of generic workload status', files.systemHealth.includes('Critical WP ${top.wp}') && !files.systemHealth.includes('Jobs / Programs CRITICAL') && !files.systemHealth.includes('Jobs / Programs ATTENTION')],
-  ['System Health explains old availability data in plain language', files.systemHealth.includes('Availability data old') && files.systemHealth.includes('older than the current performance data')],
+  ['System Health explains old or missing Availability without inferring SAP DOWN',
+    files.systemHealth.includes('availabilityFreshnessSignal(availabilityAge)') &&
+    files.systemHealthState.includes("text: 'Availability observation missing'") &&
+    files.systemHealthState.includes('Availability data old') &&
+    files.systemHealthState.includes('outside the freshness window') &&
+    files.systemHealthState.includes('This does not mean SAP DOWN.') &&
+    files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
+    files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
   ['APP server summary labels derived state as signal without generic duplicate columns', !files.appServers.includes('OS Resource') && !files.appServers.includes('Jobs / Programs') && files.appServers.includes('<th>RAM</th>') && files.appServers.includes('<th>APP Critical WP</th>') && files.appServers.includes('<th>Signal</th>') && files.appServers.includes('Critical Signal') && files.appServers.includes('Highest CPU') && files.appServers.includes('Highest RAM')],
-  ['Infrastructure filesystem NORMAL state is explicit', read('src/tools/components/RundeckInfrastructure.jsx').includes("is-${statusFs(row.used_pct).toLowerCase()}") && !read('src/tools/components/RundeckInfrastructure.jsx').includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],
+  ['Infrastructure filesystem NORMAL state is explicit for fresh data and stale data is not live',
+    files.infrastructure.includes("is-${observedStatus(statusFs(row.used_pct)).toLowerCase()}") &&
+    files.infrastructure.includes('{observedStatus(statusFs(row.used_pct))}</b>') &&
+    files.infrastructure.includes("const observedStatus=(state)=>infrastructureObservationStatus(state,freshness)") &&
+    files.infraFreshness.includes("return freshness === 'FRESH' ? rawStatus : freshness") &&
+    !files.infrastructure.includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],
   ['Run identity separates committed Collection, running Collection, and Availability cycles', files.source.includes('Collection <b>READY</b>') && files.source.includes('Collection running #') && files.availability.includes('Availability Run #')],
   ['Long-range trend reduces point clutter while preserving hover emphasis', files.serverTrend.includes("compactPoints = ['30m', '1h', '3h', '6h']") && files.serverTrend.includes("showSymbol: availabilityMode || compactPoints") && files.serverTrend.includes("emphasis: { focus: 'series'")],
   ['watchdog audit route is read-only and available', files.apiCore.includes('@app.get("/watchdog/events")') && files.apiCore.includes('read_watchdog_events')],
   ['Prometheus scrape and alert rules are versioned', files.promConfig.includes('/dev/api/metrics') && files.promRules.includes('SphereCollectorExecutionStuck') && files.promRules.includes('SphereWatchdogAutoRecovery')],
 ]
+
+// Guard the QA contract itself: a stray comma creates a sparse array item,
+// which previously threw an unhelpful TypeError while printing results.
+for (let index = 0; index < checks.length; index += 1) {
+  if (!Object.hasOwn(checks, index) || !Array.isArray(checks[index]) || checks[index].length !== 2 ||
+      typeof checks[index][0] !== 'string' || typeof checks[index][1] !== 'boolean') {
+    console.error(`INVALID QA CONTRACT: checks[${index}] must be [name, boolean].`)
+    process.exit(1)
+  }
+}
 
 const failed = checks.filter(([, ok]) => !ok)
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`)
@@ -422,4 +596,4 @@ if (failed.length) {
   console.error(`\n${failed.length} Basis investigation contract check(s) failed.`)
   process.exit(1)
 }
-console.log('\nSPHERE v1.34.61 monitoring flow and deep-analysis checks passed.')
+console.log('\nSPHERE v1.34.83 monitoring flow, data trust, gap evidence and motion checks passed.')

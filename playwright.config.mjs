@@ -26,8 +26,16 @@ export default defineConfig({
       use: { viewport: { width: 1920, height: 1080 } },
     },
     {
+      name: 'desktop-1536',
+      use: { viewport: { width: 1536, height: 864 } },
+    },
+    {
       name: 'laptop-1366',
       use: { viewport: { width: 1366, height: 768 } },
+    },
+    {
+      name: 'android-393',
+      use: { viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true },
     },
   ],
 })

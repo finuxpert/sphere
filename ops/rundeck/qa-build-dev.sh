@@ -29,12 +29,17 @@ set -e
 
 echo
 echo "=== FAILED CHECKS ==="
-fails="$(grep -n '^FAIL ' "$LOG" || true)"
+# Capture both legacy contract FAIL lines and Node TAP failures.
+# The npm exit code remains authoritative even if there is no matching line.
+fails="$(
+  grep -n '^FAIL ' "$LOG" || true
+  grep -nE '^not ok [0-9]+|^# fail [1-9][0-9]*' "$LOG" || true
+)"
 
 if [[ -n "$fails" ]]; then
   printf '%s\n' "$fails"
 else
-  echo "No FAIL checks found"
+  echo "No explicit FAIL/TAP failure markers (npm exit code checked separately)"
 fi
 
 if [[ $qa_rc -ne 0 || -n "$fails" ]]; then

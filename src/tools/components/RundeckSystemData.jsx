@@ -20,7 +20,8 @@ const metric=(value,suffix='')=>value===null||value===undefined||value===''?'—
 
 function State({value='UNKNOWN'}){
   const normalized=String(value||'UNKNOWN').toUpperCase()
-  return <span className={`rundeckSystemDataState is-${normalized.toLowerCase()}`}>{normalized}</span>
+  const name={DUE_SOON:'DUE ≤7D',DUE_3D:'DUE ≤3D',DUE_1D:'DUE ≤1D'}[normalized]||normalized
+  return <span className={`rundeckSystemDataState is-${normalized.toLowerCase()}`}>{name}</span>
 }
 
 export default function RundeckSystemData({history=[],platform=null,platformState='UNKNOWN',serviceSummary='',releaseState='NORMAL'}){
@@ -28,10 +29,13 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
   const [showAll,setShowAll]=React.useState(false)
   const [selected,setSelected]=React.useState(null)
   const rows=showAll?history:history.slice(0,8)
+  const tokenStatus=platform?.token_management
+  const tokenRows=tokenStatus?.items?.length?tokenStatus.items:[{kind:'reader',label:'Monitoring Reader',state:'UNKNOWN'},{kind:'runner',label:'Job Runner',state:'UNKNOWN'}]
   return <section className="rundeckSystemData" aria-label="System Data">
     <div className="rundeckSystemDataTabs" role="tablist" aria-label="System data view">
       <button type="button" role="tab" aria-selected={tab==='collections'} className={tab==='collections'?'is-active':''} onClick={()=>setTab('collections')}><SphereIcon name="history"/> Collection History <small>{history.length}</small></button>
       <button type="button" role="tab" aria-selected={tab==='services'} className={tab==='services'?'is-active':''} onClick={()=>setTab('services')}><SphereIcon name="database"/> SPHERE Services <small>{serviceSummary||platformState}</small></button>
+      <button type="button" role="tab" aria-selected={tab==='tokens'} className={tab==='tokens'?'is-active':''} onClick={()=>setTab('tokens')}><SphereIcon name="database"/> Token Management <small>Reader / Runner</small></button>
     </div>
 
     {tab==='collections'&&<div className="rundeckSystemDataPane">
@@ -66,6 +70,24 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
           <tr><td>Releases</td><td><State value={releaseState}/></td><td>{platform?.releases?`${platform.releases.backend.count} backend · ${platform.releases.web.count} web`:'—'}</td></tr>
         </tbody>
       </table></div>
+    </div>}
+
+    {tab==='tokens'&&<div className="rundeckSystemDataPane rundeckTokenManagement" aria-label="Rundeck credential expiry">
+      <header><div><strong>Token Management</strong><small>Rundeck credential expiry · DEV only · WIB</small></div><State value={tokenStatus?.read_only ? "REPORTED" : "UNKNOWN"}/></header>
+      <p className="rundeckTokenNotice">Last reported expiry information — not a live token validity check. Reader and Runner are separate credentials.</p>
+      <div className="rundeckTokenGrid">
+        {tokenRows.map((item)=><article className="rundeckTokenCard" key={item.kind}>
+          <div className="rundeckTokenCardHead"><div><small>{item.kind==='reader'?'MONITORING / READ ONLY':'JOB OPERATIONS / RUNNER'}</small><strong>{item.label}</strong></div><State value={item.state||'UNKNOWN'}/></div>
+          <dl>
+            <div><dt>Expires (WIB)</dt><dd>{formatTime(item.expires_at)}{item.expires_at?' WIB':''}</dd></div>
+            <div><dt>Time remaining</dt><dd>{Number.isInteger(item.days_remaining)?(item.days_remaining<=0?'Expiry reported as passed':`${item.days_remaining} day(s)`):'Unverified'}</dd></div>
+            <div><dt>Identity</dt><dd>{item.identity||'Not verified'}</dd></div>
+            <div><dt>Last report</dt><dd>{item.last_reported_at||'Not registered'}</dd></div>
+          </dl>
+          <button type="button" className="rundeckTokenRenew" disabled title="Locked until maintainer authentication, Runner ACL and safe server-side rotation are verified">Renew Now · Locked</button>
+        </article>)}
+      </div>
+      <p className="rundeckTokenFootnote">Expiry warnings appear within 7, 3 and 1 days and after the reported expiry. Renew Now requires an authenticated maintainer gateway, GET-only verification, approval, atomic rollback and systemd consumer checks. No token is accepted on this monitoring page yet.</p>
     </div>}
   </section>
 }

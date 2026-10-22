@@ -1,0 +1,47 @@
+# REVIEW TEMPLATE ONLY. DO NOT INSTALL UNTIL PROJECT, IDENTITY, ROLE, ACL
+# precedence, and all non-DEV consumers have been inspected and approved.
+# Both approved job UUIDs are confirmed in Rundeck project Linux / SAP/AOP.
+# Replace __APPROVED_NODE_NAME__ only after checking the job node filters.
+# Do not install this example with an unverified node selector.
+# If jobs span projects or run on several nodes, split into independently scoped
+# reviewed rules rather than broadening to wildcard project/node access.
+# Changes to Rundeck ACL may take effect without restarting the server.
+description: SPHERE DEV runner - read Linux project only
+context:
+  application: 'rundeck'
+for:
+  project:
+    - equals:
+        name: 'Linux'
+      allow: [read]
+by:
+  group: sphere_runner
+---
+description: SPHERE DEV runner - run two approved jobs; kill performance only
+context:
+  project: 'Linux'
+for:
+  job:
+    - equals:
+        uuid: '4f129041-956c-4e80-916f-fcde8948db09'
+      allow: [read, view, view_history, run, kill]
+    - equals:
+        uuid: '34821afe-9261-4122-88db-cf6e8fc65545'
+      # The current DEV runner starts this job; watchdog abort is scoped to
+      # performance only. Grant kill here only after an explicit separate need.
+      allow: [read, view, view_history, run]
+  resource:
+    - equals:
+        kind: event
+      allow: [read]
+  # Node access is restricted too: job UUID restriction alone is not sufficient.
+  # This placeholder MUST match the approved runtime node(s) before installation.
+  # Project-level event read may expose execution-history metadata beyond these
+  # job UUIDs. Review this residual exposure before installation.
+  # Revalidate whether reading execution histories requires the event rule above.
+  node:
+    - equals:
+        nodename: '__APPROVED_NODE_NAME__'
+      allow: [read, run]
+by:
+  group: sphere_runner

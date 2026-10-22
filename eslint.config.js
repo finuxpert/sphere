@@ -26,4 +26,15 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  // The Basis QA contract is .mjs and must not bypass ESLint's sparse-array check.
+  {
+    files: ['scripts/qa-basis-investigation.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: globals.node,
+    },
+    rules: {
+      'no-sparse-arrays': 'error',
+    },
+  },
 ])

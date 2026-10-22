@@ -884,3 +884,121 @@
   }
   .rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{min-height:395px!important}
 }
+
+
+/* SPHERE v1.34.74 — final flat Infrastructure Analysis investigation flow. */
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCompactHead{
+  margin-bottom:3px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraFreshness{
+  margin:0 0 6px!important;
+  padding:5px 0!important;
+  border:0!important;
+  border-top:1px solid rgba(126,147,158,.04)!important;
+  border-bottom:1px solid rgba(126,147,158,.04)!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendWorkspace{
+  padding:4px 0 8px!important;
+  border-bottom:1px solid rgba(126,147,158,.045)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendSummary{
+  margin:2px 0!important;
+  padding:5px 0!important;
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraTrendStats span{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraCurrentLabel{
+  margin:5px 0 2px!important;
+  padding:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid{
+  gap:0!important;
+  border:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article{
+  padding:6px 10px 6px 0!important;
+  border-bottom:0!important;
+  background:transparent!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:first-child{
+  border-bottom:0!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(2){
+  padding-right:12px!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid article:nth-child(3){
+  padding-left:12px!important;
+  border-left:1px solid rgba(126,147,158,.035)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid th,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid td{
+  border-bottom-color:rgba(126,147,158,.03)!important;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-clickable:hover td,
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraGrid tr.is-clickable:focus-visible td{
+  background:rgba(79,198,200,.025)!important;
+}
+
+/* Infrastructure investigation must never assign live severity to stale snapshots. */
+.rundeckInfra .is-stale,
+.rundeckInfra .is-unknown{
+  color:var(--sphere-text-muted,#718089)!important;
+  font-weight:600;
+}
+.rundeckInfraHistoricalNote{
+  padding:4px 0 6px;
+  color:var(--sphere-warning,#d8b35f);
+  font-size:10px;
+  line-height:1.35;
+}
+.rundeckWorkspaceDrawerBody>.rundeckInfra .rundeckInfraHistoricalNote{
+  padding:3px 0 4px!important;
+  font-size:9px!important;
+}
+
+/* v1.34.81 — direct APP cards replace the Infrastructure Analysis selector. */
+.rundeckInfraHostCards {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px; margin: 6px 0 9px;
+}
+.rundeckInfraHostCard {
+  min-width: 0; display: grid; grid-template-columns: 1fr auto;
+  gap: 5px; align-content: center; text-align: left;
+  border: 1px solid rgba(126,147,158,.18); border-radius: 7px;
+  background: rgba(126,147,158,.025); color: var(--sphere-text, #e7edf0);
+  padding: 7px 9px; cursor: pointer; font: inherit;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.rundeckInfraHostCard.is-active {
+  background: rgba(79,198,200,.075); border-color: var(--sphere-accent,#4fc6c8);
+  box-shadow: inset 2px 0 0 var(--sphere-accent,#4fc6c8);
+}
+.rundeckInfraHostCard b { font-size: 12px; }
+.rundeckInfraHostCard small { font-size: 9px; color: var(--sphere-text-muted,#718089); }
+.rundeckInfraHostCard span { grid-column: 1 / -1; font-size: 10px; color: var(--sphere-text-secondary,#a9b5bb); }
+.rundeckInfraHostCard span strong { float: right; }
+.rundeckInfraHostCard .is-attention { color: var(--sphere-warning,#d8b35f); }
+.rundeckInfraHostCard .is-critical { color: var(--sphere-danger,#db7d86); }
+.rundeckInfraHostCard .is-normal { color: var(--sphere-success,#64c99b); }
+.rundeckInfraHostCard .is-unknown, .rundeckInfraHostCard .is-stale { color: var(--sphere-text-muted,#718089); }
+.rundeckInfraHostCard:focus-visible { outline: 2px solid var(--sphere-accent,#4fc6c8); outline-offset: 2px; }
+.rundeckInfraHostMissing { grid-column: 1 / -1; padding: 8px; color: var(--sphere-text-muted,#718089); }
+@media(max-width:740px) { .rundeckInfraHostCards { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width:480px) { .rundeckInfraHostCards { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(prefers-reduced-motion:reduce),print { .rundeckInfraHostCard { transition: none !important; } }
+
+.rundeckInfraOtherHosts { margin: 1px 0 9px; }
+.rundeckInfraOtherHosts>summary {
+  list-style: none; cursor: pointer; color: var(--sphere-text-secondary,#a9b5bb);
+  font-size: 10px; padding: 5px 2px;
+}
+.rundeckInfraOtherHosts>summary::-webkit-details-marker { display: none; }
+.rundeckInfraOtherHosts>summary::before { content: '▸ '; }
+.rundeckInfraOtherHosts[open]>summary::before { content: '▾ '; }

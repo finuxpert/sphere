@@ -1,23 +1,11 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { systemHealthState } from './rundeckSystemHealth.js'
+import { availabilityFreshnessSignal, deriveSystemHealthEvidence } from './rundeckSystemHealth.js'
 import { hostResourceState, sapWorkloadState } from './rundeckStatusSemantics.js'
 import { formatWib, shortHost } from './sapUiFormat.js'
 
-const API = `${import.meta.env.BASE_URL}api`
-
 function StatusPill({ value = 'UNKNOWN', title = '' }) {
-  return <span className={`rundeckStatus is-${String(value).toLowerCase()}`} title={title || undefined}>{value}</span>
-}
-
-function observedServiceImpact(payload) {
-  const apps = payload?.sap_app || []
-  const hana = payload?.hana_system_db || []
-  const web = payload?.web_dispatcher || []
-  const appDown = apps.some((row) => String(row?.status || '').toUpperCase() === 'DOWN')
-  const hanaPrimaryDown = hana.some((row) => String(row?.name || '').toUpperCase() === 'PRIMARY' && String(row?.status || '').toUpperCase() === 'DOWN')
-  const webDown = web.length > 0 && web.every((row) => String(row?.status || '').toUpperCase() === 'DOWN')
-  return appDown || hanaPrimaryDown || webDown
+  return <span key={value} className={`rundeckStatus rundeckStatusMotion is-${String(value).toLowerCase()}`} title={title || undefined}>{value}</span>
 }
 
 function ageText(seconds) {
@@ -31,9 +19,9 @@ function ageText(seconds) {
 }
 
 function primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale = false, availabilityAge = null) {
-  if (stale) return { level: 'WARNING', text: 'Performance data is old', detail: 'The latest performance collection is older than expected.' }
-  if (availabilityStale) return { level: 'WARNING', text: `Availability data old · ${availabilityAge ?? '—'}m`, detail: `Latest availability status is ${availability}. Its timestamp is older than the current performance data.` }
   if (serviceCritical) return { level: 'CRITICAL', text: 'SAP service impact observed', detail: `Availability state ${availability}.` }
+  if (stale) return { level: 'WARNING', text: 'Performance data is old', detail: 'The latest performance collection is older than expected.' }
+  if (availabilityStale) return availabilityFreshnessSignal(availabilityAge)
 
   const ranked = hosts.map((host) => {
     const resource = hostResourceState(host)
@@ -67,15 +55,8 @@ function collectorTitle(collector) {
   return parts.join(' · ')
 }
 
-export default function RundeckSystemHealth({ refreshToken = '' }) {
+export default function RundeckSystemHealth({ sourceQuality = null, sourceCollector = null, sourceHosts = [], sourceAvailability = null }) {
   const [target, setTarget] = React.useState(null)
-  const [hosts, setHosts] = React.useState([])
-  const [availability, setAvailability] = React.useState('UNKNOWN')
-  const [serviceCritical, setServiceCritical] = React.useState(false)
-  const [availabilityCollectedAt, setAvailabilityCollectedAt] = React.useState('')
-  const [stale, setStale] = React.useState(false)
-  const [platform, setPlatform] = React.useState(null)
-
   React.useEffect(() => {
     let frame = 0
     let attempts = 0
@@ -94,39 +75,21 @@ export default function RundeckSystemHealth({ refreshToken = '' }) {
     }
   }, [])
 
-  React.useEffect(() => {
-    const controller = new AbortController()
-    const load = async () => {
-      const [hostResult, availabilityResult, healthResult, platformResult] = await Promise.allSettled([
-        fetch(`${API}/history/hosts/latest`, { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : null),
-        fetch(`${API}/availability/latest`, { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : null),
-        fetch(`${API}/health`, { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : null),
-        fetch(`${API}/platform/health`, { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : null),
-      ])
-      if (controller.signal.aborted) return
-      if (hostResult.status === 'fulfilled' && hostResult.value) setHosts(hostResult.value.items || [])
-      if (availabilityResult.status === 'fulfilled' && availabilityResult.value) {
-        const payload = availabilityResult.value
-        setAvailability(String(payload.summary?.service_state || payload.summary?.sap_state || 'UNKNOWN').toUpperCase())
-        setAvailabilityCollectedAt(payload.collected_at || '')
-        setServiceCritical(observedServiceImpact(payload))
-      }
-      if (healthResult.status === 'fulfilled' && healthResult.value) setStale(Boolean(healthResult.value.rundeck_stale))
-      if (platformResult.status === 'fulfilled' && platformResult.value) setPlatform(platformResult.value)
-    }
-    load()
-    return () => controller.abort()
-  }, [refreshToken])
-
   if (!target) return null
 
-  const availabilityAge = availabilityCollectedAt ? Math.max(0, Math.floor((Date.now() - Date.parse(availabilityCollectedAt)) / 60000)) : null
-  const availabilityStale = Number.isFinite(availabilityAge) && availabilityAge >= 20
-  const state = systemHealthState(hosts, { availabilityState: availability, serviceCritical, stale, availabilityStale })
-  const collector = platform?.collector || {}
+  const collector = sourceCollector || {}
+  const { state, observedHosts, observedAvailability, observedImpact,
+    performanceEvidenceStale, availabilityEvidenceStale, collectorUnreliable } = deriveSystemHealthEvidence({
+      hosts: sourceHosts, availability: sourceAvailability, quality: sourceQuality, collector,
+    })
+  const availabilityAge = sourceQuality?.availabilityAgeMs == null ? null : Math.floor(sourceQuality.availabilityAgeMs / 60000)
   const recovery = collector?.last_recovery || null
-  const primarySignal = primaryHealthSignal(hosts, availability, serviceCritical, stale, availabilityStale, availabilityAge)
-  const title = `System Health reflects service impact and OS resource pressure. Job and program signals can raise ATTENTION without declaring an outage. Availability ${availability}${availabilityStale ? ` · evidence ${availabilityAge}m old` : ''}${stale ? ' · performance data stale' : ''}.`
+  const primarySignal = !sourceQuality || sourceQuality.state === 'UNKNOWN'
+    ? { level: 'WARNING', text: 'Monitoring data unverified', detail: 'SAP state cannot be inferred from unverified observations.' }
+    : collectorUnreliable && !performanceEvidenceStale
+      ? { level: 'WARNING', text: 'Monitoring source unavailable', detail: 'Retained evidence exists, but its collector is unhealthy.' }
+      : primaryHealthSignal(observedHosts, observedAvailability, observedImpact, performanceEvidenceStale, availabilityEvidenceStale, availabilityAge)
+  const title = `System Health and SAP Data share the same observations. Collector ${collector.status || 'UNKNOWN'} is independent. Availability ${observedAvailability}${availabilityEvidenceStale ? ' · old or missing' : ''}${performanceEvidenceStale ? ' · performance stale' : ''}.`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
