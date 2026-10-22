@@ -991,6 +991,40 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             ),
         )[:5]
 
+    # Independent from table filters: actionable workload *candidates* are drawn
+    # from the full evaluated monthly population, not from current pagination.
+    # A candidate is NOT a confirmed ABAP dump, failed SM37 job or root cause.
+    monthly_abap_candidates = []
+    if period_key == "month":
+        for item in evaluated:
+            if item.get("status") != "REVIEW REQUIRED":
+                continue
+            overlap = item.get("pressure_overlap") or {}
+            monthly_abap_candidates.append({
+                "consumer_type": item.get("consumer_type"),
+                "consumer_key": item.get("consumer_key"),
+                "status": item.get("status"),
+                "occurrences": item.get("occurrences"),
+                "hosts": item.get("hosts") or [],
+                "avg_cpu_pct": item.get("avg_cpu_pct"),
+                "peak_cpu_pct": item.get("peak_cpu_pct"),
+                "avg_pss_gb": item.get("avg_pss_gb"),
+                "peak_pss_gb": item.get("peak_pss_gb"),
+                "confidence": item.get("overall_confidence"),
+                "cpu_pressure_host_checks": overlap.get("cpu_pressure_host_checks", 0),
+                "ram_pressure_host_checks": overlap.get("ram_pressure_host_checks", 0),
+                "cpu_pressure_hosts": overlap.get("cpu_pressure_hosts") or [],
+                "ram_pressure_hosts": overlap.get("ram_pressure_hosts") or [],
+                "signals": {
+                    "sustained_high_cpu": bool(item.get("signals", {}).get("sustained_high_cpu")),
+                    "high_memory": bool(item.get("signals", {}).get("high_memory")),
+                    "cpu_spike": bool(item.get("signals", {}).get("cpu_spike")),
+                    "baseline_anomaly": bool(item.get("signals", {}).get("baseline_anomaly")),
+                },
+                "error_attribution": "NOT_ESTABLISHED",
+            })
+        monthly_abap_candidates = monthly_abap_candidates[:25]
+
     result = {
         "period": period_key,
         "month": str(month) if period_key == "month" else None,
@@ -1009,6 +1043,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         "daily_host_trend": monthly_daily,
         "monthly_pressure": monthly_pressure,
         "monthly_errors": monthly_errors,
+        "monthly_abap_candidates": monthly_abap_candidates,
         "baseline": {
             "days": HISTORICAL_BASELINE_DAYS,
             "min_observations": HISTORICAL_BASELINE_MIN_OBSERVATIONS,
