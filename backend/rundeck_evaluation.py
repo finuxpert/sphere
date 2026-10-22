@@ -770,15 +770,19 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         if period_key == "month":
             start, end, previous_start = calendar_month_bounds(str(month))
             days = round((end - start).total_seconds() / 86400, 2)
-            cache_period = f"month:{month}"
+            # Monthly reports are separate from rolling-period cached populations.
+            # The committed collection anchor invalidates data when a new READY run arrives.
+            anchor_key = _anchor_time(conn).isoformat()
+            cache_key = (f"month:{month}", type_key, anchor_key)
         else:
+            # Preserve the existing 1D/7D/30D cache contract exactly:
+            # key off the committed evaluation end, independent of page limit.
             days = PERIOD_DAYS[period_key]
             end = _anchor_time(conn) + timedelta(microseconds=1)
             start = end - timedelta(days=days)
             previous_start = start - timedelta(days=days)
-            cache_period = period_key
-        anchor_key = _anchor_time(conn).isoformat()
-        cache_key = (cache_period, type_key, anchor_key)
+            anchor_key = end.isoformat()
+            cache_key = (period_key, type_key, anchor_key)
         cached = _cache_get(cache_key)
         if cached:
             return _runtime_payload(_evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key), cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
