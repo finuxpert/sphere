@@ -217,3 +217,26 @@
 @media(prefers-reduced-motion:reduce){
   .sphereMonthlyReview *{animation:none!important;transition:none!important}
 }
+
+/* Keep the six Operational Checks entries in a stable 2 x 3 grid. */
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions:has(.rundeckMonthlyUtility){
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>.rundeckMonthlyUtility{
+  min-width:0;
+  overflow:hidden;
+}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisActions>.rundeckMonthlyUtility small{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+@media(max-width:600px){
+  .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckAnalysisRailV13456 .rundeckAnalysisActions:has(.rundeckMonthlyUtility){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:3px!important;
+  }
+}
