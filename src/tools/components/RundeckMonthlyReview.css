@@ -315,3 +315,24 @@
  .sphereMonthlyReview.is-v2 .sphereMonthlyReportOverview{grid-template-columns:minmax(0,1fr)}
  .sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame iframe{height:280px}
 }
+
+
+.sphereMonthlyReview .sphereMonthlyErrorCounter{
+  display:inline-block;
+  max-width:100%;
+  padding:6px 9px;
+  color:#d0e6ed;
+  background:#234152;
+  border:1px solid #376073;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:600;
+  overflow-wrap:anywhere;
+}
+.sphereMonthlyReview .sphereMonthlyErrors .sphereMonthlyName{
+  min-width:205px;
+  max-width:340px;
+}
+.sphereMonthlyReview .sphereMonthlyErrors td{
+  line-height:1.45;
+}
