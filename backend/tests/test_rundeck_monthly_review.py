@@ -1,9 +1,10 @@
 """Calendar-month boundaries for SPHERE manual SAP Basis performance reports."""
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import unittest
 
 from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page
 from backend.rundeck_monthly_pressure import detect_pressure_episodes
+from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time
 
 
 class CalendarMonthReviewTests(unittest.TestCase):
@@ -104,6 +105,58 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(page2["items"][0]["consumer_key"], "ZCPU_B")
         self.assertEqual(page2["summary"]["workloads"], 4)
         self.assertEqual(_evaluation_page(report, limit=10, offset=0, query="", health="ALL", pressure="RAM")["page"]["total"], 1)
+
+
+    def test_error_code_category_and_timezone_requirements(self):
+        self.assertEqual(classify_error("TSV_TNEW_PAGE_ALLOC_FAILED")[0], "MEMORY")
+        self.assertEqual(classify_error("DBSQL_SQL_DEADLOCK")[0], "LOCK")
+        self.assertEqual(classify_error("TIME_OUT")[0], "RUNTIME")
+        self.assertIsNone(parse_explicit_error_time("2026-09-12 03:00:00"))
+        self.assertIsNone(parse_explicit_error_time("bad time"))
+        self.assertEqual(parse_explicit_error_time("2026-09-12T03:00:00+07:00"),
+                         datetime(2026, 9, 11, 20, 0, tzinfo=timezone.utc))
+
+    def test_repeated_trace_is_one_error_not_multiple_collector_events(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        base = {
+            "host": "APP1", "pid": "1234", "consumer_key": "Z_REPORT",
+            "error_program": "Z_REPORT", "latest_trace_error": "TIME_OUT",
+            "latest_error_ts": "2026-09-13T08:00:00+07:00", "collection_checks": 1,
+        }
+        rows = [{**base, "collection_id": "run-1"}, {**base, "collection_id": "run-2"}]
+        result = summarize_monthly_wp_errors(rows, start, end)
+        self.assertEqual(result["timestamped_events"], 1)
+        self.assertEqual(result["top_errors"][0]["event_count"], 1)
+        self.assertEqual(result["top_errors"][0]["program"], "Z_REPORT")
+        self.assertEqual(result["status"], "TIMESTAMPED_TRACE")
+
+    def test_old_trace_and_untimed_snapshot_are_not_new_monthly_errors(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        rows = [
+            {"host": "APP3", "pid": "21", "consumer_key": "Z_WORK",
+             "latest_trace_error": "DBSQL_SQL_ERROR",
+             "latest_error_ts": "2026-08-25T10:30:00+07:00", "collection_id": "a"},
+            {"host": "APP3", "pid": "22", "consumer_key": "Z_WORK",
+             "error_at_snapshot": "TIME_OUT",
+             "latest_error_ts": "", "collection_id": "b"},
+        ]
+        result = summarize_monthly_wp_errors(rows, start, end)
+        self.assertEqual(result["timestamped_events"], 0)
+        self.assertEqual(result["snapshot_host_checks"], 1)
+        self.assertEqual(result["top_errors"][0]["event_count"], 0)
+        self.assertEqual(result["top_errors"][0]["program"], "Belum teridentifikasi")
+        self.assertEqual(result["status"], "SNAPSHOT_ONLY")
+        self.assertEqual(summarize_monthly_wp_errors([], start, end)["status"], "NO_RETAINED_ERROR_EVIDENCE")
+
+    def test_error_groups_flagged_truncated_never_claim_complete(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        result = summarize_monthly_wp_errors([], start, end, truncated=True)
+        self.assertTrue(result["truncated"])
+        self.assertEqual(result["status"], "TRUNCATED")
+
 
 
 if __name__ == "__main__":
