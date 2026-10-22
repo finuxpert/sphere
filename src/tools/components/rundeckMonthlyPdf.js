@@ -181,7 +181,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     ['TEKANAN RAM', String(pressure.ram?.episodes ?? 'N/A') + ' kejadian', 'Puncak ' + pct(pressure.ram?.peak?.peak_pct)],
     ['CRITICAL WP TERAMATI', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' observasi' : 'N/A', 'APP-check dengan WP critical'],
     ['JOB DAN PROGRAM', format(summary.workloads, 0) + ' terpantau', format(summary.review_required, 0) + ' perlu evaluasi'],
-    ['ESTIMASI CAKUPAN', pct(quality.coverage_pct), format(quality.complete_checks, 0) + ' lengkap; ' + format(quality.partial_or_incomplete_checks, 0) + ' belum'],
+    ['ESTIMASI CAKUPAN', pct(quality.coverage_pct), String(quality.confidence || 'UNKNOWN') + ' · ' + format(quality.complete_checks, 0) + ' lengkap · ' + format(quality.partial_or_incomplete_checks, 0) + ' belum'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
