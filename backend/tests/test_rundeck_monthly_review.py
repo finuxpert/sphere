@@ -1,5 +1,5 @@
 """Calendar-month boundaries for SPHERE manual SAP Basis performance reports."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import unittest
 
 from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page
