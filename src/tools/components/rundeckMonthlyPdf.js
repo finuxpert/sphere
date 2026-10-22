@@ -367,6 +367,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.text('Period ' + month + ' WIB  |  Review Required workloads from SPHERE history', margin, 30)
       pdf.setFontSize(6.5)
       pdf.text('Performance investigation only; no confirmed Job failure, ST22 dump or root-cause attribution.', margin, 35)
+      pdf.text('Workload CPU can exceed 100% across CPU cores; PSS is process memory (GB).', margin, 38)
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(6.6);pdf.setTextColor(47, 64, 76)
       pdf.text('JOB / PROGRAM', margin + 2, 42)
       pdf.text('CPU AVG / PEAK', margin + 160, 42, {align:'right'})
