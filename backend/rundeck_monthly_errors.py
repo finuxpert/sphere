@@ -56,8 +56,10 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
     untimed = 0
     snapshot_checks: set[tuple] = set()
     for row in rows:
-        code = str(row.get("error_at_snapshot") or row.get("latest_trace_error") or "").strip()
-        if not code:
+        snapshot_code = str(row.get("error_at_snapshot") or "").strip()
+        trace_code = str(row.get("latest_trace_error") or "").strip()
+        code = snapshot_code or trace_code
+        if not code or code == "?":
             continue
         host = str(row.get("host") or "").strip().upper()
         pid = str(row.get("pid") or "").strip()
@@ -65,6 +67,11 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         # A nearby JOB / PROGRAM observation is not proof it owns the trace.
         program = explicit_program or "Belum teridentifikasi"
         timestamp = parse_explicit_error_time(row.get("latest_error_ts"))
+        # latest_error_ts belongs to the latest trace, not necessarily the
+        # error_at_snapshot. Never assign the trace timestamp to a different
+        # snapshot code and accidentally manufacture a verified event.
+        if snapshot_code and trace_code and snapshot_code != trace_code:
+            timestamp = None
         category, label = classify_error(code)
         group_key = (category, code, program, host)
         item = categories.setdefault(group_key, {
