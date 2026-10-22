@@ -247,6 +247,70 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     ? 'Rincian kode error, APP, dan program terkait tersedia pada halaman berikutnya.'
     : 'Data tidak tersedia tidak berarti SAP bebas dari error.', margin, 198)
 
+  // Detailed error section is sourced only from timestamped trace evidence or
+  // separately labeled WP snapshot observations. It is not a ST22 dump count.
+  if (errorRows.length) {
+    let ey = 41
+    const header = (continued = false) => {
+      pdf.setFillColor(248, 250, 251)
+      pdf.rect(0, 0, W, H, 'F')
+      pdf.setFillColor(15, 21, 26)
+      pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(11)
+      pdf.setTextColor(240, 245, 248)
+      pdf.text('SPHERE  |  Evaluasi Error dan Tuning ABAP' + (continued ? ' (lanjutan)' : ''), margin + 4, 18)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.setTextColor(70, 85, 94)
+      pdf.text('Periode ' + month + ' WIB  |  Sumber: histori error WP pada SPHERE', margin, 30)
+      ey = 40
+      pdf.setFontSize(6.3)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setTextColor(47, 64, 76)
+      ;[
+        ['KATEGORI', 0], ['KODE ERROR', 40], ['PROGRAM TERKAIT', 106],
+        ['APP', 201], ['KEJADIAN', 221], ['SNAPSHOT', 249],
+      ].forEach(([value,x]) => pdf.text(value, margin + x, ey))
+      pdf.setDrawColor(204, 216, 224)
+      pdf.line(margin, ey + 2, W - margin, ey + 2)
+      ey += 5
+    }
+    pdf.addPage()
+    header()
+    errorRows.forEach(row => {
+      const cat = pdf.splitTextToSize(String(row.category_label || 'Lainnya'), 37)
+      const code = pdf.splitTextToSize(String(row.error_code || 'Tidak tersedia'), 61)
+      const program = pdf.splitTextToSize(String(row.program || 'Belum teridentifikasi'), 88)
+      const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length) + 1.8)
+      if (ey + rowH > H - 17) {
+        pdf.addPage()
+        header(true)
+      }
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7)
+      pdf.setTextColor(34, 49, 59)
+      pdf.text(cat, margin, ey + 3)
+      pdf.text(code, margin + 40, ey + 3)
+      pdf.text(program, margin + 106, ey + 3)
+      pdf.text(labelHost(row.host), margin + 201, ey + 3)
+      pdf.text(String(row.event_count ?? 'N/A'), margin + 229, ey + 3, {align: 'right'})
+      pdf.text(String(row.snapshot_host_checks ?? 'N/A'), margin + 258, ey + 3, {align: 'right'})
+      pdf.setDrawColor(222, 231, 235)
+      pdf.line(margin, ey + rowH, W - margin, ey + rowH)
+      ey += rowH
+    })
+    if (ey + 13 > H - 15) {
+      pdf.addPage()
+      header(true)
+    }
+    pdf.setTextColor(78, 98, 109)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(6.6)
+    pdf.text('Kejadian: satu error dengan timestamp eksplisit, dihitung satu kali untuk APP, PID, kode, dan waktu yang sama.', margin, ey + 5)
+    pdf.text('Snapshot: observasi error saat collector berjalan. Program tanpa identitas eksplisit hanya merupakan konteks workload.', margin, ey + 9)
+  }
+
   // Optional appendix is emitted only for operator-selected evidence; names always wrap.
   if (selections.length) {
     pdf.addPage()
