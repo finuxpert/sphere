@@ -65,3 +65,45 @@ test('monthly ABAP errors use only scoped source-backed WP trace evidence', () =
   assert.match(pdf, /DATA TERBATAS/)
   assert.match(pdf, /Laporan Evaluasi Performa SAP Bulanan/)
 });
+
+
+test('monthly KPI population is independent of table-only type filters', () => {
+  const evaluation = read('backend/rundeck_evaluation.py')
+  const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
+  assert.match(evaluation, /requested_type_key = type_key/)
+  assert.match(evaluation, /if period_key == "month":\s+type_key = "ALL"/)
+  assert.match(evaluation, /consumer_type=requested_type_key/)
+  assert.match(evaluation, /if \(consumer_type == "ALL" or row\.get\("consumer_type"\) == consumer_type\)/)
+  assert.match(ui, /Observasi Critical WP/)
+})
+
+test('pressure APP identities and time-correlated evidence remain distinct from historical hosts', () => {
+  const pressure = read('backend/rundeck_monthly_pressure.py')
+  const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
+  assert.match(pressure, /ABS\(EXTRACT\(EPOCH FROM \(tc\.collected_at - hm\.collected_at\)\)\)/)
+  assert.match(pressure, /AS cpu_pressure_hosts/)
+  assert.match(pressure, /AS ram_pressure_hosts/)
+  assert.match(ui, /pressureHostsFor\(row, metric\)/)
+  assert.match(ui, /pressureHostsFor\(row,'cpu'\)/)
+  assert.match(ui, /pressureHostsFor\(row,'ram'\)/)
+})
+
+test('monthly errors preserve source availability and WP diagnostic-only state', () => {
+  const backend = read('backend/rundeck_monthly_errors.py')
+  const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
+  const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
+  assert.match(backend, /"ERROR_SOURCE_NOT_RETAINED"/)
+  assert.match(backend, /"WP_SIGNALS_ONLY"/)
+  assert.match(backend, /tc\.consumer_type IN \('JOB', 'PROGRAM', 'PROCESS'\)/)
+  assert.match(backend, /RABAX and RXMSG tail counts are diagnostic evidence/)
+  assert.match(ui, /Sinyal WP untuk investigasi ABAP/)
+  assert.match(pdf, /Sinyal Diagnostik WP/)
+  assert.doesNotMatch(pdf, /pdf\.text\('CATATAN'/)
+})
+
+test('monthly appendix retains its branded header after a page break', () => {
+  const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
+  assert.match(pdf, /selectionHeader\(true\)/)
+  assert.match(pdf, /APP teramati:/)
+  assert.match(pdf, /Estimasi|ESTIMASI CAKUPAN/)
+})
