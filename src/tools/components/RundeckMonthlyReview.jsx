@@ -181,12 +181,18 @@ export default function RundeckMonthlyReview() {
   const chosen=Object.values(selected)
   const total=Number(data?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
-  const selectRow=row=>setSelected(previous=>{
-    const copy={...previous}
-    if(copy[id(row)])delete copy[id(row)]
-    else copy[id(row)]=row
-    return copy
-  })
+  const selectRow=row=>{
+    // A previously previewed PDF must not survive changes to selected evidence.
+    if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
+    pdfRef.current=''
+    setPdfUrl('')
+    setSelected(previous=>{
+      const copy={...previous}
+      if(copy[id(row)])delete copy[id(row)]
+      else copy[id(row)]=row
+      return copy
+    })
+  }
   const previewPdf=async()=>{
     if(!data||loading||pdfBusy)return
     setPdfBusy(true);setPdfError('')
