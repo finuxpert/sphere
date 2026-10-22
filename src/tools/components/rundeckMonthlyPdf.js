@@ -383,23 +383,33 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     })
   }
 
-  // Optional appendix is emitted only for operator-selected evidence; names always wrap.
+  // Optional evidence appendix: wrap every name and repeat page identity on breaks.
   if (selections.length) {
-    pdf.addPage()
-    pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
-    pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
-    pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-    pdf.text('SPHERE  |  Bukti Job dan Program Terpilih', margin + 4, 18)
-    pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-    pdf.text('Periode ' + month + ' WIB  |  Observasi terpilih untuk evaluasi teknis', margin, 30)
     let y = 39
+    const selectionHeader = (continued = false) => {
+      pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
+      pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
+      pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
+      pdf.text('SPHERE  |  Bukti Job dan Program Terpilih' + (continued ? ' (lanjutan)' : ''), margin + 4, 18)
+      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
+      pdf.text('Periode ' + month + ' WIB  |  Observasi terpilih untuk evaluasi teknis', margin, 30)
+      y = 39
+    }
+    pdf.addPage()
+    selectionHeader()
     const addText = (value, size = 7.5, bold = false) => {
       pdf.setFont('helvetica', bold ? 'bold' : 'normal')
       pdf.setFontSize(size)
       pdf.setTextColor(bold ? 30 : 78, bold ? 47 : 94, bold ? 60 : 103)
       const lines = pdf.splitTextToSize(String(value), contentW)
       const height = Math.max(4, lines.length * size * .42 + 2)
-      if (y + height > H - 16) { pdf.addPage(); y = 18 }
+      if (y + height > H - 16) {
+        pdf.addPage()
+        selectionHeader(true)
+        pdf.setFont('helvetica', bold ? 'bold' : 'normal')
+        pdf.setFontSize(size)
+        pdf.setTextColor(bold ? 30 : 78, bold ? 47 : 94, bold ? 60 : 103)
+      }
       pdf.text(lines, margin, y)
       y += height
     }
@@ -411,8 +421,10 @@ export async function buildMonthlyPdf({ month, data, selections }) {
         ' | PSS rerata dan puncak ' + format(row.avg_pss_gb, 2) + ', ' + format(row.peak_pss_gb, 2) + ' GB')
       addText('Observasi tersimpan ' + format(row.occurrences, 0) +
         ' | Saat CPU tinggi ' + format(overlap.cpu_pressure_host_checks, 0) +
+        ' pada APP ' + (overlap.cpu_pressure_hosts || []).map(labelHost).join(', ') +
         ' | Saat RAM tinggi ' + format(overlap.ram_pressure_host_checks, 0) +
-        ' | Observasi WP ' + format(overlap.wp_host_checks, 0))
+        ' pada APP ' + (overlap.ram_pressure_hosts || []).map(labelHost).join(', ') +
+        ' | Pemeriksaan APP dengan Critical WP ' + format(overlap.wp_host_checks, 0))
       y += 3
     })
   }
