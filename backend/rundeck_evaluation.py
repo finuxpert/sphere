@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import time
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from statistics import median
 from threading import Lock
 from typing import Any
@@ -684,17 +685,71 @@ def _evaluation_health_summary(evaluated: list[dict]) -> dict:
     return counts
 
 
-def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL") -> dict:
+def calendar_month_bounds(month: str, now: datetime | None = None) -> tuple[datetime, datetime, datetime]:
+    """WIB calendar month [start, end), capped at now; comparison is previous calendar month."""
+    from re import fullmatch
+
+    if not fullmatch(r"20[0-9]{2}-(0[1-9]|1[0-2])", str(month or "")):
+        raise ValueError("month must be YYYY-MM")
+    year, month_number = (int(piece) for piece in month.split("-"))
+    wib = ZoneInfo("Asia/Jakarta")
+    now_local = (now or datetime.now(timezone.utc)).astimezone(wib)
+    start_local = datetime(year, month_number, 1, tzinfo=wib)
+    if start_local > now_local:
+        raise ValueError("Future calendar months are unavailable")
+    end_local = datetime(year + (month_number == 12), (month_number % 12) + 1, 1, tzinfo=wib)
+    previous_local = (datetime(year - 1, 12, 1, tzinfo=wib)
+                      if month_number == 1 else datetime(year, month_number - 1, 1, tzinfo=wib))
+    return (
+        start_local.astimezone(timezone.utc),
+        min(end_local, now_local).astimezone(timezone.utc),
+        previous_local.astimezone(timezone.utc),
+    )
+
+
+def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict]:
+    """Host CPU / Critical WP observations per WIB day. Not SAP transaction response time."""
+    rows = conn.execute(text(f"""
+        SELECT DATE(hm.collected_at AT TIME ZONE 'Asia/Jakarta') AS day,
+               COUNT(DISTINCT hm.collection_id) AS complete_checks,
+               AVG(hm.cpu_pct) AS avg_host_cpu_pct,
+               MAX(hm.cpu_pct) AS peak_host_cpu_pct,
+               COUNT(DISTINCT (hm.collection_id, hm.host)) FILTER (
+                   WHERE COALESCE(hm.wp_critical, 0) > 0
+               ) AS critical_wp_host_checks
+          FROM rundeck_host_metrics hm
+          JOIN rundeck_collections c ON c.collection_id = hm.collection_id
+         WHERE {_complete_collection_clause('c')}
+           AND hm.collected_at >= :start AND hm.collected_at < :end
+           AND COALESCE(c.finished_at, c.started_at) >= :start
+           AND COALESCE(c.finished_at, c.started_at) < :end
+         GROUP BY DATE(hm.collected_at AT TIME ZONE 'Asia/Jakarta')
+         ORDER BY day
+    """), {"start": start, "end": end}).mappings().all()
+    return [{
+        "day": str(row["day"]),
+        "complete_checks": int(row["complete_checks"] or 0),
+        "avg_host_cpu_pct": _round(row["avg_host_cpu_pct"]),
+        "peak_host_cpu_pct": _round(row["peak_host_cpu_pct"]),
+        "critical_wp_host_checks": int(row["critical_wp_host_checks"] or 0),
+    } for row in rows]
+
+
+def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None) -> dict:
     """Serialize cold full-population computations; cached pages use the same source anchor."""
     with _EVALUATION_COMPUTE_LOCK:
-        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
+        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month)
 
 
-def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str) -> dict:
+def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None) -> dict:
     started = time.perf_counter()
     period_key = str(period or "1d").lower()
-    if period_key not in PERIOD_DAYS:
-        raise ValueError("period must be one of 1d, 7d, 30d")
+    if period_key not in PERIOD_DAYS and period_key != "month":
+        raise ValueError("period must be one of 1d, 7d, 30d, month")
+    if period_key == "month" and not month:
+        raise ValueError("month is required when period=month")
+    if period_key != "month" and month:
+        raise ValueError("month requires period=month")
     type_key = str(consumer_type or "ALL").upper()
     if type_key not in {"ALL", "JOB", "PROGRAM"}:
         raise ValueError("type must be ALL, JOB or PROGRAM")
@@ -709,16 +764,22 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     if engine is None:
         raise RuntimeError("Database history is not enabled")
 
-    days = PERIOD_DAYS[period_key]
     with engine.connect() as conn:
-        end = _anchor_time(conn) + timedelta(microseconds=1)
-        anchor_key = end.isoformat()
-        cache_key = (period_key, type_key, anchor_key)
+        if period_key == "month":
+            start, end, previous_start = calendar_month_bounds(str(month))
+            days = round((end - start).total_seconds() / 86400, 2)
+            cache_period = f"month:{month}"
+        else:
+            days = PERIOD_DAYS[period_key]
+            end = _anchor_time(conn) + timedelta(microseconds=1)
+            start = end - timedelta(days=days)
+            previous_start = start - timedelta(days=days)
+            cache_period = period_key
+        anchor_key = _anchor_time(conn).isoformat()
+        cache_key = (cache_period, type_key, anchor_key)
         cached = _cache_get(cache_key)
         if cached:
             return _runtime_payload(_evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key), cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
-        start = end - timedelta(days=days)
-        previous_start = start - timedelta(days=days)
         current_quality = _collection_quality(conn, start, end)
         previous_quality = _collection_quality(conn, previous_start, start)
         current_rows = _aggregate_window(conn, start, end, type_key)
@@ -726,6 +787,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         historical_rows = _historical_baseline(conn, start, type_key)
         shift_rows = _recent_shift_window(conn, end, type_key)
         sampling = _sampling_quality(conn, start, end)
+        monthly_daily = _monthly_daily_host_trend(conn, start, end) if period_key == "month" else []
 
     current_checks = int(current_quality["complete_checks"])
     previous_checks = int(previous_quality["complete_checks"])
@@ -839,6 +901,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
 
     result = {
         "period": period_key,
+        "month": str(month) if period_key == "month" else None,
         "days": days,
         "type": type_key,
         "recommended_period": "1d",
@@ -851,6 +914,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         "quality": current_quality,
         "previous_quality": previous_quality,
         "sampling": sampling,
+        "daily_host_trend": monthly_daily,
         "baseline": {
             "days": HISTORICAL_BASELINE_DAYS,
             "min_observations": HISTORICAL_BASELINE_MIN_OBSERVATIONS,
