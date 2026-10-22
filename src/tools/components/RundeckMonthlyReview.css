@@ -336,3 +336,34 @@
 .sphereMonthlyReview .sphereMonthlyErrors td{
   line-height:1.45;
 }
+
+/* Monthly V2.2 finishing: preserve readable names and control nested scrolling. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyName,
+.sphereMonthlyReview.is-v2 .sphereMonthlyJobDetailToggle{
+  overflow-wrap:anywhere;
+  word-break:normal;
+  white-space:normal;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyWpDiagnostics{
+  min-width:0;
+  display:grid;
+  gap:8px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrors .sphereMonthlyTableScroll{
+  max-height:360px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame .sphereMonthlyPager a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+@media(max-width:600px){
+  .sphereMonthlyReview.is-v2 .sphereMonthlyFilters input{
+    min-width:0;
+    width:100%;
+    flex:1 1 100%;
+  }
+  .sphereMonthlyReview.is-v2 .sphereMonthlyStat>strong{
+    overflow-wrap:anywhere;
+  }
+}
