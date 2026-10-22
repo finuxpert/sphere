@@ -290,7 +290,7 @@ export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = 
         <span>Complete checks: <b>{fmt(coverage.complete_checks, 0)}</b></span>
         <span>Incomplete: <b>{fmt(coverage.partial_or_incomplete_checks, 0)}</b></span>
       </div>
-      {(coverage.confidence === 'LOW' || Number(coverage.partial_or_incomplete_checks || 0) > 0) && <div className="sphereMonthlyWarning" role="status">
+      {(coverage.confidence === 'LOW' || Number(coverage.coverage_pct ?? 0) < 95 || Number(coverage.partial_or_incomplete_checks || 0) > 0) && <div className="sphereMonthlyWarning" role="status">
         Historical evidence is limited or incomplete. Unobserved intervals are not counted as normal. Verify findings before reporting.
       </div>}
       {tab === 'overview' && <div className="sphereMonthlyLayout">
