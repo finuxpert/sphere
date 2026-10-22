@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime
 from statistics import median
+from zoneinfo import ZoneInfo
 from typing import Any
 
 from sqlalchemy import text
@@ -132,6 +133,30 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         if row.get("wp_critical") is not None and row["wp_critical"] > 0:
             values["critical_wp_host_checks"] += 1
 
+    # Daily APP-host peak/average (not global daily averages). Missing days stay absent.
+    host_days: dict[tuple[str, str], dict] = {}
+    for row in samples:
+        day = row["collected_at"].astimezone(ZoneInfo("Asia/Jakarta")).date().isoformat()
+        key = (day, str(row["host"]))
+        item = host_days.setdefault(key, {
+            "day": day, "host": str(row["host"]), "cpu_values": [], "ram_values": [],
+        })
+        if row.get("cpu_pct") is not None:
+            item["cpu_values"].append(float(row["cpu_pct"]))
+        if row.get("ram_pct") is not None:
+            item["ram_values"].append(float(row["ram_pct"]))
+    daily_hosts = []
+    for item in host_days.values():
+        cpu, ram = item["cpu_values"], item["ram_values"]
+        daily_hosts.append({
+            "day": item["day"], "host": item["host"],
+            "avg_cpu_pct": _rounded(sum(cpu) / len(cpu)) if cpu else None,
+            "peak_cpu_pct": _rounded(max(cpu)) if cpu else None,
+            "avg_ram_pct": _rounded(sum(ram) / len(ram)) if ram else None,
+            "peak_ram_pct": _rounded(max(ram)) if ram else None,
+        })
+    daily_hosts.sort(key=lambda row: (row["day"], row["host"]))
+
     host_summary = []
     for values in hosts.values():
         cpu, ram = values.pop("cpu_values"), values.pop("ram_values")
@@ -185,6 +210,7 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "ram_warning_pct": RAM_WARNING, "ram_critical_pct": RAM_CRITICAL,
         },
         "hosts": host_summary,
+        "daily_hosts": daily_hosts,
         "cpu": {
             "episodes": len(cpu_episodes),
             "peak": cpu_episodes[0] if cpu_episodes else None,
