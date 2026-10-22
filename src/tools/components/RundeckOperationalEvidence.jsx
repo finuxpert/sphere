@@ -17,7 +17,7 @@ function jobContext(workload, host, source) {
 
 export default function RundeckOperationalEvidence({
   refreshToken = '', selectedJob = null, onOpenEvidence, onOpenIssues,
-  onOpenInfrastructure, onOpenSystemData, onOpenJobsPrograms, systemDataSummary = '', infrastructureLabel = '', focusedHost = '',
+  onOpenInfrastructure, onOpenSystemData, onOpenJobsPrograms, onOpenMonthlyReview, systemDataSummary = '', infrastructureLabel = '', focusedHost = '',
 }) {
   const [summary, setSummary] = React.useState(null)
   const [error, setError] = React.useState('')
@@ -66,6 +66,10 @@ export default function RundeckOperationalEvidence({
       {onOpenSystemData && <button type="button" className="rundeckSystemDataUtility"
         onClick={onOpenSystemData} aria-label="Open System Data">
         <span><SphereIcon name="database" />System Data</span><small title={systemDataSummary}>{systemDataSummary || 'Collection runs'}</small>
+      </button>}
+      {onOpenMonthlyReview && <button type="button" className="rundeckMonthlyUtility"
+        onClick={onOpenMonthlyReview} aria-label="Open Monthly SAP Performance Review">
+        <span><SphereIcon name="history" />Monthly Review</span><small>SAP Performance · Jobs · PDF</small>
       </button>}
     </div>
   </nav>
