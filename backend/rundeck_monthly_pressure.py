@@ -6,6 +6,7 @@ time or workload-level root cause. No data is extrapolated over collector gaps.
 """
 from __future__ import annotations
 
+import os
 from collections import defaultdict
 from datetime import datetime
 from statistics import median
@@ -15,6 +16,9 @@ from typing import Any
 from sqlalchemy import text
 
 from backend.rundeck_monitoring import CPU_WARNING, CPU_CRITICAL, RAM_WARNING, RAM_CRITICAL
+
+# Reject stale workload snapshots from unrelated parts of a collection cycle.
+CORRELATION_WINDOW_SECONDS = max(60, int(os.getenv('SPHERE_MONTHLY_CORRELATION_WINDOW_SECONDS', '900')))
 
 
 def _rounded(value: Any, precision: int = 1) -> float | None:
@@ -96,6 +100,7 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         "start": start, "end": end,
         "cpu_warning": CPU_WARNING, "cpu_critical": CPU_CRITICAL,
         "ram_warning": RAM_WARNING, "ram_critical": RAM_CRITICAL,
+        "max_skew_seconds": CORRELATION_WINDOW_SECONDS,
     }
     samples = [dict(row) for row in conn.execute(text(f"""
         SELECT hm.collection_id, hm.host, hm.collected_at,
@@ -179,6 +184,9 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
                    FILTER (WHERE hm.ram_pct >= :ram_warning) AS ram_pressure_host_checks,
                COUNT(DISTINCT (tc.collection_id, tc.host))
                    FILTER (WHERE COALESCE(hm.wp_critical, 0) > 0) AS wp_host_checks,
+               ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_pressure_hosts,
+               ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE hm.ram_pct >= :ram_warning) AS ram_pressure_hosts,
+               ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE COALESCE(hm.wp_critical, 0) > 0) AS wp_signal_hosts,
                MAX(tc.cpu_pct) FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_peak_during_cpu_pressure,
                MAX(NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision)
                    FILTER (WHERE hm.ram_pct >= :ram_warning) AS pss_peak_during_ram_pressure
@@ -186,6 +194,7 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
           JOIN rundeck_collections c ON c.collection_id = tc.collection_id
           JOIN rundeck_host_metrics hm
             ON hm.collection_id = tc.collection_id AND hm.host = tc.host
+            AND ABS(EXTRACT(EPOCH FROM (tc.collected_at - hm.collected_at))) <= :max_skew_seconds
          WHERE {complete_clause}
            AND COALESCE(c.finished_at, c.started_at) >= :start
            AND COALESCE(c.finished_at, c.started_at) < :end
@@ -201,6 +210,9 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "cpu_pressure_host_checks": int(row["cpu_pressure_host_checks"] or 0),
             "ram_pressure_host_checks": int(row["ram_pressure_host_checks"] or 0),
             "wp_host_checks": int(row["wp_host_checks"] or 0),
+            "cpu_pressure_hosts": list(row["cpu_pressure_hosts"] or []),
+            "ram_pressure_hosts": list(row["ram_pressure_hosts"] or []),
+            "wp_signal_hosts": list(row["wp_signal_hosts"] or []),
             "cpu_peak_during_cpu_pressure": _rounded(row["cpu_peak_during_cpu_pressure"]),
             "pss_peak_during_ram_pressure": _rounded(row["pss_peak_during_ram_pressure"], 2),
         }
@@ -208,6 +220,7 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         "thresholds": {
             "cpu_warning_pct": CPU_WARNING, "cpu_critical_pct": CPU_CRITICAL,
             "ram_warning_pct": RAM_WARNING, "ram_critical_pct": RAM_CRITICAL,
+            "correlation_window_seconds": CORRELATION_WINDOW_SECONDS,
         },
         "hosts": host_summary,
         "daily_hosts": daily_hosts,
@@ -226,7 +239,8 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         "correlation": correlation,
         "method": (
             "Host CPU/RAM WARNING threshold episodes from complete SPHERE collections. "
-            "Pressure-workload matches require identical collection_id and APP host. "
+            "Pressure-workload matches require identical collection_id and APP host "
+            "with bounded observation timestamp skew. "
             "Episodes cover observed samples only, not incident durations or root causes."
         ),
     }
