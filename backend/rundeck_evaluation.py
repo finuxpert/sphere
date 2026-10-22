@@ -626,6 +626,18 @@ def _anchor_time(conn) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
+def _calendar_month_collection_anchor(conn, start: datetime, end: datetime) -> str:
+    """Cache completed months against their own READY collection anchor, not today's run."""
+    value = conn.execute(text(f"""
+        SELECT MAX(COALESCE(c.finished_at, c.started_at))
+          FROM rundeck_collections c
+         WHERE {_complete_collection_clause('c')}
+           AND COALESCE(c.finished_at, c.started_at) >= :start
+           AND COALESCE(c.finished_at, c.started_at) < :end
+    """), {"start": start, "end": end}).scalar()
+    return value.isoformat() if value is not None else "NO_COMPLETE_COLLECTION"
+
+
 def _evaluation_page(report: dict, *, limit: int, offset: int, query: str, health: str, pressure: str = "ALL") -> dict:
     """Filter the FULL evaluated population, then slice; leave all-population summary intact."""
     normalized_query = query.strip().casefold()
@@ -787,7 +799,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             days = round((end - start).total_seconds() / 86400, 2)
             # Monthly reports are separate from rolling-period cached populations.
             # The committed collection anchor invalidates data when a new READY run arrives.
-            anchor_key = _anchor_time(conn).isoformat()
+            anchor_key = _calendar_month_collection_anchor(conn, start, end)
             cache_key = (f"month:{month}", type_key, anchor_key)
         else:
             # Preserve the existing 1D/7D/30D cache contract exactly:
