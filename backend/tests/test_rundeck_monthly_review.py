@@ -180,9 +180,63 @@ class CalendarMonthReviewTests(unittest.TestCase):
             "latest_error_ts": "2026-09-12T08:00:00+07:00",
             "consumer_key": "Z_TEST"
         }], start, end)
+        self.assertEqual(result["timestamped_events"], 1)
+        self.assertEqual(result["snapshot_host_checks"], 1)
+        self.assertEqual({row["error_code"] for row in result["top_errors"]},
+                         {"TIME_OUT", "DBSQL_SQL_ERROR"})
+
+
+
+
+    def test_monthly_type_filter_does_not_change_official_summary(self):
+        report = {
+            "period": "month", "type": "ALL",
+            "summary": {"workloads": 3, "review_required": 2},
+            "items": [
+                {"consumer_type": "JOB", "consumer_key": "JOB1"},
+                {"consumer_type": "PROGRAM", "consumer_key": "ABAP1"},
+                {"consumer_type": "PROGRAM", "consumer_key": "ABAP2"},
+            ],
+        }
+        job_page = _evaluation_page(report, limit=25, offset=0, query="",
+                                    health="ALL", consumer_type="JOB")
+        self.assertEqual(job_page["type"], "JOB")
+        self.assertEqual(job_page["page"]["total"], 1)
+        self.assertEqual(job_page["summary"]["workloads"], 3)
+        self.assertEqual(job_page["summary"]["review_required"], 2)
+        self.assertEqual(len(report["items"]), 3)
+
+    def test_wp_diagnostics_do_not_invent_st22_incidents(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        rows = [
+            {"host": "APP1", "pid": "101", "collection_id": "check1",
+             "consumer_type": "PROCESS", "consumer_key": "PID 101",
+             "rabax": "3", "rxmsg": "2"},
+            {"host": "APP1", "pid": "101", "collection_id": "check1",
+             "consumer_type": "PROCESS", "consumer_key": "PID 101",
+             "rabax": "3", "rxmsg": "2"},
+        ]
+        result = summarize_monthly_wp_errors(rows, start, end)
+        self.assertEqual(result["status"], "WP_SIGNALS_ONLY")
+        self.assertEqual(result["timestamped_events"], 0)
+        self.assertEqual(result["snapshot_host_checks"], 0)
+        self.assertEqual(result["wp_signal_host_checks"], 2)
+        self.assertEqual({row["signal"] for row in result["wp_diagnostics"]}, {"RABAX", "RXMSG"})
+
+    def test_legacy_scalar_error_is_visible_without_assumed_timestamp(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        row = {
+            "host": "APP2", "pid": "55", "collection_id": "check-legacy",
+            "error_code": "TIME_OUT", "error_recency": "AT_SNAPSHOT",
+            "latest_error_ts": "2026-09-05 10:12:00",
+        }
+        result = summarize_monthly_wp_errors([row], start, end)
+        self.assertEqual(result["status"], "SNAPSHOT_ONLY")
         self.assertEqual(result["timestamped_events"], 0)
         self.assertEqual(result["snapshot_host_checks"], 1)
-
+        self.assertEqual(result["untimed_trace_observations"], 1)
 
 
 if __name__ == "__main__":
