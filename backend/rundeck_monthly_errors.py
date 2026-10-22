@@ -77,7 +77,7 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         item = categories.setdefault(group_key, {
             "category": category, "category_label": label,
             "error_code": code, "program": program, "host": host,
-            "events": set(), "snapshot_checks": set(),
+            "events": set(), "snapshot_checks": set(), "untimed_checks": set(),
             "first_at": None, "last_at": None,
             "sample_workload": str(row.get("consumer_key") or ""),
             "program_link": "EXPLICIT_ERROR_PROGRAM" if explicit_program else "CONTEXT_ONLY",
@@ -99,6 +99,7 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
             item["snapshot_checks"].add(key)
         if timestamp is None:
             untimed += int(row.get("collection_checks") or 1)
+            item["untimed_checks"].add((host, str(row.get("collection_id") or ""), pid, code))
             continue
         if not start <= timestamp < end:
             # Historical trace from another month is not an error of this month.
@@ -114,13 +115,15 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
     for item in categories.values():
         count = len(item["events"])
         observed = len(item["snapshot_checks"])
-        # A trace with no verifiable event timestamp remains a signal, not an event.
-        if not count and not observed:
+        untimed_checks = len(item["untimed_checks"])
+        # An untimed trace stays visible as a signal for ABAP investigation.
+        if not count and not observed and not untimed_checks:
             continue
         result.append({
-            **{key: value for key, value in item.items() if key not in {"events", "snapshot_checks"}},
+            **{key: value for key, value in item.items() if key not in {"events", "snapshot_checks", "untimed_checks"}},
             "event_count": count,
             "snapshot_host_checks": observed,
+            "untimed_trace_checks": untimed_checks,
             "first_at": item["first_at"],
             "last_at": item["last_at"],
         })
