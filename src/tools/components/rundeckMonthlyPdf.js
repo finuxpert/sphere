@@ -9,7 +9,7 @@ const labelHost = value => {
   return app ? 'APP' + (app[1] || app[2]) : raw
 }
 const format = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
-  ? 'N/A' : Number(value).toLocaleString('id-ID', { maximumFractionDigits: digits })
+  ? 'N/A' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
 const pct = value => format(value) === 'N/A' ? 'N/A' : format(value) + '%'
 const dateWib = value => value ? new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric',
@@ -84,21 +84,21 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6)
   pdf.setTextColor(100, 115, 125)
-  pdf.text('Terpantau pada APP dan collection yang sama; bukan bukti penyebab', x, y + 3.3)
+  pdf.text('Same APP and collection; co-observation does not prove causation', x, y + 3.3)
   const baseY = y + 8
   pdf.setDrawColor(215, 225, 230)
   pdf.line(x, baseY, x + width, baseY)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(6.5)
   pdf.setTextColor(56, 72, 82)
-  pdf.text('JOB DAN PROGRAM', x, baseY + 3.3)
-  pdf.text('OBSERVASI', x + width - 42, baseY + 3.3)
-  pdf.text(metric === 'ram' ? 'PSS PUNCAK' : 'CPU PUNCAK', x + width - 6, baseY + 3.3, { align: 'right' })
+  pdf.text('JOB / PROGRAM', x, baseY + 3.3)
+  pdf.text('CHECKS', x + width - 42, baseY + 3.3)
+  pdf.text(metric === 'ram' ? 'PEAK PSS' : 'PEAK CPU', x + width - 6, baseY + 3.3, { align: 'right' })
   let ry = baseY + 6
   if (!rows.length) {
     pdf.setFont('helvetica', 'normal')
     pdf.setTextColor(110, 121, 129)
-    pdf.text('Tidak ada program yang terpantau bersama tekanan resource bulan ini.', x, ry + 5)
+    pdf.text('No matching workload observations during this pressure.', x, ry + 5)
     return ry + 8
   }
   rows.slice(0, 5).forEach(row => {
@@ -163,25 +163,25 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(11)
   pdf.setTextColor(239, 247, 249)
-  pdf.text('Laporan Evaluasi Performa SAP Bulanan', headerX, 18)
+  pdf.text('SAP Monthly Performance Review', headerX, 18)
   pdf.setFillColor(limited ? 180 : 61, limited ? 124 : 132, limited ? 45 : 100)
   pdf.roundedRect(W - margin - 34, 11, 30, 9, 1, 1, 'F')
   pdf.setFontSize(7)
   pdf.setTextColor(255, 255, 255)
-  pdf.text(limited ? 'DATA TERBATAS' : 'HISTORI SAP', W - margin - 19, 16.7, { align: 'center' })
+  pdf.text(limited ? 'LIMITED DATA' : 'SPHERE HISTORY', W - margin - 19, 16.7, { align: 'center' })
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
-  pdf.text('Periode ' + month + ' WIB  |  Sumber: histori SPHERE  |  Dicetak: ' + dateWib(new Date().toISOString()), margin, 29.5)
-  pdf.text('Rentang data: ' + dateWib(data.start) + ' sampai sebelum ' + dateWib(data.end), margin, 33.8)
+  pdf.text('Period ' + month + ' WIB  |  Source: SPHERE History  |  Generated: ' + dateWib(new Date().toISOString()), margin, 29.5)
+  pdf.text('Data window: ' + dateWib(data.start) + ' to (exclusive) ' + dateWib(data.end), margin, 33.8)
 
   const kpis = [
-    ['TEKANAN CPU', String(pressure.cpu?.episodes ?? 'N/A') + ' kejadian', 'Puncak ' + pct(pressure.cpu?.peak?.peak_pct)],
-    ['TEKANAN RAM', String(pressure.ram?.episodes ?? 'N/A') + ' kejadian', 'Puncak ' + pct(pressure.ram?.peak?.peak_pct)],
-    ['CRITICAL WP TERAMATI', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' observasi' : 'N/A', 'APP-check dengan WP critical'],
-    ['JOB DAN PROGRAM', format(summary.workloads, 0) + ' terpantau', format(summary.review_required, 0) + ' perlu evaluasi'],
-    ['ESTIMASI CAKUPAN', pct(quality.coverage_pct), String(quality.confidence || 'UNKNOWN') + ' · ' + format(quality.complete_checks, 0) + ' lengkap · ' + format(quality.partial_or_incomplete_checks, 0) + ' belum'],
+    ['CPU PRESSURE', String(pressure.cpu?.episodes ?? 'N/A') + ' episodes', 'Peak ' + pct(pressure.cpu?.peak?.peak_pct)],
+    ['RAM PRESSURE', String(pressure.ram?.episodes ?? 'N/A') + ' episodes', 'Peak ' + pct(pressure.ram?.peak?.peak_pct)],
+    ['CRITICAL WP CHECKS', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' host-checks' : 'N/A', 'APP checks with Critical WP'],
+    ['JOB / PROGRAM', format(summary.workloads, 0) + ' observed', format(summary.review_required, 0) + ' need review'],
+    ['EST. COVERAGE', pct(quality.coverage_pct), String(quality.confidence || 'UNKNOWN') + ' · ' + format(quality.complete_checks, 0) + ' complete · ' + format(quality.partial_or_incomplete_checks, 0) + ' incomplete'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -200,10 +200,10 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(35, 51, 61)
-  pdf.text('SERVER APLIKASI SAP  |  Ringkasan resource bulanan', margin, 62)
+  pdf.text('SAP APP SERVERS  |  MONTHLY HOST RESOURCE SUMMARY', margin, 62)
   const cols = [0, 40, 73, 108, 143, 182, 218, 249]
   pdf.setFontSize(6.6)
-  ;['APP', 'CPU RERATA', 'CPU PUNCAK', 'RAM RERATA', 'RAM PUNCAK', 'CPU TINGGI', 'RAM TINGGI', 'WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
+  ;['APP', 'CPU RERATA', 'PEAK CPU', 'RAM RERATA', 'RAM PUNCAK', 'CPU TINGGI', 'RAM TINGGI', 'WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6.8)
   hosts.slice(0, 5).forEach((row, i) => {
@@ -214,22 +214,22 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   })
   if (!hosts.length) {
     pdf.setFont('helvetica', 'italic')
-    pdf.text('Data APP belum tersedia pada periode ini.', margin, 74)
+    pdf.text('APP host metrics are not available for this period.', margin, 74)
   }
 
   const chartW = (contentW - 6) / 2
-  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'Tren CPU  |  Puncak harian APP', margin, 91, chartW, 35, month)
-  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'Tren RAM  |  Puncak harian APP', margin + chartW + 6, 91, chartW, 35, month)
+  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'APP CPU  |  Daily Peak', margin, 91, chartW, 35, month)
+  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'APP RAM  |  Daily Peak', margin + chartW + 6, 91, chartW, 35, month)
 
-  const ramBottom = drawTopTable(pdf, 'JOB DAN PROGRAM SAAT RAM TINGGI', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
-  const cpuBottom = drawTopTable(pdf, 'JOB DAN PROGRAM SAAT CPU TINGGI', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  const ramBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING RAM PRESSURE', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
+  const cpuBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING CPU PRESSURE', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
   let errorLineY = Math.max(183, ramBottom + 2, cpuBottom + 2)
   if (errorLineY > H - 27) {
     pdf.addPage()
     pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
     pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
     pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-    pdf.text('SPHERE  |  Ringkasan Evaluasi Error ABAP', margin + 4, 18)
+    pdf.text('SPHERE  |  ABAP ERROR REVIEW', margin + 4, 18)
     errorLineY = 35
   }
   const errorEvidence = data.monthly_errors || {}
@@ -239,7 +239,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(36, 52, 62)
-  pdf.text('EVALUASI ERROR UNTUK TUNING ABAP', margin, errorLineY + 6)
+  pdf.text('ABAP ERROR ANALYSIS', margin, errorLineY + 6)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7)
   pdf.setTextColor(78, 98, 108)
@@ -277,18 +277,18 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(11)
       pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE  |  Evaluasi Error dan Tuning ABAP' + (continued ? ' (lanjutan)' : ''), margin + 4, 18)
+      pdf.text('SPHERE  |  ABAP Error Evidence' + (continued ? ' (cont.)' : ''), margin + 4, 18)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.setTextColor(70, 85, 94)
-      pdf.text('Periode ' + month + ' WIB  |  Sumber: histori error WP pada SPHERE', margin, 30)
+      pdf.text('Period ' + month + ' WIB  |  Source: SPHERE WP error history', margin, 30)
       ey = 40
       pdf.setFontSize(6.3)
       pdf.setFont('helvetica', 'bold')
       pdf.setTextColor(47, 64, 76)
       ;[
-        ['KATEGORI', 0], ['KODE ERROR', 40], ['PROGRAM TERKAIT', 106],
-        ['APP', 201], ['KEJADIAN', 221], ['SNAPSHOT', 249],
+        ['CATEGORY', 0], ['ERROR CODE', 40], ['ERROR PROGRAM', 106],
+        ['APP', 201], ['EVENTS', 221], ['SNAPSHOT', 249],
       ].forEach(([value,x]) => pdf.text(value, margin + x, ey))
       pdf.setDrawColor(204, 216, 224)
       pdf.line(margin, ey + 2, W - margin, ey + 2)
@@ -298,15 +298,15 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     header()
     errorRows.forEach(row => {
       const cat = pdf.splitTextToSize(String(row.category_label || 'Lainnya'), 37)
-      const code = pdf.splitTextToSize(String(row.error_code || 'Tidak tersedia'), 61)
-      const program = pdf.splitTextToSize(String(row.program || 'Belum teridentifikasi'), 88)
+      const code = pdf.splitTextToSize(String(row.error_code || 'Not available'), 61)
+      const program = pdf.splitTextToSize(String(row.program || 'Not identified'), 88)
       const resource = row.snapshot_host_checks > 0 && (row.cpu_snapshot_pct !== null || row.pss_snapshot_gb !== null)
-        ? 'CPU saat snapshot ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
-        : row.untimed_trace_checks > 0 ? 'Jejak error tanpa waktu: ' + format(row.untimed_trace_checks, 0) + ' observasi' : ''
+        ? 'Snapshot CPU ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
+        : row.untimed_trace_checks > 0 ? 'Untimed trace: ' + format(row.untimed_trace_checks, 0) + ' observasi' : ''
       const provenance = row.program_link === 'EXPLICIT_ERROR_PROGRAM'
-        ? 'Program tercatat eksplisit pada trace' : 'Workload hanya konteks, bukan bukti penyebab'
+        ? 'Explicit program in WP trace' : 'Workload context only; not causation'
       const timing = row.first_at
-        ? 'Pertama ' + dateWib(row.first_at) + '; terakhir ' + dateWib(row.last_at) : ''
+        ? 'First ' + dateWib(row.first_at) + '; last ' + dateWib(row.last_at) : ''
       const detailLines = pdf.splitTextToSize([provenance, timing, resource].filter(Boolean).join(' | '), 88)
       const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length + detailLines.length) + 1.8)
       if (ey + rowH > H - 17) {
@@ -340,8 +340,8 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.setTextColor(78, 98, 109)
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(6.6)
-    pdf.text('Kejadian: satu error dengan timestamp eksplisit, dihitung satu kali untuk APP, PID, kode, dan waktu yang sama.', margin, ey + 5)
-    pdf.text('Snapshot: observasi error saat collector berjalan. Program tanpa identitas eksplisit hanya merupakan konteks workload.', margin, ey + 9)
+    pdf.text('Event: unique APP, PID, error code and explicit event timestamp; not an ST22 dump total.', margin, ey + 5)
+    pdf.text('Snapshot: error signal when collected. A workload context is not proof of the failing ABAP program.', margin, ey + 9)
   }
 
   // RABAX/RXMSG are WP diagnostics, not ST22 dump counts. Detail appears
@@ -353,11 +353,11 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
       pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE  |  Sinyal Diagnostik WP' + (continued ? ' (lanjutan)' : ''), margin + 4, 18)
+      pdf.text('SPHERE  |  WP Diagnostic Signals' + (continued ? ' (cont.)' : ''), margin + 4, 18)
       pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-      pdf.text('RABAX dan RXMSG adalah sinyal trace collector, bukan jumlah dump ST22.', margin, 30)
+      pdf.text('RABAX and RXMSG are collector trace indicators, not ST22 dump counts.', margin, 30)
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(7)
-      ;[['SINYAL',0], ['APP',32], ['PROGRAM TERKAIT',60], ['PEMERIKSAAN',219], ['NILAI TRACE',260]]
+      ;[['SIGNAL',0], ['APP',32], ['ERROR PROGRAM',60], ['CHECKS',219], ['PEAK TRACE',260]]
         .forEach(([name, position]) => pdf.text(name, margin + position, 38))
       pdf.setDrawColor(204, 216, 224);pdf.line(margin, 40, W - margin, 40)
       signalY = 43
@@ -365,10 +365,10 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.addPage()
     signalHeader()
     wpDiagnostics.forEach(item => {
-      const program = pdf.splitTextToSize(String(item.program || 'Belum teridentifikasi'), 150)
+      const program = pdf.splitTextToSize(String(item.program || 'Not identified'), 150)
       const context = item.program_link === 'EXPLICIT_ERROR_PROGRAM'
-        ? 'Program tercatat eksplisit pada trace'
-        : 'Konteks workload: ' + String(item.sample_workload || 'belum teridentifikasi')
+        ? 'Explicit program in WP trace'
+        : 'Workload context: ' + String(item.sample_workload || 'not identified')
       const contextLines = pdf.splitTextToSize(context, 150)
       const rowH = Math.max(8, program.length * 3 + contextLines.length * 2.7 + 3)
       if (signalY + rowH > H - 16) {
@@ -395,9 +395,9 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
       pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE  |  Bukti Job dan Program Terpilih' + (continued ? ' (lanjutan)' : ''), margin + 4, 18)
+      pdf.text('SPHERE  |  Selected Workload Evidence' + (continued ? ' (cont.)' : ''), margin + 4, 18)
       pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-      pdf.text('Periode ' + month + ' WIB  |  Observasi terpilih untuk evaluasi teknis', margin, 30)
+      pdf.text('Period ' + month + ' WIB  |  Selected source-backed workload observations', margin, 30)
       y = 39
     }
     pdf.addPage()
@@ -421,15 +421,15 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     selections.forEach((row, index) => {
       const overlap = row.pressure_overlap || {}
       addText((index + 1) + '. ' + String(row.consumer_key || 'UNKNOWN') + '  (' + row.consumer_type + ')', 9, true)
-      addText('APP teramati: ' + (row.hosts || []).map(labelHost).join(', ') +
-        ' | CPU rerata dan puncak ' + pct(row.avg_cpu_pct) + ', ' + pct(row.peak_cpu_pct) +
-        ' | PSS rerata dan puncak ' + format(row.avg_pss_gb, 2) + ', ' + format(row.peak_pss_gb, 2) + ' GB')
-      addText('Observasi tersimpan ' + format(row.occurrences, 0) +
-        ' | Saat CPU tinggi ' + format(overlap.cpu_pressure_host_checks, 0) +
-        ' pada APP ' + (overlap.cpu_pressure_hosts || []).map(labelHost).join(', ') +
-        ' | Saat RAM tinggi ' + format(overlap.ram_pressure_host_checks, 0) +
-        ' pada APP ' + (overlap.ram_pressure_hosts || []).map(labelHost).join(', ') +
-        ' | Pemeriksaan APP dengan Critical WP ' + format(overlap.wp_host_checks, 0))
+      addText('Observed APP: ' + (row.hosts || []).map(labelHost).join(', ') +
+        ' | Avg/Peak CPU ' + pct(row.avg_cpu_pct) + ', ' + pct(row.peak_cpu_pct) +
+        ' | Avg/Peak PSS ' + format(row.avg_pss_gb, 2) + ', ' + format(row.peak_pss_gb, 2) + ' GB')
+      addText('Observed checks ' + format(row.occurrences, 0) +
+        ' | CPU pressure checks ' + format(overlap.cpu_pressure_host_checks, 0) +
+        ' on APP ' + (overlap.cpu_pressure_hosts || []).map(labelHost).join(', ') +
+        ' | RAM pressure checks ' + format(overlap.ram_pressure_host_checks, 0) +
+        ' on APP ' + (overlap.ram_pressure_hosts || []).map(labelHost).join(', ') +
+        ' | Critical WP host-checks ' + format(overlap.wp_host_checks, 0))
       y += 3
     })
   }
@@ -439,8 +439,8 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.setDrawColor(218, 228, 234)
     pdf.line(margin, H-7.5, W-margin, H-7.5)
     pdf.setTextColor(96, 109, 117);pdf.setFont('helvetica', 'normal');pdf.setFontSize(6.5)
-    pdf.text('SPHERE  |  ' + APP_DISPLAY_VERSION + '  |  Periode ' + month, margin, H-4)
-    pdf.text('Halaman '+i+' dari '+pages, W-margin, H-4,{align:'right'})
+    pdf.text('SPHERE  |  ' + APP_DISPLAY_VERSION + '  |  Period ' + month, margin, H-4)
+    pdf.text('Page '+i+' of '+pages, W-margin, H-4,{align:'right'})
   }
   return pdf.output('blob')
 }
