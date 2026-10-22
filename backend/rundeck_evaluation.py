@@ -19,6 +19,7 @@ from sqlalchemy import text
 
 from backend.db.session import get_engine
 from backend.rundeck_consumers import TOP_CONSUMERS_PER_HOST
+from backend.rundeck_monthly_pressure import monthly_pressure_observations
 
 PERIOD_DAYS = {"1d": 1, "7d": 7, "30d": 30}
 CPU_HIGH_AVG = float(os.getenv("SPHERE_EVAL_CPU_HIGH_AVG_PCT", "70"))
@@ -714,6 +715,8 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
                COUNT(DISTINCT hm.collection_id) AS complete_checks,
                AVG(hm.cpu_pct) AS avg_host_cpu_pct,
                MAX(hm.cpu_pct) AS peak_host_cpu_pct,
+               AVG(hm.ram_pct) AS avg_host_ram_pct,
+               MAX(hm.ram_pct) AS peak_host_ram_pct,
                COUNT(DISTINCT (hm.collection_id, hm.host)) FILTER (
                    WHERE COALESCE(hm.wp_critical, 0) > 0
                ) AS critical_wp_host_checks
@@ -731,6 +734,8 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
         "complete_checks": int(row["complete_checks"] or 0),
         "avg_host_cpu_pct": _round(row["avg_host_cpu_pct"]),
         "peak_host_cpu_pct": _round(row["peak_host_cpu_pct"]),
+        "avg_host_ram_pct": _round(row["avg_host_ram_pct"]),
+        "peak_host_ram_pct": _round(row["peak_host_ram_pct"]),
         "critical_wp_host_checks": int(row["critical_wp_host_checks"] or 0),
     } for row in rows]
 
@@ -794,6 +799,9 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         shift_rows = _recent_shift_window(conn, end, type_key)
         sampling = _sampling_quality(conn, start, end)
         monthly_daily = _monthly_daily_host_trend(conn, start, end) if period_key == "month" else []
+        monthly_pressure = (monthly_pressure_observations(
+            conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
+        ) if period_key == "month" else None)
 
     current_checks = int(current_quality["complete_checks"])
     previous_checks = int(previous_quality["complete_checks"])
@@ -865,6 +873,12 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
                 "avg_pss_gb": _round(previous.get("avg_pss_gb"), 2) if previous else None,
             },
         }
+        if monthly_pressure is not None:
+            normalized["pressure_overlap"] = monthly_pressure["correlation"].get(key, {
+                "cpu_pressure_host_checks": 0, "ram_pressure_host_checks": 0,
+                "wp_host_checks": 0, "cpu_peak_during_cpu_pressure": None,
+                "pss_peak_during_ram_pressure": None,
+            })
         normalized.update(assess_workload(
             normalized,
             normalized["previous"],
@@ -905,6 +919,25 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         "wp_excess_association": sum(1 for item in evaluated if item.get("signals", {}).get("wp_excess_association")),
     }
 
+    if monthly_pressure is not None:
+        monthly_pressure.pop("correlation")
+        monthly_pressure["top_cpu_workloads"] = sorted(
+            (row for row in evaluated if row.get("pressure_overlap", {}).get("cpu_pressure_host_checks", 0) > 0),
+            key=lambda row: (
+                -row["pressure_overlap"]["cpu_pressure_host_checks"],
+                -(row["pressure_overlap"]["cpu_peak_during_cpu_pressure"] or 0),
+                str(row["consumer_key"]),
+            ),
+        )[:5]
+        monthly_pressure["top_ram_workloads"] = sorted(
+            (row for row in evaluated if row.get("pressure_overlap", {}).get("ram_pressure_host_checks", 0) > 0),
+            key=lambda row: (
+                -row["pressure_overlap"]["ram_pressure_host_checks"],
+                -(row["pressure_overlap"]["pss_peak_during_ram_pressure"] or 0),
+                str(row["consumer_key"]),
+            ),
+        )[:5]
+
     result = {
         "period": period_key,
         "month": str(month) if period_key == "month" else None,
@@ -921,6 +954,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         "previous_quality": previous_quality,
         "sampling": sampling,
         "daily_host_trend": monthly_daily,
+        "monthly_pressure": monthly_pressure,
         "baseline": {
             "days": HISTORICAL_BASELINE_DAYS,
             "min_observations": HISTORICAL_BASELINE_MIN_OBSERVATIONS,
