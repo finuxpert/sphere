@@ -133,15 +133,16 @@ def performance_analysis():
 
 @app.get("/evaluation/workloads")
 def workload_evaluation(
-    period: str = Query("1d", pattern="^(1d|7d|30d)$"),
+    period: str = Query("1d", pattern="^(1d|7d|30d|month)$"),
     consumer_type: str = Query("ALL", alias="type", pattern="^(ALL|JOB|PROGRAM)$"),
     limit: int = Query(30, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100000),
     q: str = Query("", max_length=512),
     health: str = Query("ALL", pattern="^(ALL|REVIEW|ATTENTION|NORMAL|UNKNOWN)$"),
+    month: str | None = Query(None, max_length=7),
 ):
     try:
-        return evaluation_report(period=period, consumer_type=consumer_type, limit=limit, offset=offset, query=q, health=health)
+        return evaluation_report(period=period, consumer_type=consumer_type, limit=limit, offset=offset, query=q, health=health, month=month)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:
