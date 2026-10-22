@@ -253,7 +253,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   const errorSummary = errorEvidence.truncated
     ? 'Error history is partial; event totals cannot be confirmed'
     : !data.monthly_errors || errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
-      ? 'WP error evidence not retained for this period; verified error count unavailable'
+      ? 'WP error fields not found in stored workload history; event count unavailable'
       : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE'
         ? 'No error code found in retained SPHERE WP evidence; coverage is limited'
         : errorEvidence.status === 'WP_SIGNALS_ONLY'
