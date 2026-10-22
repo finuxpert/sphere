@@ -11,7 +11,6 @@ const dateWib = value => value ? new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric',
   hour: '2-digit', minute: '2-digit', hour12: false,
 }).format(new Date(value)) + ' WIB' : 'Not observed'
-const identity = row => String(row.consumer_type || '') + ':' + String(row.consumer_key || '')
 
 function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month) {
   pdf.setFont('helvetica', 'bold')
