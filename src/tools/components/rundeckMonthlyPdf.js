@@ -222,19 +222,30 @@ export async function buildMonthlyPdf({ month, data, selections }) {
 
   drawTopTable(pdf, 'JOB DAN PROGRAM SAAT RAM TINGGI', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
   drawTopTable(pdf, 'JOB DAN PROGRAM SAAT CPU TINGGI', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  const errorEvidence = data.monthly_errors || {}
+  const errorRows = (errorEvidence.top_errors || []).filter(row => row.event_count || row.snapshot_host_checks)
   pdf.setDrawColor(215, 225, 230)
-  pdf.line(margin, 191, W - margin, 191)
+  pdf.line(margin, 183, W - margin, 183)
   pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(6.9)
-  pdf.setTextColor(40, 55, 65)
-  pdf.text('CATATAN', margin, 195)
+  pdf.setFontSize(8)
+  pdf.setTextColor(36, 52, 62)
+  pdf.text('EVALUASI ERROR UNTUK TUNING ABAP', margin, 189)
   pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(6.2)
-  pdf.setTextColor(87, 103, 113)
-  pdf.text('Workloads were observed on the same APP and collection as CPU/RAM pressure, not proven causes. Host RAM % and program PSS GB are different metrics.', margin, 198.5)
-  pdf.text('Missing collection intervals remain unknown. Coverage ' + pct(quality.coverage_pct) +
-    ' (' + (quality.confidence || 'UNKNOWN') + '), incomplete checks ' + format(quality.partial_or_incomplete_checks, 0) +
-    '. Observations are not SM37 job executions or SAP response time.', margin, 201.6)
+  pdf.setFontSize(7)
+  pdf.setTextColor(78, 98, 108)
+  const errorSummary = errorEvidence.truncated
+    ? 'Histori error sebagian; jumlah kejadian belum lengkap'
+    : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE' || !data.monthly_errors
+      ? 'Data error dari histori SPHERE belum tersedia'
+      : errorEvidence.status === 'SNAPSHOT_ONLY'
+        ? 'Ada observasi error saat snapshot; waktu kejadian belum terverifikasi'
+        : format(errorEvidence.timestamped_events, 0) + ' kejadian berwaktu dan ' +
+          format(errorEvidence.snapshot_host_checks, 0) + ' observasi error saat snapshot'
+  pdf.text(errorSummary, margin, 193.6)
+  pdf.setFontSize(6.7)
+  pdf.text(errorRows.length
+    ? 'Rincian kode error, APP, dan program terkait tersedia pada halaman berikutnya.'
+    : 'Data tidak tersedia tidak berarti SAP bebas dari error.', margin, 198)
 
   // Optional appendix is emitted only for operator-selected evidence; names always wrap.
   if (selections.length) {
@@ -242,9 +253,9 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
     pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
     pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-    pdf.text('SPHERE  |  Selected Job & Program Evidence', margin + 4, 18)
+    pdf.text('SPHERE  |  Bukti Job dan Program Terpilih', margin + 4, 18)
     pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-    pdf.text('Period ' + month + ' WIB  |  Manually selected SPHERE observations - not a root-cause declaration', margin, 30)
+    pdf.text('Periode ' + month + ' WIB  |  Observasi terpilih untuk evaluasi teknis', margin, 30)
     let y = 39
     const addText = (value, size = 7.5, bold = false) => {
       pdf.setFont('helvetica', bold ? 'bold' : 'normal')
@@ -260,12 +271,12 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       const overlap = row.pressure_overlap || {}
       addText((index + 1) + '. ' + String(row.consumer_key || 'UNKNOWN') + '  (' + row.consumer_type + ')', 9, true)
       addText('APP ' + (row.hosts || []).map(labelHost).join(', ') +
-        ' | Avg/peak CPU ' + pct(row.avg_cpu_pct) + '/' + pct(row.peak_cpu_pct) +
-        ' | Avg/peak PSS ' + format(row.avg_pss_gb, 2) + '/' + format(row.peak_pss_gb, 2) + ' GB')
-      addText('Saved collection checks ' + format(row.occurrences, 0) +
-        ' | CPU pressure APP host-checks ' + format(overlap.cpu_pressure_host_checks, 0) +
-        ' | RAM pressure APP host-checks ' + format(overlap.ram_pressure_host_checks, 0) +
-        ' | WP APP host-checks ' + format(overlap.wp_host_checks, 0))
+        ' | CPU rerata dan puncak ' + pct(row.avg_cpu_pct) + ', ' + pct(row.peak_cpu_pct) +
+        ' | PSS rerata dan puncak ' + format(row.avg_pss_gb, 2) + ', ' + format(row.peak_pss_gb, 2) + ' GB')
+      addText('Observasi tersimpan ' + format(row.occurrences, 0) +
+        ' | Saat CPU tinggi ' + format(overlap.cpu_pressure_host_checks, 0) +
+        ' | Saat RAM tinggi ' + format(overlap.ram_pressure_host_checks, 0) +
+        ' | Observasi WP ' + format(overlap.wp_host_checks, 0))
       y += 3
     })
   }
@@ -275,8 +286,8 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.setDrawColor(218, 228, 234)
     pdf.line(margin, H-7.5, W-margin, H-7.5)
     pdf.setTextColor(96, 109, 117);pdf.setFont('helvetica', 'normal');pdf.setFontSize(6.5)
-    pdf.text('SPHERE  |  ' + APP_DISPLAY_VERSION + '  |  Monthly ' + month + '  |  Source: SPHERE retained history', margin, H-4)
-    pdf.text('Page '+i+' / '+pages, W-margin, H-4,{align:'right'})
+    pdf.text('SPHERE  |  ' + APP_DISPLAY_VERSION + '  |  Periode ' + month, margin, H-4)
+    pdf.text('Halaman '+i+' dari '+pages, W-margin, H-4,{align:'right'})
   }
   return pdf.output('blob')
 }
