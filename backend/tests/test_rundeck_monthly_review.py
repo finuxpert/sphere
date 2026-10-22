@@ -159,5 +159,31 @@ class CalendarMonthReviewTests(unittest.TestCase):
 
 
 
+    def test_untimed_trace_is_visible_without_inventing_error_event(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        result = summarize_monthly_wp_errors([{
+            "host": "APP1", "pid": "111", "collection_id": "run1",
+            "latest_trace_error": "TIME_OUT", "consumer_key": "Z_TEST"
+        }], start, end)
+        self.assertEqual(result["status"], "UNTIMED_TRACE_ONLY")
+        self.assertEqual(result["timestamped_events"], 0)
+        self.assertEqual(result["top_errors"][0]["untimed_trace_checks"], 1)
+
+    def test_mismatched_snapshot_code_must_not_borrow_trace_timestamp(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        result = summarize_monthly_wp_errors([{
+            "host": "APP1", "pid": "111", "collection_id": "run1",
+            "error_at_snapshot": "TIME_OUT",
+            "latest_trace_error": "DBSQL_SQL_ERROR",
+            "latest_error_ts": "2026-09-12T08:00:00+07:00",
+            "consumer_key": "Z_TEST"
+        }], start, end)
+        self.assertEqual(result["timestamped_events"], 0)
+        self.assertEqual(result["snapshot_host_checks"], 1)
+
+
+
 if __name__ == "__main__":
     unittest.main()
