@@ -28,6 +28,7 @@ import './RundeckSapChecksLayout.css'
 import './RundeckAppThreePanel.css'
 import './RundeckWorkloadAppLanes.css'
 import './RundeckInvestigationFinishingV135.css'
+import './RundeckMonthlyReview.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -35,6 +36,7 @@ const RundeckJobHistory = React.lazy(() => import('./RundeckJobHistory.jsx'))
 const RundeckReviewQuickAnalysis = React.lazy(() => import('./RundeckReviewQuickAnalysis.jsx'))
 const RundeckInfrastructure = React.lazy(() => import('./RundeckInfrastructure.jsx'))
 const RundeckUnifiedAppAnalysis = React.lazy(() => import('./RundeckUnifiedAppAnalysis.jsx'))
+const RundeckMonthlyReview = React.lazy(() => import('./RundeckMonthlyReview.jsx'))
 
 const metricLabelForTrend = (metric, fallback = 'Metric') => {
   if (metric === 'cpu') return 'CPU'
@@ -106,6 +108,7 @@ export default function RundeckMonitoringHistory(props) {
     onOpenEvidence={(job, scope) => setActiveOverlay({ type: 'evidence', job, scope, returnTo: { type: 'selected' } })}
     onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
     onOpenJobsPrograms={() => setActiveOverlay({ type: 'jobs-programs', mode: 'live', category: 'REVIEW' })}
+    onOpenMonthlyReview={() => setActiveOverlay({ type: 'monthly-review' })}
     onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', sapHost: focusedOperationalHost?.host || '', returnTo: { type: 'selected' } })}
     onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
     systemDataSummary={systemDataSummary}
@@ -171,6 +174,18 @@ export default function RundeckMonitoringHistory(props) {
           />
           <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
+
+          {activeOverlay?.type === 'monthly-review' && <RundeckWorkspaceDrawer
+            title="Monthly Review"
+            subtitle="SAP Performance & Job Impact · SPHERE saved history"
+            size="monthly-review"
+            mountInAppShell
+            onClose={() => setActiveOverlay(null)}
+          >
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading Monthly Review…</div>}>
+              <RundeckMonthlyReview refreshToken={refreshToken} sourceHosts={props.sourceHosts || []} />
+            </React.Suspense>
+          </RundeckWorkspaceDrawer>}
 
           {activeOverlay?.type === 'jobs-programs' && <RundeckWorkspaceDrawer
             title="Jobs & Programs"
