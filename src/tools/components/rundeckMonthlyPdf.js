@@ -337,6 +337,50 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.text('Snapshot: observasi error saat collector berjalan. Program tanpa identitas eksplisit hanya merupakan konteks workload.', margin, ey + 9)
   }
 
+  // RABAX/RXMSG are WP diagnostics, not ST22 dump counts. Detail appears
+  // only when the retained collection history contains such signals.
+  const wpDiagnostics = (errorEvidence.wp_diagnostics || []).slice(0, 20)
+  if (wpDiagnostics.length) {
+    let signalY = 43
+    const signalHeader = (continued = false) => {
+      pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
+      pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
+      pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
+      pdf.text('SPHERE  |  Sinyal Diagnostik WP' + (continued ? ' (lanjutan)' : ''), margin + 4, 18)
+      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
+      pdf.text('RABAX dan RXMSG adalah sinyal trace collector, bukan jumlah dump ST22.', margin, 30)
+      pdf.setFont('helvetica', 'bold');pdf.setFontSize(7)
+      ;[['SINYAL',0], ['APP',32], ['PROGRAM TERKAIT',60], ['PEMERIKSAAN',219], ['NILAI TRACE',260]]
+        .forEach(([name, position]) => pdf.text(name, margin + position, 38))
+      pdf.setDrawColor(204, 216, 224);pdf.line(margin, 40, W - margin, 40)
+      signalY = 43
+    }
+    pdf.addPage()
+    signalHeader()
+    wpDiagnostics.forEach(item => {
+      const program = pdf.splitTextToSize(String(item.program || 'Belum teridentifikasi'), 150)
+      const context = item.program_link === 'EXPLICIT_ERROR_PROGRAM'
+        ? 'Program tercatat eksplisit pada trace'
+        : 'Konteks workload: ' + String(item.sample_workload || 'belum teridentifikasi')
+      const contextLines = pdf.splitTextToSize(context, 150)
+      const rowH = Math.max(8, program.length * 3 + contextLines.length * 2.7 + 3)
+      if (signalY + rowH > H - 16) {
+        pdf.addPage()
+        signalHeader(true)
+      }
+      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(34, 49, 59)
+      pdf.text(String(item.signal || 'WP'), margin, signalY + 3)
+      pdf.text(labelHost(item.host), margin + 32, signalY + 3)
+      pdf.text(program, margin + 60, signalY + 3)
+      pdf.text(String(item.observed_checks ?? 0), margin + 244, signalY + 3, { align: 'right' })
+      pdf.text(format(item.peak_tail_count, 0), margin + 279, signalY + 3, { align: 'right' })
+      pdf.setFontSize(6);pdf.setTextColor(100, 116, 125)
+      pdf.text(contextLines, margin + 60, signalY + 3 + program.length * 3)
+      signalY += rowH
+      pdf.setDrawColor(222, 231, 235);pdf.line(margin, signalY, W - margin, signalY)
+    })
+  }
+
   // Optional appendix is emitted only for operator-selected evidence; names always wrap.
   if (selections.length) {
     pdf.addPage()
