@@ -159,12 +159,13 @@ def monthly_workload_evaluation(
     q: str = Query("", max_length=512),
     health: str = Query("ALL", pattern="^(ALL|REVIEW|ATTENTION|NORMAL|UNKNOWN)$"),
     pressure: str = Query("ALL", pattern="^(ALL|CPU|RAM|WP)$"),
+    flag: str = Query("ALL", pattern="^(ALL|HIGH_CPU|HIGH_MEMORY|RECURRING)$"),
 ):
     """Calendar-month workload observations for the SPHERE-only manual Basis report."""
     try:
         return evaluation_report(
             period="month", consumer_type=consumer_type, limit=limit,
-            offset=offset, query=q, health=health, month=month, pressure=pressure,
+            offset=offset, query=q, health=health, month=month, pressure=pressure, flag=flag,
         )
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
