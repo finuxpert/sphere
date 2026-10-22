@@ -113,7 +113,7 @@ async function generateReportPdf({ month, data, selections, assessment }) {
   pdf.text('SPHERE · Monthly Basis Assessment · ' + month, margin, 32)
   y = 53
   line('STATUS: DRAFT · Manual assessment · SPHERE historical evidence only', 10, true)
-  line('Period: ' + month + ' (Asia/Jakarta) | Saved window: ' + when(data.start) + ' to ' + when(data.end), 9)
+  line('Period: ' + month + ' (Asia/Jakarta) | Saved window [start, exclusive end): ' + when(data.start) + ' to ' + when(data.end), 9)
   line('Generated: ' + when(new Date().toISOString()) + ' | Basis reviewer: ' + (assessment.reviewer || 'Not provided'), 9)
   section('Executive indicators')
   line('Observed JOB/PROGRAM identities: ' + fmt(data.summary?.workloads, 0)
@@ -142,7 +142,7 @@ async function generateReportPdf({ month, data, selections, assessment }) {
     line((index + 1) + '. ' + row.consumer_key + ' (' + row.consumer_type + ')', 10, true)
     line('APP: ' + (hostNames(row).join(', ') || 'Not observed') + ' | Avg CPU: ' + percent(row.avg_cpu_pct)
       + ' | Peak CPU: ' + percent(row.peak_cpu_pct) + ' | Avg PSS: ' + fmt(row.avg_pss_gb, 2) + ' GB', 9)
-    line('Observed checks: ' + fmt(row.occurrences, 0) + ' | APP Critical WP overlap: '
+    line('Previous month avg CPU: ' + percent(row.previous?.avg_cpu_pct) + ' | Observed checks: ' + fmt(row.occurrences, 0) + ' | APP Critical WP overlap: '
       + fmt(row.critical_wp_host_checks ?? row.critical_wp_checks, 0)
       + ' | First: ' + when(row.first_seen) + ' | Last: ' + when(row.last_seen), 8)
   })
@@ -282,7 +282,7 @@ export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = 
     {error && <div className="sphereMonthlyState is-error" role="alert">{error}. No substitute values or simulated evidence are shown.</div>}
     {data && !loading && <>
       <div className="sphereMonthlyProvenance">
-        <span>Saved observations: {when(data.start)} – {when(data.end)}</span>
+        <span>Period [start, end): {when(data.start)} – {when(data.end)} (exclusive)</span>
         <span>Data confidence: <b>{coverage.confidence || 'UNKNOWN'}</b></span>
         <span>Coverage: <b>{percent(coverage.coverage_pct)}</b></span>
         <span>Complete checks: <b>{fmt(coverage.complete_checks, 0)}</b></span>
@@ -325,14 +325,14 @@ export default function RundeckMonthlyReview({ refreshToken = '', sourceHosts = 
           </div>
         </div>
         <div className="sphereMonthlyTableScroll"><table>
-          <thead><tr><th>Job / Program</th><th>APP</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th><th>Observed checks</th><th>WP overlap</th><th>Report</th></tr></thead>
+          <thead><tr><th>Job / Program</th><th>APP</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th><th>Prev Avg CPU</th><th>Observed checks</th><th>WP overlap</th><th>Report</th></tr></thead>
           <tbody>{currentItems.map(row => <tr key={identity(row)}>
             <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {row.assessment || row.status || 'Unclassified'}</small></td>
             <td>{hostNames(row).join(', ') || '—'}</td><td>{percent(row.avg_cpu_pct)}</td><td>{percent(row.peak_cpu_pct)}</td>
-            <td>{fmt(row.avg_pss_gb, 2)} GB</td><td>{fmt(row.occurrences, 0)}</td><td>{fmt(row.critical_wp_host_checks, 0)}</td>
+            <td>{fmt(row.avg_pss_gb, 2)} GB</td><td>{percent(row.previous?.avg_cpu_pct)}</td><td>{fmt(row.occurrences, 0)}</td><td>{fmt(row.critical_wp_host_checks, 0)}</td>
             <td><button className={selected[identity(row)] ? 'is-selected' : ''} type="button" onClick={() => addSelection(row)} aria-pressed={Boolean(selected[identity(row)])}>{selected[identity(row)] ? 'Selected' : 'Select'}</button></td>
           </tr>)}
-          {!currentItems.length && <tr><td colSpan="8">No observed workloads match the selected month/filter.</td></tr>}
+          {!currentItems.length && <tr><td colSpan="9">No observed workloads match the selected month/filter.</td></tr>}
           </tbody>
         </table></div>
         <div className="sphereMonthlyPager"><small>Selected for report: {chosen.length} · Observations are not SM37 run counts</small>
