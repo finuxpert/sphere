@@ -22,13 +22,13 @@ const errorCategoryLabel = (category, fallback) => ({
   APPLICATION: 'ABAP Application', ABAP_DATA: 'ABAP Data', OTHER: 'Other',
 })[category] || fallback || 'Other'
 
-function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month) {
+function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month, threshold) {
   pdf.setFont('helvetica', 'bold')
   pdf.setTextColor(22, 35, 43)
   pdf.setFontSize(8.6)
   pdf.text(label, x, y - 2)
   const chartY = y + 1
-  pdf.setFillColor(17, 28, 38)
+  pdf.setFillColor(255, 255, 255)
   pdf.roundedRect(x, chartY, w, h, 1, 1, 'F')
   const left = x + 9
   const top = chartY + 3
@@ -40,17 +40,28 @@ function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month) {
   pdf.setFontSize(6.2)
   ;[0, 50, 100].forEach(level => {
     const yy = top + plotH * (1 - level / 100)
-    pdf.setDrawColor(58, 74, 85)
+    pdf.setDrawColor(226, 232, 236)
     pdf.setLineWidth(.12)
     pdf.line(left, yy, left + plotW, yy)
-    pdf.setTextColor(157, 175, 186)
+    pdf.setTextColor(85, 104, 117)
     pdf.text(String(level), x + 1.2, yy + .8)
   })
   ;[1, 10, 20, days].forEach(day => {
     const xx = left + plotW * (day - 1) / Math.max(1, days - 1)
-    pdf.setTextColor(157, 175, 186)
-    pdf.text(String(day), xx, chartY + h - 2.1, { align: 'center' })
+    pdf.setTextColor(85, 104, 117)
+    pdf.text((day === 1 || day === days ? day + ' ' + month.slice(5) + '/' + month.slice(2,4) : String(day)), xx, chartY + h - 2.1, { align: 'center' })
   })
+  if (threshold != null && Number.isFinite(Number(threshold))) {
+    const warnY = top + plotH * (1 - Math.max(0, Math.min(100, Number(threshold))) / 100)
+    pdf.setDrawColor(192, 105, 48)
+    pdf.setLineWidth(.4)
+    pdf.setLineDashPattern([1.5, 1.3], 0)
+    pdf.line(left, warnY, left + plotW, warnY)
+    pdf.setLineDashPattern([], 0)
+    pdf.setFont('helvetica','bold')
+    pdf.setTextColor(156, 79, 37)
+    pdf.text('Warning ' + pct(threshold), left + plotW - 1, warnY - 1.5, {align:'right'})
+  }
   const hosts = [...new Set(rows.map(row => labelHost(row.host)))].sort().slice(0, 5)
   hosts.forEach((host, index) => {
     const color = HEX[index]
@@ -148,7 +159,6 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   const summary = data.summary || {}
   const hosts = pressure.hosts || []
   const trends = pressure.daily_hosts || []
-  const limited = Number(quality.coverage_pct ?? 0) < 95 || quality.confidence === 'LOW' || Number(quality.partial_or_incomplete_checks || 0) > 0
   pdf.setFillColor(248, 250, 251)
   pdf.rect(0, 0, W, H, 'F')
   pdf.setFillColor(15, 21, 26)
@@ -170,24 +180,24 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFontSize(11)
   pdf.setTextColor(239, 247, 249)
   pdf.text('SAP Monthly Performance Review', headerX, 18)
-  pdf.setFillColor(limited ? 180 : 61, limited ? 124 : 132, limited ? 45 : 100)
+  pdf.setFillColor(40, 104, 116)
   pdf.roundedRect(W - margin - 34, 11, 30, 9, 1, 1, 'F')
   pdf.setFontSize(7)
   pdf.setTextColor(255, 255, 255)
-  pdf.text(limited ? 'LIMITED DATA' : 'SPHERE HISTORY', W - margin - 19, 16.7, { align: 'center' })
+  pdf.text('SPHERE HISTORY', W - margin - 19, 16.7, { align: 'center' })
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
-  pdf.text('Period ' + month + ' WIB  |  Source: SPHERE History  |  Generated: ' + dateWib(new Date().toISOString()), margin, 29.5)
-  pdf.text('Data window: ' + dateWib(data.start) + ' to (exclusive) ' + dateWib(data.end), margin, 33.8)
+  pdf.text('Period ' + month + ' WIB  |  Source: SPHERE History  |pdf.text('Periode ' + month + ' WIB. Sumber: Histori SPHERE. Dibuat: ' + dateWib(new Date().toISOString()), margin, 29.5)
+  pdf.text('Data tercatat: ' + dateWib(data.start) + ' s.d. ' + dateWib(data.end) + ' (akhir tidak termasuk). Cakupan ' + pct(quality.coverage_pct), margin, 33.8)
 
   const kpis = [
-    ['CPU PRESSURE', String(pressure.cpu?.episodes ?? 'N/A') + ' episodes', 'Peak ' + pct(pressure.cpu?.peak?.peak_pct)],
-    ['RAM PRESSURE', String(pressure.ram?.episodes ?? 'N/A') + ' episodes', 'Peak ' + pct(pressure.ram?.peak?.peak_pct)],
+    ['CPU HIGH CHECKS', format(pressure.cpu?.observed_pressure_host_checks,0) + ' checks', 'Warning ' + pct(pressure.thresholds?.cpu_warning_pct)],
+    ['RAM HIGH CHECKS', format(pressure.ram?.observed_pressure_host_checks,0) + ' checks', 'Warning ' + pct(pressure.thresholds?.ram_warning_pct)],
     ['CRITICAL WP CHECKS', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' host-checks' : 'N/A', 'APP checks with Critical WP'],
     ['JOB / PROGRAM', format(summary.workloads, 0) + ' observed', format(summary.review_required, 0) + ' need review'],
-    ['EST. COVERAGE', pct(quality.coverage_pct), String(quality.confidence || 'UNKNOWN') + ' · ' + format(quality.complete_checks, 0) + ' complete · ' + format(quality.partial_or_incomplete_checks, 0) + ' incomplete'],
+    ['ERROR PROGRAM', data.monthly_errors?.status === 'ERROR_SOURCE_NOT_RETAINED' ? 'N/A' : format(data.monthly_errors?.error_program_count,0), 'WP trace evidence, not ST22'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -206,7 +216,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(35, 51, 61)
-  pdf.text('SAP APP SERVERS  |  MONTHLY HOST RESOURCE SUMMARY', margin, 62)
+  pdf.text('SAP APP SERVERS - MONTHLY RESOURCE SUMMARY', margin, 62)
   const cols = [0, 40, 73, 108, 143, 182, 218, 249]
   pdf.setFontSize(6.6)
   ;['APP', 'AVG CPU', 'PEAK CPU', 'AVG RAM', 'PEAK RAM', 'CPU HIGH', 'RAM HIGH', 'CRITICAL WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
@@ -224,8 +234,8 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   }
 
   const chartW = (contentW - 6) / 2
-  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'APP CPU  |  Daily Peak', margin, 91, chartW, 35, month)
-  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'APP RAM  |  Daily Peak', margin + chartW + 6, 91, chartW, 35, month)
+  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'APP CPU - Daily Peak', margin, 91, chartW, 35, month, pressure.thresholds?.cpu_warning_pct)
+  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'APP RAM - Daily Peak', margin + chartW + 6, 91, chartW, 35, month, pressure.thresholds?.ram_warning_pct)
 
   const ramBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING RAM PRESSURE', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
   const cpuBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING CPU PRESSURE', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
