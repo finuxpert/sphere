@@ -189,7 +189,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
-  pdf.text('Period ' + month + ' WIB  |  Source: SPHERE History  |pdf.text('Periode ' + month + ' WIB. Sumber: Histori SPHERE. Dibuat: ' + dateWib(new Date().toISOString()), margin, 29.5)
+  pdf.text('Periode ' + month + ' WIB. Sumber: Histori SPHERE. Dibuat: ' + dateWib(new Date().toISOString()), margin, 29.5)
   pdf.text('Data tercatat: ' + dateWib(data.start) + ' s.d. ' + dateWib(data.end) + ' (akhir tidak termasuk). Cakupan ' + pct(quality.coverage_pct), margin, 33.8)
 
   const kpis = [
@@ -245,7 +245,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
     pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
     pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-    pdf.text('SPHERE  |  ABAP ERROR REVIEW', margin + 4, 18)
+    pdf.text('SPHERE - ABAP ERROR REVIEW', margin + 4, 18)
     errorLineY = 35
   }
   const tuningCandidates = data.monthly_abap_candidates || []
