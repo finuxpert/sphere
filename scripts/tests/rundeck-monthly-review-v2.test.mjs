@@ -28,7 +28,7 @@ test('monthly pressure queries remain complete-collection and APP-specific', () 
   assert.match(pressure, /"daily_hosts": daily_hosts/)
 })
 
-test('manual assessment removed; monthly report keeps historical CPU RAM WP and evidence selection', () => {
+test('monthly report keeps source-backed CPU RAM WP without optional appendix', () => {
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
   assert.doesNotMatch(ui, /Basis Assessment|Not assessed|Reviewed by|Manual SAP Basis Assessment/)
   for (const term of ['CPU Pressure', 'RAM Pressure', 'Critical WP', 'Performance Impact', 'Report']) assert.ok(ui.includes(term), term)
@@ -59,10 +59,10 @@ test('monthly ABAP errors use only scoped source-backed WP trace evidence', () =
   assert.match(evaluation, /"monthly_errors": monthly_errors/)
   assert.match(ui, /MonthlyErrorAnalysis/)
   assert.match(ui, /SNAPSHOT_ONLY/)
-  assert.match(pdf, /ABAP ERROR ANALYSIS/)
+  assert.match(pdf, /MONTHLY FINDINGS - ABAP AND WP/)
   assert.match(pdf, /ABAP Error Evidence/)
   assert.doesNotMatch(pdf, /pdf\.text\('CATATAN'/)
-  assert.match(pdf, /LIMITED DATA/)
+  assert.doesNotMatch(pdf, /LIMITED DATA/)
   assert.match(pdf, /SAP Monthly Performance Review/)
 });
 
@@ -101,11 +101,11 @@ test('monthly errors preserve source availability and WP diagnostic-only state',
   assert.doesNotMatch(pdf, /pdf\.text\('CATATAN'/)
 })
 
-test('monthly appendix retains its branded header after a page break', () => {
+test('monthly report automatically includes review priorities without optional selection', () => {
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
-  assert.match(pdf, /selectionHeader\(true\)/)
+  assert.doesNotMatch(pdf, /selectionHeader\(/)
   assert.match(pdf, /Observed APP:/)
-  assert.match(pdf, /EST. COVERAGE/)
+  assert.match(pdf, /ERROR PROGRAM/)
 })
 
 test('ABAP tuning candidates are source-backed and never treated as confirmed errors', () => {
@@ -116,10 +116,30 @@ test('ABAP tuning candidates are source-backed and never treated as confirmed er
   assert.match(evaluation, /item\.get\("status"\) != "REVIEW REQUIRED"/)
   assert.match(evaluation, /"error_attribution": "NOT_ESTABLISHED"/)
   assert.match(ui, /AbapTuningCandidates/)
-  assert.match(ui, /Not confirmed errors or root cause/)
+  assert.match(ui, /Status job perlu pemeriksaan di SM37/)
   assert.match(pdf, /ABAP Tuning Candidates/)
   assert.match(pdf, /tuningHeader\(true\)/)
   assert.match(pdf, /no confirmed Job failure, ST22 dump/i)
-  assert.match(pdf, /WP error fields not found in stored workload history/)
+  assert.match(pdf, /error fields were not retained in SPHERE history/)
   assert.doesNotMatch(pdf, /EVALUASI ERROR UNTUK TUNING ABAP|Laporan Evaluasi Performa SAP Bulanan/)
+})
+
+test('2026 monthly report exposes dated peaks, warning levels, WP provenance and restrained wording', () => {
+  const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
+  const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
+  const backend = read('backend/rundeck_monthly_errors.py')
+  assert.match(ui, /sphereMonthlyExecutiveGrid/)
+  assert.match(ui, /threshold=\{evidence\.thresholds\?\.cpu_warning_pct\}/)
+  assert.match(ui, /when\(row\.peak_at\)/)
+  assert.match(ui, /errors\.error_program_count/)
+  assert.match(ui, /errors\.rabax_wp_checks/)
+  assert.doesNotMatch(ui, /Limited historical coverage\./)
+  assert.doesNotMatch(ui, /Optional Selected Workload Appendix/)
+  assert.doesNotMatch(ui, /Episode boundaries are/)
+  assert.match(pdf, /Warning ' \+ pct\(threshold\)/)
+  assert.match(pdf, /dateWib\(pressure\.cpu\?\.peak\?\.peak_at\)/)
+  assert.match(pdf, /data\.monthly_errors\?\.error_program_count/)
+  assert.doesNotMatch(pdf, /\bepisodes\b/)
+  assert.match(backend, /"error_program_count": len\(known_programs\)/)
+  assert.match(backend, /"rabax_wp_checks"/)
 })
