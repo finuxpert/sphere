@@ -162,6 +162,14 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         "observed_checks": len(item["checks"]),
     } for item in diagnostics.values()]
     diagnostic_rows.sort(key=lambda item: (-item["observed_checks"], item["signal"], item["host"], item["program"]))
+    # Counts include the complete processed history, not just top_errors[:20].
+    # Only an explicitly named error_program counts as an identified program.
+    explicit_rows = [row for row in result if row["program_link"] == "EXPLICIT_ERROR_PROGRAM"]
+    known_programs = {row["program"] for row in explicit_rows}
+    dated_programs = {row["program"] for row in explicit_rows if row["event_count"] > 0}
+    explicit_diagnostics = [row for row in diagnostic_rows if row["program_link"] == "EXPLICIT_ERROR_PROGRAM"]
+    rabax_programs = {row["program"] for row in explicit_diagnostics if row["signal"] == "RABAX"}
+    rxmsg_programs = {row["program"] for row in explicit_diagnostics if row["signal"] == "RXMSG"}
     return {
         "status": ("TRUNCATED" if truncated else "TIMESTAMPED_TRACE" if events
                    else "SNAPSHOT_ONLY" if snapshot_checks
@@ -171,6 +179,13 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         "snapshot_host_checks": len(snapshot_checks),
         "untimed_trace_observations": len(untimed_checks),
         "wp_signal_host_checks": len(diagnostic_checks),
+        "error_program_count": len(known_programs),
+        "dated_error_program_count": len(dated_programs),
+        "error_code_count": len({row["error_code"] for row in result}),
+        "rabax_program_count": len(rabax_programs),
+        "rxmsg_program_count": len(rxmsg_programs),
+        "rabax_wp_checks": sum(row["observed_checks"] for row in diagnostic_rows if row["signal"] == "RABAX"),
+        "rxmsg_wp_checks": sum(row["observed_checks"] for row in diagnostic_rows if row["signal"] == "RXMSG"),
         "wp_diagnostics": diagnostic_rows[:20],
         "groups": len(result),
         "top_errors": result[:20],
