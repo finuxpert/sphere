@@ -428,7 +428,7 @@ export default function RundeckMonthlyReview() {
         </div>
       </div>}
       {tab==='impact'&&<div className="sphereMonthlyImpact">
-        <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>Observed resource pressure</h4>
+        <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>Pengamatan CPU dan RAM di atas warning</h4>
           <div className="sphereMonthlyStatStrip">
             <span>CPU warning ≥ {pct(evidence.thresholds?.cpu_warning_pct)}</span>
             <span>RAM warning ≥ {pct(evidence.thresholds?.ram_warning_pct)}</span>
@@ -446,28 +446,28 @@ export default function RundeckMonthlyReview() {
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Monthly Performance Report</h4><small>A4 landscape · APP CPU and RAM · ABAP Tuning Candidates · Error Evidence</small></div>
+          <div><h4>Laporan Kinerja SAP Bulanan</h4><small>Ringkasan APP, job, program, dan evidence error ABAP</small></div>
           <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
-            {pdfBusy?'Preparing report…':'Preview PDF'}
+            {pdfBusy?'Membuat laporan…':'Lihat PDF'}
           </button>
         </div>
         {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
         <div className="sphereMonthlyReportOverview">
-          <div><strong>Reporting period</strong><span>{month} · Asia/Jakarta</span></div>
-          <div><strong>CPU / RAM pressure</strong><span>CPU {fmt(evidence.cpu?.observed_pressure_host_checks,0)}, RAM {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span></div>
-          <div><strong>Workload evidence</strong><span>{tuningCandidates.length} job dan program masuk daftar evaluasi. Data detail otomatis di PDF.</span></div>
+          <div><strong>Periode laporan</strong><span>{month} · Asia/Jakarta</span></div>
+          <div><strong>CPU dan RAM di atas warning</strong><span>CPU {fmt(evidence.cpu?.observed_pressure_host_checks,0)}, RAM {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span></div>
+          <div><strong>Prioritas evaluasi</strong><span>{tuningCandidates.length} job dan program masuk daftar evaluasi. Data detail otomatis di PDF.</span></div>
           <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
           <div><strong>Error ABAP dan WP</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Histori tidak menyimpan field error WP. Jumlah program error dan RABAX belum tersedia.':<>{fmt(errors.error_program_count,0)} program dengan evidence error. {fmt(errors.error_code_count,0)} kode. {fmt(errors.timestamped_events,0)} kejadian berwaktu. RABAX {fmt(errors.rabax_wp_checks,0)} pemeriksaan WP.</>}</span></div>
         </div>
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
-          <div className="sphereMonthlyPager"><small>PDF preview · Generated using current month evidence</small>
-            <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Download PDF</a>
+          <div className="sphereMonthlyPager"><small>Pratinjau PDF berdasarkan histori bulan terpilih</small>
+            <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Unduh PDF</a>
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Buka layar penuh</a>
             <button type="button" onClick={()=>{if(pdfRef.current)URL.revokeObjectURL(pdfRef.current);pdfRef.current='';setPdfUrl('')}}>Close preview</button>
           </div>
           <iframe title="SPHERE monthly PDF preview" src={pdfUrl}/>
         </div>}
-        <p className="sphereMonthlyReportDisclaimer">Laporan berdasarkan histori SPHERE. Aktivitas program pada waktu penggunaan resource tinggi merupakan bahan evaluasi, bukan keputusan penyebab gangguan.</p>
+        <p className="sphereMonthlyReportDisclaimer">Histori resource digunakan untuk evaluasi. Status job dan dump ABAP perlu diverifikasi di SM37 dan ST22.</p>
       </div>}
     </>}
   </section>
