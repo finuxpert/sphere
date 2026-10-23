@@ -147,7 +147,7 @@ async function loadLogo() {
   })
 }
 
-export async function buildMonthlyPdf({ month, data, selections }) {
+export async function buildMonthlyPdf({ month, data }) {
   const [{ jsPDF }, brand] = await Promise.all([import('jspdf'), loadLogo()])
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
   const W = pdf.internal.pageSize.getWidth()
