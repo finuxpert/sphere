@@ -227,7 +227,6 @@ export default function RundeckMonthlyReview() {
   const [data,setData]=React.useState(null)
   const [loading,setLoading]=React.useState(true)
   const [error,setError]=React.useState('')
-  const [selected,setSelected]=React.useState({})
   const [expanded,setExpanded]=React.useState(null)
   const [chartMode,setChartMode]=React.useState('peak')
   const [chartHost,setChartHost]=React.useState('ALL')
@@ -269,7 +268,7 @@ export default function RundeckMonthlyReview() {
   const changeMonth=value=>{
     pdfGenerationRef.current += 1
     setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
-    setSearch('');setAppliedSearch('');setSelected({});setExpanded(null);setPdfError('')
+    setSearch('');setAppliedSearch('');setExpanded(null);setPdfError('')
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
   }
@@ -281,28 +280,14 @@ export default function RundeckMonthlyReview() {
   const errors=data?.monthly_errors||{}
   const tuningCandidates=data?.monthly_abap_candidates||[]
   const hosts=evidence.hosts||[]
-  const chosen=Object.values(selected)
   const total=Number(data?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
-  const selectRow=row=>{
-    pdfGenerationRef.current += 1
-    // A previously previewed PDF must not survive changes to selected evidence.
-    if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
-    pdfRef.current=''
-    setPdfUrl('')
-    setSelected(previous=>{
-      const copy={...previous}
-      if(copy[id(row)])delete copy[id(row)]
-      else copy[id(row)]=row
-      return copy
-    })
-  }
   const previewPdf=async()=>{
     if(!data||loading||pdfBusy)return
     const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
     try{
-      const blob=await buildMonthlyPdf({month,data,selections:chosen})
+      const blob=await buildMonthlyPdf({month,data,selections:[]})
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
@@ -392,7 +377,7 @@ export default function RundeckMonthlyReview() {
       </div>}
       {tab==='jobs'&&<div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Observed Jobs & Programs</h4><small>{total} matches · Page {page+1}/{pages} · {chosen.length} selected</small></div>
+          <div><h4>Job dan Program untuk Evaluasi</h4><small>{total} hasil. Halaman {page+1} dari {pages}</small></div>
           <div className="sphereMonthlyFilters">
             <input type="search" value={search} onChange={event=>{pdfGenerationRef.current+=1;setSearch(event.target.value);setPage(0)}}
               placeholder="Search full job / program name" aria-label="Search job and program"/>
@@ -416,7 +401,7 @@ export default function RundeckMonthlyReview() {
         </div>
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
           <th>Job / Program</th><th>APP teramati</th><th>Avg / Peak CPU</th><th>Avg / Peak PSS</th>
-          <th>Checks</th><th>CPU / RAM High Host-Checks</th><th>Critical WP Host-Checks</th><th>Report</th>
+          <th>Pemeriksaan</th><th>CPU / RAM warning</th><th>Critical WP</th>
         </tr></thead><tbody>
           {items.map(row=><React.Fragment key={id(row)}>
             <tr><td className="sphereMonthlyName"><button type="button" className="sphereMonthlyJobDetailToggle" aria-expanded={expanded===id(row)}
@@ -426,10 +411,8 @@ export default function RundeckMonthlyReview() {
               <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td><td>{fmt(row.occurrences,0)}</td>
               <td>{fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} / {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}</td>
               <td>{fmt(row.pressure_overlap?.wp_host_checks,0)}</td>
-              <td><button type="button" aria-pressed={Boolean(selected[id(row)])} className={selected[id(row)]?'is-selected':''}
-                onClick={()=>selectRow(row)}>{selected[id(row)]?'Selected':'Select'}</button></td>
             </tr>
-            {expanded===id(row)&&<tr className="sphereMonthlyEvidenceDetail"><td colSpan="8"><div>
+            {expanded===id(row)&&<tr className="sphereMonthlyEvidenceDetail"><td colSpan="7"><div>
               <strong>Saved monthly workload evidence</strong>
               <span>First observed {when(row.first_seen)} · Last observed {when(row.last_seen)}</span>
               <span>Host observations {fmt(row.host_observations,0)} · Prev-month avg CPU {pct(row.previous?.avg_cpu_pct)} · Peak processes {fmt(row.peak_process_count,0)}</span>
@@ -437,9 +420,9 @@ export default function RundeckMonthlyReview() {
               <span>Collection counts are not SM37 executions. Same-host overlap does not prove causation.</span>
             </div></td></tr>}
           </React.Fragment>)}
-          {!items.length&&<tr><td colSpan="8">No workloads match the selected month and filters.</td></tr>}
+          {!items.length&&<tr><td colSpan="7">Tidak ada job atau program sesuai filter bulan ini.</td></tr>}
         </tbody></table></div>
-        <div className="sphereMonthlyPager"><small>Full population is filtered on the server · {chosen.length} evidence selected</small>
+        <div className="sphereMonthlyPager"><small>Filter berdasarkan histori yang tersimpan di server</small>
           <button type="button" disabled={page===0} onClick={()=>setPage(n=>n-1)}>Previous</button>
           <button type="button" disabled={page+1>=pages} onClick={()=>setPage(n=>n+1)}>Next</button>
         </div>
@@ -472,15 +455,10 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyReportOverview">
           <div><strong>Reporting period</strong><span>{month} · Asia/Jakarta</span></div>
           <div><strong>CPU / RAM pressure</strong><span>CPU {fmt(evidence.cpu?.observed_pressure_host_checks,0)}, RAM {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span></div>
-          <div><strong>Workload evidence</strong><span>Top 5 per pressure type · {tuningCandidates.length} ABAP tuning candidates · {chosen.length} selected for appendix</span></div>
+          <div><strong>Workload evidence</strong><span>{tuningCandidates.length} job dan program masuk daftar evaluasi. Data detail otomatis di PDF.</span></div>
           <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
           <div><strong>ABAP Error Analysis</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Sumber error WP belum tersimpan; jumlah kejadian tidak diketahui':<>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</>}</span></div>
         </div>
-        <h4>Optional Selected Workload Appendix ({chosen.length})</h4>
-        {chosen.length?chosen.map(row=><div className="sphereMonthlySelectedRow" key={id(row)}>
-          <strong>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)||'APP not recorded'}</small>
-          <button type="button" onClick={()=>selectRow(row)}>Remove</button>
-        </div>):<p>No selection required. The PDF automatically lists ABAP Tuning Candidates from Review Required workloads. Confirmed WP errors appear in a separate appendix only when source evidence is retained.</p>}
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
           <div className="sphereMonthlyPager"><small>PDF preview · Generated using current month evidence</small>
             <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Download PDF</a>
