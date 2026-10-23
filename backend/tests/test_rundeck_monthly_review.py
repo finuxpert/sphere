@@ -116,6 +116,39 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(parse_explicit_error_time("2026-09-12T03:00:00+07:00"),
                          datetime(2026, 9, 11, 20, 0, tzinfo=timezone.utc))
 
+    def test_monthly_error_program_counts_require_explicit_trace_identity(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        rows = [
+            {
+                "host": "APP1", "pid": "120", "collection_id": "a",
+                "consumer_key": "Z_CONTEXT", "error_program": "Z_FAILED",
+                "latest_trace_error": "TIME_OUT",
+                "latest_error_ts": "2026-09-13T02:00:00+00:00",
+                "rabax": 1,
+            },
+            {
+                "host": "APP1", "pid": "120", "collection_id": "b",
+                "consumer_key": "Z_CONTEXT", "error_program": "Z_FAILED",
+                "latest_trace_error": "TIME_OUT",
+                "latest_error_ts": "2026-09-13T02:00:00+00:00",
+                "rabax": 2,
+            },
+            {
+                "host": "APP2", "pid": "222", "collection_id": "c",
+                "consumer_key": "Z_ONLY_CONTEXT",
+                "latest_trace_error": "DBSQL_SQL_ERROR", "rabax": 1,
+            },
+        ]
+        result = summarize_monthly_wp_errors(rows, start, end)
+        self.assertEqual(result["timestamped_events"], 1)
+        self.assertEqual(result["error_program_count"], 1)
+        self.assertEqual(result["dated_error_program_count"], 1)
+        self.assertEqual(result["error_code_count"], 2)
+        self.assertEqual(result["rabax_program_count"], 1)
+        self.assertEqual(result["rabax_wp_checks"], 3)
+        self.assertEqual(result["rxmsg_wp_checks"], 0)
+
     def test_repeated_trace_is_one_error_not_multiple_collector_events(self):
         start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
         end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
