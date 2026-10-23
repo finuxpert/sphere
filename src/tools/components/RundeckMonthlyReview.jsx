@@ -40,7 +40,7 @@ const PRESSURE_FILTERS = [
   ['ALL', 'All observations'], ['CPU', 'CPU Pressure'], ['RAM', 'RAM Pressure'], ['WP', 'Critical WP'],
 ]
 
-function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL' }) {
+function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', threshold = null }) {
   const field = (mode === 'avg' ? 'avg_' : 'peak_') + metric + '_pct'
   const [year, monthNum] = month.split('-').map(Number)
   const days = new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
@@ -48,6 +48,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL' }) {
   const width = 620; const left = 36; const plotW = 566; const top = 12; const plotH = 124
   const xFor = day => left + (day - 1) * plotW / Math.max(1, days - 1)
   const yFor = val => top + plotH * (1 - Math.max(0, Math.min(100, Number(val))) / 100)
+  const showThreshold = threshold != null && Number.isFinite(Number(threshold))
   return <div className="sphereMonthlyTrend" role="group" aria-label={metric.toUpperCase() + ' daily APP ' + mode + ' trend'}>
     <svg viewBox={'0 0 ' + width + ' 164'} preserveAspectRatio="xMidYMid meet" role="img"
       aria-label={'Saved daily ' + mode + ' host ' + metric + ' percent; missing days are not zero'}>
@@ -55,7 +56,12 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL' }) {
         <line x1={left} x2={left + plotW} y1={yFor(level)} y2={yFor(level)} stroke="currentColor" strokeOpacity=".11" strokeDasharray="3 4"/>
         <text x="5" y={yFor(level)+3} fontSize="9" fill="currentColor" opacity=".6">{level}%</text>
       </g>)}
-      {[1,5,10,15,20,25,days].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".65" textAnchor="middle">{day}</text>)}
+      {[1,5,10,15,20,25,days].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{day === 1 || day === days ? day + ' ' + new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1))) : day}</text>)}
+      {showThreshold && <g>
+        <line x1={left} x2={left + plotW} y1={yFor(threshold)} y2={yFor(threshold)} stroke="#e2b56a" strokeWidth="1.5" strokeDasharray="6 4"/>
+        <rect x={left + plotW - 115} y={yFor(threshold) - 15} width="114" height="13" rx="2" fill="#253642"/>
+        <text x={left + plotW - 4} y={yFor(threshold) - 5} fontSize="10" fill="#ffd39a" textAnchor="end">Warning {pct(threshold)}</text>
+      </g>}
       {names.map((name,i) => {
         const points = rows.filter(row => hostLabel(row.host) === name && row[field] !== null && row[field] !== undefined)
           .map(row => ({day:Number(String(row.day).slice(-2)),value:row[field]})).sort((a,b)=>a.day-b.day)
@@ -75,7 +81,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL' }) {
     <div className="sphereMonthlyTrendLegend">
       {names.map((name,i)=><span key={name}><i style={{background:CHART_COLORS[i%CHART_COLORS.length]}}/>{name}</span>)}
     </div>
-    <small>Saved {mode === 'avg' ? 'average' : 'peak'} values per APP/day · Missing intervals are gaps, not zero</small>
+    <small>Tren harian {month} WIB. Garis putus-putus menunjukkan warning. Arahkan kursor ke titik untuk melihat tanggal.</small>
   </div>
 }
 
@@ -104,19 +110,18 @@ function PressureEpisodes({ metric, pressure }) {
   const evidence = pressure?.[metric] || {}
   return <section className="sphereMonthlyPanel">
     <div className="sphereMonthlyTableHead">
-      <div><h4>{metric.toUpperCase()} Pressure Episodes</h4>
-        <small>{fmt(evidence.episodes,0)} observed episodes · peak {pct(evidence.peak?.peak_pct)}</small></div>
+      <div><h4>{metric.toUpperCase()} Melewati Batas Warning</h4>
+        <small>{fmt(evidence.observed_pressure_host_checks,0)} pemeriksaan APP. Puncak {pct(evidence.peak?.peak_pct)} pada {hostLabel(evidence.peak?.host)} tanggal {when(evidence.peak?.peak_at)}</small></div>
     </div>
     <div className="sphereMonthlyTableScroll"><table>
-      <thead><tr><th>APP</th><th>First observed</th><th>Last observed</th><th>Peak</th><th>Host-checks</th></tr></thead>
+      <thead><tr><th>APP</th><th>Pertama tercatat</th><th>Terakhir tercatat</th><th>Waktu puncak</th><th>Nilai puncak</th><th>Pemeriksaan</th></tr></thead>
       <tbody>{(evidence.recent_episodes || []).map((row,index)=><tr key={row.host+String(row.first_at)+index}>
         <td>{hostLabel(row.host)}</td><td>{when(row.first_at)}</td><td>{when(row.last_at)}</td>
-        <td>{pct(row.peak_pct)}</td><td>{fmt(row.observed_host_checks,0)}</td>
+        <td>{when(row.peak_at)}</td><td>{pct(row.peak_pct)}</td><td>{fmt(row.observed_host_checks,0)}</td>
       </tr>)}
-      {!evidence.recent_episodes?.length && <tr><td colSpan="5">{evidence.episodes === null ? "No verified host samples for this month." : "No threshold exceedance in retained observations."}</td></tr>}
+      {!evidence.recent_episodes?.length && <tr><td colSpan="6">{evidence.episodes === null ? "Belum ada data APP untuk bulan ini." : "Tidak ada pengamatan melewati batas warning."}</td></tr>}
       </tbody>
     </table></div>
-    <p>Episode boundaries are first/last saved observations, not actual incident duration.</p>
   </section>
 }
 
@@ -124,7 +129,7 @@ function AbapTuningCandidates({ rows = [] }) {
   return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyTuning" aria-label="ABAP tuning candidates">
     <div className="sphereMonthlyTableHead">
       <div><h4>ABAP Tuning Candidates</h4>
-        <small>Source: SPHERE historical workload observations · Priority: Review Required · Not confirmed errors or root cause</small>
+        <small>Job dan program untuk evaluasi performa dari histori SPHERE. Status job perlu pemeriksaan di SM37.</small>
       </div>
       <span className="sphereMonthlyErrorCounter">{fmt(rows.length, 0)} candidates</span>
     </div>
@@ -148,7 +153,7 @@ function AbapTuningCandidates({ rows = [] }) {
       </tr>)}
       {!rows.length && <tr><td colSpan="7">No Review Required workloads observed for this reporting period.</td></tr>}
     </tbody></table></div>
-    <p>These Jobs and Programs are performance tuning candidates, not confirmed failures. CPU is sampled workload process CPU (100% approximately one CPU core); PSS is program process memory. APP Pressure correlation is co-observation only.</p>
+    <p>CPU workload bisa melebihi 100% pada beberapa core. PSS menunjukkan memori proses. Evaluasi ABAP tidak otomatis berarti job gagal.</p>
   </section>
 }
 
