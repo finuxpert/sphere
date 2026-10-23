@@ -287,7 +287,7 @@ export default function RundeckMonthlyReview() {
     const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
     try{
-      const blob=await buildMonthlyPdf({month,data,selections:[]})
+      const blob=await buildMonthlyPdf({month,data})
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
