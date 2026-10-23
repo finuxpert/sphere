@@ -256,33 +256,29 @@ export async function buildMonthlyPdf({ month, data, selections }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(36, 52, 62)
-  pdf.text('ABAP ERROR ANALYSIS', margin, errorLineY + 6)
+  pdf.text('MONTHLY FINDINGS - ABAP AND WP', margin, errorLineY + 6)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7)
   pdf.setTextColor(78, 98, 108)
-  const errorSummary = errorEvidence.truncated
-    ? 'Error history is partial; event totals cannot be confirmed'
-    : !data.monthly_errors || errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
-      ? 'WP error fields not found in stored workload history; event count unavailable'
-      : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE'
-        ? 'No error code found in retained SPHERE WP evidence; coverage is limited'
-        : errorEvidence.status === 'WP_SIGNALS_ONLY'
-          ? 'RABAX/RXMSG diagnostic signals found; not confirmed ST22 dump events'
-          : errorEvidence.status === 'SNAPSHOT_ONLY'
-            ? 'WP errors observed at snapshot; exact event time is not confirmed'
-            : errorEvidence.status === 'UNTIMED_TRACE_ONLY'
-              ? 'Untimed WP trace found; monthly error event count remains unknown'
-              : format(errorEvidence.timestamped_events, 0) + ' timestamped error events; ' +
-                format(errorEvidence.snapshot_host_checks, 0) + ' snapshot error observations'
-  pdf.text(errorSummary, margin, errorLineY + 10.6)
-  pdf.setFontSize(6.7)
-  const tuningSummary = tuningCandidates.length
-    ? 'ABAP Tuning: ' + format(tuningCandidates.length, 0) +
-      ' review-priority Jobs/Programs in the technical appendix; not confirmed errors.'
-    : errorRows.length
-      ? 'Error codes, APP and program context are listed in the technical appendix.'
-      : 'Missing error evidence is not proof of an error-free SAP system.'
-  pdf.text(tuningSummary, margin, errorLineY + 15)
+  const wpSourceMissing = errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
+  const errorSummary = wpSourceMissing
+    ? 'ABAP/WP error count not available: error fields were not retained in SPHERE history.'
+    : errorEvidence.truncated
+      ? 'Error evidence is partial. The full monthly total cannot be confirmed.'
+      : format(errorEvidence.error_program_count,0) + ' programs with WP error evidence. ' +
+        format(errorEvidence.timestamped_events,0) + ' timestamped events. ' +
+        format(errorEvidence.rabax_wp_checks,0) + ' RABAX WP checks.'
+  pdf.text(errorSummary, margin, errorLineY + 10.5)
+  const tuningSummary = format(tuningCandidates.length,0) +
+    ' Jobs/Programs require performance evaluation. This is not a count of failed jobs.'
+  pdf.text(tuningSummary, margin, errorLineY + 14.7)
+  pdf.setTextColor(94, 105, 113)
+  const peakDetails = 'CPU peak: ' + pct(pressure.cpu?.peak?.peak_pct) + ' on ' +
+    labelHost(pressure.cpu?.peak?.host) + ' at ' + dateWib(pressure.cpu?.peak?.peak_at) +
+    '. RAM peak: ' + pct(pressure.ram?.peak?.peak_pct) + ' on ' +
+    labelHost(pressure.ram?.peak?.host) + ' at ' + dateWib(pressure.ram?.peak?.peak_at)
+  pdf.setFontSize(6.4)
+  pdf.text(pdf.splitTextToSize(peakDetails, contentW), margin, errorLineY + 18.5)
 
   // Detailed error section is sourced only from timestamped trace evidence or
   // separately labeled WP snapshot observations. It is not a ST22 dump count.
@@ -296,11 +292,11 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(11)
       pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE  |  ABAP Error Evidence' + (continued ? ' (cont.)' : ''), margin + 4, 18)
+      pdf.text('SPHERE - ABAP Error Evidence' + (continued ? ' (cont.)' : ''), margin + 4, 18)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.setTextColor(70, 85, 94)
-      pdf.text('Period ' + month + ' WIB  |  Source: SPHERE WP error history', margin, 30)
+      pdf.text('Period ' + month + ' WIB. Source: retained SPHERE WP trace', margin, 30)
       ey = 40
       pdf.setFontSize(6.3)
       pdf.setFont('helvetica', 'bold')
@@ -327,7 +323,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       const workloadContext = row.sample_workload ? 'Observed Job/Program: ' + row.sample_workload : ''
       const timing = row.first_at
         ? 'First ' + dateWib(row.first_at) + '; last ' + dateWib(row.last_at) : ''
-      const detailLines = pdf.splitTextToSize([provenance, workloadContext, timing, resource].filter(Boolean).join(' | '), 88)
+      const detailLines = pdf.splitTextToSize([provenance, workloadContext, timing, resource].filter(Boolean).join('. '), 88)
       const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length + detailLines.length) + 1.8)
       if (ey + rowH > H - 17) {
         pdf.addPage()
@@ -372,9 +368,9 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
       pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE  |  ABAP Tuning Candidates' + (continued ? ' (cont.)' : ''), margin + 4, 18)
+      pdf.text('SPHERE - ABAP Tuning Candidates' + (continued ? ' (cont.)' : ''), margin + 4, 18)
       pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-      pdf.text('Period ' + month + ' WIB  |  Review Required workloads from SPHERE history', margin, 30)
+      pdf.text('Period ' + month + ' WIB. Review required based on SPHERE history', margin, 30)
       pdf.setFontSize(6.5)
       pdf.text('Performance investigation only; no confirmed Job failure, ST22 dump or root-cause attribution.', margin, 35)
       pdf.text('Workload CPU can exceed 100% across CPU cores; PSS is process memory (GB).', margin, 38)
@@ -404,11 +400,9 @@ export async function buildMonthlyPdf({ month, data, selections }) {
         row.signals?.baseline_anomaly && 'Above baseline',
       ].filter(Boolean).join(', ') || 'Review Required'
       const detail = pdf.splitTextToSize(
-        'Observed APP: ' + observedApps +
-        '  |  CPU pressure APP: ' + cpuApps +
-        '  |  RAM pressure APP: ' + ramApps +
-        '  |  Review signals: ' + signals +
-        '  |  Confidence: ' + String(row.confidence || 'UNKNOWN'),
+        'Observed APP: ' + observedApps + '. CPU warning APP: ' + cpuApps +
+        '. RAM warning APP: ' + ramApps + '. Review: ' + signals +
+        '. Confidence: ' + String(row.confidence || 'UNKNOWN'),
         contentW - 5,
       )
       const rowH = names.length * 3.25 + detail.length * 3.0 + 4.4
@@ -440,7 +434,7 @@ export async function buildMonthlyPdf({ month, data, selections }) {
       pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
       pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE  |  WP Diagnostic Signals' + (continued ? ' (cont.)' : ''), margin + 4, 18)
+      pdf.text('SPHERE - WP Diagnostic Signals' + (continued ? ' (cont.)' : ''), margin + 4, 18)
       pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
       pdf.text('RABAX and RXMSG are collector trace indicators, not ST22 dump counts.', margin, 30)
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(7)
@@ -475,58 +469,13 @@ export async function buildMonthlyPdf({ month, data, selections }) {
     })
   }
 
-  // Optional evidence appendix: wrap every name and repeat page identity on breaks.
-  if (selections.length) {
-    let y = 39
-    const selectionHeader = (continued = false) => {
-      pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
-      pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
-      pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE  |  Selected Workload Evidence' + (continued ? ' (cont.)' : ''), margin + 4, 18)
-      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-      pdf.text('Period ' + month + ' WIB  |  Selected source-backed workload observations', margin, 30)
-      y = 39
-    }
-    pdf.addPage()
-    selectionHeader()
-    const addText = (value, size = 7.5, bold = false) => {
-      pdf.setFont('helvetica', bold ? 'bold' : 'normal')
-      pdf.setFontSize(size)
-      pdf.setTextColor(bold ? 30 : 78, bold ? 47 : 94, bold ? 60 : 103)
-      const lines = pdf.splitTextToSize(String(value), contentW)
-      const height = Math.max(4, lines.length * size * .42 + 2)
-      if (y + height > H - 16) {
-        pdf.addPage()
-        selectionHeader(true)
-        pdf.setFont('helvetica', bold ? 'bold' : 'normal')
-        pdf.setFontSize(size)
-        pdf.setTextColor(bold ? 30 : 78, bold ? 47 : 94, bold ? 60 : 103)
-      }
-      pdf.text(lines, margin, y)
-      y += height
-    }
-    selections.forEach((row, index) => {
-      const overlap = row.pressure_overlap || {}
-      addText((index + 1) + '. ' + String(row.consumer_key || 'UNKNOWN') + '  (' + row.consumer_type + ')', 9, true)
-      addText('Observed APP: ' + (row.hosts || []).map(labelHost).join(', ') +
-        ' | Avg/Peak CPU ' + pct(row.avg_cpu_pct) + ', ' + pct(row.peak_cpu_pct) +
-        ' | Avg/Peak PSS ' + format(row.avg_pss_gb, 2) + ', ' + format(row.peak_pss_gb, 2) + ' GB')
-      addText('Observed checks ' + format(row.occurrences, 0) +
-        ' | CPU pressure checks ' + format(overlap.cpu_pressure_host_checks, 0) +
-        ' on APP ' + (overlap.cpu_pressure_hosts || []).map(labelHost).join(', ') +
-        ' | RAM pressure checks ' + format(overlap.ram_pressure_host_checks, 0) +
-        ' on APP ' + (overlap.ram_pressure_hosts || []).map(labelHost).join(', ') +
-        ' | Critical WP host-checks ' + format(overlap.wp_host_checks, 0))
-      y += 3
-    })
-  }
   const pages = pdf.internal.getNumberOfPages()
   for(let i=1;i<=pages;i++){
     pdf.setPage(i)
     pdf.setDrawColor(218, 228, 234)
-    pdf.line(margin, H-7.5, W-margin, H-7.5)
+    // Minimal footer: no divider line.
     pdf.setTextColor(96, 109, 117);pdf.setFont('helvetica', 'normal');pdf.setFontSize(6.5)
-    pdf.text('SPHERE  |  ' + APP_DISPLAY_VERSION + '  |  Period ' + month, margin, H-4)
+    pdf.text('SPHERE - ' + APP_DISPLAY_VERSION + ' - Period ' + month, margin, H-4)
     pdf.text('Page '+i+' of '+pages, W-margin, H-4,{align:'right'})
   }
   return pdf.output('blob')
