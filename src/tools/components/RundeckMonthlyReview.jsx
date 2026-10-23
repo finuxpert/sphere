@@ -179,11 +179,13 @@ function MonthlyErrorAnalysis({ evidence }) {
     <div className="sphereMonthlyStatStrip">
       <span>Kejadian berwaktu: {unknownSource ? 'Tidak tersedia' : state === 'TRUNCATED' ? 'Data parsial' : fmt(errors.timestamped_events, 0)}</span>
       <span>Observasi error saat snapshot: {unknownSource ? 'Tidak tersedia' : fmt(errors.snapshot_host_checks, 0)}</span>
-      <span>Kategori teridentifikasi: {unknownSource ? 'Tidak tersedia' : fmt((errors.categories || []).length, 0)}</span>
-      <span>Sinyal RABAX dan RXMSG: {unknownSource ? 'Tidak tersedia' : fmt(errors.wp_signal_host_checks, 0) + ' pemeriksaan sinyal WP'}</span>
+      <span>Program dengan evidence error: {unknownSource ? 'Tidak tersedia' : fmt(errors.error_program_count,0)}</span>
+      <span>Kode error: {unknownSource ? 'Tidak tersedia' : fmt(errors.error_code_count,0)}</span>
+      <span>RABAX: {unknownSource ? 'Tidak tersedia' : fmt(errors.rabax_wp_checks,0) + ' pemeriksaan WP'}</span>
+      <span>RXMSG: {unknownSource ? 'Tidak tersedia' : fmt(errors.rxmsg_wp_checks,0) + ' pemeriksaan WP'}</span>
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
-      <th>Program terkait</th><th>Kategori</th><th>Kode Error</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
+      <th>Program terkait</th><th>Jenis masalah</th><th>Kode error SAP</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
       <th>Kejadian berwaktu</th><th>Observasi snapshot</th><th>Hubungan program</th>
     </tr></thead><tbody>
       {rows.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
@@ -208,9 +210,7 @@ function MonthlyErrorAnalysis({ evidence }) {
         </tr>)}</tbody>
       </table></div>
     </div>}
-    <p>{state === 'TRUNCATED' ? 'Histori yang dapat diperiksa melebihi batas proses. Jumlah dan ranking tidak dinyatakan lengkap. ' : ''}
-      Error tanpa timestamp valid tidak dihitung sebagai kejadian bulanan. Trace yang terulang dalam beberapa collector tidak dihitung berkali-kali.
-      Program yang tampil hanya sebagai konteks tidak otomatis menjadi penyebab error.</p>
+    <p>{state === 'TRUNCATED' ? 'Histori yang dapat dibaca belum lengkap. ' : ''}RABAX dan RXMSG adalah indikator trace WP, bukan jumlah dump ST22. Status job diverifikasi di SM37. Nama program yang hanya muncul sebagai konteks tidak dinyatakan sebagai sumber error.</p>
   </section>
 }
 
@@ -457,7 +457,7 @@ export default function RundeckMonthlyReview() {
           <div><strong>CPU / RAM pressure</strong><span>CPU {fmt(evidence.cpu?.observed_pressure_host_checks,0)}, RAM {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span></div>
           <div><strong>Workload evidence</strong><span>{tuningCandidates.length} job dan program masuk daftar evaluasi. Data detail otomatis di PDF.</span></div>
           <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
-          <div><strong>ABAP Error Analysis</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Sumber error WP belum tersimpan; jumlah kejadian tidak diketahui':<>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</>}</span></div>
+          <div><strong>Error ABAP dan WP</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Histori tidak menyimpan field error WP. Jumlah program error dan RABAX belum tersedia.':<>{fmt(errors.error_program_count,0)} program dengan evidence error. {fmt(errors.error_code_count,0)} kode. {fmt(errors.timestamped_events,0)} kejadian berwaktu. RABAX {fmt(errors.rabax_wp_checks,0)} pemeriksaan WP.</>}</span></div>
         </div>
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
           <div className="sphereMonthlyPager"><small>PDF preview · Generated using current month evidence</small>
