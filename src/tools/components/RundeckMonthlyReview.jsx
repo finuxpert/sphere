@@ -311,10 +311,9 @@ export default function RundeckMonthlyReview() {
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{setPdfBusy(false)}
   }
-  const limited=Number(quality.coverage_pct??0)<95||quality.confidence==='LOW'||Number(quality.partial_or_incomplete_checks||0)>0
   return <section className="sphereMonthlyReview is-v2" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
-      <div><strong>SAP Performance & Job Impact</strong><small>Monthly observations · SPHERE data only · Asia/Jakarta</small></div>
+      <div><strong>Evaluasi Kinerja SAP Bulanan</strong><small>Resource APP, Job, Program ABAP, dan error WP berdasarkan histori SPHERE</small></div>
       <div className="sphereMonthlyPicker">
         <label htmlFor="sphere-month-choice">Reporting month</label>
         <select id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
@@ -338,21 +337,29 @@ export default function RundeckMonthlyReview() {
         <span>Complete <b>{fmt(quality.complete_checks,0)}</b></span>
         <span>Incomplete <b>{fmt(quality.partial_or_incomplete_checks,0)}</b></span>
       </div>
-      {limited&&<div className="sphereMonthlyWarning" role="status">Limited historical coverage. Unobserved intervals are unknown, not zero. Pressure episode counts represent saved observations only.</div>}
       {tab==='overview'&&<div className="sphereMonthlyLayout">
         <div className="sphereMonthlyStats">
           {[
-            ['CPU Pressure',fmt(evidence.cpu?.episodes,0),'episodes · peak '+pct(evidence.cpu?.peak?.peak_pct)],
-            ['RAM Pressure',fmt(evidence.ram?.episodes,0),'episodes · peak '+pct(evidence.ram?.peak?.peak_pct)],
+            ['CPU di atas warning',fmt(evidence.cpu?.observed_pressure_host_checks,0),'Pemeriksaan APP, puncak '+pct(evidence.cpu?.peak?.peak_pct)],
+            ['RAM di atas warning',fmt(evidence.ram?.observed_pressure_host_checks,0),'Pemeriksaan APP, puncak '+pct(evidence.ram?.peak?.peak_pct)],
             ['Observasi Critical WP',fmt(hosts.reduce((sum,row)=>sum+(row.critical_wp_host_checks||0),0),0),'APP teramati dengan WP critical; bukan insiden'],
-            ['Review Required',fmt(summary.review_required,0),fmt(summary.workloads,0)+' observed workloads'],
+            ['Perlu evaluasi',fmt(summary.review_required,0),fmt(summary.workloads,0)+' job dan program teramati'],
           ].map(([label,value,detail])=><div className="sphereMonthlyStat" key={label}>
             <span>{label}</span><strong>{value}</strong><small>{detail}</small>
           </div>)}
         </div>
+        <div className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyExecutive">
+          <h4>Temuan Utama Bulan Ini</h4>
+          <div className="sphereMonthlyExecutiveGrid">
+            <div><span>CPU APP tertinggi</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} pada {when(evidence.cpu?.peak?.peak_at)}. Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
+            <div><span>RAM APP tertinggi</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} pada {when(evidence.ram?.peak?.peak_at)}. Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
+            <div><span>Program perlu evaluasi</span><strong>{fmt(tuningCandidates.length,0)}</strong><small>Evaluasi berdasarkan CPU, PSS dan histori pemakaian resource.</small></div>
+            <div><span>Error WP</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Belum tersedia':fmt(errors.error_program_count,0)+' program'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Field error WP tidak tersimpan untuk bulan ini.':fmt(errors.timestamped_events,0)+' kejadian berwaktu. RABAX '+fmt(errors.rabax_wp_checks,0)+' pemeriksaan.'}</small></div>
+          </div>
+        </div>
         <div className="sphereMonthlyPanel sphereMonthlyWide">
           <div className="sphereMonthlyTableHead">
-            <div><h4>APP Performance Trends</h4><small>CPU and RAM are host utilisation, not program PSS</small></div>
+            <div><h4>Tren Pemakaian Resource APP</h4><small>CPU dan RAM APP per tanggal, beserta batas warning monitoring</small></div>
             <div className="sphereMonthlyFilters">
               <select aria-label="Trend statistic" value={chartMode} onChange={event=>setChartMode(event.target.value)}>
                 <option value="peak">Daily peak</option><option value="avg">Daily average</option>
@@ -365,9 +372,9 @@ export default function RundeckMonthlyReview() {
           </div>
           <div className="sphereMonthlyTrendDuo">
             <div><h4>CPU <small>{chartMode==='peak'?'Peak':'Average'}</small></h4>
-              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="cpu" mode={chartMode} host={chartHost}/></div>
+              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="cpu" mode={chartMode} host={chartHost} threshold={evidence.thresholds?.cpu_warning_pct}/></div>
             <div><h4>RAM <small>{chartMode==='peak'?'Peak':'Average'}</small></h4>
-              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="ram" mode={chartMode} host={chartHost}/></div>
+              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="ram" mode={chartMode} host={chartHost} threshold={evidence.thresholds?.ram_warning_pct}/></div>
           </div>
         </div>
         <div className="sphereMonthlyPanel sphereMonthlyWide">
@@ -442,10 +449,10 @@ export default function RundeckMonthlyReview() {
           <div className="sphereMonthlyStatStrip">
             <span>CPU warning ≥ {pct(evidence.thresholds?.cpu_warning_pct)}</span>
             <span>RAM warning ≥ {pct(evidence.thresholds?.ram_warning_pct)}</span>
-            <span>CPU episodes {fmt(evidence.cpu?.episodes,0)}</span>
-            <span>RAM episodes {fmt(evidence.ram?.episodes,0)}</span>
+            <span>CPU warning {fmt(evidence.cpu?.observed_pressure_host_checks,0)} pemeriksaan</span>
+            <span>RAM warning {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span>
           </div>
-          <p>Pressure episodes are based on saved APP host samples; unknown time gaps break episodes. Correlation requires the same collection and APP host.</p>
+          <p>Pengamatan berdasarkan histori APP. Hubungan dengan job atau program perlu dianalisis lebih lanjut sebelum dinyatakan sebagai penyebab.</p>
         </div>
         <PressureEpisodes metric="cpu" pressure={evidence}/>
         <PressureEpisodes metric="ram" pressure={evidence}/>
@@ -464,7 +471,7 @@ export default function RundeckMonthlyReview() {
         {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
         <div className="sphereMonthlyReportOverview">
           <div><strong>Reporting period</strong><span>{month} · Asia/Jakarta</span></div>
-          <div><strong>CPU / RAM pressure</strong><span>{fmt(evidence.cpu?.episodes,0)} / {fmt(evidence.ram?.episodes,0)} observed episodes</span></div>
+          <div><strong>CPU / RAM pressure</strong><span>CPU {fmt(evidence.cpu?.observed_pressure_host_checks,0)}, RAM {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span></div>
           <div><strong>Workload evidence</strong><span>Top 5 per pressure type · {tuningCandidates.length} ABAP tuning candidates · {chosen.length} selected for appendix</span></div>
           <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
           <div><strong>ABAP Error Analysis</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Sumber error WP belum tersimpan; jumlah kejadian tidak diketahui':<>{errors.status==='TRUNCATED'?'Data sebagian':errors.status==='NO_RETAINED_ERROR_EVIDENCE'?'Tidak ditemukan kode error':errors.status==='WP_SIGNALS_ONLY'?'Ada sinyal WP':errors.status==='UNTIMED_TRACE_ONLY'?'Trace tanpa timestamp':fmt(errors.timestamped_events,0)+' kejadian berwaktu'} · {fmt(errors.snapshot_host_checks,0)} observasi snapshot · {fmt(errors.wp_signal_host_checks,0)} sinyal WP</>}</span></div>
