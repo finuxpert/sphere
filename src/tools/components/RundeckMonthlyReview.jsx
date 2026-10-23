@@ -186,7 +186,7 @@ function MonthlyErrorAnalysis({ evidence }) {
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
       <th>Program terkait</th><th>Jenis masalah</th><th>Kode error SAP</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
-      <th>Kejadian berwaktu</th><th>Observasi snapshot</th><th>Hubungan program</th>
+      <th>Kejadian berwaktu</th><th>Waktu error (WIB)</th><th>Observasi WP</th><th>Hubungan program</th>
     </tr></thead><tbody>
       {rows.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
         <td className="sphereMonthlyName"><strong>{row.program || 'Belum teridentifikasi'}</strong>
@@ -194,10 +194,10 @@ function MonthlyErrorAnalysis({ evidence }) {
           {row.untimed_trace_checks>0 && <small>Trace tanpa timestamp: {fmt(row.untimed_trace_checks,0)} observasi</small>}</td>
         <td>{row.category_label}</td><td>{row.error_code}</td><td>{hostLabel(row.host)}</td>
         <td>{row.snapshot_host_checks > 0 ? pct(row.cpu_snapshot_pct) + ' · ' + fmt(row.pss_snapshot_gb,2) + ' GB' : '—'}</td>
-        <td>{fmt(row.event_count,0)}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
+        <td>{fmt(row.event_count,0)}</td><td>{when(row.first_at)}{row.last_at && row.last_at!==row.first_at && <small>Terakhir {when(row.last_at)}</small>}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
         <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat pada trace' : 'Hanya konteks workload'}</td>
       </tr>)}
-      {!rows.length && <tr><td colSpan="8">{unknownSource ? 'Kolom evidence error WP tidak tersedia pada histori yang dapat dibaca. Jumlah error tidak dapat dinyatakan nol.' : 'Belum ditemukan kode error pada sumber histori yang dapat dibaca untuk periode ini. Ini tidak membuktikan SAP bebas dari error.'}</td></tr>}
+      {!rows.length && <tr><td colSpan="9">{unknownSource ? 'Histori bulan ini tidak menyimpan field error WP. Jumlah program error, kode error, dan RABAX belum bisa ditentukan dari SPHERE.' : 'Tidak ditemukan kode error pada histori yang tersedia. Untuk validasi lanjut, periksa ST22 dan SM37.'}</td></tr>}
     </tbody></table></div>
     {(errors.wp_diagnostics || []).length > 0 && <div className="sphereMonthlyWpDiagnostics">
       <h4>Sinyal WP untuk investigasi ABAP</h4>
