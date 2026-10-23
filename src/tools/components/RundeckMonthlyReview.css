@@ -367,3 +367,19 @@
     overflow-wrap:anywhere;
   }
 }
+
+/* Monthly review 2026: compact executive summary without decorative panels. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyExecutive{padding:14px 16px;background:#142b37}
+.sphereMonthlyReview.is-v2 .sphereMonthlyExecutive>h4{margin-bottom:11px;font-size:13px;color:#e7f1f5}
+.sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid>div{display:grid;align-content:start;gap:5px;min-width:0}
+.sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid span{color:#acbfca;font-size:11px}
+.sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid strong{font-size:20px;color:#f0f7fa;font-weight:700;line-height:1.2}
+.sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid small{line-height:1.5;font-size:11px;overflow-wrap:anywhere}
+.sphereMonthlyReview.is-v2 .sphereMonthlyThreshold line{pointer-events:none}
+@media(max-width:950px){
+  .sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  .sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid{gap:12px}
+}
