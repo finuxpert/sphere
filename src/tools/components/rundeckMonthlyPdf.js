@@ -197,7 +197,7 @@ export async function buildMonthlyPdf({ month, data }) {
     ['RAM HIGH CHECKS', format(pressure.ram?.observed_pressure_host_checks,0) + ' checks', 'Warning ' + pct(pressure.thresholds?.ram_warning_pct)],
     ['CRITICAL WP CHECKS', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' host-checks' : 'N/A', 'APP checks with Critical WP'],
     ['JOB / PROGRAM', format(summary.workloads, 0) + ' observed', format(summary.review_required, 0) + ' need review'],
-    ['WP ERROR CODES', data.monthly_errors?.status === 'ERROR_SOURCE_NOT_RETAINED' ? 'N/A' : format(data.monthly_errors?.error_code_count,0), format(data.monthly_errors?.error_program_count,0) + ' identified programs; WP trace, not ST22'],
+    ['WP ERROR CODES', data.monthly_errors?.status === 'ERROR_SOURCE_NOT_RETAINED' ? 'N/A' : format(data.monthly_errors?.error_code_count,0), format(data.monthly_errors?.error_program_count,0) + ' identified programs'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
