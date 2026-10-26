@@ -223,6 +223,10 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.setFontSize(8)
   pdf.setTextColor(35, 51, 61)
   pdf.text('SAP APP SERVERS - MONTHLY RESOURCE SUMMARY', margin, 62)
+  pdf.setFont('helvetica','normal')
+  pdf.setFontSize(5.3)
+  pdf.setTextColor(92, 109, 117)
+  pdf.text('HIGH C/D = warning host-checks / distinct APP-days. Peak = highest saved reading, not a count.', margin, 64.6)
   const cols = [0, 40, 73, 108, 143, 182, 218, 249]
   pdf.setFontSize(6.6)
   ;['APP', 'AVG CPU', 'PEAK CPU', 'AVG RAM', 'PEAK RAM', 'CPU HI C/D', 'RAM HI C/D', 'CRITICAL WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
