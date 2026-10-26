@@ -265,18 +265,15 @@ export async function buildMonthlyPdf({ month, data }) {
 
   const ramBottom = drawTopTable(pdf, 'Programs Seen During High RAM', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
   const cpuBottom = drawTopTable(pdf, 'Programs Seen During High CPU', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
-  let errorLineY = Math.max(183, ramBottom + 2, cpuBottom + 2)
-  if (errorLineY > H - 27) {
-    pdf.addPage()
-    pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
-    pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
-    pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-    pdf.text('SPHERE - ABAP ERROR REVIEW', margin + 4, 18)
-    errorLineY = 35
-  }
+  const errorLineY = Math.max(183, ramBottom + 2, cpuBottom + 2)
+  // Never generate an almost-empty page just for a few finding lines.
+  // If the prior workload tables take more space, the findings are covered
+  // by the management KPI and review-priority page instead.
+  const showFindingsOnFirstPage = errorLineY <= H - 27
   const tuningCandidates = data.monthly_abap_candidates || []
   const errorEvidence = data.monthly_errors || {}
   const errorRows = (errorEvidence.top_errors || []).filter(row => row.event_count || row.snapshot_host_checks || row.untimed_trace_checks)
+  if (showFindingsOnFirstPage) {
   pdf.setDrawColor(215, 225, 230)
   pdf.line(margin, errorLineY, W - margin, errorLineY)
   pdf.setFont('helvetica', 'bold')
@@ -304,6 +301,8 @@ export async function buildMonthlyPdf({ month, data }) {
     labelHost(pressure.ram?.peak?.host) + ', ' + dateWib(pressure.ram?.peak?.peak_at) + ')'
   pdf.setFontSize(6.4)
   pdf.text(pdf.splitTextToSize(peakDetails, contentW), margin, errorLineY + 18.5)
+
+  }
 
   // Detailed error section is sourced only from timestamped trace evidence or
   // separately labeled WP snapshot observations. It is not a ST22 dump count.
