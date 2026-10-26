@@ -174,7 +174,6 @@ function MonthlyErrorAnalysis({ evidence }) {
   const rows = errors.top_errors || []
   const [categoryFilter,setCategoryFilter] = React.useState('ALL')
   const [appFilter,setAppFilter] = React.useState('ALL')
-  React.useEffect(()=>{setCategoryFilter('ALL');setAppFilter('ALL')},[evidence])
   const categories = [...new Set(rows.map(row=>row.category_label).filter(Boolean))].sort()
   const apps = [...new Set(rows.map(row=>hostLabel(row.host)).filter(Boolean))].sort()
   const visible = rows.filter(row=>(categoryFilter==='ALL'||row.category_label===categoryFilter) &&
@@ -484,7 +483,7 @@ export default function RundeckMonthlyReview() {
         <PressureEpisodes metric="ram" pressure={evidence}/>
         <PressureRows label="Jobs / Programs During CPU Pressure" evidence={evidence} metric="cpu"/>
         <PressureRows label="Jobs / Programs During RAM Pressure" evidence={evidence} metric="ram"/>
-        <MonthlyErrorAnalysis evidence={errors}/>
+        <MonthlyErrorAnalysis key={month} evidence={errors}/>
         <AbapTuningCandidates rows={tuningCandidates} errorEvidence={errors} />
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
