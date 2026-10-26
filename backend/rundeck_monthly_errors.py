@@ -245,8 +245,10 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
                signal.value->>'latest_error_ts' AS latest_error_ts,
                COALESCE(signal.value->>'rabax', signal.value->>'rabax_tail_count') AS rabax,
                COALESCE(signal.value->>'rxmsg', signal.value->>'rxmsg_tail_count') AS rxmsg,
-               MAX(NULLIF(signal.value->>'cpu_pct', '')::double precision) AS cpu_pct,
-               MAX(NULLIF(signal.value->>'pss_gb', '')::double precision) AS pss_gb
+               MAX(CASE WHEN jsonb_typeof(signal.value->'cpu_pct') = 'number'
+                        THEN (signal.value->>'cpu_pct')::double precision END) AS cpu_pct,
+               MAX(CASE WHEN jsonb_typeof(signal.value->'pss_gb') = 'number'
+                        THEN (signal.value->>'pss_gb')::double precision END) AS pss_gb
           FROM {source} tc
           JOIN rundeck_collections c ON c.collection_id = tc.collection_id
           CROSS JOIN LATERAL jsonb_array_elements(
