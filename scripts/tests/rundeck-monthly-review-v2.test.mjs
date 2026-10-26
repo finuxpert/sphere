@@ -130,7 +130,7 @@ test('monthly errors preserve source availability and WP diagnostic-only state',
 test('monthly report automatically includes review priorities without optional selection', () => {
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.doesNotMatch(pdf, /selectionHeader\(/)
-  assert.match(pdf, /Showing 10 priority items/)
+  assert.match(pdf, /jobs\/programs flagged for review/)
   assert.match(pdf, /RELATED PROGRAM/)
 })
 
@@ -259,7 +259,7 @@ test('management monthly PDF uses plain IT wording and excludes confusing techni
   assert.match(pdf, /Daily Highest RAM/)
   assert.match(pdf, /What Needs Attention/)
   assert.match(pdf, /Recommended Follow-up/)
-  assert.match(pdf, /10 priority items out of/)
+  assert.match(pdf, /jobs\/programs flagged for review/)
   assert.match(pdf, /This does not mean there were no errors/)
   assert.match(pdf, /not confirmed failed jobs or program errors/)
   assert.doesNotMatch(pdf, /CRITICAL WP CHECKS/)
