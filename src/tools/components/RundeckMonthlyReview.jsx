@@ -160,6 +160,12 @@ function AbapTuningCandidates({ rows = [] }) {
 function MonthlyErrorAnalysis({ evidence }) {
   const errors = evidence || {}
   const rows = errors.top_errors || []
+  const [categoryFilter,setCategoryFilter] = React.useState('ALL')
+  const [appFilter,setAppFilter] = React.useState('ALL')
+  const categories = [...new Set(rows.map(row=>row.category_label).filter(Boolean))].sort()
+  const apps = [...new Set(rows.map(row=>hostLabel(row.host)).filter(Boolean))].sort()
+  const visible = rows.filter(row=>(categoryFilter==='ALL'||row.category_label===categoryFilter) &&
+    (appFilter==='ALL'||hostLabel(row.host)===appFilter))
   const state = errors.status || 'ERROR_SOURCE_NOT_RETAINED'
   const unknownSource = state === 'ERROR_SOURCE_NOT_RETAINED'
   return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyErrors" aria-label="Evaluasi error program ABAP">
@@ -184,20 +190,41 @@ function MonthlyErrorAnalysis({ evidence }) {
       <span>RABAX: {unknownSource ? 'Tidak tersedia' : fmt(errors.rabax_wp_checks,0) + ' pemeriksaan WP'}</span>
       <span>RXMSG: {unknownSource ? 'Tidak tersedia' : fmt(errors.rxmsg_wp_checks,0) + ' pemeriksaan WP'}</span>
     </div>
+    <div className="sphereMonthlyErrorTools">
+      <span>{fmt(rows.length,0)} dari {fmt(errors.groups ?? rows.length,0)} error groups tersedia untuk drilldown</span>
+      <label>Category <select aria-label="Filter error category" value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
+        <option value="ALL">All categories</option>{categories.map(value=><option value={value} key={value}>{value}</option>)}
+      </select></label>
+      <label>APP <select aria-label="Filter error APP" value={appFilter} onChange={e=>setAppFilter(e.target.value)}>
+        <option value="ALL">All APP</option>{apps.map(value=><option value={value} key={value}>{value}</option>)}
+      </select></label>
+    </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
-      <th>Program terkait</th><th>Jenis masalah</th><th>Kode error SAP</th><th>APP</th><th>CPU dan PSS saat snapshot</th>
+      <th>Program terkait</th><th>Jenis masalah</th><th>Kode error SAP</th><th>APP / WP / PID</th><th>WP CPU / PSS at snapshot</th>
       <th>Kejadian berwaktu</th><th>Waktu error (WIB)</th><th>Observasi WP</th><th>Hubungan program</th>
     </tr></thead><tbody>
-      {rows.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
-        <td className="sphereMonthlyName"><strong>{row.program || 'Belum teridentifikasi'}</strong>
-          {row.sample_workload && <small>Workload saat observasi: {row.sample_workload}</small>}
-          {row.untimed_trace_checks>0 && <small>Trace tanpa timestamp: {fmt(row.untimed_trace_checks,0)} observasi</small>}</td>
-        <td>{row.category_label}</td><td>{row.error_code}</td><td>{hostLabel(row.host)}</td>
-        <td>{row.snapshot_host_checks > 0 ? pct(row.cpu_snapshot_pct) + ' · ' + fmt(row.pss_snapshot_gb,2) + ' GB' : '—'}</td>
-        <td>{fmt(row.event_count,0)}</td><td>{when(row.first_at)}{row.last_at && row.last_at!==row.first_at && <small>Terakhir {when(row.last_at)}</small>}</td><td>{fmt(row.snapshot_host_checks,0)}</td>
-        <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat pada trace' : 'Hanya konteks workload'}</td>
+      {visible.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
+        <td className="sphereMonthlyName"><strong>{row.program || 'Unidentified program'}</strong>
+          {row.job_names?.length>0 && <small>Job context: {row.job_names.join(', ')}</small>}
+          {row.sample_workload && <small>Observed workload: {row.sample_workload}</small>}
+          {row.log_paths?.[0] && <small title={row.log_paths[0]}>WP trace: {row.log_paths[0]}</small>}
+          {row.untimed_trace_checks>0 && <small>Trace without event time: {fmt(row.untimed_trace_checks,0)} checks</small>}</td>
+        <td>{row.category_label}</td><td>{row.error_code}</td>
+        <td>{hostLabel(row.host)}
+          {row.wps?.length>0 && <small>WP {row.wps.join(', ')}</small>}
+          {row.pids?.length>0 && <small>PID {row.pids.join(', ')}</small>}</td>
+        <td>{row.snapshot_host_checks>0 ? pct(row.cpu_snapshot_pct) + ' · ' + fmt(row.pss_snapshot_gb,2) + ' GB' : '—'}</td>
+        <td>{fmt(row.event_count,0)}</td>
+        <td>{row.first_at ? when(row.first_at) : 'Event time unavailable'}
+          {row.last_at && row.last_at!==row.first_at && <small>Last event: {when(row.last_at)}</small>}
+          {row.observed_at && <small>Snapshot: {when(row.observed_at)}</small>}</td>
+        <td>{fmt(row.snapshot_host_checks,0)}</td>
+        <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Explicit WP trace program' : 'Workload context only'}</td>
       </tr>)}
-      {!rows.length && <tr><td colSpan="9">{unknownSource ? 'Histori bulan ini tidak menyimpan field error WP. Jumlah program error, kode error, dan RABAX belum bisa ditentukan dari SPHERE.' : 'Tidak ditemukan kode error pada histori yang tersedia. Untuk validasi lanjut, periksa ST22 dan SM37.'}</td></tr>}
+      {!visible.length && <tr><td colSpan="9">{unknownSource
+        ? 'WP error fields were not retained in the selected workload history. Recoverable raw SPHERE archives should be checked before concluding no errors.'
+        : rows.length ? 'No error evidence matches these filters.'
+        : 'No error code was found in available retained observations. Check ST22 and SM37 for authoritative SAP records.'}</td></tr>}
     </tbody></table></div>
     {(errors.wp_diagnostics || []).length > 0 && <div className="sphereMonthlyWpDiagnostics">
       <h4>Sinyal WP untuk investigasi ABAP</h4>
