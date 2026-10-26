@@ -125,19 +125,23 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "cpu_warning_host_checks": 0, "ram_warning_host_checks": 0,
             "_seen_check_ids": set(), "_critical_check_ids": set(),
             "_cpu_warning_ids": set(), "_ram_warning_ids": set(),
+            "_cpu_warning_days": set(), "_ram_warning_days": set(),
         })
         check_id = str(row["collection_id"])
+        day_wib = row["collected_at"].astimezone(ZoneInfo("Asia/Jakarta")).date().isoformat()
         values["_seen_check_ids"].add(check_id)
         if row.get("cpu_pct") is not None:
             cpu = float(row["cpu_pct"])
             values["cpu_values"].append(cpu)
             if cpu >= CPU_WARNING:
                 values["_cpu_warning_ids"].add(check_id)
+                values["_cpu_warning_days"].add(day_wib)
         if row.get("ram_pct") is not None:
             ram = float(row["ram_pct"])
             values["ram_values"].append(ram)
             if ram >= RAM_WARNING:
                 values["_ram_warning_ids"].add(check_id)
+                values["_ram_warning_days"].add(day_wib)
         if row.get("wp_critical") is not None and row["wp_critical"] > 0:
             values["_critical_check_ids"].add(check_id)
 
@@ -148,11 +152,18 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         key = (day, str(row["host"]))
         item = host_days.setdefault(key, {
             "day": day, "host": str(row["host"]), "cpu_values": [], "ram_values": [],
+            "_cpu_warning_ids": set(), "_ram_warning_ids": set(),
         })
         if row.get("cpu_pct") is not None:
-            item["cpu_values"].append(float(row["cpu_pct"]))
+            cpu = float(row["cpu_pct"])
+            item["cpu_values"].append(cpu)
+            if cpu >= CPU_WARNING:
+                item["_cpu_warning_ids"].add(str(row["collection_id"]))
         if row.get("ram_pct") is not None:
-            item["ram_values"].append(float(row["ram_pct"]))
+            ram = float(row["ram_pct"])
+            item["ram_values"].append(ram)
+            if ram >= RAM_WARNING:
+                item["_ram_warning_ids"].add(str(row["collection_id"]))
     daily_hosts = []
     for item in host_days.values():
         cpu, ram = item["cpu_values"], item["ram_values"]
@@ -162,6 +173,11 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "peak_cpu_pct": _rounded(max(cpu)) if cpu else None,
             "avg_ram_pct": _rounded(sum(ram) / len(ram)) if ram else None,
             "peak_ram_pct": _rounded(max(ram)) if ram else None,
+            "cpu_warning_checks": len(item["_cpu_warning_ids"]),
+            "ram_warning_checks": len(item["_ram_warning_ids"]),
+            # Threshold tests use unrounded samples, not rounded display peaks.
+            "cpu_warning_day": bool(item["_cpu_warning_ids"]),
+            "ram_warning_day": bool(item["_ram_warning_ids"]),
         })
     daily_hosts.sort(key=lambda row: (row["day"], row["host"]))
 
@@ -171,6 +187,8 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         values["critical_wp_host_checks"] = len(values.pop("_critical_check_ids"))
         values["cpu_warning_host_checks"] = len(values.pop("_cpu_warning_ids"))
         values["ram_warning_host_checks"] = len(values.pop("_ram_warning_ids"))
+        values["cpu_warning_days"] = len(values.pop("_cpu_warning_days"))
+        values["ram_warning_days"] = len(values.pop("_ram_warning_days"))
         cpu, ram = values.pop("cpu_values"), values.pop("ram_values")
         values.update({
             "avg_cpu_pct": _rounded(sum(cpu) / len(cpu)) if cpu else None,
@@ -236,12 +254,14 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "peak": cpu_episodes[0] if cpu_episodes else None,
             "recent_episodes": cpu_episodes[:20],
             "observed_pressure_host_checks": sum(row["cpu_warning_host_checks"] for row in host_summary) if samples else None,
+            "observed_warning_app_days": sum(row["cpu_warning_days"] for row in host_summary) if samples else None,
         },
         "ram": {
             "episodes": len(ram_episodes) if samples else None,
             "peak": ram_episodes[0] if ram_episodes else None,
             "recent_episodes": ram_episodes[:20],
             "observed_pressure_host_checks": sum(row["ram_warning_host_checks"] for row in host_summary) if samples else None,
+            "observed_warning_app_days": sum(row["ram_warning_days"] for row in host_summary) if samples else None,
         },
         "correlation": correlation,
         "method": (
