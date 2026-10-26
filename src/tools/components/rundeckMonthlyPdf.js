@@ -11,6 +11,9 @@ const labelHost = value => {
 const format = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
   ? 'N/A' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
 const pct = value => format(value) === 'N/A' ? 'N/A' : format(value) + '%'
+// Collector WP CPU is core-based and may exceed 100%; 100% = one logical CPU core.
+const coreEquivalent = value => value === null || value === undefined || !Number.isFinite(Number(value))
+  ? 'N/A' : format(Number(value) / 100, 2) + ' core eq.'
 const dateWib = value => value ? new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric',
   hour: '2-digit', minute: '2-digit', hour12: false,
@@ -107,7 +110,9 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6)
   pdf.setTextColor(100, 115, 125)
-  pdf.text('Same APP and collection; co-observation does not prove causation', x, y + 3.3)
+  pdf.text(metric === 'cpu'
+    ? 'WP CPU: 100% = 1 logical CPU core; APP utilization measured separately'
+    : 'Same APP and collection; co-observation does not prove causation', x, y + 3.3)
   const baseY = y + 8
   pdf.setDrawColor(215, 225, 230)
   pdf.line(x, baseY, x + width, baseY)
@@ -116,7 +121,7 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
   pdf.setTextColor(56, 72, 82)
   pdf.text('JOB / PROGRAM', x, baseY + 3.3)
   pdf.text('CHECKS', x + width - 42, baseY + 3.3)
-  pdf.text(metric === 'ram' ? 'PEAK PSS' : 'PEAK CPU', x + width - 6, baseY + 3.3, { align: 'right' })
+  pdf.text(metric === 'ram' ? 'PEAK PSS' : 'PEAK WP CPU', x + width - 6, baseY + 3.3, { align: 'right' })
   let ry = baseY + 6
   if (!rows.length) {
     pdf.setFont('helvetica', 'normal')
@@ -133,10 +138,17 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
     pdf.setTextColor(35, 51, 61)
     const name = pdf.splitTextToSize(String(row.consumer_key || 'UNKNOWN'), width - 55)
     // Rows expand rather than truncating long ABAP names.
-    const rowH = Math.max(5, name.length * 2.7 + 1.4)
+    const rowH = Math.max(metric === 'cpu' ? 7.8 : 5, name.length * 2.7 + 1.4)
     pdf.text(name, x, ry + 2.8)
     pdf.text(String(count ?? 0), x + width - 36, ry + 2.8)
     pdf.text(peak, x + width - 6, ry + 2.8, { align: 'right' })
+    if (metric === 'cpu') {
+      pdf.setFontSize(5.5)
+      pdf.setTextColor(91, 109, 119)
+      pdf.text(coreEquivalent(overlap.cpu_peak_during_cpu_pressure), x + width - 6, ry + 5.5, { align: 'right' })
+      pdf.setFontSize(6.7)
+      pdf.setTextColor(35, 51, 61)
+    }
     ry += rowH
     pdf.setDrawColor(225, 232, 236)
     pdf.line(x, ry, x + width, ry)
@@ -402,10 +414,10 @@ export async function buildMonthlyPdf({ month, data }) {
       pdf.text('Period ' + month + ' WIB. Review required based on SPHERE history', margin, 30)
       pdf.setFontSize(6.5)
       pdf.text('Performance investigation only; no confirmed Job failure, ST22 dump or root-cause attribution.', margin, 35)
-      pdf.text('Workload CPU can exceed 100% across CPU cores; PSS is process memory (GB).', margin, 38)
+      pdf.text('WP CPU: 100% = one logical CPU core equivalent; not a percentage of APP host CPU capacity.', margin, 38)
       pdf.setFont('helvetica', 'bold');pdf.setFontSize(6.6);pdf.setTextColor(47, 64, 76)
       pdf.text('JOB / PROGRAM', margin + 2, 42)
-      pdf.text('CPU AVG / PEAK', margin + 160, 42, {align:'right'})
+      pdf.text('WP CPU AVG / PEAK', margin + 160, 42, {align:'right'})
       pdf.text('PSS AVG / PEAK', margin + 211, 42, {align:'right'})
       pdf.text('CHECKS', margin + 238, 42, {align:'right'})
       pdf.text('CPU / RAM', margin + 279, 42, {align:'right'})
@@ -442,7 +454,9 @@ export async function buildMonthlyPdf({ month, data }) {
         : ''
       const detail = pdf.splitTextToSize(
         'Observed APP: ' + observedApps + '. CPU warning APP: ' + cpuApps +
-        '. RAM warning APP: ' + ramApps + '. Review: ' + signals +
+        '. RAM warning APP: ' + ramApps +
+        '. WP CPU Avg/Peak: ' + coreEquivalent(row.avg_cpu_pct) + ' / ' + coreEquivalent(row.peak_cpu_pct) +
+        '. Review: ' + signals +
         '. Confidence: ' + String(row.confidence || 'UNKNOWN') + traceNote,
         contentW - 5,
       )
