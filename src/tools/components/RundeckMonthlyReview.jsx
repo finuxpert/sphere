@@ -1,4 +1,5 @@
 import React from 'react'
+import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { shortHost } from './sapUiFormat.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import './RundeckMonthlyReview.css'
@@ -9,8 +10,10 @@ const fmt = (value, digits = 1) => value === null || value === undefined || !Num
   ? '—' : Number(value).toLocaleString('id-ID', { maximumFractionDigits: digits })
 const pct = value => fmt(value) === '—' ? '—' : fmt(value) + '%'
 // WP CPU is measured against one logical CPU, not the entire APP host.
-const wpCoreEq = value => value === null || value === undefined || !Number.isFinite(Number(value))
-  ? '—' : fmt(Number(value) / 100, 2) + ' core eq.'
+const wpCoreEq = value => {
+  const cores = wpCpuCoreEquivalent(value)
+  return cores === null ? '—' : fmt(cores, 2) + ' core eq.'
+}
 const id = row => String(row.consumer_type || '') + ':' + String(row.consumer_key || '')
 const hostLabel = host => shortHost(typeof host === 'string' ? host : host?.host || '').toUpperCase()
 const hostsFor = row => (Array.isArray(row.hosts) ? row.hosts : []).map(hostLabel).filter(Boolean).join(', ')
