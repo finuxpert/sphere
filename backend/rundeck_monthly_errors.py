@@ -72,7 +72,7 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         explicit_program = str(row.get("error_program") or "").strip()
         if explicit_program.upper() in {"?", "NA", "N/A", "-"}:
             explicit_program = ""
-        program = explicit_program or "Unidentified program"
+        program = explicit_program or "Belum teridentifikasi"
         context_workload = str(row.get("consumer_key") or "")
         wp_number = str(row.get("wp") or "").strip()
         wp_type = str(row.get("wp_type") or "").strip()
