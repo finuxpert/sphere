@@ -237,7 +237,7 @@ test('WP CPU report displays logical core-equivalents without inventing a 28-vCP
   assert.match(ui, /wpCoreEq\(row\.pressure_overlap\?\.cpu_peak_during_cpu_pressure\)/)
   assert.match(ui, /wpCoreEq\(row\.peak_cpu_pct\)/)
   assert.match(pdf, /MAX CPU CORES/)
-  assert.match(pdf, /CPU cores = estimated logical core usage/)
+  assert.match(pdf, /CPU cores = estimated workload use/)
   assert.match(pdf, /coreEquivalent\(overlap\.cpu_peak_during_cpu_pressure\)/)
   assert.match(pdf, /coreEquivalent\(row\.peak_cpu_pct\)/)
   assert.match(evaluation, /"peak_cpu_core_equivalent": item\.get\("peak_cpu_core_equivalent"\)/)
