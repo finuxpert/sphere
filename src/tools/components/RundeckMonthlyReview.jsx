@@ -67,10 +67,14 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
           .map(row => ({day:Number(String(row.day).slice(-2)),value:row[field]})).sort((a,b)=>a.day-b.day)
         return <g key={name}>
           {points.map((point,k) => <g key={point.day}>
-            {k>0 && point.day===points[k-1].day+1 && <line
-              x1={xFor(points[k-1].day)} y1={yFor(points[k-1].value)}
-              x2={xFor(point.day)} y2={yFor(point.value)}
-              stroke={CHART_COLORS[i%CHART_COLORS.length]} strokeWidth="2.3" strokeLinecap="round"/>}
+            {k>0 && point.day===points[k-1].day+1 && <path
+              d={(() => {
+                const x0=xFor(points[k-1].day), y0=yFor(points[k-1].value)
+                const x1=xFor(point.day), y1=yFor(point.value), dx=(x1-x0)*.42
+                return 'M '+x0+' '+y0+' C '+(x0+dx)+' '+y0+' '+(x1-dx)+' '+y1+' '+x1+' '+y1
+              })()}
+              fill="none" stroke={CHART_COLORS[i%CHART_COLORS.length]}
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>}
             <circle cx={xFor(point.day)} cy={yFor(point.value)} r="2.9" fill={CHART_COLORS[i%CHART_COLORS.length]}>
               <title>{name} · {month}-{String(point.day).padStart(2,'0')} · {pct(point.value)} {mode} {metric.toUpperCase()}</title>
             </circle>
