@@ -114,8 +114,8 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
   pdf.setFontSize(6)
   pdf.setTextColor(100, 115, 125)
   pdf.text(metric === 'cpu'
-    ? 'WP CPU: 100% = 1 logical CPU core; APP utilization measured separately'
-    : 'Same APP and collection; co-observation does not prove causation', x, y + 3.3)
+    ? 'CPU shown as cores used; not total server CPU'
+    : 'Memory used by the program, not total server RAM', x, y + 3.3)
   const baseY = y + 8
   pdf.setDrawColor(215, 225, 230)
   pdf.line(x, baseY, x + width, baseY)
@@ -123,35 +123,29 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
   pdf.setFontSize(6.5)
   pdf.setTextColor(56, 72, 82)
   pdf.text('JOB / PROGRAM', x, baseY + 3.3)
-  pdf.text('CHECKS', x + width - 42, baseY + 3.3)
-  pdf.text(metric === 'ram' ? 'PEAK PSS' : 'PEAK WP CPU', x + width - 6, baseY + 3.3, { align: 'right' })
+  pdf.text('TIMES SEEN', x + width - 42, baseY + 3.3)
+  pdf.text(metric === 'ram' ? 'MAX MEMORY' : 'MAX CPU CORES', x + width - 6, baseY + 3.3, { align: 'right' })
   let ry = baseY + 6
   if (!rows.length) {
     pdf.setFont('helvetica', 'normal')
     pdf.setTextColor(110, 121, 129)
-    pdf.text('No matching workload observations during this pressure.', x, ry + 5)
+    pdf.text('No matching programs in the saved records.', x, ry + 5)
     return ry + 8
   }
   rows.slice(0, 5).forEach(row => {
     const overlap = row.pressure_overlap || {}
     const count = metric === 'ram' ? overlap.ram_pressure_host_checks : overlap.cpu_pressure_host_checks
-    const peak = metric === 'ram' ? format(overlap.pss_peak_during_ram_pressure, 2) + ' GB' : pct(overlap.cpu_peak_during_cpu_pressure)
+    const peak = metric === 'ram' ? format(overlap.pss_peak_during_ram_pressure, 2) + ' GB'
+      : coreEquivalent(overlap.cpu_peak_during_cpu_pressure).replace(' core eq.', ' cores')
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(6.7)
     pdf.setTextColor(35, 51, 61)
     const name = pdf.splitTextToSize(String(row.consumer_key || 'UNKNOWN'), width - 55)
     // Rows expand rather than truncating long ABAP names.
-    const rowH = Math.max(metric === 'cpu' ? 7.8 : 5, name.length * 2.7 + 1.4)
+    const rowH = Math.max(5, name.length * 2.7 + 1.4)
     pdf.text(name, x, ry + 2.8)
     pdf.text(String(count ?? 0), x + width - 36, ry + 2.8)
     pdf.text(peak, x + width - 6, ry + 2.8, { align: 'right' })
-    if (metric === 'cpu') {
-      pdf.setFontSize(5.5)
-      pdf.setTextColor(91, 109, 119)
-      pdf.text(coreEquivalent(overlap.cpu_peak_during_cpu_pressure), x + width - 6, ry + 5.5, { align: 'right' })
-      pdf.setFontSize(6.7)
-      pdf.setTextColor(35, 51, 61)
-    }
     ry += rowH
     pdf.setDrawColor(225, 232, 236)
     pdf.line(x, ry, x + width, ry)
@@ -205,20 +199,19 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.roundedRect(W - margin - 34, 11, 30, 9, 1, 1, 'F')
   pdf.setFontSize(7)
   pdf.setTextColor(255, 255, 255)
-  pdf.text('SPHERE HISTORY', W - margin - 19, 16.7, { align: 'center' })
+  pdf.text('MONTHLY REPORT', W - margin - 19, 16.7, { align: 'center' })
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
-  pdf.text('Periode ' + month + ' WIB. Sumber: Histori SPHERE. Dibuat: ' + dateWib(new Date().toISOString()), margin, 29.5)
-  pdf.text('Data tercatat: ' + dateWib(data.start) + ' s.d. ' + dateWib(data.end) + ' (akhir tidak termasuk). Cakupan ' + pct(quality.coverage_pct), margin, 33.8)
+  pdf.text('Reporting month: ' + month + '  |  Prepared: ' + dateWib(new Date().toISOString()), margin, 29.5)
+  pdf.text('Estimated data coverage: ' + pct(quality.coverage_pct) + '  |  Results are based on available SPHERE monitoring records only.', margin, 33.8)
 
   const kpis = [
-    ['CPU HIGH CHECKS', format(pressure.cpu?.observed_pressure_host_checks,0) + ' checks', 'Warning ' + pct(pressure.thresholds?.cpu_warning_pct)],
-    ['RAM HIGH CHECKS', format(pressure.ram?.observed_pressure_host_checks,0) + ' checks', 'Warning ' + pct(pressure.thresholds?.ram_warning_pct)],
-    ['CRITICAL WP CHECKS', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' host-checks' : 'N/A', 'APP checks with Critical WP'],
-    ['JOB / PROGRAM', format(summary.workloads, 0) + ' observed', format(summary.review_required, 0) + ' need review'],
-    ['WP ERROR CODES', data.monthly_errors?.status === 'ERROR_SOURCE_NOT_RETAINED' ? 'N/A' : format(data.monthly_errors?.error_code_count,0), format(data.monthly_errors?.error_program_count,0) + ' identified programs'],
+    ['PROGRAMS TO REVIEW', format(summary.review_required,0), 'Out of ' + format(summary.workloads,0) + ' observed workloads'],
+    ['HIGH CPU READINGS', format(pressure.cpu?.observed_pressure_host_checks,0), 'APP CPU at or above ' + pct(pressure.thresholds?.cpu_warning_pct)],
+    ['HIGH RAM READINGS', format(pressure.ram?.observed_pressure_host_checks,0), 'APP RAM at or above ' + pct(pressure.thresholds?.ram_warning_pct)],
+    ['DATA COVERAGE', pct(quality.coverage_pct), 'Estimated monitoring history available'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -237,14 +230,14 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(35, 51, 61)
-  pdf.text('SAP APP SERVERS - MONTHLY RESOURCE SUMMARY', margin, 62)
+  pdf.text('APP Server Performance', margin, 62)
   pdf.setFont('helvetica','normal')
   pdf.setFontSize(5.3)
   pdf.setTextColor(92, 109, 117)
-  pdf.text('HIGH C/D = warning host-checks / distinct APP-days. Peak = highest saved reading, not a count.', margin, 64.6)
-  const cols = [0, 40, 73, 108, 143, 182, 218, 249]
+  pdf.text('High readings = monitoring results above limit / days affected. Peak = highest reading.', margin, 64.6)
+  const cols = [0, 37, 69, 105, 141, 181, 231]
   pdf.setFontSize(6.6)
-  ;['APP', 'AVG CPU', 'PEAK CPU', 'AVG RAM', 'PEAK RAM', 'CPU HI C/D', 'RAM HI C/D', 'CRITICAL WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
+  ;['APP', 'AVG CPU', 'MAX CPU', 'AVG RAM', 'MAX RAM', 'HIGH CPU (TIMES/DAYS)', 'HIGH RAM (TIMES/DAYS)'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6.8)
   hosts.slice(0, 5).forEach((row, i) => {
@@ -252,8 +245,7 @@ export async function buildMonthlyPdf({ month, data }) {
     const vals = [labelHost(row.host), pct(row.avg_cpu_pct), pct(row.peak_cpu_pct), pct(row.avg_ram_pct),
       pct(row.peak_ram_pct),
       String(row.cpu_warning_host_checks ?? 0) + ' / ' + format(row.cpu_warning_days,0),
-      String(row.ram_warning_host_checks ?? 0) + ' / ' + format(row.ram_warning_days,0),
-      String(row.critical_wp_host_checks)]
+      String(row.ram_warning_host_checks ?? 0) + ' / ' + format(row.ram_warning_days,0)]
     vals.forEach((v, index) => pdf.text(v, margin + cols[index], y))
   })
   if (!hosts.length) {
@@ -262,17 +254,17 @@ export async function buildMonthlyPdf({ month, data }) {
   }
 
   const chartW = (contentW - 6) / 2
-  const cpuWarningSummary = format(pressure.cpu?.observed_pressure_host_checks,0) + ' checks / ' +
-    format(pressure.cpu?.observed_warning_app_days,0) + ' APP-days'
-  const ramWarningSummary = format(pressure.ram?.observed_pressure_host_checks,0) + ' checks / ' +
-    format(pressure.ram?.observed_warning_app_days,0) + ' APP-days'
-  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'APP CPU - Daily Peak', margin, 91, chartW, 35, month,
+  const cpuWarningSummary = format(pressure.cpu?.observed_pressure_host_checks,0) + ' readings / ' +
+    format(pressure.cpu?.observed_warning_app_days,0) + ' server-days'
+  const ramWarningSummary = format(pressure.ram?.observed_pressure_host_checks,0) + ' readings / ' +
+    format(pressure.ram?.observed_warning_app_days,0) + ' server-days'
+  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'Daily Highest CPU', margin, 91, chartW, 35, month,
     pressure.thresholds?.cpu_warning_pct, cpuWarningSummary)
-  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'APP RAM - Daily Peak', margin + chartW + 6, 91, chartW, 35, month,
+  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'Daily Highest RAM', margin + chartW + 6, 91, chartW, 35, month,
     pressure.thresholds?.ram_warning_pct, ramWarningSummary)
 
-  const ramBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING RAM PRESSURE', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
-  const cpuBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING CPU PRESSURE', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  const ramBottom = drawTopTable(pdf, 'Programs Seen During High RAM', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
+  const cpuBottom = drawTopTable(pdf, 'Programs Seen During High CPU', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
   let errorLineY = Math.max(183, ramBottom + 2, cpuBottom + 2)
   if (errorLineY > H - 27) {
     pdf.addPage()
@@ -290,28 +282,26 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(8)
   pdf.setTextColor(36, 52, 62)
-  pdf.text('MONTHLY FINDINGS - ABAP AND WP', margin, errorLineY + 6)
+  pdf.text('What Needs Attention', margin, errorLineY + 6)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7)
   pdf.setTextColor(78, 98, 108)
   const wpSourceMissing = errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
   const errorSummary = wpSourceMissing
-    ? 'WP error data unavailable in retained workload history; check saved raw SPHERE archives.'
+    ? 'Error details are not available for this month. This does not mean there were no errors.'
     : errorEvidence.truncated
-      ? 'Error evidence is partial. The full monthly total cannot be confirmed.'
-      : format(errorEvidence.error_code_count,0) + ' WP error codes; ' +
-        format(errorEvidence.timestamped_events,0) + ' dated trace events; ' +
-        format(errorEvidence.error_program_count,0) + ' explicitly identified programs; ' +
-        format(errorEvidence.rabax_wp_checks,0) + ' RABAX WP checks.'
+      ? 'Only partial error data is available; the number of errors cannot be confirmed.'
+      : format(errorEvidence.error_code_count,0) + ' types of WP errors recorded; ' +
+        format(errorEvidence.error_program_count,0) + ' programs identified for investigation.'
   pdf.text(errorSummary, margin, errorLineY + 10.5)
   const tuningSummary = format(tuningCandidates.length,0) +
-    ' Jobs/Programs require performance evaluation. This is not a count of failed jobs.'
+    ' jobs or programs are flagged for review; this does not confirm a failed job.'
   pdf.text(tuningSummary, margin, errorLineY + 14.7)
   pdf.setTextColor(94, 105, 113)
-  const peakDetails = 'CPU peak: ' + pct(pressure.cpu?.peak?.peak_pct) + ' on ' +
-    labelHost(pressure.cpu?.peak?.host) + ' at ' + dateWib(pressure.cpu?.peak?.peak_at) +
-    '. RAM peak: ' + pct(pressure.ram?.peak?.peak_pct) + ' on ' +
-    labelHost(pressure.ram?.peak?.host) + ' at ' + dateWib(pressure.ram?.peak?.peak_at)
+  const peakDetails = 'Highest server CPU: ' + pct(pressure.cpu?.peak?.peak_pct) + ' (' +
+    labelHost(pressure.cpu?.peak?.host) + ', ' + dateWib(pressure.cpu?.peak?.peak_at) +
+    '). Highest RAM: ' + pct(pressure.ram?.peak?.peak_pct) + ' (' +
+    labelHost(pressure.ram?.peak?.host) + ', ' + dateWib(pressure.ram?.peak?.peak_at) + ')'
   pdf.setFontSize(6.4)
   pdf.text(pdf.splitTextToSize(peakDetails, contentW), margin, errorLineY + 18.5)
 
