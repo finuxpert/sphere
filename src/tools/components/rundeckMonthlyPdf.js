@@ -400,8 +400,9 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(7.3)
     pdf.setTextColor(67, 84, 95)
-    pdf.text('Showing 10 priority items out of ' + format(tuningCandidates.length,0) +
-      ' flagged workloads. Full list is available in SPHERE Monthly Review.', margin, 30)
+    pdf.text('Showing ' + format(Math.min(10, tuningCandidates.length),0) +
+      ' of ' + format(summary.review_required,0) +
+      ' jobs/programs flagged for review. Full list is available in SPHERE.', margin, 30)
     pdf.text('These are performance review candidates, not confirmed failed jobs or program errors.', margin, 34.5)
     pdf.setFontSize(6.6)
     pdf.text('CPU cores = estimated logical core usage by the workload; memory = SAP process memory, not total server use.', margin, 38.5)
