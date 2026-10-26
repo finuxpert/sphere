@@ -1,10 +1,16 @@
 """Calendar-month boundaries for SPHERE manual SAP Basis performance reports."""
 from datetime import datetime, timezone
+import gzip
+import hashlib
+import tempfile
+from pathlib import Path
 import unittest
 
 from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page, _monthly_abap_tuning_candidates
 from backend.rundeck_monthly_pressure import detect_pressure_episodes, monthly_pressure_observations
 from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time
+from backend.rundeck_workload_observations import parse_workload_observations
+from backend.backfill_monthly_wp_errors import recoverable_archive
 
 
 class CalendarMonthReviewTests(unittest.TestCase):
@@ -338,6 +344,77 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(report["cpu"]["episodes"], 1)
         self.assertEqual(report["ram"]["episodes"], 1)
 
+
+
+    def test_error_bearing_process_survives_beyond_top_consumer_limit(self):
+        snapshot = (
+            "## RCA-SNAPSHOT-V2.2-BEGIN\\n"
+            "snapshot_id\\tcheck1\\n"
+            "snapshot_ts\\t2026-09-12T09:30:00+07:00\\n"
+            "hostname\\tAPP1\\n"
+            "## RCA-SNAPSHOT-V2.2-END\\n"
+            "## RCA-WP-V2.2-BEGIN\\n"
+            "snapshot_id\\thost\\tpid\\twp\\ttype\\tcpu_interval_pct\\tpss_gb\\tjob_name\\tprogram\\terror_code\\terror_recency\\terror_program\\tlatest_error_ts\\trabax_tail_count\\n"
+        )
+        records = [
+            "check1\\tAPP1\\t999\\t24\\tDIA\\t0.1\\t0.4\\t?\\t?\\tDBSQL_SQL_ERROR\\tHISTORICAL\\tZ_FAILED\\t2026-09-12T09:10:00+07:00\\t0",
+        ]
+        records.extend(
+            f"check1\\tAPP1\\t{i}\\t{i}\\tDIA\\t90\\t0.2\\t?\\t?\\t?\\tUNKNOWN\\t?\\t?\\t0"
+            for i in range(40)
+        )
+        records.append(
+            "check1\\tAPP1\\t888\\t15\\tBTC\\t22\\t0.7\\tZ_BATCH\\tZ_PROGRAM\\t?\\tUNKNOWN\\t?\\t?\\t0"
+        )
+        raw = (snapshot + "\\n".join(records) + "\\n## RCA-WP-V2.2-END\\n").encode()
+        rows = parse_workload_observations(raw)
+        self.assertEqual(len(rows), 2)
+        process = next(row for row in rows if row["consumer_type"] == "PROCESS")
+        self.assertEqual(process["consumer_key"], "PID 999")
+        self.assertEqual(process["details"]["observation_scope"], "WP_ERROR_ONLY")
+        self.assertEqual(process["details"]["wp_signals"][0]["latest_trace_error"], "DBSQL_SQL_ERROR")
+        self.assertEqual(process["details"]["wp_signals"][0]["pss_gb"], 0.4)
+        self.assertTrue(any(row["consumer_type"] == "JOB" for row in rows))
+
+    def test_error_signal_provenance_does_not_fabricate_older_month_events(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        row = {
+            "collection_id": "collection-oct", "host": "APP1", "pid": "999",
+            "wp": "24", "wp_type": "DIA", "job_name": "Z_CONTEXT",
+            "error_program": "Z_FAILED", "latest_trace_error": "DBSQL_SQL_ERROR",
+            "latest_error_ts": "2026-10-25T14:59:00+07:00", "error_recency": "HISTORICAL",
+            "log_path": "/usr/sap/AOP/D40/work/dev_w24",
+        }
+        result = summarize_monthly_wp_errors([row], start, end)
+        self.assertEqual(result["timestamped_events"], 0)
+        self.assertEqual(result["error_code_count"], 0)
+        row["latest_error_ts"] = "2026-09-12T09:10:00+07:00"
+        result = summarize_monthly_wp_errors([row, row], start, end)
+        self.assertEqual(result["timestamped_events"], 1)
+        detail = result["top_errors"][0]
+        self.assertEqual(detail["pids"], ["999"])
+        self.assertEqual(detail["wps"], ["DIA 24"])
+        self.assertEqual(detail["job_names"], ["Z_CONTEXT"])
+        self.assertEqual(detail["program_link"], "EXPLICIT_ERROR_PROGRAM")
+
+    def test_backfill_archive_is_checksum_verified_and_rejects_path_escape(self):
+        payload = b"## RCA-WP-V2.2-BEGIN\\nexample\\n## RCA-WP-V2.2-END\\n"
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "archive").mkdir()
+            path = root / "archive" / "rundeck-1.log.gz"
+            path.write_bytes(gzip.compress(payload))
+            manifest = {
+                "status": "READY", "database_status": "STORED",
+                "raw_path": "archive/rundeck-1.log.gz",
+                "checksum": hashlib.sha256(payload).hexdigest(),
+                "collection_id": "rundeck-1",
+            }
+            self.assertEqual(recoverable_archive(root, manifest), payload)
+            self.assertIsNone(recoverable_archive(root, {**manifest, "raw_path": "../outside.log"}))
+            with self.assertRaises(ValueError):
+                recoverable_archive(root, {**manifest, "checksum": "not-a-real-checksum"})
 
 if __name__ == "__main__":
     unittest.main()
