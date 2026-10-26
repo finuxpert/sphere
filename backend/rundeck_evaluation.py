@@ -658,6 +658,8 @@ def _monthly_abap_tuning_candidates(evaluated: list[dict], limit: int = 25) -> l
             "hosts": item.get("hosts") or [],
             "avg_cpu_pct": item.get("avg_cpu_pct"),
             "peak_cpu_pct": item.get("peak_cpu_pct"),
+            "avg_cpu_core_equivalent": item.get("avg_cpu_core_equivalent"),
+            "peak_cpu_core_equivalent": item.get("peak_cpu_core_equivalent"),
             "avg_pss_gb": item.get("avg_pss_gb"),
             "peak_pss_gb": item.get("peak_pss_gb"),
             "confidence": item.get("overall_confidence"),
