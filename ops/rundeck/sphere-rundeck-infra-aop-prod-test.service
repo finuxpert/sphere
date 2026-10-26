@@ -18,7 +18,8 @@ Environment=RUNDECK_INFRA_EXPECTED_HOSTS=AOPH1PAPPDC,AOPH2PAPPDC,AOPH3PAPPDC,AOP
 EnvironmentFile=-/etc/sphere/rundeck-dev.env
 LoadCredential=rundeck-reader:/etc/sphere/rundeck-readonly.token
 ExecStart=/opt/sphere-rundeck-dev/venv/bin/python -m backend.rundeck_infra_poller
-TimeoutStartSec=90
+# DEV-only AOP PROD read-only test: two sequential 60s Rundeck requests plus persistence.
+TimeoutStartSec=180
 UMask=0027
 NoNewPrivileges=true
 ProtectSystem=strict
