@@ -13,7 +13,9 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 EnvironmentFile=-/etc/sphere/rundeck-dev.env
 LoadCredential=rundeck-reader:/etc/sphere/rundeck-readonly.token
 ExecStart=/opt/sphere-rundeck-dev/venv/bin/python -m backend.rundeck_infra_poller
-TimeoutStartSec=90
+# Two sequential Rundeck HTTP calls each allow up to 60s, plus ingestion/DB I/O.
+# Keep a bounded 180s watchdog; deployment still fails closed on a real timeout.
+TimeoutStartSec=180
 UMask=0027
 NoNewPrivileges=true
 ProtectSystem=strict
