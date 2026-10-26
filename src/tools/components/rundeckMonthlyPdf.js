@@ -1,6 +1,7 @@
 /* Monthly report deliberately reuses the restrained SPHERE landscape visual language.
  * It contains stored observations only; no inferred root cause or SM37 run totals. */
 import { APP_DISPLAY_VERSION } from '../../app/version.js'
+import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 
 const HEX = [[35, 166, 183], [93, 134, 201], [155, 110, 199], [201, 142, 76], [84, 160, 123]]
 const labelHost = value => {
@@ -12,8 +13,10 @@ const format = (value, digits = 1) => value === null || value === undefined || !
   ? 'N/A' : Number(value).toLocaleString('en-US', { maximumFractionDigits: digits })
 const pct = value => format(value) === 'N/A' ? 'N/A' : format(value) + '%'
 // Collector WP CPU is core-based and may exceed 100%; 100% = one logical CPU core.
-const coreEquivalent = value => value === null || value === undefined || !Number.isFinite(Number(value))
-  ? 'N/A' : format(Number(value) / 100, 2) + ' core eq.'
+const coreEquivalent = value => {
+  const cores = wpCpuCoreEquivalent(value)
+  return cores === null ? 'N/A' : format(cores, 2) + ' core eq.'
+}
 const dateWib = value => value ? new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric',
   hour: '2-digit', minute: '2-digit', hour12: false,
