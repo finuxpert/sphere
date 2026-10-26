@@ -4,6 +4,7 @@ import fcntl
 import json
 import os
 import re
+import time
 from urllib.parse import quote, urlencode
 from backend.rundeck_credentials import credential_mode, read_credential
 from backend.rundeck_poller import API_VERSION, execution_matches, output_text, request
@@ -61,7 +62,14 @@ def output_by_node(execution_id, token, expected_hosts):
     ))
     return _group_output_entries(payload, expected_hosts)
 
+def _phase(name: str, started: float) -> None:
+    """Minimal, credential-free journald breadcrumb for slow poller operations."""
+    print(f"INFRA_POLLER_PHASE={name} ELAPSED_SECONDS={time.monotonic()-started:.1f}", flush=True)
+
+
 def poll():
+    started = time.monotonic()
+    _phase("START", started)
     initialize()
     with _lock_path().open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -75,7 +83,9 @@ def poll():
             return
         token = read_credential("rundeck-reader", "RUNDECK_TOKEN_FILE")
         query = urlencode({"groupPathExact":group,"jobFilter":name,"adhoc":"false","max":20,"offset":0})
+        _phase("RUNDECK_LIST_START", started)
         page = json.loads(request(f"/api/{API_VERSION}/project/{quote(project, safe='')}/executions?"+query, token, "application/json"))
+        _phase("RUNDECK_LIST_DONE", started)
         executions = [row for row in page.get("executions", []) if execution_matches(row, group, name)]
         if not executions:
             _write(_state_path("poller"), {"status":"NO_MATCH","checked_at":now(),"project":project,"job_group":group,"job_name":name})
@@ -103,8 +113,12 @@ def poll():
             raise ValueError("Rundeck infrastructure execution did not succeed")
 
         if len(expected_hosts) == 1:
+            _phase("RUNDECK_OUTPUT_START", started)
             raw = output_text(eid, token)
+            _phase("RUNDECK_OUTPUT_DONE", started)
+            _phase("PERSIST_START", started)
             result = ingest(execution, raw, expected_hosts[0])
+            _phase("PERSIST_DONE", started)
             db_status = result.get("database_status")
             state_payload = {
                 "status":"OK" if db_status == "STORED" else "ERROR",
@@ -114,8 +128,12 @@ def poll():
                 "job_id_observed":(execution.get("job") or {}).get("id")
             }
         else:
+            _phase("RUNDECK_OUTPUT_START", started)
             raw_by_host = output_by_node(eid, token, expected_hosts)
+            _phase("RUNDECK_OUTPUT_DONE", started)
+            _phase("PERSIST_START", started)
             result = ingest_many(execution, raw_by_host, expected_hosts)
+            _phase("PERSIST_DONE", started)
             db_status = result.get("database_status")
             state_payload = {
                 "status":"OK" if db_status == "STORED" else "PARTIAL",
@@ -127,6 +145,7 @@ def poll():
         _write(_state_path("poller"), state_payload)
         if state_payload["status"] != "OK":
             raise RuntimeError("Infrastructure ingestion did not persist all expected hosts")
+        _phase("DONE", started)
 
 if __name__ == "__main__":
     try:
