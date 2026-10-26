@@ -50,3 +50,24 @@ test('read-only smoke spans local and public Custom CPU/RAM/Network and historic
   assert.match(smoke, /CUSTOM_API_SMOKE=FAIL/)
   assert.doesNotMatch(smoke, /collect-now|POST |INSERT INTO /)
 })
+
+test('DEV infrastructure poller has bounded sequential request budget and actionable failure diagnostics', () => {
+  const service = read('ops/rundeck/sphere-rundeck-infra-poller.service')
+  const aopTest = read('ops/rundeck/sphere-rundeck-infra-aop-prod-test.service')
+  const poller = read('backend/rundeck_infra_poller.py')
+  const deploy = read('ops/rundeck/deploy-dev.sh')
+  for (const unit of [service, aopTest]) {
+    assert.match(unit, /Type=oneshot/)
+    assert.match(unit, /TimeoutStartSec=180/)
+    assert.match(unit, /LoadCredential=rundeck-reader:/)
+    assert.match(unit, /IPAddressDeny=any/)
+  }
+  assert.match(poller, /INFRA_POLLER_PHASE=/)
+  assert.match(poller, /_phase\("RUNDECK_LIST_START"/)
+  assert.match(poller, /_phase\("RUNDECK_OUTPUT_START"/)
+  assert.match(poller, /_phase\("PERSIST_START"/)
+  assert.match(deploy, /start_oneshot_with_retry sphere-rundeck-infra-poller\.service 2 3/)
+  assert.match(deploy, /journalctl -u "\$service"/)
+  assert.match(deploy, /SERVICE FAILED/)
+  assert.match(deploy, /DEPLOY FAILED - rolling back \/dev/)
+})
