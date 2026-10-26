@@ -81,6 +81,8 @@ def persist_workload_observations(
     collection_id: str,
     raw: bytes,
     fallback_time: datetime | None = None,
+    *,
+    scoped_rows: list[dict] | None = None,
 ) -> int:
     if not db_enabled():
         return 0
@@ -88,7 +90,7 @@ def persist_workload_observations(
     if engine is None:
         return 0
 
-    rows = parse_workload_observations(raw, fallback_time=fallback_time)
+    rows = scoped_rows if scoped_rows is not None else parse_workload_observations(raw, fallback_time=fallback_time)
     with engine.begin() as conn:
         table_ready = conn.execute(text(
             "SELECT to_regclass('public.rundeck_workload_observations') IS NOT NULL"
