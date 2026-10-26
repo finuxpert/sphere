@@ -53,4 +53,4 @@ echo "DEV_WP_BACKFILL=$MODE MONTH=$MONTH OFFSET=$OFFSET SIZE=$SIZE SOURCE_SHA=$(
 runuser -u sphere -- env \
   DB_MODE="$DB_MODE" DATABASE_URL="$DATABASE_URL" \
   SPHERE_INGESTION_ROOT=/var/lib/sphere/ingestion \
-  "$PYTHON" -m backend.backfill_monthly_wp_errors "\${ARGS[@]}"
+  "$PYTHON" -m backend.backfill_monthly_wp_errors "${ARGS[@]}"
