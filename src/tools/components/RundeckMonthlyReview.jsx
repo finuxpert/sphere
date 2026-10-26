@@ -456,7 +456,7 @@ export default function RundeckMonthlyReview() {
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
               <div><h4>Daily APP Resource Trend</h4>
-                <small>Retained daily ${chartMode} · ${month} WIB · gaps are not zero</small></div>
+                <small>Retained daily {chartMode} · {month} WIB · gaps are not zero</small></div>
               <div className="sphereMonthlyFilters sphereMonthlyVisualFilters">
                 <select aria-label="Resource metric" value={chartMetric} onChange={event=>setChartMetric(event.target.value)}>
                   <option value="cpu">CPU</option><option value="ram">RAM</option>
