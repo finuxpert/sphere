@@ -202,7 +202,7 @@ test('RAM graph and APP table reconcile warning checks, distinct days and unroun
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
   const unit = read('backend/tests/test_rundeck_monthly_review.py')
-  assert.match(pressure, /"ram_warning_days": len\(values\.pop\("_ram_warning_days"\)\)/)
+  assert.ok(pressure.includes('values["ram_warning_days"] = len(values.pop("_ram_warning_days"))'))
   assert.match(pressure, /"ram_warning_checks": len\(item\["_ram_warning_ids"\]\)/)
   assert.match(pressure, /"ram_warning_day": bool\(item\["_ram_warning_ids"\]\)/)
   assert.match(pressure, /"observed_warning_app_days"/)
