@@ -1,9 +1,9 @@
-"""Persist all observed SAP Job/Program workload rows from retained RCA-WP snapshots.
+"""Persist workload history and error-bearing WP processes from retained RCA-WP snapshots.
 
 This projection intentionally differs from ``rundeck_top_consumers``. Top consumers
 remain a bounded performance ranking, while this table retains every JOB/PROGRAM
-consumer observed in the already-collected WP snapshot. No additional SAP or Rundeck
-collection command is introduced here.
+consumer and error-bearing PROCESS observed in the already-collected WP snapshot.
+PROCESS rows are evidence only, never ABAP tuning candidates. No new SAP polling.
 """
 from __future__ import annotations
 
@@ -17,20 +17,43 @@ from backend.rundeck_consumers import parse_top_consumers
 
 # parse_top_consumers accepts an explicit depth without the environment cap. A very
 # high bound lets us reuse the canonical aggregation/parser while retaining every
-# grouped consumer present in the snapshot. PROCESS rows are filtered out below.
+# grouped consumer present in the snapshot. PROCESS rows are retained only for error evidence.
 _ALL_GROUPS_DEPTH = 1_000_000
 _VALID_TYPES = {"JOB", "PROGRAM"}
+
+
+def _has_wp_error_signal(details: dict) -> bool:
+    """Error evidence must not depend on the Top Consumers ranking or workload identity."""
+    for signal in details.get("wp_signals") or []:
+        if not isinstance(signal, dict):
+            continue
+        if any(str(signal.get(key) or "").strip() not in {"", "?", "NA", "N/A", "-"}
+               for key in ("error_at_snapshot", "latest_trace_error", "error_code")):
+            return True
+        for key in ("rabax", "rxmsg"):
+            try:
+                if float(signal.get(key) or 0) > 0:
+                    return True
+            except (TypeError, ValueError):
+                continue
+    return False
 
 
 def parse_workload_observations(raw: bytes, fallback_time: datetime | None = None) -> list[dict]:
     rows = parse_top_consumers(raw, fallback_time=fallback_time, top_per_host=_ALL_GROUPS_DEPTH)
     output: list[dict] = []
     for row in rows:
-        if row.get("consumer_type") not in _VALID_TYPES:
-            continue
+        consumer_type = row.get("consumer_type")
         details = dict(row.get("details") or {})
+        if consumer_type not in _VALID_TYPES and not (
+            consumer_type == "PROCESS" and _has_wp_error_signal(details)
+        ):
+            continue
         details.pop("persisted_rank_limit", None)
-        details["observation_scope"] = "ALL_OBSERVED_ACTIVE_WORKLOADS"
+        details["observation_scope"] = (
+            "ALL_OBSERVED_ACTIVE_WORKLOADS" if consumer_type in _VALID_TYPES
+            else "WP_ERROR_ONLY"
+        )
         details["performance_rank"] = int(row.get("rank") or 0) or None
         output.append({
             "host": row.get("host"),
