@@ -197,7 +197,7 @@ export async function buildMonthlyPdf({ month, data }) {
     ['RAM HIGH CHECKS', format(pressure.ram?.observed_pressure_host_checks,0) + ' checks', 'Warning ' + pct(pressure.thresholds?.ram_warning_pct)],
     ['CRITICAL WP CHECKS', hosts.length ? format(hosts.reduce((s, h) => s + (h.critical_wp_host_checks || 0), 0), 0) + ' host-checks' : 'N/A', 'APP checks with Critical WP'],
     ['JOB / PROGRAM', format(summary.workloads, 0) + ' observed', format(summary.review_required, 0) + ' need review'],
-    ['ERROR PROGRAM', data.monthly_errors?.status === 'ERROR_SOURCE_NOT_RETAINED' ? 'N/A' : format(data.monthly_errors?.error_program_count,0), 'WP trace evidence, not ST22'],
+    ['WP ERROR CODES', data.monthly_errors?.status === 'ERROR_SOURCE_NOT_RETAINED' ? 'N/A' : format(data.monthly_errors?.error_code_count,0), format(data.monthly_errors?.error_program_count,0) + ' identified programs; WP trace, not ST22'],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -315,7 +315,7 @@ export async function buildMonthlyPdf({ month, data }) {
     errorRows.forEach(row => {
       const cat = pdf.splitTextToSize(String(errorCategoryLabel(row.category, row.category_label)), 37)
       const code = pdf.splitTextToSize(String(row.error_code || 'Not available'), 61)
-      const program = pdf.splitTextToSize(String(row.program || 'Not identified'), 88)
+      const program = pdf.splitTextToSize(String(row.program === 'Belum teridentifikasi' ? 'Unidentified program' : (row.program || 'Unidentified program')), 88)
       const resource = row.snapshot_host_checks > 0 && (row.cpu_snapshot_pct !== null || row.pss_snapshot_gb !== null)
         ? 'Snapshot CPU ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
         : row.untimed_trace_checks > 0 ? 'Untimed trace: ' + format(row.untimed_trace_checks, 0) + ' observations' : ''
@@ -409,10 +409,22 @@ export async function buildMonthlyPdf({ month, data }) {
         row.signals?.cpu_spike && 'CPU spike',
         row.signals?.baseline_anomaly && 'Above baseline',
       ].filter(Boolean).join(', ') || 'Review Required'
+      const matchedTrace = errorRows.filter(item => (
+        (row.consumer_type === 'PROGRAM' && item.program_link === 'EXPLICIT_ERROR_PROGRAM' &&
+          String(item.program).toUpperCase() === String(row.consumer_key).toUpperCase()) ||
+        (row.consumer_type === 'JOB' && (item.job_names || []).some(
+          name=>String(name).toUpperCase() === String(row.consumer_key).toUpperCase()
+        ))
+      ))
+      const matchedCodes = [...new Set(matchedTrace.map(item=>item.error_code))]
+      const traceNote = matchedCodes.length
+        ? '. Monthly WP trace ' + (row.consumer_type === 'PROGRAM' ? 'program match: ' : 'job context: ') +
+          matchedCodes.join(', ') + ' (not causal)'
+        : ''
       const detail = pdf.splitTextToSize(
         'Observed APP: ' + observedApps + '. CPU warning APP: ' + cpuApps +
         '. RAM warning APP: ' + ramApps + '. Review: ' + signals +
-        '. Confidence: ' + String(row.confidence || 'UNKNOWN'),
+        '. Confidence: ' + String(row.confidence || 'UNKNOWN') + traceNote,
         contentW - 5,
       )
       const rowH = names.length * 3.25 + detail.length * 3.0 + 4.4
