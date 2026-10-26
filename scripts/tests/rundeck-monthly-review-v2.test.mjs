@@ -222,7 +222,7 @@ test('RAM graph and APP table reconcile warning checks, distinct days and unroun
 test('WP CPU report displays logical core-equivalents without inventing a 28-vCPU host denominator', () => {
   assert.equal(wpCpuCoreEquivalent(100), 1)
   assert.equal(wpCpuCoreEquivalent(200), 2)
-  assert.equal(wpCpuCoreEquivalent(275.1), 2.751)
+  assert.ok(Math.abs(wpCpuCoreEquivalent(275.1) - 2.751) < 1e-10, 'core equivalent preserves fractional CPU')
   assert.equal(wpCpuCoreEquivalent(0), 0)
   assert.equal(wpCpuCoreEquivalent(null), null)
   assert.equal(wpCpuCoreEquivalent(''), null)
