@@ -85,6 +85,94 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
   </div>
 }
 
+
+const DASHBOARD_COLORS = ['#75b4e5', '#4b91cb', '#2d659f', '#1a3b70']
+const WORKLOAD_GROUPS = [
+  { key:'review', label:'Review Required' },
+  { key:'attention', label:'Attention' },
+  { key:'normal', label:'Normal' },
+  { key:'unknown', label:'Unknown' },
+]
+
+function WorkloadDistribution({ summary = {}, onSelect }) {
+  const status = summary.health || {}
+  const values = WORKLOAD_GROUPS.map(group => {
+    const raw = Number(status[group.key])
+    return Number.isFinite(raw) && raw >= 0 ? raw : 0
+  })
+  const total = values.reduce((sum, value) => sum + value, 0)
+  let degrees = 0
+  const segments = values.map((value, index) => {
+    const size = total > 0 ? value / total * 360 : 0
+    const start = degrees
+    degrees += size
+    return `${DASHBOARD_COLORS[index]} ${start}deg ${degrees}deg`
+  })
+  return <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyMix" aria-label="Workload review distribution">
+    <div className="sphereMonthlyVisualHeading">
+      <div><h4>Workload Review Distribution</h4>
+        <small>Full-month JOB and PROGRAM population · mutually exclusive groups</small></div>
+    </div>
+    {total>0 ? <div className="sphereMonthlyMixBody">
+      <div className="sphereMonthlyDonut" role="img"
+        aria-label={WORKLOAD_GROUPS.map((group, index)=>group.label+': '+values[index]).join(', ')}
+        style={{background:'conic-gradient('+segments.join(', ')+')'}}>
+        <div className="sphereMonthlyDonutCenter">
+          <strong>{fmt(total,0)}</strong><span>Workloads</span>
+        </div>
+      </div>
+      <div className="sphereMonthlyMixLegend">
+        {WORKLOAD_GROUPS.map((group,index)=>{
+          const value = values[index]
+          return <button key={group.key} type="button"
+            className="sphereMonthlyMixItem"
+            onClick={()=>onSelect(group.key.toUpperCase())}
+            aria-label={'Open '+group.label+' workloads'}>
+            <i aria-hidden="true" style={{background:DASHBOARD_COLORS[index]}}/>
+            <span>{group.label}</span><strong>{fmt(value,0)}</strong>
+            <small>{fmt(value/total*100,1)}%</small>
+          </button>
+        })}
+      </div>
+    </div> : <div className="sphereMonthlyMixEmpty">
+      No JOB or PROGRAM workload observations for the selected month.
+    </div>}
+    <small className="sphereMonthlyVisualNote">Select a category to open its workload details. Source: retained SPHERE evaluation.</small>
+  </section>
+}
+
+function MonthlyDashboardKpis({ pressure = {}, summary = {} }) {
+  const hosts = pressure.hosts || []
+  const criticalChecks = hosts.length
+    ? hosts.reduce((sum,row)=>sum+Number(row.critical_wp_host_checks||0),0)
+    : null
+  const entries = [
+    { key:'cpu', label:'CPU Warning', value:pressure.cpu?.observed_pressure_host_checks,
+      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.cpu?.peak?.peak_pct),
+      mark:'CPU' },
+    { key:'ram', label:'RAM Warning', value:pressure.ram?.observed_pressure_host_checks,
+      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.ram?.peak?.peak_pct),
+      mark:'RAM' },
+    { key:'wp', label:'Critical WP', value:criticalChecks,
+      note:'APP host-checks with critical WP', detail:'Observed samples, not incidents',
+      mark:'WP' },
+    { key:'review', label:'Review Required', value:summary.review_required,
+      note:'Jobs / Programs requiring review', detail:'Out of '+fmt(summary.workloads,0)+' workloads',
+      mark:'ABAP' },
+  ]
+  return <div className="sphereMonthlyDashboardKpis" aria-label="Monthly SAP performance key indicators">
+    {entries.map(entry=><div className={'sphereMonthlyDashboardKpi is-'+entry.key} key={entry.key}>
+      <div className="sphereMonthlyDashboardKpiHead">
+        <span className="sphereMonthlyDashboardGlyph" aria-hidden="true">{entry.mark}</span>
+        <span>{entry.label}</span>
+      </div>
+      <strong>{fmt(entry.value,0)}</strong>
+      <span className="sphereMonthlyDashboardKpiNote">{entry.note}</span>
+      <small>{entry.detail}</small>
+    </div>)}
+  </div>
+}
+
 function PressureRows({ label, evidence, metric }) {
   const rows = metric === 'ram' ? evidence.top_ram_workloads || [] : evidence.top_cpu_workloads || []
   return <section className="sphereMonthlyPanel sphereMonthlyRank">
@@ -270,6 +358,7 @@ export default function RundeckMonthlyReview() {
   const [expanded,setExpanded]=React.useState(null)
   const [chartMode,setChartMode]=React.useState('peak')
   const [chartHost,setChartHost]=React.useState('ALL')
+  const [chartMetric,setChartMetric]=React.useState('cpu')
   const [pdfBusy,setPdfBusy]=React.useState(false)
   const [pdfError,setPdfError]=React.useState('')
   const [pdfUrl,setPdfUrl]=React.useState('')
@@ -362,46 +451,47 @@ export default function RundeckMonthlyReview() {
         <span>Complete <b>{fmt(quality.complete_checks,0)}</b></span>
         <span>Incomplete <b>{fmt(quality.partial_or_incomplete_checks,0)}</b></span>
       </div>
-      {tab==='overview'&&<div className="sphereMonthlyLayout">
-        <div className="sphereMonthlyStats">
-          {[
-            ['CPU di atas warning',fmt(evidence.cpu?.observed_pressure_host_checks,0),'Pemeriksaan APP, puncak '+pct(evidence.cpu?.peak?.peak_pct)],
-            ['RAM di atas warning',fmt(evidence.ram?.observed_pressure_host_checks,0),'Pemeriksaan APP, puncak '+pct(evidence.ram?.peak?.peak_pct)],
-            ['Observasi Critical WP',fmt(hosts.reduce((sum,row)=>sum+(row.critical_wp_host_checks||0),0),0),'APP teramati dengan WP critical; bukan insiden'],
-            ['Perlu evaluasi',fmt(summary.review_required,0),fmt(summary.workloads,0)+' job dan program teramati'],
-          ].map(([label,value,detail])=><div className="sphereMonthlyStat" key={label}>
-            <span>{label}</span><strong>{value}</strong><small>{detail}</small>
-          </div>)}
-        </div>
-        <div className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyExecutive">
-          <h4>Temuan Utama Bulan Ini</h4>
-          <div className="sphereMonthlyExecutiveGrid">
-            <div><span>CPU APP tertinggi</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} pada {when(evidence.cpu?.peak?.peak_at)}. Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
-            <div><span>RAM APP tertinggi</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} pada {when(evidence.ram?.peak?.peak_at)}. Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
-            <div><span>Program perlu evaluasi</span><strong>{fmt(tuningCandidates.length,0)}</strong><small>Evaluasi berdasarkan CPU, PSS dan histori pemakaian resource.</small></div>
-            <div><span>WP Error Evidence</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available':fmt(errors.error_code_count,0)+' codes'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'
-              ? 'Error fields are missing from retained workload history; inspect saved raw SPHERE archives.'
-              : fmt(errors.error_program_count,0)+' identified programs, '+fmt(errors.timestamped_events,0)+' dated trace events. RABAX '+fmt(errors.rabax_wp_checks,0)+' WP checks.'}</small></div>
-          </div>
-        </div>
-        <div className="sphereMonthlyPanel sphereMonthlyWide">
-          <div className="sphereMonthlyTableHead">
-            <div><h4>Tren Pemakaian Resource APP</h4><small>CPU dan RAM APP per tanggal, beserta batas warning monitoring</small></div>
-            <div className="sphereMonthlyFilters">
-              <select aria-label="Trend statistic" value={chartMode} onChange={event=>setChartMode(event.target.value)}>
-                <option value="peak">Daily peak</option><option value="avg">Daily average</option>
-              </select>
-              <select aria-label="Select APP trend" value={chartHost} onChange={event=>setChartHost(event.target.value)}>
-                <option value="ALL">All APP</option>
-                {hosts.map(row=><option key={row.host} value={hostLabel(row.host)}>{hostLabel(row.host)}</option>)}
-              </select>
+      {tab==='overview'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
+        <div className="sphereMonthlyVisualGrid">
+          <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
+            <div className="sphereMonthlyVisualHeading">
+              <div><h4>Daily APP Resource Trend</h4>
+                <small>Retained daily ${chartMode} · ${month} WIB · gaps are not zero</small></div>
+              <div className="sphereMonthlyFilters sphereMonthlyVisualFilters">
+                <select aria-label="Resource metric" value={chartMetric} onChange={event=>setChartMetric(event.target.value)}>
+                  <option value="cpu">CPU</option><option value="ram">RAM</option>
+                </select>
+                <select aria-label="Trend statistic" value={chartMode} onChange={event=>setChartMode(event.target.value)}>
+                  <option value="peak">Daily peak</option><option value="avg">Daily average</option>
+                </select>
+                <select aria-label="Select APP trend" value={chartHost} onChange={event=>setChartHost(event.target.value)}>
+                  <option value="ALL">All APP</option>
+                  {hosts.map(row=><option key={row.host} value={hostLabel(row.host)}>{hostLabel(row.host)}</option>)}
+                </select>
+              </div>
             </div>
-          </div>
-          <div className="sphereMonthlyTrendDuo">
-            <div><h4>CPU <small>{chartMode==='peak'?'Peak':'Average'}</small></h4>
-              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="cpu" mode={chartMode} host={chartHost} threshold={evidence.thresholds?.cpu_warning_pct}/></div>
-            <div><h4>RAM <small>{chartMode==='peak'?'Peak':'Average'}</small></h4>
-              <HostTrend rows={evidence.daily_hosts||[]} month={month} metric="ram" mode={chartMode} host={chartHost} threshold={evidence.thresholds?.ram_warning_pct}/></div>
+            <HostTrend rows={evidence.daily_hosts||[]} month={month} metric={chartMetric}
+              mode={chartMode} host={chartHost}
+              threshold={evidence.thresholds?.[chartMetric+'_warning_pct']}/>
+            <div className="sphereMonthlyVisualFooter">
+              <span>Warning threshold: <b>{pct(evidence.thresholds?.[chartMetric+'_warning_pct'])}</b></span>
+              <span>Latest retained observations only · not live monitoring</span>
+            </div>
+          </section>
+          <WorkloadDistribution summary={summary} onSelect={value=>{
+            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setExpanded(null);setTab('jobs')
+          }}/>
+        </div>
+        <MonthlyDashboardKpis pressure={evidence} summary={summary}/>
+        <div className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyExecutive">
+          <h4>Monthly Operational Highlights</h4>
+          <div className="sphereMonthlyExecutiveGrid">
+            <div><span>Highest APP CPU</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} · {when(evidence.cpu?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
+            <div><span>Highest APP RAM</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} · {when(evidence.ram?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
+            <div><span>ABAP Tuning Candidates</span><strong>{fmt(tuningCandidates.length,0)}</strong><small>Observed resource usage, not confirmed job failures</small></div>
+            <div><span>WP Error Evidence</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Unavailable':errors.truncated?'Partial':fmt(errors.error_code_count,0)+' codes'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'
+              ? 'Error fields not available in saved workload history'
+              : fmt(errors.error_program_count,0)+' identified programs · '+fmt(errors.timestamped_events,0)+' dated trace events'}</small></div>
           </div>
         </div>
         <div className="sphereMonthlyPanel sphereMonthlyWide">
