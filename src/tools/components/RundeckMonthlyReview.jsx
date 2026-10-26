@@ -101,10 +101,10 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
 
 const DASHBOARD_COLORS = ['#75b4e5', '#4b91cb', '#2d659f', '#1a3b70']
 const WORKLOAD_GROUPS = [
-  { key:'review', label:'Review Required' },
-  { key:'attention', label:'Attention' },
+  { key:'review', label:'Needs Review' },
+  { key:'attention', label:'Watch' },
   { key:'normal', label:'Normal' },
-  { key:'unknown', label:'Unknown' },
+  { key:'unknown', label:'Not Enough Data' },
 ]
 
 function WorkloadDistribution({ summary = {}, onSelect }) {
@@ -123,8 +123,8 @@ function WorkloadDistribution({ summary = {}, onSelect }) {
   })
   return <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyMix" aria-label="Workload review distribution">
     <div className="sphereMonthlyVisualHeading">
-      <div><h4>Workload Review Distribution</h4>
-        <small>Full-month JOB and PROGRAM population · mutually exclusive groups</small></div>
+      <div><h4>Job and Program Status</h4>
+        <small>How observed jobs and programs were classified this month</small></div>
     </div>
     {total>0 ? <div className="sphereMonthlyMixBody">
       <div className="sphereMonthlyDonut" role="img"
@@ -150,28 +150,26 @@ function WorkloadDistribution({ summary = {}, onSelect }) {
     </div> : <div className="sphereMonthlyMixEmpty">
       No JOB or PROGRAM workload observations for the selected month.
     </div>}
-    <small className="sphereMonthlyVisualNote">Select a category to open its workload details. Source: retained SPHERE evaluation.</small>
+    <small className="sphereMonthlyVisualNote">Select a category to see the related jobs and programs.</small>
   </section>
 }
 
-function MonthlyDashboardKpis({ pressure = {}, summary = {} }) {
+function MonthlyDashboardKpis({ pressure = {}, summary = {}, quality = {} }) {
   const hosts = pressure.hosts || []
-  const criticalChecks = hosts.length
-    ? hosts.reduce((sum,row)=>sum+Number(row.critical_wp_host_checks||0),0)
-    : null
+  // The host-level WP flag is not a verified incident count; omit it from management KPIs.
   const entries = [
-    { key:'cpu', label:'CPU Warning', value:pressure.cpu?.observed_pressure_host_checks,
-      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.cpu?.peak?.peak_pct)+' · '+fmt(pressure.cpu?.observed_warning_app_days,0)+' APP-days',
+    { key:'cpu', label:'High CPU', value:pressure.cpu?.observed_pressure_host_checks,
+      note:'Times CPU reached its limit', detail:'Highest '+pct(pressure.cpu?.peak?.peak_pct)+' · '+fmt(pressure.cpu?.observed_warning_app_days,0)+' server-days',
       mark:'CPU' },
-    { key:'ram', label:'RAM Warning', value:pressure.ram?.observed_pressure_host_checks,
-      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.ram?.peak?.peak_pct)+' · '+fmt(pressure.ram?.observed_warning_app_days,0)+' APP-days',
+    { key:'ram', label:'High RAM', value:pressure.ram?.observed_pressure_host_checks,
+      note:'Times RAM reached its limit', detail:'Highest '+pct(pressure.ram?.peak?.peak_pct)+' · '+fmt(pressure.ram?.observed_warning_app_days,0)+' server-days',
       mark:'RAM' },
-    { key:'wp', label:'Critical WP', value:criticalChecks,
-      note:'APP host-checks with critical WP', detail:'Observed samples, not incidents',
-      mark:'WP' },
-    { key:'review', label:'Review Required', value:summary.review_required,
-      note:'Jobs / Programs requiring review', detail:'Out of '+fmt(summary.workloads,0)+' workloads',
-      mark:'ABAP' },
+    { key:'wp', label:'Data Coverage', value:quality.coverage_pct,
+      note:'Estimated monitoring history', detail:'Partial history may miss problems',
+      mark:'DATA', percentage:true },
+    { key:'review', label:'Programs to Review', value:summary.review_required,
+      note:'Jobs / programs requiring review', detail:'Of '+fmt(summary.workloads,0)+' seen',
+      mark:'SAP' },
   ]
   return <div className="sphereMonthlyDashboardKpis" aria-label="Monthly SAP performance key indicators">
     {entries.map(entry=><div className={'sphereMonthlyDashboardKpi is-'+entry.key} key={entry.key}>
@@ -179,7 +177,7 @@ function MonthlyDashboardKpis({ pressure = {}, summary = {} }) {
         <span className="sphereMonthlyDashboardGlyph" aria-hidden="true">{entry.mark}</span>
         <span>{entry.label}</span>
       </div>
-      <strong>{fmt(entry.value,0)}</strong>
+      <strong>{fmt(entry.value,entry.percentage?1:0)}{entry.percentage && entry.value!=null?'%':''}</strong>
       <span className="sphereMonthlyDashboardKpiNote">{entry.note}</span>
       <small>{entry.detail}</small>
     </div>)}
@@ -443,7 +441,7 @@ export default function RundeckMonthlyReview() {
   }
   return <section className="sphereMonthlyReview is-v2" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
-      <div><strong>Evaluasi Kinerja SAP Bulanan</strong><small>Resource APP, Job, Program ABAP, dan error WP berdasarkan histori SPHERE</small></div>
+      <div><strong>SAP Monthly Review</strong><small>Server performance, priority programs and follow-up actions</small></div>
       <div className="sphereMonthlyPicker">
         <label htmlFor="sphere-month-choice">Reporting month</label>
         <select id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
@@ -461,18 +459,16 @@ export default function RundeckMonthlyReview() {
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
     {data&&!loading&&<>
       <div className="sphereMonthlyProvenance">
-        <span>Window: {when(data.start)} - {when(data.end)} (exclusive)</span>
-        <span>Estimasi cakupan <b>{pct(quality.coverage_pct)}</b></span>
-        <span>Confidence <b>{quality.confidence||'UNKNOWN'}</b></span>
-        <span>Complete <b>{fmt(quality.complete_checks,0)}</b></span>
-        <span>Incomplete <b>{fmt(quality.partial_or_incomplete_checks,0)}</b></span>
+        <span>Reporting month: <b>{month}</b></span>
+        <span>Data available: <b>{pct(quality.coverage_pct)}</b> (estimated)</span>
+        <span>Results are based on recorded monitoring data only.</span>
       </div>
       {tab==='overview'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
         <div className="sphereMonthlyVisualGrid">
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
-              <div><h4>Daily APP Resource Trend</h4>
-                <small>Retained daily {chartMode} · {month} WIB · gaps are not zero</small></div>
+              <div><h4>Daily Server CPU and RAM</h4>
+                <small>{chartMode==='peak'?'Highest':'Average'} reading each day · {month}</small></div>
               <div className="sphereMonthlyFilters sphereMonthlyVisualFilters">
                 <select aria-label="Resource metric" value={chartMetric} onChange={event=>setChartMetric(event.target.value)}>
                   <option value="cpu">CPU</option><option value="ram">RAM</option>
@@ -490,8 +486,8 @@ export default function RundeckMonthlyReview() {
               mode={chartMode} host={chartHost}
               threshold={evidence.thresholds?.[chartMetric+'_warning_pct']}/>
             <div className="sphereMonthlyVisualFooter">
-              <span>Warning threshold: <b>{pct(evidence.thresholds?.[chartMetric+'_warning_pct'])}</b></span>
-              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} warning checks on {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days · retained history</span>
+              <span>High {chartMetric.toUpperCase()} starts at <b>{pct(evidence.thresholds?.[chartMetric+'_warning_pct'])}</b></span>
+              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} high readings across {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} server-days</span>
             </div>
           </section>
           <WorkloadDistribution summary={summary} onSelect={value=>{
@@ -499,23 +495,23 @@ export default function RundeckMonthlyReview() {
             setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setExpanded(null);setTab('jobs')
           }}/>
         </div>
-        <MonthlyDashboardKpis pressure={evidence} summary={summary}/>
+        <MonthlyDashboardKpis pressure={evidence} summary={summary} quality={quality}/>
         <div className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyExecutive">
-          <h4>Monthly Operational Highlights</h4>
+          <h4>Monthly Highlights</h4>
           <div className="sphereMonthlyExecutiveGrid">
-            <div><span>Highest APP CPU</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} · {when(evidence.cpu?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
-            <div><span>Highest APP RAM</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} · {when(evidence.ram?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
-            <div><span>ABAP Tuning Candidates</span><strong>{fmt(tuningCandidates.length,0)}</strong><small>Observed resource usage, not confirmed job failures</small></div>
-            <div><span>WP Error Evidence</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Unavailable':errors.truncated?'Partial':fmt(errors.error_code_count,0)+' codes'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'
-              ? 'Error fields not available in saved workload history'
-              : fmt(errors.error_program_count,0)+' identified programs · '+fmt(errors.timestamped_events,0)+' dated trace events'}</small></div>
+            <div><span>Highest Server CPU</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} · {when(evidence.cpu?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
+            <div><span>Highest Server RAM</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} · {when(evidence.ram?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
+            <div><span>Programs to Review</span><strong>{fmt(tuningCandidates.length,0)}</strong><small>Review needed; job failures are not confirmed</small></div>
+            <div><span>Error Details</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available':errors.truncated?'Partial':fmt(errors.error_code_count,0)+' types'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'
+              ? 'Cannot confirm error status from this report'
+              : fmt(errors.error_program_count,0)+' programs identified for review'}</small></div>
           </div>
         </div>
         <div className="sphereMonthlyPanel sphereMonthlyWide">
-          <h4>APP1–APP5 Resource Summary</h4>
+          <h4>Server Performance by APP</h4>
           <div className="sphereMonthlyTableScroll"><table><thead><tr>
             <th>APP</th><th>CPU Avg</th><th>CPU Peak</th><th>RAM Avg</th><th>RAM Peak</th>
-            <th>CPU High Checks / Days</th><th>RAM High Checks / Days</th><th>Critical WP Host-Checks</th>
+            <th>High CPU (Times / Days)</th><th>High RAM (Times / Days)</th><th>WP Flagged Readings</th>
           </tr></thead><tbody>
             {hosts.map(row=><tr key={row.host}><td>{hostLabel(row.host)}</td>
               <td>{pct(row.avg_cpu_pct)}</td><td>{pct(row.peak_cpu_pct)}</td><td>{pct(row.avg_ram_pct)}</td><td>{pct(row.peak_ram_pct)}</td>
@@ -524,7 +520,7 @@ export default function RundeckMonthlyReview() {
               <td>{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
             {!hosts.length&&<tr><td colSpan="8">No historical host samples available.</td></tr>}
           </tbody></table></div>
-          <small>High Checks / Days = distinct APP collection checks at or above warning / APP calendar days with at least one warning sample. Peak is a maximum reading, not an occurrence count. CPU warning {pct(evidence.thresholds?.cpu_warning_pct)}; RAM warning {pct(evidence.thresholds?.ram_warning_pct)}.</small>
+          <small>Times = readings above the limit. Days = days with at least one high reading. Work process (WP) readings are not confirmed incidents.</small>
         </div>
       </div>}
       {tab==='jobs'&&<div className="sphereMonthlyPanel">
@@ -603,18 +599,18 @@ export default function RundeckMonthlyReview() {
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Laporan Kinerja SAP Bulanan</h4><small>Ringkasan APP, job, program, dan evidence error ABAP</small></div>
+          <div><h4>Monthly Management Report</h4><small>Server health, programs to review and suggested follow-up</small></div>
           <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
             {pdfBusy?'Membuat laporan…':'Lihat PDF'}
           </button>
         </div>
         {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
         <div className="sphereMonthlyReportOverview">
-          <div><strong>Periode laporan</strong><span>{month} · Asia/Jakarta</span></div>
-          <div><strong>CPU dan RAM di atas warning</strong><span>CPU {fmt(evidence.cpu?.observed_pressure_host_checks,0)}, RAM {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span></div>
-          <div><strong>Prioritas evaluasi</strong><span>{tuningCandidates.length} job dan program masuk daftar evaluasi. Data detail otomatis di PDF.</span></div>
-          <div><strong>Cakupan data monitoring</strong><span>Estimasi {pct(quality.coverage_pct)} · {quality.confidence||'UNKNOWN'} · {fmt(quality.partial_or_incomplete_checks,0)} pemeriksaan belum lengkap</span></div>
-          <div><strong>Error ABAP dan WP</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Histori tidak menyimpan field error WP. Jumlah program error dan RABAX belum tersedia.':<>{fmt(errors.error_program_count,0)} program dengan evidence error. {fmt(errors.error_code_count,0)} kode. {fmt(errors.timestamped_events,0)} kejadian berwaktu. RABAX {fmt(errors.rabax_wp_checks,0)} pemeriksaan WP.</>}</span></div>
+          <div><strong>Reporting Month</strong><span>{month} · Jakarta time</span></div>
+          <div><strong>High CPU and RAM</strong><span>CPU: {fmt(evidence.cpu?.observed_pressure_host_checks,0)} readings. RAM: {fmt(evidence.ram?.observed_pressure_host_checks,0)} readings.</span></div>
+          <div><strong>Programs to Review</strong><span>{tuningCandidates.length} jobs/programs flagged. The report shows the first 10 priorities.</span></div>
+          <div><strong>Data Coverage</strong><span>Estimated {pct(quality.coverage_pct)}. This is not a complete record of the month.</span></div>
+          <div><strong>Error Details</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available for this month; this does not mean no errors occurred.':errors.truncated?'Only partial error data is available.':<>{fmt(errors.error_code_count,0)} error types found; {fmt(errors.error_program_count,0)} programs identified.</>}</span></div>
         </div>
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
           <div className="sphereMonthlyPager"><small>Pratinjau PDF berdasarkan histori bulan terpilih</small>
@@ -624,7 +620,7 @@ export default function RundeckMonthlyReview() {
           </div>
           <iframe title="SPHERE monthly PDF preview" src={pdfUrl}/>
         </div>}
-        <p className="sphereMonthlyReportDisclaimer">Histori resource digunakan untuk evaluasi. Status job dan dump ABAP perlu diverifikasi di SM37 dan ST22.</p>
+        <p className="sphereMonthlyReportDisclaimer">These findings highlight areas to review. Confirm job failures or program errors in SAP before reporting them as incidents.</p>
       </div>}
     </>}
   </section>
