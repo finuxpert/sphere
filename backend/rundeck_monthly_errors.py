@@ -18,13 +18,13 @@ from sqlalchemy import text
 MAX_ERROR_GROUPS = 15000
 
 CATEGORIES = (
-    (r"TSV_TNEW_PAGE_ALLOC_FAILED|SYSTEM_NO_ROLL|SYSTEM_NO_TASK_STORAGE|OUT_OF_MEMORY|MEMORY[_ -]?(ALLOC|NO_MORE)", "MEMORY", "Memori"),
-    (r"DBSQL_SQL_DEADLOCK|SQL_DEADLOCK|DEADLOCK", "LOCK", "Lock dan deadlock"),
+    (r"TSV_TNEW_PAGE_ALLOC(?:_FAILED)?|SYSTEM_NO_ROLL|SYSTEM_NO_TASK_STORAGE|OUT_OF_MEMORY|MEMORY[_ -]?(ALLOC|NO_MORE)", "MEMORY", "Memory"),
+    (r"DBSQL_SQL_DEADLOCK|SQL_DEADLOCK|DEADLOCK", "LOCK", "Lock / Deadlock"),
     (r"DBSQL_SQL_ERROR|DBIF_RSQL|SQL_ERROR|DUPLICATE_KEY", "DATABASE", "Database"),
-    (r"TIME_OUT|TIMEOUT", "RUNTIME", "Waktu proses"),
-    (r"CALL_FUNCTION_SEND_ERROR|CALL_FUNCTION_REMOTE_ERROR|RFC|COMMUNICATION|CONNECTION|ICM|NI_", "RFC", "RFC dan koneksi"),
-    (r"RAISE_EXCEPTION|ASSERTION_FAILED|MESSAGE_TYPE_X|SYSTEM_CORE_DUMPED", "APPLICATION", "Aplikasi ABAP"),
-    (r"STRING_SIZE_TOO_LARGE|CONVT_|MOVE_TO_LIT_NOTALLOWED_NODATA|IMPORT_WRONG_END_POS|EXPORT_TOO_MUCH_DATA", "ABAP_DATA", "Pengolahan data ABAP"),
+    (r"TIME_OUT|TIMEOUT", "RUNTIME", "Runtime / Timeout"),
+    (r"CALL_FUNCTION_SEND_(?:ERR|ERROR)|CALL_FUNCTION_REMOTE_ERROR|RFC|COMMUNICATION|CONNECTION|ICM|NI_", "RFC", "RFC / Network"),
+    (r"RAISE_EXCEPTION|ASSERTION_FAILED|MESSAGE_TYPE_X|SYSTEM_CORE_DUMPED", "APPLICATION", "ABAP Application"),
+    (r"STRING_SIZE_TOO_LARGE|CONVT_|MOVE_TO_LIT_NOTALLOWED_NODATA|IMPORT_WRONG_END_POS|EXPORT_TOO_MUCH_DATA", "ABAP_DATA", "ABAP Data"),
 )
 
 
@@ -32,7 +32,7 @@ def classify_error(code: str) -> tuple[str, str]:
     for pattern, key, title in CATEGORIES:
         if re.search(pattern, code, re.IGNORECASE):
             return key, title
-    return "OTHER", "Lainnya"
+    return "OTHER", "Other"
 
 
 def parse_explicit_error_time(value: Any) -> datetime | None:
@@ -70,8 +70,15 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         pid = str(row.get("pid") or "").strip()
         collection_id = str(row.get("collection_id") or "")
         explicit_program = str(row.get("error_program") or "").strip()
-        program = explicit_program or "Belum teridentifikasi"
+        if explicit_program.upper() in {"?", "NA", "N/A", "-"}:
+            explicit_program = ""
+        program = explicit_program or "Unidentified program"
         context_workload = str(row.get("consumer_key") or "")
+        wp_number = str(row.get("wp") or "").strip()
+        wp_type = str(row.get("wp_type") or "").strip()
+        job_name = str(row.get("job_name") or "").strip()
+        log_path = str(row.get("log_path") or "").strip()
+        observed_at = row.get("observed_at")
         program_link = "EXPLICIT_ERROR_PROGRAM" if explicit_program else "CONTEXT_ONLY"
 
         # RABAX and RXMSG tail counts are diagnostic evidence, NOT unique dumps
@@ -96,6 +103,8 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         if not snapshot_code and recency == "AT_SNAPSHOT":
             snapshot_code = raw_code
         trace_code = str(row.get("latest_trace_error") or raw_code).strip()
+        if trace_code.upper() in {"?", "NA", "N/A", "-"}:
+            trace_code = ""
         timestamp = parse_explicit_error_time(row.get("latest_error_ts"))
 
         # Snapshot and latest trace can contain DIFFERENT error codes.
@@ -110,11 +119,21 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
                 "category": category, "category_label": label,
                 "error_code": code, "program": program, "host": host,
                 "events": set(), "snapshot_checks": set(), "untimed_checks": set(),
+                "pids": set(), "wps": set(), "job_names": set(), "log_paths": set(),
                 "first_at": None, "last_at": None,
                 "sample_workload": context_workload,
                 "program_link": program_link,
                 "cpu_snapshot_pct": None, "pss_snapshot_gb": None,
+                "observed_at": observed_at, "error_recency": recency,
             })
+            if pid:
+                item["pids"].add(pid)
+            if wp_number:
+                item["wps"].add(f"{wp_type} {wp_number}".strip())
+            if job_name:
+                item["job_names"].add(job_name)
+            if log_path:
+                item["log_paths"].add(log_path)
             signal_key = (host, collection_id, pid, code)
             if origin == "snapshot":
                 snapshot_checks.add(signal_key)
@@ -148,7 +167,11 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
         if not (count or observed or untimed_count):
             continue
         result.append({
-            **{key: value for key, value in item.items() if key not in {"events", "snapshot_checks", "untimed_checks"}},
+            **{key: value for key, value in item.items() if key not in {"events", "snapshot_checks", "untimed_checks", "pids", "wps", "job_names", "log_paths"}},
+            "pids": sorted(item["pids"]),
+            "wps": sorted(item["wps"]),
+            "job_names": sorted(item["job_names"]),
+            "log_paths": sorted(item["log_paths"])[:3],
             "event_count": count,
             "snapshot_host_checks": observed,
             "untimed_trace_checks": untimed_count,
@@ -209,6 +232,11 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
     rows = [dict(row) for row in conn.execute(text(f"""
         SELECT tc.collection_id, tc.host, tc.consumer_type, tc.consumer_key,
                signal.value->>'pid' AS pid,
+               MAX(signal.value->>'wp') AS wp,
+               MAX(signal.value->>'wp_type') AS wp_type,
+               MAX(signal.value->>'job_name') AS job_name,
+               MAX(signal.value->>'log_path') AS log_path,
+               MIN(tc.collected_at) AS observed_at,
                signal.value->>'error_at_snapshot' AS error_at_snapshot,
                signal.value->>'latest_trace_error' AS latest_trace_error,
                signal.value->>'error_code' AS error_code,
@@ -217,8 +245,8 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
                signal.value->>'latest_error_ts' AS latest_error_ts,
                COALESCE(signal.value->>'rabax', signal.value->>'rabax_tail_count') AS rabax,
                COALESCE(signal.value->>'rxmsg', signal.value->>'rxmsg_tail_count') AS rxmsg,
-               MAX(tc.cpu_pct) AS cpu_pct,
-               MAX(NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision) AS pss_gb
+               MAX(NULLIF(signal.value->>'cpu_pct', '')::double precision) AS cpu_pct,
+               MAX(NULLIF(signal.value->>'pss_gb', '')::double precision) AS pss_gb
           FROM {source} tc
           JOIN rundeck_collections c ON c.collection_id = tc.collection_id
           CROSS JOIN LATERAL jsonb_array_elements(
