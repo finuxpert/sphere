@@ -317,18 +317,18 @@ export async function buildMonthlyPdf({ month, data }) {
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(11)
       pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE - ABAP Error Evidence' + (continued ? ' (cont.)' : ''), margin + 4, 18)
+      pdf.text('SAP Errors to Check' + (continued ? ' (cont.)' : ''), margin + 4, 18)
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(7)
       pdf.setTextColor(70, 85, 94)
-      pdf.text('Period ' + month + ' WIB. Source: retained SPHERE WP trace', margin, 30)
+      pdf.text('Reporting month ' + month + '. Based on saved SAP logs; job failure not confirmed.', margin, 30)
       ey = 40
       pdf.setFontSize(6.3)
       pdf.setFont('helvetica', 'bold')
       pdf.setTextColor(47, 64, 76)
       ;[
-        ['CATEGORY', 0], ['ERROR CODE', 40], ['ERROR PROGRAM', 106],
-        ['APP', 201], ['EVENTS', 221], ['SNAPSHOT', 249],
+        ['ISSUE TYPE', 0], ['SAP ERROR CODE', 40], ['RELATED PROGRAM', 106],
+        ['APP', 201], ['DATED', 221], ['SEEN', 249],
       ].forEach(([value,x]) => pdf.text(value, margin + x, ey))
       pdf.setDrawColor(204, 216, 224)
       pdf.line(margin, ey + 2, W - margin, ey + 2)
@@ -336,27 +336,18 @@ export async function buildMonthlyPdf({ month, data }) {
     }
     pdf.addPage()
     header()
-    errorRows.forEach(row => {
+    errorRows.slice(0, 10).forEach(row => {
       const cat = pdf.splitTextToSize(String(errorCategoryLabel(row.category, row.category_label)), 37)
       const code = pdf.splitTextToSize(String(row.error_code || 'Not available'), 61)
       const program = pdf.splitTextToSize(String(row.program === 'Belum teridentifikasi' ? 'Unidentified program' : (row.program || 'Unidentified program')), 88)
-      const resource = row.snapshot_host_checks > 0 && (row.cpu_snapshot_pct !== null || row.pss_snapshot_gb !== null)
-        ? 'Snapshot CPU ' + pct(row.cpu_snapshot_pct) + ', PSS ' + format(row.pss_snapshot_gb, 2) + ' GB'
-        : row.untimed_trace_checks > 0 ? 'Untimed trace: ' + format(row.untimed_trace_checks, 0) + ' observations' : ''
-      const provenance = row.program_link === 'EXPLICIT_ERROR_PROGRAM'
-        ? 'Explicit error program in WP trace' : 'Workload context only; not causation'
-      const workloadContext = row.sample_workload ? 'Observed Job/Program: ' + row.sample_workload : ''
-      const wpDetail = [
-        row.wps?.length ? 'WP: ' + row.wps.join(', ') : '',
-        row.pids?.length ? 'PID: ' + row.pids.join(', ') : '',
-        row.job_names?.length ? 'Job context: ' + row.job_names.join(', ') : '',
-      ].filter(Boolean).join(' | ')
-      const traceSource = row.log_paths?.[0] ? 'WP trace: ' + row.log_paths[0] : ''
-      const timing = row.first_at
-        ? 'First error: ' + dateWib(row.first_at) + '; last: ' + dateWib(row.last_at)
-        : row.observed_at ? 'Observed snapshot: ' + dateWib(row.observed_at) + '; event time unavailable' : ''
+      const association = row.program_link === 'EXPLICIT_ERROR_PROGRAM'
+        ? 'Named in SAP trace'
+        : 'Related workload only; cause not confirmed'
+      const dateInfo = row.first_at ? 'First recorded: ' + dateWib(row.first_at)
+        : row.observed_at ? 'Recorded on: ' + dateWib(row.observed_at)
+        : 'Event date not available'
       const detailLines = pdf.splitTextToSize(
-        [provenance, workloadContext, wpDetail, timing, resource, traceSource].filter(Boolean).join('. '), 88
+        association + '. ' + dateInfo, 88
       )
       const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length + detailLines.length) + 1.8)
       if (ey + rowH > H - 17) {
@@ -390,8 +381,8 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setTextColor(78, 98, 109)
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(6.6)
-    pdf.text('Event: unique APP, PID, error code and explicit event timestamp; not an ST22 dump total.', margin, ey + 5)
-    pdf.text('Snapshot: error signal when collected. A workload context is not proof of the failing ABAP program.', margin, ey + 9)
+    pdf.text('Dated = errors with a recorded time. Seen = readings with an error signal.', margin, ey + 5)
+    pdf.text('A related program is not necessarily the cause. Confirm in SAP before reporting.', margin, ey + 9)
   }
 
   // Management-facing priority list: one concise page. All 25 source-backed
@@ -467,49 +458,9 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.text('Job or error status must be verified separately in SAP before any failure is reported.', margin, 190)
   }
 
-  // RABAX/RXMSG are WP diagnostics, not ST22 dump counts. Detail appears
-  // only when the retained collection history contains such signals.
-  const wpDiagnostics = (errorEvidence.wp_diagnostics || []).slice(0, 20)
-  if (wpDiagnostics.length) {
-    let signalY = 43
-    const signalHeader = (continued = false) => {
-      pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
-      pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
-      pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE - WP Diagnostic Signals' + (continued ? ' (cont.)' : ''), margin + 4, 18)
-      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-      pdf.text('RABAX and RXMSG are collector trace indicators, not ST22 dump counts.', margin, 30)
-      pdf.setFont('helvetica', 'bold');pdf.setFontSize(7)
-      ;[['SIGNAL',0], ['APP',32], ['PROGRAM CONTEXT',60], ['CHECKS',219], ['PEAK TRACE',260]]
-        .forEach(([name, position]) => pdf.text(name, margin + position, 38))
-      pdf.setDrawColor(204, 216, 224);pdf.line(margin, 40, W - margin, 40)
-      signalY = 43
-    }
-    pdf.addPage()
-    signalHeader()
-    wpDiagnostics.forEach(item => {
-      const program = pdf.splitTextToSize(String(item.program || 'Not identified'), 150)
-      const context = item.program_link === 'EXPLICIT_ERROR_PROGRAM'
-        ? 'Explicit program in WP trace'
-        : 'Workload context: ' + String(item.sample_workload || 'not identified')
-      const contextLines = pdf.splitTextToSize(context, 150)
-      const rowH = Math.max(8, program.length * 3 + contextLines.length * 2.7 + 3)
-      if (signalY + rowH > H - 16) {
-        pdf.addPage()
-        signalHeader(true)
-      }
-      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(34, 49, 59)
-      pdf.text(String(item.signal || 'WP'), margin, signalY + 3)
-      pdf.text(labelHost(item.host), margin + 32, signalY + 3)
-      pdf.text(program, margin + 60, signalY + 3)
-      pdf.text(String(item.observed_checks ?? 0), margin + 244, signalY + 3, { align: 'right' })
-      pdf.text(format(item.peak_tail_count, 0), margin + 279, signalY + 3, { align: 'right' })
-      pdf.setFontSize(6);pdf.setTextColor(100, 116, 125)
-      pdf.text(contextLines, margin + 60, signalY + 3 + program.length * 3)
-      signalY += rowH
-      pdf.setDrawColor(222, 231, 235);pdf.line(margin, signalY, W - margin, signalY)
-    })
-  }
+  // Detailed WP counters and traces remain available for SAP Basis in SPHERE.
+  // They are intentionally omitted from the management PDF to avoid presenting
+  // diagnostic signals as confirmed business incidents.
 
   const pages = pdf.internal.getNumberOfPages()
   for(let i=1;i<=pages;i++){
