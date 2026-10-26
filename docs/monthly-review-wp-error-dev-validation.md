@@ -50,20 +50,48 @@ Dry runs verify stored archive checksums and report recoverable observations,
 including `error_only_process_rows`. They do not write to the DB. A missing
 raw archive cannot be reconstructed from screenshots.
 
-If the dry run confirms eligible saved collections and the current DB and
-archive targets have both been reviewed as DEV-only, run only the month(s)
-needed:
+The September 2026 dry run recovered 2,976 archives and identified 28,572
+`WP_ERROR_ONLY` PROCESS rows. October recovered 3,737 archives and identified
+51,707 such rows. These are diagnostic observations, **not** confirmed SAP
+error events or ST22 dump totals. Skipped archives (11 September; 26 October)
+remain excluded; do not fabricate their missing data.
+
+**Use the guarded DEV-only runner after releasing the updated source.** It checks
+the active DEV release SHA against the DEV checkout, exact local DEV PostgreSQL
+role/database/socket, and runs under the `sphere` OS user for peer authentication.
+Run the first small September batch in dry-run mode:
 
 ```bash
 cd /root/rundeck-sphere-dev
-python -m backend.backfill_monthly_wp_errors --month 2026-09 --apply --confirm-dev
+bash ops/rundeck/backfill-monthly-wp-errors-dev.sh 2026-09 0 25 dry-run
 ```
 
-The script requires an explicit apply flag and DEV working directory.
-Upserts use collection and snapshot keys and can be retried. Avoid running
-the backfill concurrently with a release. Restart the DEV API using the
-approved operations procedure to invalidate in-memory month caching; do
-not restart PROD services.
+If reviewed, execute that same closed-month batch explicitly:
+
+```bash
+bash ops/rundeck/backfill-monthly-wp-errors-dev.sh 2026-09 0 25 apply
+```
+
+Check `upserted_rows`, `error_only_process_rows`, `next_offset` and the
+read-only Monthly Review API before continuing. The batch API accepts
+`OFFSET` and `SIZE` (maximum 500 manifests per batch) for resumable
+idempotent runs, but do not run concurrent writers. After the first batch,
+larger subsequent batches require performance review of PostgreSQL/DEV API.
+
+The runner intentionally blocks writing an *ongoing* current month: the eligible
+manifest sequence is still changing. Use September first; October can be
+backfilled as a closed month later. Python also refuses an unverified
+database target and only upserts month-scoped records, including the existing
+JOB/PROGRAM observations and error-bearing PROCESS rows.
+
+Historical reprocessing can invalidate the cached monthly report. Restart
+**only the DEV API** using the approved operations procedure after the agreed
+batch group is complete; do not restart PROD services.
+
+The monthly error reader processes separate three-day windows rather than
+silently selecting the first 15,000 rows of a month. It still flags
+`TRUNCATED` if a window exceeds its bounded limit or the full month exceeds
+100,000 source groups; partial totals must not be presented as complete.
 
 ## Gate 3 — API and UI evidence validation
 
