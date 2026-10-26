@@ -268,6 +268,9 @@ start_oneshot_with_retry() {
       return 0
     fi
     echo "SERVICE RETRY ${service} attempt=${attempt}/${attempts}" >&2
+    # Emit the real systemd failure/phase instead of only the generic rollback line.
+    systemctl show "$service" -p Result -p ExecMainStatus -p TimeoutStartUSec --no-pager >&2 || true
+    journalctl -u "$service" -n 18 --no-pager --output=short-iso >&2 || true
     systemctl reset-failed "$service" >/dev/null 2>&1 || true
     (( attempt < attempts )) && sleep "$delay"
   done
