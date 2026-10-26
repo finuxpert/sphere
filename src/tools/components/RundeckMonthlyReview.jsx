@@ -162,6 +162,7 @@ function MonthlyErrorAnalysis({ evidence }) {
   const rows = errors.top_errors || []
   const [categoryFilter,setCategoryFilter] = React.useState('ALL')
   const [appFilter,setAppFilter] = React.useState('ALL')
+  React.useEffect(()=>{setCategoryFilter('ALL');setAppFilter('ALL')},[evidence])
   const categories = [...new Set(rows.map(row=>row.category_label).filter(Boolean))].sort()
   const apps = [...new Set(rows.map(row=>hostLabel(row.host)).filter(Boolean))].sort()
   const visible = rows.filter(row=>(categoryFilter==='ALL'||row.category_label===categoryFilter) &&
@@ -213,7 +214,8 @@ function MonthlyErrorAnalysis({ evidence }) {
         <td>{hostLabel(row.host)}
           {row.wps?.length>0 && <small>WP {row.wps.join(', ')}</small>}
           {row.pids?.length>0 && <small>PID {row.pids.join(', ')}</small>}</td>
-        <td>{row.snapshot_host_checks>0 ? pct(row.cpu_snapshot_pct) + ' · ' + fmt(row.pss_snapshot_gb,2) + ' GB' : '—'}</td>
+        <td>{row.snapshot_host_checks>0 && (row.cpu_snapshot_pct!=null || row.pss_snapshot_gb!=null)
+          ? pct(row.cpu_snapshot_pct) + ' · ' + fmt(row.pss_snapshot_gb,2) + ' GB' : '—'}</td>
         <td>{fmt(row.event_count,0)}</td>
         <td>{row.first_at ? when(row.first_at) : 'Event time unavailable'}
           {row.last_at && row.last_at!==row.first_at && <small>Last event: {when(row.last_at)}</small>}
@@ -366,7 +368,9 @@ export default function RundeckMonthlyReview() {
             <div><span>CPU APP tertinggi</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} pada {when(evidence.cpu?.peak?.peak_at)}. Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
             <div><span>RAM APP tertinggi</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} pada {when(evidence.ram?.peak?.peak_at)}. Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
             <div><span>Program perlu evaluasi</span><strong>{fmt(tuningCandidates.length,0)}</strong><small>Evaluasi berdasarkan CPU, PSS dan histori pemakaian resource.</small></div>
-            <div><span>Error WP</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Belum tersedia':fmt(errors.error_program_count,0)+' program'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Field error WP tidak tersimpan untuk bulan ini.':fmt(errors.timestamped_events,0)+' kejadian berwaktu. RABAX '+fmt(errors.rabax_wp_checks,0)+' pemeriksaan.'}</small></div>
+            <div><span>WP Error Evidence</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available':fmt(errors.error_code_count,0)+' codes'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'
+              ? 'Error fields are missing from retained workload history; inspect saved raw SPHERE archives.'
+              : fmt(errors.error_program_count,0)+' identified programs, '+fmt(errors.timestamped_events,0)+' dated trace events. RABAX '+fmt(errors.rabax_wp_checks,0)+' WP checks.'}</small></div>
           </div>
         </div>
         <div className="sphereMonthlyPanel sphereMonthlyWide">
