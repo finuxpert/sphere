@@ -383,3 +383,27 @@
 @media(max-width:600px){
   .sphereMonthlyReview.is-v2 .sphereMonthlyExecutiveGrid{gap:12px}
 }
+
+/* Historical WP error drilldown: filters remain visible; long SAP identities wrap. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrorTools{
+  display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;
+  margin:2px 0 10px;color:#b3c9d4;font-size:11px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrorTools>span{margin-right:auto}
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrorTools label{
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrorTools select{
+  max-width:180px;min-width:112px;color:inherit;background:#13252e;
+  border:1px solid #365363;border-radius:6px;padding:7px 9px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrors td small{
+  display:block;margin-top:4px;color:#a9bfcb;overflow-wrap:anywhere;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrors th:nth-child(3),
+.sphereMonthlyReview.is-v2 .sphereMonthlyErrors td:nth-child(3){
+  min-width:150px;
+}
+@media(max-width:600px){
+  .sphereMonthlyReview.is-v2 .sphereMonthlyErrorTools>span{flex:1 1 100%}
+}
