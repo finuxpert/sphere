@@ -1,16 +1,18 @@
 """Calendar-month boundaries for SPHERE manual SAP Basis performance reports."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import gzip
 import hashlib
 import tempfile
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page, _monthly_abap_tuning_candidates
 from backend.rundeck_monthly_pressure import detect_pressure_episodes, monthly_pressure_observations
-from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time
+from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time, monthly_error_evidence
 from backend.rundeck_workload_observations import parse_workload_observations
-from backend.backfill_monthly_wp_errors import recoverable_archive
+from backend.backfill_monthly_wp_errors import recoverable_archive, backfill, _validate_dev_database
+from backend import backfill_monthly_wp_errors as backfill_module
 
 
 class CalendarMonthReviewTests(unittest.TestCase):
@@ -415,6 +417,98 @@ class CalendarMonthReviewTests(unittest.TestCase):
             self.assertIsNone(recoverable_archive(root, {**manifest, "raw_path": "../outside.log"}))
             with self.assertRaises(ValueError):
                 recoverable_archive(root, {**manifest, "checksum": "not-a-real-checksum"})
+
+
+    def test_backfill_rejects_non_dev_db_before_connecting(self):
+        with patch.object(backfill_module, "DB_MODE", "db"), \
+             patch.object(backfill_module, "DATABASE_URL",
+                          "postgresql+psycopg://sphere@localhost/sphere_rundeck_prod"), \
+             patch.object(backfill_module, "get_engine") as engine:
+            with self.assertRaisesRegex(RuntimeError, "Only exact local"):
+                _validate_dev_database()
+            engine.assert_not_called()
+
+    def test_backfill_only_writes_rows_from_selected_month(self):
+        def sample(snapshot_id, instant, pid):
+            return (
+                "## RCA-SNAPSHOT-V2.2-BEGIN\n"
+                f"snapshot_id\t{snapshot_id}\n"
+                f"snapshot_ts\t{instant}\n"
+                "hostname\tAPP1\n"
+                "## RCA-SNAPSHOT-V2.2-END\n"
+                "## RCA-WP-V2.2-BEGIN\n"
+                "snapshot_id\thost\tpid\twp\ttype\tjob_name\tprogram\terror_code"
+                "\terror_recency\terror_program\tlatest_error_ts\n"
+                f"{snapshot_id}\tAPP1\t{pid}\t1\tDIA\t?\t?\tTIME_OUT"
+                "\tHISTORICAL\tZ_FAIL\t" + instant + "\n"
+                "## RCA-WP-V2.2-END\n"
+            )
+        payload = (sample("sep", "2026-09-10T12:00:00+07:00", 101) +
+                   sample("oct", "2026-10-01T12:00:00+07:00", 202)).encode()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "archive").mkdir()
+            (root / "manifests").mkdir()
+            (root / "archive" / "rundeck-1.log.gz").write_bytes(gzip.compress(payload))
+            manifest = {
+                "collection_id": "rundeck-1",
+                "started_at": "2026-09-10T12:00:00+07:00",
+                "finished_at": "2026-09-10T12:05:00+07:00",
+                "status": "READY", "database_status": "STORED",
+                "raw_path": "archive/rundeck-1.log.gz",
+                "checksum": hashlib.sha256(payload).hexdigest(),
+            }
+            (root / "manifests" / "rundeck-1.json").write_text(__import__("json").dumps(manifest))
+            with patch.object(backfill_module, "_validate_dev_database"), \
+                 patch.object(backfill_module, "workload_observation_table_available", return_value=True), \
+                 patch.object(backfill_module, "persist_workload_observations", return_value=1) as persist:
+                result = backfill("2026-09", root, apply=True, batch_size=1)
+                scoped = persist.call_args.kwargs["scoped_rows"]
+                self.assertEqual(len(scoped), 1)
+                self.assertEqual(scoped[0]["consumer_key"], "PID 101")
+                self.assertEqual(result["next_offset"], 1)
+                self.assertEqual(result["upserted_rows"], 1)
+                self.assertEqual(result["eligible_total"], 1)
+
+    def test_monthly_error_query_reads_all_three_day_windows(self):
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        data = [
+            (datetime(2026, 9, 2, 8, tzinfo=timezone.utc), {
+                "collection_id": "c1", "host": "APP1", "pid": "100",
+                "consumer_key": "Z1", "error_program": "Z1",
+                "latest_trace_error": "TIME_OUT",
+                "latest_error_ts": "2026-09-02T08:00:00+00:00",
+            }),
+            (datetime(2026, 9, 23, 8, tzinfo=timezone.utc), {
+                "collection_id": "c2", "host": "APP5", "pid": "200",
+                "consumer_key": "Z2", "error_program": "Z2",
+                "latest_trace_error": "DBSQL_SQL_ERROR",
+                "latest_error_ts": "2026-09-23T08:00:00+00:00",
+            }),
+        ]
+        class Result:
+            def __init__(self, values):
+                self.values = values
+            def mappings(self):
+                return self
+            def all(self):
+                return self.values
+        class Connection:
+            def __init__(self):
+                self.windows = []
+            def execute(self, statement, params):
+                self.windows.append((params["slice_start"], params["slice_end"]))
+                return Result([row for when, row in data
+                               if params["slice_start"] <= when < params["slice_end"]])
+        conn = Connection()
+        report = monthly_error_evidence(conn, start, end,
+                                        "rundeck_top_consumers", "c.status = 'READY'")
+        self.assertEqual(report["timestamped_events"], 2)
+        self.assertEqual(report["error_program_count"], 2)
+        self.assertEqual(report["status"], "TIMESTAMPED_TRACE")
+        self.assertGreaterEqual(len(conn.windows), 10)
+        self.assertTrue(all((b-a) <= timedelta(days=3) for a, b in conn.windows))
 
 if __name__ == "__main__":
     unittest.main()
