@@ -348,25 +348,25 @@ class CalendarMonthReviewTests(unittest.TestCase):
 
     def test_error_bearing_process_survives_beyond_top_consumer_limit(self):
         snapshot = (
-            "## RCA-SNAPSHOT-V2.2-BEGIN\\n"
-            "snapshot_id\\tcheck1\\n"
-            "snapshot_ts\\t2026-09-12T09:30:00+07:00\\n"
-            "hostname\\tAPP1\\n"
-            "## RCA-SNAPSHOT-V2.2-END\\n"
-            "## RCA-WP-V2.2-BEGIN\\n"
-            "snapshot_id\\thost\\tpid\\twp\\ttype\\tcpu_interval_pct\\tpss_gb\\tjob_name\\tprogram\\terror_code\\terror_recency\\terror_program\\tlatest_error_ts\\trabax_tail_count\\n"
+            "## RCA-SNAPSHOT-V2.2-BEGIN\n"
+            "snapshot_id\tcheck1\n"
+            "snapshot_ts\t2026-09-12T09:30:00+07:00\n"
+            "hostname\tAPP1\n"
+            "## RCA-SNAPSHOT-V2.2-END\n"
+            "## RCA-WP-V2.2-BEGIN\n"
+            "snapshot_id\thost\tpid\twp\ttype\tcpu_interval_pct\tpss_gb\tjob_name\tprogram\terror_code\terror_recency\terror_program\tlatest_error_ts\trabax_tail_count\n"
         )
         records = [
-            "check1\\tAPP1\\t999\\t24\\tDIA\\t0.1\\t0.4\\t?\\t?\\tDBSQL_SQL_ERROR\\tHISTORICAL\\tZ_FAILED\\t2026-09-12T09:10:00+07:00\\t0",
+            "check1\tAPP1\t999\t24\tDIA\t0.1\t0.4\t?\t?\tDBSQL_SQL_ERROR\tHISTORICAL\tZ_FAILED\t2026-09-12T09:10:00+07:00\t0",
         ]
         records.extend(
-            f"check1\\tAPP1\\t{i}\\t{i}\\tDIA\\t90\\t0.2\\t?\\t?\\t?\\tUNKNOWN\\t?\\t?\\t0"
+            f"check1\tAPP1\t{i}\t{i}\tDIA\t90\t0.2\t?\t?\t?\tUNKNOWN\t?\t?\t0"
             for i in range(40)
         )
         records.append(
-            "check1\\tAPP1\\t888\\t15\\tBTC\\t22\\t0.7\\tZ_BATCH\\tZ_PROGRAM\\t?\\tUNKNOWN\\t?\\t?\\t0"
+            "check1\tAPP1\t888\t15\tBTC\t22\t0.7\tZ_BATCH\tZ_PROGRAM\t?\tUNKNOWN\t?\t?\t0"
         )
-        raw = (snapshot + "\\n".join(records) + "\\n## RCA-WP-V2.2-END\\n").encode()
+        raw = (snapshot + "\n".join(records) + "\n## RCA-WP-V2.2-END\n").encode()
         rows = parse_workload_observations(raw)
         self.assertEqual(len(rows), 2)
         process = next(row for row in rows if row["consumer_type"] == "PROCESS")
@@ -399,7 +399,7 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(detail["program_link"], "EXPLICIT_ERROR_PROGRAM")
 
     def test_backfill_archive_is_checksum_verified_and_rejects_path_escape(self):
-        payload = b"## RCA-WP-V2.2-BEGIN\\nexample\\n## RCA-WP-V2.2-END\\n"
+        payload = b"## RCA-WP-V2.2-BEGIN\nexample\n## RCA-WP-V2.2-END\n"
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / "archive").mkdir()
