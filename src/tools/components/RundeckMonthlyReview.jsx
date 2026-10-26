@@ -8,6 +8,9 @@ const PAGE_SIZE = 25
 const fmt = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
   ? '—' : Number(value).toLocaleString('id-ID', { maximumFractionDigits: digits })
 const pct = value => fmt(value) === '—' ? '—' : fmt(value) + '%'
+// WP CPU is measured against one logical CPU, not the entire APP host.
+const wpCoreEq = value => value === null || value === undefined || !Number.isFinite(Number(value))
+  ? '—' : fmt(Number(value) / 100, 2) + ' core eq.'
 const id = row => String(row.consumer_type || '') + ':' + String(row.consumer_key || '')
 const hostLabel = host => shortHost(typeof host === 'string' ? host : host?.host || '').toUpperCase()
 const hostsFor = row => (Array.isArray(row.hosts) ? row.hosts : []).map(hostLabel).filter(Boolean).join(', ')
@@ -184,15 +187,17 @@ function PressureRows({ label, evidence, metric }) {
   const rows = metric === 'ram' ? evidence.top_ram_workloads || [] : evidence.top_cpu_workloads || []
   return <section className="sphereMonthlyPanel sphereMonthlyRank">
     <div className="sphereMonthlyTableHead">
-      <div><h4>{label}</h4><small>Top 5 workload identities · same APP + collection</small></div>
+      <div><h4>{label}</h4>
+        <small>Top 5 workload identities · same APP + collection. WP CPU 100% = 1 logical CPU core equivalent; not APP host utilization.</small></div>
     </div>
     <div className="sphereMonthlyTableScroll">
-      <table><thead><tr><th>Job / Program</th><th>APP host-checks</th><th>{metric === 'ram' ? 'Peak PSS' : 'Peak CPU'}</th></tr></thead>
+      <table><thead><tr><th>Job / Program</th><th>APP host-checks</th><th>{metric === 'ram' ? 'Peak PSS' : 'Peak WP CPU'}</th></tr></thead>
         <tbody>{rows.map(row => <tr key={id(row)}>
           <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · APP saat tekanan: {pressureHostsFor(row, metric) || '—'}</small></td>
           <td>{fmt(row.pressure_overlap?.[metric + '_pressure_host_checks'],0)}</td>
           <td>{metric === 'ram' ? fmt(row.pressure_overlap?.pss_peak_during_ram_pressure,2)+' GB'
-            : pct(row.pressure_overlap?.cpu_peak_during_cpu_pressure)}</td>
+            : <span className="sphereMonthlyCpuValue"><strong>{pct(row.pressure_overlap?.cpu_peak_during_cpu_pressure)}</strong>
+                <small>{wpCoreEq(row.pressure_overlap?.cpu_peak_during_cpu_pressure)}</small></span>}</td>
         </tr>)}
         {!rows.length && <tr><td colSpan="3">No correlated workload recorded during {metric.toUpperCase()} pressure.</td></tr>}
         </tbody>
@@ -237,13 +242,14 @@ function AbapTuningCandidates({ rows = [], errorEvidence = {} }) {
       <span className="sphereMonthlyErrorCounter">{fmt(rows.length, 0)} candidates</span>
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
-      <th>Job / Program</th><th>Observed APP</th><th>CPU Avg / Peak</th>
+      <th>Job / Program</th><th>Observed APP</th><th>WP CPU Avg / Peak</th>
       <th>PSS Avg / Peak</th><th>Checks</th><th>CPU / RAM Pressure Checks</th><th>Review Signal</th><th>WP Error Context</th>
     </tr></thead><tbody>
       {rows.map(row => <tr key={id(row)}>
         <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {row.status}</small></td>
         <td>{hostsFor(row) || '—'}</td>
-        <td>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</td>
+        <td className="sphereMonthlyCpuValue"><strong>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</strong>
+          <small>{wpCoreEq(row.avg_cpu_pct)} / {wpCoreEq(row.peak_cpu_pct)}</small></td>
         <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td>
         <td>{fmt(row.occurrences,0)}</td>
         <td>{fmt(row.cpu_pressure_host_checks,0)} / {fmt(row.ram_pressure_host_checks,0)}</td>
@@ -260,7 +266,7 @@ function AbapTuningCandidates({ rows = [], errorEvidence = {} }) {
       </tr>)}
       {!rows.length && <tr><td colSpan="8">No Review Required workloads observed for this reporting period.</td></tr>}
     </tbody></table></div>
-    <p>CPU workload can exceed 100% across cores; PSS is process memory. WP error context uses retained top error groups only. A monthly match does not establish causation or a failed job.</p>
+    <p>Aggregated WP CPU: 100% = 1 logical CPU-core equivalent, not 100% of the APP host. CPU/PSS snapshots and host pressure checks are separate measurements; co-observation does not establish causation or failed job status. Host vCPU capacity is not available in retained historical evidence, so no host-capacity percentage is estimated.</p>
   </section>
 }
 
@@ -543,14 +549,18 @@ export default function RundeckMonthlyReview() {
           </div>
         </div>
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
-          <th>Job / Program</th><th>APP teramati</th><th>Avg / Peak CPU</th><th>Avg / Peak PSS</th>
+          <th>Job / Program</th><th>APP teramati</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
           <th>Pemeriksaan</th><th>CPU / RAM warning</th><th>Critical WP</th>
         </tr></thead><tbody>
           {items.map(row=><React.Fragment key={id(row)}>
             <tr><td className="sphereMonthlyName"><button type="button" className="sphereMonthlyJobDetailToggle" aria-expanded={expanded===id(row)}
                 onClick={()=>setExpanded(value=>value===id(row)?null:id(row))}>{row.consumer_key}</button>
                 <small>{row.consumer_type} · {row.assessment||'Observed'}</small></td>
-              <td>{hostsFor(row)||'—'}</td><td>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</td>
+              <td>{hostsFor(row)||'—'}</td>
+              <td className="sphereMonthlyCpuValue">
+                <strong>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</strong>
+                <small>{wpCoreEq(row.avg_cpu_pct)} / {wpCoreEq(row.peak_cpu_pct)}</small>
+              </td>
               <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td><td>{fmt(row.occurrences,0)}</td>
               <td>{fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} / {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}</td>
               <td>{fmt(row.pressure_overlap?.wp_host_checks,0)}</td>
@@ -558,7 +568,8 @@ export default function RundeckMonthlyReview() {
             {expanded===id(row)&&<tr className="sphereMonthlyEvidenceDetail"><td colSpan="7"><div>
               <strong>Saved monthly workload evidence</strong>
               <span>First observed {when(row.first_seen)} · Last observed {when(row.last_seen)}</span>
-              <span>Host observations {fmt(row.host_observations,0)} · Prev-month avg CPU {pct(row.previous?.avg_cpu_pct)} · Peak processes {fmt(row.peak_process_count,0)}</span>
+              <span>Host observations {fmt(row.host_observations,0)} · Prev-month avg WP CPU {pct(row.previous?.avg_cpu_pct)} · Max process count {fmt(row.peak_process_count,0)} (not necessarily at the CPU peak)</span>
+              <span>WP CPU scale: 100% = 1 logical CPU-core equivalent. APP host CPU is a separate percent of full host capacity. Historical APP logical-CPU capacity is not retained, so no host-share percentage is calculated.</span>
               <span>Korelasi waktu: CPU {fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} pada {pressureHostsFor(row,'cpu')||'—'}; RAM {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)} pada {pressureHostsFor(row,'ram')||'—'}; WP {fmt(row.pressure_overlap?.wp_host_checks,0)} pemeriksaan APP</span>
               <span>Collection counts are not SM37 executions. Same-host overlap does not prove causation.</span>
             </div></td></tr>}
