@@ -394,83 +394,77 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.text('Snapshot: error signal when collected. A workload context is not proof of the failing ABAP program.', margin, ey + 9)
   }
 
-  // Automatically include source-backed tuning candidates. These entries are
-  // observed workloads selected for review, NEVER confirmed ABAP errors.
+  // Management-facing priority list: one concise page. All 25 source-backed
+  // candidates remain available with drilldown in the Monthly Review interface.
   if (tuningCandidates.length) {
-    let ty = 48
-    const tuningHeader = (continued = false) => {
-      pdf.setFillColor(248, 250, 251);pdf.rect(0, 0, W, H, 'F')
-      pdf.setFillColor(15, 21, 26);pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
-      pdf.setFont('helvetica', 'bold');pdf.setFontSize(11);pdf.setTextColor(240, 245, 248)
-      pdf.text('SPHERE - ABAP Tuning Candidates' + (continued ? ' (cont.)' : ''), margin + 4, 18)
-      pdf.setFont('helvetica', 'normal');pdf.setFontSize(7);pdf.setTextColor(70, 85, 94)
-      pdf.text('Period ' + month + ' WIB. Review required based on SPHERE history', margin, 30)
-      pdf.setFontSize(6.5)
-      pdf.text('Performance investigation only; no confirmed Job failure, ST22 dump or root-cause attribution.', margin, 35)
-      pdf.text('WP CPU: 100% = one logical CPU core equivalent; not a percentage of APP host CPU capacity.', margin, 38)
-      pdf.setFont('helvetica', 'bold');pdf.setFontSize(6.6);pdf.setTextColor(47, 64, 76)
-      pdf.text('JOB / PROGRAM', margin + 2, 42)
-      pdf.text('WP CPU AVG / PEAK', margin + 160, 42, {align:'right'})
-      pdf.text('PSS AVG / PEAK', margin + 211, 42, {align:'right'})
-      pdf.text('CHECKS', margin + 238, 42, {align:'right'})
-      pdf.text('CPU / RAM', margin + 279, 42, {align:'right'})
-      pdf.setDrawColor(204, 216, 224);pdf.line(margin, 44, W - margin, 44)
-      ty = 48
-    }
     pdf.addPage()
-    tuningHeader()
-    tuningCandidates.forEach((row, index) => {
-      const names = pdf.splitTextToSize(
-        (index + 1) + '. ' + String(row.consumer_key || 'UNKNOWN') + ' [' + String(row.consumer_type || 'WORKLOAD') + ']',
-        119,
-      )
-      const observedApps = (row.hosts || []).map(labelHost).join(', ') || 'N/A'
-      const cpuApps = (row.cpu_pressure_hosts || []).map(labelHost).join(', ') || 'none'
-      const ramApps = (row.ram_pressure_hosts || []).map(labelHost).join(', ') || 'none'
-      const signals = [
-        row.signals?.sustained_high_cpu && 'High CPU',
-        row.signals?.high_memory && 'High PSS',
-        row.signals?.cpu_spike && 'CPU spike',
-        row.signals?.baseline_anomaly && 'Above baseline',
-      ].filter(Boolean).join(', ') || 'Review Required'
-      const matchedTrace = errorRows.filter(item => (
-        (row.consumer_type === 'PROGRAM' && item.program_link === 'EXPLICIT_ERROR_PROGRAM' &&
-          String(item.program).toUpperCase() === String(row.consumer_key).toUpperCase()) ||
-        (row.consumer_type === 'JOB' && (item.job_names || []).some(
-          name=>String(name).toUpperCase() === String(row.consumer_key).toUpperCase()
-        ))
-      ))
-      const matchedCodes = [...new Set(matchedTrace.map(item=>item.error_code))]
-      const traceNote = matchedCodes.length
-        ? '. Monthly WP trace ' + (row.consumer_type === 'PROGRAM' ? 'program match: ' : 'job context: ') +
-          matchedCodes.join(', ') + ' (not causal)'
-        : ''
-      const detail = pdf.splitTextToSize(
-        'Observed APP: ' + observedApps + '. CPU warning APP: ' + cpuApps +
-        '. RAM warning APP: ' + ramApps +
-        '. WP CPU Avg/Peak: ' + coreEquivalent(row.avg_cpu_pct) + ' / ' + coreEquivalent(row.peak_cpu_pct) +
-        '. Review: ' + signals +
-        '. Confidence: ' + String(row.confidence || 'UNKNOWN') + traceNote,
-        contentW - 5,
-      )
-      const rowH = names.length * 3.25 + detail.length * 3.0 + 4.4
-      if (ty + rowH > H - 16) {
-        pdf.addPage()
-        tuningHeader(true)
-      }
-      pdf.setFont('helvetica','bold');pdf.setFontSize(7);pdf.setTextColor(34, 49, 59)
-      pdf.text(names, margin + 2, ty + 2.5)
-      pdf.setFont('helvetica','normal');pdf.setFontSize(6.6)
-      pdf.text(pct(row.avg_cpu_pct) + ' / ' + pct(row.peak_cpu_pct), margin + 160, ty + 2.5, {align:'right'})
-      pdf.text(format(row.avg_pss_gb,2) + ' / ' + format(row.peak_pss_gb,2) + ' GB', margin + 211, ty + 2.5, {align:'right'})
-      pdf.text(format(row.occurrences,0), margin + 238, ty + 2.5, {align:'right'})
-      pdf.text(format(row.cpu_pressure_host_checks,0) + ' / ' +
-        format(row.ram_pressure_host_checks,0), margin + 279, ty + 2.5, {align:'right'})
-      pdf.setFontSize(6.3);pdf.setTextColor(92, 108, 118)
-      pdf.text(detail, margin + 2, ty + names.length * 3.25 + 2)
-      ty += rowH
-      pdf.setDrawColor(224, 232, 236);pdf.line(margin, ty, W - margin, ty)
+    pdf.setFillColor(248, 250, 251)
+    pdf.rect(0, 0, W, H, 'F')
+    pdf.setFillColor(15, 21, 26)
+    pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(11)
+    pdf.setTextColor(240, 245, 248)
+    pdf.text('Programs to Review', margin + 4, 18)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(7.3)
+    pdf.setTextColor(67, 84, 95)
+    pdf.text('Showing 10 priority items out of ' + format(tuningCandidates.length,0) +
+      ' flagged workloads. Full list is available in SPHERE Monthly Review.', margin, 30)
+    pdf.text('These are performance review candidates, not confirmed failed jobs or program errors.', margin, 34.5)
+    pdf.setFontSize(6.6)
+    pdf.text('CPU cores = estimated logical core usage by the workload; memory = SAP process memory, not total server use.', margin, 38.5)
+
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(7)
+    pdf.setTextColor(45, 63, 77)
+    pdf.text('JOB / PROGRAM', margin + 2, 46)
+    pdf.text('WHY REVIEW', margin + 119, 46)
+    pdf.text('MAX CPU', margin + 184, 46, { align: 'right' })
+    pdf.text('MAX MEMORY', margin + 236, 46, { align: 'right' })
+    pdf.text('TIMES SEEN', margin + 279, 46, { align: 'right' })
+    pdf.setDrawColor(204, 216, 224)
+    pdf.line(margin, 48, W-margin, 48)
+
+    const reviewReason = row => [
+      row.signals?.sustained_high_cpu && 'High CPU',
+      row.signals?.high_memory && 'High memory',
+      row.signals?.cpu_spike && 'CPU spike',
+      row.signals?.baseline_anomaly && 'Above usual level',
+    ].filter(Boolean).slice(0,2).join(', ') || 'Resource usage'
+
+    let y = 52
+    tuningCandidates.slice(0, 10).forEach((row, index) => {
+      const jobName = String(row.consumer_key || 'Name not available')
+      const apps = (row.hosts || []).map(labelHost).join(', ') || 'APP not identified'
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7)
+      pdf.setTextColor(36, 53, 66)
+      const nameLines = pdf.splitTextToSize((index+1) + '. ' + jobName, 110).slice(0,2)
+      pdf.text(nameLines, margin + 2, y + 2.3)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(6.1)
+      pdf.setTextColor(106, 122, 133)
+      pdf.text('Server: ' + apps, margin + 2, y + 6.8)
+      pdf.setFontSize(6.8)
+      pdf.setTextColor(45, 63, 77)
+      pdf.text(pdf.splitTextToSize(reviewReason(row), 54).slice(0,2), margin + 119, y + 2.3)
+      pdf.text(coreEquivalent(row.peak_cpu_pct).replace(' core eq.', ' cores'), margin + 184, y + 2.3, {align:'right'})
+      pdf.text(format(row.peak_pss_gb, 2) + ' GB', margin + 236, y + 2.3, {align:'right'})
+      pdf.text(format(row.occurrences, 0), margin + 279, y + 2.3, {align:'right'})
+      y += 11
+      pdf.setDrawColor(230, 235, 240)
+      pdf.line(margin, y, W-margin, y)
     })
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(8)
+    pdf.setTextColor(34, 53, 67)
+    pdf.text('Recommended Follow-up', margin, 174)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(7.2)
+    pdf.text('SAP Basis: check high CPU and RAM periods and confirm the affected servers.', margin, 180)
+    pdf.text('ABAP / Functional: review the listed programs and confirm whether tuning is needed.', margin, 185)
+    pdf.text('Job or error status must be verified separately in SAP before any failure is reported.', margin, 190)
   }
 
   // RABAX/RXMSG are WP diagnostics, not ST22 dump counts. Detail appears
