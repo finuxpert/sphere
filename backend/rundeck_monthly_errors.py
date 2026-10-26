@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import text
 
 MAX_ERROR_GROUPS = 15000
+MAX_MONTHLY_ERROR_ROWS = 100000
+ERROR_WINDOW_DAYS = 3
 
 CATEGORIES = (
     (r"TSV_TNEW_PAGE_ALLOC(?:_FAILED)?|SYSTEM_NO_ROLL|SYSTEM_NO_TASK_STORAGE|OUT_OF_MEMORY|MEMORY[_ -]?(ALLOC|NO_MORE)", "MEMORY", "Memory"),
@@ -229,7 +231,19 @@ def summarize_monthly_wp_errors(rows: list[dict], start: datetime, end: datetime
 
 def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, complete_clause: str) -> dict:
     """Read complete SPHERE collections, including legacy scalar WP error details."""
-    rows = [dict(row) for row in conn.execute(text(f"""
+    # Bound each query to a short collection-time window. A single monthly
+    # LIMIT 15000 silently omitted other APPs when tens of thousands of WP
+    # diagnostic rows were retained. Aggregate groups across windows instead.
+    rows: list[dict] = []
+    truncated = False
+    slice_start = start
+    while slice_start < end:
+        if len(rows) >= MAX_MONTHLY_ERROR_ROWS:
+            truncated = True
+            break
+        slice_end = min(slice_start + timedelta(days=ERROR_WINDOW_DAYS), end)
+        max_groups = min(MAX_ERROR_GROUPS, MAX_MONTHLY_ERROR_ROWS - len(rows)) + 1
+        page = [dict(row) for row in conn.execute(text(f"""
         SELECT tc.collection_id, tc.host, tc.consumer_type, tc.consumer_key,
                signal.value->>'pid' AS pid,
                MAX(signal.value->>'wp') AS wp,
@@ -263,6 +277,7 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
            AND COALESCE(c.finished_at, c.started_at) >= :start
            AND COALESCE(c.finished_at, c.started_at) < :end
            AND tc.collected_at >= :start AND tc.collected_at < :end
+           AND tc.collected_at >= :slice_start AND tc.collected_at < :slice_end
            AND tc.consumer_type IN ('JOB', 'PROGRAM', 'PROCESS')
            AND (
                 NULLIF(signal.value->>'error_at_snapshot', '') IS NOT NULL
@@ -280,9 +295,15 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
                   COALESCE(signal.value->>'rxmsg', signal.value->>'rxmsg_tail_count')
          ORDER BY tc.host, tc.consumer_key
          LIMIT :max_groups
-    """), {"start": start, "end": end, "max_groups": MAX_ERROR_GROUPS + 1}).mappings().all()]
-    truncated = len(rows) > MAX_ERROR_GROUPS
-    report = summarize_monthly_wp_errors(rows[:MAX_ERROR_GROUPS], start, end, truncated=truncated)
+    """), {"start": start, "end": end, "slice_start": slice_start,
+           "slice_end": slice_end, "max_groups": max_groups}).mappings().all()]
+        if len(page) >= max_groups:
+            truncated = True
+            rows.extend(page[:max_groups - 1])
+            break
+        rows.extend(page)
+        slice_start = slice_end
+    report = summarize_monthly_wp_errors(rows, start, end, truncated=truncated)
     # A zero error result is not authoritative when the retained source never
     # stored error-capable WP fields. Distinguish this case without a full scan
     # of every WP signal: EXISTS can short-circuit on the first matching row.
