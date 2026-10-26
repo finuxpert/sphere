@@ -131,7 +131,7 @@ test('monthly report automatically includes review priorities without optional s
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.doesNotMatch(pdf, /selectionHeader\(/)
   assert.match(pdf, /Showing 10 priority items/)
-  assert.match(pdf, /ERROR PROGRAM/)
+  assert.match(pdf, /RELATED PROGRAM/)
 })
 
 test('ABAP tuning candidates are source-backed and never treated as confirmed errors', () => {
@@ -164,7 +164,7 @@ test('2026 monthly report exposes dated peaks, warning levels, WP provenance and
   assert.doesNotMatch(ui, /Episode boundaries are/)
   assert.match(pdf, /Warning ' \+ pct\(threshold\)/)
   assert.match(pdf, /dateWib\(pressure\.cpu\?\.peak\?\.peak_at\)/)
-  assert.match(pdf, /data\.monthly_errors\?\.error_program_count/)
+  assert.match(pdf, /errorEvidence\.error_program_count/)
   assert.doesNotMatch(pdf, /\bepisodes\b/)
   assert.match(backend, /"error_program_count": len\(known_programs\)/)
   assert.match(backend, /"rabax_wp_checks"/)
