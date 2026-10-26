@@ -262,11 +262,12 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.setTextColor(78, 98, 108)
   const wpSourceMissing = errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
   const errorSummary = wpSourceMissing
-    ? 'ABAP/WP error count not available: error fields were not retained in SPHERE history.'
+    ? 'WP error data unavailable in retained workload history; check saved raw SPHERE archives.'
     : errorEvidence.truncated
       ? 'Error evidence is partial. The full monthly total cannot be confirmed.'
-      : format(errorEvidence.error_program_count,0) + ' programs with WP error evidence. ' +
-        format(errorEvidence.timestamped_events,0) + ' timestamped events. ' +
+      : format(errorEvidence.error_code_count,0) + ' WP error codes; ' +
+        format(errorEvidence.timestamped_events,0) + ' dated trace events; ' +
+        format(errorEvidence.error_program_count,0) + ' explicitly identified programs; ' +
         format(errorEvidence.rabax_wp_checks,0) + ' RABAX WP checks.'
   pdf.text(errorSummary, margin, errorLineY + 10.5)
   const tuningSummary = format(tuningCandidates.length,0) +
@@ -321,9 +322,18 @@ export async function buildMonthlyPdf({ month, data }) {
       const provenance = row.program_link === 'EXPLICIT_ERROR_PROGRAM'
         ? 'Explicit error program in WP trace' : 'Workload context only; not causation'
       const workloadContext = row.sample_workload ? 'Observed Job/Program: ' + row.sample_workload : ''
+      const wpDetail = [
+        row.wps?.length ? 'WP: ' + row.wps.join(', ') : '',
+        row.pids?.length ? 'PID: ' + row.pids.join(', ') : '',
+        row.job_names?.length ? 'Job context: ' + row.job_names.join(', ') : '',
+      ].filter(Boolean).join(' | ')
+      const traceSource = row.log_paths?.[0] ? 'WP trace: ' + row.log_paths[0] : ''
       const timing = row.first_at
-        ? 'First ' + dateWib(row.first_at) + '; last ' + dateWib(row.last_at) : ''
-      const detailLines = pdf.splitTextToSize([provenance, workloadContext, timing, resource].filter(Boolean).join('. '), 88)
+        ? 'First error: ' + dateWib(row.first_at) + '; last: ' + dateWib(row.last_at)
+        : row.observed_at ? 'Observed snapshot: ' + dateWib(row.observed_at) + '; event time unavailable' : ''
+      const detailLines = pdf.splitTextToSize(
+        [provenance, workloadContext, wpDetail, timing, resource, traceSource].filter(Boolean).join('. '), 88
+      )
       const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length + detailLines.length) + 1.8)
       if (ey + rowH > H - 17) {
         pdf.addPage()
