@@ -22,11 +22,17 @@ const errorCategoryLabel = (category, fallback) => ({
   APPLICATION: 'ABAP Application', ABAP_DATA: 'ABAP Data', OTHER: 'Other',
 })[category] || fallback || 'Other'
 
-function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month, threshold) {
+function drawMultiHostChart(pdf, rows, key, label, x, y, w, h, month, threshold, warningSummary = '') {
   pdf.setFont('helvetica', 'bold')
   pdf.setTextColor(22, 35, 43)
   pdf.setFontSize(8.6)
   pdf.text(label, x, y - 2)
+  if (warningSummary) {
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(86, 101, 113)
+    pdf.setFontSize(6.1)
+    pdf.text(warningSummary, x + w - 1, y - 2, { align: 'right' })
+  }
   const chartY = y + 1
   pdf.setFillColor(255, 255, 255)
   pdf.roundedRect(x, chartY, w, h, 1, 1, 'F')
@@ -219,13 +225,16 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.text('SAP APP SERVERS - MONTHLY RESOURCE SUMMARY', margin, 62)
   const cols = [0, 40, 73, 108, 143, 182, 218, 249]
   pdf.setFontSize(6.6)
-  ;['APP', 'AVG CPU', 'PEAK CPU', 'AVG RAM', 'PEAK RAM', 'CPU HIGH', 'RAM HIGH', 'CRITICAL WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
+  ;['APP', 'AVG CPU', 'PEAK CPU', 'AVG RAM', 'PEAK RAM', 'CPU HI C/D', 'RAM HI C/D', 'CRITICAL WP'].forEach((name, i) => pdf.text(name, margin + cols[i], 67))
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6.8)
   hosts.slice(0, 5).forEach((row, i) => {
     const y = 71 + i * 3.7
     const vals = [labelHost(row.host), pct(row.avg_cpu_pct), pct(row.peak_cpu_pct), pct(row.avg_ram_pct),
-      pct(row.peak_ram_pct), String(row.cpu_warning_host_checks), String(row.ram_warning_host_checks), String(row.critical_wp_host_checks)]
+      pct(row.peak_ram_pct),
+      String(row.cpu_warning_host_checks ?? 0) + ' / ' + format(row.cpu_warning_days,0),
+      String(row.ram_warning_host_checks ?? 0) + ' / ' + format(row.ram_warning_days,0),
+      String(row.critical_wp_host_checks)]
     vals.forEach((v, index) => pdf.text(v, margin + cols[index], y))
   })
   if (!hosts.length) {
@@ -234,8 +243,14 @@ export async function buildMonthlyPdf({ month, data }) {
   }
 
   const chartW = (contentW - 6) / 2
-  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'APP CPU - Daily Peak', margin, 91, chartW, 35, month, pressure.thresholds?.cpu_warning_pct)
-  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'APP RAM - Daily Peak', margin + chartW + 6, 91, chartW, 35, month, pressure.thresholds?.ram_warning_pct)
+  const cpuWarningSummary = format(pressure.cpu?.observed_pressure_host_checks,0) + ' checks / ' +
+    format(pressure.cpu?.observed_warning_app_days,0) + ' APP-days'
+  const ramWarningSummary = format(pressure.ram?.observed_pressure_host_checks,0) + ' checks / ' +
+    format(pressure.ram?.observed_warning_app_days,0) + ' APP-days'
+  drawMultiHostChart(pdf, trends, 'peak_cpu_pct', 'APP CPU - Daily Peak', margin, 91, chartW, 35, month,
+    pressure.thresholds?.cpu_warning_pct, cpuWarningSummary)
+  drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'APP RAM - Daily Peak', margin + chartW + 6, 91, chartW, 35, month,
+    pressure.thresholds?.ram_warning_pct, ramWarningSummary)
 
   const ramBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING RAM PRESSURE', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
   const cpuBottom = drawTopTable(pdf, 'JOBS & PROGRAMS DURING CPU PRESSURE', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
