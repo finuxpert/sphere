@@ -125,7 +125,15 @@ function PressureEpisodes({ metric, pressure }) {
   </section>
 }
 
-function AbapTuningCandidates({ rows = [] }) {
+function AbapTuningCandidates({ rows = [], errorEvidence = {} }) {
+  const traceMatches = errorEvidence.top_errors || []
+  const relatedEvidence = row => traceMatches.filter(item => (
+    (row.consumer_type === 'PROGRAM' &&
+      item.program_link === 'EXPLICIT_ERROR_PROGRAM' &&
+      item.program?.toUpperCase() === row.consumer_key?.toUpperCase()) ||
+    (row.consumer_type === 'JOB' &&
+      (item.job_names || []).some(name=>name.toUpperCase() === row.consumer_key?.toUpperCase()))
+  ))
   return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyTuning" aria-label="ABAP tuning candidates">
     <div className="sphereMonthlyTableHead">
       <div><h4>ABAP Tuning Candidates</h4>
@@ -135,7 +143,7 @@ function AbapTuningCandidates({ rows = [] }) {
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
       <th>Job / Program</th><th>Observed APP</th><th>CPU Avg / Peak</th>
-      <th>PSS Avg / Peak</th><th>Checks</th><th>CPU / RAM Pressure Checks</th><th>Review Signal</th>
+      <th>PSS Avg / Peak</th><th>Checks</th><th>CPU / RAM Pressure Checks</th><th>Review Signal</th><th>WP Error Context</th>
     </tr></thead><tbody>
       {rows.map(row => <tr key={id(row)}>
         <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {row.status}</small></td>
@@ -150,10 +158,14 @@ function AbapTuningCandidates({ rows = [] }) {
           row.signals?.cpu_spike && 'CPU spike',
           row.signals?.baseline_anomaly && 'Above baseline',
         ].filter(Boolean).join(', ') || 'Review Required'}</td>
+        <td>{relatedEvidence(row).length ? <>
+          <strong>{[...new Set(relatedEvidence(row).map(item=>item.error_code))].join(', ')}</strong>
+          <small>{row.consumer_type === 'PROGRAM' ? 'Same program in monthly WP trace' : 'Observed job context only'}</small>
+        </> : '—'}</td>
       </tr>)}
-      {!rows.length && <tr><td colSpan="7">No Review Required workloads observed for this reporting period.</td></tr>}
+      {!rows.length && <tr><td colSpan="8">No Review Required workloads observed for this reporting period.</td></tr>}
     </tbody></table></div>
-    <p>CPU workload bisa melebihi 100% pada beberapa core. PSS menunjukkan memori proses. Evaluasi ABAP tidak otomatis berarti job gagal.</p>
+    <p>CPU workload can exceed 100% across cores; PSS is process memory. WP error context uses retained top error groups only. A monthly match does not establish causation or a failed job.</p>
   </section>
 }
 
@@ -473,7 +485,7 @@ export default function RundeckMonthlyReview() {
         <PressureRows label="Jobs / Programs During CPU Pressure" evidence={evidence} metric="cpu"/>
         <PressureRows label="Jobs / Programs During RAM Pressure" evidence={evidence} metric="ram"/>
         <MonthlyErrorAnalysis evidence={errors}/>
-        <AbapTuningCandidates rows={tuningCandidates}/>
+        <AbapTuningCandidates rows={tuningCandidates} errorEvidence={errors} />
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
