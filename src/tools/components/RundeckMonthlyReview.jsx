@@ -483,6 +483,7 @@ export default function RundeckMonthlyReview() {
             </div>
           </section>
           <WorkloadDistribution summary={summary} onSelect={value=>{
+            setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
             setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setExpanded(null);setTab('jobs')
           }}/>
         </div>
