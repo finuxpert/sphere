@@ -114,8 +114,8 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
   pdf.setFontSize(6)
   pdf.setTextColor(100, 115, 125)
   pdf.text(metric === 'cpu'
-    ? 'CPU shown as cores used; not total server CPU'
-    : 'Memory used by the program, not total server RAM', x, y + 3.3)
+    ? 'Seen during high CPU; program is not a confirmed cause'
+    : 'Seen during high RAM; memory shown is for the program', x, y + 3.3)
   const baseY = y + 8
   pdf.setDrawColor(215, 225, 230)
   pdf.line(x, baseY, x + width, baseY)
@@ -288,10 +288,14 @@ export async function buildMonthlyPdf({ month, data }) {
     ? 'Error details are not available for this month. This does not mean there were no errors.'
     : errorEvidence.truncated
       ? 'Only partial error data is available; the number of errors cannot be confirmed.'
-      : format(errorEvidence.error_code_count,0) + ' types of WP errors recorded; ' +
-        format(errorEvidence.error_program_count,0) + ' programs identified for investigation.'
+      : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE'
+        ? 'No error evidence was found in the available data; this does not confirm that no errors occurred.'
+        : errorEvidence.status === 'WP_SIGNALS_ONLY'
+          ? 'Work process warning signals were recorded. Program errors are not confirmed.'
+          : format(errorEvidence.error_code_count,0) + ' types of program errors recorded; ' +
+            format(errorEvidence.error_program_count,0) + ' programs identified for investigation.'
   pdf.text(errorSummary, margin, errorLineY + 10.5)
-  const tuningSummary = format(tuningCandidates.length,0) +
+  const tuningSummary = format(summary.review_required,0) +
     ' jobs or programs are flagged for review; this does not confirm a failed job.'
   pdf.text(tuningSummary, margin, errorLineY + 14.7)
   pdf.setTextColor(94, 105, 113)
@@ -404,7 +408,9 @@ export async function buildMonthlyPdf({ month, data }) {
       ' jobs/programs flagged for review. Full list is available in SPHERE.', margin, 30)
     pdf.text('These are performance review candidates, not confirmed failed jobs or program errors.', margin, 34.5)
     pdf.setFontSize(6.6)
-    pdf.text('CPU cores = estimated logical core usage by the workload; memory = SAP process memory, not total server use.', margin, 38.5)
+    pdf.text('CPU cores = estimated workload use; memory = process use, not the whole server.', margin, 38.5)
+    pdf.setFontSize(6.1)
+    pdf.text('Times seen = monitoring observations, not job executions. High usage does not confirm the cause.', margin, 42)
 
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(7)
