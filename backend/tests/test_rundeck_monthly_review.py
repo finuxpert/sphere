@@ -510,5 +510,60 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertGreaterEqual(len(conn.windows), 10)
         self.assertTrue(all((b-a) <= timedelta(days=3) for a, b in conn.windows))
 
+
+    def test_ram_warning_checks_vs_daily_peak_days_use_same_saved_samples(self):
+        class Result:
+            def __init__(self, rows):
+                self.rows = rows
+            def mappings(self):
+                return self
+            def all(self):
+                return self.rows
+
+        def sample(cid, host, day, hour, ram):
+            return {
+                "collection_id": cid, "host": host,
+                "collected_at": datetime(2026, 9, day, hour, 0, tzinfo=timezone.utc),
+                "cpu_pct": 37, "ram_pct": ram, "wp_critical": 0,
+            }
+
+        samples = [
+            sample("a", "APP1", 2, 7, 95.9),
+            sample("b", "APP1", 2, 8, 84.6),
+            sample("c", "APP1", 3, 7, 79.5),
+            sample("d", "APP1", 4, 7, 88.3),
+            sample("e", "APP2", 4, 7, 79.96),
+            sample("f", "APP3", 5, 7, 88.8),
+        ]
+        class Connection:
+            def execute(self, statement, params):
+                if "SELECT hm.collection_id" in str(statement):
+                    return Result(samples)
+                return Result([])
+        start = datetime(2026, 8, 31, 17, tzinfo=timezone.utc)
+        end = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
+        with patch("backend.rundeck_monthly_pressure.CPU_WARNING", 75.0), \
+             patch("backend.rundeck_monthly_pressure.RAM_WARNING", 80.0):
+            report = monthly_pressure_observations(Connection(), start, end,
+                "rundeck_workload_observations", "c.status = 'READY'")
+        hosts = {row["host"]: row for row in report["hosts"]}
+        self.assertEqual(hosts["APP1"]["ram_warning_host_checks"], 3)
+        self.assertEqual(hosts["APP1"]["ram_warning_days"], 2)
+        self.assertEqual(hosts["APP1"]["peak_ram_pct"], 95.9)
+        self.assertEqual(hosts["APP2"]["peak_ram_pct"], 80.0)
+        self.assertEqual(hosts["APP2"]["ram_warning_host_checks"], 0)
+        self.assertEqual(hosts["APP2"]["ram_warning_days"], 0)
+        self.assertEqual(hosts["APP3"]["ram_warning_host_checks"], 1)
+        self.assertEqual(report["ram"]["observed_pressure_host_checks"], 4)
+        self.assertEqual(report["ram"]["observed_warning_app_days"], 3)
+        daily = {(row["day"], row["host"]): row for row in report["daily_hosts"]}
+        self.assertEqual(daily[("2026-09-02", "APP1")]["ram_warning_checks"], 2)
+        self.assertTrue(daily[("2026-09-02", "APP1")]["ram_warning_day"])
+        self.assertEqual(daily[("2026-09-02", "APP1")]["peak_ram_pct"], 95.9)
+        self.assertEqual(daily[("2026-09-04", "APP2")]["ram_warning_checks"], 0)
+        self.assertFalse(daily[("2026-09-04", "APP2")]["ram_warning_day"])
+        self.assertEqual(sum(row["ram_warning_days"] for row in hosts.values()),
+                         report["ram"]["observed_warning_app_days"])
+
 if __name__ == "__main__":
     unittest.main()
