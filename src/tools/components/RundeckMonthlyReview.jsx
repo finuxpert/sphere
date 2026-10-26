@@ -155,7 +155,6 @@ function WorkloadDistribution({ summary = {}, onSelect }) {
 }
 
 function MonthlyDashboardKpis({ pressure = {}, summary = {}, quality = {} }) {
-  const hosts = pressure.hosts || []
   // The host-level WP flag is not a verified incident count; omit it from management KPIs.
   const entries = [
     { key:'cpu', label:'High CPU', value:pressure.cpu?.observed_pressure_host_checks,
@@ -501,7 +500,7 @@ export default function RundeckMonthlyReview() {
           <div className="sphereMonthlyExecutiveGrid">
             <div><span>Highest Server CPU</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} · {when(evidence.cpu?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
             <div><span>Highest Server RAM</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} · {when(evidence.ram?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
-            <div><span>Programs to Review</span><strong>{fmt(tuningCandidates.length,0)}</strong><small>Review needed; job failures are not confirmed</small></div>
+            <div><span>Programs to Review</span><strong>{fmt(summary.review_required,0)}</strong><small>Review needed; job failures are not confirmed</small></div>
             <div><span>Error Details</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available':errors.truncated?'Partial':fmt(errors.error_code_count,0)+' types'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'
               ? 'Cannot confirm error status from this report'
               : fmt(errors.error_program_count,0)+' programs identified for review'}</small></div>
@@ -608,7 +607,7 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyReportOverview">
           <div><strong>Reporting Month</strong><span>{month} · Jakarta time</span></div>
           <div><strong>High CPU and RAM</strong><span>CPU: {fmt(evidence.cpu?.observed_pressure_host_checks,0)} readings. RAM: {fmt(evidence.ram?.observed_pressure_host_checks,0)} readings.</span></div>
-          <div><strong>Programs to Review</strong><span>{tuningCandidates.length} jobs/programs flagged. The report shows the first 10 priorities.</span></div>
+          <div><strong>Programs to Review</strong><span>{fmt(summary.review_required,0)} jobs/programs flagged. The PDF shows {Math.min(10,tuningCandidates.length)} priorities.</span></div>
           <div><strong>Data Coverage</strong><span>Estimated {pct(quality.coverage_pct)}. This is not a complete record of the month.</span></div>
           <div><strong>Error Details</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available for this month; this does not mean no errors occurred.':errors.truncated?'Only partial error data is available.':<>{fmt(errors.error_code_count,0)} error types found; {fmt(errors.error_program_count,0)} programs identified.</>}</span></div>
         </div>
