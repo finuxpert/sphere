@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
+import { wpCpuCoreEquivalent } from '../../src/tools/components/monthlyCpuMetrics.js'
 
 const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'utf8')
 
@@ -216,4 +217,31 @@ test('RAM graph and APP table reconcile warning checks, distinct days and unroun
   assert.match(ui, /point\.warningChecks>0/)
   assert.match(ui, /evidence\[chartMetric\]\?\.observed_warning_app_days/)
   assert.match(unit, /test_ram_warning_checks_vs_daily_peak_days_use_same_saved_samples/)
+})
+
+test('WP CPU report displays logical core-equivalents without inventing a 28-vCPU host denominator', () => {
+  assert.equal(wpCpuCoreEquivalent(100), 1)
+  assert.equal(wpCpuCoreEquivalent(200), 2)
+  assert.equal(wpCpuCoreEquivalent(275.1), 2.751)
+  assert.equal(wpCpuCoreEquivalent(0), 0)
+  assert.equal(wpCpuCoreEquivalent(null), null)
+  assert.equal(wpCpuCoreEquivalent(''), null)
+  assert.equal(wpCpuCoreEquivalent('bad'), null)
+  assert.equal(wpCpuCoreEquivalent(-3), null)
+  const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
+  const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
+  const evaluation = read('backend/rundeck_evaluation.py')
+  assert.match(ui, /Peak WP CPU/)
+  assert.match(ui, /WP CPU Avg \/ Peak/)
+  assert.match(ui, /100% = 1 logical CPU-core equivalent/)
+  assert.match(ui, /wpCoreEq\(row\.pressure_overlap\?\.cpu_peak_during_cpu_pressure\)/)
+  assert.match(ui, /wpCoreEq\(row\.peak_cpu_pct\)/)
+  assert.match(pdf, /PEAK WP CPU/)
+  assert.match(pdf, /WP CPU AVG \/ PEAK/)
+  assert.match(pdf, /coreEquivalent\(overlap\.cpu_peak_during_cpu_pressure\)/)
+  assert.match(pdf, /coreEquivalent\(row\.peak_cpu_pct\)/)
+  assert.match(evaluation, /"peak_cpu_core_equivalent": item\.get\("peak_cpu_core_equivalent"\)/)
+  assert.match(evaluation, /"peak_cpu_core_equivalent": round\(peak_cpu \/ 100\.0, 2\)/)
+  assert.doesNotMatch(ui, /28\s*vCPU.*100|275\.1\s*\/\s*28/)
+  assert.doesNotMatch(pdf, /275\.1\s*\/\s*28|Host CPU Capacity Share/)
 })
