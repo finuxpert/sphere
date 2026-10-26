@@ -64,7 +64,8 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
       </g>}
       {names.map((name,i) => {
         const points = rows.filter(row => hostLabel(row.host) === name && row[field] !== null && row[field] !== undefined)
-          .map(row => ({day:Number(String(row.day).slice(-2)),value:row[field]})).sort((a,b)=>a.day-b.day)
+          .map(row => ({day:Number(String(row.day).slice(-2)),value:row[field],
+            warningChecks:Number(row[metric+'_warning_checks']||0)})).sort((a,b)=>a.day-b.day)
         return <g key={name}>
           {points.map((point,k) => <g key={point.day}>
             {k>0 && point.day===points[k-1].day+1 && <path
@@ -75,8 +76,10 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
               })()}
               fill="none" stroke={CHART_COLORS[i%CHART_COLORS.length]}
               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>}
+            {mode==='peak' && point.warningChecks>0 && <circle cx={xFor(point.day)} cy={yFor(point.value)}
+              r="5.5" fill="none" stroke="#e6ad67" strokeWidth="1.3" aria-hidden="true"/>}
             <circle cx={xFor(point.day)} cy={yFor(point.value)} r="2.9" fill={CHART_COLORS[i%CHART_COLORS.length]}>
-              <title>{name} · {month}-{String(point.day).padStart(2,'0')} · {pct(point.value)} {mode} {metric.toUpperCase()}</title>
+              <title>{name} · {month}-{String(point.day).padStart(2,'0')} · {pct(point.value)} {mode} {metric.toUpperCase()} · {fmt(point.warningChecks,0)} warning host-checks</title>
             </circle>
           </g>)}
         </g>
@@ -85,7 +88,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
     <div className="sphereMonthlyTrendLegend">
       {names.map((name,i)=><span key={name}><i style={{background:CHART_COLORS[i%CHART_COLORS.length]}}/>{name}</span>)}
     </div>
-    <small>Tren harian {month} WIB. Garis putus-putus menunjukkan warning. Arahkan kursor ke titik untuk melihat tanggal.</small>
+    <small>Daily peak is the highest saved sample per APP per day. Gold rings mark days with raw samples at or above warning. One day may contain several host-checks.</small>
   </div>
 }
 
@@ -152,10 +155,10 @@ function MonthlyDashboardKpis({ pressure = {}, summary = {} }) {
     : null
   const entries = [
     { key:'cpu', label:'CPU Warning', value:pressure.cpu?.observed_pressure_host_checks,
-      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.cpu?.peak?.peak_pct),
+      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.cpu?.peak?.peak_pct)+' · '+fmt(pressure.cpu?.observed_warning_app_days,0)+' APP-days',
       mark:'CPU' },
     { key:'ram', label:'RAM Warning', value:pressure.ram?.observed_pressure_host_checks,
-      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.ram?.peak?.peak_pct),
+      note:'APP host-checks above warning', detail:'Peak '+pct(pressure.ram?.peak?.peak_pct)+' · '+fmt(pressure.ram?.observed_warning_app_days,0)+' APP-days',
       mark:'RAM' },
     { key:'wp', label:'Critical WP', value:criticalChecks,
       note:'APP host-checks with critical WP', detail:'Observed samples, not incidents',
@@ -479,7 +482,7 @@ export default function RundeckMonthlyReview() {
               threshold={evidence.thresholds?.[chartMetric+'_warning_pct']}/>
             <div className="sphereMonthlyVisualFooter">
               <span>Warning threshold: <b>{pct(evidence.thresholds?.[chartMetric+'_warning_pct'])}</b></span>
-              <span>Latest retained observations only · not live monitoring</span>
+              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} warning checks on {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days · retained history</span>
             </div>
           </section>
           <WorkloadDistribution summary={summary} onSelect={value=>{
@@ -503,13 +506,16 @@ export default function RundeckMonthlyReview() {
           <h4>APP1–APP5 Resource Summary</h4>
           <div className="sphereMonthlyTableScroll"><table><thead><tr>
             <th>APP</th><th>CPU Avg</th><th>CPU Peak</th><th>RAM Avg</th><th>RAM Peak</th>
-            <th>CPU High Host-Checks</th><th>RAM High Host-Checks</th><th>Critical WP Host-Checks</th>
+            <th>CPU High Checks / Days</th><th>RAM High Checks / Days</th><th>Critical WP Host-Checks</th>
           </tr></thead><tbody>
             {hosts.map(row=><tr key={row.host}><td>{hostLabel(row.host)}</td>
               <td>{pct(row.avg_cpu_pct)}</td><td>{pct(row.peak_cpu_pct)}</td><td>{pct(row.avg_ram_pct)}</td><td>{pct(row.peak_ram_pct)}</td>
-              <td>{fmt(row.cpu_warning_host_checks,0)}</td><td>{fmt(row.ram_warning_host_checks,0)}</td><td>{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
+              <td>{fmt(row.cpu_warning_host_checks,0)} / {fmt(row.cpu_warning_days,0)}</td>
+              <td>{fmt(row.ram_warning_host_checks,0)} / {fmt(row.ram_warning_days,0)}</td>
+              <td>{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
             {!hosts.length&&<tr><td colSpan="8">No historical host samples available.</td></tr>}
           </tbody></table></div>
+          <small>High Checks / Days = distinct APP collection checks at or above warning / APP calendar days with at least one warning sample. Peak is a maximum reading, not an occurrence count. CPU warning {pct(evidence.thresholds?.cpu_warning_pct)}; RAM warning {pct(evidence.thresholds?.ram_warning_pct)}.</small>
         </div>
       </div>}
       {tab==='jobs'&&<div className="sphereMonthlyPanel">
