@@ -234,6 +234,7 @@ class CalendarMonthReviewTests(unittest.TestCase):
             {"consumer_type": "JOB", "consumer_key": "Z_BATCH_A",
              "status": "REVIEW REQUIRED", "occurrences": 20, "hosts": ["APP1"],
              "avg_cpu_pct": 125.4, "peak_cpu_pct": 270.0,
+             "avg_cpu_core_equivalent": 1.25, "peak_cpu_core_equivalent": 2.7,
              "avg_pss_gb": 1.2, "peak_pss_gb": 3.8, "overall_confidence": "MEDIUM",
              "signals": {"sustained_high_cpu": True},
              "pressure_overlap": {"cpu_pressure_host_checks": 2,
@@ -250,6 +251,8 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(results[0]["cpu_pressure_hosts"], ["APP1"])
         self.assertEqual(results[0]["error_attribution"], "NOT_ESTABLISHED")
         self.assertEqual(results[0]["avg_cpu_pct"], 125.4)
+        self.assertEqual(results[0]["avg_cpu_core_equivalent"], 1.25)
+        self.assertEqual(results[0]["peak_cpu_core_equivalent"], 2.7)
         self.assertEqual(results[1]["error_attribution"], "NOT_ESTABLISHED")
         self.assertEqual(len(_monthly_abap_tuning_candidates(rows, limit=1)), 1)
 
