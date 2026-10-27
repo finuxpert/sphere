@@ -279,9 +279,9 @@ export async function buildMonthlyPdf({ month, data }) {
 
   // Source-backed executive summary within available page space. Do not
   // infer failure, downtime, causality or execution count from WP samples.
-  const topCpuApp = hosts.filter(row => Number.isFinite(Number(row.peak_cpu_pct)))
+  const topCpuApp = hosts.filter(row => row.peak_cpu_pct !== null && row.peak_cpu_pct !== undefined && Number.isFinite(Number(row.peak_cpu_pct)))
     .sort((a, b) => Number(b.peak_cpu_pct) - Number(a.peak_cpu_pct))[0]
-  const topRamApp = hosts.filter(row => Number.isFinite(Number(row.peak_ram_pct)))
+  const topRamApp = hosts.filter(row => row.peak_ram_pct !== null && row.peak_ram_pct !== undefined && Number.isFinite(Number(row.peak_ram_pct)))
     .sort((a, b) => Number(b.peak_ram_pct) - Number(a.peak_ram_pct))[0]
   const summaryY = Math.max(ramTableBottom, cpuTableBottom) + 7
   if (summaryY < H - 16 && (topCpuApp || topRamApp)) {
