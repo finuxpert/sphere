@@ -1,0 +1,449 @@
+/* SPHERE Enterprise Monitoring — conservative operational UI.
+   Based on Grafana time-series ergonomics, SAP Fiori analytical cards and
+   PatternFly dashboard structure. Presentation only: never change severity,
+   source freshness, historical gaps, computed KPIs or SM37 verification. */
+.appShell:has(.rundeckPanel) .spherePerformanceShell {
+  --v36-bg:#10151c;
+  --v36-shell:#151c25;
+  --v36-panel:#1b242e;
+  --v36-subpanel:#1d2833;
+  --v36-border:#33404e;
+  --v36-rule:#2b3744;
+  --v36-ink:#e9edf2;
+  --v36-muted:#9baabb;
+  --v36-cyan:#67a9e7;
+  --v36-blue:#67a9e7;
+  --v36-green:#54b98b;
+  --v36-amber:#d7a552;
+  --v36-red:#e37c7c;
+  color:var(--v36-ink)!important;
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+  grid-template-columns:190px minmax(0,1fr)!important;
+  gap:12px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(button,select,input) {
+  font-family:inherit!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(button,a):focus-visible{
+  outline:2px solid var(--v36-blue)!important;
+  outline-offset:2px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar{
+  background:var(--v36-shell)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:6px!important;
+  box-shadow:none!important;
+  padding:12px 8px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarBrand{
+  color:var(--v36-ink)!important;
+  border-color:var(--v36-rule)!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  font-size:12px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavGroup{
+  color:var(--v36-muted)!important;
+  font-size:10px!important;
+  letter-spacing:.025em!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink{
+  border-radius:4px!important;
+  border-left:2px solid transparent!important;
+  color:#b5c0cc!important;
+  font-size:12px!important;
+  min-height:38px!important;
+  font-weight:500!important;
+  background:transparent!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink:hover{
+  background:#26323f!important;color:#f0f4f8!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink.is-active{
+  background:#263747!important;
+  border-left-color:var(--v36-blue)!important;
+  color:#d8e9fa!important;
+  font-weight:650!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink :is(.sphereIcon,svg){
+  color:inherit!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain{
+  background:transparent!important;
+  color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage{
+  background:transparent!important;
+  color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePageHeader{
+  padding:0 2px 11px!important;
+  margin:0!important;
+  border:0!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePageHeader h2{
+  color:var(--v36-ink)!important;
+  font-size:19px!important;font-weight:680!important;
+  letter-spacing:-.01em!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePageHeader p{
+  color:var(--v36-muted)!important;font-size:12px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.rundeckCockpitV13491{
+  gap:9px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckUnifiedAppInfraHead{
+  min-height:0!important;margin:0 0 7px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckUnifiedAppInfraHead :is(h3,strong){
+  color:var(--v36-ink)!important;font-size:13px!important;font-weight:650!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexMain.rundeckAppThreePanels{
+  gap:7px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppMotionPanel,
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppDetailPanel{
+  width:100%!important;
+  max-width:none!important;
+  background:var(--v36-panel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:6px!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppMotionPanel{
+  padding:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppPanelHeading{
+  color:var(--v36-ink)!important;font-size:12px!important;font-weight:680!important;
+  min-height:0!important;margin:0 0 8px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppPanelHeading small{
+  color:var(--v36-muted)!important;font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppMotionPanel .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+  gap:8px!important;grid-template-rows:54px!important;min-height:54px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb>.rundeckAppHexSelector{
+  background:var(--v36-subpanel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:5px!important;
+  height:54px!important;min-height:54px!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb>.rundeckAppHexSelector.is-active{
+  border-color:var(--v36-blue)!important;
+  background:#253447!important;
+  box-shadow:inset 0 0 0 1px var(--v36-blue)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexSelector:after{
+  width:6px;height:6px;top:13px;left:10px;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexSelector .rundeckAppHexShape{
+  padding:5px 8px 5px 23px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexShape strong{
+  color:var(--v36-ink)!important;font-size:12px!important;font-weight:690!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexShape :is(em,small){
+  color:var(--v36-muted)!important;
+  font-size:10px!important;font-weight:500!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppDetailPanel{
+  padding:7px 10px!important;min-height:0!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckSelectedAppMetrics strong{
+  font-size:13px!important;font-weight:660!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckSelectedAppOpen{
+  background:#263748!important;color:#a7cced!important;
+  border:1px solid #445c74!important;
+  border-radius:4px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendBandV13454,
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckJobsProgramsOverview{
+  background:var(--v36-panel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:6px!important;
+  box-shadow:none!important;
+  padding:11px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendEditorial{
+  padding:0 0 7px!important;min-height:0!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendEditorial h3{
+  font-size:14px!important;font-weight:700!important;
+  color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendEditorial>small{
+  color:var(--v36-muted)!important;font-size:11px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendSharedControls{
+  border-color:var(--v36-rule)!important;
+  margin-bottom:7px!important;padding-bottom:7px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendSharedGroup>small{
+  color:var(--v36-muted)!important;
+  font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendSharedControls select{
+  background:#202c39!important;
+  color:var(--v36-ink)!important;
+  border:1px solid var(--v36-border)!important;
+  min-height:28px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid>.rundeckServerTrendPanelV1234{
+  background:var(--v36-subpanel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:5px!important;
+  box-shadow:none!important;
+  min-height:220px!important;
+  height:auto!important;
+  padding:9px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckMonitoringHead h3{
+  color:var(--v36-ink)!important;
+  font-size:12px!important;font-weight:650!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckMonitoringHead h3 small{
+  color:var(--v36-muted)!important;
+  font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckTrendToolbar{
+  margin:3px 0!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckTrendChart{
+  min-height:116px!important;height:126px!important;max-height:132px!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend :is(.rundeckNetworkCoverage,.rundeckNetworkSampleTime,.rundeckTechnicalLoadPeakNotice){
+  color:var(--v36-muted)!important;font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealth{
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthBrand strong{
+  font-size:13px!important;font-weight:700!important;color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthBrand svg{
+  display:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthTitle{
+  min-height:0!important;margin:0 0 8px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthLegend{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  border:0!important;
+  padding:0!important;gap:8px!important;margin:0 0 7px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadCategory{
+  background:var(--v36-subpanel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:4px!important;
+  padding:6px 10px!important;min-height:48px!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadCategory strong{
+  font-size:21px!important;line-height:1.05!important;
+  color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadCategory span{
+  color:var(--v36-muted)!important;font-size:11px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvaluationLanes{
+  gap:5px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead,
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalLane{
+  grid-template-columns:minmax(90px,118px) minmax(0,1fr) minmax(196px,228px)!important;
+  gap:11px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead{
+  padding:0 9px 4px!important;
+  color:var(--v36-muted)!important;font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalLane{
+  background:transparent!important;border:0!important;
+  border-top:1px solid var(--v36-rule)!important;
+  border-radius:0!important;
+  min-height:35px!important;
+  padding:6px 9px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalIdentity strong,
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalHostButton{
+  font-size:12px!important;font-weight:650!important;
+  color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalIdentity small{
+  color:var(--v36-muted)!important;
+  font-size:10px!important;line-height:1.2!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSummary{
+  display:flex;gap:11px;align-items:center;min-width:0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBar{
+  display:flex;align-items:stretch;width:100%;height:13px;min-width:0;
+  border:1px solid var(--v36-border);border-radius:3px;overflow:hidden;
+  background:#283440;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSegment{
+  flex:0 0 auto;height:100%;box-sizing:border-box;border-right:1px solid rgba(20,30,40,.45);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSegment.is-review{background:var(--v36-red)}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSegment.is-attention{background:var(--v36-amber)}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSegment.is-unknown{background:#7f8d9d}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSegment.is-normal{background:var(--v36-green)}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalNoData{
+  margin:auto;color:var(--v36-muted);font-size:10px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalToggle{
+  white-space:nowrap;flex:0 0 auto;
+  border:1px solid var(--v36-border)!important;
+  background:#253442!important;color:#b9d5ed!important;
+  padding:5px 7px!important;font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalToggle:hover{
+  background:#2e4357!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalDots{
+  grid-column:1/-1!important;
+  border-top:1px solid var(--v36-rule);padding-top:9px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBreakdown{
+  border-color:var(--v36-rule)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBreakdown strong{
+  color:var(--v36-ink)!important;font-size:11px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBreakdown small{
+  color:var(--v36-muted)!important;font-size:10px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthFooter{
+  color:var(--v36-muted)!important;margin-top:5px!important;
+}
+/* Reuse the same enterprise surfaces in investigation and infrastructure. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimeline,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckObservationHistoryV1234,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfra,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid>.rundeckOperatorPairedPane,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksHistoryDock{
+  background:var(--v36-panel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:6px!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraHostCard,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid article,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendWorkspace,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckAvailabilitySummaryStrip>div,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckAvailabilitySummaryStrip>span{
+  background:var(--v36-subpanel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:5px!important;
+  box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid article{
+  min-height:190px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimingStrip,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceAssessment{
+  background:var(--v36-subpanel)!important;
+  border-color:var(--v36-border)!important;border-radius:5px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage table thead th{
+  background:#161e28!important;
+  border-color:var(--v36-border)!important;
+  color:#b7c4d1!important;
+  font-size:11px!important;letter-spacing:0!important;
+  text-transform:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage table tbody td{
+  font-size:12px!important;
+  color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage table tbody tr:hover{
+  background:#25323e!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage select{
+  background:#202c39!important;
+  border:1px solid var(--v36-border)!important;
+  color:var(--v36-ink)!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapIssuesSummaryStrip>div{
+  background:var(--v36-subpanel)!important;
+  border:1px solid var(--v36-border)!important;
+  border-radius:5px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckOperatorPairedPane>h3{
+  color:var(--v36-ink)!important;font-size:14px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2{
+  --mr-surface:#1b242e;--mr-surface-2:#1d2833;
+  --mr-border:#33404e;--mr-text:#e9edf2;
+  --mr-muted:#9baabb;--mr-accent:#67a9e7;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyDashboardKpi,
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyVisualCard{
+  box-shadow:none!important;border-radius:6px!important;
+}
+@media(max-width:1260px){
+ .appShell:has(.rundeckPanel) .spherePerformanceShell{grid-template-columns:172px minmax(0,1fr)!important}
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead,
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalLane{
+   grid-template-columns:minmax(80px,105px) minmax(0,1fr) minmax(170px,200px)!important
+ }
+}
+@media(max-width:1050px){
+ .appShell:has(.rundeckPanel) .spherePerformanceShell{grid-template-columns:minmax(0,1fr)!important}
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid{grid-template-columns:minmax(0,1fr)!important}
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid>.rundeckServerTrendPanelV1234{min-height:215px!important}
+}
+@media(max-width:650px){
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppMotionPanel .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+   grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   grid-template-rows:auto!important;
+ }
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthLegend{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead{display:none!important}
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalLane{
+   grid-template-columns:minmax(0,1fr)!important;
+   gap:8px!important;
+ }
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSummary{grid-column:1!important}
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBreakdown{
+   grid-column:1!important;border-left:0!important;border-top:1px solid var(--v36-rule)!important;
+   padding:5px 0 0!important;
+ }
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalDots{grid-column:1!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSegment,
+ .appShell:has(.rundeckPanel) .spherePerformanceShell :is(button,select){transition:none!important;animation:none!important}
+}
+/* Light mode uses neutral surfaces, not hard-coded dark panels. */
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceShell{
+  --v36-bg:#f6f8fa;--v36-shell:#fff;--v36-panel:#fff;
+  --v36-subpanel:#f3f6f9;--v36-border:#d6dee6;
+  --v36-rule:#e2e7ec;--v36-ink:#213344;--v36-muted:#586e7f;
+  --v36-cyan:#236eae;--v36-blue:#236eae;
+  --v36-green:#18805f;--v36-amber:#936414;--v36-red:#bb3d50;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceSidebar,
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain :is(.rundeckAppMotionPanel,.rundeckAppDetailPanel,.rundeckTrendBandV13454,.rundeckJobsProgramsOverview){
+ background:var(--v36-panel)!important;color:var(--v36-ink)!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain :is(.rundeckTripleTrendGrid>.rundeckServerTrendPanelV1234,.rundeckWorkloadCategory,.rundeckAppHexSelectors.is-honeycomb>.rundeckAppHexSelector){
+ background:var(--v36-subpanel)!important;color:var(--v36-ink)!important
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalLane{background:transparent!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformancePage table thead th{background:#edf2f6!important;color:#42596c!important}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformancePage table tbody td{color:#213344!important}
