@@ -575,6 +575,8 @@ def _collection_quality(conn, start: datetime, end: datetime) -> dict:
         "partial_or_incomplete_checks": len(partial),
         "expected_checks": expected_checks,
         "coverage_pct": coverage_pct,
+        "complete_record_ratio_pct": round(check_coverage_pct, 1),
+        "recorded_time_span_pct": round(time_coverage_pct, 1),
         "coverage_method": "ESTIMATED_FROM_OBSERVED_MEDIAN_CADENCE_AND_MONTH_SPAN",
         "expected_checks_is_estimate": True,
         "observed_span_hours": round(observed_span_seconds / 3600.0, 1),
