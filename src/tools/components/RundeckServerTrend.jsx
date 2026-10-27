@@ -785,7 +785,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [scaleMode, setScaleMode] = React.useState('full')
   const [loadScaleMode, setLoadScaleMode] = React.useState('full')
-  const [networkScaleMode, setNetworkScaleMode] = React.useState('full')
+  const [networkScaleMode, setNetworkScaleMode] = React.useState(saved.networkScaleMode === 'full' ? 'full' : 'typical')
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
@@ -850,10 +850,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   React.useEffect(() => {
     try {
       window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({
-        range, bucket, serverMetric1, serverMetric2, technicalMetric, networkDirection, mode,
+        range, bucket, serverMetric1, serverMetric2, technicalMetric, networkDirection, networkScaleMode, mode,
       }))
     } catch { /* best effort */ }
-  }, [bucket, mode, networkDirection, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, mode, networkDirection, networkScaleMode, range, serverMetric1, serverMetric2, technicalMetric])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
