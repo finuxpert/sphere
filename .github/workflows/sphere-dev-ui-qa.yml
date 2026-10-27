@@ -1,0 +1,24 @@
+name: SPHERE DEV UI QA
+
+on:
+  push:
+    branches: [rundeck-sphere-dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run static checks, cockpit regression, and build
+        run: npm run qa
