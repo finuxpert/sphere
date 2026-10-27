@@ -83,3 +83,47 @@ test('fleet and selected APP summary use compact two-row layout instead of a str
     assert.ok(infra.includes(value), 'APP metrics and navigation remain source-backed: ' + value)
   }
 })
+
+test('Operational Checks own full-page CSS scope without overriding investigation drawers', () => {
+  const main = read('RundeckMonitoringHistory.jsx')
+  const css = read('RundeckOperationalPagesV135.css')
+  assert.match(main, /import '\.\/RundeckOperationalPagesV135\.css'/)
+  assert.match(main, /className=\{\x60spherePerformancePage is-\$\{activeView\}\x60\}/)
+  for (const view of ['infrastructure', 'sap-checks', 'events', 'jobs']) {
+    assert.ok(css.includes('.spherePerformancePage.is-' + view), view + ' is scoped to its own page')
+  }
+  assert.doesNotMatch(css, /\.rundeckWorkspaceDrawerBody\s*>\s*\.rundeckInfra/)
+  assert.doesNotMatch(css, /\.rundeckWorkspaceDrawer\.is-/)
+})
+
+test('Infrastructure workspace is stacked with independent readable telemetry cards', () => {
+  const css = read('RundeckOperationalPagesV135.css')
+  const component = read('RundeckInfrastructure.jsx')
+  assert.match(css, /\.is-infrastructure \.rundeckInfraWorkspace\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+  assert.match(css, /\.is-infrastructure \.rundeckInfraGrid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(235px/)
+  assert.match(css, /\.is-infrastructure \.rundeckInfraGrid :is\(th, td\)/)
+  for (const feature of ['rundeckInfraHostCards', 'rundeckInfraTrendWorkspace', 'rundeckInfraFreshness', 'rundeckInfraChartWrap']) {
+    assert.ok(component.includes(feature), feature + ' remains data-backed and selectable')
+  }
+})
+
+test('SAP Checks and Related Events keep their evidence, with responsive full-page layout', () => {
+  const css = read('RundeckOperationalPagesV135.css')
+  const wrapper = read('RundeckMonitoringHistory.jsx')
+  assert.match(css, /\.is-sap-checks \.rundeckSapChecksDetailGrid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(330px/)
+  assert.match(css, /\.is-events \.rundeckEvidenceEvent\s*\{[\s\S]*?grid-template-columns:\s*126px/)
+  assert.match(css, /\.is-events \.rundeckObservationHistoryTableWrap/)
+  for (const prop of ['paired refreshToken={refreshToken} job={selectedJob}', 'readinessRoot={readinessSummaryRoot}', 'historyRoot={incidentHistoryRoot}']) {
+    assert.ok(wrapper.includes(prop), 'keeps existing monitoring evidence: ' + prop)
+  }
+})
+
+test('Jobs & Programs reclaims full width but preserves tabs, saved evaluation and pagination', () => {
+  const css = read('RundeckOperationalPagesV135.css')
+  const workspace = read('RundeckJobsProgramsWorkspace.jsx')
+  assert.match(css, /\.is-jobs \.rundeckJobsProgramsSplit/)
+  assert.match(css, /\.is-jobs \.rundeckCurrentWorkload table/)
+  for (const text of ['Current', 'Review', 'Search', 'showHealth &&', 'currentContent', 'reviewContent']) {
+    assert.ok(workspace.includes(text), text + ' remains operational')
+  }
+})
