@@ -992,13 +992,14 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     ...(technicalTrend?.items || []),
   ])
   const activeFocus = shortHost(focusedHost || '')
+  const trendSwatches = palette().series
   const observedWindow = React.useMemo(() => longHistoricalRange
     ? observedTrendWindow([serverTrend1, serverTrend2, technicalTrend]) : null,
   [longHistoricalRange, serverTrend1, serverTrend2, technicalTrend])
   const displayWindow = longHistoricalRange && fitObserved ? observedWindow : null
-  const savedPeak1 = React.useMemo(() => savedVortexPeak(serverTrend1, mode, activeFocus), [serverTrend1, mode, activeFocus])
-  const savedPeak2 = React.useMemo(() => savedVortexPeak(serverTrend2, mode, activeFocus), [serverTrend2, mode, activeFocus])
-  const savedTechnicalPeak = React.useMemo(() => savedVortexPeak(technicalTrend, mode, activeFocus), [technicalTrend, mode, activeFocus])
+  const savedPeak1 = React.useMemo(() => temporalReady ? savedVortexPeak(serverTrend1, mode, activeFocus) : null, [temporalReady, serverTrend1, mode, activeFocus])
+  const savedPeak2 = React.useMemo(() => temporalReady ? savedVortexPeak(serverTrend2, mode, activeFocus) : null, [temporalReady, serverTrend2, mode, activeFocus])
+  const savedTechnicalPeak = React.useMemo(() => temporalReady ? savedVortexPeak(technicalTrend, mode, activeFocus) : null, [temporalReady, technicalTrend, mode, activeFocus])
   const temporalReady = Boolean(
     ambientBraid && databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
     !serverError1 && !serverError2 && !technicalError &&
@@ -1093,7 +1094,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           {focusOptions.map((label, index) => <button key={label} type="button"
             aria-pressed={activeFocus === label}
             className={activeFocus === label ? 'is-focused' : ''}
-            style={{ '--trend-host-color': palette().series[trendHostColorIndex(label, index, palette().series.length)] }}
+            style={{ '--trend-host-color': trendSwatches[trendHostColorIndex(label, index, trendSwatches.length)] }}
             onClick={() => onFocusHost?.(activeFocus === label ? '' : label)}>
             <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
           </button>)}
