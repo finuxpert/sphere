@@ -6,10 +6,11 @@ const read = path => readFileSync(new URL('../../src/tools/components/' + path, 
 
 test('SAP Operations exposes all six deep-linked workspaces without changing ST03N routing', () => {
   const navigation = read('RundeckPerformanceNavigation.jsx')
+  const state = read('RundeckPerformanceNavigationState.js')
   for (const key of ['performance','jobs','events','sap-checks','infrastructure','system-data','monthly-review']) {
-    assert.match(navigation, new RegExp("id: '" + key + "'"))
+    assert.match(state, new RegExp("id: '" + key + "'"))
   }
-  assert.match(navigation, /location\.hash/)
+  assert.match(state, /location\.hash/)
   assert.match(navigation, /aria-current=\{activeView === item\.id/)
   assert.match(navigation, /href=\{item\.id === 'performance'/)
 })
