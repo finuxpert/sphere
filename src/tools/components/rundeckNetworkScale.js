@@ -1,6 +1,6 @@
 /** Source-preserving Network Y-axis zoom for saved AOP Infrastructure samples.
  * This never changes observed Mbps, peak timestamps, or NIC identity.
- * Full stays the default. Typical is only a viewport crop when spikes dominate.
+ * Full always remains available. Typical is only a viewport crop when spikes dominate.
  */
 export function networkTrendScale(items = [], mode = 'max') {
   const key = mode === 'avg' ? 'avg_value' : 'max_value'
