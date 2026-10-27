@@ -16,6 +16,7 @@ import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
 import { attachUnifiedVortex, savedVortexPeak } from './rundeckTrendAmbient.js'
 import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
+import { observedTrendWindow } from './rundeckObservedWindow.js'
 import './RundeckWorkloadExplorer.css'
 import './RundeckTrendAmbient.css'
 import './RundeckHistoryRange.css'
@@ -251,7 +252,7 @@ function TrendFreshness({ trend }) {
   return <div className="rundeckHistoryState">Last {source} {ageMinutes}m ago · {formatWib(trend.latest_collection_at, true)} WIB · showing saved history</div>
 }
 
-function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null }) {
+function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode = 'full', technicalAxisMax = null, displayWindow = null }) {
   const ref = React.useRef(null)
   const chartRef = React.useRef(null)
   const activeCallbackRef = React.useRef(null)
@@ -356,7 +357,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           return lines.join('<br/>')
         },
       },
-      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 11, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      xAxis: { type: 'time', min: displayWindow?.from ?? (Number.isFinite(rangeStart) ? rangeStart : undefined), max: displayWindow?.to ?? rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 11, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 11, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' || Boolean(trend?.network_source) ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (['load','network_rx','network_tx'].includes(trend?.metric) && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
@@ -389,7 +390,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
       }
       })
     }
-  }, [focusedHost, hostLabels, hosts, mode, range, reduceMotion, scaleMode, technicalAxisMax, trend, themeRevision])
+  }, [displayWindow, focusedHost, hostLabels, hosts, mode, range, reduceMotion, scaleMode, technicalAxisMax, trend, themeRevision])
 
   // ECharts stays mounted while focus and stored samples update. No chart loop.
   // The latest handler is read at click-time, not captured by the mount effect.
@@ -469,7 +470,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
   React.useEffect(() => {
     const chart = chartRef.current
     if (!chart) return
-    const schema = `${trend?.metric || ''}:${range}:${mode}:${scaleMode}:${technicalAxisMax ?? 'auto'}`
+    const schema = `${trend?.metric || ''}:${range}:${mode}:${scaleMode}:${technicalAxisMax ?? 'auto'}:${displayWindow ? 'fit' : 'full'}`
     const schemaChanged = optionSchemaRef.current !== schema
     optionSchemaRef.current = schema
     chart.setOption(reduceMotion ? { ...option, animation: false } : option, {
@@ -477,7 +478,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
       replaceMerge: schemaChanged ? undefined : ['series'],
       lazyUpdate: false,
     })
-  }, [mode, option, range, reduceMotion, scaleMode, technicalAxisMax, trend?.metric])
+  }, [displayWindow, mode, option, range, reduceMotion, scaleMode, technicalAxisMax, trend?.metric])
 
   return <div className="rundeckTrendPlot">
     <div ref={ref} className="rundeckTrendChart" role="img"
@@ -779,6 +780,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [windowModal, setWindowModal] = React.useState(false)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
   const longHistoricalRange = LONG_RANGES.has(range)
+  const [fitObserved, setFitObserved] = React.useState(false)
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','network','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
@@ -979,7 +981,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <AvailabilityCoverageBand trend={trend} />
       {showGap && <CollectionGapBand trend={trend} />}
       <AvailabilityObservationSummary trend={trend} />
-      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} />
+      <TrendChart trend={trend} mode={mode} range={range} onSelect={(point) => onSelect(point, trend)} selectedHost={focusedHost} scaleMode={scaleMode} technicalAxisMax={technicalAxisMax} displayWindow={displayWindow} />
     </>
     return trend ? <div className="rundeckHistoryState">{trend.network_source ? 'No saved Infrastructure network samples for APP1–APP5 in this time range. Traffic is unknown, not zero.' : range === 'custom' ? 'No retained sample in the selected WIB interval. This is a collection gap / unknown observation, not evidence of SAP downtime.' : 'No stored data in this range yet.'}</div> : null
   }
@@ -990,6 +992,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     ...(technicalTrend?.items || []),
   ])
   const activeFocus = shortHost(focusedHost || '')
+  const observedWindow = React.useMemo(() => longHistoricalRange
+    ? observedTrendWindow([serverTrend1, serverTrend2, technicalTrend]) : null,
+  [longHistoricalRange, serverTrend1, serverTrend2, technicalTrend])
+  const displayWindow = longHistoricalRange && fitObserved ? observedWindow : null
   const savedPeak1 = React.useMemo(() => savedVortexPeak(serverTrend1, mode, activeFocus), [serverTrend1, mode, activeFocus])
   const savedPeak2 = React.useMemo(() => savedVortexPeak(serverTrend2, mode, activeFocus), [serverTrend2, mode, activeFocus])
   const savedTechnicalPeak = React.useMemo(() => savedVortexPeak(technicalTrend, mode, activeFocus), [technicalTrend, mode, activeFocus])
@@ -1109,6 +1115,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
       <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
       <small>Jobs &amp; Programs Current uses latest collection, not this historical window</small>
+    </div>}
+    {longHistoricalRange && observedWindow && <div className="rundeckObservedWindowControl" role="group" aria-label="Historical display window">
+      <span>Retained observations: {formatWib(observedWindow.first, true)} – {formatWib(observedWindow.last, true)} WIB</span>
+      <button type="button" aria-pressed={Boolean(displayWindow)}
+        title="Display-only zoom to retained samples. The selected historical query, missing coverage, thresholds and values do not change."
+        onClick={() => setFitObserved(value => !value)}>{displayWindow ? 'Show full period' : 'Fit observed data'}</button>
+      {displayWindow && <small>Axis fitted to saved samples · earlier intervals remain unknown</small>}
     </div>}
     {serverTrend1?.items?.length > 0 && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
       <CollectionGapBand trend={serverTrend1} />
