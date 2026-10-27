@@ -95,7 +95,7 @@ test('Single-screen desktop Overview measures real viewport space and keeps smal
   const fit = read('RundeckViewportFitV139.css')
   assert.ok(history.indexOf("RundeckViewportFitV139.css") > history.indexOf("RundeckEnterpriseFinishV138.css"))
   assert.match(core, /window\.innerHeight - overview\.getBoundingClientRect\(\)\.top - 10/)
-  assert.match(core, /window\.innerWidth >= 1280 && window\.innerHeight >= 760 && available >= 670/)
+  assert.match(core, /window\.innerWidth >= 1280 && window\.innerHeight >= 760 && available >= 700/)
   assert.match(core, /overview\.style\.setProperty\('--sphere-overview-room'/)
   assert.match(core, /overview\.dataset\.viewportFit = 'true'/)
   assert.match(core, /delete overview\.dataset\.viewportFit/)
