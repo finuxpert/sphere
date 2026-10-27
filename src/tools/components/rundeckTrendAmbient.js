@@ -58,7 +58,6 @@ export function retainedVortexSamples(series = [], limit = 36) {
 }
 
 // Retain the same public API for consumers and tests; canvas logic is optional.
-import { vortexAppLabel } from './rundeckTrendAmbientData.js'
 export { vortexAppLabel, savedVortexPeak } from './rundeckTrendAmbientData.js'
 
 // Three interlaced time ribbons share one central field, with space for
