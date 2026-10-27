@@ -1,9 +1,50 @@
+import React from 'react'
 import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
-  return <section className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491">
+  const overviewRef = React.useRef(null)
+
+  // Fit the read-only overview into the real available browser viewport.
+  // The fit is opt-in for spacious desktop windows; smaller screens and expanded
+  // evaluation details retain natural page scrolling instead of clipping data.
+  const measureViewport = React.useCallback(() => {
+    const overview = overviewRef.current
+    if (!overview) return
+    const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
+    const fit = window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 670
+    if (fit) {
+      overview.style.setProperty('--sphere-overview-room', available + 'px')
+      overview.dataset.viewportFit = 'true'
+    } else {
+      overview.style.removeProperty('--sphere-overview-room')
+      delete overview.dataset.viewportFit
+    }
+  }, [])
+
+  React.useLayoutEffect(() => { measureViewport() })
+  React.useEffect(() => {
+    let frame = 0
+    const schedule = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(measureViewport)
+    }
+    window.addEventListener('resize', schedule, { passive: true })
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule)
+    const panel = overviewRef.current?.closest('.rundeckPanel')
+    for (const element of [panel?.querySelector('.rundeckLandscapeHeader'),
+      panel?.querySelector('.rundeckDataQualityNotice')]) {
+      if (element) observer?.observe(element)
+    }
+    return () => {
+      window.removeEventListener('resize', schedule)
+      window.cancelAnimationFrame(frame)
+      observer?.disconnect()
+    }
+  }, [measureViewport])
+
+  return <section ref={overviewRef} className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491">
     <section className="rundeckTopBandV13454 is-unified-app-infra">
       <RundeckUnifiedAppInfrastructure
         hosts={props.sourceHosts || []}
