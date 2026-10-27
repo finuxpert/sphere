@@ -155,7 +155,7 @@ export default function RundeckMonitoringHistory(props) {
   }
   const currentPage = pageNames[activeView]
   const inlinePage = activeView === 'jobs'
-    ? <RundeckJobsProgramsWorkspace initialMode="live" initialHealth="REVIEW" showHealth={false}
+    ? <RundeckJobsProgramsWorkspace initialMode="live" initialHealth="REVIEW" showHealth={false} standalone
         refreshToken={refreshToken} performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
         currentContent={currentWorkloadContent} reviewContent={performanceReviewContent}
         onOpenEvaluatedWorkload={openEvaluatedWorkload} />

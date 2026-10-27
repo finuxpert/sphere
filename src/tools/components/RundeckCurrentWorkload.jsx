@@ -96,7 +96,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], layoutKey = '', embedded = false, initialAppHost = '' }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], layoutKey = '', embedded = false, initialAppHost = '', standalone = false }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
@@ -214,12 +214,12 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       .some(value => String(value ?? '').toLocaleLowerCase().includes(query))
   })
 
-  const defaultPageSize = viewportHeight <= 720 ? 2 : viewportHeight <= 940 ? 3 : viewportHeight <= 1100 ? 4 : 5
+  const defaultPageSize = standalone ? (viewportHeight < 720 ? 6 : 10) : viewportHeight <= 720 ? 2 : viewportHeight <= 940 ? 3 : viewportHeight <= 1100 ? 4 : 5
   React.useLayoutEffect(() => {
     if (typeof window === 'undefined') return undefined
     const wrap = tableWrapRef.current
     const measure = () => {
-      if (window.innerWidth < 1200 || !visible.length) {
+      if (standalone || window.innerWidth < 1200 || !visible.length) {
         setFittedRows(null)
         return
       }
@@ -258,7 +258,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
       window.removeEventListener('resize', scheduleMeasure)
       window.visualViewport?.removeEventListener('resize', scheduleMeasure)
     }
-  }, [visible.length, viewportHeight, defaultPageSize, layoutKey])
+  }, [visible.length, viewportHeight, defaultPageSize, layoutKey, standalone])
   const pageSize = fittedRows === null ? defaultPageSize : Math.min(defaultPageSize, fittedRows)
   const totalPages=Math.max(1,Math.ceil(visible.length/pageSize))
   const currentPage=Math.min(listPage,totalPages-1)
