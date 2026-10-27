@@ -17,7 +17,7 @@ async function readJson(path, signal) {
 
 export default function RundeckUnifiedAppInfrastructure({
   hosts = [], sourceQuality = null, refreshToken = '', selectedJob = null,
-  focusRequest = null, onInspectApp = null, onSelectApp = null, operationalChecks = null,
+  focusRequest = null, onInspectApp = null, onSelectApp = null, operationalChecks = null, fleetMode = false,
 }) {
   const [preferredHost, setPreferredHost] = React.useState(() => {
     try { return window.localStorage.getItem(KEY) || '' } catch { return '' }
@@ -34,7 +34,7 @@ export default function RundeckUnifiedAppInfrastructure({
   orbitExpandedRef.current = orbitExpanded
 
   React.useEffect(() => {
-    if (hosts.length !== 5 || typeof window.matchMedia !== 'function') {
+    if (fleetMode || hosts.length !== 5 || typeof window.matchMedia !== 'function') {
       setOrbitEnabled(false)
       return undefined
     }
@@ -43,7 +43,7 @@ export default function RundeckUnifiedAppInfrastructure({
     sync()
     query.addEventListener?.('change', sync)
     return () => query.removeEventListener?.('change', sync)
-  }, [hosts.length])
+  }, [hosts.length, fleetMode])
 
   React.useEffect(() => { orbitWakeRef.current?.() }, [orbitExpanded])
 
