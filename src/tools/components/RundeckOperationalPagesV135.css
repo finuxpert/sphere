@@ -1,0 +1,506 @@
+/* SPHERE DEV v1.35: dedicated full-page Operational Checks layouts.
+   Scoped to Performance sidebar pages so existing investigation drawers are untouched.
+   Data status, provenance, limits and actions are inherited from live components. */
+.appShell:has(.rundeckPanel) .spherePerformancePage {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: clamp(14px, 1.35vw, 20px);
+  overflow: visible;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage > :not(.spherePerformancePageHeader) {
+  min-width: 0;
+  max-width: none;
+}
+.spherePerformancePage .spherePerformancePageHeader {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+}
+.spherePerformancePage .spherePerformancePageHeader h2 {
+  font-size: 18px;
+  line-height: 1.3;
+}
+.spherePerformancePage .spherePerformancePageHeader p {
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+/* Infrastructure: telemetry first, trend beneath; no 42:58 drawer split.
+   Tables may scroll inside their card on narrow screens, never run into adjacent cards. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfra {
+  width: 100% !important;
+  min-width: 0;
+  padding: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraWorkspace {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  gap: 18px !important;
+  width: 100%;
+  min-width: 0;
+  align-items: start;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraCurrent,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendWorkspace {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid {
+  display: grid !important;
+  grid-template-columns: minmax(235px, .9fr) minmax(315px, 1.15fr) minmax(315px, 1.15fr) !important;
+  align-items: stretch;
+  gap: 12px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid > article {
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding: 12px !important;
+  border: 1px solid var(--sphere-border-subtle, rgba(126,147,158,.18)) !important;
+  border-radius: 7px !important;
+  background: rgba(126,147,158,.025) !important;
+  scrollbar-width: thin;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid .cardHead {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+  min-height: 32px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid .cardHead h4 {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: auto !important;
+  margin-top: 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid :is(th, td) {
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+  padding: 8px 6px !important;
+  white-space: nowrap !important;
+  text-overflow: initial !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid th {
+  font-size: 9.5px !important;
+  color: var(--sphere-text-secondary, #a9b5bb) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendWorkspace {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 14px 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--sphere-border-subtle, rgba(126,147,158,.14)) !important;
+  background: transparent !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendWorkspaceHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 9px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendWorkspaceHead b {
+  font-size: 13px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendSummary {
+  display: grid !important;
+  grid-template-columns: minmax(125px, 1fr) minmax(0, 4fr) !important;
+  gap: 12px !important;
+  align-items: center !important;
+  margin: 7px 0 12px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendStats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 9px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendSummary :is(span, strong) {
+  font-size: 11px;
+  line-height: 1.35;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg {
+  display: block !important;
+  width: 100% !important;
+  height: 270px !important;
+  min-height: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraLegend {
+  font-size: 10.5px !important;
+  line-height: 1.4;
+}
+
+/* SAP Checks: one summary rail and two truly equal-height, readable workspaces. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksLayout {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 17px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksSummaryRail {
+  display: grid !important;
+  grid-template-columns: minmax(0, 4fr) minmax(155px, 1fr) !important;
+  align-items: center !important;
+  width: 100% !important;
+  gap: 10px !important;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksSummaryAvailability,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksSummaryReadiness {
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckAvailabilitySummaryStrip {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0,1fr)) !important;
+  width: 100% !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksReadiness {
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid {
+  display: grid !important;
+  grid-template-columns: minmax(330px, .92fr) minmax(0, 1.08fr) !important;
+  gap: 24px !important;
+  align-items: start !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid > .rundeckOperatorPairedPane {
+  display: block !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  border: none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid > .rundeckOperatorPairedPane + .rundeckOperatorPairedPane {
+  padding-left: 18px !important;
+  border-left: 1px solid var(--sphere-border-subtle, rgba(126,147,158,.16)) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid > .rundeckOperatorPairedPane > h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 13px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid > .rundeckOperatorPairedPane > h3 small {
+  font-size: 10px !important;
+  color: var(--sphere-text-secondary, #a9b5bb);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks :is(.rundeckAvailability, .rundeckSapIssuesV1231) {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckAvailabilityDetailSections {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapIssuesSummaryStrip {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0,1fr)) !important;
+  width: 100% !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapIssuesSummaryStrip > span {
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks :is(.rundeckIssueIndicatorTableWrap,.rundeckSapIssuesTableWrap) {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckIssueIndicatorTable {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckIssueIndicatorTable :is(th,td) {
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  padding: 8px !important;
+  overflow-wrap: anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksHistoryDock {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+/* Related Events: independent timeline and history rows, not a drawer-sized pair.
+   Preserve all timestamps and provenance; improve spacing instead of hiding evidence. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckOperatorPairedWorkspace.is-events {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) !important;
+  grid-template-rows: auto auto !important;
+  gap: 20px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckOperatorPairedPane {
+  min-width: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckOperatorPairedPane + .rundeckOperatorPairedPane {
+  padding-top: 14px !important;
+  border-top: 1px solid var(--sphere-border-subtle,rgba(126,147,158,.17)) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckOperatorPairedPane > h3 {
+  display: flex !important;
+  align-items: baseline !important;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 11px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckOperatorPairedPane > h3 small {
+  font-size: 10px !important;
+  color: var(--sphere-text-secondary,#a9b5bb);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimeline,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceBody {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceSummary {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  grid-template-areas: "title status" "scope timing" !important;
+  gap: 4px 12px !important;
+  padding: 7px 0 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceSummary > small {
+  grid-area: timing;
+  justify-self: end;
+  font-size: 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceAlignment {
+  font-size: 9.5px !important;
+  line-height: 1.3;
+  padding: 3px 7px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimingStrip {
+  display: grid !important;
+  grid-template-columns: minmax(105px,.4fr) minmax(0,2fr) !important;
+  gap: 7px 14px !important;
+  align-items: start !important;
+  padding: 10px 0 !important;
+  border-bottom: 1px solid var(--sphere-border-subtle,rgba(126,147,158,.12));
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimingStrip strong {
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimingStrip span {
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  overflow-wrap: anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimingStrip small {
+  grid-column: 2;
+  font-size: 10px !important;
+  line-height: 1.4 !important;
+  white-space: normal !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceAssessment {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  padding: 11px 0 !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceAssessment :is(strong,span,small) {
+  display: block !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+  overflow-wrap: anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceEvents {
+  max-height: 260px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-gutter: stable;
+  padding: 3px 8px 3px 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceEvent {
+  display: grid !important;
+  grid-template-columns: 126px 12px minmax(0,1fr) minmax(100px,max-content) !important;
+  gap: 10px !important;
+  align-items: start !important;
+  padding: 9px 0 !important;
+  border-bottom: 1px solid rgba(126,147,158,.07);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceEvent time {
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+  white-space: normal !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceEvent > div {
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceEvent strong {
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceEvent :is(small,p) {
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+  overflow-wrap: anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceRelation {
+  grid-column: 4;
+  grid-row: 1;
+  justify-self: end;
+  white-space: nowrap !important;
+  font-size: 9.5px !important;
+  font-style: normal;
+  line-height: 1.4;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckObservationHistoryContext {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px 16px !important;
+  width: 100% !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckObservationHistoryContext > span {
+  min-width: 100px !important;
+  font-size: 10.5px !important;
+  line-height: 1.5 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckObservationHistoryTableWrap {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckObservationHistoryV1234 table {
+  width: 100% !important;
+  min-width: 650px !important;
+  table-layout: auto !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckObservationHistoryV1234 :is(th,td) {
+  padding: 8px 10px !important;
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckCollectionEvidenceSummary {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 5px 10px !important;
+  line-height: 1.45;
+  padding: 9px 0 !important;
+}
+
+/* Jobs & Programs: showHealth=false must not reserve the historical second rail. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsWorkspace,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsSplit,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsWorkspaceBody,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadTableWrap {
+  box-sizing: border-box;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsWorkspaceHead {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-bottom: 13px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadHead {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadTableWrap {
+  overflow-x: auto !important;
+  scrollbar-width: thin;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload table {
+  width: 100% !important;
+  min-width: 790px !important;
+  table-layout: fixed !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload :is(th,td) {
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+  padding: 10px 8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadName {
+  overflow-wrap: anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckWorkloadPager {
+  width: 100% !important;
+  min-width: 0;
+}
+
+/* Sidebar-to-page breakpoint: avoid cramped multi-column contents at medium widths. */
+@media (max-width: 1399px) {
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid > article:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 1100px) {
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid {
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 20px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid > .rundeckOperatorPairedPane + .rundeckOperatorPairedPane {
+    border-left: 0 !important;
+    border-top: 1px solid var(--sphere-border-subtle, rgba(126,147,158,.16)) !important;
+    padding: 17px 0 0 !important;
+  }
+}
+@media (max-width: 790px) {
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid > article:last-child {
+    grid-column: auto;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksSummaryRail {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceEvent {
+    grid-template-columns: 108px 10px minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceRelation {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: start;
+  }
+}
+@media (max-width: 560px) {
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckAvailabilitySummaryStrip,
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapIssuesSummaryStrip {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimingStrip {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-events .rundeckEvidenceTimingStrip small {
+    grid-column: 1;
+  }
+}
