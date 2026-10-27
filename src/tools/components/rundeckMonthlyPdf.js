@@ -21,6 +21,14 @@ const dateWib = value => value ? new Intl.DateTimeFormat('en-GB', {
   hour: '2-digit', minute: '2-digit', hour12: false,
 }).format(new Date(value)) + ' WIB' : 'Not observed'
 
+const simpleDate = value => {
+  if (!value) return 'N/A'
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? 'N/A' : new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', year: 'numeric',
+  }).format(d)
+}
+
 const errorCategoryLabel = (category, fallback) => ({
   MEMORY: 'Memory', LOCK: 'Lock / Deadlock', DATABASE: 'Database',
   RUNTIME: 'Runtime / Timeout', RFC: 'RFC / Network',
@@ -204,8 +212,10 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
   pdf.text('Reporting month: ' + month + '  |  Prepared: ' + dateWib(new Date().toISOString()), margin, 29.5)
-  pdf.text('Monitoring records: ' + format(quality.complete_checks,0) + ' of approx. ' +
-    format(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ').', margin, 33.8)
+  pdf.text('Monitoring records: ' + format(quality.complete_checks,0) + ' / ~' +
+    format(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ').  ' +
+    'Recorded ' + simpleDate(quality.first_complete_at) + ' - ' +
+    simpleDate(quality.last_complete_at) + '.', margin, 33.8)
 
   const kpis = [
     ['PROGRAMS TO REVIEW', format(summary.review_required,0), 'Out of ' + format(summary.workloads,0) + ' observed workloads'],
