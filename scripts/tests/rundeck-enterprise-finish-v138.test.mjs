@@ -52,3 +52,22 @@ test('New visual layer does not hide evidence, timestamps, alerts, or error rows
   assert.match(read('RundeckInfrastructure.jsx'), /OPERATOR_THRESHOLDS\.filesystem\.critical/)
   assert.match(read('RundeckMonthlyReview.jsx'), /monthly_errors|sphereMonthlyErrors/)
 })
+
+test('APP evaluation host buttons open the filtered current workload instead of being disabled', () => {
+  const parent = read('RundeckMonitoringHistoryCore.jsx')
+  const health = read('RundeckWorkloadHealth.jsx')
+  const lanes = read('RundeckWorkloadAppLanes.jsx')
+  assert.match(parent, /onOpenApp=\{props\.onOpenAppJobs\}/)
+  assert.match(health, /onSelectWorkload, onOpenApp, viewMode/)
+  assert.match(health, /<RundeckWorkloadAppLanes[^>]*onOpenApp=\{onOpenApp\}/)
+  assert.match(lanes, /disabled=\{!onOpenApp\}/)
+  assert.match(lanes, /onClick=\{\(\) => onOpenApp\?\.\(lane\.key\)\}/)
+  assert.match(css, /\.rundeckAppEvalHostButton:not\(:disabled\):hover/)
+})
+
+test('Compact APP evaluations keep human-readable status labels and bars', () => {
+  assert.match(css, /\.rundeckAppEvalBar\s*\{[\s\S]*?height: 16px !important/)
+  assert.match(css, /\.rundeckAppEvalColumnHead > div > span\s*\{[\s\S]*?white-space: normal/)
+  assert.match(css, /\.rundeckAppEvalBreakdown small\s*\{[\s\S]*?font-size: 11\.5px !important/)
+  assert.match(read('RundeckWorkloadAppLanes.jsx'), /per-APP memberships are not distinct workloads/)
+})
