@@ -514,43 +514,39 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain .ru
 html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformancePage table thead th{background:#edf2f6!important;color:#42596c!important}
 html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformancePage table tbody td{color:#213344!important}
 
-/* Historical fidelity: full-range and saved-observation fitting are distinct
-   operator choices, never inferred or silently applied from missing months. */
-.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl {
-  display:flex;
+/* Chart fitting lives in the existing time selector. It does not add a second
+   banner or change collection coverage and alert-threshold evidence. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl{
+  display:inline-flex;
   align-items:center;
   flex-wrap:wrap;
-  gap:5px 12px;
-  margin:0 0 7px;
-  padding:6px 10px;
-  min-height:30px;
+  gap:4px 7px;
+  margin:0;
+  padding:0;
+  min-height:0;
+  background:transparent;
+  border:0;
   color:var(--v36-muted);
-  background:var(--v36-subpanel);
-  border-left:2px solid var(--v36-blue);
   font-size:11px;
-  line-height:1.4;
+  line-height:1.35;
 }
-.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl button {
-  padding:4px 10px!important;
-  min-height:26px!important;
-  margin-left:auto;
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl button{
   background:var(--v36-panel)!important;
   color:var(--v36-ink)!important;
   border:1px solid var(--v36-border)!important;
-  font-weight:600;
+  padding:4px 8px!important;
+  min-height:26px!important;
+  margin:0!important;
+  white-space:nowrap;
   font-size:11px;
+  font-weight:600;
 }
-.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl button[aria-pressed="true"] {
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl button[aria-pressed="true"]{
   border-color:var(--v36-blue)!important;
   color:var(--v36-blue)!important;
 }
-.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl small {
-  flex-basis:100%;
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl small{
   color:var(--v36-muted);
   font-size:10px;
-}
-@media(max-width:650px){
-  .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckObservedWindowControl button{
-    margin-left:0;
-  }
+  white-space:normal;
 }
