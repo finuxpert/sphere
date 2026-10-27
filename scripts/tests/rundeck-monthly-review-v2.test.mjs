@@ -130,7 +130,7 @@ test('monthly errors preserve source availability and WP diagnostic-only state',
 test('monthly report automatically includes review priorities without optional selection', () => {
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.doesNotMatch(pdf, /selectionHeader\(/)
-  assert.match(pdf, /programs requiring review/)
+  assert.match(pdf, /Programs Requiring Review/)
   assert.match(pdf, /RELATED PROGRAM/)
 })
 
@@ -143,7 +143,7 @@ test('ABAP tuning candidates are source-backed and never treated as confirmed er
   assert.match(evaluation, /"error_attribution": "NOT_ESTABLISHED"/)
   assert.match(ui, /AbapTuningCandidates/)
   assert.match(ui, /Status job perlu pemeriksaan di SM37/)
-  assert.match(pdf, /Programs to Review/)
+  assert.match(pdf, /Programs Requiring Review/)
   assert.match(pdf, /tuningCandidates\.slice\(0, 10\)/)
   assert.doesNotMatch(pdf, /not confirmed failed jobs or program errors/i)
   assert.doesNotMatch(pdf, /Error details are not available for this month/)
@@ -262,7 +262,7 @@ test('management monthly PDF uses plain IT wording and excludes confusing techni
   assert.doesNotMatch(pdf, /showFindingsOnFirstPage/)
   assert.doesNotMatch(pdf, /if \(errorLineY > H - 27\)/)
   assert.match(pdf, /tuningCandidates\.slice\(0, 10\)/)
-  assert.match(pdf, /programs requiring review/)
+  assert.match(pdf, /Programs Requiring Review/)
   assert.doesNotMatch(pdf, /This does not mean there were no errors/)
   assert.doesNotMatch(pdf, /not confirmed failed jobs or program errors/)
   assert.doesNotMatch(pdf, /CRITICAL WP CHECKS/)
