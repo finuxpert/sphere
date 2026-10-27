@@ -204,9 +204,10 @@
   border:1px solid var(--v36-border)!important;
   border-radius:5px!important;
   box-shadow:none!important;
-  min-height:220px!important;
+  min-height:235px!important;
   height:auto!important;
   padding:9px!important;
+  overflow:visible!important;
 }
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckMonitoringHead h3{
   color:var(--v36-ink)!important;
@@ -219,12 +220,69 @@
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckTrendToolbar{
   margin:3px 0!important;
 }
+/* Let the ECharts canvas fill actual space, with ResizeObserver resizing the plot. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckTrendPlot{
+  display:flex!important;
+  flex:1 1 176px!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:176px!important;
+  height:auto!important;
+  margin-top:auto!important;
+}
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckTrendChart{
-  min-height:116px!important;height:126px!important;max-height:132px!important;
+  display:block!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-height:176px!important;
+  height:100%!important;
+  max-height:none!important;
+  margin:0!important;
   overflow:visible!important;
 }
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendPlot{
+  flex-basis:142px!important;
+  min-height:142px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendChart{
+  min-height:142px!important;
+}
+/* Network controls get a readable two-line toolbar instead of colliding labels. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendToolbar{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:center!important;
+  gap:5px 10px!important;
+  min-width:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendToolbar .rundeckSegmented{
+  flex:1 0 100%!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:3px!important;
+  min-width:0!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendToolbar .rundeckSegmented button{
+  font-size:10px!important;
+  padding:4px 6px!important;
+  min-height:24px!important;
+  white-space:nowrap!important;
+}
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend :is(.rundeckNetworkCoverage,.rundeckNetworkSampleTime,.rundeckTechnicalLoadPeakNotice){
-  color:var(--v36-muted)!important;font-size:10px!important;
+  color:var(--v36-muted)!important;
+  font-size:10px!important;
+  line-height:1.45!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .is-technical-trend .rundeckNetworkSampleTime{
+  margin-left:auto!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckMonitoringHead h3 small{
+  font-size:10.5px!important;
+  line-height:1.35!important;
 }
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealth{
   background:transparent!important;
@@ -269,7 +327,7 @@
 }
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead{
   padding:0 9px 4px!important;
-  color:var(--v36-muted)!important;font-size:10px!important;
+  color:var(--v36-muted)!important;font-size:11px!important;
 }
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalLane{
   background:transparent!important;border:0!important;
@@ -285,7 +343,7 @@
 }
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalIdentity small{
   color:var(--v36-muted)!important;
-  font-size:10px!important;line-height:1.2!important;
+  font-size:11px!important;line-height:1.35!important;
 }
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalSummary{
   display:flex;gap:11px;align-items:center;min-width:0;
