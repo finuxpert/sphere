@@ -13,7 +13,7 @@ import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
 import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
-import { attachUnifiedVortex, savedVortexPeak } from './rundeckTrendAmbient.js'
+import { savedVortexPeak } from './rundeckTrendAmbientData.js'
 import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import { observedTrendWindow } from './rundeckObservedWindow.js'
@@ -1013,14 +1013,24 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   React.useEffect(() => { unifiedWakeRef.current?.() }, [temporalExpanded])
   React.useEffect(() => {
     if (!temporalReady) return undefined
-    const layer = attachUnifiedVortex({
-      canvas: unifiedCanvasRef.current,
-      grid: unifiedGridRef.current,
-      getChart: node => echarts.getInstanceByDom?.(node),
-      expandedRef: unifiedExpandedRef,
+    let disposed = false
+    let layer = null
+    // The operator view keeps actual trend plots visible. Load decorative
+    // canvas code only when explicitly enabled by a separate consumer.
+    import('./rundeckTrendAmbient.js').then(({ attachUnifiedVortex }) => {
+      if (disposed) return
+      layer = attachUnifiedVortex({
+        canvas: unifiedCanvasRef.current,
+        grid: unifiedGridRef.current,
+        getChart: node => echarts.getInstanceByDom?.(node),
+        expandedRef: unifiedExpandedRef,
+      })
+      unifiedWakeRef.current = layer?.wake || null
+    }).catch(() => {
+      // The optional canvas must never prevent live charts from rendering.
     })
-    unifiedWakeRef.current = layer?.wake || null
     return () => {
+      disposed = true
       layer?.dispose?.()
       if (unifiedWakeRef.current === layer?.wake) unifiedWakeRef.current = null
     }
