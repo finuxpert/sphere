@@ -1,0 +1,59 @@
+/* Network trend finishing: compact source timing and independent gap evidence. */
+.rundeckNetworkSampleTime {
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 9px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.rundeckNetworkScaleToggle { flex-shrink: 0; }
+.rundeckNetworkPeakNotice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+}
+.rundeckNetworkGapNotice {
+  margin: 3px 0 2px;
+  padding: 4px 7px;
+  border: 1px dashed rgba(106,162,216,.3);
+  border-radius: 4px;
+  background: rgba(106,162,216,.03);
+  color: var(--sphere-text-muted, #718089);
+}
+.rundeckNetworkGapNotice summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+  list-style: none;
+  cursor: pointer;
+}
+.rundeckNetworkGapNotice summary::-webkit-details-marker { display: none; }
+.rundeckNetworkGapNotice summary span {
+  color: var(--sphere-attention, #6aa2d8);
+  text-transform: uppercase;
+  font-weight: 750;
+  font-size: 8px;
+  letter-spacing: .03em;
+}
+.rundeckNetworkGapNotice summary strong {
+  color: var(--sphere-text-secondary, #a9b5bb);
+  font-size: 8.6px;
+}
+.rundeckNetworkGapNotice summary small, .rundeckNetworkGapDetails {
+  font-size: 8px;
+  color: var(--sphere-text-muted, #718089);
+}
+.rundeckNetworkGapDetails { margin-top: 5px; }
+.rundeckNetworkGapDetails > div {
+  display: grid;
+  grid-template-columns: 20px minmax(0,1fr) auto;
+  gap: 6px;
+  padding: 2px 0;
+}
+.rundeckNetworkGapDetails > small { display: block; margin-top: 3px; }
+@container (max-width: 600px) {
+  .rundeckNetworkSampleTime { white-space: normal; }
+  .rundeckNetworkGapNotice summary { align-items: flex-start; }
+}
