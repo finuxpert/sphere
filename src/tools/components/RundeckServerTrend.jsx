@@ -356,15 +356,15 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           return lines.join('<br/>')
         },
       },
-      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 10.5, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' || Boolean(trend?.network_source) ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (['load','network_rx','network_tx'].includes(trend?.metric) && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
+      xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 11, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 11, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' || Boolean(trend?.network_source) ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (['load','network_rx','network_tx'].includes(trend?.metric) && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
         const traceColor = colors.series[trendHostColorIndex(shortHost(host), index, colors.series.length)]
         const focused = selectedKey && shortHost(host) === selectedKey
         return {
-        id: host, name: shortHost(host), type: 'line', step: availabilityMode && trend?.range !== 'custom' ? 'end' : false, connectNulls: false,
+        id: host, name: shortHost(host), type: 'line', z: focused ? 6 : 2, step: availabilityMode && trend?.range !== 'custom' ? 'end' : false, connectNulls: false,
         showSymbol: availabilityMode || compactPoints,
         symbolSize: availabilityMode
           ? ((value, params) => String(params?.data?.status || '').toUpperCase() === 'DOWN' ? 8 : 3.5)
