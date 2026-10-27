@@ -93,3 +93,37 @@ test('visual finishing keeps focus visible and APP memberships unambiguous', () 
   assert.match(bars, /not confirmed SAP SM37 failed jobs/)
   assert.match(styles, /\.rundeckAppEvalBreakdown small\{[\s\S]*?font-size:11px!important/)
 })
+
+test('enterprise chart tokens are consistent with the selected shell and preserve severity meaning', () => {
+  const trend = read('RundeckServerTrend.jsx')
+  const css = read('RundeckEnterpriseMonitoringV137.css')
+  assert.match(trend, /document\.querySelector\('\.spherePerformanceShell'\)/)
+  for (let index = 1; index <= 5; index++) {
+    assert.match(css, new RegExp('--v36-series-' + index + ':'))
+    assert.ok(trend.includes("'--v36-series-" + index + "'"), 'chart palette missing APP slot ' + index)
+  }
+  assert.match(trend, /warning: token\('--v36-amber'/)
+  assert.match(trend, /danger: token\('--v36-red'/)
+})
+
+test('inactive temporal decoration does not execute its reduction or load canvas until requested', () => {
+  const trend = read('RundeckServerTrend.jsx')
+  const pure = read('rundeckTrendAmbientData.js')
+  const ambient = read('rundeckTrendAmbient.js')
+  assert.match(trend, /temporalReady \? savedVortexPeak\(/)
+  assert.match(trend, /import\('\.\/rundeckTrendAmbient\.js'\)/)
+  assert.match(ambient, /export \{ vortexAppLabel, savedVortexPeak \}/)
+  assert.match(pure, /export function savedVortexPeak/)
+  assert.match(trend, /if \(disposed\) return/)
+  assert.match(trend, /layer\?\.dispose\?\.\(\)/)
+})
+
+test('chart and APP details use only one active resize notification source', () => {
+  const trend = read('RundeckServerTrend.jsx')
+  const details = read('RundeckWorkloadAppLanes.jsx')
+  for (const [source, callback] of [[trend, 'resize'], [details, 'measure']]) {
+    assert.ok(source.includes('if (observer) observer.observe('))
+    assert.ok(source.includes("else window.addEventListener('resize', " + callback))
+    assert.ok(source.includes("if (!observer) window.removeEventListener('resize', " + callback))
+  }
+})
