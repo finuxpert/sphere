@@ -29,3 +29,15 @@ test('historical queries and SAP evidence checks are unaffected by render-order 
   assert.match(source, /markLine: index === 0 && visibleThresholds\.length/)
   assert.match(source, /markArea: index === 0 && gaps\.length/)
 })
+
+test('SPA root has an operator-facing fallback instead of an empty error screen', () => {
+  const main = readFileSync(new URL('../../src/main.jsx', import.meta.url), 'utf8')
+  const boundary = readFileSync(new URL('../../src/app/SphereAppErrorBoundary.jsx', import.meta.url), 'utf8')
+  assert.match(main, /<SphereAppErrorBoundary>/)
+  assert.match(main, /<App \/>/)
+  assert.match(main, /<\/SphereAppErrorBoundary>/)
+  assert.match(boundary, /getDerivedStateFromError/)
+  assert.match(boundary, /componentDidCatch/)
+  assert.match(boundary, /role="alert"/)
+  assert.match(boundary, /Reload dashboard/)
+})
