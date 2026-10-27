@@ -113,6 +113,16 @@
     gap: 3px !important;
   }
   .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendV13457 {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    gap: 2px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
   .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendEditorial {
     padding: 0 !important;
     margin: 0 !important;
