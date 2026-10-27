@@ -15,6 +15,7 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
   const laneListRef = React.useRef(null)
   const [laneWidth, setLaneWidth] = React.useState(0)
   const [activeByLane, setActiveByLane] = React.useState({})
+  const [expandedByLane, setExpandedByLane] = React.useState({})
 
   React.useLayoutEffect(() => {
     const target = laneListRef.current?.querySelector('.rundeckAppEvalDots')
@@ -28,7 +29,7 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
     observer?.observe(target)
     window.addEventListener('resize', measure, { passive: true })
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
-  }, [lanes.length])
+  }, [lanes.length, expandedByLane])
 
   // Maintain actual hexagon readability; wrap dense APP lanes rather than shrinking to dots.
   const maxCount = Math.max(1, ...lanes.map(lane => lane.total))
@@ -50,7 +51,7 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
     aria-label="Saved evaluations grouped by explicitly observed APP host">
     <div className="rundeckAppEvalColumnHead" aria-hidden="true">
       <span>APP / linked evaluations</span>
-      <span>Saved evaluation hexagons</span>
+      <span>Evaluation status distribution</span>
       <div>{STATUS_LABELS.map(level => <span key={level.key}>{level.label}</span>)}</div>
     </div>
     {lanes.map(lane => <section key={lane.key} className={'rundeckAppEvalLane' + (lane.key === 'UNVERIFIED' ? ' is-host-unverified' : '')}
@@ -65,24 +66,43 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
             </button>}
         <small>{lane.total} {lane.key === 'UNVERIFIED' ? 'without verified APP host' : 'linked evaluations'}</small>
       </div>
-      <div className="rundeckAppEvalDots" role="group" aria-label={lane.label + ' evaluation hexagons'}>
-        {lane.rows.map((row, index) => {
-          const state = workloadHealthLevel(row)
-          const type = String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'
-          const identity = String(row.consumer_key || 'Unidentified workload')
-          const label = lane.label + ' · ' + type + ' ' + identity + ' · global evaluation ' +
-            (STATUS_LABELS.find(level => level.key === state)?.label || 'Unknown') +
-            ' · ' + (period || 'saved window') + ' · not SM37 execution status'
-          return <button key={row.consumer_type + ':' + identity} type="button"
-            className={'rundeckAppEvalHex is-' + state}
-            title={label} aria-label={label + ' · open analysis'}
-            tabIndex={index === Math.min(activeByLane[lane.key] || 0, lane.total - 1) ? 0 : -1}
-            onFocus={() => setActiveByLane(previous => previous[lane.key] === index ? previous : ({ ...previous, [lane.key]: index }))}
-            onKeyDown={event => moveFocus(event, lane.key, index, lane.total)}
-            onClick={() => onSelectWorkload?.(row)} />
-        })}
-        {!lane.total && <span className="rundeckAppEvalEmpty">No verified APP-linked evaluation</span>}
+      <div className="rundeckAppEvalSummary">
+        <div className="rundeckAppEvalBar" role="img"
+          aria-label={lane.label + ' saved memberships: ' + STATUS_LABELS.map(level => level.label + ' ' + lane.counts[level.key]).join(', ')}>
+          {STATUS_LABELS.map(level => lane.counts[level.key] > 0
+            ? <span key={level.key} className={'rundeckAppEvalSegment is-' + level.key}
+                style={{ width: (lane.total ? 100 * lane.counts[level.key] / lane.total : 0) + '%' }}
+                title={level.label + ': ' + lane.counts[level.key] + ' verified APP-linked memberships'} />
+            : null)}
+          {!lane.total && <span className="rundeckAppEvalNoData">No saved evaluations</span>}
+        </div>
+        {lane.total > 0 && <button type="button" className="rundeckAppEvalToggle"
+          aria-expanded={Boolean(expandedByLane[lane.key])}
+          aria-label={(expandedByLane[lane.key] ? 'Hide' : 'Show') + ' individual saved evaluations for ' + lane.label}
+          onClick={() => setExpandedByLane(previous => ({ ...previous, [lane.key]: !previous[lane.key] }))}>
+          {expandedByLane[lane.key] ? 'Hide details' : 'Details'}
+        </button>}
       </div>
+      {expandedByLane[lane.key] && (
+        <div className="rundeckAppEvalDots" role="group" aria-label={lane.label + ' evaluation hexagons'}>
+          {lane.rows.map((row, index) => {
+            const state = workloadHealthLevel(row)
+            const type = String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'
+            const identity = String(row.consumer_key || 'Unidentified workload')
+            const label = lane.label + ' · ' + type + ' ' + identity + ' · global evaluation ' +
+              (STATUS_LABELS.find(level => level.key === state)?.label || 'Unknown') +
+              ' · ' + (period || 'saved window') + ' · not SM37 execution status'
+            return <button key={row.consumer_type + ':' + identity} type="button"
+              className={'rundeckAppEvalHex is-' + state}
+              title={label} aria-label={label + ' · open analysis'}
+              tabIndex={index === Math.min(activeByLane[lane.key] || 0, lane.total - 1) ? 0 : -1}
+              onFocus={() => setActiveByLane(previous => previous[lane.key] === index ? previous : ({ ...previous, [lane.key]: index }))}
+              onKeyDown={event => moveFocus(event, lane.key, index, lane.total)}
+              onClick={() => onSelectWorkload?.(row)} />
+          })}
+          {!lane.total && <span className="rundeckAppEvalEmpty">No verified APP-linked evaluation</span>}
+        </div>
+      )}
       <div className="rundeckAppEvalBreakdown" aria-label={lane.label + ' counts by global evaluation status'}>
         {STATUS_LABELS.map(level => <span key={level.key} className={'is-' + level.key}
           title={level.label + ' · global evaluation classification, not a host-specific threshold'}>
