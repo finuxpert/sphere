@@ -211,7 +211,7 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
-  pdf.text('Reporting month: ' + month + '  |  Prepared: ' + dateWib(new Date().toISOString()), margin, 29.5)
+  pdf.text('Reporting month: ' + month + '    Prepared: ' + dateWib(new Date().toISOString()), margin, 29.5)
   pdf.text('Monitoring records: ' + format(quality.complete_checks,0) + ' / ~' +
     format(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ').  ' +
     'Recorded ' + simpleDate(quality.first_complete_at) + ' - ' +
@@ -222,7 +222,7 @@ export async function buildMonthlyPdf({ month, data }) {
     ['HIGH CPU READINGS', format(pressure.cpu?.observed_pressure_host_checks,0), 'APP CPU at or above ' + pct(pressure.thresholds?.cpu_warning_pct)],
     ['HIGH RAM READINGS', format(pressure.ram?.observed_pressure_host_checks,0), 'APP RAM at or above ' + pct(pressure.thresholds?.ram_warning_pct)],
     ['MONITORING RECORDS', format(quality.complete_checks,0), 'of ~' + format(quality.expected_checks,0) +
-      ' expected | ' + pct(quality.coverage_pct)],
+      ' expected, ' + pct(quality.coverage_pct)],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -274,8 +274,35 @@ export async function buildMonthlyPdf({ month, data }) {
   drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'Daily Highest RAM', margin + chartW + 6, 91, chartW, 35, month,
     pressure.thresholds?.ram_warning_pct, ramWarningSummary)
 
-  drawTopTable(pdf, 'Programs Seen During High RAM', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
-  drawTopTable(pdf, 'Programs Seen During High CPU', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  const ramTableBottom = drawTopTable(pdf, 'Programs Seen During High RAM', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
+  const cpuTableBottom = drawTopTable(pdf, 'Programs Seen During High CPU', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+
+  // Source-backed executive summary within available page space. Do not
+  // infer failure, downtime, causality or execution count from WP samples.
+  const topCpuApp = hosts.filter(row => Number.isFinite(Number(row.peak_cpu_pct)))
+    .sort((a, b) => Number(b.peak_cpu_pct) - Number(a.peak_cpu_pct))[0]
+  const topRamApp = hosts.filter(row => Number.isFinite(Number(row.peak_ram_pct)))
+    .sort((a, b) => Number(b.peak_ram_pct) - Number(a.peak_ram_pct))[0]
+  const summaryY = Math.max(ramTableBottom, cpuTableBottom) + 7
+  if (summaryY < H - 16 && (topCpuApp || topRamApp)) {
+    pdf.setDrawColor(218, 227, 231)
+    pdf.line(margin + 2, summaryY - 4, W - margin - 2, summaryY - 4)
+    pdf.setTextColor(35, 51, 61)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(8)
+    pdf.text('Executive Findings', margin + 2, summaryY)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(6.8)
+    pdf.setTextColor(73, 88, 99)
+    const findings = [
+      topCpuApp && 'Highest observed APP CPU: ' + labelHost(topCpuApp.host) + ' at ' + pct(topCpuApp.peak_cpu_pct) + '.',
+      topRamApp && 'Highest observed APP RAM: ' + labelHost(topRamApp.host) + ' at ' + pct(topRamApp.peak_ram_pct) + '.',
+    ].filter(Boolean)
+    pdf.text(findings.join('  '), margin + 2, summaryY + 4)
+    if (summaryY + 9 < H - 8) {
+      pdf.text('Review candidates are based on saved measurements; they are not confirmed failed jobs or root causes.', margin + 2, summaryY + 8)
+    }
+  }
   const tuningCandidates = data.monthly_abap_candidates || []
   const summaryErrors = data.monthly_errors || {}
   const errorRows = (summaryErrors.top_errors || [])
@@ -373,6 +400,10 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setFontSize(11)
     pdf.setTextColor(240, 245, 248)
     pdf.text('Programs Requiring Review', margin + 4, 18)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(7)
+    pdf.setTextColor(87, 101, 113)
+    pdf.text('Priority ABAP review candidates from saved CPU and memory observations; no job failure is implied.', margin, 31)
     // The full monthly count is already visible on page 1.
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(7)
@@ -431,7 +462,7 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setDrawColor(218, 228, 234)
     // Minimal footer: no divider line.
     pdf.setTextColor(96, 109, 117);pdf.setFont('helvetica', 'normal');pdf.setFontSize(6.5)
-    pdf.text('SAP Monthly Performance Review  |  ' + month, margin, H-4)
+    pdf.text('SAP Monthly Performance Review  -  ' + month, margin, H-4)
     pdf.text('Page '+i+' of '+pages, W-margin, H-4,{align:'right'})
   }
   return pdf.output('blob')
