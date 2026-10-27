@@ -2,6 +2,7 @@ import React from 'react'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckJobsProgramsWorkspace from './RundeckJobsProgramsWorkspace.jsx'
 import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
+import RundeckPerformanceNavigation, { performanceViewFromHash } from './RundeckPerformanceNavigation.jsx'
 import RundeckAvailability from './RundeckAvailability.jsx'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
@@ -29,6 +30,7 @@ import './RundeckAppThreePanel.css'
 import './RundeckWorkloadAppLanes.css'
 import './RundeckInvestigationFinishingV135.css'
 import './RundeckMonthlyReview.css'
+import './RundeckPerformanceShell.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -58,6 +60,12 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [activeOverlay, setActiveOverlay] = React.useState(null)
+  const [activeView, setActiveView] = React.useState(performanceViewFromHash)
+  React.useEffect(() => {
+    const sync = () => { setActiveView(performanceViewFromHash()); setActiveOverlay(null) }
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
   const [availabilitySummaryRoot, setAvailabilitySummaryRoot] = React.useState(null)
   const [readinessSummaryRoot, setReadinessSummaryRoot] = React.useState(null)
   const [incidentHistoryRoot, setIncidentHistoryRoot] = React.useState(null)
@@ -152,8 +160,73 @@ export default function RundeckMonitoringHistory(props) {
     externalQuickKey={activeOverlay?.type === 'review' ? `${activeOverlay.row?.consumer_type}:${activeOverlay.row?.consumer_key}` : ''}
   />
 
+  const pageNames = {
+    jobs: ['Jobs & Programs', 'Current workload, saved evaluations and search'],
+    events: ['Related Events', 'Event correlation and collection evidence'],
+    'sap-checks': ['SAP Checks', 'Availability, SAP indicators and issue history'],
+    infrastructure: ['Infrastructure', 'Filesystem, Network and Storage telemetry'],
+    'system-data': ['System Data', 'Collection history and platform status'],
+    'monthly-review': ['Monthly Review', 'Saved performance evaluations and PDF reporting'],
+  }
+  const currentPage = pageNames[activeView]
+  const inlinePage = activeView === 'jobs'
+    ? <RundeckJobsProgramsWorkspace initialMode="live" initialHealth="REVIEW" showHealth={false}
+        refreshToken={refreshToken} performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+        currentContent={currentWorkloadContent} reviewContent={performanceReviewContent}
+        onOpenEvaluatedWorkload={openEvaluatedWorkload} />
+    : activeView === 'events'
+      ? <div className="rundeckOperatorPairedWorkspace is-events">
+          <section className="rundeckOperatorPairedPane" aria-label="Related events timeline">
+            <h3>Related Events</h3>
+            <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading events…</div>}>
+              <RundeckEvidenceTimeline paired refreshToken={refreshToken} job={selectedJob} incidentActive />
+            </React.Suspense>
+          </section>
+          <section className="rundeckOperatorPairedPane" aria-label="Rundeck collection history">
+            <h3>Rundeck Collection History <small>Saved samples · not SM37 job runs</small></h3>
+            {selectedJob?.key
+              ? <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading saved runs…</div>}>
+                  <RundeckObservationHistory paired job={selectedJob} refreshToken={refreshToken} embedded onSelectJob={inspectJob} />
+                </React.Suspense>
+              : <p className="rundeckOperatorPairedEmpty">Select a job or program to inspect saved observations.</p>}
+          </section>
+        </div>
+      : activeView === 'sap-checks'
+        ? <div className="rundeckSapChecksLayout">
+            <div className="rundeckSapChecksSummaryRail" aria-label="Availability and SAP readiness summary">
+              <div className="rundeckSapChecksSummaryAvailability" ref={setAvailabilitySummaryRoot} />
+              <div className="rundeckSapChecksSummaryReadiness" ref={setReadinessSummaryRoot} />
+            </div>
+            <div className="rundeckOperatorPairedWorkspace is-sap-checks rundeckSapChecksDetailGrid">
+              <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
+                <h3>Technical checks <small>Service Availability source</small></h3>
+                <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
+              </section>
+              <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
+                <h3>SAP Indicators <small>Latest verified APP signals · unavailable sources separate</small></h3>
+                <RundeckSapIssues paired readinessRoot={readinessSummaryRoot} historyRoot={incidentHistoryRoot}
+                  refreshToken={refreshToken} onInspectApp={inspectApp} />
+              </section>
+            </div>
+            <div className="rundeckSapChecksHistoryDock" ref={setIncidentHistoryRoot} aria-label="SAP incident history" />
+          </div>
+        : activeView === 'infrastructure'
+          ? <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading infrastructure…</div>}>
+              <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} />
+            </React.Suspense>
+          : activeView === 'system-data'
+            ? systemDataContent || <p role="status">System data unavailable.</p>
+            : activeView === 'monthly-review'
+              ? <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading monthly review…</div>}>
+                  <RundeckMonthlyReview refreshToken={refreshToken} sourceHosts={props.sourceHosts || []} />
+                </React.Suspense>
+              : null
+
   return <>
-    <RundeckMonitoringHistoryCore
+    <div className="spherePerformanceShell">
+      <RundeckPerformanceNavigation activeView={activeView} onNavigate={(view) => { setActiveView(view); setActiveOverlay(null) }} />
+      <div className="spherePerformanceMain">
+        {activeView === 'performance' ? <RundeckMonitoringHistoryCore
             {...props}
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
@@ -171,8 +244,13 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendInfrastructure={(context) => setActiveOverlay({ type: 'infrastructure', trendContext: context, returnTo: { type: 'selected' } })}
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
-          />
-          <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
+          /> : <section className="spherePerformancePage" aria-label={currentPage?.[0] || 'SAP Operations'}>
+          <header className="spherePerformancePageHeader"><h2>{currentPage?.[0] || 'SAP Operations'}</h2><p>{currentPage?.[1] || 'Source-backed observations'}</p></header>
+          {inlinePage}
+        </section>}
+      </div>
+    </div>
+    <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
           <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
 
           {activeOverlay?.type === 'monthly-review' && <RundeckWorkspaceDrawer
