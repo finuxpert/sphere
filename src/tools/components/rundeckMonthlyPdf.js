@@ -276,6 +276,7 @@ export async function buildMonthlyPdf({ month, data }) {
 
   drawTopTable(pdf, 'Programs Seen During High RAM', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
   drawTopTable(pdf, 'Programs Seen During High CPU', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  const tuningCandidates = data.monthly_abap_candidates || []
   const summaryErrors = data.monthly_errors || {}
   const errorRows = (summaryErrors.top_errors || [])
     .filter(row => row.event_count || row.snapshot_host_checks || row.untimed_trace_checks)
