@@ -26,9 +26,12 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
     }
     measure()
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
-    observer?.observe(target)
-    window.addEventListener('resize', measure, { passive: true })
-    return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
+    if (observer) observer.observe(target)
+    else window.addEventListener('resize', measure, { passive: true })
+    return () => {
+      observer?.disconnect()
+      if (!observer) window.removeEventListener('resize', measure)
+    }
   }, [lanes.length, expandedByLane])
 
   // Maintain actual hexagon readability; wrap dense APP lanes rather than shrinking to dots.
