@@ -1078,6 +1078,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             aria-pressed={range === 'custom'} aria-expanded={customOpen}
             onClick={() => { setCustomError(''); setCustomOpen(value => !value) }}
             aria-haspopup="dialog">Custom</button>
+          {longHistoricalRange && observedWindow && <span className="rundeckObservedWindowControl" role="group" aria-label="Historical display window">
+            <button type="button" aria-pressed={Boolean(displayWindow)}
+              title={'Retained observations: ' + formatWib(observedWindow.first, true) + ' – ' + formatWib(observedWindow.last, true) +
+                ' WIB. Display-only zoom; selected range, missing intervals, thresholds and values are unchanged.'}
+              onClick={() => setFitObserved(value => !value)}>{displayWindow ? 'Full range' : 'Fit observed'}</button>
+            {displayWindow && <small>Saved samples only · earlier intervals remain unknown</small>}
+          </span>}
         </div>
       </div>
       <div className="rundeckTrendSharedGroup rundeckTrendControlBucket" role="group" aria-label="Bucket interval">
@@ -1128,13 +1135,6 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
       <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
       <small>Jobs &amp; Programs Current uses latest collection, not this historical window</small>
-    </div>}
-    {longHistoricalRange && observedWindow && <div className="rundeckObservedWindowControl" role="group" aria-label="Historical display window">
-      <span>Retained observations: {formatWib(observedWindow.first, true)} – {formatWib(observedWindow.last, true)} WIB</span>
-      <button type="button" aria-pressed={Boolean(displayWindow)}
-        title="Display-only zoom to retained samples. The selected historical query, missing coverage, thresholds and values do not change."
-        onClick={() => setFitObserved(value => !value)}>{displayWindow ? 'Show full period' : 'Fit observed data'}</button>
-      {displayWindow && <small>Axis fitted to saved samples · earlier intervals remain unknown</small>}
     </div>}
     {serverTrend1?.items?.length > 0 && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
       <CollectionGapBand trend={serverTrend1} />
