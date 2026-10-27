@@ -26,6 +26,13 @@ const when = value => {
     minute: '2-digit', hour12: false,
   }).format(date) + ' WIB'
 }
+const dateShort = value => {
+  if (!value) return '—'
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? '—' : new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', year: 'numeric',
+  }).format(d)
+}
 function monthOptions() {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'numeric' })
     .formatToParts(new Date())
@@ -158,10 +165,10 @@ function MonthlyDashboardKpis({ pressure = {}, summary = {}, quality = {} }) {
   // The host-level WP flag is not a verified incident count; omit it from management KPIs.
   const entries = [
     { key:'cpu', label:'High CPU', value:pressure.cpu?.observed_pressure_host_checks,
-      note:'Times CPU reached its limit', detail:'Highest '+pct(pressure.cpu?.peak?.peak_pct)+' · '+fmt(pressure.cpu?.observed_warning_app_days,0)+' server-days',
+      note:'Readings at or above the CPU limit', detail:'Highest '+pct(pressure.cpu?.peak?.peak_pct)+' · '+fmt(pressure.cpu?.observed_warning_app_days,0)+' server-days',
       mark:'CPU' },
     { key:'ram', label:'High RAM', value:pressure.ram?.observed_pressure_host_checks,
-      note:'Times RAM reached its limit', detail:'Highest '+pct(pressure.ram?.peak?.peak_pct)+' · '+fmt(pressure.ram?.observed_warning_app_days,0)+' server-days',
+      note:'Readings at or above the RAM limit', detail:'Highest '+pct(pressure.ram?.peak?.peak_pct)+' · '+fmt(pressure.ram?.observed_warning_app_days,0)+' server-days',
       mark:'RAM' },
     { key:'wp', label:'Monitoring Records', value:quality.complete_checks,
       note:'Of about '+fmt(quality.expected_checks,0)+' expected',
@@ -460,8 +467,8 @@ export default function RundeckMonthlyReview() {
     {data&&!loading&&<>
       <div className="sphereMonthlyProvenance">
         <span>Reporting month: <b>{month}</b></span>
-        <span>Monitoring: <b>{fmt(quality.complete_checks,0)}</b> of ~{fmt(quality.expected_checks,0)} expected ({pct(quality.coverage_pct)})</span>
-        <span>Estimated from the monitoring interval</span>
+        <span>Monitoring records: <b>{fmt(quality.complete_checks,0)}</b> / ~{fmt(quality.expected_checks,0)} expected ({pct(quality.coverage_pct)})</span>
+        <span>Recorded: {dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
       </div>
       {tab==='overview'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
         <div className="sphereMonthlyVisualGrid">
@@ -496,17 +503,6 @@ export default function RundeckMonthlyReview() {
           }}/>
         </div>
         <MonthlyDashboardKpis pressure={evidence} summary={summary} quality={quality}/>
-        <div className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyExecutive">
-          <h4>Monthly Highlights</h4>
-          <div className="sphereMonthlyExecutiveGrid">
-            <div><span>Highest Server CPU</span><strong>{pct(evidence.cpu?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.cpu?.peak?.host)} · {when(evidence.cpu?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.cpu_warning_pct)}</small></div>
-            <div><span>Highest Server RAM</span><strong>{pct(evidence.ram?.peak?.peak_pct)}</strong><small>{hostLabel(evidence.ram?.peak?.host)} · {when(evidence.ram?.peak?.peak_at)} · Warning {pct(evidence.thresholds?.ram_warning_pct)}</small></div>
-            <div><span>Programs to Review</span><strong>{fmt(summary.review_required,0)}</strong><small>Review needed; job failures are not confirmed</small></div>
-            <div><span>Error Details</span><strong>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available':errors.truncated?'Partial':fmt(errors.error_code_count,0)+' types'}</strong><small>{errors.status==='ERROR_SOURCE_NOT_RETAINED'
-              ? 'Cannot confirm error status from this report'
-              : fmt(errors.error_program_count,0)+' programs identified for review'}</small></div>
-          </div>
-        </div>
         <div className="sphereMonthlyPanel sphereMonthlyWide">
           <h4>Server Performance by APP</h4>
           <div className="sphereMonthlyTableScroll"><table><thead><tr>
