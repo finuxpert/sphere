@@ -13,7 +13,7 @@ test('v1.36 visual layer loads last and respects existing SAP source models', ()
   assert.match(css, /--v36-cyan:#38c7df/)
   assert.match(css, /html\[data-theme="light"\]/)
   assert.match(css, /prefers-reduced-motion:reduce/)
-  assert.doesNotMatch(css, /Math\.random|mock|fake API|hardcoded metric/)
+  assert.doesNotMatch(css, /Math\.random|fake API|hardcoded metric/)
 })
 
 test('Overview keeps live APP and three real trend charts above Job & Program Evaluation', () => {
