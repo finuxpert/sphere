@@ -453,12 +453,14 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     chart.on('click', exactClick)
     chart.getZr().on('click', fallbackClick)
     const resize = () => chart.resize()
-    window.addEventListener('resize', resize)
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null
-    observer?.observe(ref.current)
+    // One resize source per mounted ECharts panel, not duplicate browser and
+    // element callbacks on every responsive layout adjustment.
+    if (observer) observer.observe(ref.current)
+    else window.addEventListener('resize', resize)
     return () => {
       observer?.disconnect()
-      window.removeEventListener('resize', resize)
+      if (!observer) window.removeEventListener('resize', resize)
       chart.off('click', exactClick)
       chart.getZr().off('click', fallbackClick)
       chart.dispose()
