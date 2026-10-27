@@ -50,8 +50,8 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
     style={{ '--lane-hex-size': dotSize + 'px' }}
     aria-label="Saved evaluations grouped by explicitly observed APP host">
     <div className="rundeckAppEvalColumnHead" aria-hidden="true">
-      <span>APP / linked evaluations</span>
-      <span>Evaluation status distribution</span>
+      <span title="The same job or program may be linked to more than one APP host; per-APP memberships are not distinct workloads">APP / linked evaluations</span>
+      <span title="Classification of saved SPHERE evaluations, not confirmed SAP SM37 failed jobs">Evaluation status distribution</span>
       <div>{STATUS_LABELS.map(level => <span key={level.key}>{level.label}</span>)}</div>
     </div>
     {lanes.map(lane => <section key={lane.key} className={'rundeckAppEvalLane' + (lane.key === 'UNVERIFIED' ? ' is-host-unverified' : '')}
