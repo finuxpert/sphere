@@ -301,7 +301,7 @@ export default function RundeckUnifiedAppInfrastructure({
         {!selectedHost && <p className="rundeckHistoryState">APP detail unavailable until a server sample is present.</p>}
       </section>
       <aside className="rundeckAppChecksPanel" aria-label="Operational Checks">
-        {operationalChecks}
+        {fleetMode ? null : operationalChecks}
       </aside>
     </div>
   </section>
