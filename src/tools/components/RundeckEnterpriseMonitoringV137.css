@@ -16,6 +16,12 @@
   --v36-green:#54b98b;
   --v36-amber:#d7a552;
   --v36-red:#e37c7c;
+  /* Five stable APP slots, reserved for measured traces rather than severity. */
+  --v36-series-1:#79a9db;
+  --v36-series-2:#80ba9e;
+  --v36-series-3:#b4a1db;
+  --v36-series-4:#d9a66d;
+  --v36-series-5:#6eb7c9;
   color:var(--v36-ink)!important;
   font-family:Inter,"Segoe UI",Arial,sans-serif;
   grid-template-columns:190px minmax(0,1fr)!important;
@@ -494,6 +500,8 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceShell{
   --v36-rule:#e2e7ec;--v36-ink:#213344;--v36-muted:#586e7f;
   --v36-cyan:#236eae;--v36-blue:#236eae;
   --v36-green:#18805f;--v36-amber:#936414;--v36-red:#bb3d50;
+  --v36-series-1:#27659e;--v36-series-2:#247f65;--v36-series-3:#7157ae;
+  --v36-series-4:#986324;--v36-series-5:#187f98;
 }
 html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceSidebar,
 html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain :is(.rundeckAppMotionPanel,.rundeckAppDetailPanel,.rundeckTrendBandV13454,.rundeckJobsProgramsOverview){
