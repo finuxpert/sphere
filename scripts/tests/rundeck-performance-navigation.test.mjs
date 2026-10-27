@@ -38,9 +38,9 @@ test('fleet mode disables moving orbit controls and retains source-backed select
   assert.match(app, /matchedInfrastructureHost/)
   assert.match(app, /selectedHost\.cpu_pct/)
   assert.match(app, /selectedHost\.ram_pct/)
-  assert.match(css, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/)
-  assert.match(css, /\.rundeckAppChecksPanel\{display:none!important\}/)
-  assert.match(css, /@media\(max-width:640px\)/)
+  assert.match(css, /grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\)\s*!important/)
+  assert.match(css, /\.rundeckAppChecksPanel\s*\{\s*display:\s*none\s*!important/)
+  assert.match(css, /@media\s*\(max-width:\s*640px\)/)
 })
 
 test('new UI scope does not remove evidence and infrastructure provenance', () => {
@@ -49,4 +49,20 @@ test('new UI scope does not remove evidence and infrastructure provenance', () =
   assert.match(app, /infraHostVerified/)
   assert.match(app, /fsFresh/)
   assert.match(review, /buildMonthlyPdf/)
+})
+
+test('performance cockpit is a normal-flow stack; APP fleet, Trends, and Workload cannot share grid cells', () => {
+  const css = read('RundeckPerformanceShell.css')
+  const core = read('RundeckMonitoringHistoryCore.jsx')
+  assert.doesNotMatch(css, /display:\\s*contents\\s*!important/)
+  assert.match(css, /\.rundeckMonitoring\.rundeckCockpitV13491\\s*\\{[\\s\\S]*?display:\\s*flex\\s*!important/)
+  assert.match(css, /flex-direction:\\s*column\\s*!important/)
+  assert.match(css, /grid-template-areas:\\s*none\\s*!important/)
+  assert.match(css, /\.rundeckAppHexMain\.rundeckAppThreePanels\\s*\\{[\\s\\S]*?grid-template-columns:\\s*minmax/)
+  assert.match(css, /\.rundeckTrendBandV13454/)
+  assert.match(css, /\.rundeckJobsProgramsOverview/)
+  const a = core.indexOf('<RundeckUnifiedAppInfrastructure')
+  const b = core.indexOf('<RundeckServerTrend')
+  const c = core.indexOf('<RundeckWorkloadHealth')
+  assert.ok(a > 0 && b > a && c > b, 'APP, trends and evaluations stay in reading order')
 })
