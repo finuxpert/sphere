@@ -575,6 +575,10 @@ html:not([data-theme="light"]) .appShell:has(.rundeckPanel) .spherePerformanceSh
   font-weight:450!important;
   color:var(--v36-muted)!important;
 }
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppMotionPanel .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+  grid-template-rows:minmax(64px,auto)!important;
+  min-height:64px!important;
+}
 .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
   min-height:64px!important;
   height:auto!important;
