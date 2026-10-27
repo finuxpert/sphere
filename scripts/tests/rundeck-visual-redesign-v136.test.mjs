@@ -62,3 +62,24 @@ test('Infrastructure keeps measured host selectors, thresholds, and historical s
   assert.match(css, /is-infrastructure \.rundeckInfraGrid/)
   assert.match(css, /is-infrastructure \.rundeckInfraTrendWorkspace/)
 })
+
+test('desktop finishing restores full fleet width despite retired honeycomb max-width', () => {
+  const finishing = css.slice(css.indexOf('v1.36.1 finishing'))
+  assert.ok(finishing.length > 4000, 'finishing rules loaded')
+  assert.match(finishing, /\.rundeckAppHexMain\.rundeckAppThreePanels\s*\{[\s\S]*?align-items:stretch!important/)
+  assert.match(finishing, /\.rundeckAppHexSelectors\.rundeckUnifiedAppCards\.is-honeycomb\s*\{[\s\S]*?max-width:none!important/)
+  assert.match(finishing, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/)
+  assert.match(finishing, /\.rundeckAppHexSelector\s*\{[\s\S]*?grid-column:auto!important/)
+  assert.match(finishing, /@media\(max-width:650px\)/)
+})
+
+test('Technical Trend keeps observed network evidence and selected chart visible, not cropped', () => {
+  const finishing = css.slice(css.indexOf('v1.36.1 finishing'))
+  const trend = read('RundeckServerTrend.jsx')
+  assert.match(finishing, /\.rundeckTripleTrendGrid > \.rundeckServerTrendPanelV1234\s*\{[\s\S]*?height:auto!important;[\s\S]*?overflow:visible!important/)
+  assert.match(finishing, /\.rundeckTripleTrendGrid \.is-technical-trend \.rundeckTrendToolbar\s*\{[\s\S]*?flex-wrap:wrap!important/)
+  assert.match(trend, /InfrastructureGapBand trend=\{technicalTrend\}/)
+  assert.match(trend, /networkScale\.outliers/)
+  assert.match(trend, /renderTrendState\(technicalTrend, technicalLoading/)
+  assert.match(read('RundeckMonitoringHistoryCore.jsx'), /<RundeckWorkloadHealth/)
+})
