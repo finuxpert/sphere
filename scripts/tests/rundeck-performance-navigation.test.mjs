@@ -1,0 +1,51 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+
+const read = path => readFileSync(new URL('../../src/tools/components/' + path, import.meta.url), 'utf8')
+
+test('SAP Operations exposes all six deep-linked workspaces without changing ST03N routing', () => {
+  const navigation = read('RundeckPerformanceNavigation.jsx')
+  for (const key of ['performance','jobs','events','sap-checks','infrastructure','system-data','monthly-review']) {
+    assert.match(navigation, new RegExp("id: '" + key + "'"))
+  }
+  assert.match(navigation, /location\.hash/)
+  assert.match(navigation, /aria-current=\{activeView === item\.id/)
+  assert.match(navigation, /href=\{item\.id === 'performance'/)
+})
+
+test('performance shell preserves live components and uses page navigation for operations', () => {
+  const wrapper = read('RundeckMonitoringHistory.jsx')
+  for (const component of ['RundeckMonitoringHistoryCore','RundeckJobsProgramsWorkspace',
+    'RundeckEvidenceTimeline','RundeckObservationHistory','RundeckSapIssues',
+    'RundeckAvailability','RundeckInfrastructure','RundeckMonthlyReview']) {
+    assert.ok(wrapper.includes('<' + component), component + ' remains connected')
+  }
+  assert.match(wrapper, /window\.addEventListener\('hashchange', sync\)/)
+  assert.match(wrapper, /activeView === 'performance'/)
+  assert.match(wrapper, /<RundeckPerformanceNavigation/)
+  assert.match(wrapper, /onOpenEvaluatedWorkload=\{openEvaluatedWorkload\}/)
+  assert.match(wrapper, /sourceHosts=\{props\.sourceHosts \|\| \[\]\}/)
+})
+
+test('fleet mode disables moving orbit controls and retains source-backed selected APP metrics', () => {
+  const core = read('RundeckMonitoringHistoryCore.jsx')
+  const app = read('RundeckUnifiedAppInfrastructure.jsx')
+  const css = read('RundeckPerformanceShell.css')
+  assert.match(core, /fleetMode/)
+  assert.match(app, /fleetMode \|\| hosts\.length !== 5/)
+  assert.match(app, /matchedInfrastructureHost/)
+  assert.match(app, /selectedHost\.cpu_pct/)
+  assert.match(app, /selectedHost\.ram_pct/)
+  assert.match(css, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)!important/)
+  assert.match(css, /\.rundeckAppChecksPanel\{display:none!important\}/)
+  assert.match(css, /@media\(max-width:640px\)/)
+})
+
+test('new UI scope does not remove evidence and infrastructure provenance', () => {
+  const app = read('RundeckUnifiedAppInfrastructure.jsx')
+  const review = read('RundeckMonthlyReview.jsx')
+  assert.match(app, /infraHostVerified/)
+  assert.match(app, /fsFresh/)
+  assert.match(review, /refreshToken/)
+})
