@@ -22,3 +22,5 @@ jobs:
         run: npm ci
       - name: Run static checks, cockpit regression, and build
         run: npm run qa
+      - name: Boot built DEV app in Chromium and reject blank dashboard
+        run: bash scripts/qa-browser-boot.sh
