@@ -145,6 +145,7 @@ test('ABAP tuning candidates are source-backed and never treated as confirmed er
   assert.match(ui, /Status job perlu pemeriksaan di SM37/)
   assert.match(pdf, /Programs Requiring Review/)
   assert.match(pdf, /tuningCandidates\.slice\(0, 10\)/)
+  assert.match(pdf, /const tuningCandidates = data\.monthly_abap_candidates \|\| \[\]/)
   assert.doesNotMatch(pdf, /not confirmed failed jobs or program errors/i)
   assert.doesNotMatch(pdf, /Error details are not available for this month/)
   assert.doesNotMatch(pdf, /EVALUASI ERROR UNTUK TUNING ABAP|Laporan Evaluasi Performa SAP Bulanan/)
