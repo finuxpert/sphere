@@ -20,6 +20,30 @@ DIRECTIONS = {
 HOST_PATTERN = r"^AOPH[1-5]PAPPDC$"
 
 
+def network_collection_gaps(observations: list[dict], cadence_seconds: int = 300) -> list[dict]:
+    """Find missing retained Network cycles from raw Infrastructure timestamps.
+
+    Boundaries are two actual observations. Never infer SAP downtime or claim
+    a missing cycle occurred at an exact unobserved timestamp.
+    """
+    stamps = sorted({
+        row.get("observed_at")
+        for row in observations
+        if row.get("observed_at") is not None
+    })
+    threshold_seconds = max(900, 2 * max(60, cadence_seconds))
+    result = []
+    for before, after in zip(stamps, stamps[1:]):
+        delta = int((after - before).total_seconds())
+        if delta > threshold_seconds:
+            result.append({
+                "before": before,
+                "after": after,
+                "observed_spacing_seconds": delta,
+            })
+    return result[-30:]
+
+
 def app_network_trend(
     since: datetime,
     range_key: str,
@@ -99,8 +123,25 @@ def app_network_trend(
     if until is not None:
         params["until"] = until
 
+    # Independent Infrastructure gap evidence uses the raw collection
+    # timestamps rather than bucketed Performance history or bucket centres.
+    gap_sql = f"""
+        SELECT c.execution_id, MAX(s.collected_at) AS observed_at
+        FROM rundeck_infra_samples s
+        JOIN rundeck_infra_collections c ON c.collection_id = s.collection_id
+        WHERE s.kind = 'network' AND c.status = 'READY'
+          AND upper(split_part(s.host,'.',1)) ~ '{HOST_PATTERN}'
+          AND s.collected_at >= :since
+          {bounds}
+        GROUP BY c.execution_id ORDER BY observed_at
+    """
+    cadence = max(60, int(os.getenv("SPHERE_INFRA_COLLECTION_CADENCE_SECONDS", "300")))
     with engine.connect() as conn:
+        observations = [dict(row._mapping) for row in conn.execute(
+            text(gap_sql), {"since": since, **({"until": until} if until is not None else {})}
+        )]
         items = [dict(row._mapping) for row in conn.execute(text(sql), params)]
+    collection_gaps = network_collection_gaps(observations, cadence)
     # Freshness uses the last retained observation, not the earlier peak in a bucket.
     latest = max((row["latest_at"] for row in items if row.get("latest_at")), default=None)
     return {
@@ -123,5 +164,7 @@ def app_network_trend(
         "expected_hosts": ["APP1", "APP2", "APP3", "APP4", "APP5"],
         "observed_hosts": sorted({row["host"] for row in items}),
         "last_observed_at": latest,
+        "collection_gaps": collection_gaps,
+        "infrastructure_collection_cadence_seconds": cadence,
         "items": items,
     }
