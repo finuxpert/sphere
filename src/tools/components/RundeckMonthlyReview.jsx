@@ -222,7 +222,7 @@ function PressureEpisodes({ metric, pressure }) {
         <small>{fmt(evidence.observed_pressure_host_checks,0)} pemeriksaan APP. Puncak {pct(evidence.peak?.peak_pct)} pada {hostLabel(evidence.peak?.host)} tanggal {when(evidence.peak?.peak_at)}</small></div>
     </div>
     <div className="sphereMonthlyTableScroll"><table>
-      <thead><tr><th>APP</th><th>Pertama tercatat</th><th>Terakhir tercatat</th><th>Waktu puncak</th><th>Nilai puncak</th><th>Pemeriksaan</th></tr></thead>
+      <thead><tr><th>APP</th><th>First observed</th><th>Last observed</th><th>Peak time</th><th>Peak value</th><th>Checks</th></tr></thead>
       <tbody>{(evidence.recent_episodes || []).map((row,index)=><tr key={row.host+String(row.first_at)+index}>
         <td>{hostLabel(row.host)}</td><td>{when(row.first_at)}</td><td>{when(row.last_at)}</td>
         <td>{when(row.peak_at)}</td><td>{pct(row.peak_pct)}</td><td>{fmt(row.observed_host_checks,0)}</td>
@@ -245,7 +245,7 @@ function AbapTuningCandidates({ rows = [], errorEvidence = {} }) {
   return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyTuning" aria-label="ABAP tuning candidates">
     <div className="sphereMonthlyTableHead">
       <div><h4>ABAP Tuning Candidates</h4>
-        <small>Job dan program untuk evaluasi performa dari histori SPHERE. Status job perlu pemeriksaan di SM37.</small>
+        <small>Jobs and programs flagged by saved SPHERE history. Confirm job execution in SAP SM37.</small>
       </div>
       <span className="sphereMonthlyErrorCounter">{fmt(rows.length, 0)} candidates</span>
     </div>
@@ -289,27 +289,27 @@ function MonthlyErrorAnalysis({ evidence }) {
     (appFilter==='ALL'||hostLabel(row.host)===appFilter))
   const state = errors.status || 'ERROR_SOURCE_NOT_RETAINED'
   const unknownSource = state === 'ERROR_SOURCE_NOT_RETAINED'
-  return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyErrors" aria-label="Evaluasi error program ABAP">
+  return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyErrors" aria-label="ABAP program error review">
     <div className="sphereMonthlyTableHead">
       <div>
-        <h4>Evaluasi Error Program ABAP</h4>
+        <h4>ABAP Program Error Review</h4>
         <small>Histori SPHERE · Tidak menggantikan ST22 atau SM37</small>
       </div>
       <span className="sphereMonthlyErrorCounter">
-        {state === 'TRUNCATED' ? 'Data error sebagian' : state === 'ERROR_SOURCE_NOT_RETAINED' ? 'Sumber error belum tersimpan' :
+        {state === 'TRUNCATED' ? 'Partial error history' : state === 'ERROR_SOURCE_NOT_RETAINED' ? 'Error source not retained' :
         state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Tidak ditemukan kode error' :
         state === 'WP_SIGNALS_ONLY' ? 'Ada sinyal diagnostik WP' :
         state === 'SNAPSHOT_ONLY' ? 'Hanya observasi snapshot' :
-        state === 'UNTIMED_TRACE_ONLY' ? 'Trace tanpa waktu kejadian' : fmt(errors.timestamped_events, 0) + ' kejadian berwaktu'}
+        state === 'UNTIMED_TRACE_ONLY' ? 'Untimed WP trace' : fmt(errors.timestamped_events, 0) + ' timestamped events'}
       </span>
     </div>
     <div className="sphereMonthlyStatStrip">
-      <span>Kejadian berwaktu: {unknownSource ? 'Tidak tersedia' : state === 'TRUNCATED' ? 'Data parsial' : fmt(errors.timestamped_events, 0)}</span>
-      <span>Observasi error saat snapshot: {unknownSource ? 'Tidak tersedia' : fmt(errors.snapshot_host_checks, 0)}</span>
-      <span>Program dengan evidence error: {unknownSource ? 'Tidak tersedia' : fmt(errors.error_program_count,0)}</span>
-      <span>Kode error: {unknownSource ? 'Tidak tersedia' : fmt(errors.error_code_count,0)}</span>
-      <span>RABAX: {unknownSource ? 'Tidak tersedia' : fmt(errors.rabax_wp_checks,0) + ' pemeriksaan WP'}</span>
-      <span>RXMSG: {unknownSource ? 'Tidak tersedia' : fmt(errors.rxmsg_wp_checks,0) + ' pemeriksaan WP'}</span>
+      <span>Timestamped events: {unknownSource ? 'Unavailable' : state === 'TRUNCATED' ? 'Partial' : fmt(errors.timestamped_events, 0)}</span>
+      <span>Error observations at snapshot: {unknownSource ? 'Unavailable' : fmt(errors.snapshot_host_checks, 0)}</span>
+      <span>Programs with error evidence: {unknownSource ? 'Unavailable' : fmt(errors.error_program_count,0)}</span>
+      <span>Error codes: {unknownSource ? 'Unavailable' : fmt(errors.error_code_count,0)}</span>
+      <span>RABAX: {unknownSource ? 'Unavailable' : fmt(errors.rabax_wp_checks,0) + ' WP checks'}</span>
+      <span>RXMSG: {unknownSource ? 'Unavailable' : fmt(errors.rxmsg_wp_checks,0) + ' WP checks'}</span>
     </div>
     <div className="sphereMonthlyErrorTools">
       <span>{fmt(rows.length,0)} dari {fmt(errors.groups ?? rows.length,0)} error groups tersedia untuk drilldown</span>
@@ -321,7 +321,7 @@ function MonthlyErrorAnalysis({ evidence }) {
       </select></label>
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
-      <th>Program terkait</th><th>Jenis masalah</th><th>Kode error SAP</th><th>APP / WP / PID</th><th>WP CPU / PSS at snapshot</th>
+      <th>Related program</th><th>Issue type</th><th>SAP error code</th><th>APP / WP / PID</th><th>WP CPU / PSS at snapshot</th>
       <th>Kejadian berwaktu</th><th>Waktu error (WIB)</th><th>Observasi WP</th><th>Hubungan program</th>
     </tr></thead><tbody>
       {visible.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
@@ -349,9 +349,9 @@ function MonthlyErrorAnalysis({ evidence }) {
         : 'No error code was found in available retained observations. Check ST22 and SM37 for authoritative SAP records.'}</td></tr>}
     </tbody></table></div>
     {(errors.wp_diagnostics || []).length > 0 && <div className="sphereMonthlyWpDiagnostics">
-      <h4>Sinyal WP untuk investigasi ABAP</h4>
-      <small>RABAX dan RXMSG berasal dari hitungan trace collector. Bukan jumlah dump ST22 atau kejadian error terkonfirmasi.</small>
-      <div className="sphereMonthlyTableScroll"><table><thead><tr><th>Sinyal</th><th>APP</th><th>Program terkait</th><th>Pemeriksaan WP</th><th>Nilai trace tertinggi</th></tr></thead>
+      <h4>WP Trace Signals for ABAP Review</h4>
+      <small>RABAX and RXMSG are WP trace signals, not confirmed ST22 dump or failed-job counts.</small>
+      <div className="sphereMonthlyTableScroll"><table><thead><tr><th>Signal</th><th>APP</th><th>Related program</th><th>WP checks</th><th>Peak trace value</th></tr></thead>
         <tbody>{errors.wp_diagnostics.map((item,index)=><tr key={item.signal+item.host+item.program+index}>
           <td>{item.signal}</td><td>{hostLabel(item.host)}</td><td className="sphereMonthlyName"><strong>{item.program}</strong>
             <small>{item.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program tercatat eksplisit' : 'Hanya konteks workload: '+(item.sample_workload || 'tidak tersedia')}</small></td>
@@ -359,7 +359,7 @@ function MonthlyErrorAnalysis({ evidence }) {
         </tr>)}</tbody>
       </table></div>
     </div>}
-    <p>{state === 'TRUNCATED' ? 'Histori yang dapat dibaca belum lengkap. ' : ''}RABAX dan RXMSG adalah indikator trace WP, bukan jumlah dump ST22. Status job diverifikasi di SM37. Nama program yang hanya muncul sebagai konteks tidak dinyatakan sebagai sumber error.</p>
+    <p>{state === 'TRUNCATED' ? 'Retained history is incomplete. ' : ''}RABAX and RXMSG indicate WP trace signals, not ST22 dump counts. Confirm job status in SM37. A related program is not a confirmed error source.</p>
   </section>
 }
 
@@ -521,7 +521,7 @@ export default function RundeckMonthlyReview() {
       </div>}
       {tab==='jobs'&&<div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Job dan Program untuk Evaluasi</h4><small>{total} hasil. Halaman {page+1} dari {pages}</small></div>
+          <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} dari {pages}</small></div>
           <div className="sphereMonthlyFilters">
             <input type="search" value={search} onChange={event=>{pdfGenerationRef.current+=1;setSearch(event.target.value);setPage(0)}}
               placeholder="Search full job / program name" aria-label="Search job and program"/>
@@ -545,7 +545,7 @@ export default function RundeckMonthlyReview() {
         </div>
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
           <th>Job / Program</th><th>APP teramati</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
-          <th>Pemeriksaan</th><th>CPU / RAM warning</th><th>Critical WP</th>
+          <th>Checks</th><th>CPU / RAM warning</th><th>Critical WP</th>
         </tr></thead><tbody>
           {items.map(row=><React.Fragment key={id(row)}>
             <tr><td className="sphereMonthlyName"><button type="button" className="sphereMonthlyJobDetailToggle" aria-expanded={expanded===id(row)}
@@ -571,20 +571,20 @@ export default function RundeckMonthlyReview() {
           </React.Fragment>)}
           {!items.length&&<tr><td colSpan="7">Tidak ada job atau program sesuai filter bulan ini.</td></tr>}
         </tbody></table></div>
-        <div className="sphereMonthlyPager"><small>Filter berdasarkan histori yang tersimpan di server</small>
+        <div className="sphereMonthlyPager"><small>Filters use saved SPHERE observations</small>
           <button type="button" disabled={page===0} onClick={()=>setPage(n=>n-1)}>Previous</button>
           <button type="button" disabled={page+1>=pages} onClick={()=>setPage(n=>n+1)}>Next</button>
         </div>
       </div>}
       {tab==='impact'&&<div className="sphereMonthlyImpact">
-        <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>Pengamatan CPU dan RAM di atas warning</h4>
+        <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>CPU & RAM Warning Observations</h4>
           <div className="sphereMonthlyStatStrip">
             <span>CPU warning ≥ {pct(evidence.thresholds?.cpu_warning_pct)}</span>
             <span>RAM warning ≥ {pct(evidence.thresholds?.ram_warning_pct)}</span>
-            <span>CPU warning {fmt(evidence.cpu?.observed_pressure_host_checks,0)} pemeriksaan</span>
-            <span>RAM warning {fmt(evidence.ram?.observed_pressure_host_checks,0)} pemeriksaan</span>
+            <span>CPU warning {fmt(evidence.cpu?.observed_pressure_host_checks,0)} checks</span>
+            <span>RAM warning {fmt(evidence.ram?.observed_pressure_host_checks,0)} checks</span>
           </div>
-          <p>Pengamatan berdasarkan histori APP. Hubungan dengan job atau program perlu dianalisis lebih lanjut sebelum dinyatakan sebagai penyebab.</p>
+          <p>Based on saved APP observations. Workloads seen at the same time are not confirmed root causes.</p>
         </div>
         <PressureEpisodes metric="cpu" pressure={evidence}/>
         <PressureEpisodes metric="ram" pressure={evidence}/>
@@ -609,7 +609,7 @@ export default function RundeckMonthlyReview() {
           <div><strong>Error Details</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available for this month; this does not mean no errors occurred.':errors.truncated?'Only partial error data is available.':<>{fmt(errors.error_code_count,0)} error types found; {fmt(errors.error_program_count,0)} programs identified.</>}</span></div>
         </div>
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
-          <div className="sphereMonthlyPager"><small>Pratinjau PDF berdasarkan histori bulan terpilih</small>
+          <div className="sphereMonthlyPager"><small>Preview based on the selected month's saved history</small>
             <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Unduh PDF</a>
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Buka layar penuh</a>
             <button type="button" onClick={()=>{if(pdfRef.current)URL.revokeObjectURL(pdfRef.current);pdfRef.current='';setPdfUrl('')}}>Close preview</button>
