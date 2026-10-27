@@ -367,12 +367,8 @@
     font-size: 10px !important;
   }
 
-  /* Expanded detail intentionally restores normal height and page scrolling. */
-  .appShell:has(.rundeckPanel) .spherePerformanceMain
-  .rundeckMonitoring[data-viewport-fit="true"]:has(.rundeckAppEvalDots) {
-    height: auto !important;
-    grid-template-rows: auto auto auto !important;
-  }
+  /* Expanded evaluations remove data-viewport-fit in React before paint.
+     Do not mix auto grid tracks with children sized to 100% height. */
 }
 
 /* Ordinary laptop, narrow desktop, and mobile do not clip long names or data. */
