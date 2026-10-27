@@ -48,6 +48,7 @@ const files = {
   evidenceBackend: read('backend/rundeck_evidence.py'),
   sapIssues: read('src/tools/components/RundeckSapIssues.jsx'),
   operationalEvidence: read('src/tools/components/RundeckOperationalEvidence.jsx'),
+  performanceNavigation: read('src/tools/components/RundeckPerformanceNavigationState.js'),
   investigationContext: read('src/tools/components/RundeckInvestigationContext.jsx'),
   investigationFlow: read('src/tools/components/RundeckInvestigationFlow.css'),
   sm37Portal: read('src/tools/components/RundeckSm37LivePortal.jsx'),
@@ -273,19 +274,18 @@ const checks = [
 
   ['SAP Job Source renders as a visible neutral integrity strip', files.accessibilityThemeFinal.includes('.rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED')],
   ['SAP Job Monitor legacy detail remains removed until authoritative SM37 feed is ready', !files.wrapper.includes('RundeckJobMonitor') && !files.wrapper.includes('SAP Job Monitor details') && files.wrapper.includes('RundeckSm37LivePortal')],
-  ['Top cockpit merges SAP APP and Infrastructure into one host-card workspace',
+  ['SAP fleet, APP detail and matching Infrastructure source remain connected',
     files.monitoringCore.includes('rundeckTopBandV13454 is-unified-app-infra') &&
     files.monitoringCore.includes('<RundeckUnifiedAppInfrastructure') &&
-    files.monitoringCore.includes('operationalChecks={props.operationalEvidenceContent}') &&
+    files.monitoringCore.includes('fleetMode') &&
     files.unifiedApp.includes('rundeckAppThreePanels') &&
     files.unifiedApp.includes('rundeckAppMotionPanel') &&
     files.unifiedApp.includes('rundeckAppDetailPanel') &&
-    files.unifiedApp.includes('rundeckAppChecksPanel') &&
     files.unifiedApp.includes('const openSelectedAnalysis = () => openAppAnalysis(selectedHost)') &&
     files.unifiedApp.includes('infraHostVerified: Boolean(infraHost)') &&
     files.unifiedAnalysis.includes('RundeckAppServerAnalysis') &&
     files.unifiedAnalysis.includes('RundeckInfrastructure') &&
-    files.unifiedAnalysis.includes('lockedHost') && files.unifiedAnalysis.includes('hideHostCards') &&
+    files.unifiedAnalysis.includes('lockedHost') &&
     files.unifiedState.includes('infrastructureTelemetryFreshness')],
   ['Shared APP context drills into Infrastructure Analysis without another host selector',
     files.wrapper.includes('onOpenInfrastructureMetric=') &&
@@ -322,21 +322,15 @@ const checks = [
     files.jobsPrograms.includes('>Current</button>') &&
     files.jobsPrograms.includes('>Review</button>') &&
     files.jobsPrograms.includes('>Search</button>')],
-  ['Flat cockpit preserves six operational checks with the monthly review inside the APP workspace',
-    files.monitoringCore.includes('operationalChecks={props.operationalEvidenceContent}') &&
-    files.operationalEvidence.includes('rundeckAnalysisActions') &&
-    files.operationalEvidence.includes('Jobs &amp; Programs') &&
-    files.operationalEvidence.includes('Related Events') &&
-    files.operationalEvidence.includes('SAP Checks') &&
-    files.operationalEvidence.includes('Infrastructure') &&
-    files.operationalEvidence.includes('System Data') &&
-    files.operationalEvidence.includes('Monthly Review') &&
-    files.wrapper.includes('onOpenMonthlyReview=') &&
-    files.wrapper.includes('size="monthly-review"') &&
-    files.wrapper.includes('onOpenJobsPrograms=') &&
-    files.wrapper.includes('onOpenEvidence=') &&
-    files.wrapper.includes('onOpenInfrastructure=') &&
-    files.wrapper.includes('onOpenSystemData=')],
+  ['Six Operational Checks pages replace retired APP shortcuts',
+    ['jobs','events','sap-checks','infrastructure','system-data','monthly-review']
+      .every(id => files.performanceNavigation.includes("id: '" + id + "'")) &&
+    files.wrapper.includes('<RundeckPerformanceNavigation') &&
+    files.wrapper.includes("activeView === 'events'") &&
+    files.wrapper.includes("activeView === 'sap-checks'") &&
+    files.wrapper.includes("activeView === 'infrastructure'") &&
+    files.wrapper.includes("activeView === 'monthly-review'") &&
+    !files.wrapper.includes('operationalEvidenceContent')],
   ['Analysis drawers share the restrained v1.34.58 visual contract', files.workspaceDrawerCss.includes('one restrained visual contract for all analysis drawers') && files.evidenceTimelineCss.includes('calmer correlated-events timeline') && files.availabilityCss.includes('flatter SAP Availability report') && files.infrastructureCss.includes('reduce infrastructure separators') && files.systemDataCss.includes('lighter System Data drawer')],
   ['Drawer navigation no longer references removed Selected Job or Live Monitoring chrome', !files.wrapper.includes('Back to Selected Job') && !files.wrapper.includes('Back to Live Monitoring') && files.wrapper.includes('Back to SAP Performance') && files.wrapper.includes('Back to Performance Analysis')],
   ['Paired Run History retains the saved observation count, collection and period', files.observationHistory.includes('rundeckObservationHistoryContext') && files.observationHistory.includes('<b>Performance observations</b>') && files.observationHistory.includes('<b>Rundeck collections</b>') && files.observationHistory.includes('<b>Period</b>')],
@@ -511,7 +505,12 @@ const checks = [
   ['Selected job performance opens directly without nested disclosure', files.jobHistory.includes('rundeckJobPerformanceDisclosure is-direct') && !files.jobHistory.includes('className="rundeckJobPerformanceDisclosure" open')],
   ['Selected job header exposes JOB or PROGRAM badge', files.jobHistory.includes('rundeckJobTypeBadge') && files.jobHistory.includes('displayType')],
   ['Selected job inline panel is removed and Current Jobs launches shared Performance Analysis', !files.core.includes('rundeckSelectedCompact') && files.wrapper.includes('React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })') && files.wrapper.includes('Job / Program Performance Analysis')],
-  ['Run History and Infrastructure launch via paired evidence and dedicated infrastructure actions', files.wrapper.includes('onOpenEvidence=') && files.wrapper.includes('RundeckObservationHistory') && files.wrapper.includes('onOpenInfrastructure=') && files.wrapper.includes("type: 'infrastructure', sapHost: focusedOperationalHost?.host || ''")],
+  ['Run History and Infrastructure retain source-backed page and modal entry points',
+    files.wrapper.includes('RundeckObservationHistory') &&
+    files.wrapper.includes('onOpenTrendEvidence=') &&
+    files.wrapper.includes('onOpenInfrastructureMetric=') &&
+    files.wrapper.includes('infraContext: context') &&
+    files.wrapper.includes("activeView === 'infrastructure'")],
   ['Generic analysis drawer supports escape close and responsive full width', files.workspaceDrawer.includes("event.key === 'Escape'") && files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawer') && files.workspaceDrawerCss.includes('@media(max-width:1180px)')],
   ['Exactly one overlay state controls Review, paired events and standalone infrastructure', files.wrapper.includes('const [activeOverlay, setActiveOverlay]') && files.wrapper.includes("activeOverlay?.type === 'review'") && files.wrapper.includes("['evidence', 'history'].includes(activeOverlay?.type)") && files.wrapper.includes("activeOverlay?.type === 'infrastructure'")],
   ['Review rows do not mount a second Job Performance renderer', !files.quickAnalysis.includes('RundeckJobHistory') && files.wrapper.includes("source: 'performance-review'")],
@@ -583,9 +582,19 @@ const checks = [
   ['Review Result can return to the same shared Performance Analysis drawer', files.wrapper.includes('returnToJob: true') && files.wrapper.includes("setActiveOverlay({ type: 'job', reviewRow: activeOverlay.row, reviewContext: activeOverlay.reviewContext })")],
   ['Run History drilldown preserves the paired modal return stack', files.wrapper.includes("setActiveOverlay({ type: 'job', returnTo: activeOverlay })") && files.wrapper.includes('RundeckObservationHistory') && files.wrapper.includes("activeOverlay.returnTo?.type === 'history'")],
   ['Drawer Back control has compact header styling', files.workspaceDrawerCss.includes('.rundeckWorkspaceDrawerHeaderActions') && files.workspaceDrawerCss.includes('.rundeckWorkspaceBack')],
-  ['Flat bar exposes four connected destinations without a duplicate menu', !files.wrapper.includes("activeOverlay?.type === 'menu'") && files.wrapper.includes('onOpenEvidence=') && files.wrapper.includes('onOpenIssues=') && files.wrapper.includes('onOpenInfrastructure=') && files.wrapper.includes('onOpenSystemData=') && files.operationalEvidence.includes('rundeckAnalysisActions') && !files.operationalEvidence.includes('onOpenHistory') && !files.operationalEvidence.includes('onOpenAvailability')],
+  ['Sidebar connects Operational Checks without a duplicate analysis menu',
+    !files.wrapper.includes("activeOverlay?.type === 'menu'") &&
+    files.wrapper.includes('RundeckPerformanceNavigation') &&
+    files.wrapper.includes("activeView === 'events'") &&
+    files.wrapper.includes("activeView === 'sap-checks'") &&
+    files.wrapper.includes("activeView === 'infrastructure'") &&
+    files.wrapper.includes("activeView === 'system-data'")],
   ['Paired Run History remains available from selected investigation and Job context', files.wrapper.includes("type: 'evidence', job, returnTo: { type: 'selected' }") && files.wrapper.includes("type: 'evidence', job: selectedJob") && files.wrapper.includes('aria-label="Rundeck collection history"')],
-  ['Infrastructure opens directly from selected or Job context', files.wrapper.includes("type: 'infrastructure', sapHost: focusedOperationalHost?.host || ''") && files.wrapper.includes("type: 'infrastructure', returnTo: { type: 'job'")],
+  ['Infrastructure opens from APP metric, Job context and standalone page',
+    files.wrapper.includes('onOpenInfrastructureMetric=') &&
+    files.wrapper.includes('infraContext: context') &&
+    files.wrapper.includes("type: 'infrastructure', returnTo: { type: 'job'") &&
+    files.wrapper.includes("activeView === 'infrastructure'")],
   ['Job Performance preserves APP return stack without menu hop', files.wrapper.includes("returnTo: { type: 'app', app: activeOverlay.app, returnTo: activeOverlay.returnTo || null }") && !files.wrapper.includes("type: 'job', returnTo: { type: 'menu' }")],
   ['Paired operational analysis renders events/runs and availability/issues without a menu', files.wrapper.includes('rundeckOperatorPairedWorkspace is-events') && files.wrapper.includes('rundeckOperatorPairedWorkspace is-sap-checks') && !files.wrapper.includes('rundeckDrawerAnalysisMenu')],
   ['Operational evidence has four direct destinations without duplicate navigation', files.operationalEvidence.includes('className="rundeckAnalysisActions" role="group" aria-label="Investigation shortcuts"') && files.operationalEvidence.includes('className="rundeckAnalysisLaunchers" aria-label="Operational analysis"') && !files.operationalEvidence.includes('rundeckOperationalSummaryCards') && files.operationalEvidence.includes('Related Events') && files.operationalEvidence.includes('SAP Checks') && files.operationalEvidence.includes('Infrastructure') && files.operationalEvidence.includes('System Data') && files.operationalEvidence.includes('onOpenEvidence') && files.operationalEvidence.includes('onOpenIssues') && files.operationalEvidence.includes('onOpenInfrastructure') && files.operationalEvidence.includes('onOpenSystemData')],
