@@ -7,7 +7,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page, _monthly_abap_tuning_candidates
+from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page, _monthly_abap_tuning_candidates, _collection_quality
 from backend.rundeck_monthly_pressure import detect_pressure_episodes, monthly_pressure_observations
 from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time, monthly_error_evidence
 from backend.rundeck_workload_observations import parse_workload_observations
@@ -16,6 +16,37 @@ from backend import backfill_monthly_wp_errors as backfill_module
 
 
 class CalendarMonthReviewTests(unittest.TestCase):
+    def test_monthly_coverage_estimate_explains_2842_of_4321_monitoring_runs(self):
+        """Missing early-month monitoring is not equivalent to SAP downtime."""
+        local_tz = timezone(timedelta(hours=7))
+        first = datetime(2026, 9, 10, 6, 0, tzinfo=local_tz)
+        rows = [{
+            "status": "READY",
+            "observed_at": first + timedelta(minutes=10 * offset),
+            "expected_host_count": 5,
+            "received_host_count": 5,
+        } for offset in range(2842)]
+        class Result:
+            def mappings(self):
+                return self
+            def all(self):
+                return rows
+        class Conn:
+            def execute(self, stmt, params):
+                return Result()
+        month_start = datetime(2026, 9, 1, tzinfo=local_tz)
+        month_end = datetime(2026, 10, 1, tzinfo=local_tz)
+        result = _collection_quality(Conn(), month_start, month_end)
+        self.assertEqual(result["complete_checks"], 2842)
+        self.assertEqual(result["expected_checks"], 4321)
+        self.assertEqual(result["cadence_minutes"], 10)
+        self.assertEqual(result["coverage_pct"], 65.8)
+        self.assertEqual(result["complete_record_ratio_pct"], 65.8)
+        self.assertEqual(result["recorded_time_span_pct"], 65.8)
+        self.assertEqual(result["first_complete_at"], first)
+        self.assertEqual(result["last_complete_at"], rows[-1]["observed_at"])
+        self.assertEqual(result["confidence"], "MEDIUM")
+
     def test_full_september_window_is_wib_calendar_month(self):
         start, end, previous = calendar_month_bounds(
             "2026-09", now=datetime(2026, 10, 21, 3, 0, tzinfo=timezone.utc)
