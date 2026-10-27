@@ -220,8 +220,8 @@ export default function RundeckUnifiedAppInfrastructure({
       </div>
     </header>
     <div className="rundeckAppHexMain rundeckAppThreePanels">
-      <section className="rundeckAppMotionPanel" aria-label="APP Motion">
-        <h4 className="rundeckAppPanelHeading"><SphereIcon name="hexagon" /> APP Motion <small>Choose a server</small></h4>
+      <section className="rundeckAppMotionPanel" aria-label="APP server selection">
+        <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Fleet <small>Select server</small></h4>
         <div ref={orbitStageRef}
         className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '') + (orbitEnabled ? ' is-sphere-orbit' + (orbitExpanded ? ' is-expanded' : '') : '')}
         role="group" aria-label="Select APP server"

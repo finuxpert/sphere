@@ -21,19 +21,19 @@ test('hexagon APP selection, source provenance and modal behavior', () => {
   assert.match(css,/@media \(max-width:430px\)/)
 })
 
-test('five operational checks reside inside APP overview; trends and evaluation follow', () => {
+test('Operational Checks use sidebar pages; APP overview retains trends and evaluation', () => {
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const wrapper=read('RundeckMonitoringHistory.jsx')
-  const evidence=read('RundeckOperationalEvidence.jsx')
+  const navigation=read('RundeckPerformanceNavigationState.js')
   assert.ok(core.indexOf('rundeckTopBandV13454') < core.indexOf('rundeckTrendBandV13454'))
   assert.ok(core.indexOf('rundeckTrendBandV13454') < core.indexOf('rundeckJobsProgramsOverview'))
-  assert.match(core,/operationalChecks=\{props\.operationalEvidenceContent\}/)
+  assert.doesNotMatch(core,/operationalChecks=\{props\.operationalEvidenceContent\}/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
   assert.match(core,/<RundeckWorkloadHealth/)
   assert.match(wrapper,/onOpenJobsPrograms=/)
-  assert.match(wrapper,/focusedOperationalHost/)
-  for (const action of ['Jobs &amp; Programs', 'Related Events', 'SAP Checks', 'Infrastructure', 'System Data']) {
-    assert.ok(evidence.includes(action), 'Operational Checks missing ' + action)
+  assert.doesNotMatch(wrapper,/operationalEvidenceContent/)
+  for (const view of ['jobs', 'events', 'sap-checks', 'infrastructure', 'system-data', 'monthly-review']) {
+    assert.ok(navigation.includes("id: '" + view + "'"), 'Sidebar route missing ' + view)
   }
 })
 

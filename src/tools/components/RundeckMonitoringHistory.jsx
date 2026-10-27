@@ -1,7 +1,6 @@
 import React from 'react'
 import RundeckMonitoringHistoryCore from './RundeckMonitoringHistoryCore.jsx'
 import RundeckJobsProgramsWorkspace from './RundeckJobsProgramsWorkspace.jsx'
-import RundeckOperationalEvidence from './RundeckOperationalEvidence.jsx'
 import RundeckPerformanceNavigation from './RundeckPerformanceNavigation.jsx'
 import { performanceViewFromHash } from './RundeckPerformanceNavigationState.js'
 import RundeckAvailability from './RundeckAvailability.jsx'
@@ -103,8 +102,6 @@ export default function RundeckMonitoringHistory(props) {
     setActiveOverlay({ type: 'app', app: context })
   }, [chooseAppFocus])
 
-  const focusedOperationalHost = (props.sourceHosts || []).find(row => shortHost(row.host) === shortHost(trendFocusedHost)) || (props.sourceHosts?.[0] || null)
-
   const selectedContextTime = selectedJob?.at
     ? `${formatWib(selectedJob.at, true)} WIB`
     : selectedJob?.reviewPeriod
@@ -112,20 +109,6 @@ export default function RundeckMonitoringHistory(props) {
       : props.latestCollectionAt
         ? `${formatWib(props.latestCollectionAt, true)} WIB`
         : ''
-  const operationalEvidenceContent = <RundeckOperationalEvidence
-    refreshToken={refreshToken}
-    selectedJob={selectedJob}
-    onOpenEvidence={(job, scope) => setActiveOverlay({ type: 'evidence', job, scope, returnTo: { type: 'selected' } })}
-    onOpenIssues={() => setActiveOverlay({ type: 'issues', returnTo: { type: 'selected' } })}
-    onOpenJobsPrograms={() => setActiveOverlay({ type: 'jobs-programs', mode: 'live', category: 'REVIEW' })}
-    onOpenMonthlyReview={() => setActiveOverlay({ type: 'monthly-review' })}
-    onOpenInfrastructure={() => setActiveOverlay({ type: 'infrastructure', sapHost: focusedOperationalHost?.host || '', returnTo: { type: 'selected' } })}
-    onOpenSystemData={systemDataContent ? () => setActiveOverlay({ type: 'system-data', returnTo: { type: 'selected' } }) : null}
-    systemDataSummary={systemDataSummary}
-    focusedHost={focusedOperationalHost?.host || ''}
-    infrastructureLabel={focusedOperationalHost ? `APP ${shortHost(focusedOperationalHost.host)} · FS / Network / Storage` : 'No APP host selected'}
-  />
-
   const currentWorkloadContent = React.isValidElement(props.currentWorkloadContent)
     ? React.cloneElement(props.currentWorkloadContent, { onSelectJob: inspectJob })
     : props.currentWorkloadContent
@@ -179,7 +162,6 @@ export default function RundeckMonitoringHistory(props) {
     : activeView === 'events'
       ? <div className="rundeckOperatorPairedWorkspace is-events">
           <section className="rundeckOperatorPairedPane" aria-label="Related events timeline">
-            <h3>Related Events</h3>
             <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading events…</div>}>
               <RundeckEvidenceTimeline paired refreshToken={refreshToken} job={selectedJob} incidentActive />
             </React.Suspense>
@@ -236,7 +218,6 @@ export default function RundeckMonitoringHistory(props) {
             onFocusAppHost={chooseAppFocus}
             onTrendContext={forwardTrendContext}
             onOpenInfrastructureMetric={(context) => setActiveOverlay({ type: 'infrastructure', infraContext: context, returnTo: { type: 'selected' } })}
-            operationalEvidenceContent={operationalEvidenceContent}
             performanceReviewContent={performanceReviewContent}
             onOpenJobsPrograms={(mode = 'live', category = 'REVIEW') => setActiveOverlay({ type: 'jobs-programs', mode, category })}
             onOpenAppJobs={(hostKey) => setActiveOverlay({ type: 'jobs-programs', mode: 'live', category: 'REVIEW', hostKey })}
@@ -247,7 +228,7 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
           /> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
-          <header className="spherePerformancePageHeader"><h2>{currentPage?.[0] || 'SAP Operations'}</h2><p>{currentPage?.[1] || 'Source-backed observations'}</p></header>
+          {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2>{currentPage?.[0] || 'SAP Operations'}</h2><p>{currentPage?.[1] || 'Source-backed observations'}</p></header>}
           {inlinePage}
         </section>}
       </div>

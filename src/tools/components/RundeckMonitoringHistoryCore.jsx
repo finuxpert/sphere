@@ -14,13 +14,9 @@ export default function RundeckMonitoringHistoryCore(props) {
         onInspectApp={props.onInspectApp}
         onSelectApp={props.onFocusAppHost}
         onOpenMetric={props.onOpenInfrastructureMetric}
-        operationalChecks={props.operationalEvidenceContent}
         fleetMode
       />
     </section>
-
-
-
 
     <section className="rundeckTrendBandV13454">
       <RundeckServerTrend
