@@ -59,7 +59,7 @@ async function readVerifiedPopulation(signal) {
 }
 
 /** One saved 1D evaluation = one selectable hexagon, without 400+1 pagination. */
-export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, viewMode = 'globe' }) {
+export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe' }) {
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
@@ -194,7 +194,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     </div>
     {viewMode === 'by-app'
       ? rows.length > 0
-        ? <RundeckWorkloadAppLanes rows={rows} onSelectWorkload={openWorkload} period={period} />
+        ? <RundeckWorkloadAppLanes rows={rows} onSelectWorkload={openWorkload} onOpenApp={onOpenApp} period={period} />
         : <div className="rundeckAppEvalState" role="status">{outcome}</div>
       : <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
       role="group" aria-label="Individual saved workload evaluations"
