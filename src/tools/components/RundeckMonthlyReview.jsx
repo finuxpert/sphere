@@ -163,9 +163,10 @@ function MonthlyDashboardKpis({ pressure = {}, summary = {}, quality = {} }) {
     { key:'ram', label:'High RAM', value:pressure.ram?.observed_pressure_host_checks,
       note:'Times RAM reached its limit', detail:'Highest '+pct(pressure.ram?.peak?.peak_pct)+' · '+fmt(pressure.ram?.observed_warning_app_days,0)+' server-days',
       mark:'RAM' },
-    { key:'wp', label:'Data Coverage', value:quality.coverage_pct,
-      note:'Estimated monitoring history', detail:'Partial history may miss problems',
-      mark:'DATA', percentage:true },
+    { key:'wp', label:'Monitoring Records', value:quality.complete_checks,
+      note:'Of about '+fmt(quality.expected_checks,0)+' expected',
+      detail:pct(quality.coverage_pct)+' of estimated monthly monitoring runs',
+      mark:'DATA' },
     { key:'review', label:'Programs to Review', value:summary.review_required,
       note:'Jobs / programs requiring review', detail:'Of '+fmt(summary.workloads,0)+' seen',
       mark:'SAP' },
@@ -176,7 +177,7 @@ function MonthlyDashboardKpis({ pressure = {}, summary = {}, quality = {} }) {
         <span className="sphereMonthlyDashboardGlyph" aria-hidden="true">{entry.mark}</span>
         <span>{entry.label}</span>
       </div>
-      <strong>{fmt(entry.value,entry.percentage?1:0)}{entry.percentage && entry.value!=null?'%':''}</strong>
+      <strong>{fmt(entry.value,0)}</strong>
       <span className="sphereMonthlyDashboardKpiNote">{entry.note}</span>
       <small>{entry.detail}</small>
     </div>)}
@@ -459,8 +460,8 @@ export default function RundeckMonthlyReview() {
     {data&&!loading&&<>
       <div className="sphereMonthlyProvenance">
         <span>Reporting month: <b>{month}</b></span>
-        <span>Data available: <b>{pct(quality.coverage_pct)}</b> (estimated)</span>
-        <span>Results are based on recorded monitoring data only.</span>
+        <span>Monitoring: <b>{fmt(quality.complete_checks,0)}</b> of ~{fmt(quality.expected_checks,0)} expected ({pct(quality.coverage_pct)})</span>
+        <span>Estimated from the monitoring interval</span>
       </div>
       {tab==='overview'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
         <div className="sphereMonthlyVisualGrid">
@@ -608,7 +609,7 @@ export default function RundeckMonthlyReview() {
           <div><strong>Reporting Month</strong><span>{month} · Jakarta time</span></div>
           <div><strong>High CPU and RAM</strong><span>CPU: {fmt(evidence.cpu?.observed_pressure_host_checks,0)} readings. RAM: {fmt(evidence.ram?.observed_pressure_host_checks,0)} readings.</span></div>
           <div><strong>Programs to Review</strong><span>{fmt(summary.review_required,0)} jobs/programs flagged. The PDF shows {Math.min(10,tuningCandidates.length)} priorities.</span></div>
-          <div><strong>Data Coverage</strong><span>Estimated {pct(quality.coverage_pct)}. This is not a complete record of the month.</span></div>
+          <div><strong>Monitoring Records</strong><span>{fmt(quality.complete_checks,0)} of approximately {fmt(quality.expected_checks,0)} expected ({pct(quality.coverage_pct)}). Estimated from saved collection intervals.</span></div>
           <div><strong>Error Details</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available for this month; this does not mean no errors occurred.':errors.truncated?'Only partial error data is available.':<>{fmt(errors.error_code_count,0)} error types found; {fmt(errors.error_program_count,0)} programs identified.</>}</span></div>
         </div>
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
