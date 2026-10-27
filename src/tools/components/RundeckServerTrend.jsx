@@ -301,7 +301,8 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
       legend: { show: false, top: 0, type: 'scroll', itemWidth: 15, itemHeight: 9, itemGap: 12, data: hostLabels, textStyle: { color: colors.secondary, fontSize: 11.2, fontWeight: 600 } },
       // The panel heading carries the metric. Reserve the upper plot rail
       // for the accessible APP trace selector, not a duplicate axis name.
-      grid: { left: 58, right: 72, top: 32, bottom: compactPoints ? 34 : 48 },
+      // Reserve axis-label and threshold space without wasting the chart's plot height.
+      grid: { left: 46, right: 63, top: 12, bottom: compactPoints ? 27 : 31 },
       tooltip: {
         trigger: 'axis',
         confine: true,
