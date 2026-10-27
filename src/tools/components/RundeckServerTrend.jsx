@@ -1,6 +1,8 @@
 import { buildHostTrendSeries } from './rundeckTrendSeries.js'
 import { trendPercentAxisMax } from './rundeckTrendAxis.js'
 import { technicalLoadScale } from './rundeckTechnicalLoadScale.js'
+import { networkTrendScale } from './rundeckNetworkScale.js'
+import './RundeckNetworkTrendFinishing.css'
 import React from 'react'
 import { createPortal } from 'react-dom'
 import * as echarts from './logEcharts.js'
@@ -214,6 +216,30 @@ function AvailabilityObservationSummary({ trend }) {
   </div>
 }
 
+function InfrastructureGapBand({ trend }) {
+  if (!trend?.network_source || !Array.isArray(trend?.collection_gaps) || !trend.collection_gaps.length) return null
+  const sorted = [...trend.collection_gaps].sort((a,b) => Number(b.observed_spacing_seconds || 0) - Number(a.observed_spacing_seconds || 0))
+  const primary = sorted[0]
+  const from = Date.parse(primary.before || '')
+  const to = Date.parse(primary.after || '')
+  if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return null
+  return <details className="rundeckNetworkGapNotice" role="status">
+    <summary title="Based on separate saved Infrastructure Network collection timestamps, not the SAP Performance collection. Missing samples are unknown, not a claim that SAP was down.">
+      <span>Infrastructure Gap</span>
+      <strong>{gapTimeRangeText(from, to)}</strong>
+      <small>{gapDurationText(from, to)} between saved observations{sorted.length > 1 ? ` · +${sorted.length - 1} more` : ''}</small>
+    </summary>
+    <div className="rundeckNetworkGapDetails">
+      {sorted.slice(0,8).map((gap,index) => <div key={String(gap.before) + String(gap.after)}>
+        <b>{index+1}</b>
+        <span>{gapTimeRangeText(Date.parse(gap.before), Date.parse(gap.after))}</span>
+        <small>{gapDurationText(Date.parse(gap.before), Date.parse(gap.after))}</small>
+      </div>)}
+      <small>No saved Infrastructure Network observation between the displayed timestamps. This is separate from Performance collection coverage.</small>
+    </div>
+  </details>
+}
+
 function TrendFreshness({ trend }) {
   // Availability age is shown inline next to the saved-check percentages.
   if (trend?.metric === 'availability' || trend?.range === 'custom') return null
@@ -254,7 +280,10 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     const percentTrend = !availabilityMode && trend?.unit === '%'
     const focusAxisMax = percentTrend ? trendPercentAxisMax(rows, valueKey, scaleMode) : 100
     const compactPoints = ['custom', '30m', '1h', '3h', '6h'].includes(range)
-    const { gaps, rangeStart, rangeEnd } = trendGaps(trend)
+    const { gaps: inferredGaps, rangeStart, rangeEnd } = trendGaps(trend)
+    const gaps = trend?.network_source
+      ? (trend?.collection_gaps || []).map(gap => [Date.parse(gap.before || ''), Date.parse(gap.after || '')]).filter(([from,to]) => Number.isFinite(from) && Number.isFinite(to) && to > from)
+      : inferredGaps
     const gapPoints = gaps.map(([from, to]) => Math.round((from + to) / 2))
     const threshold = []
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
@@ -327,7 +356,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
         },
       },
       xAxis: { type: 'time', min: Number.isFinite(rangeStart) ? rangeStart : undefined, max: rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 10.5, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (trend?.metric === 'load' && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
+      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 10, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' || Boolean(trend?.network_source) ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (['load','network_rx','network_tx'].includes(trend?.metric) && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
@@ -354,7 +383,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           silent: true,
           label: { show: true, formatter: (params) => params?.name || (availabilityMode ? 'NO OBSERVATION' : 'COLLECTION GAP'), fontSize: 8, color: availabilityMode ? colors.attention : colors.warning, position: 'insideTop' },
           itemStyle: { color: availabilityMode ? colors.attention : colors.warning, opacity: availabilityMode ? .035 : .06, borderColor: availabilityMode ? colors.attention : colors.warning, borderWidth: 1, borderType: 'dashed' },
-          data: gaps.map(([from, to]) => [{ name: availabilityMode ? `NO OBSERVATION · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}` : gapLabel(from, to), xAxis: from }, { xAxis: to }]),
+          data: gaps.map(([from, to]) => [{ name: availabilityMode ? `NO OBSERVATION · ${formatWib(from, false)}–${formatWib(to, false)} WIB · ${gapDurationText(from, to)}` : trend?.network_source ? `INFRASTRUCTURE GAP · ${formatWib(from, false)}–${formatWib(to, false)} WIB` : gapLabel(from, to), xAxis: from }, { xAxis: to }]),
         } : undefined,
       }
       })
@@ -756,6 +785,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [scaleMode, setScaleMode] = React.useState('full')
   const [loadScaleMode, setLoadScaleMode] = React.useState('full')
+  const [networkScaleMode, setNetworkScaleMode] = React.useState('full')
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
@@ -986,11 +1016,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       layer?.dispose?.()
       if (unifiedWakeRef.current === layer?.wake) unifiedWakeRef.current = null
     }
-  }, [temporalReady, serverTrend1, serverTrend2, technicalTrend, range, mode, scaleMode, loadScaleMode, focusedHost])
+  }, [temporalReady, serverTrend1, serverTrend2, technicalTrend, range, mode, scaleMode, loadScaleMode, networkScaleMode, focusedHost])
   const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
   const technicalNetwork = technicalMetric === 'network'
   const loadScale = React.useMemo(() => technicalLoadScale(technicalTrend?.items, mode), [technicalTrend, mode])
   const typicalLoadActive = technicalMetric === 'load' && loadScaleMode === 'typical'
+  const networkScale = React.useMemo(() => networkTrendScale(technicalTrend?.items, mode), [technicalTrend, mode])
+  const typicalNetworkActive = technicalMetric === 'network' && networkScaleMode === 'typical'
   const activeTrend = selectedTrend || serverTrend1
   const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
 
@@ -1111,6 +1143,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             onClick={() => setLoadScaleMode(value => value === 'full' ? 'typical' : 'full')}>
             Load Y · {loadScaleMode === 'typical' ? 'Typical' : 'Full'}
           </button>}
+          {technicalNetwork && <button type="button" className="rundeckTechnicalScaleToggle rundeckNetworkScaleToggle"
+            aria-pressed={networkScaleMode === 'typical'} aria-label="Switch Network Y axis between Full and Typical scale"
+            title="Typical adjusts the display only. Saved Mbps, exact peak time and NIC identity remain unchanged. Full shows every measured peak."
+            onClick={() => setNetworkScaleMode(value => value === 'full' ? 'typical' : 'full')}>
+            Network Y · {networkScaleMode === 'typical' ? 'Typical' : 'Full'}
+          </button>}
           {technicalNetwork && <div className="rundeckNetworkDirection" role="group" aria-label="Network throughput direction">
             <button type="button" aria-pressed={networkDirection === 'rx'} className={networkDirection === 'rx' ? 'is-active' : ''} onClick={() => setNetworkDirection('rx')}>RX</button>
             <button type="button" aria-pressed={networkDirection === 'tx'} className={networkDirection === 'tx' ? 'is-active' : ''} onClick={() => setNetworkDirection('tx')}>TX</button>
@@ -1126,6 +1164,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           </span>}
 
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
+          {technicalNetwork && <span className="rundeckNetworkSampleTime" role="status"
+            title="Last stored AOP Infrastructure Network observation. The 5/5 coverage label means observed in the selected range, not necessarily simultaneously fresh.">
+            Last Network Sample: {technicalTrend?.last_observed_at ? formatWib(technicalTrend.last_observed_at, true) + ' WIB' : 'Not observed'}
+          </span>}
         </div>
         {typicalLoadActive && loadScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice" role="status"
           title="Source peak remains unchanged; Typical is a visual crop, not missing data or SAP outage. Switch to Full to inspect the outlier on the chart.">
@@ -1134,9 +1176,18 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           {loadScale.peakAt ? ' · ' + formatWib(loadScale.peakAt,true) + ' WIB' : ''}
           <button type="button" onClick={() => setLoadScaleMode('full')}>Show Full</button>
         </div>}
+        {typicalNetworkActive && networkScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice rundeckNetworkPeakNotice" role="status"
+          title="Typical only crops the visible Y-axis. The exact measured peak, time and NIC remain stored and visible in Full.">
+          {networkScale.outliers} samples above Y {numberText(networkScale.axisMax,1)} Mbps · Peak {numberText(networkScale.peak,1)} Mbps
+          {networkScale.peakHost ? ' · ' + shortHost(networkScale.peakHost) : ''}
+          {networkScale.peakInterface ? ' · NIC ' + networkScale.peakInterface : ''}
+          {networkScale.peakAt ? ' · ' + formatWib(networkScale.peakAt,true) + ' WIB' : ''}
+          <button type="button" onClick={() => setNetworkScaleMode('full')}>Show Full</button>
+        </div>}
+        {technicalNetwork && !technicalLoading && !technicalError && <InfrastructureGapBand trend={technicalTrend} />}
         {/* Source samples, gap markers and peak identity are preserved in both scales. */}
         {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint, { showGap: false,
-          technicalAxisMax: typicalLoadActive ? loadScale.axisMax : null })}
+          technicalAxisMax: typicalLoadActive ? loadScale.axisMax : typicalNetworkActive ? networkScale.axisMax : null })}
       </section>
       {temporalReady && <>
         <canvas ref={unifiedCanvasRef} className="rundeckUnifiedVortexCanvas" aria-hidden="true" />
