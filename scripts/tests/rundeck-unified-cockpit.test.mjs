@@ -64,10 +64,11 @@ test('Operational Checks connects five investigation destinations with paired hi
   assert.doesNotMatch(evidence,/className="rundeckAnalysisGroup"/)
   for(const name of ['onOpenEvidence','onOpenIssues','onOpenInfrastructure','onOpenSystemData','onOpenJobsPrograms']){
     assert.ok(evidence.includes(name),'Missing action: '+name)
-    assert.ok(wrapper.includes(name+'='),'Missing connected modal: '+name)
+    assert.ok(evidence.includes(name), 'Legacy analysis action available for older drawer: ' + name)
   }
   assert.match(evidence,/Open Related Events and Run History/)
-  assert.match(wrapper,/title="Related Events & Rundeck Collection History"/)
+  assert.match(wrapper,/activeView === 'events'/)
+  assert.match(wrapper,/RundeckPerformanceNavigation/)
   assert.match(wrapper,/aria-label="Rundeck collection history"/)
   assert.match(wrapper,/RundeckObservationHistory/)
   assert.match(wrapper,/title="SAP Checks"/)
@@ -136,7 +137,8 @@ test('Workload Health remains a standalone validated 1D overview and Jobs modal 
 test('selected APP Infrastructure navigation never reuses a different persisted host', () => {
   const wrapper=read('RundeckMonitoringHistory.jsx')
   const infra=read('RundeckInfrastructure.jsx')
-  assert.match(wrapper,/sapHost: focusedOperationalHost\?\.host \|\| ''/)
+  assert.match(wrapper,/onOpenInfrastructureMetric=\{\(context\) => setActiveOverlay/)
+  assert.match(wrapper,/infraContext: context/)
   assert.match(wrapper,/lockedHost=\{Boolean\(activeOverlay\.sapHost\)\}/)
   assert.match(infra,/matchedInfrastructureHost\(\{host:requestedSapHost\}, hosts\)/)
   assert.match(infra,/if\(requestedSapHost&&!resolvedTarget\)/)
@@ -178,7 +180,7 @@ test('tab switching retains Current/Review state and labels technical scope',()=
   assert.match(workspace,/rundeckCurrentPersistentPane/)
   assert.match(workspace,/reviewVisited &&/)
   assert.match(workspace,/selectMode\('review'\)/)
-  assert.match(wrapper,/FS \/ Network \/ Storage/)
+  assert.match(wrapper,/Filesystem, Network and Storage telemetry/)
   assert.match(trend,/APP % Axis/)
   assert.match(trend,/Host load average \(not %\)/)
 })
