@@ -15,6 +15,7 @@ export default function RundeckMonitoringHistoryCore(props) {
         onSelectApp={props.onFocusAppHost}
         onOpenMetric={props.onOpenInfrastructureMetric}
         operationalChecks={props.operationalEvidenceContent}
+        fleetMode
       />
     </section>
 
