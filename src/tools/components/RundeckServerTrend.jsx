@@ -44,7 +44,7 @@ const BUCKET_INTERVAL_MS = {
 
 const metricLabel = (value) => ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability', network: 'Network', network_rx: 'Network RX', network_tx: 'Network TX' })[value] || 'Metric'
 const rangeLabel = value => ALL_RANGES.find(([key]) => key === value)?.[1] || String(value || '').toUpperCase()
-const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.querySelector('.spherePerformanceShell') || document.documentElement).getPropertyValue(name).trim() || fallback
 
 function formatTrendAxis(value, range) {
   const date = new Date(value)
@@ -84,7 +84,7 @@ function trendAxisSplitNumber(range) {
   return 5
 }
 
-const palette = () => ({ text: token('--sphere-text', '#e7edf0'), secondary: token('--sphere-text-secondary', '#a9b5bb'), muted: token('--sphere-text-muted', '#718089'), grid: token('--sphere-chart-grid', 'rgba(126,147,158,.08)'), panel: token('--sphere-surface-1', '#141d23'), attention: token('--sphere-attention', '#6aa2d8'), warning: token('--sphere-warning', '#d8b35f'), danger: token('--sphere-danger', '#db7d86'), series: [token('--sphere-chart-1', '#72a9e8'), token('--sphere-chart-2', '#8cc985'), token('--sphere-chart-3', '#aaa0df'), token('--sphere-chart-4', '#e1a16c'), token('--sphere-chart-5', '#5dcbd1')] })
+const palette = () => ({ text: token('--v36-ink', token('--sphere-text', '#e7edf0')), secondary: token('--v36-muted', token('--sphere-text-secondary', '#a9b5bb')), muted: token('--v36-muted', token('--sphere-text-muted', '#718089')), grid: token('--v36-rule', token('--sphere-chart-grid', 'rgba(126,147,158,.08)')), panel: token('--v36-panel', token('--sphere-surface-1', '#141d23')), attention: token('--sphere-attention', '#6aa2d8'), warning: token('--v36-amber', token('--sphere-warning', '#d8b35f')), danger: token('--v36-red', token('--sphere-danger', '#db7d86')), series: [token('--v36-series-1', token('--sphere-chart-1', '#72a9e8')), token('--v36-series-2', token('--sphere-chart-2', '#8cc985')), token('--v36-series-3', token('--sphere-chart-3', '#aaa0df')), token('--v36-series-4', token('--sphere-chart-4', '#e1a16c')), token('--v36-series-5', token('--sphere-chart-5', '#5dcbd1'))] })
 
 async function json(url, signal, requestedMetric = '') {
   const response = await fetch(url, { cache: 'no-store', signal })
