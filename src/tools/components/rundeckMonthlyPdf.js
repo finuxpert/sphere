@@ -1,6 +1,5 @@
 /* Monthly report deliberately reuses the restrained SPHERE landscape visual language.
  * It contains stored observations only; no inferred root cause or SM37 run totals. */
-import { APP_DISPLAY_VERSION } from '../../app/version.js'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 
 const HEX = [[35, 166, 183], [93, 134, 201], [155, 110, 199], [201, 142, 76], [84, 160, 123]]
@@ -205,13 +204,15 @@ export async function buildMonthlyPdf({ month, data }) {
   pdf.setFontSize(7.2)
   pdf.setTextColor(78, 91, 101)
   pdf.text('Reporting month: ' + month + '  |  Prepared: ' + dateWib(new Date().toISOString()), margin, 29.5)
-  pdf.text('Estimated data coverage: ' + pct(quality.coverage_pct) + '  |  Results are based on available SPHERE monitoring records only.', margin, 33.8)
+  pdf.text('Monitoring records: ' + format(quality.complete_checks,0) + ' of approx. ' +
+    format(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ').', margin, 33.8)
 
   const kpis = [
     ['PROGRAMS TO REVIEW', format(summary.review_required,0), 'Out of ' + format(summary.workloads,0) + ' observed workloads'],
     ['HIGH CPU READINGS', format(pressure.cpu?.observed_pressure_host_checks,0), 'APP CPU at or above ' + pct(pressure.thresholds?.cpu_warning_pct)],
     ['HIGH RAM READINGS', format(pressure.ram?.observed_pressure_host_checks,0), 'APP RAM at or above ' + pct(pressure.thresholds?.ram_warning_pct)],
-    ['DATA COVERAGE', pct(quality.coverage_pct), 'Estimated monitoring history available'],
+    ['MONITORING RECORDS', format(quality.complete_checks,0), 'of ~' + format(quality.expected_checks,0) +
+      ' expected | ' + pct(quality.coverage_pct)],
   ]
   const kpiGap = 3
   const kpiW = (contentW - (kpis.length - 1) * kpiGap) / kpis.length
@@ -263,50 +264,11 @@ export async function buildMonthlyPdf({ month, data }) {
   drawMultiHostChart(pdf, trends, 'peak_ram_pct', 'Daily Highest RAM', margin + chartW + 6, 91, chartW, 35, month,
     pressure.thresholds?.ram_warning_pct, ramWarningSummary)
 
-  const ramBottom = drawTopTable(pdf, 'Programs Seen During High RAM', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
-  const cpuBottom = drawTopTable(pdf, 'Programs Seen During High CPU', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
-  const errorLineY = Math.max(183, ramBottom + 2, cpuBottom + 2)
-  // Never generate an almost-empty page just for a few finding lines.
-  // If the prior workload tables take more space, the findings are covered
-  // by the management KPI and review-priority page instead.
-  const showFindingsOnFirstPage = errorLineY <= H - 27
-  const tuningCandidates = data.monthly_abap_candidates || []
-  const errorEvidence = data.monthly_errors || {}
-  const errorRows = (errorEvidence.top_errors || []).filter(row => row.event_count || row.snapshot_host_checks || row.untimed_trace_checks)
-  if (showFindingsOnFirstPage) {
-  pdf.setDrawColor(215, 225, 230)
-  pdf.line(margin, errorLineY, W - margin, errorLineY)
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(8)
-  pdf.setTextColor(36, 52, 62)
-  pdf.text('What Needs Attention', margin, errorLineY + 6)
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(7)
-  pdf.setTextColor(78, 98, 108)
-  const wpSourceMissing = errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED'
-  const errorSummary = wpSourceMissing
-    ? 'Error details are not available for this month. This does not mean there were no errors.'
-    : errorEvidence.truncated
-      ? 'Only partial error data is available; the number of errors cannot be confirmed.'
-      : errorEvidence.status === 'NO_RETAINED_ERROR_EVIDENCE'
-        ? 'No error evidence was found in the available data; this does not confirm that no errors occurred.'
-        : errorEvidence.status === 'WP_SIGNALS_ONLY'
-          ? 'Work process warning signals were recorded. Program errors are not confirmed.'
-          : format(errorEvidence.error_code_count,0) + ' types of program errors recorded; ' +
-            format(errorEvidence.error_program_count,0) + ' programs identified for investigation.'
-  pdf.text(errorSummary, margin, errorLineY + 10.5)
-  const tuningSummary = format(summary.review_required,0) +
-    ' jobs or programs are flagged for review; this does not confirm a failed job.'
-  pdf.text(tuningSummary, margin, errorLineY + 14.7)
-  pdf.setTextColor(94, 105, 113)
-  const peakDetails = 'Highest server CPU: ' + pct(pressure.cpu?.peak?.peak_pct) + ' (' +
-    labelHost(pressure.cpu?.peak?.host) + ', ' + dateWib(pressure.cpu?.peak?.peak_at) +
-    '). Highest RAM: ' + pct(pressure.ram?.peak?.peak_pct) + ' (' +
-    labelHost(pressure.ram?.peak?.host) + ', ' + dateWib(pressure.ram?.peak?.peak_at) + ')'
-  pdf.setFontSize(6.4)
-  pdf.text(pdf.splitTextToSize(peakDetails, contentW), margin, errorLineY + 18.5)
-
-  }
+  drawTopTable(pdf, 'Programs Seen During High RAM', pressure.top_ram_workloads || [], 'ram', margin + 2, 140, chartW - 4)
+  drawTopTable(pdf, 'Programs Seen During High CPU', pressure.top_cpu_workloads || [], 'cpu', margin + chartW + 7, 140, chartW - 4)
+  const summaryErrors = data.monthly_errors || {}
+  const errorRows = (summaryErrors.top_errors || [])
+    .filter(row => row.event_count || row.snapshot_host_checks || row.untimed_trace_checks)
 
   // Detailed error section is sourced only from timestamped trace evidence or
   // separately labeled WP snapshot observations. It is not a ST22 dump count.
@@ -401,25 +363,20 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setTextColor(240, 245, 248)
     pdf.text('Programs to Review', margin + 4, 18)
     pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7.3)
+    pdf.setFontSize(7.5)
     pdf.setTextColor(67, 84, 95)
-    pdf.text('Showing ' + format(Math.min(10, tuningCandidates.length),0) +
-      ' of ' + format(summary.review_required,0) +
-      ' jobs/programs flagged for review. Full list is available in SPHERE.', margin, 30)
-    pdf.text('These are performance review candidates, not confirmed failed jobs or program errors.', margin, 34.5)
-    pdf.setFontSize(6.6)
-    pdf.text('CPU cores = estimated workload use; memory = process use, not the whole server.', margin, 38.5)
-    pdf.setFontSize(6.1)
-    pdf.text('Times seen = monitoring observations, not job executions. High usage does not confirm the cause.', margin, 42)
+    pdf.text('September-style monthly priority list: ' +
+      format(Math.min(10, tuningCandidates.length),0) + ' shown / ' +
+      format(summary.review_required,0) + ' flagged', margin, 31)
 
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(7)
     pdf.setTextColor(45, 63, 77)
     pdf.text('JOB / PROGRAM', margin + 2, 46)
-    pdf.text('WHY REVIEW', margin + 119, 46)
-    pdf.text('MAX CPU', margin + 184, 46, { align: 'right' })
+    pdf.text('REVIEW REASON', margin + 119, 46)
+    pdf.text('MAX CPU CORES', margin + 184, 46, { align: 'right' })
     pdf.text('MAX MEMORY', margin + 236, 46, { align: 'right' })
-    pdf.text('TIMES SEEN', margin + 279, 46, { align: 'right' })
+    pdf.text('RECORDS', margin + 279, 46, { align: 'right' })
     pdf.setDrawColor(204, 216, 224)
     pdf.line(margin, 48, W-margin, 48)
 
@@ -453,15 +410,10 @@ export async function buildMonthlyPdf({ month, data }) {
       pdf.setDrawColor(230, 235, 240)
       pdf.line(margin, y, W-margin, y)
     })
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(8)
-    pdf.setTextColor(34, 53, 67)
-    pdf.text('Recommended Follow-up', margin, 174)
     pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7.2)
-    pdf.text('SAP Basis: check high CPU and RAM periods and confirm the affected servers.', margin, 180)
-    pdf.text('ABAP / Functional: review the listed programs and confirm whether tuning is needed.', margin, 185)
-    pdf.text('Job or error status must be verified separately in SAP before any failure is reported.', margin, 190)
+    pdf.setFontSize(6.7)
+    pdf.setTextColor(90, 105, 115)
+    pdf.text('Records = number of saved monitoring observations, not job executions.', margin, 174)
   }
 
   // Detailed WP counters and traces remain available for SAP Basis in SPHERE.
@@ -474,7 +426,7 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setDrawColor(218, 228, 234)
     // Minimal footer: no divider line.
     pdf.setTextColor(96, 109, 117);pdf.setFont('helvetica', 'normal');pdf.setFontSize(6.5)
-    pdf.text('SPHERE - ' + APP_DISPLAY_VERSION + ' - Period ' + month, margin, H-4)
+    pdf.text('SAP Monthly Performance Review  |  ' + month, margin, H-4)
     pdf.text('Page '+i+' of '+pages, W-margin, H-4,{align:'right'})
   }
   return pdf.output('blob')
