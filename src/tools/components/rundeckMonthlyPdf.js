@@ -365,9 +365,8 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(7.5)
     pdf.setTextColor(67, 84, 95)
-    pdf.text('September-style monthly priority list: ' +
-      format(Math.min(10, tuningCandidates.length),0) + ' shown / ' +
-      format(summary.review_required,0) + ' flagged', margin, 31)
+    pdf.text(format(Math.min(10, tuningCandidates.length),0) + ' of ' +
+      format(summary.review_required,0) + ' programs requiring review', margin, 31)
 
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(7)
@@ -376,7 +375,7 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.text('REVIEW REASON', margin + 119, 46)
     pdf.text('MAX CPU CORES', margin + 184, 46, { align: 'right' })
     pdf.text('MAX MEMORY', margin + 236, 46, { align: 'right' })
-    pdf.text('RECORDS', margin + 279, 46, { align: 'right' })
+    pdf.text('MONITORING RECORDS', margin + 279, 46, { align: 'right' })
     pdf.setDrawColor(204, 216, 224)
     pdf.line(margin, 48, W-margin, 48)
 
@@ -413,7 +412,7 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(6.7)
     pdf.setTextColor(90, 105, 115)
-    pdf.text('Records = number of saved monitoring observations, not job executions.', margin, 174)
+    pdf.text('Monitoring records count saved observations, not job runs.', margin, 174)
   }
 
   // Detailed WP counters and traces remain available for SAP Basis in SPHERE.
