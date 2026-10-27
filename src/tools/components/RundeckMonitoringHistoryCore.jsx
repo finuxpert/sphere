@@ -13,7 +13,7 @@ export default function RundeckMonitoringHistoryCore(props) {
     const overview = overviewRef.current
     if (!overview) return
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
-    const fit = window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 670
+    const fit = window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
     if (fit) {
       overview.style.setProperty('--sphere-overview-room', available + 'px')
       overview.dataset.viewportFit = 'true'
