@@ -1,0 +1,385 @@
+/* SPHERE SAP Operations — unified enterprise presentation layer.
+ * Presentation only. No changes to status semantics, filters, saved evidence,
+ * collection freshness, numeric values, thresholds, or report generation.
+ * Loaded AFTER legacy cockpit styles; keep overrides scoped to this workspace.
+ */
+.appShell:has(.rundeckPanel) .spherePerformanceShell {
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-radius: 7px;
+  --ui-line: 1px solid var(--v36-rule);
+  --ui-focus: var(--v36-blue);
+  --ui-muted: var(--v36-muted);
+  --ui-interactive: var(--v36-blue);
+  --ui-surface: var(--v36-panel);
+  --ui-surface-raised: var(--v36-subpanel);
+  --ui-text: var(--v36-ink);
+  grid-template-columns: 180px minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: start;
+  isolation: isolate;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(
+  .spherePerformanceSidebar,.spherePerformanceMain,.spherePerformancePage,
+  .rundeckJobsProgramsWorkspace,.rundeckCurrentWorkload,.sphereMonthlyReview
+) { min-width: 0; }
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(h2,h3,h4) {
+  letter-spacing: -.012em;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(
+  .spherePerformancePageHeader h2,.rundeckTrendEditorial h3,.sphereMonthlyVisualHeading h4
+) { font-weight: 700 !important; }
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(
+  .spherePerformancePageHeader p,.rundeckMonitoringHead small,
+  .sphereMonthlyProvenance,.rundeckWorkloadFreshness
+) { line-height: 1.5; }
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar {
+  padding: 12px 8px !important;
+  border-radius: var(--ui-radius) !important;
+  top: 12px;
+  gap: 3px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarBrand {
+  padding: 6px 9px 12px !important;
+  line-height: 1.35;
+  font-size: 12px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavGroup {
+  margin-top: 5px;
+  padding: 10px 9px 5px !important;
+  font-size: 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink {
+  min-height: 40px !important;
+  padding: 9px 10px !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  line-height: 1.35;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarFoot {
+  margin-top: 10px;
+  padding: 12px 9px 4px;
+  border-top: var(--ui-line);
+  line-height: 1.5;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage {
+  padding: 12px 14px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePageHeader {
+  margin: 0 0 10px !important;
+  padding: 0 0 7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePageHeader h2 {
+  font-size: 18px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(
+  .rundeckTopBandV13454,.rundeckTrendBandV13454,.rundeckJobsProgramsOverview,
+  .rundeckOperatorPairedPane,.rundeckInfraCurrent,.rundeckInfraTrendWorkspace,
+  .sphereMonthlyPanel,.sphereMonthlyVisualCard
+) {
+  border-radius: var(--ui-radius) !important;
+  box-shadow: none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.rundeckCockpitV13491 {
+  gap: 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckUnifiedAppInfraHead {
+  margin-bottom: 7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexMain.rundeckAppThreePanels {
+  gap: 8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain :is(.rundeckAppMotionPanel,.rundeckAppDetailPanel) {
+  padding: 10px 12px !important;
+  min-height: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
+  min-height: 62px !important;
+  padding: 8px 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckSelectedAppMetric strong {
+  font-variant-numeric: tabular-nums;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendBandV13454 {
+  padding: 11px 12px 12px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendSharedControls {
+  row-gap: 9px !important;
+  column-gap: 12px !important;
+  padding-bottom: 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid {
+  gap: 9px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid > .rundeckServerTrendPanelV1234 {
+  min-width: 0 !important;
+  padding: 11px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid .rundeckTrendPlot {
+  min-height: 210px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTrendSharedGroup > small {
+  font-size: 10.5px !important;
+  line-height: 1.35;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(button,select,input,textarea) {
+  font: inherit;
+  line-height: 1.35;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(input,select,textarea) {
+  min-height: 34px;
+  max-width: 100%;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(button,a,input,select,textarea):focus-visible {
+  outline: 2px solid var(--ui-focus) !important;
+  outline-offset: 2px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell :is(button,select,input,textarea):disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage :is(
+  .rundeckJobsProgramsWorkspaceHead,.rundeckCurrentWorkloadHead,
+  .sphereMonthlyTableHead,.rundeckInfraTrendWorkspaceHead
+) {
+  gap: 10px;
+  align-items: center;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage :is(
+  .rundeckCurrentWorkloadTools,.sphereMonthlyFilters
+) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage :is(
+  .rundeckCurrentWorkloadTableWrap,.sphereMonthlyTableScroll,
+  .rundeckObservationHistoryTableWrap,.rundeckIssueIndicatorTableWrap,
+  .rundeckSapIssuesTableWrap
+) {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.45;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage table :is(td,th) {
+  padding-block: 10px !important;
+  padding-inline: 11px !important;
+  vertical-align: middle;
+  border-right: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-size: 11px !important;
+  line-height: 1.3;
+  font-weight: 650 !important;
+  white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage table tbody tr {
+  transition: background-color 130ms ease;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage :is(
+  .rundeckCurrentWorkloadName,.sphereMonthlyName
+) {
+  min-width: 190px;
+  max-width: none !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage :is(
+  .rundeckCurrentWorkloadName,.sphereMonthlyName
+) :is(strong,small,span) {
+  max-width: none !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload table {
+  width: 100% !important;
+  min-width: 840px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckWorkloadPager {
+  padding-block: 10px 2px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events :is(
+  .rundeckEvidenceTimingStrip,.rundeckEvidenceAssessment
+) {
+  padding: 12px !important;
+  border-color: var(--v36-rule) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-events :is(
+  .rundeckEvidenceEvent,.rundeckEvidenceSummary
+) { line-height: 1.55; }
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksSummaryRail {
+  gap: 8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid {
+  gap: 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid > .rundeckOperatorPairedPane {
+  min-width: 0;
+  padding: 13px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapIssuesSummaryStrip {
+  gap: 6px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraHostCards {
+  gap: 8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraHostCard {
+  min-width: 0;
+  border-radius: 6px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid {
+  gap: 9px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid article {
+  min-height: 0 !important;
+  padding: 12px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraFsPager button {
+  min-width: 30px;
+  min-height: 30px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid table {
+  width: 100%;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 {
+  gap: 9px;
+  --mr-border: var(--v36-border);
+  --mr-text: var(--v36-ink);
+  --mr-muted: var(--v36-muted);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyVisualGrid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: 9px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyDashboardKpi {
+  min-height: 100px;
+  padding: 10px 12px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyDashboardKpi > strong {
+  font-size: clamp(22px, 2vw, 28px);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyVisualCard {
+  padding: 12px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyVisualHeading h4 {
+  font-size: 13px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyPrimaryTrend .sphereMonthlyTrend svg {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyTableScroll table {
+  width: 100%;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyReportItem {
+  background: var(--v36-subpanel);
+  border: 1px solid var(--v36-rule);
+  border-radius: var(--ui-radius);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame iframe {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceShell {
+  --ui-surface: #fff;
+  --ui-surface-raised: #f3f6f9;
+  --ui-text: #213344;
+  --ui-muted: #586e7f;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyReportItem {
+  background: #f3f6f9 !important;
+  border-color: #d6dee6 !important;
+}
+@media (max-width: 1250px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceShell {
+    grid-template-columns: 168px minmax(0,1fr) !important;
+    gap: 10px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyVisualGrid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+}
+@media (max-width: 1050px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceShell {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceSidebar {
+    position: static !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px !important;
+    padding: 6px !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceSidebar :is(
+    .spherePerformanceSidebarBrand,.spherePerformanceNavGroup,.spherePerformanceSidebarFoot
+  ) { display: none !important; }
+  .appShell:has(.rundeckPanel) .spherePerformanceSidebar .spherePerformanceNavLink {
+    flex: 0 0 auto;
+    min-height: 38px !important;
+    padding-inline: 10px !important;
+    white-space: nowrap;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage {
+    padding: 10px 0 !important;
+  }
+}
+@media (max-width: 720px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckTripleTrendGrid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyDashboardKpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformancePage .sphereMonthlyReview.is-v2 .sphereMonthlyMixBody {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .appShell:has(.rundeckPanel) .spherePerformanceShell *,
+  .appShell:has(.rundeckPanel) .spherePerformanceShell *::before,
+  .appShell:has(.rundeckPanel) .spherePerformanceShell *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
