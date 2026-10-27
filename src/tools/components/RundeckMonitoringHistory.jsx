@@ -32,6 +32,7 @@ import './RundeckWorkloadAppLanes.css'
 import './RundeckInvestigationFinishingV135.css'
 import './RundeckMonthlyReview.css'
 import './RundeckPerformanceShell.css'
+import './RundeckOperationalPagesV135.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -245,7 +246,7 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendInfrastructure={(context) => setActiveOverlay({ type: 'infrastructure', trendContext: context, returnTo: { type: 'selected' } })}
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
-          /> : <section className="spherePerformancePage" aria-label={currentPage?.[0] || 'SAP Operations'}>
+          /> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
           <header className="spherePerformancePageHeader"><h2>{currentPage?.[0] || 'SAP Operations'}</h2><p>{currentPage?.[1] || 'Source-backed observations'}</p></header>
           {inlinePage}
         </section>}
