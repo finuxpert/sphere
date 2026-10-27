@@ -80,3 +80,16 @@ test('status charts remain linked to actual APP evaluation totals and drilldowns
   assert.match(source, /onSelectWorkload\?\.\(row\)/)
   assert.match(css, /\.rundeckAppEvalBar\{/)
 })
+
+test('visual finishing keeps focus visible and APP memberships unambiguous', () => {
+  const trend = read('RundeckServerTrend.jsx')
+  const bars = read('RundeckWorkloadAppLanes.jsx')
+  const styles = read('RundeckEnterpriseMonitoringV137.css')
+  assert.match(trend, /type: 'line', z: focused \? 6 : 2/)
+  assert.match(trend, /axisLabel: \{ color: colors\.muted, fontSize: 11/)
+  assert.match(trend, /markLine: index === 0 && visibleThresholds\.length/)
+  assert.match(trend, /markArea: index === 0 && gaps\.length/)
+  assert.match(bars, /per-APP memberships are not distinct workloads/)
+  assert.match(bars, /not confirmed SAP SM37 failed jobs/)
+  assert.match(styles, /\.rundeckAppEvalBreakdown small\{[\s\S]*?font-size:11px!important/)
+})
