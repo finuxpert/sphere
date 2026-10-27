@@ -999,9 +999,6 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     ? observedTrendWindow([serverTrend1, serverTrend2, technicalTrend]) : null,
   [longHistoricalRange, serverTrend1, serverTrend2, technicalTrend])
   const displayWindow = longHistoricalRange && fitObserved ? observedWindow : null
-  const savedPeak1 = React.useMemo(() => temporalReady ? savedVortexPeak(serverTrend1, mode, activeFocus) : null, [temporalReady, serverTrend1, mode, activeFocus])
-  const savedPeak2 = React.useMemo(() => temporalReady ? savedVortexPeak(serverTrend2, mode, activeFocus) : null, [temporalReady, serverTrend2, mode, activeFocus])
-  const savedTechnicalPeak = React.useMemo(() => temporalReady ? savedVortexPeak(technicalTrend, mode, activeFocus) : null, [temporalReady, technicalTrend, mode, activeFocus])
   const temporalReady = Boolean(
     ambientBraid && databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
     !serverError1 && !serverError2 && !technicalError &&
@@ -1009,6 +1006,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     serverTrend1?.metric !== 'availability' && serverTrend2?.metric !== 'availability' &&
     technicalTrend?.metric !== 'availability'
   )
+  const savedPeak1 = React.useMemo(() => temporalReady ? savedVortexPeak(serverTrend1, mode, activeFocus) : null, [temporalReady, serverTrend1, mode, activeFocus])
+  const savedPeak2 = React.useMemo(() => temporalReady ? savedVortexPeak(serverTrend2, mode, activeFocus) : null, [temporalReady, serverTrend2, mode, activeFocus])
+  const savedTechnicalPeak = React.useMemo(() => temporalReady ? savedVortexPeak(technicalTrend, mode, activeFocus) : null, [temporalReady, technicalTrend, mode, activeFocus])
   const temporalPaused = Boolean(selected || windowModal || customOpen)
   const temporalExpanded = unifiedHovered || temporalPaused
   unifiedExpandedRef.current = temporalExpanded
