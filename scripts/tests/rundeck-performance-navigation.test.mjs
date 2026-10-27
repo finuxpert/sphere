@@ -66,3 +66,20 @@ test('performance cockpit is a normal-flow stack; APP fleet, Trends, and Workloa
   const c = core.indexOf('<RundeckWorkloadHealth')
   assert.ok(a > 0 && b > a && c > b, 'APP, trends and evaluations stay in reading order')
 })
+
+test('fleet and selected APP summary use compact two-row layout instead of a stretched empty card', () => {
+  const css = read('RundeckPerformanceShell.css')
+  const marker = 'v1.35.20 DEV finishing: compact APP fleet'
+  assert.ok(css.includes(marker), 'compact finishing rules must be present')
+  const compact = css.slice(css.indexOf(marker))
+  assert.match(compact, /\.rundeckAppHexMain\.rundeckAppThreePanels\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+  assert.match(compact, /grid-template-rows:\s*auto auto\s*!important/)
+  assert.match(compact, /\.rundeckAppMotionPanel\s*\{[\s\S]*?min-height:\s*0\s*!important/)
+  assert.match(compact, /\.rundeckAppDetailPanel\s*\{[\s\S]*?display:\s*grid\s*!important/)
+  assert.match(compact, /\.rundeckSelectedAppMetrics\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/)
+  assert.match(compact, /@media\s*\(max-width:\s*560px\)/)
+  const infra = read('RundeckUnifiedAppInfrastructure.jsx')
+  for (const value of ['selectedHost.cpu_pct', 'selectedHost.ram_pct', 'selectedHost.wp_critical', 'selectedInfra.topFs.used_pct', 'openSelectedAnalysis']) {
+    assert.ok(infra.includes(value), 'APP metrics and navigation remain source-backed: ' + value)
+  }
+})
