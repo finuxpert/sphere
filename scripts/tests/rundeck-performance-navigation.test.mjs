@@ -48,5 +48,5 @@ test('new UI scope does not remove evidence and infrastructure provenance', () =
   const review = read('RundeckMonthlyReview.jsx')
   assert.match(app, /infraHostVerified/)
   assert.match(app, /fsFresh/)
-  assert.match(review, /refreshToken/)
+  assert.match(review, /buildMonthlyPdf/)
 })
