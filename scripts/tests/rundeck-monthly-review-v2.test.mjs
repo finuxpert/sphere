@@ -171,7 +171,7 @@ test('2026 monthly report exposes dated peaks, warning levels, WP provenance and
   assert.match(backend, /"rabax_wp_checks"/)
 })
 
-test('Monthly Overview dashboard matches blue analytics layout using only retained SAP measures', () => {
+test('Monthly Overview uses source-backed measures with responsive neutral analytics layout', () => {
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
   const css = read('src/tools/components/RundeckMonthlyReview.css')
   const evaluation = read('backend/rundeck_evaluation.py')
@@ -192,7 +192,9 @@ test('Monthly Overview dashboard matches blue analytics layout using only retain
   assert.match(ui, /aria-label="Trend statistic"/)
   assert.match(ui, /aria-label="Select APP trend"/)
   assert.match(css, /conic-gradient|sphereMonthlyDonut/)
-  assert.match(css, /@media\(max-width:820px\)/)
+  assert.match(css, /@media\(max-width:1050px\)/)
+  assert.match(css, /background:var\(--mr-surface-2\)/)
+  assert.doesNotMatch(css, /linear-gradient\(135deg,#83bcef/)
   assert.match(ui, /Server Performance by APP/)
   assert.doesNotMatch(ui, /Monthly Highlights/)
   assert.doesNotMatch(ui, /Daily active users|Shopping|Product Viewing|Inventory Monitoring/)
