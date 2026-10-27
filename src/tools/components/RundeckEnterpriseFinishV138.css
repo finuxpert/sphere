@@ -311,6 +311,83 @@
   max-width: 100%;
   display: block;
 }
+/* Evaluation visual finishing: use readable compact text and actionable APP rows.
+ * Host-linked memberships may repeat globally evaluated workloads. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthBrand strong {
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthTitle > span > small {
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadCategory {
+  min-height: 52px !important;
+  padding: 7px 11px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadCategory span {
+  font-size: 11.5px !important;
+  line-height: 1.35 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead {
+  align-items: center !important;
+  padding-bottom: 7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead > div > span {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-align: center;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalLane {
+  min-height: 44px !important;
+  padding-block: 8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalHostButton {
+  font-size: 12.5px !important;
+  line-height: 1.35 !important;
+  min-height: 30px;
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalHostButton:not(:disabled):hover {
+  color: var(--v36-blue) !important;
+  text-decoration: underline;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalHostButton:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalIdentity small {
+  font-size: 11.5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBar {
+  height: 16px !important;
+  border-radius: 3px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalToggle {
+  min-height: 30px !important;
+  padding: 5px 9px !important;
+  font-size: 11.5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBreakdown strong {
+  font-size: 12px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalBreakdown small {
+  font-size: 11.5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckWorkloadHealthFooter small {
+  font-size: 11px !important;
+  line-height: 1.45;
+}
+@media (max-width: 1050px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckAppEvalColumnHead > div > span {
+    font-size: 10px;
+  }
+}
+
 html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceShell {
   --ui-surface: #fff;
   --ui-surface-raised: #f3f6f9;
