@@ -776,3 +776,82 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain :is
     transition:none!important;
   }
 }
+
+
+/* v1.39.1 — SAP Checks and Infrastructure desktop legibility.
+   Presentation-only; state labels and data provenance remain unchanged. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksReadiness {
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  justify-content: flex-start !important;
+  column-gap: 9px !important;
+  row-gap: 3px !important;
+  line-height: 1.4 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksReadiness > :is(b,strong) {
+  display: inline-block !important;
+  overflow-wrap: anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckIssueViewSwitch {
+  display: inline-flex !important;
+  gap: 5px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckIssueViewSwitch > button,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckSapChecksFilterToggle {
+  background: var(--v36-subpanel) !important;
+  border: 1px solid var(--v36-border) !important;
+  border-radius: 5px !important;
+  color: var(--v36-muted) !important;
+  padding: 6px 9px !important;
+  min-height: 30px !important;
+  font-size: 11.5px !important;
+  line-height: 1.25 !important;
+  box-shadow: none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-sap-checks .rundeckIssueViewSwitch > button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--v36-subpanel) 84%, var(--v36-blue)) !important;
+  border-color: var(--v36-blue) !important;
+  color: var(--v36-ink) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid .cardHead {
+  gap: 7px 10px !important;
+  align-items: center !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid .rundeckInfraFsPager {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+  width: auto !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid .rundeckInfraFsPager button {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  border: 1px solid var(--v36-border) !important;
+  background: var(--v36-subpanel) !important;
+  color: var(--v36-ink) !important;
+  border-radius: 5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid .rundeckInfraFsPager small {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--v36-muted);
+  line-height: 1.35;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-infrastructure .rundeckInfraGrid .rundeckInfraFsPager > span {
+  white-space: nowrap;
+  font-size: 10px;
+}
