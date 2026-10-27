@@ -13,7 +13,8 @@ export default function RundeckMonitoringHistoryCore(props) {
     const overview = overviewRef.current
     if (!overview) return
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
-    const fit = window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
+    const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
+    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
     if (fit) {
       overview.style.setProperty('--sphere-overview-room', available + 'px')
       overview.dataset.viewportFit = 'true'
@@ -37,10 +38,21 @@ export default function RundeckMonitoringHistoryCore(props) {
       panel?.querySelector('.rundeckDataQualityNotice')]) {
       if (element) observer?.observe(element)
     }
+    // Expanded evaluation hexagons must exit the constrained single-screen
+    // grid *before paint*. Observe only evaluation child additions/removals,
+    // not live chart attributes, to avoid expensive monitoring redraws.
+    const evaluations = overviewRef.current?.querySelector('.rundeckJobsProgramsOverview')
+    const expansionObserver = typeof MutationObserver === 'undefined' ? null :
+      new MutationObserver(() => {
+        window.cancelAnimationFrame(frame)
+        measureViewport()
+      })
+    if (evaluations) expansionObserver?.observe(evaluations, { childList: true, subtree: true })
     return () => {
       window.removeEventListener('resize', schedule)
       window.cancelAnimationFrame(frame)
       observer?.disconnect()
+      expansionObserver?.disconnect()
     }
   }, [measureViewport])
 
