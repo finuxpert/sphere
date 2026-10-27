@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from backend.rundeck_network_trends import app_network_trend
+from backend.rundeck_network_trends import app_network_trend, network_collection_gaps
 
 
 class AppNetworkTrendTests(unittest.TestCase):
@@ -69,3 +69,21 @@ class AppNetworkTrendTests(unittest.TestCase):
             app_network_trend(self.start, "custom", "auto", "network_rx")
         with self.assertRaises(ValueError):
             app_network_trend(self.start, "6h", "auto", "unknown")
+
+    def test_infrastructure_gaps_use_exact_retained_sample_boundaries(self):
+        observations = [
+            {"observed_at": self.start},
+            {"observed_at": self.start + timedelta(minutes=5)},
+            {"observed_at": self.start + timedelta(hours=12)},
+            {"observed_at": self.start + timedelta(hours=12, minutes=5)},
+        ]
+        gaps = network_collection_gaps(observations, cadence_seconds=300)
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual(gaps[0]["before"], self.start + timedelta(minutes=5))
+        self.assertEqual(gaps[0]["after"], self.start + timedelta(hours=12))
+        self.assertEqual(gaps[0]["observed_spacing_seconds"], 11 * 3600 + 55 * 60)
+
+    def test_gap_detection_does_not_infer_missing_data_as_sap_down(self):
+        observations = [{"observed_at": self.start}, {"observed_at": self.start + timedelta(minutes=5)}]
+        self.assertEqual(network_collection_gaps(observations), [])
+        self.assertEqual(network_collection_gaps([]), [])
