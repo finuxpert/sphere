@@ -32,6 +32,7 @@ import './RundeckInvestigationFinishingV135.css'
 import './RundeckMonthlyReview.css'
 import './RundeckPerformanceShell.css'
 import './RundeckOperationalPagesV135.css'
+import './RundeckVisualRedesignV136.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
