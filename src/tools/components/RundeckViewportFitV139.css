@@ -1,0 +1,375 @@
+/* SPHERE V1.39 — one-screen SAP Performance Overview.
+ * Scopes layout to the default 5-APP monitoring cockpit only. The natural
+ * page flow remains on smaller screens, expanded details and other views.
+ * No hiding/cropping of measurements, errors, timestamps, or source notes.
+ */
+@media (min-width: 1280px) and (min-height: 760px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491[data-viewport-fit="true"] {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-rows: minmax(132px,.72fr) minmax(240px,1.55fr) minmax(236px,1.2fr) !important;
+    gap: 6px !important;
+    height: var(--sphere-overview-room) !important;
+    min-height: 0 !important;
+    align-content: stretch !important;
+    width: 100% !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] > :is(
+    .rundeckTopBandV13454,.rundeckTrendBandV13454,.rundeckJobsProgramsOverview
+  ) {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* APP selector + selected host details use less vertical chrome. */
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckUnifiedAppInfra.rundeckAppHexWorkspace {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckUnifiedAppInfraHead {
+    min-height: 17px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: center !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppHexMain.rundeckAppThreePanels {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppMotionPanel {
+    padding: 5px 8px !important;
+    min-height: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppPanelHeading {
+    min-height: 0 !important;
+    margin: 0 0 3px !important;
+    line-height: 1.25 !important;
+    font-size: 11.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppMotionPanel .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+    grid-template-rows: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    gap: 7px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
+    height: 48px !important;
+    min-height: 48px !important;
+    border-radius: 5px !important;
+    padding: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppHexSelector .rundeckAppHexShape {
+    padding: 3px 7px 3px 22px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppHexShape strong {
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppHexShape :is(em,small) {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppDetailPanel {
+    min-height: 0 !important;
+    padding: 4px 8px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckSelectedAppMetrics strong {
+    font-size: 12px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckSelectedAppOpen {
+    min-height: 28px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* Trend layout has fixed allocation; ECharts owns its inner plot. */
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendBandV13454 {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 7px 9px !important;
+    gap: 3px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendEditorial {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 19px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendEditorial h3 {
+    font-size: 13px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendSharedControls {
+    flex: 0 0 auto !important;
+    gap: 3px 8px !important;
+    margin: 0 0 3px !important;
+    padding: 1px 0 5px !important;
+    row-gap: 4px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendSharedGroup > span {
+    font-size: 10px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendSharedControls select,
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendSharedControls button {
+    min-height: 24px !important;
+    padding-block: 3px !important;
+    font-size: 10.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckSharedCollectionCoverage {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1.09fr) !important;
+    grid-auto-rows: minmax(0,1fr) !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    gap: 7px !important;
+    overflow: visible !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid > .rundeckServerTrendPanelV1234 {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 6px 8px !important;
+    border-radius: 5px !important;
+    gap: 2px !important;
+    overflow: visible !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .rundeckMonitoringHead {
+    min-height: 16px !important;
+    margin: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .rundeckMonitoringHead h3 {
+    font-size: 11.5px !important;
+    line-height: 1.3 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .rundeckMonitoringHead h3 small {
+    font-size: 10px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .rundeckTrendToolbar {
+    min-height: 0 !important;
+    margin: 1px 0 !important;
+    gap: 3px 5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .rundeckTrendMetricSelect {
+    min-height: 24px !important;
+    padding: 3px 7px !important;
+    font-size: 10.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendToolbar .rundeckSegmented button {
+    min-height: 20px !important;
+    padding: 2px 4px !important;
+    font-size: 9.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .is-technical-trend :is(
+    .rundeckNetworkCoverage,.rundeckNetworkSampleTime,.rundeckTechnicalLoadPeakNotice,.rundeckNetworkPeakNotice
+  ) {
+    font-size: 9.5px !important;
+    line-height: 1.25 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .rundeckTrendPlot,
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendPlot {
+    display: flex !important;
+    flex: 1 1 0 !important;
+    height: auto !important;
+    min-height: 105px !important;
+    margin: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .rundeckTrendChart,
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTripleTrendGrid .is-technical-trend .rundeckTrendChart {
+    flex: 1 1 0 !important;
+    height: 100% !important;
+    min-height: 105px !important;
+    max-height: none !important;
+    width: 100% !important;
+  }
+
+  /* Align 4 KPI cards beside the title; keep all five actual APP lanes. */
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview {
+    padding: 6px 8px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsHealthSide {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app {
+    display: grid !important;
+    grid-template-columns: minmax(235px,.35fr) minmax(0,1fr) !important;
+    grid-template-areas: "heading summary" "lanes lanes" "foot foot" !important;
+    grid-template-rows: auto minmax(0,1fr) auto !important;
+    gap: 4px 12px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 0 !important;
+    align-content: stretch !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadHealthTitle {
+    grid-area: heading !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadHealthTitle > span > small {
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadHealthReview {
+    padding: 2px 0 !important;
+    min-height: 20px !important;
+    line-height: 1.15 !important;
+    font-size: 10.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadHealthLegend {
+    grid-area: summary !important;
+    display: grid !important;
+    grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: 48px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadCategory {
+    min-height: 48px !important;
+    padding: 3px 7px !important;
+    border-radius: 5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadCategory strong {
+    font-size: 19px !important;
+    line-height: 1.05 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadCategory span {
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvaluationLanes {
+    grid-area: lanes !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    gap: 2px !important;
+    margin: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalColumnHead {
+    min-height: 14px !important;
+    padding: 0 7px 2px !important;
+    line-height: 1.15 !important;
+    font-size: 10px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalLane {
+    min-height: 31px !important;
+    padding: 3px 7px !important;
+    gap: 8px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalHostButton {
+    min-height: 21px !important;
+    line-height: 1.2 !important;
+    font-size: 11px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalIdentity small,
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalBreakdown small {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalBar {
+    height: 14px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalToggle {
+    min-height: 24px !important;
+    padding: 3px 6px !important;
+    font-size: 10px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckWorkloadHealthFooter {
+    grid-area: foot !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+  }
+
+  /* Expanded detail intentionally restores normal height and page scrolling. */
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"]:has(.rundeckAppEvalDots) {
+    height: auto !important;
+    grid-template-rows: auto auto auto !important;
+  }
+}
+
+/* Ordinary laptop, narrow desktop, and mobile do not clip long names or data. */
+@media (max-width: 1279px), (max-height: 759px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491 {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}
