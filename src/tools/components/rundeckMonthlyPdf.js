@@ -371,23 +371,18 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(11)
     pdf.setTextColor(240, 245, 248)
-    pdf.text('Programs to Review', margin + 4, 18)
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7.5)
-    pdf.setTextColor(67, 84, 95)
-    pdf.text(format(Math.min(10, tuningCandidates.length),0) + ' of ' +
-      format(summary.review_required,0) + ' programs requiring review', margin, 31)
-
+    pdf.text('Programs Requiring Review', margin + 4, 18)
+    // The full monthly count is already visible on page 1.
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(7)
     pdf.setTextColor(45, 63, 77)
-    pdf.text('JOB / PROGRAM', margin + 2, 46)
-    pdf.text('REVIEW REASON', margin + 119, 46)
-    pdf.text('MAX CPU CORES', margin + 184, 46, { align: 'right' })
-    pdf.text('MAX MEMORY', margin + 236, 46, { align: 'right' })
-    pdf.text('MONITORING RECORDS', margin + 279, 46, { align: 'right' })
+    pdf.text('JOB / PROGRAM', margin + 2, 40)
+    pdf.text('REVIEW REASON', margin + 119, 40)
+    pdf.text('MAX CPU CORES', margin + 184, 40, { align: 'right' })
+    pdf.text('MAX MEMORY', margin + 236, 40, { align: 'right' })
+    pdf.text('MONITORING RECORDS', margin + 279, 40, { align: 'right' })
     pdf.setDrawColor(204, 216, 224)
-    pdf.line(margin, 48, W-margin, 48)
+    pdf.line(margin, 42, W-margin, 42)
 
     const reviewReason = row => [
       row.signals?.sustained_high_cpu && 'High CPU',
@@ -396,7 +391,7 @@ export async function buildMonthlyPdf({ month, data }) {
       row.signals?.baseline_anomaly && 'Above usual level',
     ].filter(Boolean).slice(0,2).join(', ') || 'Resource usage'
 
-    let y = 52
+    let y = 46
     tuningCandidates.slice(0, 10).forEach((row, index) => {
       const jobName = String(row.consumer_key || 'Name not available')
       const apps = (row.hosts || []).map(labelHost).join(', ') || 'APP not identified'
@@ -422,7 +417,7 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(6.7)
     pdf.setTextColor(90, 105, 115)
-    pdf.text('Monitoring records count saved observations, not job runs.', margin, 174)
+    pdf.text('Monitoring records count saved observations, not job runs.', margin, 163)
   }
 
   // Detailed WP counters and traces remain available for SAP Basis in SPHERE.
