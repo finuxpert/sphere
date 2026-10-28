@@ -53,8 +53,8 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
     style={{ '--lane-hex-size': dotSize + 'px' }}
     aria-label="Saved evaluations grouped by explicitly observed APP host">
     <div className="rundeckAppEvalColumnHead" aria-hidden="true">
-      <span title="The same job or program may be linked to more than one APP host; per-APP memberships are not distinct workloads">APP / linked evaluations</span>
-      <span title="Classification of saved SPHERE evaluations, not confirmed SAP SM37 failed jobs">Evaluation status distribution</span>
+      <span title="The same job or program may be linked to more than one APP host; per-APP memberships are not distinct workloads">APP / linked</span>
+      <span title="Classification of saved SPHERE evaluations, not confirmed SAP SM37 failed jobs">Review status</span>
       <div>{STATUS_LABELS.map(level => <span key={level.key}>{level.label}</span>)}</div>
     </div>
     {lanes.map(lane => <section key={lane.key} className={'rundeckAppEvalLane' + (lane.key === 'UNVERIFIED' ? ' is-host-unverified' : '')}
@@ -67,7 +67,7 @@ export default function RundeckWorkloadAppLanes({ rows = [], onSelectWorkload, o
               onClick={() => onOpenApp?.(lane.key)} aria-label={'Open Current Jobs and Programs filtered to ' + lane.label}>
               {lane.label}<span aria-hidden="true"> ↗</span>
             </button>}
-        <small>{lane.total} {lane.key === 'UNVERIFIED' ? 'without verified APP host' : 'linked evaluations'}</small>
+        <small title={lane.key === 'UNVERIFIED' ? 'Unverified APP host evidence' : 'One evaluation can be linked to several APP hosts; do not add these counts as unique evaluations'}>{lane.total} {lane.key === 'UNVERIFIED' ? 'unverified hosts' : 'APP links'}</small>
       </div>
       <div className="rundeckAppEvalSummary">
         <div className="rundeckAppEvalBar" role="img"
