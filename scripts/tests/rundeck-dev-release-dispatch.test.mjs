@@ -91,8 +91,8 @@ test('DEV deployment logs and bounds each public HTTP check without bypassing ro
     'PROD_PLATFORM 2', 'DEV_PLATFORM 2']) {
     assert.ok(deploy.includes(label), 'Missing endpoint-specific smoke proof: ' + label)
   }
-  assert.match(deploy, /assert_json_file "\\$path"/)
+  assert.ok(deploy.includes('assert_json_file "$path"'))
   assert.match(deploy, /trap rollback ERR/)
   assert.match(deploy, /PRODUCTION ROUTING VERIFIED/)
-  assert.match(deploy, /test "\\$\\(sha256sum "\\$PROD_WEB\\/index.html"\\)" = "\\$PROD_HASH"/)
+  assert.ok(deploy.includes('test "$(sha256sum "$PROD_WEB/index.html")" = "$PROD_HASH"'))
 })
