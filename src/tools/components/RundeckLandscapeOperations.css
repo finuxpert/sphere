@@ -365,3 +365,42 @@
     row-gap: 4px;
   }
 }
+
+/* v1.40.4: distribute available APP evaluation space and clarify labels. */
+@media (min-width:1280px) and (min-height:760px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckAppEvaluationLanes {
+    justify-content:space-between !important;
+    min-height:0 !important;
+    gap:4px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckAppEvalLane {
+    min-height:34px !important;
+    padding-block:4px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppEvalIdentity small {
+    font-size:10.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendSharedGroup > span {
+    font-size:10.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTrendSharedControls :is(button,select) {
+    font-size:11px !important;
+  }
+}
+@media (min-width:1280px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+  :is(.rundeckFleetMeterName,.rundeckFleetMeterValue) {
+    font-size:10.5px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+  .rundeckAppHexShape > :is(small,em) {
+    font-size:10.5px !important;
+  }
+}
