@@ -78,7 +78,17 @@ test('DEV deployment logs and bounds each public HTTP check without bypassing ro
   const syntax = spawnSync('bash', ['-n', new URL('ops/rundeck/deploy-dev.sh', root).pathname], { encoding: 'utf8' })
   assert.equal(syntax.status, 0, syntax.stderr || 'deploy-dev.sh bash syntax failed')
   assert.ok(deploy.includes('smoke_get() {'))
-  assert.ok(deploy.includes('SMOKE_START label=$label'))
+  assert.ok(!deploy.includes('SMOKE_START label=$label'), 'Successful checks should log one line')
+  assert.ok(deploy.includes("route=(--resolve 'sphere.astraotoparts.co.id:443:127.0.0.1')"))
+  assert.ok(deploy.includes('SPHERE_LOCAL_NGINX_SMOKE=1 bash'))
+  assert.ok(!deploy.includes('cat /tmp/sphere-dev-health.json'))
+  assert.ok(!deploy.includes('cat /tmp/sphere-dev-platform.json'))
+  for (const filename of ['smoke-watchdog-dev.sh', 'smoke-network-trends-dev.sh', 'smoke-custom-window-dev.sh']) {
+    const script = read('ops/rundeck/' + filename)
+    assert.ok(script.includes('SPHERE_LOCAL_NGINX_SMOKE'))
+    assert.ok(script.includes('sphere.astraotoparts.co.id:443:127.0.0.1'))
+    assert.ok(script.includes('CURL_ROUTE[@]'))
+  }
   assert.ok(deploy.includes('SMOKE_PASS label=$label'))
   assert.ok(deploy.includes('SMOKE_FAIL label=$label'))
   assert.ok(deploy.includes('if (( attempt < attempts && (rc == 28 || rc == 7) )); then'))
