@@ -1048,7 +1048,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
 
   return <section className="rundeckTripleTrendV13457" aria-label="Server and Technical Trends">
     <div className="rundeckTrendEditorial">
-      <h3>Performance Trends</h3><small>Saved APP and technical measurements</small>
+      <h3>Performance Trends</h3>
       {scaleMode === 'focus' && <small className="rundeckTrendFocusReference" title="These are the original backend thresholds, not zoomed or recalculated.">
         {[serverTrend1,serverTrend2].filter(trend => trend?.unit === '%').map((trend,index) =>
           <span key={trend.metric || index}>{metricLabel(trend.metric)} warn {trend.warning ?? '—'}% / crit {trend.critical ?? '—'}%</span>)} · thresholds unchanged
@@ -1151,13 +1151,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(':hover')) setUnifiedHovered(false)
       }}>
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label={metricLabel(serverMetric1) + " Trend"}>
-        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend <small>· APP host</small></h3></div>
+        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend</h3></div>
         <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric" value={serverMetric1} onChange={event => setServerMetric1(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
         {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label={metricLabel(serverMetric2) + " Trend"}>
-        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from workload PSS and CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric2)} Trend <small>· APP host</small></h3></div>
+        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from workload PSS and CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric2)} Trend</h3></div>
         <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 2 metric" value={serverMetric2} onChange={event => setServerMetric2(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
         {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
       </section>

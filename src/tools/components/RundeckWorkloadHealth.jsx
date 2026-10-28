@@ -63,7 +63,7 @@ async function readVerifiedPopulation(signal) {
 }
 
 /** One saved 1D evaluation = one selectable hexagon, without 400+1 pagination. */
-export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe', onSummaryChange = null }) {
+export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe' }) {
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
@@ -108,18 +108,6 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   }, [refreshToken, retryToken])
 
   const preview = loading || error ? null : data?.preview
-  // Reuse the already validated 1D population for the top summary; never
-  // initiate a second API request or mix Current collection with 24h review.
-  React.useEffect(() => {
-    onSummaryChange?.(preview ? {
-      total: preview.total,
-      review: Number(preview.health.review),
-      attention: Number(preview.health.attention),
-      unknown: Number(preview.health.unknown),
-      normal: Number(preview.health.normal),
-      end: data?.end || '',
-    } : null)
-  }, [onSummaryChange, preview, data?.end])
   const rows = React.useMemo(() =>
     preview && !data?.tooMany ? [...(data?.rows || [])].sort((left, right) =>
       SEVERITY_ORDER[workloadHealthLevel(left)] - SEVERITY_ORDER[workloadHealthLevel(right)] ||
@@ -141,8 +129,6 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
   }, [rows.length])
 
-  // First saved Review candidates, not a host-specific failure ranking or SM37 status.
-  const investigationCandidates = rows.filter(row => workloadHealthLevel(row) === 'review').slice(0, 3)
   const insufficient = rows.filter(row => workloadHealthLevel(row) === 'unknown' &&
     String(row.status || '').toUpperCase() === 'INSUFFICIENT DATA').length
   const otherUnknown = preview && !data?.tooMany
@@ -203,7 +189,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     <header className="rundeckWorkloadHealthTitle">
-      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Job &amp; Program Evaluation</strong></span><small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Saved 24h · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small></span>
+      <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Job &amp; Program Evaluation</strong></span>
+        {viewMode !== 'by-app' && <small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Saved 24h · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small>}</span>
       <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
         aria-label="Open Jobs & Programs Review">Open Review</button>
     </header>
@@ -256,25 +243,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
       </span>}
     </div>}
-    {viewMode === 'by-app' && <aside className="rundeckNeedsInvestigation" aria-label="Needs Investigation · saved evaluation review candidates">
-      <strong>Needs Investigation</strong>
-      {investigationCandidates.length > 0
-        ? <div className="rundeckInvestigationItems">
-          {investigationCandidates.map(row => <button key={row.consumer_type + ':' + row.consumer_key}
-            type="button" onClick={() => openWorkload(row)}
-            title={(row.consumer_type || 'Workload') + ' ' + row.consumer_key + ' · ' + (row.assessment_reason || row.status || 'Review required') + ' · saved 24h performance evaluation, not confirmed SAP SM37 failure'}>
-            <small>{String(row.consumer_type || '').toUpperCase() === 'JOB' ? 'Job' : 'Program'}</small>
-            <span>{row.consumer_key}</span>
-          </button>)}
-        </div>
-        : <span className="rundeckInvestigationState">{!preview ? 'Evaluation unverified'
-          : Number(preview.health.review) > 0 ? 'Open Review for saved candidates'
-            : 'No review candidates in saved 24h data'}</span>}
-      <button type="button" className="rundeckInvestigationAll" onClick={() => onReview?.('REVIEW')} disabled={!preview}>Review all</button>
-    </aside>}
-    {(viewMode !== 'by-app' || (preview && Number(preview.health.unknown) > 0 && otherUnknown !== null) || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
+    {(viewMode !== 'by-app' || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
       {viewMode !== 'by-app' && <span className={'is-' + state} title="Evaluation priority is based on saved evidence, not SAP SM37 execution status.">{statusNote} · not SAP SM37 job status</span>}
-      {preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
+      {viewMode !== 'by-app' && preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
         <small title={unknownDescription}>Evidence gap · {insufficient} insufficient{otherUnknown > 0 ? ` · ${otherUnknown} other` : ''}</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
     </footer>}

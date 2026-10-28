@@ -2,12 +2,9 @@ import React from 'react'
 import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
-import RundeckOperationsSummary from './RundeckOperationsSummary.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   const overviewRef = React.useRef(null)
-  const [evaluationSummary, setEvaluationSummary] = React.useState(null)
-  const onEvaluationSummary = React.useCallback(summary => setEvaluationSummary(summary), [])
 
   // Fit the read-only overview into the real available browser viewport.
   // The fit is opt-in for spacious desktop windows; smaller screens and expanded
@@ -17,10 +14,8 @@ export default function RundeckMonitoringHistoryCore(props) {
     if (!overview) return
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
-    // Four KPI tiles and the investigation row require more room than the legacy
-    // three-section cockpit. On shorter desktops use natural page flow instead
-    // of clipping the fifth APP lane or overlapping investigation details.
-    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 780
+    // Fit only when all visible source-backed overview sections have room.
+    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
     if (fit) {
       overview.style.setProperty('--sphere-overview-room', available + 'px')
       overview.dataset.viewportFit = 'true'
@@ -64,12 +59,6 @@ export default function RundeckMonitoringHistoryCore(props) {
 
   return <section ref={overviewRef} className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491">
     <section className="rundeckTopBandV13454 is-unified-app-infra">
-      <RundeckOperationsSummary
-        hosts={props.sourceHosts || []}
-        sourceQuality={props.sourceQuality}
-        evaluationSummary={evaluationSummary}
-        onOpenReview={() => props.onOpenJobsPrograms?.('review', 'REVIEW')}
-      />
       <RundeckUnifiedAppInfrastructure
         hosts={props.sourceHosts || []}
         sourceQuality={props.sourceQuality}
@@ -107,7 +96,6 @@ export default function RundeckMonitoringHistoryCore(props) {
           onSelectWorkload={props.onOpenEvaluatedWorkload}
           onOpenApp={props.onOpenAppJobs}
           viewMode="by-app"
-          onSummaryChange={onEvaluationSummary}
           onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
         />
       </div>

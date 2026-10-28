@@ -766,9 +766,8 @@ export default function RundeckSource({ onCollection }) {
       <div className="rundeckTitleBlock">
         <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">SAP Performance</span></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
-          <span className="rundeckLastCollected">Last collected {formatTime(latestCollectionAt, true)} WIB</span>
-          <span>{appCount || '—'} APP</span>
-          <span className="rundeckCycleIdentityV132">{quality.performanceValid ? <>Collection <b>READY</b></> : <>Collection <b>LAST READY</b></>} #{latest?.execution_id || '—'}</span>
+          <span className="rundeckLastCollected" title={'Last collected ' + formatTime(latestCollectionAt, true) + ' WIB'}>{formatTime(latestCollectionAt, true)} WIB</span>
+          <span className="rundeckCycleIdentityV132" title={'Collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') + ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') + ' APP'}><b>{quality.performanceValid ? 'READY' : 'LAST READY'}</b></span>
         </div>
       </div>
       <div className="rundeckActions">
@@ -792,9 +791,8 @@ export default function RundeckSource({ onCollection }) {
         </div>
         <div className="rundeckStateCluster">
           <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
-            <summary title={dataAlignmentTitle}>
-              <span>SAP Data</span><StatusPill value={qualityDisplay} />
-              <small className="rundeckSourceFreshness" title={freshnessSummary}>{freshnessShort}</small>
+            <summary title={dataAlignmentTitle + ' · ' + freshnessSummary} aria-label={'SAP data ' + qualityDisplay + ' · ' + freshnessShort}>
+              <StatusPill value={qualityDisplay} />
             </summary>
             <div className="rundeckDataAlignmentPopover">
               <div><span>Performance / Availability</span><strong>{quality.state}</strong></div>
