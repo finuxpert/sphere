@@ -5,6 +5,7 @@ import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } fro
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
 import RundeckWorkloadAppLanes from './RundeckWorkloadAppLanes.jsx'
+import { validatedAppEvaluationMemberships } from './rundeckWorkloadAppLanes.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const MIN_REFRESH_MS = 5 * 60 * 1000
@@ -54,6 +55,9 @@ async function readVerifiedPopulation(signal) {
   const verified = validatedWorkloadDots(first, following, 0, completePageSize)
   if (!verified || verified.rows.length !== preview.total) {
     throw new Error('Workload rows do not match the saved evaluation snapshot')
+  }
+  if (!validatedAppEvaluationMemberships(verified.rows, preview.total)) {
+    throw new Error('APP evaluation membership totals do not match the saved population')
   }
   return { preview: verified.preview, rows: verified.rows, tooMany: false, start: verified.start, end: verified.end }
 }
