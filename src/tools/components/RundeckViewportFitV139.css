@@ -379,3 +379,46 @@
     min-height: 0 !important;
   }
 }
+
+
+/* V1.39.3 — simpler enterprise overview.
+ * The APP buttons and selected SAP/Infra metrics are the actual controls.
+ * Avoid a second decorative panel around them. Never hide evidence or charts.
+ */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckAppMotionPanel {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckWorkloadCategory {
+  border: 0 !important;
+  border-top: 2px solid var(--v36-rule) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: 42px !important;
+  padding: 4px 9px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckWorkloadCategory.is-review {
+  border-top-color: var(--v36-red) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckWorkloadCategory.is-attention {
+  border-top-color: var(--v36-amber) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckWorkloadCategory.is-unknown {
+  border-top-color: #7f8d9d !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckWorkloadCategory.is-normal {
+  border-top-color: var(--v36-green) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckWorkloadCategory:hover {
+  background: var(--v36-subpanel) !important;
+}
