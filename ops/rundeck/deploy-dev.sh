@@ -133,12 +133,47 @@ json.loads(raw)
 PY
 }
 
+# Public Nginx probes may time out transiently even on the server's own IP.
+# Preserve all DEV/PROD HTTP and JSON contracts: retry ONLY connect/timeout
+# failures, and never interpret repeated failure as deployment success.
+smoke_get() {
+  local url="$1"
+  local path="$2"
+  local timeout="${3:-15}"
+  local label="${4:-HTTP_GET}"
+  local attempts="${5:-2}"
+  local attempt rc timing
+  for (( attempt=1; attempt<=attempts; attempt++ )); do
+    echo "SMOKE_START label=$label attempt=$attempt/$attempts timeout_seconds=$timeout url=$url"
+    if timing="$(curl --noproxy '*' -fsS --connect-timeout 4 --max-time "$timeout" \
+      -o "$path" \
+      -w 'http=%{http_code} tcp=%{time_connect}s tls=%{time_appconnect}s ttfb=%{time_starttransfer}s total=%{time_total}s' \
+      "$url")"; then
+      echo "SMOKE_PASS label=$label attempt=$attempt $timing"
+      return 0
+    else
+      rc=$?
+      echo "SMOKE_ERROR label=$label attempt=$attempt curl_exit=$rc $timing" >&2
+    fi
+    if (( attempt < attempts && (rc == 28 || rc == 7) )); then
+      echo "SMOKE_RETRY label=$label reason=transient_connection_or_timeout delay_seconds=2" >&2
+      sleep 2
+    else
+      echo "SMOKE_FAIL label=$label curl_exit=$rc attempts_used=$attempt" >&2
+      return "$rc"
+    fi
+  done
+}
+
 fetch_json() {
   local url="$1"
   local path="$2"
   local timeout="${3:-15}"
-  curl --noproxy '*' -fsS --max-time "$timeout" "$url" -o "$path"
+  local label="${4:-JSON_GET}"
+  local attempts="${5:-2}"
+  smoke_get "$url" "$path" "$timeout" "$label" "$attempts"
   assert_json_file "$path"
+  echo "SMOKE_JSON_PASS label=$label"
 }
 
 trap rollback ERR
@@ -305,21 +340,29 @@ cat /tmp/sphere-dev-health.json
 # single request a finite 90s budget without spawning competing retry queries.
 EVALUATION_SMOKE_START=$SECONDS
 echo 'EVALUATION_SMOKE_START=1D_COLD_START TIMEOUT_SECONDS=90'
-fetch_json 'http://127.0.0.1:8091/evaluation/workloads?period=1d&type=ALL&limit=5' /tmp/sphere-dev-evaluation.json 90
+fetch_json 'http://127.0.0.1:8091/evaluation/workloads?period=1d&type=ALL&limit=5' /tmp/sphere-dev-evaluation.json 90 DEV_EVALUATION_1D 1
 echo "EVALUATION_SMOKE_HTTP_JSON=PASS SECONDS=$((SECONDS-EVALUATION_SMOKE_START))"
 grep -q '"period":"1d"' /tmp/sphere-dev-evaluation.json
 grep -q '"wp_excess_association_pct"' /tmp/sphere-dev-evaluation.json
-cat /tmp/sphere-dev-evaluation.json
+python3 - /tmp/sphere-dev-evaluation.json <<'PY'
+import json
+import sys
+with open(sys.argv[1]) as file:
+    data = json.load(file)
+page = data.get("page") or {}
+runtime = data.get("runtime") or {}
+print(f"EVALUATION_SMOKE_SUMMARY period={data.get('period')} total={page.get('total')} returned={page.get('returned')} cache={runtime.get('cache')} duration_ms={runtime.get('duration_ms')}")
+PY
 
 # Public DEV web and API must both resolve through Nginx.
-curl --noproxy '*' -fsS --max-time 10 https://sphere.astraotoparts.co.id/dev/ -o /tmp/sphere-dev-smoke.html
+smoke_get 'https://sphere.astraotoparts.co.id/dev/' /tmp/sphere-dev-smoke.html 15 DEV_WEB 2
 grep -q '/dev/assets/' /tmp/sphere-dev-smoke.html
-fetch_json 'https://sphere.astraotoparts.co.id/dev/api/collections/latest' /tmp/sphere-dev-public-latest.json
+fetch_json 'https://sphere.astraotoparts.co.id/dev/api/collections/latest' /tmp/sphere-dev-public-latest.json 15 DEV_COLLECTIONS 2
 grep -q '"collection_id"' /tmp/sphere-dev-public-latest.json
-curl --noproxy '*' -fsS --max-time 10 https://sphere.astraotoparts.co.id/dev/api/metrics -o /tmp/sphere-dev-metrics.txt
+smoke_get 'https://sphere.astraotoparts.co.id/dev/api/metrics' /tmp/sphere-dev-metrics.txt 15 DEV_METRICS 2
 grep -q 'sphere_collection_age_seconds' /tmp/sphere-dev-metrics.txt
 grep -q 'sphere_rundeck_execution_stuck' /tmp/sphere-dev-metrics.txt
-fetch_json 'https://sphere.astraotoparts.co.id/dev/api/watchdog/events?limit=5' /tmp/sphere-dev-watchdog-events.json
+fetch_json 'https://sphere.astraotoparts.co.id/dev/api/watchdog/events?limit=5' /tmp/sphere-dev-watchdog-events.json 15 DEV_WATCHDOG_EVENTS 2
 grep -q '"items"' /tmp/sphere-dev-watchdog-events.json
 bash "$RELEASE/ops/rundeck/smoke-watchdog-dev.sh" 'https://sphere.astraotoparts.co.id/dev'
 # Ensure the DEV API and public proxy both accept the new network trend metrics.
@@ -330,10 +373,10 @@ bash "$RELEASE/ops/rundeck/smoke-custom-window-dev.sh" 'http://127.0.0.1:8091' '
 # Cross-environment contract: a DEV deploy is not successful unless the existing
 # production Rundeck routes still return JSON. This specifically prevents the
 # HTML-as-JSON incident caused by an over-broad Nginx block replacement.
-fetch_json 'https://sphere.astraotoparts.co.id/api/collections/latest' /tmp/sphere-prod-public-latest.json
+fetch_json 'https://sphere.astraotoparts.co.id/api/collections/latest' /tmp/sphere-prod-public-latest.json 15 PROD_COLLECTIONS 2
 grep -q '"collection_id"' /tmp/sphere-prod-public-latest.json
-fetch_json 'https://sphere.astraotoparts.co.id/api/history/hosts/latest' /tmp/sphere-prod-public-hosts.json
-fetch_json 'https://sphere.astraotoparts.co.id/api/platform/health' /tmp/sphere-prod-public-platform.json
+fetch_json 'https://sphere.astraotoparts.co.id/api/history/hosts/latest' /tmp/sphere-prod-public-hosts.json 15 PROD_HOSTS 2
+fetch_json 'https://sphere.astraotoparts.co.id/api/platform/health' /tmp/sphere-prod-public-platform.json 15 PROD_PLATFORM 2
 grep -q '"status"' /tmp/sphere-prod-public-platform.json
 
 test "$(readlink -f /var/www/sphere.astraotoparts.co.id/current)" = "$PROD_WEB"
@@ -373,7 +416,7 @@ prune_releases /opt/sphere-rundeck-dev/releases "$(readlink -f "$API_CURRENT")" 
 prune_releases /var/www/sphere-dev/releases "$(readlink -f "$WEB_CURRENT")" "$KEEP"
 
 # Report platform health only after release cleanup so the visible count is final.
-fetch_json 'https://sphere.astraotoparts.co.id/dev/api/platform/health' /tmp/sphere-dev-platform.json
+fetch_json 'https://sphere.astraotoparts.co.id/dev/api/platform/health' /tmp/sphere-dev-platform.json 15 DEV_PLATFORM 2
 cat /tmp/sphere-dev-platform.json
 
 trap - ERR

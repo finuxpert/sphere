@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 
 const root = new URL('../../', import.meta.url)
 const read = path => readFileSync(new URL(path, root), 'utf8')
@@ -70,4 +71,28 @@ test('DEV infrastructure poller has bounded sequential request budget and action
   assert.match(deploy, /journalctl -u "\$service"/)
   assert.match(deploy, /SERVICE FAILED/)
   assert.match(deploy, /DEPLOY FAILED - rolling back \/dev/)
+})
+
+test('DEV deployment logs and bounds each public HTTP check without bypassing rollback or PROD', () => {
+  const deploy = read('ops/rundeck/deploy-dev.sh')
+  const syntax = spawnSync('bash', ['-n', new URL('ops/rundeck/deploy-dev.sh', root).pathname], { encoding: 'utf8' })
+  assert.equal(syntax.status, 0, syntax.stderr || 'deploy-dev.sh bash syntax failed')
+  assert.ok(deploy.includes('smoke_get() {'))
+  assert.ok(deploy.includes('SMOKE_START label=$label'))
+  assert.ok(deploy.includes('SMOKE_PASS label=$label'))
+  assert.ok(deploy.includes('SMOKE_FAIL label=$label'))
+  assert.ok(deploy.includes('if (( attempt < attempts && (rc == 28 || rc == 7) )); then'))
+  assert.ok(deploy.includes('curl --noproxy'))
+  assert.ok(deploy.includes('--connect-timeout 4 --max-time "$timeout"'))
+  assert.ok(!deploy.includes('--retry-all-errors'), 'Do not retry HTTP errors or masked source failures')
+  assert.ok(deploy.includes("DEV_EVALUATION_1D 1"), 'Never duplicate expensive cold evaluation SQL')
+  for (const label of ['DEV_WEB 2', 'DEV_COLLECTIONS 2', 'DEV_METRICS 2',
+    'DEV_WATCHDOG_EVENTS 2', 'PROD_COLLECTIONS 2', 'PROD_HOSTS 2',
+    'PROD_PLATFORM 2', 'DEV_PLATFORM 2']) {
+    assert.ok(deploy.includes(label), 'Missing endpoint-specific smoke proof: ' + label)
+  }
+  assert.ok(deploy.includes('assert_json_file "$path"'))
+  assert.match(deploy, /trap rollback ERR/)
+  assert.match(deploy, /PRODUCTION ROUTING VERIFIED/)
+  assert.ok(deploy.includes('test "$(sha256sum "$PROD_WEB/index.html")" = "$PROD_HASH"'))
 })
