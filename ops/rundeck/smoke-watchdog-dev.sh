@@ -5,15 +5,21 @@ BASE_URL="${1:-https://sphere.astraotoparts.co.id/dev}"
 PYTHON="${SPHERE_DEV_PYTHON:-/opt/sphere-rundeck-dev/venv/bin/python}"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 RELEASE_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
+# For on-host release checks, use local Nginx while preserving TLS and Host routing.
+# Independent operator runs keep normal DNS unless explicitly requested.
+CURL_ROUTE=()
+if [[ "${SPHERE_LOCAL_NGINX_SMOKE:-}" == 1 ]]; then
+  CURL_ROUTE=(--resolve 'sphere.astraotoparts.co.id:443:127.0.0.1')
+fi
 
 tmp_health="$(mktemp)"
 tmp_metrics="$(mktemp)"
 tmp_events="$(mktemp)"
 trap 'rm -f "$tmp_health" "$tmp_metrics" "$tmp_events"' EXIT
 
-curl --noproxy '*' -fsS --max-time 10 "$BASE_URL/api/platform/health" -o "$tmp_health"
-curl --noproxy '*' -fsS --max-time 10 "$BASE_URL/api/metrics" -o "$tmp_metrics"
-curl --noproxy '*' -fsS --max-time 10 "$BASE_URL/api/watchdog/events?limit=5" -o "$tmp_events"
+curl --noproxy '*' "${CURL_ROUTE[@]}" -fsS --max-time 10 "$BASE_URL/api/platform/health" -o "$tmp_health"
+curl --noproxy '*' "${CURL_ROUTE[@]}" -fsS --max-time 10 "$BASE_URL/api/metrics" -o "$tmp_metrics"
+curl --noproxy '*' "${CURL_ROUTE[@]}" -fsS --max-time 10 "$BASE_URL/api/watchdog/events?limit=5" -o "$tmp_events"
 
 "$PYTHON" - "$tmp_health" "$tmp_events" <<'PY'
 import json

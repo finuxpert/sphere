@@ -29,9 +29,9 @@ if [[ "$(readlink -f "$API_CURRENT" 2>/dev/null || true)" == "/opt/sphere-rundec
    grep -Rqs "$SHORT_REVISION" "$WEB_CURRENT/assets" &&
    systemctl is-active --quiet sphere-rundeck-api.service &&
    curl --noproxy '*' -fsS --max-time 6 http://127.0.0.1:8091/health >/dev/null &&
-   curl --noproxy '*' -fsS --max-time 8 https://sphere.astraotoparts.co.id/dev/ >/dev/null &&
-   bash "$SOURCE/ops/rundeck/smoke-network-trends-dev.sh" >/dev/null &&
-   bash "$SOURCE/ops/rundeck/smoke-custom-window-dev.sh" >/dev/null; then
+   curl --noproxy '*' --resolve 'sphere.astraotoparts.co.id:443:127.0.0.1' -fsS --max-time 8 https://sphere.astraotoparts.co.id/dev/ >/dev/null &&
+   SPHERE_LOCAL_NGINX_SMOKE=1 bash "$SOURCE/ops/rundeck/smoke-network-trends-dev.sh" >/dev/null &&
+   SPHERE_LOCAL_NGINX_SMOKE=1 bash "$SOURCE/ops/rundeck/smoke-custom-window-dev.sh" >/dev/null; then
   echo "FINAL=PASS DEV=ALREADY_CURRENT SHA=$REVISION DB_MIGRATION=UNCHANGED API_RESTART=SKIPPED DURATION=${SECONDS}s"
   exit 0
 fi
@@ -143,9 +143,15 @@ smoke_get() {
   local label="${4:-HTTP_GET}"
   local attempts="${5:-2}"
   local attempt rc timing
+  local -a route=()
+  # This is an on-host deployment contract. Keep the actual HTTPS hostname,
+  # TLS validation, Host routing and real Nginx/PROD checks, but avoid unreliable
+  # self-connections to the server's primary IP (10.14.90.79).
+  if [[ "$url" == https://sphere.astraotoparts.co.id/* ]]; then
+    route=(--resolve 'sphere.astraotoparts.co.id:443:127.0.0.1')
+  fi
   for (( attempt=1; attempt<=attempts; attempt++ )); do
-    echo "SMOKE_START label=$label attempt=$attempt/$attempts timeout_seconds=$timeout url=$url"
-    if timing="$(curl --noproxy '*' -fsS --connect-timeout 4 --max-time "$timeout" \
+    if timing="$(curl --noproxy '*' "${route[@]}" -fsS --connect-timeout 4 --max-time "$timeout" \
       -o "$path" \
       -w 'http=%{http_code} tcp=%{time_connect}s tls=%{time_appconnect}s ttfb=%{time_starttransfer}s total=%{time_total}s' \
       "$url")"; then
@@ -173,7 +179,7 @@ fetch_json() {
   local attempts="${5:-2}"
   smoke_get "$url" "$path" "$timeout" "$label" "$attempts"
   assert_json_file "$path"
-  echo "SMOKE_JSON_PASS label=$label"
+
 }
 
 trap rollback ERR
@@ -246,7 +252,11 @@ python3 "$RELEASE/ops/rundeck/update-nginx-block.py" \
 grep -q '# BEGIN SPHERE DEV ROUTING' "$NGINX_SITE"
 grep -q '# END SPHERE DEV ROUTING' "$NGINX_SITE"
 grep -Eq '# SPHERE production Rundeck API routing|# BEGIN SPHERE PROD ROUTING' "$NGINX_SITE"
-nginx -t
+nginx -t > /tmp/sphere-dev-nginx-check.log 2>&1 || {
+  cat /tmp/sphere-dev-nginx-check.log >&2
+  exit 1
+}
+echo "NGINX_CONFIG=PASS"
 
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-api.service" /etc/systemd/system/
 install -m 0644 "$RELEASE/ops/rundeck/sphere-rundeck-poller.service" /etc/systemd/system/
@@ -331,7 +341,13 @@ for attempt in {1..20}; do
 done
 test "$HEALTH_OK" = 1
 assert_json_file /tmp/sphere-dev-health.json
-cat /tmp/sphere-dev-health.json
+python3 - /tmp/sphere-dev-health.json <<'PY'
+import json
+import sys
+with open(sys.argv[1]) as file:
+    data = json.load(file)
+print(f"DEV_HEALTH=PASS source={data.get('source')} latest={((data.get('latest') or {}).get('collection_id'))}")
+PY
 
 # Evaluation SQL is part of the release contract.
 # Evaluation performs several retained-history aggregates on a cold API process.
@@ -364,11 +380,11 @@ grep -q 'sphere_collection_age_seconds' /tmp/sphere-dev-metrics.txt
 grep -q 'sphere_rundeck_execution_stuck' /tmp/sphere-dev-metrics.txt
 fetch_json 'https://sphere.astraotoparts.co.id/dev/api/watchdog/events?limit=5' /tmp/sphere-dev-watchdog-events.json 15 DEV_WATCHDOG_EVENTS 2
 grep -q '"items"' /tmp/sphere-dev-watchdog-events.json
-bash "$RELEASE/ops/rundeck/smoke-watchdog-dev.sh" 'https://sphere.astraotoparts.co.id/dev'
+SPHERE_LOCAL_NGINX_SMOKE=1 bash "$RELEASE/ops/rundeck/smoke-watchdog-dev.sh" 'https://sphere.astraotoparts.co.id/dev'
 # Ensure the DEV API and public proxy both accept the new network trend metrics.
-bash "$RELEASE/ops/rundeck/smoke-network-trends-dev.sh" 'http://127.0.0.1:8091' 'https://sphere.astraotoparts.co.id/dev/api'
+SPHERE_LOCAL_NGINX_SMOKE=1 bash "$RELEASE/ops/rundeck/smoke-network-trends-dev.sh" 'http://127.0.0.1:8091' 'https://sphere.astraotoparts.co.id/dev/api'
 # Custom Range must agree across local/public API on CPU, RAM, Network and saved evidence.
-bash "$RELEASE/ops/rundeck/smoke-custom-window-dev.sh" 'http://127.0.0.1:8091' 'https://sphere.astraotoparts.co.id/dev/api'
+SPHERE_LOCAL_NGINX_SMOKE=1 bash "$RELEASE/ops/rundeck/smoke-custom-window-dev.sh" 'http://127.0.0.1:8091' 'https://sphere.astraotoparts.co.id/dev/api'
 
 # Cross-environment contract: a DEV deploy is not successful unless the existing
 # production Rundeck routes still return JSON. This specifically prevents the
@@ -417,7 +433,13 @@ prune_releases /var/www/sphere-dev/releases "$(readlink -f "$WEB_CURRENT")" "$KE
 
 # Report platform health only after release cleanup so the visible count is final.
 fetch_json 'https://sphere.astraotoparts.co.id/dev/api/platform/health' /tmp/sphere-dev-platform.json 15 DEV_PLATFORM 2
-cat /tmp/sphere-dev-platform.json
+python3 - /tmp/sphere-dev-platform.json <<'PY'
+import json
+import sys
+with open(sys.argv[1]) as file:
+    data = json.load(file)
+print(f"DEV_PLATFORM=PASS status={data.get('status', 'unknown')}")
+PY
 
 trap - ERR
 printf '\nPRODUCTION ROUTING VERIFIED\nPRODUCTION UNCHANGED\nDEV REVISION %s\nROLLBACK READY %s\nRELEASES RETAINED %s\n' \

@@ -4,13 +4,19 @@
 set -Eeuo pipefail
 BASE_LOCAL="${1:-http://127.0.0.1:8091}"
 BASE_PUBLIC="${2:-https://sphere.astraotoparts.co.id/dev/api}"
+# For on-host release checks, use local Nginx while preserving TLS and Host routing.
+# Independent operator runs keep normal DNS unless explicitly requested.
+CURL_ROUTE=()
+if [[ "${SPHERE_LOCAL_NGINX_SMOKE:-}" == 1 ]]; then
+  CURL_ROUTE=(--resolve 'sphere.astraotoparts.co.id:443:127.0.0.1')
+fi
 for label in local public; do
   if [[ "$label" == local ]]; then BASE="$BASE_LOCAL"; else BASE="$BASE_PUBLIC"; fi
   for metric in network_rx network_tx; do
     tmp="$(mktemp)"
     trap 'rm -f "$tmp"' EXIT
     url="$BASE/history/trend?range=3h&bucket=auto&metric=$metric"
-    code="$(curl --noproxy '*' -sS --max-time 30 -o "$tmp" -w '%{http_code}' "$url")" || {
+    code="$(curl --noproxy '*' "${CURL_ROUTE[@]}" -sS --max-time 30 -o "$tmp" -w '%{http_code}' "$url")" || {
       echo "NETWORK_API_SMOKE=FAIL endpoint=$label metric=$metric request_failed" >&2
       exit 1
     }

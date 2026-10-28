@@ -4,6 +4,12 @@
 set -Eeuo pipefail
 BASE_LOCAL="${1:-http://127.0.0.1:8091}"
 BASE_PUBLIC="${2:-https://sphere.astraotoparts.co.id/dev/api}"
+# For on-host release checks, use local Nginx while preserving TLS and Host routing.
+# Independent operator runs keep normal DNS unless explicitly requested.
+CURL_ROUTE=()
+if [[ "${SPHERE_LOCAL_NGINX_SMOKE:-}" == 1 ]]; then
+  CURL_ROUTE=(--resolve 'sphere.astraotoparts.co.id:443:127.0.0.1')
+fi
 QUERY="$(python3 - <<'PY'
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
@@ -17,7 +23,7 @@ for label in local public; do
   for metric in cpu ram network_rx network_tx; do
     tmp="$(mktemp)"
     url="$base/history/trend?range=custom&bucket=auto&metric=$metric&$QUERY"
-    code="$(curl --noproxy '*' -sS --max-time 30 -o "$tmp" -w '%{http_code}' "$url")" || {
+    code="$(curl --noproxy '*' "${CURL_ROUTE[@]}" -sS --max-time 30 -o "$tmp" -w '%{http_code}' "$url")" || {
       rm -f "$tmp"
       echo "CUSTOM_API_SMOKE=FAIL endpoint=$label metric=$metric request_failed" >&2
       exit 1
@@ -57,7 +63,7 @@ PY
     echo "CUSTOM_API_SMOKE=PASS endpoint=$label metric=$metric"
   done
   tmp="$(mktemp)"
-  code="$(curl --noproxy '*' -sS --max-time 30 -o "$tmp" -w '%{http_code}' "$base/history/window?$QUERY")" || {
+  code="$(curl --noproxy '*' "${CURL_ROUTE[@]}" -sS --max-time 30 -o "$tmp" -w '%{http_code}' "$base/history/window?$QUERY")" || {
     rm -f "$tmp"
     echo "CUSTOM_API_SMOKE=FAIL endpoint=$label route=history/window request_failed" >&2
     exit 1
