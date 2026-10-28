@@ -329,7 +329,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
-    {stale&&<div className="rundeckInfraHistoricalNote" role="status" title={'Host ' + host + ' · Collection ' + (hostRow?.collection_id || 'unverified') + ' · sample ' + (observedAt || 'unknown')}>Historical data · {freshness}</div>
+    {stale&&<div className="rundeckInfraHistoricalNote" role="status" title={'Host ' + host + ' · Collection ' + (hostRow?.collection_id || 'unverified') + ' · sample ' + (observedAt || 'unknown')}>Historical data · {freshness}</div>}
     <div className="rundeckInfraWorkspace">
       <div className="rundeckInfraCurrent">
         <div className="rundeckInfraCurrentLabel">{stale?'Last retained readings':'Latest collected readings'}</div>
