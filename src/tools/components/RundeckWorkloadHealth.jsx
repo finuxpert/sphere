@@ -238,7 +238,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     {(viewMode !== 'by-app' || (preview && Number(preview.health.unknown) > 0 && otherUnknown !== null) || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
       {viewMode !== 'by-app' && <span className={'is-' + state} title="Evaluation priority is based on saved evidence, not SAP SM37 execution status.">{statusNote} · not SAP SM37 job status</span>}
       {preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
-        <small title={unknownDescription}>Data limited {preview.health.unknown}/{preview.total} ({preview.unknownSharePct}%) · {insufficient} insufficient</small>}
+        <small title={unknownDescription}>Evidence gap · {insufficient} insufficient{otherUnknown > 0 ? ` · ${otherUnknown} other` : ''}</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
     </footer>}
   </section>
