@@ -233,3 +233,108 @@
     grid-template-rows:auto auto auto auto!important;
   }
 }
+
+/* v1.40.1 — layout finishing for the four-area operator overview.
+ * Let the APP fleet occupy its real content height in desktop fit mode:
+ * the old fractional first row reserved blank space after Selected APP
+ * Detail was deliberately removed. Trend and evaluation share the remainder.
+ */
+@media (min-width: 1280px) and (min-height: 760px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491[data-viewport-fit="true"] {
+    grid-template-rows: auto minmax(250px,1.28fr) minmax(245px,1fr) !important;
+    align-content:stretch !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] > .rundeckTopBandV13454.is-unified-app-infra {
+    height:auto !important;
+    min-height:0 !important;
+    align-self:start !important;
+    margin:0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckUnifiedAppInfra.rundeckAppHexWorkspace {
+    height:auto !important;
+    min-height:0 !important;
+    flex:0 0 auto !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppHexMain.rundeckAppThreePanels {
+    height:auto !important;
+    min-height:0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckAppMotionPanel {
+    height:auto !important;
+    min-height:0 !important;
+    flex:0 0 auto !important;
+  }
+}
+
+/* Make current APP signals legible without adding cards or descriptors. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexShape > strong {
+  font-size:12.5px !important;
+  line-height:1.15 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexShape > small {
+  font-size:10px !important;
+  line-height:1.15 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexShape > em {
+  font-size:10px !important;
+  font-weight:700 !important;
+  line-height:1.15 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelector.is-sap-critical .rundeckAppHexShape > em {
+  color:var(--v36-red,#db7d86) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeterName,
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeterValue {
+  font-size:10px !important;
+  line-height:1.1 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeter {
+  grid-template-columns:22px minmax(12px,1fr) 40px;
+  gap:4px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeters {
+  gap:5px;
+}
+
+/* Critical RCA context is still visible in charts, tooltips and modals.
+ * Readable summary labels should never require clipping or hiding a row. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalIdentity small,
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalBreakdown small {
+  font-variant-numeric:tabular-nums;
+}
+@media (max-width: 899px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeter {
+    grid-template-columns:22px minmax(10px,1fr) 40px;
+  }
+}
+@media (max-width: 400px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeter {
+    grid-template-columns:21px minmax(8px,1fr) 34px;
+    gap:2px;
+  }
+}
