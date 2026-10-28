@@ -316,3 +316,16 @@ test('concise overview preserves data provenance, network outliers and RCA actio
   assert.match(css, /v1\.40\.2 — concise overview labels/)
   assert.doesNotMatch(css.slice(css.indexOf('v1.40.2 —')), /display:\s*none|visibility:\s*hidden/)
 })
+
+test('v1.40.4 overview removes duplicated action but retains all four review filters and RCA', () => {
+  const work = read('RundeckWorkloadHealth.jsx')
+  const css = read('RundeckLandscapeOperations.css')
+  const app = read('RundeckUnifiedAppInfrastructure.jsx')
+  assert.match(work, /viewMode !== 'by-app' && <button type="button" className="rundeckWorkloadHealthReview"/)
+  assert.match(work, /onReview\?\.\(level\.health\)/)
+  assert.match(work, /<RundeckWorkloadAppLanes rows=\{rows\}/)
+  assert.match(css, /v1\.40\.4: distribute available APP evaluation space/)
+  assert.match(css, /justify-content:space-between !important/)
+  assert.match(css, /@media \(min-width:1280px\) and \(min-height:760px\)/)
+  assert.match(app, /openAppAnalysis\(host\)/)
+})
