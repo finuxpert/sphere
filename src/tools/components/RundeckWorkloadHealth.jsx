@@ -5,6 +5,7 @@ import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } fro
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
 import RundeckWorkloadAppLanes from './RundeckWorkloadAppLanes.jsx'
+import { validatedAppEvaluationMemberships } from './rundeckWorkloadAppLanes.js'
 
 const API = import.meta.env.BASE_URL + 'api'
 const MIN_REFRESH_MS = 5 * 60 * 1000
@@ -54,6 +55,9 @@ async function readVerifiedPopulation(signal) {
   const verified = validatedWorkloadDots(first, following, 0, completePageSize)
   if (!verified || verified.rows.length !== preview.total) {
     throw new Error('Workload rows do not match the saved evaluation snapshot')
+  }
+  if (!validatedAppEvaluationMemberships(verified.rows, preview.total)) {
+    throw new Error('APP evaluation membership totals do not match the saved population')
   }
   return { preview: verified.preview, rows: verified.rows, tooMany: false, start: verified.start, end: verified.end }
 }
@@ -234,7 +238,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     {(viewMode !== 'by-app' || (preview && Number(preview.health.unknown) > 0 && otherUnknown !== null) || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
       {viewMode !== 'by-app' && <span className={'is-' + state} title="Evaluation priority is based on saved evidence, not SAP SM37 execution status.">{statusNote} · not SAP SM37 job status</span>}
       {preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
-        <small title={unknownDescription}>Data limited {preview.health.unknown}/{preview.total} ({preview.unknownSharePct}%) · {insufficient} insufficient</small>}
+        <small title={unknownDescription}>Evidence gap · {insufficient} insufficient{otherUnknown > 0 ? ` · ${otherUnknown} other` : ''}</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
     </footer>}
   </section>

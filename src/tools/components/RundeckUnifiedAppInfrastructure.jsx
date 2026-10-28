@@ -221,7 +221,7 @@ export default function RundeckUnifiedAppInfrastructure({
     </header>
     <div className="rundeckAppHexMain rundeckAppThreePanels">
       <section className="rundeckAppMotionPanel" aria-label="APP server selection">
-        <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Fleet <small>Select server</small></h4>
+        {!fleetMode && <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Fleet <small>Select server</small></h4>}
         <div ref={orbitStageRef}
         className={'rundeckAppHexSelectors rundeckUnifiedAppCards' + (hosts.length === 5 ? ' is-honeycomb' : '') + (orbitEnabled ? ' is-sphere-orbit' + (orbitExpanded ? ' is-expanded' : '') : '')}
         role="group" aria-label="Select APP server"
@@ -269,7 +269,7 @@ export default function RundeckUnifiedAppInfrastructure({
         </div>
       </section>
       <section className="rundeckAppDetailPanel" aria-label="APP Detail">
-        <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Detail <small>{selectedHost ? appKey + ' selected' : 'No verified selection'}</small></h4>
+        {!fleetMode && <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Detail <small>{selectedHost ? appKey + ' selected' : 'No verified selection'}</small></h4>}
         {selectedHost && <div className="rundeckSelectedAppDetail" aria-label={'Selected APP ' + appKey}>
         <div className="rundeckSelectedAppIdentity">
           <strong>{appKey}</strong>
