@@ -15,6 +15,5 @@ export default function RundeckPerformanceNavigation({ activeView = 'performance
         <SphereIcon name={item.icon} /><span>{item.label}</span>
       </a>
     </React.Fragment>)}
-    <div className="spherePerformanceSidebarFoot">Saved SAP & Infrastructure observations</div>
   </nav>
 }

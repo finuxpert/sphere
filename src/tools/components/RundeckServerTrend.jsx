@@ -1088,7 +1088,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         </div>
       </div>
       <div className="rundeckTrendSharedGroup rundeckTrendControlBucket" role="group" aria-label="Bucket interval">
-        <span>Bucket Interval</span>
+        <span>Bucket</span>
         {range === 'custom'
           ? <strong className="rundeckCustomRangeRaw" title="Custom range uses unaggregated observations">Raw · observed</strong>
           : <select className="rundeckTrendBucketSelect" aria-label="Bucket interval"
@@ -1100,12 +1100,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             </select>}
       </div>
       <div className="rundeckTrendSharedGroup rundeckTrendControlMode" role="group" aria-label="Server trend values">
-        <span title="Average or Peak for supported APP host measurements; technical availability states remain unchanged">Server Values</span>
+        <span title="Average or Peak for supported APP host measurements; technical availability states remain unchanged">Values</span>
         <Segmented options={[['avg', 'Avg'], ['max', 'Peak']]} value={mode}
           onChange={setMode} ariaLabel="Server trend view" />
       </div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts" role="group" aria-label="Highlight APP">
-        <span>Highlight APP</span>
+        <span>APP</span>
         {selectedJob?.host && shortHost(selectedJob.host) !== (shortHost(focusedHost) || '') &&
           <small className="rundeckTrendFocusIdentity">Job {shortHost(selectedJob.host)} · Focus {shortHost(focusedHost) || 'All'}</small>}
         <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
@@ -1163,7 +1163,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </section>
 
       <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
-        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3><SphereIcon name="server" /> Technical Trend <small title={technicalMetric === 'load' ? 'Linux load average, not CPU usage percent. Compare with logical CPU count and saved evidence.' : technicalNetwork ? 'Infrastructure Collector · highest single-interface observed throughput per APP; not summed across interfaces.' : ''}>· {technicalMetric === 'load' ? 'Host load average (not %)' : technicalNetwork ? 'Network ' + networkDirection.toUpperCase() + ' · Mbps' : metricLabel(technicalMetric)}</small></h3>
+        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3 title={technicalMetric === 'load' ? 'Linux load average, not CPU usage percent. Compare with logical CPU count and saved evidence.' : technicalNetwork ? 'Infrastructure Collector · highest single-interface observed throughput per APP; not summed across interfaces.' : 'Saved technical measurements'}><SphereIcon name="server" /> {technicalMetric === 'load' ? 'Host Load' : technicalNetwork ? 'Network' : metricLabel(technicalMetric)} <small>{technicalNetwork ? networkDirection.toUpperCase() + ' · Mbps' : ''}</small></h3>
           {technicalMetric === 'load' && <button type="button" className="rundeckTechnicalScaleToggle"
             aria-pressed={loadScaleMode === 'typical'} aria-label="Switch Technical Load between Full and Typical scale"
             title="Typical zooms the plotted Load axis when extreme saved samples compress other observations. Peak and timestamp remain visible; Full restores every value."
@@ -1174,7 +1174,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             aria-pressed={networkScaleMode === 'typical'} aria-label="Switch Network Y axis between Full and Typical scale"
             title="Typical adjusts the display only. Saved Mbps, exact peak time and NIC identity remain unchanged. Full shows every measured peak."
             onClick={() => setNetworkScaleMode(value => value === 'full' ? 'typical' : 'full')}>
-            Network Y · {networkScaleMode === 'typical' ? 'Typical' : 'Full'}
+            Y: {networkScaleMode === 'typical' ? 'Typical' : 'Full'}
           </button>}
           {technicalNetwork && <div className="rundeckNetworkDirection" role="group" aria-label="Network throughput direction">
             <button type="button" aria-pressed={networkDirection === 'rx'} className={networkDirection === 'rx' ? 'is-active' : ''} onClick={() => setNetworkDirection('rx')}>RX</button>
@@ -1183,32 +1183,30 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         </div>
         <div className="rundeckTrendToolbar">
           <Segmented options={[["load","Load"],["swap","Swap I/O"],["network","Network"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
-          {technicalNetwork && <span className="rundeckNetworkCoverage"
-            title="Infrastructure Collector: the single interface with highest observed throughput per APP; not all NICs summed.">
-            {technicalLoading ? 'Loading…' : technicalTrend?.network_source
-              ? `${technicalTrend.observed_hosts?.length || 0}/5 APP sampled`
-              : 'Source: Infrastructure'}
-          </span>}
+          {technicalNetwork && !technicalLoading && (!technicalTrend?.network_source || (technicalTrend.observed_hosts?.length || 0) !== 5) &&
+            <span className="rundeckNetworkCoverage"
+              title="Infrastructure Collector: observed host coverage for the selected period, not necessarily current. Peak is the highest single interface, not NICs summed.">
+              {technicalTrend?.network_source ? `${technicalTrend.observed_hosts?.length || 0}/5 APP` : 'Source unverified'}
+            </span>}
 
           {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
           {technicalNetwork && <span className="rundeckNetworkSampleTime" role="status"
             title="Last stored AOP Infrastructure Network observation. The 5/5 coverage label means observed in the selected range, not necessarily simultaneously fresh.">
-            Last Network Sample: {technicalTrend?.last_observed_at ? formatWib(technicalTrend.last_observed_at, true) + ' WIB' : 'Not observed'}
+            {technicalTrend?.last_observed_at ? formatWib(technicalTrend.last_observed_at, true) + ' WIB' : 'Not observed'}
           </span>}
         </div>
         {typicalLoadActive && loadScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice" role="status"
-          title="Source peak remains unchanged; Typical is a visual crop, not missing data or SAP outage. Switch to Full to inspect the outlier on the chart.">
-          {loadScale.outliers} samples above Y {loadScale.axisMax} · Peak {numberText(loadScale.peak,1)}
+          title={'Typical crops ' + loadScale.outliers + ' samples above ' + loadScale.axisMax + '. Peak ' + numberText(loadScale.peak,1) + (loadScale.peakHost ? ' · ' + shortHost(loadScale.peakHost) : '') + (loadScale.peakAt ? ' · ' + formatWib(loadScale.peakAt,true) + ' WIB' : '') + '. Full shows saved outliers; this is not an SAP outage.'}>
+          Peak {numberText(loadScale.peak,1)}
           {loadScale.peakHost ? ' · ' + shortHost(loadScale.peakHost) : ''}
-          {loadScale.peakAt ? ' · ' + formatWib(loadScale.peakAt,true) + ' WIB' : ''}
+          {' · ' + loadScale.outliers + ' above axis'}
           <button type="button" onClick={() => setLoadScaleMode('full')}>Show Full</button>
         </div>}
         {typicalNetworkActive && networkScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice rundeckNetworkPeakNotice" role="status"
-          title="Typical only crops the visible Y-axis. The exact measured peak, time and NIC remain stored and visible in Full.">
-          {networkScale.outliers} samples above Y {numberText(networkScale.axisMax,1)} Mbps · Peak {numberText(networkScale.peak,1)} Mbps
+          title={'Typical crops ' + networkScale.outliers + ' samples above ' + numberText(networkScale.axisMax,1) + ' Mbps. Peak ' + numberText(networkScale.peak,1) + ' Mbps' + (networkScale.peakHost ? ' · ' + shortHost(networkScale.peakHost) : '') + (networkScale.peakInterface ? ' · NIC ' + networkScale.peakInterface : '') + (networkScale.peakAt ? ' · ' + formatWib(networkScale.peakAt,true) + ' WIB' : '') + '. Full shows original saved values.'}>
+          Peak {numberText(networkScale.peak,1)} Mbps
           {networkScale.peakHost ? ' · ' + shortHost(networkScale.peakHost) : ''}
-          {networkScale.peakInterface ? ' · NIC ' + networkScale.peakInterface : ''}
-          {networkScale.peakAt ? ' · ' + formatWib(networkScale.peakAt,true) + ' WIB' : ''}
+          {' · ' + networkScale.outliers + ' above axis'}
           <button type="button" onClick={() => setNetworkScaleMode('full')}>Show Full</button>
         </div>}
         {technicalNetwork && !technicalLoading && !technicalError && <InfrastructureGapBand trend={technicalTrend} />}
