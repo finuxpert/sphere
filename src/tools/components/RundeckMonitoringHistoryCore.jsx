@@ -17,7 +17,10 @@ export default function RundeckMonitoringHistoryCore(props) {
     if (!overview) return
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
-    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
+    // Four KPI tiles and the investigation row require more room than the legacy
+    // three-section cockpit. On shorter desktops use natural page flow instead
+    // of clipping the fifth APP lane or overlapping investigation details.
+    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 780
     if (fit) {
       overview.style.setProperty('--sphere-overview-room', available + 'px')
       overview.dataset.viewportFit = 'true'
