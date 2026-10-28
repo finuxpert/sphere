@@ -5,7 +5,7 @@ import { formatWib } from './sapUiFormat.js'
 /** Current fleet numbers are valid only for an aligned, verified SAP snapshot.
  * Unknown or incomplete WP fields must not be silently counted as zero.
  */
-export function summarizeOperationsFleet(hosts = [], quality = null) {
+function summarizeOperationsFleet(hosts = [], quality = null) {
   const verified = quality?.performanceValid === true && !quality?.collectorBad
   if (!verified || !Array.isArray(hosts) || hosts.length === 0) return null
   const states = hosts.map(host => appSignalState(host, true))
