@@ -154,7 +154,7 @@ test('minimal overview removes duplicate headings without hiding SAP source or d
   const health = read('RundeckWorkloadHealth.jsx')
   const css = read('RundeckViewportFitV139.css')
   assert.match(infra, /!fleetMode && <h4 className="rundeckAppPanelHeading"/)
-  assert.match(infra, /APP Servers & Infrastructure/)
+  assert.match(infra, /SAP APP Landscape/)
   assert.match(infra, /Host CPU/)
   assert.match(infra, /Host RAM/)
   assert.match(infra, /Critical WP/)

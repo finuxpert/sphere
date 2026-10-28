@@ -140,7 +140,7 @@ test('v1.35.18 saved evaluation categories are backend Review shortcuts, not loc
 test('v1.35.19 APP and Infrastructure source times are named independently',()=>{
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const css=read('RundeckCockpitHexV13512.css')
-  assert.match(app,/SAP APP sample ·/)
+  assert.match(app,/Verified APP snapshot ·/)
   assert.match(app,/Infra FS · \{mountNote\}/)
   assert.match(app,/Infra sampled/)
   assert.match(app,/Last Infra sample/)
