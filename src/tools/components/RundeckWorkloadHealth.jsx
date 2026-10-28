@@ -191,8 +191,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     <header className="rundeckWorkloadHealthTitle">
       <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Job &amp; Program Evaluation</strong></span>
         {viewMode !== 'by-app' && <small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Saved 24h · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small>}</span>
-      <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
-        aria-label="Open Jobs & Programs Review">Open Review</button>
+      {viewMode !== 'by-app' && <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
+        aria-label="Open Jobs & Programs Review">Open Review</button>}
     </header>
     <div className="rundeckWorkloadHealthLegend" aria-label="Filter saved evaluations by review category">
       {LEVELS.map(level => <button type="button" key={level.key} className={'rundeckWorkloadCategory is-' + level.key}
