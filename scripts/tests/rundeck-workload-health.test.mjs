@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { workloadHealthLevel, workloadHealthPreview, validatedWorkloadDots } from '../../src/tools/components/rundeckWorkloadHealthState.js'
+import { evaluationEvidenceGapReasons, workloadHealthLevel, workloadHealthPreview, validatedWorkloadDots } from '../../src/tools/components/rundeckWorkloadHealthState.js'
 
 test('grouped multicore CPU above 100 percent never independently marks a workload red', () => {
   assert.equal(workloadHealthLevel({status:'NORMAL',avg_cpu_pct:199}), 'normal')
@@ -93,4 +93,19 @@ test('coverage uses full 1D population and keeps unknown separate from SAP execu
   assert.equal(preview.reviewRequired,8)
   assert.equal(workloadHealthPreview({summary:{workloads:0,review_required:0,
     health:{review:0,attention:0,unknown:0,normal:0}},items:[]}).unknownSharePct,0)
+})
+
+test('saved confidence explains unknown evidence without reclassifying it as normal or SM37 error', () => {
+  const rows = [
+    { status: 'INSUFFICIENT DATA', observation_confidence: 'LOW', period_confidence: 'HIGH' },
+    { status: 'INSUFFICIENT DATA', observation_confidence: 'HIGH', period_confidence: 'LOW' },
+    { status: 'INSUFFICIENT DATA', observation_confidence: 'LOW', period_confidence: 'LOW' },
+    { status: 'INSUFFICIENT DATA' },
+    { status: 'UNKNOWN', observation_confidence: 'LOW' },
+    { status: 'NORMAL', observation_confidence: 'LOW' },
+  ]
+  assert.deepEqual(evaluationEvidenceGapReasons(rows),
+    { lowSamples: 1, lowCoverage: 1, bothLow: 1, other: 2 })
+  assert.deepEqual(evaluationEvidenceGapReasons([]),
+    { lowSamples: 0, lowCoverage: 0, bothLow: 0, other: 0 })
 })

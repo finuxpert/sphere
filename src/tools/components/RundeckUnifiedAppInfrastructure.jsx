@@ -292,7 +292,7 @@ export default function RundeckUnifiedAppInfrastructure({
           </div>
         </div>
         <div className="rundeckSelectedAppSource" title={fsDetails}>
-          <small>Infra FS · {mountNote} · {selectedInfra?.infra?.host || 'Host unverified'}</small>
+          <small>{mountNote} · {selectedInfra?.infra?.host || 'host unverified'}</small>
           <small>{fsSampleAt ? `${fsFresh ? 'Infra sampled' : 'Last Infra sample'} ${formatWib(fsSampleAt, true)} WIB` : 'Infra sample time unavailable'} · {selectedInfra?.freshness || 'UNKNOWN'}</small>
         </div>
         <button type="button" className="rundeckSelectedAppOpen" onClick={openSelectedAnalysis}

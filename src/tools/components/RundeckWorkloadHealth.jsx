@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib } from './sapUiFormat.js'
-import { validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } from './rundeckWorkloadHealthState.js'
+import { evaluationEvidenceGapReasons, validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } from './rundeckWorkloadHealthState.js'
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
 import RundeckWorkloadAppLanes from './RundeckWorkloadAppLanes.jsx'
@@ -133,9 +133,16 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     String(row.status || '').toUpperCase() === 'INSUFFICIENT DATA').length
   const otherUnknown = preview && !data?.tooMany
     ? Math.max(0, Number(preview.health.unknown) - insufficient) : null
+  const gapReasons = evaluationEvidenceGapReasons(rows)
+  const gapDetails = [
+    gapReasons.lowSamples ? `${gapReasons.lowSamples} low workload sample count` : '',
+    gapReasons.lowCoverage ? `${gapReasons.lowCoverage} low period coverage` : '',
+    gapReasons.bothLow ? `${gapReasons.bothLow} both low samples and low period coverage` : '',
+    gapReasons.other ? `${gapReasons.other} other or unclassified` : '',
+  ].filter(Boolean).join(' · ')
   const unknownDescription = otherUnknown === null
     ? 'Unknown evaluations need evidence review.'
-    : `${insufficient} insufficient data · ${otherUnknown} other unknown statuses. UNKNOWN is not NORMAL and is not an SM37 result.`
+    : `${insufficient} insufficient data · ${otherUnknown} other unknown statuses. Evidence: ${gapDetails || 'reason unavailable'}. From saved evaluation confidence; not confirmed SAP SM37 errors.`
   const state = error ? 'unavailable' : loading ? 'loading' : !preview ? 'unavailable' :
     preview.total === 0 ? 'empty' : preview.reviewRequired > 0 ? 'review' :
     Number(preview.health.attention) > 0 ? 'attention' :

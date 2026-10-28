@@ -78,7 +78,7 @@
   grid-template-columns: minmax(0,1fr) auto !important;
   grid-template-rows: auto auto 1fr !important;
   align-items: start !important;
-  gap: 9px 12px !important;
+  gap: 6px 10px !important;
   border: 0 !important;
   background: transparent !important;
   padding: 4px 0 0 !important;

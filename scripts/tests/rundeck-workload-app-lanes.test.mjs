@@ -63,7 +63,7 @@ test('APP evaluation cockpit hides redundant metadata strips but retains actiona
   assert.match(lanes, /lane\.counts\[level\.key\]/)
   assert.match(lanes, /onSelectWorkload\?\.\(row\)/)
   assert.match(health, /viewMode !== 'by-app' && <span/)
-  assert.match(health, /Data limited \{preview\.health\.unknown\}/)
+  assert.match(health, /Evidence gap · \{insufficient\} insufficient/)
   assert.match(health, /Host data unverified/)
   assert.match(css, /grid-template-rows:auto auto auto!important/)
   assert.doesNotMatch(css, /\.rundeckAppEvalProvenance\{/)

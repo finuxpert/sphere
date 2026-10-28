@@ -7,6 +7,25 @@ export function workloadHealthLevel(row = {}) {
   return 'unknown'
 }
 
+/** Explain UNKNOWN by saved confidence only, without guessing at collection failures.
+ * Buckets are disjoint; 'other' includes missing fields and non-insufficient UNKNOWN.
+ */
+export function evaluationEvidenceGapReasons(rows = []) {
+  const counts = { lowSamples: 0, lowCoverage: 0, bothLow: 0, other: 0 }
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (workloadHealthLevel(row) !== 'unknown') continue
+    const insufficient = String(row?.status || '').toUpperCase() === 'INSUFFICIENT DATA'
+    const lowSamples = String(row?.observation_confidence || '').toUpperCase() === 'LOW'
+    const lowCoverage = String(row?.period_confidence || '').toUpperCase() === 'LOW'
+    if (!insufficient) counts.other++
+    else if (lowSamples && lowCoverage) counts.bothLow++
+    else if (lowSamples) counts.lowSamples++
+    else if (lowCoverage) counts.lowCoverage++
+    else counts.other++
+  }
+  return counts
+}
+
 /** Full-report counts, not the first 30 rank-sorted rows. Fail closed for older API or inconsistent totals. */
 export function workloadHealthPreview(report) {
   if (!report || !report.summary || !Array.isArray(report.items)) return null
