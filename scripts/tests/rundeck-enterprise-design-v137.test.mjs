@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { groupEvaluationsByApp } from '../../src/tools/components/rundeckWorkloadAppLanes.js'
+import { groupEvaluationsByApp, validatedAppEvaluationMemberships } from '../../src/tools/components/rundeckWorkloadAppLanes.js'
 
 const read = path => readFileSync(new URL('../../src/tools/components/' + path, import.meta.url), 'utf8')
 
@@ -126,4 +126,45 @@ test('chart and APP details use only one active resize notification source', () 
     assert.ok(source.includes("else window.addEventListener('resize', " + callback))
     assert.ok(source.includes("if (!observer) window.removeEventListener('resize', " + callback))
   }
+})
+
+test('APP audit preserves unique evaluations, multi-APP links and unverified host provenance', () => {
+  const rows = [
+    { consumer_type: 'JOB', consumer_key: 'A', status: 'REVIEW REQUIRED',
+      hosts: ['AOPH1PAPPDC', 'APP2', 'APP2'] },
+    { consumer_type: 'PROGRAM', consumer_key: 'B', status: 'NORMAL', hosts: ['APP1'] },
+    { consumer_type: 'JOB', consumer_key: 'C', status: 'INSUFFICIENT DATA',
+      hosts: ['UNRECOGNIZED-SERVER'] },
+  ]
+  const verified = validatedAppEvaluationMemberships(rows, 3)
+  assert.ok(verified)
+  assert.equal(verified.linkedUnique, 2)
+  assert.equal(verified.unverified, 1)
+  assert.equal(verified.memberships, 3)
+  assert.equal(verified.lanes.find(row => row.key === 'APP1').total, 2)
+  assert.equal(verified.lanes.find(row => row.key === 'APP2').total, 1)
+  assert.equal(verified.lanes.find(row => row.key === 'UNVERIFIED').counts.unknown, 1)
+  assert.equal(validatedAppEvaluationMemberships(rows, 4), null)
+  assert.equal(validatedAppEvaluationMemberships(null, 0), null)
+})
+
+test('minimal overview removes duplicate headings without hiding SAP source or drilldowns', () => {
+  const infra = read('RundeckUnifiedAppInfrastructure.jsx')
+  const evalRows = read('RundeckWorkloadAppLanes.jsx')
+  const health = read('RundeckWorkloadHealth.jsx')
+  const css = read('RundeckViewportFitV139.css')
+  assert.match(infra, /!fleetMode && <h4 className="rundeckAppPanelHeading"/)
+  assert.match(infra, /APP Servers & Infrastructure/)
+  assert.match(infra, /Host CPU/)
+  assert.match(infra, /Host RAM/)
+  assert.match(infra, /Critical WP/)
+  assert.match(infra, /onClick=\{openSelectedAnalysis\}/)
+  assert.match(evalRows, /APP \/ linked/)
+  assert.match(evalRows, /APP links/)
+  assert.match(evalRows, /onSelectWorkload\?\.\(row\)/)
+  assert.match(health, /validatedAppEvaluationMemberships\(verified\.rows, preview\.total\)/)
+  assert.match(css, /V1\.39\.3 — simpler enterprise overview/)
+  assert.match(css, /\.rundeckWorkloadCategory\.is-review/)
+  assert.match(css, /\.rundeckWorkloadCategory\.is-unknown/)
+  assert.doesNotMatch(css.slice(css.indexOf('V1.39.3 — simpler enterprise overview')), /display:\s*none|visibility:\s*hidden|overflow:\s*hidden/)
 })
