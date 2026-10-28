@@ -211,7 +211,7 @@ test('DEV idle braid reveals full verified ECharts on hover/focus and keeps inci
   // Manual marker list must never be confused with APP Critical WP warning.
   assert.match(workload, />Marked Workloads <b>\{attentionRows\.length\}<\/b>/)
   assert.match(workload, /latest collection · observed/)
-  assert.match(infra, /<b>Collector sample<\/b>/)
+  assert.match(infra, /Collector interval/)
   assert.match(infra, /Latest collected readings/)
   assert.match(infra, /Last retained readings/)
   assert.match(cockpitStyle, /font-size:10\.5px!important/)
