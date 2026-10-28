@@ -213,7 +213,7 @@ export default function RundeckUnifiedAppInfrastructure({
 
   return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure" data-layout="landscape-operations">
     <header className="rundeckUnifiedAppInfraHead">
-      <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> SAP APP Landscape <small>APP Servers &amp; Infrastructure</small></h3>
+      <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> SAP APP Landscape <small>APP Servers & Infrastructure</small></h3>
       <div>
         <span title="Counts describe APP health classifications, not the number of Critical Work Processes. APP Critical WP is displayed separately below.">{performanceVerified ? 'APP ' + hosts.length + ' · Attention ' + attentionCount + ' · Warning ' + warningCount + ' · Critical ' + criticalCount + (unknownCount ? ' · Unknown ' + unknownCount : '') : 'SAP snapshot unverified'}</span>
         {performanceVerified && <span title={`Across verified APP samples: highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}. Timestamp below refers only to the selected APP.`}>SAP APP sample · {appKey} · {selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'time unverified'}</span>}
