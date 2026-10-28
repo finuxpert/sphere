@@ -153,3 +153,209 @@
     transition: none;
   }
 }
+
+/* v1.39.5 — source-backed compact operations pulse and investigation focus.
+ * Scoped to the overview; full analysis remains unchanged.
+ */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTopBandV13454.is-unified-app-infra {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckOperationsSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  align-items: stretch;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckOpsPulseItem {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 1px 7px;
+  padding: 5px 9px;
+  border: 1px solid var(--v36-border, rgba(126,147,158,.2));
+  border-radius: 5px;
+  background: var(--v36-subpanel, rgba(31,45,57,.55));
+  color: var(--v36-ink, #e7edf0);
+  font: inherit;
+  text-align: left;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckOpsPulseItem small {
+  grid-column: 1;
+  color: var(--v36-muted, #9dadb6);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckOpsPulseItem strong {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  font-size: 19px;
+  font-weight: 740;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckOpsPulseItem > span {
+  grid-column: 1;
+  font-size: 9px;
+  color: var(--v36-muted, #9dadb6);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckOpsPulseItem.is-attention strong { color: var(--v36-amber, #d8b35f); }
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckOpsPulseItem.is-critical strong { color: var(--v36-red, #db7d86); }
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring button.rundeckOpsPulseItem.is-action:not(:disabled) { cursor:pointer; }
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring button.rundeckOpsPulseItem.is-action:focus-visible {
+  outline: 2px solid var(--v36-blue, #75bce5);
+  outline-offset: 2px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring button.rundeckOpsPulseItem.is-action:disabled { cursor:default; }
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > strong {
+  font-size: 12.5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > em {
+  font-size: 10px !important;
+  font-weight: 690 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterTrack { height: 5px; }
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckNeedsInvestigation {
+  grid-area: investigation;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 28px;
+  gap: 9px;
+  padding: 3px 7px;
+  border-top: 1px solid var(--v36-border,rgba(126,147,158,.2));
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckNeedsInvestigation > strong {
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--v36-ink, #e7edf0);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationItems {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationItems button {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  gap: 4px;
+  min-width: 0;
+  padding: 3px 5px;
+  border: 1px solid var(--v36-border,rgba(126,147,158,.2));
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  color: var(--v36-ink,#e7edf0);
+  cursor:pointer;
+  text-align:left;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationItems button small {
+  font-size: 9px;
+  color: var(--v36-amber,#d8b35f);
+  flex: 0 0 auto;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationItems button span {
+  font-size: 10px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationState {
+  flex: 1;
+  font-size: 10px;
+  color: var(--v36-muted,#9dadb6);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationAll {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 650;
+  color: var(--v36-blue,#75bce5);
+  background: transparent;
+  border: 0;
+  padding: 4px 5px;
+  cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationAll:disabled {
+  color: var(--v36-muted,#9dadb6);
+  cursor:default;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationItems button:focus-visible,
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckInvestigationAll:focus-visible {
+  outline: 2px solid var(--v36-blue,#75bce5);
+  outline-offset: 1px;
+}
+@media (min-width: 1280px) and (min-height: 760px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491[data-viewport-fit="true"] {
+    grid-template-rows: minmax(164px,.9fr) minmax(240px,1.38fr) minmax(255px,1.25fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckTopBandV13454 .rundeckUnifiedAppInfra {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app {
+    grid-template-areas: "heading summary" "lanes lanes" "investigation investigation" "foot foot" !important;
+    grid-template-rows: auto minmax(0,1fr) auto auto !important;
+  }
+}
+@media (max-width: 1279px), (max-height: 759px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckNeedsInvestigation {
+    flex-wrap:wrap;
+    height:auto;
+  }
+}
+@media (max-width: 700px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckOperationsSummary { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckNeedsInvestigation { align-items:flex-start; }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckInvestigationItems { flex-basis:100%; flex-wrap:wrap; }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckInvestigationItems button { flex-basis:45%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterTrack i { transition:none; }
+}
