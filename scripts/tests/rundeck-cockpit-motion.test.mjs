@@ -157,7 +157,7 @@ test('DEV motion restoration keeps source data correct and animation interactive
 
   assert.match(app, /const attentionCount = visibleStates\.filter\(value => value === 'ATTENTION'\)/)
   assert.match(app, /const warningCount = visibleStates\.filter\(value => value === 'WARNING'\)/)
-  assert.match(app, /SAP APP sample · \{appKey\}/)
+  assert.match(app, /Verified APP snapshot ·/)
   assert.match(app, /if \(!expanded\) phase \+= delta \* \.22/)
   assert.match(app, /if \(!expanded \|\| moving\) raf = window\.requestAnimationFrame\(tick\)/)
   assert.match(app, /const viewportObserver = typeof IntersectionObserver/)
