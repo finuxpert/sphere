@@ -1,0 +1,77 @@
+/* v1.40.3 — SPHERE compact operations: mobile-safe and source-preserving.
+ * Do not force one screen by clipping monitoring rows or truncating RCA data.
+ */
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePage {
+  padding: 8px 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePageHeader {
+  padding-bottom: 5px !important; margin-bottom: 7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePageHeader h2 {
+  font-size: 15px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 {
+  gap: 6px !important; padding-top: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyHead {
+  gap: 8px !important; padding: 0 !important; align-items: center !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyTabs {
+  padding-bottom: 3px !important; gap: 4px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyTabs button {
+  min-height: 30px !important; padding: 5px 8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyProvenance {
+  gap: 10px !important; margin: 0 !important; padding: 2px 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyDashboard {
+  gap: 8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyPanel {
+  padding: 9px 10px !important; gap: 7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyPrimaryTrend,
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyMix {
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyReportPreview {
+  padding: 10px 12px !important; gap: 7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame iframe {
+  height: clamp(350px,58dvh,720px) !important; max-height: none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePage.is-infrastructure .rundeckInfraCompactHead {
+  margin: 0 0 4px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePage.is-infrastructure .rundeckInfraFreshness {
+  gap: 8px !important; padding: 5px 8px !important; flex-wrap: wrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePage.is-events .rundeckEvidenceAssessment {
+  padding: 7px 10px !important; gap: 4px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePage.is-events .rundeckOperatorPairedPane {
+  padding: 8px 10px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePage.is-sap-checks .rundeckSapChecksDetailGrid > .rundeckOperatorPairedPane {
+  padding: 8px 10px !important;
+}
+@media (min-width:1280px) and (min-height:780px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyVisualGrid {
+    gap: 8px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyVisualGrid svg {
+    max-height: 192px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyDashboard .sphereMonthlyTableScroll {
+    max-height: 210px !important;
+  }
+}
+@media (max-width:900px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame iframe {
+    height: 50dvh !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain .sphereMonthlyReview.is-v2 .sphereMonthlyDashboard .sphereMonthlyTableScroll {
+    max-height: none !important;
+  }
+}
