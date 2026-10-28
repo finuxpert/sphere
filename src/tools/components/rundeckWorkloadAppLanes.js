@@ -46,3 +46,22 @@ export function groupEvaluationsByApp(rows = []) {
     memberships: lanes.slice(0, 5).reduce((total, lane) => total + lane.total, 0),
   }
 }
+
+
+/**
+ * Source-integrity gate for the APP display: each globally evaluated workload
+ * must be allocated to at least one verified APP or the unverified-host lane.
+ * Host membership counts may exceed unique global totals (multi-APP workloads).
+ */
+export function validatedAppEvaluationMemberships(rows, expectedUnique) {
+  if (!Array.isArray(rows) || !Number.isSafeInteger(expectedUnique) ||
+      expectedUnique < 0 || rows.length !== expectedUnique) return null
+  const model = groupEvaluationsByApp(rows)
+  const countMatches = model.lanes.every(lane =>
+    Object.values(lane.counts).reduce((sum, count) => sum + count, 0) === lane.total)
+  if (!countMatches ||
+      model.linkedUnique + model.unverified !== expectedUnique ||
+      model.memberships < model.linkedUnique ||
+      model.lanes.slice(0, 5).reduce((sum, lane) => sum + lane.total, 0) !== model.memberships) return null
+  return model
+}
