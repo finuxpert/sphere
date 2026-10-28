@@ -182,7 +182,7 @@ test('tab switching retains Current/Review state and labels technical scope',()=
   assert.match(workspace,/selectMode\('review'\)/)
   assert.match(wrapper,/Filesystem, Network and Storage telemetry/)
   assert.match(trend,/APP % Axis/)
-  assert.match(trend,/Host load average \(not %\)/)
+  assert.match(trend,/Linux load average, not CPU usage percent/)
 })
 
 test('APP analysis shows complete job names, program names and retained WP/PID evidence', () => {
@@ -301,7 +301,7 @@ test('concise overview preserves data provenance, network outliers and RCA actio
   assert.match(nav, /PERFORMANCE_VIEWS\.map/)
   assert.match(trends, /<span>Bucket<\/span>/)
   assert.match(trends, /<span>APP<\/span>/)
-  assert.match(trends, /<span>Values<\/span>/)
+  assert.match(trends, /technical availability states remain unchanged">Values<\/span>/)
   assert.match(trends, /technicalTrend\?\.network_source/)
   assert.match(trends, /last_observed_at/)
   assert.match(trends, /networkScale\.peakInterface/)

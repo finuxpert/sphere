@@ -38,7 +38,7 @@ test('host trends keep all metrics in accessible compact selectors', () => {
   assert.match(trend, /className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric"/)
   assert.match(trend, /className="rundeckTrendMetricSelect" aria-label="Server Trend 2 metric"/)
   assert.match(trend, /METRICS\.map\(\(\[key, label\]\) => <option/)
-  assert.match(trend, /Host load average/)
+  assert.match(trend, /Linux load average, not CPU usage percent/)
   assert.match(trend, /APP host/)
 })
 
