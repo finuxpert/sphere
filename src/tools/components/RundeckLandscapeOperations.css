@@ -404,3 +404,27 @@
     font-size:10.5px !important;
   }
 }
+
+/* v1.40.5 — selected APP observation is distinct from collection READY time. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppSampleMeta {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:4px 10px;
+  min-width:0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppSampleTime {
+  font-size:10.5px !important;
+  line-height:1.35 !important;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+@media(max-width:520px){
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppSampleMeta {
+    justify-content:flex-start;
+  }
+}

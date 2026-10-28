@@ -1248,3 +1248,38 @@
     max-width:calc(100vw - 24px)!important;
   }
 }
+
+/* v1.40.5 — consistent WIB clock and collection-state spacing.
+ * Explicit separator replaces the fragile absolute-positioned pseudo-dot.
+ */
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta.is-fresh {
+  display:inline-flex !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+  column-gap:7px !important;
+  row-gap:2px !important;
+  min-width:0;
+}
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta.is-fresh > span {
+  position:static !important;
+  font-size:10.5px !important;
+  line-height:1.35 !important;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta.is-fresh > span::before {
+  content:none !important;
+}
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta.is-fresh .rundeckMetaDivider {
+  color:var(--sphere-text-muted,#a9b5bb);
+  font-size:10px !important;
+  opacity:.75;
+}
+.appShell:has(.rundeckPanel) .rundeckLandscapeMeta.is-fresh .rundeckCycleIdentityV132 {
+  padding-inline:1px;
+}
+@media(max-width:520px){
+  .appShell:has(.rundeckPanel) .rundeckLandscapeMeta.is-fresh {
+    column-gap:6px !important;
+  }
+}

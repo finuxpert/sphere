@@ -5,7 +5,7 @@ import RundeckPerformanceIncident from './RundeckPerformanceIncident.jsx'
 import RundeckSystemData from './RundeckSystemData.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
-import { numberText, shortHost } from './sapUiFormat.js'
+import { formatWib, numberText, shortHost } from './sapUiFormat.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
 import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage } from './rundeckDataQuality.js'
 import './RundeckSource.css'
@@ -766,7 +766,8 @@ export default function RundeckSource({ onCollection }) {
       <div className="rundeckTitleBlock">
         <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">SAP Performance</span></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
-          <span className="rundeckLastCollected" title={'Last collected ' + formatTime(latestCollectionAt, true) + ' WIB'}>{formatTime(latestCollectionAt, true)} WIB</span>
+          <span className="rundeckLastCollected" title={'Last collected ' + formatWib(latestCollectionAt, true) + ' WIB'}>{formatWib(latestCollectionAt)} WIB</span>
+          <span className="rundeckMetaDivider" aria-hidden="true">·</span>
           <span className="rundeckCycleIdentityV132" title={'Collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') + ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') + ' APP'}><b>{quality.performanceValid ? 'READY' : 'LAST READY'}</b></span>
         </div>
       </div>

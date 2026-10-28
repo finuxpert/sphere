@@ -214,9 +214,9 @@ export default function RundeckUnifiedAppInfrastructure({
   return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure" data-layout="landscape-operations">
     <header className="rundeckUnifiedAppInfraHead">
       <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> SAP APP Landscape</h3>
-      <div>
-        <span title={performanceVerified
-          ? `Verified APP snapshot · ${hosts.length} APP · Attention ${attentionCount} · Warning ${warningCount} · Critical ${criticalCount} · Unknown ${unknownCount} · highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`
+      <div className="rundeckAppSampleMeta">
+        <span className="rundeckAppSampleTime" aria-label={'Selected APP ' + appKey + ' sample time'} title={performanceVerified
+          ? `Selected ${appKey} sample: ${selectedHost?.collected_at ? formatWib(selectedHost.collected_at,true) + ' WIB' : 'time unverified'} · Verified APP snapshot · ${hosts.length} APP · Attention ${attentionCount} · Warning ${warningCount} · Critical ${criticalCount} · Unknown ${unknownCount} · highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`
           : 'SAP APP snapshot unverified'}>
           {performanceVerified && selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'UNVERIFIED'}
         </span>
