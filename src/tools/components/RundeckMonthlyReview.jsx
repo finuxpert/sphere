@@ -161,36 +161,6 @@ function WorkloadDistribution({ summary = {}, onSelect }) {
   </section>
 }
 
-function MonthlyDashboardKpis({ pressure = {}, summary = {}, quality = {} }) {
-  // The host-level WP flag is not a verified incident count; omit it from management KPIs.
-  const entries = [
-    { key:'cpu', label:'High CPU', value:pressure.cpu?.observed_pressure_host_checks,
-      note:'Readings at or above the CPU limit', detail:'Highest '+pct(pressure.cpu?.peak?.peak_pct)+' · '+fmt(pressure.cpu?.observed_warning_app_days,0)+' server-days',
-      mark:'CPU' },
-    { key:'ram', label:'High RAM', value:pressure.ram?.observed_pressure_host_checks,
-      note:'Readings at or above the RAM limit', detail:'Highest '+pct(pressure.ram?.peak?.peak_pct)+' · '+fmt(pressure.ram?.observed_warning_app_days,0)+' server-days',
-      mark:'RAM' },
-    { key:'wp', label:'Monitoring Records', value:quality.complete_checks,
-      note:'Of about '+fmt(quality.expected_checks,0)+' expected',
-      detail:pct(quality.coverage_pct)+' of estimated monthly monitoring runs',
-      mark:'DATA' },
-    { key:'review', label:'Programs to Review', value:summary.review_required,
-      note:'Jobs / programs requiring review', detail:'Of '+fmt(summary.workloads,0)+' seen',
-      mark:'SAP' },
-  ]
-  return <div className="sphereMonthlyDashboardKpis" aria-label="Monthly SAP performance key indicators">
-    {entries.map(entry=><div className={'sphereMonthlyDashboardKpi is-'+entry.key} key={entry.key}>
-      <div className="sphereMonthlyDashboardKpiHead">
-        <span className="sphereMonthlyDashboardGlyph" aria-hidden="true">{entry.mark}</span>
-        <span>{entry.label}</span>
-      </div>
-      <strong>{fmt(entry.value,0)}</strong>
-      <span className="sphereMonthlyDashboardKpiNote">{entry.note}</span>
-      <small>{entry.detail}</small>
-    </div>)}
-  </div>
-}
-
 function PressureRows({ label, evidence, metric }) {
   const rows = metric === 'ram' ? evidence.top_ram_workloads || [] : evidence.top_cpu_workloads || []
   return <section className="sphereMonthlyPanel sphereMonthlyRank">
@@ -384,6 +354,7 @@ export default function RundeckMonthlyReview() {
   const [pdfError,setPdfError]=React.useState('')
   const [pdfUrl,setPdfUrl]=React.useState('')
   const pdfRef=React.useRef('')
+  const pdfInFlightRef=React.useRef(false)
   const pdfGenerationRef=React.useRef(0)
   React.useEffect(()=>()=>{if(pdfRef.current) URL.revokeObjectURL(pdfRef.current)},[])
   React.useEffect(()=>{
@@ -432,8 +403,9 @@ export default function RundeckMonthlyReview() {
   const hosts=evidence.hosts||[]
   const total=Number(data?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
-  const previewPdf=async()=>{
-    if(!data||loading||pdfBusy)return
+  const previewPdf=React.useCallback(async()=>{
+    if(!data||loading||pdfBusy||pdfInFlightRef.current)return
+    pdfInFlightRef.current=true
     const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
     try{
@@ -444,11 +416,15 @@ export default function RundeckMonthlyReview() {
       pdfRef.current=url
       setPdfUrl(url)
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
-    finally{setPdfBusy(false)}
-  }
+    finally{pdfInFlightRef.current=false;setPdfBusy(false)}
+  },[data,loading,pdfBusy,month])
+  // One click on Report generates a source-backed preview. Errors stop auto-retries.
+  React.useEffect(()=>{
+    if(tab==='report' && data && !loading && !pdfBusy && !pdfUrl && !pdfError) void previewPdf()
+  },[tab,data,loading,pdfBusy,pdfUrl,pdfError,previewPdf])
   return <section className="sphereMonthlyReview is-v2" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
-      <div><strong>SAP Monthly Review</strong><small>Server performance, priority programs and follow-up actions</small></div>
+      <div><strong>Monthly Review</strong></div>
       <div className="sphereMonthlyPicker">
         <label htmlFor="sphere-month-choice">Reporting month</label>
         <select id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
@@ -465,10 +441,9 @@ export default function RundeckMonthlyReview() {
     {loading&&<div className="sphereMonthlyState" role="status">Loading historical CPU, RAM and workload evidence…</div>}
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
     {data&&!loading&&<>
-      <div className="sphereMonthlyProvenance">
-        <span>Reporting month: <b>{month}</b></span>
-        <span>Monitoring records: <b>{fmt(quality.complete_checks,0)}</b> / ~{fmt(quality.expected_checks,0)} expected ({pct(quality.coverage_pct)})</span>
-        <span>Recorded: {dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
+      <div className="sphereMonthlyProvenance" title={'Reporting month: ' + month + ' · Monitoring records ' + fmt(quality.complete_checks,0) + ' / ~' + fmt(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ') · Recorded ' + dateShort(quality.first_complete_at) + ' – ' + dateShort(quality.last_complete_at)}>
+        <span><b>{fmt(quality.complete_checks,0)}</b> records · {pct(quality.coverage_pct)} coverage</span>
+        <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
       </div>
       {tab==='overview'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
         <div className="sphereMonthlyVisualGrid">
@@ -502,7 +477,6 @@ export default function RundeckMonthlyReview() {
             setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setExpanded(null);setTab('jobs')
           }}/>
         </div>
-        <MonthlyDashboardKpis pressure={evidence} summary={summary} quality={quality}/>
         <div className="sphereMonthlyPanel sphereMonthlyWide">
           <h4>Server Performance by APP</h4>
           <div className="sphereMonthlyTableScroll"><table><thead><tr>
@@ -516,7 +490,7 @@ export default function RundeckMonthlyReview() {
               <td>{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
             {!hosts.length&&<tr><td colSpan="8">No historical host samples available.</td></tr>}
           </tbody></table></div>
-          <small>Times = readings above the limit. Days = days with at least one high reading. Work process (WP) readings are not confirmed incidents.</small>
+          <small title="Times = readings above threshold. Days = distinct affected days. WP is an APP signal, not a confirmed SAP SM37 job failure.">Readings / affected days · WP is host evidence</small>
         </div>
       </div>}
       {tab==='jobs'&&<div className="sphereMonthlyPanel">
@@ -584,7 +558,7 @@ export default function RundeckMonthlyReview() {
             <span>CPU warning {fmt(evidence.cpu?.observed_pressure_host_checks,0)} checks</span>
             <span>RAM warning {fmt(evidence.ram?.observed_pressure_host_checks,0)} checks</span>
           </div>
-          <p>Based on saved APP observations. Workloads seen at the same time are not confirmed root causes.</p>
+          <p title="Saved APP measurements. Workloads seen during high CPU or RAM are not confirmed root causes.">Saved observations · cause unconfirmed</p>
         </div>
         <PressureEpisodes metric="cpu" pressure={evidence}/>
         <PressureEpisodes metric="ram" pressure={evidence}/>
@@ -595,28 +569,19 @@ export default function RundeckMonthlyReview() {
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Monthly Management Report</h4><small>Server health, programs to review and suggested follow-up</small></div>
+          <div><h4>Monthly Report</h4></div>
           <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
-            {pdfBusy?'Membuat laporan…':'Lihat PDF'}
+            {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
           </button>
         </div>
         {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
-        <div className="sphereMonthlyReportOverview">
-          <div><strong>Reporting Month</strong><span>{month} · Jakarta time</span></div>
-          <div><strong>High CPU and RAM</strong><span>CPU: {fmt(evidence.cpu?.observed_pressure_host_checks,0)} readings. RAM: {fmt(evidence.ram?.observed_pressure_host_checks,0)} readings.</span></div>
-          <div><strong>Programs to Review</strong><span>{fmt(summary.review_required,0)} jobs/programs flagged. The PDF shows {Math.min(10,tuningCandidates.length)} priorities.</span></div>
-          <div><strong>Monitoring Records</strong><span>{fmt(quality.complete_checks,0)} of approximately {fmt(quality.expected_checks,0)} expected ({pct(quality.coverage_pct)}). Estimated from saved collection intervals.</span></div>
-          <div><strong>Error Details</strong><span>{errors.status==='ERROR_SOURCE_NOT_RETAINED'?'Not available for this month; this does not mean no errors occurred.':errors.truncated?'Only partial error data is available.':<>{fmt(errors.error_code_count,0)} error types found; {fmt(errors.error_program_count,0)} programs identified.</>}</span></div>
-        </div>
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
-          <div className="sphereMonthlyPager"><small>Preview based on the selected month's saved history</small>
-            <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Unduh PDF</a>
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Buka layar penuh</a>
-            <button type="button" onClick={()=>{if(pdfRef.current)URL.revokeObjectURL(pdfRef.current);pdfRef.current='';setPdfUrl('')}}>Close preview</button>
+          <div className="sphereMonthlyPager">
+            <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Download PDF</a>
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Full screen</a>
           </div>
           <iframe title="SPHERE monthly PDF preview" src={pdfUrl}/>
         </div>}
-        <p className="sphereMonthlyReportDisclaimer">These findings highlight areas to review. Confirm job failures or program errors in SAP before reporting them as incidents.</p>
       </div>}
     </>}
   </section>
