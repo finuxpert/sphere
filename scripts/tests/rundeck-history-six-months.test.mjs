@@ -14,7 +14,7 @@ test('performance history has distinct rolling and calendar presets', () => {
   assert.match(trend, /\['180d', '6M'\]/)
   assert.match(trend, /aria-label="Short performance ranges"/)
   assert.match(trend, /\['180d', '6M'\]/)
-  assert.match(trend, /Saved APP and technical measurements/)
+  assert.match(trend, /<h3>Performance Trends<\/h3>/)
   assert.match(trend, /connectNulls: false/)
   assert.match(trend, /serverTrend1\?\.items\?\.length > 0/)
   assert.match(trend, /const longHistoricalRange = LONG_RANGES\.has\(range\)/)
@@ -38,7 +38,7 @@ test('long-range queries are bounded and unsupported SAP availability is explici
   assert.match(ranges, /CAST\(:origin AS timestamptz\)/)
   assert.match(network, /if until is not None:/)
   assert.match(ui, /no verified daily summary/)
-  assert.match(ui, /Saved APP and technical measurements/)
+  assert.match(ui, /<h3>Performance Trends<\/h3>/)
 })
 
 test('existing current view, custom raw window and evaluation review remain unchanged', () => {

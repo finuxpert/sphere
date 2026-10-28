@@ -751,7 +751,7 @@ const checks = [
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
   ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table',
-    files.unifiedApp.includes('APP Servers & Infrastructure') &&
+    files.unifiedApp.includes('SAP APP Landscape') &&
     files.unifiedApp.includes('highest CPU') &&
     files.unifiedApp.includes('highest RAM') &&
     files.unifiedApp.includes('Critical WP') &&
