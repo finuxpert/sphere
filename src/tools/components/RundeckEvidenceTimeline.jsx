@@ -141,16 +141,16 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
       <small title="Timeline event count is separate from source-pair correlation status">{events.length ? `${events.length} timeline events · ${hasThreshold ? outsideCount + ' outside ±' + threshold + 'm' : 'correlation window unavailable'}` : 'No events'}</small>
     </div>
 
-    <div className={`rundeckEvidenceTimingStrip ${alignmentClass(state)}`}>
+    {!paired && <div className={`rundeckEvidenceTimingStrip ${alignmentClass(state)}`}>
       <strong>Time check</strong>
       <span title={alignmentHint}>{timingSummary}</span>
       {issueAt && <small>Issue first observed: {formatWib(issueAt, true)} WIB</small>}
       {pair.workloadAt && <small>Workload sample ({pair.referenceSource} anchor): {formatWib(pair.workloadAt, true)} WIB</small>}
-    </div>
+    </div>}
 
     <div className="rundeckEvidenceAssessment" role="note" aria-label="Investigation context">
-      <strong>Investigation Summary · Cause not established</strong>
-      <span>Issue first observed: {issueAt ? formatWib(issueAt, true) + ' WIB' : 'unavailable'} · Workload first retained: {firstWorkload ? formatWib(firstWorkload, true) + ' WIB' : 'unavailable'} · Gap: {issueDelay}</span>
+      <strong>Cause not established</strong>
+      <span title={alignmentHint + ' · ' + timingSummary}>Issue first observed: {issueAt ? formatWib(issueAt, true) + ' WIB' : 'unavailable'} · Workload first retained: {firstWorkload ? formatWib(firstWorkload, true) + ' WIB' : 'unavailable'} · Gap: {issueDelay}</span>
       <small>{summaryNote} APP Critical WP is host evidence; use SM37 for SAP job execution and SM50/SM66 for WP checks.</small>
     </div>
     <div className="rundeckEvidenceBody">

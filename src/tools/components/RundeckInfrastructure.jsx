@@ -286,7 +286,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
 
   return <section className="rundeckInfra" aria-label="Infrastructure monitoring">
     <header className="rundeckInfraCompactHead">
-      <div><p>{stale?'Infrastructure sample: '+freshness:'Host sample and history'}</p></div>
+      <div><p title={'Host evidence · ' + (stale ? 'last retained sample' : 'latest collected sample') + ' · ' + freshness}>{stale?'Historical sample':'Host readings'}</p></div>
       <div className="rundeckInfraIdentity"><span className={`state is-${overall.toLowerCase()}`}>{shortHost(host)} · {overall}</span></div>
     </header>
     {!hideHostCards && <div className="rundeckInfraHostCards" role="group" aria-label="Select Infrastructure APP">
@@ -321,16 +321,15 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       </div>
     </details>}
 
-    <div className="rundeckInfraFreshness">
-      <span><b>Last collected</b> {formatTime(observedAt)} WIB</span>
+    <div className="rundeckInfraFreshness"
+      title={'Host ' + host + ' · Snapshot ' + (hostRow?.snapshot_ts || 'unknown') + ' · Collection ' + (hostRow?.collection_id || 'unverified') + ' · Collector interval ' + metric(hostRow?.sample_seconds,'s') + ' · State ' + overall}>
+      <span><b>Observed</b> {formatTime(observedAt)} WIB</span>
       <span><b>Freshness</b> {freshness==='UNKNOWN'?'UNKNOWN':`${ageText(observedAt)} · ${freshness}`}</span>
-      <span title="Infrastructure collector sampling interval in seconds; not the aggregation bucket of the history chart."><b>Collector sample</b> {metric(hostRow?.sample_seconds,'s')}</span>
-      <span><b>State</b> <strong className={`is-${overall.toLowerCase()}`}>{overall}</strong></span>
-      <span title={`${host} · snapshot ${hostRow?.snapshot_ts || 'unknown'}`}><b>Collection</b> {hostRow?.collection_id || '—'}</span>
+      <span><strong className={`is-${overall.toLowerCase()}`}>{overall}</strong></span>
     </div>
 
     {error&&<div className="rundeckInfraError">{error}</div>}
-    {stale&&<div className="rundeckInfraHistoricalNote" role="status">Infrastructure sample: {freshness} · host and collection checked separately</div>}
+    {stale&&<div className="rundeckInfraHistoricalNote" role="status" title={'Host ' + host + ' · Collection ' + (hostRow?.collection_id || 'unverified') + ' · sample ' + (observedAt || 'unknown')}>Historical data · {freshness}</div>
     <div className="rundeckInfraWorkspace">
       <div className="rundeckInfraCurrent">
         <div className="rundeckInfraCurrentLabel">{stale?'Last retained readings':'Latest collected readings'}</div>

@@ -172,7 +172,7 @@ export default function RundeckMonitoringHistory(props) {
             </React.Suspense>
           </section>
           <section className="rundeckOperatorPairedPane" aria-label="Rundeck collection history">
-            <h3>Rundeck Collection History <small>Saved samples · not SM37 job runs</small></h3>
+            <h3 title="Saved SPHERE collections, not SAP SM37 job executions">Collection History</h3>
             {selectedJob?.key
               ? <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading saved runs…</div>}>
                   <RundeckObservationHistory paired job={selectedJob} refreshToken={refreshToken} embedded onSelectJob={inspectJob} />
@@ -188,11 +188,11 @@ export default function RundeckMonitoringHistory(props) {
             </div>
             <div className="rundeckOperatorPairedWorkspace is-sap-checks rundeckSapChecksDetailGrid">
               <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
-                <h3>Technical checks <small>Service Availability source</small></h3>
+                <h3 title="Independent saved service availability checks">Technical Checks</h3>
                 <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
               </section>
               <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
-                <h3>SAP Indicators <small>Latest verified APP signals · unavailable sources separate</small></h3>
+                <h3 title="Latest verified APP signals; unavailable sources remain UNKNOWN">SAP Indicators</h3>
                 <RundeckSapIssues paired readinessRoot={readinessSummaryRoot} historyRoot={incidentHistoryRoot}
                   refreshToken={refreshToken} onInspectApp={inspectApp} />
               </section>
@@ -233,7 +233,7 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
           /> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
-          {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2>{currentPage?.[0] || 'SAP Operations'}</h2><p>{currentPage?.[1] || 'Source-backed observations'}</p></header>}
+          {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2 title={currentPage?.[1] || 'Source-backed observations'}>{currentPage?.[0] || 'SAP Operations'}</h2></header>}
           {inlinePage}
         </section>}
       </div>
@@ -351,7 +351,7 @@ export default function RundeckMonitoringHistory(props) {
                 </React.Suspense>
               </section>
               <section className="rundeckOperatorPairedPane" aria-label="Rundeck collection history">
-                <h3>Rundeck Collection History <small>Saved samples · not SM37 job runs</small></h3>
+                <h3 title="Saved SPHERE collections, not SAP SM37 job executions">Collection History</h3>
                 {(activeOverlay.job || selectedJob)?.key
                   ? <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading saved runs…</div>}>
                     <RundeckObservationHistory
@@ -386,11 +386,11 @@ export default function RundeckMonitoringHistory(props) {
               </div>
               <div className="rundeckOperatorPairedWorkspace is-sap-checks rundeckSapChecksDetailGrid">
                 <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
-                  <h3>Technical checks <small>Service Availability source</small></h3>
+                  <h3 title="Independent saved service availability checks">Technical Checks</h3>
                   <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
                 </section>
                 <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
-                  <h3>SAP Indicators <small>Latest verified APP signals · unavailable sources separate</small></h3>
+                  <h3 title="Latest verified APP signals; unavailable sources remain UNKNOWN">SAP Indicators</h3>
                   <RundeckSapIssues
                     paired
                     readinessRoot={readinessSummaryRoot}
