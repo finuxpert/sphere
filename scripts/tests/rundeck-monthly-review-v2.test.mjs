@@ -271,10 +271,10 @@ test('management monthly PDF uses plain IT wording and excludes confusing techni
   assert.doesNotMatch(pdf, /CRITICAL WP CHECKS/)
   assert.doesNotMatch(pdf, /HIGH C\/D = warning host-checks/)
   assert.doesNotMatch(pdf, /SPHERE - WP Diagnostic Signals/)
-  assert.match(ui, /Monitoring Records/)
+  assert.match(ui, /Monitoring records/)
   assert.match(ui, /Programs to Review/)
-  assert.match(ui, /of approximately/)
-  assert.match(ui, /Estimated from saved collection intervals/)
+  assert.match(ui, /fmt\(quality\.expected_checks,0\)/)
+  assert.match(ui, /pct\(quality\.coverage_pct\)/)
 })
 
 test('management PDF has no repeated generic observations or build version', () => {
