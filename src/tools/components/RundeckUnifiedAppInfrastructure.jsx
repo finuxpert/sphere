@@ -6,6 +6,7 @@ import { metricResourceState, sapWorkloadState } from './rundeckStatusSemantics.
 
 const API = import.meta.env.BASE_URL + 'api'
 const KEY = 'sphere.live.host'
+const meterPercent = value => value == null || value === '' || !Number.isFinite(Number(value)) ? 0 : Math.max(0, Math.min(100, Number(value)))
 const metric = (value, unit = '') => value == null || value === '' || !Number.isFinite(Number(value))
   ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 }) + unit
 
@@ -210,9 +211,9 @@ export default function RundeckUnifiedAppInfrastructure({
   }
   const openSelectedAnalysis = () => openAppAnalysis(selectedHost)
 
-  return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure">
+  return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure" data-layout="landscape-operations">
     <header className="rundeckUnifiedAppInfraHead">
-      <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> APP Servers & Infrastructure</h3>
+      <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> SAP APP Landscape <small>APP Servers &amp; Infrastructure</small></h3>
       <div>
         <span title="Counts describe APP health classifications, not the number of Critical Work Processes. APP Critical WP is displayed separately below.">{performanceVerified ? 'APP ' + hosts.length + ' · Attention ' + attentionCount + ' · Warning ' + warningCount + ' · Critical ' + criticalCount + (unknownCount ? ' · Unknown ' + unknownCount : '') : 'SAP snapshot unverified'}</span>
         {performanceVerified && <span title={`Across verified APP samples: highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}. Timestamp below refers only to the selected APP.`}>SAP APP sample · {appKey} · {selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : 'time unverified'}</span>}
@@ -252,16 +253,31 @@ export default function RundeckUnifiedAppInfrastructure({
         {hosts.map(host => {
           const key = shortHost(host.host)
           const state = appSignalState(host, performanceVerified)
+          const hostCpu = performanceVerified ? host.cpu_pct : null
+          const hostRam = performanceVerified ? host.ram_pct : null
+          const hostWp = performanceVerified ? host.wp_critical : null
           return <button key={host.host} type="button"
             className={'rundeckAppHexSelector is-sap-' + state.toLowerCase() + (appKey === key ? ' is-active' : '')}
-            aria-label={key + ' SAP ' + state + ' · Critical WP ' + metric(host.wp_critical) + ' · Open APP analysis'}
-            title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + ' · open APP analysis'}
+            aria-label={key + ' SAP ' + state + ' · CPU ' + metric(hostCpu, '%') + ' · RAM ' + metric(hostRam, '%') + ' · Critical WP ' + metric(hostWp) + ' · Open APP analysis'}
+            title={key + ' · SAP ' + state + ' · ' + appSignalReason(host, performanceVerified) + (host.collected_at ? ' · ' + formatWib(host.collected_at, true) + ' WIB' : ' · time unavailable') + ' · open APP analysis'}
             aria-pressed={appKey === key}
             onClick={() => { openAppAnalysis(host); selectApp(key); onSelectApp?.(host.host) }}>
             <span className="rundeckAppHexShape" aria-hidden="true">
               <strong>{key}</strong>
               <small>{state === 'ATTENTION' ? 'ATTN' : state === 'WARNING' ? 'WARN' : state}</small>
-              <em>WP {metric(host.wp_critical)}</em>
+              <em>WP {metric(hostWp)}</em>
+              <span className="rundeckFleetMeters">
+                {[
+                  { key: 'cpu', label: 'CPU', value: hostCpu },
+                  { key: 'ram', label: 'RAM', value: hostRam },
+                ].map(item => <span key={item.key}
+                  className={'rundeckFleetMeter is-' + (performanceVerified ? metricResourceState(item.value, item.key).toLowerCase() : 'unknown')}
+                  title={'Host ' + item.label + ' · ' + metric(item.value, '%') + ' · APP sample'}>
+                  <span className="rundeckFleetMeterName">{item.label}</span>
+                  <span className="rundeckFleetMeterTrack" aria-hidden="true"><i style={{ width: meterPercent(item.value) + '%' }} /></span>
+                  <span className="rundeckFleetMeterValue">{metric(item.value, '%')}</span>
+                </span>)}
+              </span>
             </span>
           </button>
         })}

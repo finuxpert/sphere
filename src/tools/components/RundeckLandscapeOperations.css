@@ -1,0 +1,155 @@
+/* SPHERE DEV — SAP APP Landscape | OpManager-style compact host utilization.
+ * Presentation only. Host values, source freshness, status, and drilldowns
+ * stay owned by the existing collector-backed React components.
+ */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring[data-layout] .rundeckUnifiedAppInfraHead { gap: 8px; }
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckUnifiedAppInfraHead h3 {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckUnifiedAppInfraHead h3 small {
+  color: var(--v36-muted, var(--sphere-text-secondary,#a9b5bb));
+  font-size: 10px;
+  font-weight: 450;
+  white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
+  border-left: 3px solid var(--hex-border, var(--v36-border)) !important;
+  text-align: left !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector .rundeckAppHexShape {
+  display: grid !important;
+  grid-template-columns: minmax(42px, .7fr) minmax(78px, 1.4fr) !important;
+  grid-template-rows: repeat(3, minmax(0, auto)) !important;
+  gap: 0 7px !important;
+  align-content: center !important;
+  align-items: center !important;
+  justify-items: start !important;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 3px 7px 3px 12px !important;
+  text-align: left !important;
+  clip-path: none !important;
+  background: transparent !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector .rundeckAppHexShape::before {
+  background: transparent !important;
+  clip-path: none !important;
+  pointer-events: none;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > strong {
+  grid-column: 1; grid-row: 1;
+  font-size: 11.5px !important; line-height: 1.05 !important;
+  white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > small {
+  grid-column: 1; grid-row: 2;
+  font-size: 9px !important; line-height: 1.1 !important;
+  white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > em {
+  grid-column: 1; grid-row: 3;
+  font-size: 9px !important; line-height: 1.1 !important;
+  white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeters {
+  grid-column: 2; grid-row: 1 / 4;
+  display: grid; gap: 5px;
+  width: 100%; min-width: 0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeter {
+  display: grid;
+  grid-template-columns: 21px minmax(12px, 1fr) 36px;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  font-size: 9px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterName {
+  color: var(--v36-muted, #a9b5bb);
+  font-size: 9px; white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterValue {
+  color: var(--v36-ink, #e7edf0);
+  font-size: 9px; font-weight: 610;
+  text-align: right; white-space: nowrap;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterTrack {
+  display: block; position: relative;
+  height: 4px; width: 100%;
+  background: color-mix(in srgb, var(--v36-muted, #889baa) 20%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterTrack i {
+  display: block; height: 100%;
+  background: var(--v36-blue, #75bce5);
+  border-radius: inherit;
+  transition: width 160ms ease;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeter:is(.is-warning,.is-attention) .rundeckFleetMeterTrack i {
+  background: var(--v36-amber, #d8b35f);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeter.is-critical .rundeckFleetMeterTrack i {
+  background: var(--v36-red, #db7d86);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeter.is-unknown .rundeckFleetMeterValue {
+  color: var(--v36-muted, #a9b5bb);
+}
+@media (max-width: 899px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: minmax(58px,auto) !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.is-honeycomb > .rundeckAppHexSelector {
+    grid-column: auto !important; grid-row: auto !important;
+    width: 100% !important; height: 58px !important; min-height: 58px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckUnifiedAppInfraHead h3 {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 400px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeter {
+    grid-template-columns: 21px minmax(8px,1fr) 31px;
+    gap: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterTrack i {
+    transition: none;
+  }
+}
