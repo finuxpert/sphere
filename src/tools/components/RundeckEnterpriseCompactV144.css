@@ -1,0 +1,172 @@
+/* SPHERE DEV compact enterprise layout.
+   Loaded last; overrides only the current monitoring/report shells.
+   Raw observations and evidence are never hidden to manufacture a fit. */
+
+.spherePerformanceSidebar .sphereSidebarUtilities {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 5px;
+  margin-top: 14px;
+  padding: 10px 8px 6px;
+  border-top: 1px solid var(--sphere-border, rgba(159,177,191,.13));
+}
+.spherePerformanceSidebar .sphereSidebarUtilities button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--sphere-text-secondary, #a9b7bd);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+}
+.spherePerformanceSidebar .sphereSidebarUtilities button:hover,
+.spherePerformanceSidebar .sphereSidebarUtilities button:focus-visible {
+  background: var(--sphere-surface-2, rgba(101,129,141,.15));
+  color: var(--sphere-text, #e5ebee);
+  outline-offset: 2px;
+}
+.spherePerformanceSidebar.is-collapsed .sphereSidebarUtilities { padding-inline: 4px; }
+.spherePerformanceSidebar.is-collapsed .sphereSidebarUtilities button { justify-content: center; }
+.spherePerformanceSidebar.is-collapsed .sphereSidebarUtilities button span { display: none; }
+
+.sphereMonthlyReview .sphereMonthlyTabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 5px;
+}
+.sphereMonthlyReview .sphereMonthlyTabs > button { min-width: 0; }
+.sphereMonthlyReview .sphereMonthlyDashboard { min-width: 0; }
+.sphereMonthlyReview .sphereMonthlySummaryBottom {
+  display: grid;
+  grid-template-columns: minmax(0, 52fr) minmax(0, 48fr);
+  gap: 8px;
+  align-items: stretch;
+  min-width: 0;
+}
+.sphereMonthlyReview .sphereMonthlySummaryBottom > * { min-width: 0; }
+.sphereMonthlyReview .sphereMonthlyHostSummary,
+.sphereMonthlyReview .sphereMonthlyPriorities {
+  padding: 9px 11px;
+}
+.sphereMonthlyReview .sphereMonthlyHostSummary h4,
+.sphereMonthlyReview .sphereMonthlyPriorities h4 { margin: 0 0 7px; }
+.sphereMonthlyReview .sphereMonthlyHostSummary .sphereMonthlyTableScroll {
+  overflow-x: auto;
+  max-height: none;
+}
+.sphereMonthlyReview .sphereMonthlyHostSummary table { width: 100%; table-layout: fixed; }
+.sphereMonthlyReview .sphereMonthlyHostSummary th,
+.sphereMonthlyReview .sphereMonthlyHostSummary td {
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 7px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sphereMonthlyReview .sphereMonthlyHostSummary th:first-child,
+.sphereMonthlyReview .sphereMonthlyHostSummary td:first-child { width: 16%; }
+.sphereMonthlyReview .sphereMonthlyHostSummary th:nth-child(4),
+.sphereMonthlyReview .sphereMonthlyHostSummary td:nth-child(4) { width: 27%; }
+
+.sphereMonthlyReview .sphereMonthlyPriorities .sphereMonthlyTableHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sphereMonthlyReview .sphereMonthlyPriorities .sphereMonthlyTableHead button {
+  min-width: 72px;
+  padding: 6px 9px;
+  color: var(--sphere-accent, #65c5cf);
+  background: transparent;
+  border: 1px solid var(--sphere-border, rgba(159,177,191,.18));
+  border-radius: 5px;
+  cursor: pointer;
+}
+.sphereMonthlyReview .sphereMonthlyPriorityList {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sphereMonthlyReview .sphereMonthlyPriorityRow {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 1px;
+  border-bottom: 1px solid var(--sphere-border, rgba(159,177,191,.10));
+  font-size: 11px;
+}
+.sphereMonthlyReview .sphereMonthlyPriorityRow:last-child { border-bottom: 0; }
+.sphereMonthlyReview .sphereMonthlyPriorityRow > span { min-width: 0; }
+.sphereMonthlyReview .sphereMonthlyPriorityRow strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.sphereMonthlyReview .sphereMonthlyPriorityRow small {
+  display: block;
+  color: var(--sphere-text-muted, #81939d);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sphereMonthlyReview .sphereMonthlyPriorities > small { display: block; margin-top: 7px; }
+
+.sphereMonthlyReview .sphereMonthlyEvidencePage { display: grid; gap: 8px; min-width: 0; }
+.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure {
+  min-width: 0;
+  border: 1px solid var(--sphere-border, rgba(159,177,191,.18));
+  border-radius: 6px;
+}
+.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure > summary {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure[open] > summary {
+  border-bottom: 1px solid var(--sphere-border, rgba(159,177,191,.15));
+}
+.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure .sphereMonthlyImpact { padding: 8px; }
+.sphereMonthlyReview .sphereMonthlyPressureMode {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 12px;
+}
+.sphereMonthlyReview .sphereMonthlyPressureMode select { margin-left: 6px; }
+.sphereSystemDataBackupNotice,
+.spherePlatformBackupNotice {
+  margin: 5px 0 10px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--sphere-warning, #d2ae69);
+  font-size: 12px;
+  color: var(--sphere-text-secondary, #bdc6cb);
+}
+
+@media (min-width: 1400px) and (min-height: 760px) {
+  .sphereMonthlyReview .sphereMonthlyVisualGrid { grid-template-columns: minmax(0, 62fr) minmax(0, 38fr); }
+  .sphereMonthlyReview .sphereMonthlyMixBody { gap: 10px; }
+  .sphereMonthlyReview .sphereMonthlyDonut { width: 140px; height: 140px; flex: 0 0 140px; }
+  .sphereMonthlyReview .sphereMonthlyDashboard { gap: 7px; }
+}
+@media (max-width: 1199px) {
+  .sphereMonthlyReview .sphereMonthlySummaryBottom { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 640px) {
+  .sphereMonthlyReview .sphereMonthlyTabs { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .sphereMonthlyReview .sphereMonthlyTabs > button { font-size: 11px; padding-inline: 5px; }
+  .sphereMonthlyReview .sphereMonthlyPriorityRow { grid-template-columns: minmax(0,1fr); }
+}
