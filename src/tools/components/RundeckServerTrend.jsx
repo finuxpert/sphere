@@ -1048,12 +1048,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       if (unifiedWakeRef.current === layer?.wake) unifiedWakeRef.current = null
     }
   }, [temporalReady, serverTrend1, serverTrend2, technicalTrend, range, mode, scaleMode, loadScaleMode, networkScaleMode, focusedHost])
-  const technicalAvailability = Boolean(AVAILABILITY_CATEGORIES[technicalMetric])
   const technicalNetwork = technicalMetric === 'network'
   const loadScale = React.useMemo(() => technicalLoadScale(technicalTrend?.items, mode), [technicalTrend, mode])
-  const typicalLoadActive = technicalMetric === 'load' && loadScaleMode === 'typical'
   const networkScale = React.useMemo(() => networkTrendScale(technicalTrend?.items, mode), [technicalTrend, mode])
-  const typicalNetworkActive = technicalMetric === 'network' && networkScaleMode === 'typical'
   const activeTrend = selectedTrend || serverTrend1
   const activeMetric = selected?.metric || activeTrend?.display_metric || activeTrend?.metric || serverMetric1
 
@@ -1147,7 +1144,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
       <small>Jobs &amp; Programs Current uses latest collection, not this historical window</small>
     </div>}
-    {serverTrend1?.items?.length > 0 && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
+    {serverTrend1?.items?.length > 0 && !serverTrend1.network_source && serverTrend1.metric !== 'availability' && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
       <CollectionGapBand trend={serverTrend1} />
     </div>}
 
