@@ -42,7 +42,7 @@ test('unverified quality never means normal SAP', () => {
 test('old Availability evidence is explained without asserting current SAP DOWN', () => {
   const warning = availabilityFreshnessSignal(25.9)
   assert.equal(warning.level, 'WARNING')
-  assert.equal(warning.text, 'Availability data old · 25m')
+  assert.equal(warning.text, 'Availability data 25m old')
   assert.match(warning.detail, /25 minutes ago/)
   assert.match(warning.detail, /outside the freshness window/)
   assert.match(warning.detail, /does not mean SAP DOWN/)
