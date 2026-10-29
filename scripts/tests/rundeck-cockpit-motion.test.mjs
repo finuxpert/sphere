@@ -112,7 +112,7 @@ test('v1.34.85 light operator palette corrects shadowed vars and preserves data 
   assert.match(light, /\.rundeckInfraTrendWorkspace \.rundeckInfraChartWrap svg/)
   assert.match(light, /overflow-wrap:anywhere!important/)
   assert.match(light, /prefers-reduced-motion:reduce/)
-  assert.match(app, /appSignalState\(host, performanceVerified\)/)
+  assert.match(app, /appSignalState\(host, verified\)/)
   // Selected APP reads real source metrics; filesystem evidence remains independent.
   assert.match(app,/rundeckAppHexSelector/)
   assert.match(app,/selectedInfra\?\.topFs\?\.mount_point/)
