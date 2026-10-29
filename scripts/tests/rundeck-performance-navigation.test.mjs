@@ -177,3 +177,22 @@ test('compact Overview never reserves obsolete evaluation-table height', () => {
   assert.match(styles, /\.rundeckJobsProgramsHealthSide\s*\{[\s\S]*?min-height:0!important/)
   assert.match(styles, /\.sphereHealthSummaryGrid \.rundeckEvidenceCard\s*\{[\s\S]*?min-height:52px!important/)
 })
+
+test('Overview shows saved priority workloads and source-backed health and events inline', () => {
+  const core = read('RundeckMonitoringHistoryCore.jsx')
+  const wrapper = read('RundeckMonitoringHistory.jsx')
+  const workload = read('RundeckWorkloadHealth.jsx')
+  const styles = read('RundeckRevitalization.css')
+  assert.match(core,/sphereOverviewBottomRow/)
+  assert.match(core,/\{props\.healthSummary\}/)
+  assert.match(workload,/sphereWorkloadPriorityList/)
+  assert.match(workload,/workloadHealthLevel\(row\) === 'review'/)
+  assert.match(workload,/onClick=\{\(\) => openWorkload\(row\)\}/)
+  for (const name of ['RundeckAvailability','RundeckSapIssues','RundeckInfrastructure','RundeckEvidenceTimeline']) {
+    assert.match(wrapper,new RegExp('<' + name + '[^>]*'))
+  }
+  assert.match(wrapper,/inlineSummary/)
+  assert.match(styles,/\.sphereOverviewBottomRow/)
+  assert.match(styles,/\.sphereHealthInlineBlock/)
+  assert.match(styles,/\.sphereEventsInlineList/)
+})
