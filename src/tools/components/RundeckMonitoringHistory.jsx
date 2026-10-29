@@ -224,10 +224,7 @@ export default function RundeckMonitoringHistory(props) {
     <div className="spherePerformanceShell">
       <RundeckPerformanceNavigation activeView={activeView} onNavigate={(view) => { setActiveView(view); setActiveOverlay(null) }} />
       <div className="spherePerformanceMain">
-        {['performance','jobs'].includes(activeView) && <nav className="sphereMonitoringTabs" aria-label="Monitoring sections">
-          <a href="#/tool/logs" aria-current={activeView === 'performance' ? 'page' : undefined}>Overview</a>
-          <a href="#/tool/logs/jobs" aria-current={activeView === 'jobs' ? 'page' : undefined}>Jobs & Programs</a>
-        </nav>}
+        
         {activeView === 'performance' ? <><RundeckMonitoringHistoryCore
             {...props}
             currentWorkloadContent={currentWorkloadContent}
@@ -263,7 +260,7 @@ export default function RundeckMonitoringHistory(props) {
             </React.Suspense>
             <section className="sphereCollectionInline" aria-label="Recent Data Collections">
               <header className="sphereHealthInlineHead"><h4>Data Collection</h4>
-                <div><a href="#/tool/logs/system-data/history">History</a>
+                <div><button type="button" onClick={() => setActiveOverlay({ type:'collection-history' })}>History</button>
                 <button type="button" onClick={props.onManualUpload}>Upload Data</button></div>
               </header>
               {props.collectionHistoryUnverified ? <small>Collection history unavailable</small> :
@@ -298,7 +295,33 @@ export default function RundeckMonitoringHistory(props) {
             </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
-          {activeOverlay?.type === 'jobs-programs' && <RundeckWorkspaceDrawer
+          {activeOverlay?.type === 'collection-history' && <RundeckWorkspaceDrawer
+             title="Collection History"
+             subtitle="Saved Rundeck collector runs · 90 days"
+             size="evidence"
+             mountInAppShell
+             onClose={() => setActiveOverlay(null)}
+           >
+             <section className="sphereCollectionHistoryModal" aria-label="Saved collection history">
+               {props.collectionHistoryUnverified
+                 ? <p role="status">Collection history unavailable · status unverified.</p>
+                 : !props.collectionHistory?.length
+                   ? <p>No saved collector runs available.</p>
+                   : <div className="sphereCollectionHistoryTableWrap">
+                       <table>
+                         <thead><tr><th scope="col">Run</th><th scope="col">Finished (WIB)</th><th scope="col">APP</th><th scope="col">Status</th></tr></thead>
+                         <tbody>{props.collectionHistory.slice(0,80).map((run,i) => <tr key={run.collection_id || run.execution_id || i}>
+                           <td>{run.execution_id || '—'}</td>
+                           <td>{run.finished_at || run.started_at ? formatWib(run.finished_at || run.started_at,true) : '—'}</td>
+                           <td>{run.received_host_count ?? run.received_hosts?.length ?? '—'}</td>
+                           <td>{run.status || 'UNKNOWN'}</td>
+                         </tr>)}</tbody>
+                       </table>
+                     </div>}
+             </section>
+           </RundeckWorkspaceDrawer>}
+
+           {activeOverlay?.type === 'jobs-programs' && <RundeckWorkspaceDrawer
             title="Jobs & Programs"
             subtitle="Current collection · Saved evaluation Review · Search"
             size="jobs-programs"

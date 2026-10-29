@@ -145,14 +145,14 @@ test('V1.43 sidebar is collapsible, keyboard labeled and retains all SAP workspa
   assert.doesNotMatch(css,/\.rundeckAppEvalLane\s*\{[\s\S]*display:\s*none/)
 })
 
-test('three main sections preserve older monitoring deep links', () => {
+test('four main sections preserve older monitoring deep links', () => {
   const state=read('RundeckPerformanceNavigationState.js')
   const nav=read('RundeckPerformanceNavigation.jsx')
   const wrapper=read('RundeckMonitoringHistory.jsx')
   const jobs=read('RundeckJobsProgramsWorkspace.jsx')
   const review=read('RundeckPerformanceReview.jsx')
   assert.match(state,/PRIMARY_PERFORMANCE_VIEWS/)
-  for(const label of ['Monitoring','Data Collection','Reports'])assert.ok(state.includes("label:'"+label+"'"))
+  for(const label of ['Monitoring','Jobs & Programs','Data Collection','Reports'])assert.ok(state.includes("label:'"+label+"'"))
   for(const id of ['performance','jobs','events','sap-checks','infrastructure','system-data','monthly-review'])assert.ok(state.includes("id: '"+id+"'"))
   assert.match(nav,/React\.useState\(false\)/)
   assert.match(nav,/SPHERE/)
@@ -213,4 +213,14 @@ test('Overview includes current workloads, two saved collections, and restrained
   assert.match(data,/system-data\/history/)
   assert.match(styles,/\.rundeckTripleTrendGrid \.rundeckTrendPlot/)
   assert.match(styles,/\.rundeckTripleTrendGrid \.rundeckTrendChart/)
+})
+
+test('DEV navigation and collector history stay available without duplicate top tabs', () => {
+ const view=read('RundeckMonitoringHistory.jsx'),s=read('RundeckPerformanceNavigationState.js'),d=read('RundeckDataCollection.jsx')
+ const primary=s.split('export const PRIMARY_PERFORMANCE_VIEWS = [')[1].split(']')[0]
+ assert.equal((primary.match(/id:'/g)||[]).length,4)
+ assert.doesNotMatch(view,/className="sphereMonitoringTabs"/)
+ assert.match(view,/type:'collection-history'/)
+ assert.match(view,/collectionHistory\.slice\(0,80\)/)
+ assert.doesNotMatch(d,/\['history','History'\]/)
 })

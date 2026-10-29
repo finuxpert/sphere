@@ -254,3 +254,29 @@
  .sphereCurrentWorkloadRow{grid-template-columns:minmax(0,1fr) 40px 45px 50px;gap:3px}
  .sphereCollectionInlineRuns{grid-template-columns:1fr}
 }
+
+/* Full-width desktop monitoring, without removing metric controls or evidence. */
+.appShell.isTool:has(.rundeckPanel) .fullBleed {width:100%!important;max-width:none!important;margin-inline:0!important}
+.appShell.isTool:has(.rundeckPanel) .logV2Shell {width:100%!important;min-height:calc(100dvh - var(--rca-nav-h,60px))!important;padding:8px 0 12px!important;box-sizing:border-box}
+.appShell.isTool:has(.rundeckPanel) .logV2Inner {width:calc(100% - 24px)!important;max-width:none!important;min-width:0!important;margin:0 auto!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell {gap:8px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain {min-width:0!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTrendSharedControls {margin-bottom:2px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTrendBandV13454 {padding:6px 8px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid {gap:6px!important}
+.sphereCollectionHistoryModal {min-width:0;padding:10px}
+.sphereCollectionHistoryModal p {margin:8px 0;font-size:12px}
+.sphereCollectionHistoryTableWrap {width:100%;max-height:min(65dvh,610px);overflow:auto}
+.sphereCollectionHistoryTableWrap table {width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.sphereCollectionHistoryTableWrap th,.sphereCollectionHistoryTableWrap td {text-align:left;padding:9px 10px;border-bottom:1px solid var(--sphere-design-edge,rgba(140,150,160,.18))}
+.sphereCollectionHistoryTableWrap th {position:sticky;top:0;background:var(--cockpit-surface-alt,#1d2833)}
+@media (min-width:1200px) and (min-height:760px) {
+  .appShell.isTool:has(.rundeckPanel) .logV2Inner {width:calc(100% - 20px)!important}
+  .appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid .rundeckTrendPlot {flex:0 0 clamp(150px,18dvh,178px)!important;height:clamp(150px,18dvh,178px)!important;min-height:150px!important;max-height:178px!important}
+  .appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid .rundeckTrendChart {height:100%!important;min-height:0!important}
+  .appShell.isTool:has(.rundeckPanel) .sphereOverviewBottomRow {gap:6px!important}
+  .appShell.isTool:has(.rundeckPanel) .sphereOverviewBottomRow .sphereWorkloadPriorityRow,.appShell.isTool:has(.rundeckPanel) .sphereCurrentWorkloadRow {padding-block:3px!important}
+  .appShell.isTool:has(.rundeckPanel) .sphereEventsInlineList>div {padding-block:2px!important}
+  .appShell.isTool:has(.rundeckPanel) .sphereCollectionInlineRuns>div {padding-block:3px!important}
+}
+@media (max-width:1199px) {.appShell.isTool:has(.rundeckPanel) .logV2Inner {width:calc(100% - 16px)!important}}

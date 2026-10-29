@@ -20,6 +20,7 @@ export function performanceViewFromHash() {
 // by performanceViewFromHash() for saved bookmarks and investigation drawers.
 export const PRIMARY_PERFORMANCE_VIEWS = [
   { id:'performance', label:'Monitoring', icon:'activity' },
+  { id:'jobs', label:'Jobs & Programs', icon:'workload' },
   { id:'system-data', label:'Data Collection', icon:'database' },
   { id:'monthly-review', label:'Reports', icon:'history' },
 ]

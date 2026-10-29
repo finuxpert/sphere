@@ -124,7 +124,7 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
 
   if (inlineSummary) {
     const recentEvents = events.filter(event => Number.isFinite(Date.parse(event.at || '')))
-      .sort((a,b) => Date.parse(b.at) - Date.parse(a.at)).slice(0,3)
+      .sort((a,b) => Date.parse(b.at) - Date.parse(a.at)).slice(0,2)
     return <section className="sphereEventsInline" aria-label="Recent saved monitoring events">
       <div className="sphereHealthInlineHead"><h4>Recent Events</h4><button type="button" onClick={onOpen}>View all</button></div>
       {recentEvents.length ? <div className="sphereEventsInlineList">{recentEvents.map((event,i) =>

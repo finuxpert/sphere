@@ -17,7 +17,7 @@ export default function RundeckDataCollection({ systemDataContent, onManualUploa
     : <p role="status">Collection data unavailable.</p>
   return <section className="sphereCollectionWorkspace" aria-label="Data Collection">
     <nav className="sphereCollectionTabs" role="tablist" aria-label="Data Collection sections">
-      {[['automatic','Automatic'],['manual','Manual Upload'],['history','History']].map(([id,label]) =>
+      {[['automatic','Automatic'],['manual','Manual Upload']].map(([id,label]) =>
         <button key={id} type="button" role="tab" aria-selected={tab === id}
           className={tab === id ? 'is-active' : ''} onClick={() => setTab(id)}>{label}</button>)}
     </nav>

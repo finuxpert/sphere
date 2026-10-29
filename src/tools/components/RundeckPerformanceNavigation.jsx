@@ -20,7 +20,7 @@ export default function RundeckPerformanceNavigation({ activeView = 'performance
     </div>
     {PRIMARY_PERFORMANCE_VIEWS.map(item => {
       const selected = activeView === item.id ||
-        (item.id === 'performance' && ['jobs','events','sap-checks','infrastructure'].includes(activeView))
+        (item.id === 'performance' && ['events','sap-checks','infrastructure'].includes(activeView))
       return <a key={item.id}
         className={'spherePerformanceNavLink' + (selected ? ' is-active' : '')}
         href={item.id === 'performance' ? '#/tool/logs' : '#/tool/logs/' + item.id}
