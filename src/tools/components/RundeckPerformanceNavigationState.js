@@ -15,3 +15,12 @@ export function performanceViewFromHash() {
     ? parts[2] : 'performance'
 }
 
+
+// The primary sidebar is deliberately small. Legacy routes remain recognized
+// by performanceViewFromHash() for saved bookmarks and investigation drawers.
+export const PRIMARY_PERFORMANCE_VIEWS = [
+  { id:'performance', label:'Dashboard', icon:'activity' },
+  { id:'jobs', label:'Workloads', icon:'workload' },
+  { id:'sap-checks', label:'Health', icon:'activity' },
+  { id:'monthly-review', label:'Reports', icon:'history' },
+]

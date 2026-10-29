@@ -781,6 +781,7 @@ export default function RundeckSource({ onCollection }) {
           <button type="button" onClick={() => switchParentSource('manual')} title="Manual Upload Logs"><SphereIcon name="upload" /> Manual</button>
         </div>
         <button type="button" className="rundeckPdfButton" disabled={exporting} onClick={exportPdf} title="Preview one-page performance report"><SphereIcon name="pdf" /> {exporting ? 'Generating…' : 'PDF Preview'}</button>
+        <a className="rundeckQuickEventsLink" href="#/tool/logs/events" title="Investigate saved related events" aria-label="Open Related Events"><SphereIcon name="history" /> Events</a>
         {runState.enabled && (
           <button
             type="button"

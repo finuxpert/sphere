@@ -157,10 +157,10 @@ export default function RundeckMonitoringHistory(props) {
   const pageNames = {
     jobs: ['Jobs & Programs', 'Current workload, saved evaluations and search'],
     events: ['Related Events', 'Event correlation and collection evidence'],
-    'sap-checks': ['SAP Checks', 'Availability, SAP indicators and issue history'],
-    infrastructure: ['Infrastructure', 'Filesystem, Network and Storage telemetry'],
-    'system-data': ['System Data', 'Collection history and platform status'],
-    'monthly-review': ['Monthly Review', 'Saved performance evaluations and PDF reporting'],
+    'sap-checks': ['Health', 'SAP service checks and saved indicators'],
+    infrastructure: ['Health', 'Infrastructure telemetry and saved host evidence'],
+    'system-data': ['Administration', 'Collection history and platform status'],
+    'monthly-review': ['Reports', 'Monthly performance summary and detailed evidence'],
   }
   const currentPage = pageNames[activeView]
   const inlinePage = activeView === 'jobs'
@@ -238,6 +238,10 @@ export default function RundeckMonitoringHistory(props) {
             onInspectApp={inspectApp}
           /> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
           {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2 title={currentPage?.[1] || 'Source-backed observations'}>{currentPage?.[0] || 'SAP Operations'}</h2></header>}
+          {['sap-checks','infrastructure'].includes(activeView) && <nav className="sphereHealthSubnav" aria-label="Health sections">
+            <a href="#/tool/logs/sap-checks" aria-current={activeView==='sap-checks'?'page':undefined}>SAP Services & Indicators</a>
+            <a href="#/tool/logs/infrastructure" aria-current={activeView==='infrastructure'?'page':undefined}>Infrastructure</a>
+          </nav>}
           {inlinePage}
         </section>}
       </div>

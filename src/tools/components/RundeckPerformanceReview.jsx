@@ -37,7 +37,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [quickRow, setQuickRow] = React.useState(null)
   const [loadedPeriod, setLoadedPeriod] = React.useState('')
   const [loadedType, setLoadedType] = React.useState('')
-  const [searchOpen, setSearchOpen] = React.useState(false)
+  const [searchOpen, setSearchOpen] = React.useState(embedded)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [appliedQuery, setAppliedQuery] = React.useState('')
   React.useEffect(() => {
@@ -46,7 +46,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     setHealthGroup(['REVIEW','ATTENTION','UNKNOWN','NORMAL'].includes(reviewJumpHealth) ? reviewJumpHealth : 'REVIEW')
     setSearchQuery('')
     setAppliedQuery('')
-    setSearchOpen(false)
+    setSearchOpen(embedded)
     setPageIndex(0)
   }, [reviewJumpToken, reviewJumpHealth])
   React.useLayoutEffect(() => {
