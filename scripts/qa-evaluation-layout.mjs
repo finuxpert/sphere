@@ -28,6 +28,8 @@ const cssLinks = cssFiles.map(file => '<link rel="stylesheet" href="' +
   pathToFileURL(join(dist,file)).href + '">').join('\n')
 const category = ['Review','Attention','Data limited','Normal']
   .map(label => '<button class="rundeckWorkloadCategory"><strong>24</strong><span>'+label+'</span></button>').join('')
+const headings = ['Review','Attention','Data limited','Normal']
+  .map(label => '<span>'+label+'</span>').join('')
 const row = name => `<section class="rundeckAppEvalLane">
   <div class="rundeckAppEvalIdentity"><strong>${name}</strong><small>140 linked</small></div>
   <div class="rundeckAppEvalSummary"><div class="rundeckAppEvalBar" style="display:flex">
@@ -67,7 +69,7 @@ try {
               <div class="rundeckWorkloadHealthLegend">${category}</div>
             </div>
             <div class="rundeckAppEvaluationLanes">
-              <div class="rundeckAppEvalColumnHead"><span>APP</span><span>Status</span><div>${category}</div></div>
+              <div class="rundeckAppEvalColumnHead"><span>APP</span><span>Status</span><div>${headings}</div></div>
               ${lanes}
             </div>
           </section>
@@ -84,9 +86,22 @@ try {
           const rowWidth=first.getBoundingClientRect().width
           const parentLayout=getComputedStyle(health).display
           const headLayout=getComputedStyle(head).display
+          const readable = (selector, min) => {
+            const item=document.querySelector(selector)
+            return Boolean(item) && parseFloat(getComputedStyle(item).fontSize) >= min
+          }
+          const dataLimited=document.querySelector('.rundeckAppEvalColumnHead > div > span:nth-child(3)')
+          const headerStyle=dataLimited && getComputedStyle(dataLimited)
+          const typographyOk=readable('.rundeckWorkloadCategory span',11.4) &&
+            readable('.rundeckWorkloadCategory strong',17.8) &&
+            readable('.rundeckAppEvalIdentity small',10.4) &&
+            readable('.rundeckAppEvalColumnHead > div > span',10.4) &&
+            headerStyle?.whiteSpace === 'normal'
           const ok=healthWidth>700 && laneWidth/healthWidth>.93 &&
-            rowWidth/healthWidth>.93 && parentLayout==='flex' && headLayout==='grid'
+            rowWidth/healthWidth>.93 && parentLayout==='flex' && headLayout==='grid' &&
+            typographyOk
           document.body.setAttribute('data-geometry',ok?'PASS':'FAIL')
+          document.body.setAttribute('data-type',typographyOk?'PASS':'FAIL')
           document.body.setAttribute('data-actual',[
             healthWidth.toFixed(1),laneWidth.toFixed(1),rowWidth.toFixed(1),
             parentLayout,headLayout].join(','))

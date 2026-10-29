@@ -457,3 +457,213 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain .ru
     gap: 6px !important;
   }
 }
+
+/* V1.42 - enterprise finishing, based on the actual 1536x960 operator screen.
+ * One coherent scale for status, fleet measurements, trend controls and review.
+ * Keep the V1.41.3 full-width fix and preserve authentic SAP/infra evidence. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring {
+  --cockpit-text:var(--v36-ink,#e9edf2);
+  --cockpit-muted:var(--v36-muted,#9baabb);
+  --cockpit-radius:8px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring :is(.rundeckUnifiedAppInfraHead h3,.rundeckTrendEditorial h3,.rundeckWorkloadHealthBrand strong) {
+  font-size:13.5px !important;
+  font-weight:700 !important;
+  line-height:1.3 !important;
+  letter-spacing:-.012em !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfraHead {
+  align-items:center !important;
+  gap:8px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckAppSampleTime {
+  font-size:11px !important;
+  font-variant-numeric:tabular-nums;
+  color:var(--cockpit-muted) !important;
+}
+
+/* LaMa-style fleet: readable labels at a glance instead of 9px telemetry. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexShape > strong {
+  font-size:12px !important;
+  font-weight:740 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexShape > :is(small,em) {
+  font-size:10.5px !important;
+  line-height:1.12 !important;
+  font-style:normal !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeter {
+  font-size:10.5px !important;
+  line-height:1.18 !important;
+  grid-template-columns:24px minmax(10px,1fr) 43px !important;
+  gap:4px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+:is(.rundeckFleetMeterName,.rundeckFleetMeterValue) {
+  font-size:10.5px !important;
+  font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeters {gap:5px !important;}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeterTrack {height:5px !important;}
+
+/* Nexus-style shared controls: align four groups to a consistent baseline.
+   Keep all genuine period, bucket, mode and APP actions available. */
+@media(min-width:1280px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckTrendSharedControls {
+    display:grid !important;
+    grid-template-columns:minmax(320px,1.8fr) minmax(125px,.62fr) minmax(80px,.4fr) minmax(235px,1.45fr) !important;
+    align-items:end !important;
+    column-gap:12px !important;
+    row-gap:5px !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckTrendSharedGroup {
+    min-width:0 !important;
+    justify-content:flex-end !important;
+  }
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendSharedControls .rundeckTrendSharedGroup > span {
+  font-size:11px !important;
+  line-height:1.2 !important;
+  font-weight:650 !important;
+  letter-spacing:.025em !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendSharedControls :is(button,select) {
+  font-size:11.5px !important;
+  line-height:1.25 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendSharedControls :is(.rundeckTrendHistoricalSelect,.rundeckTrendBucketSelect) {
+  min-height:27px !important;
+  border-radius:5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid .rundeckMonitoringHead h3 {
+  font-size:12.5px !important;
+  font-weight:680 !important;
+  line-height:1.3 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid .rundeckTrendMetricSelect {
+  min-height:28px !important;
+  font-size:11.5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendYAxisToggle {
+  font-size:10.5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid > .rundeckServerTrendPanelV1234 {
+  border-color:var(--cockpit-outline) !important;
+  border-radius:7px !important;
+}
+
+/* Review status is the chart legend; host rows remain a wide data table.
+   Column headers wrap naturally (especially 'Data limited'), not ellipsize. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealthLegend .rundeckWorkloadCategory strong {
+  font-size:18px !important;
+  line-height:1.07 !important;
+  font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealthLegend .rundeckWorkloadCategory span {
+  font-size:11.5px !important;
+  line-height:1.18 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalColumnHead {
+  font-size:10.5px !important;
+  line-height:1.2 !important;
+  min-height:19px !important;
+  align-items:center !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalColumnHead > div > span {
+  font-size:10.5px !important;
+  line-height:1.08 !important;
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  overflow-wrap:normal !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalIdentity small {
+  font-size:10.5px !important;
+  line-height:1.15 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalHostButton {
+  font-size:12px !important;
+  line-height:1.15 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalToggle {
+  min-height:25px !important;
+  padding:3px 7px !important;
+  font-size:10.5px !important;
+  border-radius:5px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalBreakdown strong {
+  font-size:11.5px !important;
+  line-height:1.2 !important;
+}
+/* Keep the one-screen desktop contract: improve readability without enlarging
+   the five evaluation rows into a clipped, forced-height container. */
+@media(min-width:1280px) and (min-height:760px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+  .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+    height:56px !important;
+    min-height:56px !important;
+    grid-template-rows:56px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+  .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
+    height:56px !important;
+    min-height:56px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app > .rundeckAppEvaluationLanes {
+    gap:3px !important;
+  }
+}
+/* Compact responsive flow and accessible keyboard targeting. */
+@media(max-width:1279px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckTrendSharedControls {row-gap:7px !important;}
+}
+@media(max-width:899px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalColumnHead > div > span {
+    font-size:10.5px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring :is(.rundeckAppHexSelector,.rundeckWorkloadCategory,.rundeckAppEvalLane) {
+    transition:none !important;
+    transform:none !important;
+  }
+}
