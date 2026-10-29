@@ -828,6 +828,8 @@ export default function RundeckSource({ onCollection }) {
       sourceAvailability={availabilitySnapshot}
       onTrendContext={setTrendContext}
       systemDataSummary={historyRefreshFailed ? 'Collector history unverified' : `Last ${collectionCount} collector runs · 90D · ${failedCount} failed · ${partialCount} partial`}
+      collectionHistory={history}
+      collectionHistoryUnverified={historyRefreshFailed}
       systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} />}
       onManualUpload={() => switchParentSource('manual')}
       onOpenPdf={exportPdf}

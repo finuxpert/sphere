@@ -205,3 +205,52 @@
  .sphereWorkloadPriorityRow{grid-template-columns:minmax(0,1fr) 65px 58px}
  .sphereEventsInlineList>div{grid-template-columns:95px minmax(0,1fr)}
 }
+
+/* Overview additions: top live workloads, two saved collection runs, no duplicate pages. */
+.appShell.isTool:has(.rundeckPanel) .sphereCurrentWorkloadSummary{min-width:0;margin-top:5px;padding-top:5px;border-top:1px solid var(--sphere-design-edge,rgba(140,150,160,.14))}
+.sphereCurrentWorkloadSummary header{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.sphereCurrentWorkloadSummary header strong{font-size:11px}
+.sphereCurrentWorkloadSummary header a,.sphereCollectionInline a{font-size:10px;color:var(--sphere-accent,#76bace);text-decoration:none}
+.sphereCurrentWorkloadSummary>small{display:block;font-size:9.5px;color:var(--sphere-text-secondary,#9eaeb7);margin:3px 0 5px}
+.sphereCurrentWorkloadList{display:flex;flex-direction:column;gap:1px}
+.sphereCurrentWorkloadRow{font:inherit;border:0;background:transparent;color:inherit;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) 47px 49px 57px;gap:5px;align-items:center;padding:5px 3px;text-align:left;min-width:0;border-radius:3px}
+.sphereCurrentWorkloadRow:hover,.sphereCurrentWorkloadRow:focus-visible{background:rgba(105,142,160,.12)}
+.sphereCurrentWorkloadRow:focus-visible{outline:2px solid var(--sphere-accent,#76bace)}
+.sphereCurrentWorkloadRow .sphereCurrentWorkloadName{font-size:10px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sphereCurrentWorkloadRow span:not(.sphereCurrentWorkloadName){font-size:9.5px;color:var(--sphere-text-secondary,#acbbc3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sphereCurrentWorkloadRow strong{text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+.sphereCurrentWorkloadList p{font-size:10px;color:var(--sphere-text-secondary,#acbbc3);margin:5px 0}
+.sphereCollectionInline{min-width:0;border-top:1px solid var(--sphere-design-edge,rgba(140,150,160,.14));margin-top:6px;padding-top:5px}
+.sphereCollectionInline .sphereHealthInlineHead>div{display:flex;align-items:center;gap:10px}
+.sphereCollectionInline .sphereHealthInlineHead button{padding:2px 0}
+.sphereCollectionInlineRuns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:5px}
+.sphereCollectionInlineRuns>div{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:10px;padding:5px;background:rgba(140,150,160,.05);border-radius:3px;min-width:0}
+.sphereCollectionInlineRuns>div>span:first-child{font-weight:600}
+.sphereCollectionInlineRuns>div>span:nth-child(2){color:var(--sphere-text-secondary,#adbdc6)}
+.sphereCollectionInlineRuns>div>strong{margin-left:auto;font-size:9px}
+.sphereCollectionInline>small{font-size:10px;color:var(--sphere-text-secondary,#a5b5bf)}
+/* Network plot must own its height; ECharts canvas must not overlap the summary area. */
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid{
+ align-items:stretch!important;overflow:visible!important
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid>.rundeckServerTrendPanelV1234{
+ display:flex!important;flex-direction:column!important;min-height:0!important;
+ height:auto!important;max-height:none!important;overflow:hidden!important;
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid .rundeckTrendPlot{
+ position:relative!important;flex:0 0 clamp(175px,23dvh,215px)!important;
+ height:clamp(175px,23dvh,215px)!important;min-height:175px!important;
+ max-height:215px!important;overflow:hidden!important;min-width:0!important
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid .rundeckTrendChart{
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ width:100%!important;margin:0!important;overflow:hidden!important
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTrendBandV13454,
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendV13457{
+ height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important
+}
+@media(max-width:740px){
+ .sphereCurrentWorkloadRow{grid-template-columns:minmax(0,1fr) 40px 45px 50px;gap:3px}
+ .sphereCollectionInlineRuns{grid-template-columns:1fr}
+}

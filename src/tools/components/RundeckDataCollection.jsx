@@ -3,8 +3,15 @@ import SphereIcon from './SphereIcon.jsx'
 
 // Use the existing Rundeck status and import workflow; never copy monitoring data.
 export default function RundeckDataCollection({ systemDataContent, onManualUpload, collectionAction }) {
-  const [tab, setTab] = React.useState('automatic')
+  const [tab, setTab] = React.useState(() => typeof window !== 'undefined' && window.location.hash.includes('/system-data/history') ? 'history' : 'automatic')
   const [credentialsOpen, setCredentialsOpen] = React.useState(false)
+  React.useEffect(() => {
+    const updateFromHash = () => {
+      if (window.location.hash.includes('/system-data/history')) setTab('history')
+    }
+    window.addEventListener('hashchange', updateFromHash)
+    return () => window.removeEventListener('hashchange', updateFromHash)
+  }, [])
   const renderData = (initialTab) => React.isValidElement(systemDataContent)
     ? React.cloneElement(systemDataContent, { key: initialTab, initialTab, hideTabs: true, onOpenPdf: null })
     : <p role="status">Collection data unavailable.</p>

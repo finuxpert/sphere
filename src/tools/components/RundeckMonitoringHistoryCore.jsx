@@ -111,6 +111,8 @@ export default function RundeckMonitoringHistoryCore(props) {
           compactSummary
           onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
         />
+        {React.isValidElement(props.currentWorkloadContent) &&
+          React.cloneElement(props.currentWorkloadContent, { summaryOnly: true })}
       </div>
     </section>
     {props.healthSummary}

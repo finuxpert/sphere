@@ -96,7 +96,7 @@ function identityTitle(row = {}) {
   return values.join(' | ')
 }
 
-export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], layoutKey = '', embedded = false, initialAppHost = '', standalone = false }) {
+export default function RundeckCurrentWorkload({ collectionId = '', selectedJob = null, onSelectJob, onSelectedContext, compactLimit = 100, sourceHosts = [], layoutKey = '', embedded = false, initialAppHost = '', standalone = false, summaryOnly = false }) {
   const [rows, setRows] = React.useState([])
   const [workloadMeta, setWorkloadMeta] = React.useState({ total: 0, coverageScope: '' })
   const [loading, setLoading] = React.useState(false)
@@ -271,6 +271,32 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   const freshnessMinutes = latestObservedAt ? ageMinutes(latestObservedAt, nowMs) : null
   const showFreshness = freshnessMinutes !== null && freshnessMinutes >= STALE_MINUTES
 
+  if (summaryOnly) {
+    const top = sortedRows.filter(row => row.consumer_key && row.cpu_pct !== null &&
+      row.cpu_pct !== undefined && row.cpu_pct !== '' && Number.isFinite(Number(row.cpu_pct))).slice(0,4)
+    return <section className="sphereCurrentWorkloadSummary" aria-label="Top Current Workloads">
+      <header><strong>Top Current Workloads</strong><a href="#/tool/logs/jobs">View all</a></header>
+      <small title={coverageLabel}>Latest collection · {loading ? 'Loading…' : error ? 'Source unavailable' : `${rows.length} loaded observations`}{!allLoaded ? ' · Partial list' : ''}</small>
+      <div className="sphereCurrentWorkloadList">
+        {top.map(row => {
+          const ctx = jobContext(row)
+          const cpu = Number(row.cpu_pct)
+          const pss = pssGb(row)
+          return <button type="button" className="sphereCurrentWorkloadRow"
+            key={[row.collection_id,row.host,row.consumer_type,row.consumer_key].join(':')}
+            onClick={() => ctx && onSelectJob?.(ctx)}
+            title={`${row.consumer_key} · ${row.host || 'No host'} · multi-core CPU (not host CPU)`}>
+            <span className="sphereCurrentWorkloadName">{observedWorkloadName(row.consumer_key,row.details || {})}</span>
+            <span>{shortHost(row.host)}</span>
+            <strong>{numberText(cpu)}%</strong>
+            <span>{pss == null ? 'PSS —' : numberText(pss,2) + ' GB'}</span>
+          </button>
+        })}
+        {!loading && !error && !top.length && <p>No current workload CPU observations.</p>}
+        {(loading || error) && <p role="status">{loading ? 'Loading current workloads…' : 'Current workload data unavailable.'}</p>}
+      </div>
+    </section>
+  }
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
