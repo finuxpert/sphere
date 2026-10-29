@@ -11,6 +11,7 @@ import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, shortHost } from './sapUiFormat.js'
+import { currentAppSample } from './rundeckUnifiedHost.js'
 import './RundeckMonitoringHistory.css'
 import './RundeckInvestigationFlow.css'
 import './RundeckOperatorMotion.css'
@@ -413,7 +414,7 @@ export default function RundeckMonitoringHistory(props) {
           {activeOverlay?.type === 'app' && activeOverlay.app && <RundeckWorkspaceDrawer
             key={String(activeOverlay.app.host).trim().toUpperCase()}
             title={activeOverlay.app.host ? shortHost(activeOverlay.app.host) + ' Analysis' : 'APP Analysis'}
-            subtitle={`${activeOverlay.app.host || 'UNKNOWN host'} · SAP ${props.sourceQuality?.performanceValid && !props.sourceQuality?.collectorBad ? (props.latestCollectionAt ? formatWib(props.latestCollectionAt, true) + ' WIB' : 'sample time UNKNOWN') : 'UNVERIFIED'} · Infra data checked separately`}
+            subtitle={`${activeOverlay.app.host || 'UNKNOWN host'} · SAP ${props.sourceQuality?.performanceValid && !props.sourceQuality?.collectorBad && currentAppSample(activeOverlay.app, true) ? (activeOverlay.app.collected_at ? formatWib(activeOverlay.app.collected_at, true) + ' WIB' : 'sample time UNKNOWN') : 'UNVERIFIED'} · Infra data checked separately`}
             size="unified-app"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
@@ -423,7 +424,7 @@ export default function RundeckMonitoringHistory(props) {
             <RundeckUnifiedAppAnalysis
               app={activeOverlay.app}
               latestCollectionId={props.latestCollectionId}
-              performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+              performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad && currentAppSample(activeOverlay.app, true)}
               performanceCollectedAt={props.latestCollectionAt || ''}
               incidentStart=""
               refreshToken={refreshToken}

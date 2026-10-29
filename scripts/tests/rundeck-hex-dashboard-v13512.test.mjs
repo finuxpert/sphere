@@ -8,7 +8,7 @@ test('hexagon APP selection, source provenance and modal behavior', () => {
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const css=read('RundeckCockpitHexV13512.css')
   assert.match(app,/hosts\.map\(host => \{/)
-  assert.match(app,/appSignalState\(host, performanceVerified\)/)
+  assert.match(app,/appSignalState\(host, verified\)/)
   assert.match(app,/aria-pressed=\{appKey === key\}/)
   assert.match(app,/onSelectApp\?\.\(host\.host\)/)
   assert.match(app,/selectedHost && <div className="rundeckSelectedAppDetail"/)
