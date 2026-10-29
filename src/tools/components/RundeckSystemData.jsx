@@ -59,7 +59,7 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
     </div>}
 
     {tab==='services'&&<div className="rundeckSystemDataPane">
-      <header><div><strong>SPHERE Services</strong><small>{serviceSummary||'Collector, storage, database and maintenance services'}</small></div><State value={platformState}/></header>
+      <header><div><strong>SPHERE Services</strong><small>{serviceSummary||'Collector, storage, database and maintenance services'} · Backup status shown separately</small></div><State value={platformState}/></header>
       <div className="rundeckSystemDataTableWrap"><table>
         <thead><tr><th>Component</th><th>State</th><th>Detail</th></tr></thead>
         <tbody>
