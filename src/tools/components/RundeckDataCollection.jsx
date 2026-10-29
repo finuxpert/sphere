@@ -8,6 +8,7 @@ export default function RundeckDataCollection({ systemDataContent, onManualUploa
   React.useEffect(() => {
     const updateFromHash = () => {
       if (window.location.hash.includes('/system-data/history')) setTab('history')
+      else if (window.location.hash.includes('/system-data')) setTab('automatic')
     }
     window.addEventListener('hashchange', updateFromHash)
     return () => window.removeEventListener('hashchange', updateFromHash)
@@ -17,7 +18,7 @@ export default function RundeckDataCollection({ systemDataContent, onManualUploa
     : <p role="status">Collection data unavailable.</p>
   return <section className="sphereCollectionWorkspace" aria-label="Data Collection">
     <nav className="sphereCollectionTabs" role="tablist" aria-label="Data Collection sections">
-      {[['automatic','Automatic'],['manual','Manual Upload']].map(([id,label]) =>
+      {[['automatic','Automatic'],['manual','Manual Upload'],['history','History']].map(([id,label]) =>
         <button key={id} type="button" role="tab" aria-selected={tab === id}
           className={tab === id ? 'is-active' : ''} onClick={() => setTab(id)}>{label}</button>)}
     </nav>
@@ -30,7 +31,7 @@ export default function RundeckDataCollection({ systemDataContent, onManualUploa
     </div>}
     {tab === 'manual' && <div className="sphereCollectionBody sphereManualCollection" role="tabpanel">
       <div><h3>Manual Upload</h3><p>Upload WP-SCOUT or Daily Check logs for analysis.</p></div>
-      <button type="button" className="sphereUploadAction" onClick={onManualUpload}>
+      <button type="button" className="sphereUploadAction" onClick={onManualUpload} disabled={!onManualUpload}>
         <SphereIcon name="upload" /> Open Manual Upload
       </button>
     </div>}
