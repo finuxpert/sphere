@@ -105,5 +105,9 @@ export PIP_NO_INDEX=1
 SPHERE_DEV_MIGRATION_DECISION=skip bash "$SOURCE/ops/rundeck/deploy-dev.sh" >> "$LOG" 2>&1
 echo "DEPLOY=PASS DB_MIGRATION=SKIPPED"
 echo "PROD=UNCHANGED_BY_RELEASE_GUARDS"
-echo "CLEANUP=ON_EXIT"
+# Clear transient dist and archive extraction before claiming FINAL=PASS.
+cleanup
+DIST_STAGED=0
+SCRATCH=''
+echo "CLEANUP=PASS"
 echo "FINAL=PASS DEV_SHA=${SHA:0:8} SOURCE=OFFLINE"
