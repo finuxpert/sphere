@@ -45,13 +45,29 @@ if [[ "$ready" != 1 ]]; then
   exit 1
 fi
 
-timeout 50 "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
-  --no-first-run --no-default-browser-check --virtual-time-budget=15000 \
-  --dump-dom "$URL" >"$OUT" 2>>"$LOG" || {
-    echo "FAIL: browser startup failed"
-    tail -35 "$LOG"
-    exit 1
-  }
+# Chromium can hang on runner DBus/session initialization even when Vite is healthy.
+# Isolate each browser attempt, retry startup once, but never waive DOM assertions.
+BROWSER_OK=0
+for attempt in 1 2; do
+  PROFILE="$(mktemp -d)"
+  : >"$OUT"
+  if DBUS_SESSION_BUS_ADDRESS="" timeout -k 5 45 "$CHROME" --headless --no-sandbox \
+    --disable-gpu --disable-dev-shm-usage --disable-background-networking \
+    --disable-extensions --no-first-run --no-default-browser-check \
+    --user-data-dir="$PROFILE" --virtual-time-budget=15000 \
+    --dump-dom "$URL" >"$OUT" 2>>"$LOG"; then
+    BROWSER_OK=1
+    rm -rf "$PROFILE"
+    break
+  fi
+  echo "Chromium attempt $attempt failed; retrying with an isolated profile"
+  rm -rf "$PROFILE"
+done
+if [[ "$BROWSER_OK" != 1 ]]; then
+  echo "FAIL: browser startup failed after two attempts"
+  tail -35 "$LOG"
+  exit 1
+fi
 
 # SPA content must exist in the rendered DOM, not merely in the page title
 # or metadata. In a render-time ReferenceError, the root remains empty.
