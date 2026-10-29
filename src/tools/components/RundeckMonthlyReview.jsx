@@ -109,10 +109,10 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
 
 const DASHBOARD_COLORS = ['#75b4e5', '#4b91cb', '#2d659f', '#1a3b70']
 const WORKLOAD_GROUPS = [
-  { key:'review', label:'Needs Review' },
+  { key:'review', label:'Review' },
   { key:'attention', label:'Watch' },
   { key:'normal', label:'Normal' },
-  { key:'unknown', label:'Not Enough Data' },
+  { key:'unknown', label:'Limited Data' },
 ]
 
 function WorkloadDistribution({ summary = {}, onSelect }) {
