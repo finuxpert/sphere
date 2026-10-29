@@ -141,6 +141,6 @@ test('V1.43 sidebar is collapsible, keyboard labeled and retains all SAP workspa
   assert.match(css,/spherePerformanceShell:has\(\.spherePerformanceSidebar\.is-collapsed\)/)
   assert.match(css,/grid-template-columns:64px minmax\(0,1fr\)/)
   assert.match(css,/spherePerformanceSidebar\.is-expanded/)
-  assert.match(css,/@media \(max-width: 899px\)/)
+  assert.match(css,/@media\(max-width:899px\)/)
   assert.doesNotMatch(css,/\.rundeckAppEvalLane\s*\{[\s\S]*display:\s*none/)
 })
