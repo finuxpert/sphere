@@ -235,7 +235,7 @@ test('WP CPU report displays logical core-equivalents without inventing a 28-vCP
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   const evaluation = read('backend/rundeck_evaluation.py')
   assert.match(ui, /Peak WP CPU/)
-  assert.match(ui, /WP CPU Avg \/ Peak/)
+  assert.match(ui, /Avg \/ Peak WP CPU/)
   assert.match(ui, /100% = 1 logical CPU-core equivalent/)
   assert.match(ui, /wpCoreEq\(row\.pressure_overlap\?\.cpu_peak_during_cpu_pressure\)/)
   assert.match(ui, /wpCoreEq\(row\.peak_cpu_pct\)/)
