@@ -178,7 +178,7 @@ test('DEV grouped Performance Trends toolbar preserves range, bucket, server val
   assert.match(trend, /rundeckTrendControlMode/)
   assert.match(trend, /rundeckTrendSharedHosts/)
   assert.match(trend, /<span>Time Range<\/span>/)
-  assert.match(trend, /<span>Bucket<\/span>/)
+  assert.match(trend, /<span>Interval<\/span>/)
   assert.match(trend, /className="rundeckTrendBucketSelect" aria-label="Bucket interval"/)
   assert.match(trend, /BUCKETS\.map\(\(\[key, label\]\) => <option key=\{key\} value=\{key\}>\{label\}<\/option>\)/)
   assert.match(trend, /onChange=\{event => setBucket\(event\.target\.value\)\}/)
