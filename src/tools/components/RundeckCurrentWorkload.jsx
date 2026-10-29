@@ -304,7 +304,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
        <span className="rundeckCurrentWorkloadCount" title={'Saved observations from the latest collection, not SAP job executions. ' + coverageLabel}>{allLoaded ? `${rows.length} observations` : `${rows.length} of ${workloadMeta.total} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
-          <option value="ALL">All APP · global</option>
+          <option value="ALL">All APPs</option>
           {availableHosts.map(host => <option key={host} value={host}>{shortHost(host)}</option>)}
           {hostFilter !== 'ALL' && !availableHosts.includes(hostFilter) &&
             <option value={hostFilter}>{shortHost(hostFilter)} · no saved current observation</option>}
