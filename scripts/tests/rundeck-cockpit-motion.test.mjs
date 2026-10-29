@@ -9,14 +9,15 @@ test('first-load trends default to CPU and RAM', () => {
   assert.deepEqual(resolveServerTrendMetrics(), { first: 'cpu', second: 'ram' })
 })
 
-test('legacy duplicate CPU preferences are normalized without a stale second CPU chart', () => {
-  assert.deepEqual(resolveServerTrendMetrics({ serverMetric1: 'cpu', serverMetric2: 'cpu' }), { first: 'cpu', second: 'ram' })
-  assert.deepEqual(resolveServerTrendMetrics({ serverMetric: 'cpu', serverMetric2: 'cpu' }), { first: 'cpu', second: 'ram' })
-  assert.deepEqual(resolveServerTrendMetrics({ serverMetric1: 'ram', serverMetric2: 'ram' }), { first: 'ram', second: 'cpu' })
+test('independent chart selectors preserve intentionally duplicated metrics', () => {
+  assert.deepEqual(resolveServerTrendMetrics({ serverMetric1: 'cpu', serverMetric2: 'cpu' }), { first: 'cpu', second: 'cpu' })
+  assert.deepEqual(resolveServerTrendMetrics({ serverMetric: 'cpu', serverMetric2: 'cpu' }), { first: 'cpu', second: 'cpu' })
+  assert.deepEqual(resolveServerTrendMetrics({ serverMetric1: 'ram', serverMetric2: 'ram' }), { first: 'ram', second: 'ram' })
 })
 
 test('valid distinct operator preferences remain respected', () => {
   assert.deepEqual(resolveServerTrendMetrics({ serverMetric1: 'wp', serverMetric2: 'iowait' }), { first: 'wp', second: 'iowait' })
+  assert.deepEqual(resolveServerTrendMetrics({ serverMetric1: 'network', serverMetric2: 'hana' }), { first: 'network', second: 'hana' })
   assert.deepEqual(resolveServerTrendMetrics({ serverMetric1: 'unknown', serverMetric2: 'unknown' }), { first: 'cpu', second: 'ram' })
 })
 
