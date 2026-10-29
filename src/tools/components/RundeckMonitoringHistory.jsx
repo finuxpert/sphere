@@ -245,8 +245,7 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendInfrastructure={(context) => setActiveOverlay({ type: 'infrastructure', trendContext: context, returnTo: { type: 'selected' } })}
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
-          />
-          <section className="sphereOverviewDetails" aria-label="System Health">
+            healthSummary={<section className="sphereOverviewDetails" aria-label="System Health">
             <header className="sphereHealthSummaryHeader">
               <h3>System Health</h3>
               <button type="button" onClick={() => setActiveOverlay({ type:'evidence', returnTo:{ type:'selected' } })}>Recent Events</button>
@@ -259,7 +258,8 @@ export default function RundeckMonitoringHistory(props) {
                   onOpen={() => setActiveOverlay({ type:'infrastructure' })} />
               </React.Suspense>
             </div>
-          </section></> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
+          </section>}
+          /></> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
           {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2 title={currentPage?.[1] || 'Source-backed observations'}>{currentPage?.[0] || 'SAP Operations'}</h2></header>}
           {inlinePage}
         </section>}

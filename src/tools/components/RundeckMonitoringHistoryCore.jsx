@@ -99,6 +99,7 @@ export default function RundeckMonitoringHistoryCore(props) {
       />
     </section>
 
+    <div className="sphereOverviewBottomRow">
     <section className="rundeckJobsProgramsOverview" aria-label="Job & Program Evaluation">
       <div className="rundeckJobsProgramsHealthSide">
         <RundeckWorkloadHealth
@@ -112,5 +113,7 @@ export default function RundeckMonitoringHistoryCore(props) {
         />
       </div>
     </section>
+    {props.healthSummary}
+    </div>
   </section>
 }

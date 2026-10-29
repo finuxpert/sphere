@@ -209,6 +209,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         <span>{level.label}</span>
       </button>)}
     </div>
+  const priorityRows = rows.filter(row => workloadHealthLevel(row) === 'review').slice(0,4)
+  const fallbackRows = priorityRows.length ? priorityRows : rows.filter(row => workloadHealthLevel(row) === 'attention').slice(0,4)
   if (compactSummary) return <section className="rundeckWorkloadHealth sphereWorkloadSummary" data-state={state} aria-label="Jobs and Programs summary" aria-busy={loading}>
     <header className="sphereWorkloadSummaryHead"><h3>Jobs &amp; Programs</h3><a href="#/tool/logs/jobs">View details</a></header>
     <div className="sphereWorkloadSummaryMetrics">{LEVELS.map(level => <button type="button" key={level.key}
@@ -216,6 +218,19 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       aria-label={'Open ' + level.label + ' saved evaluations'} title="Based on saved 24h performance evaluations, not SAP job execution results">
       <strong>{preview ? preview.health[level.key] : '—'}</strong><span>{level.label}</span>
     </button>)}</div>
+    <div className="sphereWorkloadPriority" aria-label="Priority programs from saved performance review">
+      <div className="sphereWorkloadPriorityTitle"><strong>Programs to Check</strong><small>Saved 24h evaluation</small></div>
+      {fallbackRows.length ? <div className="sphereWorkloadPriorityList">
+        {fallbackRows.map(row => <button type="button"
+          key={[row.consumer_type,row.consumer_key,row.host].join(':')}
+          onClick={() => openWorkload(row)} className="sphereWorkloadPriorityRow"
+          title={[row.consumer_key,row.host,row.status].filter(Boolean).join(' · ')}>
+          <span className="sphereWorkloadPriorityName">{row.consumer_key || 'Unnamed workload'}</span>
+          <span className="sphereWorkloadPriorityHost">{row.host ? String(row.host).split('.')[0] : 'Host —'}</span>
+          <span className={'sphereWorkloadPriorityLevel is-' + workloadHealthLevel(row)}>{workloadHealthLevel(row) === 'review' ? 'Review' : 'Attention'}</span>
+        </button>)}
+      </div> : <p className="sphereWorkloadPriorityEmpty">{!preview ? 'Data unavailable' : data?.tooMany ? 'Open Review to see programs' : 'No priority programs in saved evaluations'}</p>}
+    </div>
     {!preview && <small role="status">{error ? 'Evaluation unavailable' : 'Checking evaluations…'}</small>}
   </section>
   return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : '')}
