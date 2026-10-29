@@ -15,7 +15,7 @@ export default function RundeckMonitoringHistoryCore(props) {
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
     // Fit only when all visible source-backed overview sections have room.
-    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
+    const fit = false // The new compact summary uses natural flow; never stretch empty tracks.
     // A sixth UNKNOWN/UNVERIFIED membership lane must never be squeezed into
     // the five-row desktop allocation. Use natural page flow instead.
     const additionalLane = overview.querySelectorAll('.rundeckAppEvalLane').length > 5
@@ -99,6 +99,7 @@ export default function RundeckMonitoringHistoryCore(props) {
           onSelectWorkload={props.onOpenEvaluatedWorkload}
           onOpenApp={props.onOpenAppJobs}
           viewMode="by-app"
+          compactSummary
           onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
         />
       </div>

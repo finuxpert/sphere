@@ -40,3 +40,41 @@
 .sphereHealthSummaryGrid .rundeckEvidenceCard strong{overflow-wrap:anywhere;font-size:11px;line-height:1.4}
 .sphereHealthLoading{padding:14px;color:var(--sphere-text-secondary,#aeb9c0);font-size:11px}
 @media(max-width:900px){.sphereHealthSummaryGrid{grid-template-columns:1fr}}
+
+/* DEV: fixed one-screen Overview and genuinely full-width application shell. */
+.appShell.isTool:has(.rundeckPanel) main,.appShell.isTool:has(.rundeckPanel) main>.container{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important}
+.appShell.isTool:has(.rundeckPanel) main>.container{padding-inline:clamp(6px,.75vw,12px)!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell{grid-template-columns:52px minmax(0,1fr)!important;gap:6px!important;min-width:0;width:100%!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell:has(.spherePerformanceSidebar.is-expanded){grid-template-columns:180px minmax(0,1fr)!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell:has(.spherePerformanceSidebar.is-collapsed){grid-template-columns:52px minmax(0,1fr)!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceSidebar{min-height:0!important;padding:5px 2px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain,.appShell.isTool:has(.rundeckPanel) .rundeckPanel{width:100%!important;max-width:none!important;min-width:0!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckLandscapeHeader{padding-block:4px!important;margin-bottom:3px!important;min-height:0!important}
+.appShell.isTool:has(.rundeckPanel) .sphereMonitoringTabs{margin-bottom:5px;padding-bottom:5px}
+.appShell.isTool:has(.rundeckPanel) .sphereMonitoringTabs a{padding:6px 10px}
+.appShell.isTool:has(.rundeckPanel) .rundeckDataQualityNotice{padding:3px 7px!important;margin:2px 0 5px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring.rundeckCockpitV13491{display:flex!important;flex-direction:column!important;gap:6px!important;height:auto!important;min-height:0!important;max-width:100%!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring>:is(.rundeckTopBandV13454,.rundeckTrendBandV13454,.rundeckJobsProgramsOverview){flex:none!important;min-height:0!important;height:auto!important;margin:0!important;min-width:0!important;max-width:100%!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckAppMotionPanel{padding:4px 6px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckAppHexMain.rundeckAppThreePanels{gap:3px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckAppHexSelector{height:52px!important;min-height:52px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckAppHexSelectors.rundeckUnifiedAppCards{grid-template-rows:52px!important;min-height:52px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTrendBandV13454{padding:7px 8px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTrendSharedControls{gap:4px 10px!important;margin-bottom:3px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckServerTrendPanelV1234{min-height:0!important;padding:4px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid .rundeckTrendChart{height:clamp(165px,23dvh,225px)!important;min-height:0!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckJobsProgramsOverview{padding:5px 8px!important}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.sphereWorkloadSummary{display:flex!important;flex-direction:row!important;align-items:center!important;gap:12px!important;min-height:0!important;max-height:none!important;height:auto!important;padding:0!important}
+.sphereWorkloadSummaryHead{flex:0 0 155px;display:flex;flex-direction:column;gap:3px}
+.sphereWorkloadSummaryHead h3{margin:0!important;font-size:12px!important}
+.sphereWorkloadSummaryHead a{font-size:10px;color:var(--sphere-accent,#71c2ce)}
+.sphereWorkloadSummaryMetrics{flex:1;min-width:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.sphereWorkloadSummaryMetric{background:var(--cockpit-surface-alt,#1d2833)!important;color:inherit!important;min-width:0!important;min-height:42px!important;border:0!important;border-radius:4px!important;display:flex;align-items:center;justify-content:center;gap:2px;flex-direction:column;cursor:pointer;padding:4px!important;font:inherit}
+.sphereWorkloadSummaryMetric strong{font-size:15px;line-height:1.1}
+.sphereWorkloadSummaryMetric span{font-size:10px;color:var(--sphere-text-secondary,#afbdc6)}
+.sphereWorkloadSummaryMetric:disabled{opacity:.65;cursor:default}
+.appShell.isTool:has(.rundeckPanel) .sphereOverviewDetails{margin:3px 0 0!important;padding:0!important}
+.appShell.isTool:has(.rundeckPanel) .sphereHealthSummaryHeader{margin:0 0 3px!important}
+.appShell.isTool:has(.rundeckPanel) .sphereHealthSummaryGrid .rundeckEvidenceCard{height:44px!important;min-height:44px!important;padding:5px 9px!important}
+@media(max-width:1099px){.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell,.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell:has(.spherePerformanceSidebar.is-expanded){grid-template-columns:46px minmax(0,1fr)!important;gap:5px!important}.appShell.isTool:has(.rundeckPanel) .spherePerformanceSidebar.is-expanded{position:fixed!important;top:55px!important;left:5px!important;width:min(230px,90vw)!important;z-index:150}}
+@media(max-width:740px){.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell{grid-template-columns:38px minmax(0,1fr)!important;gap:4px!important}.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid{grid-template-columns:1fr!important}.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.sphereWorkloadSummary{flex-direction:column!important;align-items:stretch!important}.sphereWorkloadSummaryHead{flex:auto;flex-direction:row;justify-content:space-between}.sphereHealthSummaryGrid{grid-template-columns:1fr!important}}

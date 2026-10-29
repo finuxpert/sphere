@@ -63,7 +63,7 @@ async function readVerifiedPopulation(signal) {
 }
 
 /** One saved 1D evaluation = one selectable hexagon, without 400+1 pagination. */
-export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe' }) {
+export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe', compactSummary = false }) {
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
@@ -209,6 +209,15 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         <span>{level.label}</span>
       </button>)}
     </div>
+  if (compactSummary) return <section className="rundeckWorkloadHealth sphereWorkloadSummary" data-state={state} aria-label="Jobs and Programs summary" aria-busy={loading}>
+    <header className="sphereWorkloadSummaryHead"><h3>Jobs &amp; Programs</h3><a href="#/tool/logs/jobs">View details</a></header>
+    <div className="sphereWorkloadSummaryMetrics">{LEVELS.map(level => <button type="button" key={level.key}
+      disabled={!preview} onClick={() => onReview?.(level.health)} className={'sphereWorkloadSummaryMetric is-' + level.key}
+      aria-label={'Open ' + level.label + ' saved evaluations'} title="Based on saved 24h performance evaluations, not SAP job execution results">
+      <strong>{preview ? preview.health[level.key] : '—'}</strong><span>{level.label}</span>
+    </button>)}</div>
+    {!preview && <small role="status">{error ? 'Evaluation unavailable' : 'Checking evaluations…'}</small>}
+  </section>
   return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : '')}
     data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
