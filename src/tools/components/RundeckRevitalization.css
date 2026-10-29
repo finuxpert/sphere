@@ -78,3 +78,46 @@
 .appShell.isTool:has(.rundeckPanel) .sphereHealthSummaryGrid .rundeckEvidenceCard{height:44px!important;min-height:44px!important;padding:5px 9px!important}
 @media(max-width:1099px){.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell,.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell:has(.spherePerformanceSidebar.is-expanded){grid-template-columns:46px minmax(0,1fr)!important;gap:5px!important}.appShell.isTool:has(.rundeckPanel) .spherePerformanceSidebar.is-expanded{position:fixed!important;top:55px!important;left:5px!important;width:min(230px,90vw)!important;z-index:150}}
 @media(max-width:740px){.appShell.isTool:has(.rundeckPanel) .spherePerformanceShell{grid-template-columns:38px minmax(0,1fr)!important;gap:4px!important}.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckTripleTrendGrid{grid-template-columns:1fr!important}.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.sphereWorkloadSummary{flex-direction:column!important;align-items:stretch!important}.sphereWorkloadSummaryHead{flex:auto;flex-direction:row;justify-content:space-between}.sphereHealthSummaryGrid{grid-template-columns:1fr!important}}
+
+/* Fix: compact KPI mode must not inherit legacy full-height evaluation lanes.
+   Preserve all four source-backed totals and put System Health immediately below. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.rundeckCockpitV13491 .rundeckJobsProgramsOverview {
+ display:block!important;
+ height:auto!important;min-height:0!important;max-height:none!important;
+ flex:0 0 auto!important;align-self:stretch!important;
+ padding:5px 8px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckJobsProgramsHealthSide {
+ display:block!important;position:static!important;
+ height:auto!important;min-height:0!important;max-height:none!important;
+ width:100%!important;padding:0!important;margin:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckWorkloadHealth.sphereWorkloadSummary {
+ display:flex!important;flex-direction:row!important;align-items:center!important;
+ height:auto!important;min-height:0!important;max-height:none!important;
+ grid-template-rows:none!important;grid-template-columns:none!important;
+ grid-template-areas:none!important;gap:10px!important;
+ padding:0!important;margin:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.rundeckCockpitV13491 .sphereWorkloadSummaryMetrics {
+ align-self:center!important;min-width:0!important;grid-template-rows:42px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .sphereOverviewDetails .sphereHealthSummaryGrid .rundeckEvidenceCard {
+ height:auto!important;min-height:52px!important;max-height:none!important;
+ padding:7px 9px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .sphereOverviewDetails .sphereHealthSummaryGrid .rundeckEvidenceCard strong {
+ display:block;white-space:normal!important;line-height:1.35!important;overflow:visible!important;
+}
+@media(max-width:740px) {
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.rundeckCockpitV13491 .rundeckJobsProgramsOverview .rundeckWorkloadHealth.sphereWorkloadSummary {
+  flex-direction:column!important;align-items:stretch!important
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.rundeckCockpitV13491 .sphereWorkloadSummaryMetrics {grid-template-rows:auto!important}
+}

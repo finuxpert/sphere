@@ -165,3 +165,15 @@ test('three main sections preserve older monitoring deep links', () => {
   assert.match(read('RundeckSource.jsx'),/sphere:set-source/)
   assert.match(read('RundeckDataCollection.jsx'),/Open Manual Upload/)
 })
+
+test('compact Overview never reserves obsolete evaluation-table height', () => {
+  const core = read('RundeckMonitoringHistoryCore.jsx')
+  const styles = read('RundeckRevitalization.css')
+  const workload = read('RundeckWorkloadHealth.jsx')
+  assert.match(core, /querySelector\('\.sphereWorkloadSummary'\)/)
+  assert.match(core, /delete overview\.dataset\.viewportFit/)
+  assert.match(workload, /compactSummary/)
+  assert.match(styles, /\.rundeckWorkloadHealth\.sphereWorkloadSummary\s*\{[\s\S]*?height:auto!important/)
+  assert.match(styles, /\.rundeckJobsProgramsHealthSide\s*\{[\s\S]*?min-height:0!important/)
+  assert.match(styles, /\.sphereHealthSummaryGrid \.rundeckEvidenceCard\s*\{[\s\S]*?min-height:52px!important/)
+})

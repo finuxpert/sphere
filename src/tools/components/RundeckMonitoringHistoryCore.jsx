@@ -12,6 +12,14 @@ export default function RundeckMonitoringHistoryCore(props) {
   const measureViewport = React.useCallback(() => {
     const overview = overviewRef.current
     if (!overview) return
+    // The compact KPI row is content-sized. Old viewport-fit rules allocated
+    // 200+ pixels to the removed evaluation table, leaving a blank card and
+    // pushing System Health below the viewport.
+    if (overview.querySelector('.sphereWorkloadSummary')) {
+      overview.style.removeProperty('--sphere-overview-room')
+      delete overview.dataset.viewportFit
+      return
+    }
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
     // Fit only when all visible source-backed overview sections have room.
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
