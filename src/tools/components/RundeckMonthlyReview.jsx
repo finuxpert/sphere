@@ -572,7 +572,7 @@ export default function RundeckMonthlyReview() {
           <button type="button" disabled={page===0} onClick={()=>setPage(n=>n-1)}>Previous</button>
           <button type="button" disabled={page+1>=pages} onClick={()=>setPage(n=>n+1)}>Next</button>
         </div>
-      </div>}
+      </div>
       <details className="sphereMonthlyEvidenceDisclosure"><summary>CPU/RAM pressure and ABAP error evidence</summary>
       <div className="sphereMonthlyImpact">
         <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>CPU & RAM Warning Observations</h4>
