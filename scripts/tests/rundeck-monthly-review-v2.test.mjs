@@ -175,7 +175,7 @@ test('Monthly Overview uses source-backed measures with responsive neutral analy
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
   const css = read('src/tools/components/RundeckMonthlyReview.css')
   const evaluation = read('backend/rundeck_evaluation.py')
-  assert.match(ui, /Daily Server CPU and RAM/)
+  assert.match(ui, /Daily Server Performance/)
   assert.match(ui, /Job and Program Status/)
   assert.doesNotMatch(ui, /MonthlyDashboardKpis/)
   assert.match(ui, /sphereMonthlyVisualGrid/)
