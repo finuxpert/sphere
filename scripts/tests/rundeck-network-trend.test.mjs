@@ -26,7 +26,7 @@ test('Network preserves NIC provenance, shows Mbps and avoids SAP timeline', () 
 test('Network scale, freshness and independent gap keep original collection evidence', () => {
   const src = read('RundeckServerTrend.jsx')
   assert.match(src, /networkTrendScale\(technicalTrend\?\.items, mode\)/)
-  assert.match(src, /networkScaleMode === 'full' \? 'full' : 'typical'/)
+  assert.match(src, /networkScaleMode === 'typical' \? 'typical' : 'full'/)
   assert.match(src, /<option value="typical">Y: Typical<\/option>/)
   assert.match(src, /Last stored AOP Infrastructure Network observation/)
   assert.match(src, /InfrastructureGapBand trend=\{panel.trend\}/)
