@@ -200,8 +200,9 @@ test('DEV idle braid reveals full verified ECharts on hover/focus and keeps inci
   assert.match(source('RundeckServerTrend.jsx'), /connectNulls: false/)
   assert.match(source('RundeckServerTrend.jsx'), /\{ value: \[at, null\], gap: true \}/)
 
-  // Short retained-incident histories are visible without a hidden disclosure.
-  assert.match(issue, /open=\{!paired \|\| \(incidentItems\.length > 0 && incidentItems\.length <= 5\)\}/)
+  // In the compact paired dialog, incidents remain accessible but collapsed by default.
+  assert.match(issue, /open=\{!paired\}/)
+  assert.match(issue, /<summary>Incident history/)
   assert.match(issue, /const activeFindings = criticalCount \+ warningCount/)
   assert.match(issue, /<b>Data unavailable<\/b>/)
   assert.match(issue, /Unknown is missing or stale evidence, not confirmed SAP downtime/)
