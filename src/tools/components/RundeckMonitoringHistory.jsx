@@ -46,6 +46,7 @@ import './RundeckRevitalization.css'
 import '../../vendor/bootstrap-grid.min.css'
 import './RundeckBootstrapTrend.css'
 import './RundeckOneScreenDev.css'
+import './RundeckEnterpriseCompactV144.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -258,25 +259,6 @@ export default function RundeckMonitoringHistory(props) {
                   onOpen={() => setActiveOverlay({ type:'infrastructure' })} />
               </React.Suspense>
             </div>
-            <React.Suspense fallback={<span className="sphereHealthLoading">Loading events…</span>}>
-              <RundeckEvidenceTimeline refreshToken={refreshToken} incidentActive inlineSummary job={null}
-                onOpen={() => setActiveOverlay({ type:'evidence', returnTo:{ type:'selected' } })} />
-            </React.Suspense>
-            <section className="sphereCollectionInline" aria-label="Recent Data Collections">
-              <header className="sphereHealthInlineHead"><h4>Data Collection</h4>
-                <div><button type="button" onClick={() => setActiveOverlay({ type:'collection-history' })}>History</button>
-                <button type="button" onClick={props.onManualUpload}>Upload Data</button></div>
-              </header>
-              {props.collectionHistoryUnverified ? <small>Collection history unavailable</small> :
-                props.collectionHistory?.length ? <div className="sphereCollectionInlineRuns">
-                  {props.collectionHistory.slice(0,2).map((run,i) =>
-                    <div key={run.collection_id || run.execution_id || i}>
-                      <span>Run #{run.execution_id || '—'}</span>
-                      <span>{run.received_host_count ?? run.received_hosts?.length ?? '—'} APP</span>
-                      <strong>{run.status || 'UNKNOWN'}</strong>
-                    </div>)}
-                </div> : <small>No saved collection history</small>}
-            </section>
           </section>}
           /></> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
           {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2 title={currentPage?.[1] || 'Source-backed observations'}>{currentPage?.[0] || 'SAP Operations'}</h2></header>}
