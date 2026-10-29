@@ -168,6 +168,7 @@ export default function RundeckMonitoringHistory(props) {
     'system-data': ['Data Collection', 'Automatic collection, uploads and history'],
     'monthly-review': ['Reports', 'Monthly Review'],
   }
+  const backupState = React.isValidElement(systemDataContent) ? String(systemDataContent.props.platform?.backup?.status || 'NOT_CONFIGURED').toUpperCase() : 'UNKNOWN'
   const currentPage = pageNames[activeView]
   const inlinePage = activeView === 'jobs'
     ? <RundeckJobsProgramsWorkspace initialMode="live" initialHealth="REVIEW" showHealth={false} standalone
@@ -250,6 +251,9 @@ export default function RundeckMonitoringHistory(props) {
             healthSummary={<section className="sphereOverviewDetails col-12 col-xl-7" aria-label="System Health">
             <header className="sphereHealthSummaryHeader">
               <h3>System Health</h3>
+              <span className="sphereHealthBackupState" title="Backup status is independent of collector health">
+                Backup: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState.replaceAll('_',' ')}
+              </span>
             </header>
             <div className="sphereHealthSummaryGrid">
               <RundeckAvailability refreshToken={refreshToken} inlineSummary onOpen={() => setActiveOverlay({ type:'availability' })} />
