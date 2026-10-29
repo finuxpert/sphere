@@ -57,3 +57,107 @@
   .rundeckNetworkSampleTime { white-space: normal; }
   .rundeckNetworkGapNotice summary { align-items: flex-start; }
 }
+
+/* Configurable Trends: three independent metric panels, one compact toolbar each. */
+.rundeckTripleTrendGrid .rundeckMonitoringHead.rundeckConfigurableTrendHead {
+  display:flex!important;
+  flex-flow:row wrap!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:5px 8px!important;
+  min-height:30px!important;
+  margin:0 0 4px!important;
+  padding:0!important;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendHead h3 {
+  flex:0 0 auto!important;
+  margin:0!important;
+  color:var(--sphere-text-secondary,#a9b5bb)!important;
+  font-size:10.5px!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendHead .rundeckConfigurableMetricSelect {
+  display:block;
+  flex:1 1 110px;
+  width:auto!important;
+  min-width:94px;
+  max-width:185px;
+  height:29px;
+  padding:4px 25px 4px 8px;
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.24));
+  border-radius:5px;
+  background-color:var(--sphere-surface-2,#1f2c36);
+  color:var(--sphere-text,#e7edf0);
+  font:inherit;
+  font-size:11px;
+  font-weight:600;
+  text-overflow:ellipsis;
+  cursor:pointer;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendActions {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:5px;
+  min-width:0;
+  margin-left:auto;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendActions .rundeckNetworkDirection {
+  display:flex;
+  gap:3px;
+  margin:0;
+  min-width:0;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendActions .rundeckNetworkDirection button {
+  min-height:25px;
+  padding:3px 6px;
+}
+.rundeckTripleTrendGrid .rundeckTrendAxisSelect {
+  width:86px;
+  height:26px;
+  padding:3px 4px;
+  border:1px solid var(--sphere-design-edge,rgba(126,147,158,.24));
+  border-radius:4px;
+  background:var(--sphere-surface-2,#1f2c36);
+  color:var(--sphere-text-secondary,#a9b5bb);
+  font:inherit;
+  font-size:10px;
+  cursor:pointer;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendHead select:focus-visible {
+  outline:2px solid var(--sphere-accent,#4fc6c8);
+  outline-offset:2px;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendMeta {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  align-items:center;
+  gap:4px 8px;
+  margin:0 0 3px;
+  min-height:13px;
+}
+.rundeckTripleTrendGrid .rundeckConfigurableTrendMeta .rundeckNetworkSampleTime {
+  font-size:9.5px;
+  font-weight:500;
+  white-space:normal;
+}
+@media(max-width:1350px) {
+  .rundeckTripleTrendGrid .rundeckConfigurableTrendHead .rundeckConfigurableMetricSelect {
+    max-width:none;
+  }
+  .rundeckTripleTrendGrid .rundeckConfigurableTrendActions {
+    flex:1 1 auto;
+  }
+}
+@media(max-width:900px) {
+  .rundeckTripleTrendGrid .rundeckMonitoringHead.rundeckConfigurableTrendHead {
+    gap:6px!important;
+  }
+  .rundeckTripleTrendGrid .rundeckConfigurableTrendHead .rundeckConfigurableMetricSelect {
+    flex:1 1 170px;
+  }
+}
