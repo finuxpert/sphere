@@ -153,15 +153,23 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         item = host_days.setdefault(key, {
             "day": day, "host": str(row["host"]), "cpu_values": [], "ram_values": [],
             "_cpu_warning_ids": set(), "_ram_warning_ids": set(),
+            "_cpu_peak_value": None, "_ram_peak_value": None,
+            "peak_cpu_at": None, "peak_ram_at": None,
         })
         if row.get("cpu_pct") is not None:
             cpu = float(row["cpu_pct"])
             item["cpu_values"].append(cpu)
+            if item["_cpu_peak_value"] is None or cpu > item["_cpu_peak_value"]:
+                item["_cpu_peak_value"] = cpu
+                item["peak_cpu_at"] = row["collected_at"].isoformat()
             if cpu >= CPU_WARNING:
                 item["_cpu_warning_ids"].add(str(row["collection_id"]))
         if row.get("ram_pct") is not None:
             ram = float(row["ram_pct"])
             item["ram_values"].append(ram)
+            if item["_ram_peak_value"] is None or ram > item["_ram_peak_value"]:
+                item["_ram_peak_value"] = ram
+                item["peak_ram_at"] = row["collected_at"].isoformat()
             if ram >= RAM_WARNING:
                 item["_ram_warning_ids"].add(str(row["collection_id"]))
     daily_hosts = []
@@ -173,6 +181,7 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "peak_cpu_pct": _rounded(max(cpu)) if cpu else None,
             "avg_ram_pct": _rounded(sum(ram) / len(ram)) if ram else None,
             "peak_ram_pct": _rounded(max(ram)) if ram else None,
+            "peak_cpu_at": item["peak_cpu_at"], "peak_ram_at": item["peak_ram_at"],
             "cpu_warning_checks": len(item["_cpu_warning_ids"]),
             "ram_warning_checks": len(item["_ram_warning_ids"]),
             # Threshold tests use unrounded samples, not rounded display peaks.
