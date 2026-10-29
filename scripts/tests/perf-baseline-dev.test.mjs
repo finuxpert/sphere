@@ -6,7 +6,7 @@ test('DEV-only target and bounded read-only sampling', () => {
   assert.equal(SCENARIOS.length, 9)
   assert.equal(parseOptions([]).baseUrl, 'http://127.0.0.1:8091')
   assert.throws(() => parseOptions(['--samples=100']), /between 1 and 30/)
-  assert.throws(() => parseOptions(['--base-url=http://127.0.0.1:8092']), /PROD port 8092/)
+  assert.throws(() => parseOptions(['--base-url=http://127.0.0.1:8092']), /PROD API port 8092/)
   assert.throws(() => parseOptions(['--base-url=http://127.0.0.1:8092/dev/api']), /PROD API port 8092/)
   assert.throws(() => parseOptions(['--base-url=https://sphere.astraotoparts.co.id/api', '--allow-remote']), /Only root/)
   assert.equal(parseOptions(['--base-url=https://sphere.astraotoparts.co.id/dev/api', '--allow-remote']).baseUrl,
