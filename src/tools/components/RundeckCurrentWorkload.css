@@ -365,3 +365,19 @@
     white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
   }
 }
+
+/* Jobs & Programs: full readable identity, compact technical columns. */
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(2){width:39%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(3){width:11%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(4){width:10%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(5){width:8%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(6){width:10%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(7){width:15%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadName button{
+ display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+ white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;
+ overflow-wrap:anywhere!important;max-width:100%!important;text-align:left!important;line-height:1.35!important;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadName small{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;font-size:10px}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload tbody td{vertical-align:middle}
+@media(max-width:899px){.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadTableWrap{overflow-x:auto!important}.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadTableWrap table{min-width:740px!important}}

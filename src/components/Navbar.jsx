@@ -70,10 +70,7 @@ export default function Navbar() {
         <div className="navInner sphereNavInner">
           <a className="brand sphereBrand" href="#/tool/logs" aria-label={`${APP_NAME} ${APP_DISPLAY_VERSION} LOG analysis`}>
             <SphereLogo theme={resolvedTheme} />
-            <span className="brandText">
-              <span className="brandTitle">{APP_TAGLINE}</span>
-              <span className="brandSub" title={`Previous release: v${APP_PREVIOUS_VERSION}`}>{APP_BUILD_LABEL}</span>
-            </span>
+            <span className="brandText" title={APP_TAGLINE + ' · ' + APP_BUILD_LABEL} />
           </a>
 
           <nav className="navQuick sphereToolTabs" aria-label={`${APP_NAME} SAP analysis workspaces`}>

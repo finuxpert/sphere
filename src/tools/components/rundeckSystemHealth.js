@@ -58,7 +58,7 @@ export function availabilityFreshnessSignal(ageMinutes = null) {
       }
     : {
         level: 'WARNING',
-        text: `Availability data old · ${minutes}m`,
+        text: `Availability data ${minutes}m old`,
         detail: `Last Availability observation was ${minutes} minutes ago and is outside the freshness window. This does not mean SAP DOWN.`,
       }
 }

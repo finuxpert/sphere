@@ -274,8 +274,8 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <button type="button" className="sphereAttentionTrigger" onClick={()=>setAttentionOpen(true)} aria-label={`Open manually marked workloads, ${attentionRows.length} marked observations`} title="Manual marked workload list; independent of SAP Critical WP Attention and saved 24h evaluations">Marked Workloads <b>{attentionRows.length}</b></button>
-       <span className="rundeckCurrentWorkloadCount" title="Workload observations for the latest collection only. This count is not the saved 1D evaluation population in Workload Health. Coverage is source-specific; per-APP API is capped at 100 rows and unloaded records cannot be searched here.">{allLoaded ? `${rows.length} saved · ${coverageLabel}` : `${rows.length}/${workloadMeta.total} loaded · ${coverageLabel}`}</span>
+      <button type="button" className="sphereAttentionTrigger" onClick={()=>setAttentionOpen(true)} aria-label={`Open manually marked workloads, ${attentionRows.length} marked observations`} title="Manual marked workload list; independent of SAP Critical WP Attention and saved 24h evaluations">Marked <b>{attentionRows.length}</b></button>
+       <span className="rundeckCurrentWorkloadCount" title="Saved observations from the latest collection, not SAP job executions.">{allLoaded ? `${rows.length} observations` : `${rows.length} of ${workloadMeta.total} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APP · global</option>

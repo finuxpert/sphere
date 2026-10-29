@@ -108,13 +108,13 @@ export default function RundeckSystemHealth({ sourceQuality = null, sourceCollec
   return createPortal(
     <div className="rundeckSystemHealthV1231">
       <div className="rundeckSystemHealthPrimary">
-        <span>Monitoring Status</span>
+        <span>Monitoring</span>
         <StatusPill value={state} title={title} />
         {primarySignal && <span className={`rundeckSystemHealthReasonV132 is-${String(primarySignal.level || 'attention').toLowerCase()}`} title={primarySignal.detail}>{primarySignal.text}</span>}
       </div>
       <details className="rundeckCollectorHealthV131">
         <summary title={collectorTitle(collector)}>
-          <span>Data Collector</span>
+          <span>Collector</span>
           <StatusPill value={collector.status || 'UNKNOWN'} />
         </summary>
         <div className="rundeckCollectorHealthPopover">

@@ -431,7 +431,7 @@ export default function ToolLogAutoSphereV5() {
   </section>
 
   return <section className="logV2Shell"><div className="logV2Inner">
-    <header className="logV2Header"><div><h1>{source === 'manual' ? 'Manual Upload' : 'SAP Monitoring'}</h1></div>{source === 'manual' && <label>Source <select value={source} disabled={busy} onChange={(event) => { setSource(event.target.value); setAnalysis(null); setRca(null); setStatus(''); setShowAllCurrentWorkload(false) }}><option value="automatic">Automatic — Rundeck</option><option value="manual">Manual Upload</option></select></label>}{source === 'manual' && <label className="logV2Upload"><input type="file" multiple accept=".zip,.log,.txt,.csv" disabled={busy} onChange={(event) => upload(event.target.files)} />{busy ? 'Analyzing…' : 'Upload Logs'}</label>}</header>
+    <header className="logV2Header"><div><h1>{source === 'manual' ? 'Manual Upload' : 'Monitoring'}</h1></div>{source === 'manual' && <label>Source <select value={source} disabled={busy} onChange={(event) => { setSource(event.target.value); setAnalysis(null); setRca(null); setStatus(''); setShowAllCurrentWorkload(false) }}><option value="automatic">Automatic — Rundeck</option><option value="manual">Manual Upload</option></select></label>}{source === 'manual' && <label className="logV2Upload"><input type="file" multiple accept=".zip,.log,.txt,.csv" disabled={busy} onChange={(event) => upload(event.target.files)} />{busy ? 'Analyzing…' : 'Upload Logs'}</label>}</header>
     {source === 'automatic' && <RundeckSource onCollection={upload} />}
     {source === 'manual' && status ? <div className="logV2StatusBar">{status}</div> : null}
 

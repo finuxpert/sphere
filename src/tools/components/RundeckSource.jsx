@@ -767,7 +767,7 @@ export default function RundeckSource({ onCollection }) {
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
-        <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">SAP Performance</span></h2>
+        <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">Monitoring</span></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span className="rundeckLastCollected" title={'Last collected ' + formatWib(latestCollectionAt, true) + ' WIB'}>{formatWib(latestCollectionAt)} WIB</span>
           <span className="rundeckMetaDivider" aria-hidden="true">·</span>
@@ -778,7 +778,7 @@ export default function RundeckSource({ onCollection }) {
         <div className="rundeckStateCluster">
           <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
             <summary title={dataAlignmentTitle + ' · ' + freshnessSummary} aria-label={'SAP data ' + qualityDisplay + ' · ' + freshnessShort}>
-              <StatusPill value={qualityDisplay} />
+              <span className="rundeckDataQualityLink">Data Quality</span>
             </summary>
             <div className="rundeckDataAlignmentPopover">
               <div><span>Performance / Availability</span><strong>{quality.state}</strong></div>
