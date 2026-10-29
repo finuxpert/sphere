@@ -46,5 +46,6 @@ test('peak scope, four dropdowns and reset remain source-preserving', () => {
   assert.match(trend, /Selected ' \+ activeFocus/)
   assert.match(trend, /savedTrendPeak\(panel\.trend, mode, activeFocus\)/)
   assert.match(trend, /<select className="rundeckTrendMetricSelect/)
-  assert.match(trend, /<InfrastructureGapBand trend=\{panel\.trend\} \/>/)
+  assert.doesNotMatch(trend, /InfrastructureGapBand/)
+  assert.match(trend, /gapPoints.map/)
 })
