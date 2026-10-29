@@ -374,6 +374,8 @@ export default function RundeckMonitoringHistory(props) {
           >
             {React.isValidElement(systemDataContent)
               ? React.cloneElement(systemDataContent, {
+                  key: 'collector-service-details',
+                  initialTab: 'services',
                   onOpenPdf: systemDataContent.props.onOpenPdf
                     ? () => { setActiveOverlay(null); systemDataContent.props.onOpenPdf() }
                     : null,
