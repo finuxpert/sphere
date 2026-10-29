@@ -222,7 +222,7 @@ test('DEV navigation and collector history stay available without duplicate top 
  const primary=s.split('export const PRIMARY_PERFORMANCE_VIEWS = [')[1].split(']')[0]
  assert.equal((primary.match(/id:'/g)||[]).length,3)
  assert.doesNotMatch(view,/className="sphereMonitoringTabs"/)
- assert.match(view,/type:'collection-history'/)
+ assert.match(view,/activeOverlay\?\.type === 'collection-history'/)
  assert.match(view,/collectionHistory\.slice\(0,80\)/)
  assert.match(d,/\['history','History'\]/)
 })
