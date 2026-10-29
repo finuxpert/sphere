@@ -49,7 +49,8 @@ test('existing SAP evidence semantics remain unchanged in presentation updates',
   assert.match(core, /<RundeckUnifiedAppInfrastructure/)
   assert.match(core, /<RundeckServerTrend/)
   assert.match(core, /<RundeckWorkloadHealth/)
-  assert.match(trend, /InfrastructureGapBand trend=\{panel.trend\}/)
+  assert.doesNotMatch(trend, /InfrastructureGapBand/)
+  assert.match(trend, /gapPoints\.map/)
   assert.match(evidence, /Cause not established/)
 })
 
