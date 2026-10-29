@@ -34,6 +34,7 @@ export function parseOptions(argv) {
     throw new Error('HTTP(S) URL without credentials, query or fragment required')
   if (!loopback && !options.allowRemote)
     throw new Error('Remote DEV API requires --allow-remote')
+  if (url.port === '8092') throw new Error('PROD API port 8092 is forbidden')
   const path = url.pathname.replace(/\/$/, '')
   if (path && path !== '/dev/api') throw new Error('Only root (direct DEV) or /dev/api is permitted')
   if (!path && (!loopback || url.port !== '8091'))
