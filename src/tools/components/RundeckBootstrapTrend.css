@@ -1,0 +1,76 @@
+/* SPHERE DEV — Bootstrap 5.3.8 Grid, scoped to the monitoring trend row.
+   Existing ECharts/data bindings stay unchanged; only layout is standardized. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow.row {
+  display:flex!important;flex-wrap:wrap!important;
+  grid-template-columns:none!important;gap:0!important;
+  --bs-gutter-x:8px;--bs-gutter-y:6px;
+  width:calc(100% + var(--bs-gutter-x))!important;
+  margin-left:calc(var(--bs-gutter-x) * -.5)!important;
+  margin-right:calc(var(--bs-gutter-x) * -.5)!important;
+  align-items:stretch!important;overflow:visible!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow.row>.rundeckServerTrendPanelV1234.col {
+  box-sizing:border-box!important;min-width:0!important;max-width:100%!important;
+  flex:0 0 auto!important;grid-column:auto!important;
+  margin:0!important;padding:5px 7px!important;
+  height:auto!important;min-height:0!important;
+  display:flex!important;flex-direction:column!important;overflow:hidden!important;
+  border-radius:5px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendPlot {
+  position:relative!important;flex:0 0 clamp(136px,17dvh,172px)!important;
+  height:clamp(136px,17dvh,172px)!important;
+  min-height:0!important;max-height:172px!important;overflow:hidden!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendChart {
+  width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckConfigurableTrendHead {
+  gap:5px!important;min-height:27px!important;
+  display:flex!important;align-items:center!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendMetricSelect {
+  min-width:0!important;max-width:100%!important;font-size:11px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckConfigurableTrendMeta {
+  display:none!important;
+}
+.rundeckTrendPeakSummary {
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px;
+  min-height:28px;padding:3px 2px 1px;
+  border-top:1px solid var(--cockpit-outline,rgba(140,150,160,.13));
+  font-variant-numeric:tabular-nums;line-height:1.25;
+}
+.rundeckTrendPeakSummary strong {font-size:11px;font-weight:700;color:var(--sphere-text,#e2e9ec)}
+.rundeckTrendPeakSummary span {font-size:10px;color:var(--sphere-text-secondary,#a5b6c0);white-space:nowrap}
+@media(min-width:1400px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow.row>.rundeckServerTrendPanelV1234.col {
+    width:25%!important;
+  }
+}
+@media(min-width:768px) and (max-width:1399px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow.row>.rundeckServerTrendPanelV1234.col {
+    width:50%!important;
+  }
+}
+@media(max-width:767px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow.row>.rundeckServerTrendPanelV1234.col {
+    width:100%!important;
+  }
+}
+@media(min-width:1400px) and (max-height:830px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendPlot {
+    height:130px!important;flex-basis:130px!important;
+  }
+}

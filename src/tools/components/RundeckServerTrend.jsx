@@ -14,6 +14,7 @@ import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCapt
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
 import { savedVortexPeak } from './rundeckTrendAmbientData.js'
+import { savedTrendPeak, formatTrendPeakWib } from './rundeckTrendPeak.js'
 import { trendApiError } from './rundeckTrendApiError.js'
 import { resolveTrendFocus, trendFocusStyle, trendHostColorIndex, trendFocusHosts } from './rundeckTrendFocus.js'
 import { observedTrendWindow } from './rundeckObservedWindow.js'
@@ -32,7 +33,7 @@ const ALL_RANGES = [...RANGES, ...MORE_RANGES]
 const LONG_RANGES = new Set(HISTORY_RANGES.map(([key]) => key))
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
 const METRICS = [
-  ['cpu', 'CPU'], ['ram', 'RAM'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'],
+  ['cpu', 'CPU Usage'], ['ram', 'Memory Usage'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'],
   ['availability', 'SAP Availability'], ['load', 'Host Load'], ['swap', 'Swap I/O'],
   ['network', 'Network'], ['hana', 'HANA'], ['replication', 'Replication'],
   ['ssh', 'SSH'], ['web', 'Web Dispatcher'],
@@ -59,7 +60,7 @@ function formatTrendAxis(value, range) {
     return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
   }
   if (range === '24h') {
-    return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
+    return new Intl.DateTimeFormat('id-ID', { ...base, hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
   }
   return formatWib(value, false)
 }
@@ -281,6 +282,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     const rows = trend?.items || []
     const availabilityMode = trend?.metric === 'availability'
     const selectedKey = focusedHost
+    const markerPeak = savedTrendPeak(trend, mode, selectedKey)
     const valueKey = mode === 'max' ? 'max_value' : 'avg_value'
     // Focus changes only the visual Y range, never samples, severity thresholds, or source evidence.
     const percentTrend = !availabilityMode && trend?.unit === '%'
@@ -308,7 +310,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
       // The panel heading carries the metric. Reserve the upper plot rail
       // for the accessible APP trace selector, not a duplicate axis name.
       // Reserve axis-label and threshold space without wasting the chart's plot height.
-      grid: { left: 46, right: 63, top: 12, bottom: compactPoints ? 27 : 31 },
+      grid: { left: 42, right: 44, top: 13, bottom: compactPoints ? 24 : 27 },
       tooltip: {
         trigger: 'axis',
         confine: true,
@@ -385,6 +387,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           resolvedGapIntervalMs(trend),
           gapPoints.map((at) => ({ value: [at, null], gap: true }))
         ),
+        markPoint: markerPeak && shortHost(host) === markerPeak.host ? {
+          silent: true, symbol: 'circle', symbolSize: 10,
+          label: { show: false },
+          itemStyle: { color: colors.warning, borderColor: colors.panel, borderWidth: 2 },
+          data: [{ coord: [Date.parse(markerPeak.bucket), markerPeak.value], value: markerPeak.value }],
+        } : undefined,
         markLine: index === 0 && visibleThresholds.length ? { silent: true, symbol: ['none', 'none'], data: visibleThresholds } : undefined,
         markArea: index === 0 && gaps.length ? {
           silent: true,
@@ -791,26 +799,33 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
   const [technicalMetric, setTechnicalMetric] = React.useState(METRICS.some(([key]) => key === saved.technicalMetric) ? saved.technicalMetric : 'network')
+  const [fourthMetric, setFourthMetric] = React.useState(METRICS.some(([key]) => key === saved.fourthMetric) ? saved.fourthMetric : 'wp')
   const [networkDirection, setNetworkDirection] = React.useState(saved.networkDirection === 'tx' ? 'tx' : 'rx')
   const [networkDirection1, setNetworkDirection1] = React.useState(saved.networkDirection1 === 'tx' ? 'tx' : 'rx')
   const [networkDirection2, setNetworkDirection2] = React.useState(saved.networkDirection2 === 'tx' ? 'tx' : 'rx')
+  const [fourthNetworkDirection, setFourthNetworkDirection] = React.useState(saved.fourthNetworkDirection === 'tx' ? 'tx' : 'rx')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [scaleMode, setScaleMode] = React.useState('full')
   const [loadScaleMode, setLoadScaleMode] = React.useState('full')
   const [loadScaleMode1, setLoadScaleMode1] = React.useState('full')
   const [loadScaleMode2, setLoadScaleMode2] = React.useState('full')
-  const [networkScaleMode, setNetworkScaleMode] = React.useState(saved.networkScaleMode === 'full' ? 'full' : 'typical')
-  const [networkScaleMode1, setNetworkScaleMode1] = React.useState(saved.networkScaleMode1 === 'full' ? 'full' : 'typical')
-  const [networkScaleMode2, setNetworkScaleMode2] = React.useState(saved.networkScaleMode2 === 'full' ? 'full' : 'typical')
+  const [networkScaleMode, setNetworkScaleMode] = React.useState(saved.networkScaleMode === 'typical' ? 'typical' : 'full')
+  const [networkScaleMode1, setNetworkScaleMode1] = React.useState(saved.networkScaleMode1 === 'typical' ? 'typical' : 'full')
+  const [networkScaleMode2, setNetworkScaleMode2] = React.useState(saved.networkScaleMode2 === 'typical' ? 'typical' : 'full')
+  const [fourthNetworkScaleMode, setFourthNetworkScaleMode] = React.useState(saved.fourthNetworkScaleMode === 'typical' ? 'typical' : 'full')
+  const [fourthLoadScaleMode, setFourthLoadScaleMode] = React.useState('full')
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
+  const [fourthTrend, setFourthTrend] = React.useState(null)
   const [serverLoading1, setServerLoading1] = React.useState(false)
   const [serverLoading2, setServerLoading2] = React.useState(false)
   const [technicalLoading, setTechnicalLoading] = React.useState(false)
+  const [fourthLoading, setFourthLoading] = React.useState(false)
   const [serverError1, setServerError1] = React.useState('')
   const [serverError2, setServerError2] = React.useState('')
   const [technicalError, setTechnicalError] = React.useState('')
+  const [fourthError, setFourthError] = React.useState('')
   const [selected, setSelected] = React.useState(null)
   const [selectedTrend, setSelectedTrend] = React.useState(null)
   const [timeline, setTimeline] = React.useState(null)
@@ -866,10 +881,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   React.useEffect(() => {
     try {
       window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({
-        range, bucket, serverMetric1, serverMetric2, technicalMetric, networkDirection, networkDirection1, networkDirection2, networkScaleMode, networkScaleMode1, networkScaleMode2, mode,
+        range, bucket, serverMetric1, serverMetric2, technicalMetric, fourthMetric, networkDirection, networkDirection1, networkDirection2, fourthNetworkDirection, networkScaleMode, networkScaleMode1, networkScaleMode2, fourthNetworkScaleMode, mode,
       }))
     } catch { /* best effort */ }
-  }, [bucket, mode, networkDirection, networkDirection1, networkDirection2, networkScaleMode, networkScaleMode1, networkScaleMode2, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, mode, networkDirection, networkDirection1, networkDirection2, fourthNetworkDirection, networkScaleMode, networkScaleMode1, networkScaleMode2, fourthNetworkScaleMode, range, serverMetric1, serverMetric2, technicalMetric, fourthMetric])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
@@ -893,13 +908,20 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [databaseEnabled, loadTrend, networkDirection, refreshToken, technicalMetric])
 
   React.useEffect(() => {
+    if (!databaseEnabled) return undefined
+    const controller = new AbortController()
+    loadTrend(fourthMetric, setFourthTrend, setFourthLoading, setFourthError, controller.signal, fourthNetworkDirection)
+    return () => controller.abort()
+  }, [databaseEnabled, loadTrend, fourthNetworkDirection, refreshToken, fourthMetric])
+
+  React.useEffect(() => {
     timelineRequestSequence.current += 1
     setSelected(null)
     setSelectedTrend(null)
     setTimeline(null)
     setTimelineLoading(false)
     setTimelineError('')
-  }, [bucket, customWindow, mode, networkDirection, networkDirection1, networkDirection2, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, customWindow, mode, networkDirection, networkDirection1, networkDirection2, fourthNetworkDirection, range, serverMetric1, serverMetric2, technicalMetric, fourthMetric])
 
   React.useEffect(() => {
     if (range !== 'custom' || !customWindow || !databaseEnabled) return undefined
@@ -1003,12 +1025,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     ...(serverTrend1?.items || []),
     ...(serverTrend2?.items || []),
     ...(technicalTrend?.items || []),
+    ...(fourthTrend?.items || []),
   ])
   const activeFocus = shortHost(focusedHost || '')
   const trendSwatches = palette().series
   const observedWindow = React.useMemo(() => longHistoricalRange
-    ? observedTrendWindow([serverTrend1, serverTrend2, technicalTrend]) : null,
-  [longHistoricalRange, serverTrend1, serverTrend2, technicalTrend])
+    ? observedTrendWindow([serverTrend1, serverTrend2, technicalTrend, fourthTrend]) : null,
+  [longHistoricalRange, serverTrend1, serverTrend2, technicalTrend, fourthTrend])
   const displayWindow = longHistoricalRange && fitObserved ? observedWindow : null
   const temporalReady = Boolean(
     ambientBraid && databaseEnabled && !serverLoading1 && !serverLoading2 && !technicalLoading &&
@@ -1096,7 +1119,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         </div>
       </div>
       <div className="rundeckTrendSharedGroup rundeckTrendControlBucket" role="group" aria-label="Bucket interval">
-        <span>Bucket</span>
+        <span>Interval</span>
         {range === 'custom'
           ? <strong className="rundeckCustomRangeRaw" title="Custom range uses unaggregated observations">Raw · observed</strong>
           : <select className="rundeckTrendBucketSelect" aria-label="Bucket interval"
@@ -1108,7 +1131,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             </select>}
       </div>
       <div className="rundeckTrendSharedGroup rundeckTrendControlMode" role="group" aria-label="Server trend values">
-        <span title="Average or Peak for supported APP host measurements; technical availability states remain unchanged">Values</span>
+        <span title="Average or Peak for supported APP host measurements; technical availability states remain unchanged">Aggregation</span>
         <Segmented options={[['avg', 'Avg'], ['max', 'Peak']]} value={mode}
           onChange={setMode} ariaLabel="Server trend view" />
       </div>
@@ -1149,7 +1172,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     </div>}
 
     <div ref={unifiedGridRef}
-      className={'rundeckTripleTrendGrid' + (temporalReady ? ' is-unified-vortex' + (temporalExpanded ? ' is-expanded' : '') : '')}
+      className={'rundeckTripleTrendGrid sphereTrendBootstrapRow row row-cols-1 row-cols-md-2 row-cols-xxl-4 g-2' + (temporalReady ? ' is-unified-vortex' + (temporalExpanded ? ' is-expanded' : '') : '')}
       onPointerEnter={event => { if (event.pointerType !== 'touch') setUnifiedHovered(true) }}
       onPointerLeave={event => {
         if (event.pointerType !== 'touch' && !event.currentTarget.contains(document.activeElement)) setUnifiedHovered(false)
@@ -1171,6 +1194,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           direction: networkDirection, setDirection: setNetworkDirection,
           loadAxis: loadScaleMode, setLoadAxis: setLoadScaleMode, networkAxis: networkScaleMode, setNetworkAxis: setNetworkScaleMode,
           className: 'is-technical-trend' },
+        { index: 4, metric: fourthMetric, setMetric: setFourthMetric, trend: fourthTrend, loading: fourthLoading, error: fourthError,
+          direction: fourthNetworkDirection, setDirection: setFourthNetworkDirection,
+          loadAxis: fourthLoadScaleMode, setLoadAxis: setFourthLoadScaleMode, networkAxis: fourthNetworkScaleMode, setNetworkAxis: setFourthNetworkScaleMode,
+          className: 'is-fourth-trend' },
       ].map(panel => {
         const isNetwork = panel.metric === 'network'
         const isLoad = panel.metric === 'load'
@@ -1179,7 +1206,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         const networkInfo = panel.index === 3 ? networkScale : networkTrendScale(panel.trend?.items, mode)
         const clippedLoad = isLoad && panel.loadAxis === 'typical' && loadInfo.axisMax != null
         const clippedNetwork = isNetwork && panel.networkAxis === 'typical' && networkInfo.axisMax != null
-        return <section key={panel.index} className={'rundeckServerTrendPanelV1234 rundeckConfigurableTrend ' + panel.className}
+        const panelPeak = !panel.loading && !panel.error ? savedTrendPeak(panel.trend, mode, activeFocus) : null
+        const peakKind = mode === 'avg' ? 'Highest Avg' : panelPeak?.exact ? 'Peak' : 'Peak bucket'
+        const peakUnit = panel.trend?.unit === '%' ? '%' : panel.trend?.unit ? ' ' + panel.trend.unit : ''
+        return <section key={panel.index} className={'rundeckServerTrendPanelV1234 rundeckConfigurableTrend col ' + panel.className}
           aria-label={metricLabel(panel.metric) + ' Trend · chart ' + panel.index}>
           <div className="rundeckMonitoringHead rundeckConfigurableTrendHead">
             <h3 className="sphereScreenReaderOnly">Chart {panel.index}</h3>
@@ -1235,6 +1265,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           {isNetwork && !panel.loading && !panel.error && <InfrastructureGapBand trend={panel.trend} />}
           {renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
             technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
+          {panelPeak && <div className="rundeckTrendPeakSummary" role="status"
+            title={peakKind + ' from saved observations; source timestamp shown when available'}>
+            <strong>{peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
+            <span>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB</span>
+          </div>}
         </section>
       })}
       {temporalReady && <>
