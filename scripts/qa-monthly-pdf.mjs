@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { buildMonthlyPdf } from '../src/tools/components/rundeckMonthlyPdf.js'
+import { buildManagementMonthlyPdf } from '../src/tools/components/rundeckMonthlyManagementPdf.js'
 
 // Actual jsPDF generation, not a mock of the layout or a regex-only test.
 // Contains long ABAP identifiers and both explicitly dated / snapshot errors.
@@ -55,3 +56,21 @@ assert.equal(String.fromCharCode(...bytes.slice(0,5)),'%PDF-')
 const out=join(process.env.RUNNER_TEMP||tmpdir(),'sphere-monthly-qa-fixture.pdf')
 writeFileSync(out,bytes)
 console.log('MONTHLY_PDF=PASS pages='+pageCount+' bytes='+bytes.length+' fixture='+out)
+
+const executive=await buildManagementMonthlyPdf({month:'2026-09',data,returnInstance:true})
+assert.equal(executive.internal.getNumberOfPages(),1,'Management PDF must be exactly one A4 landscape page')
+const executivePage=executive.internal.pages[1].join('\n')
+assert.match(executivePage,/Management Summary/)
+assert.match(executivePage,/Executive Summary/)
+assert.match(executivePage,/APP Server Performance/)
+assert.match(executivePage,/Priority ABAP Programs for Review/)
+assert.match(executivePage,/Threshold Review/)
+assert.match(executivePage,/ZCUSTOM_SAP_ABAP_PROGRAM/)
+assert.match(executivePage,/Full program details in Technical Report/)
+assert.match(executivePage,/saved observations|SPHERE saved observations/i)
+assert.doesNotMatch(executivePage,/DAILY HIGHEST CPU|MONTHLY REPORT/)
+const executiveBytes=new Uint8Array(executive.output('arraybuffer'))
+assert.equal(String.fromCharCode(...executiveBytes.slice(0,5)),'%PDF-')
+const managementPath=join(process.env.RUNNER_TEMP||tmpdir(),'sphere-monthly-management-qa.pdf')
+writeFileSync(managementPath,executiveBytes)
+console.log('MANAGEMENT_PDF=PASS pages=1 bytes='+executiveBytes.length+' fixture='+managementPath)
