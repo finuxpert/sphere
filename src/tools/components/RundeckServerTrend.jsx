@@ -184,19 +184,12 @@ function CollectionGapBand({ trend }) {
       <span>Data tersimpan mulai</span>
       <strong>{formatWib(historyStartedAt, true)} WIB</strong>
     </div>}
-    {gaps.length > 0 && <details className={`rundeckCollectionGapBandV132 ${observed ? 'is-observation-gap' : ''}`} role="status">
-      <summary title={observed ? 'No Service Availability observation was retained for this interval. Missing observation is UNKNOWN, not DOWN.' : 'No retained performance collection exists inside this interval. This is a data collection gap, not evidence of SAP downtime.'}>
-        <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
-        <strong>{gapTimeRangeText(from, to)}</strong>
-        <small>{gapDurationText(from, to)}{gaps.length > 1 ? ` · +${gaps.length - 1} more` : ''}</small>
-      </summary>
-      {gaps.length > 1 && <div className="rundeckGapDetailsV133">
-        {sorted.slice(0, 8).map(([gapFrom, gapTo], index) => <div key={`${gapFrom}-${gapTo}`}>
-          <b>{index + 1}</b><span>{gapTimeRangeText(gapFrom, gapTo)}</span><small>{gapDurationText(gapFrom, gapTo)}</small>
-        </div>)}
-        {gaps.length > 8 && <small>+{gaps.length - 8} more retained-gap interval{gaps.length - 8 === 1 ? '' : 's'}</small>}
-      </div>}
-    </details>}
+    {gaps.length > 0 && <div className="rundeckCollectionGapInline" role="status"
+      title="Collection gap: saved monitoring observations are unavailable; this does not confirm SAP downtime.">
+      <span>{observed ? 'No Observation' : 'Collection Gap'}</span>
+      <strong>{gapTimeRangeText(from, to)}</strong>
+      <small>{gapDurationText(from, to)}{gaps.length > 1 ? ` · ${gaps.length} intervals` : ''}</small>
+    </div>}
   </>
 }
 
@@ -221,30 +214,6 @@ function AvailabilityObservationSummary({ trend }) {
     <span>{observedLabel}</span>
     <div>{trend.uptime.map((row) => <small key={row.name}><b>{row.name}</b> {row.uptime_pct === null || row.uptime_pct === undefined ? '—' : `${numberText(row.uptime_pct, 2)}%`}</small>)}</div>
   </div>
-}
-
-function InfrastructureGapBand({ trend }) {
-  if (!trend?.network_source || !Array.isArray(trend?.collection_gaps) || !trend.collection_gaps.length) return null
-  const sorted = [...trend.collection_gaps].sort((a,b) => Number(b.observed_spacing_seconds || 0) - Number(a.observed_spacing_seconds || 0))
-  const primary = sorted[0]
-  const from = Date.parse(primary.before || '')
-  const to = Date.parse(primary.after || '')
-  if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return null
-  return <details className="rundeckNetworkGapNotice" role="status">
-    <summary title="Based on separate saved Infrastructure Network collection timestamps, not the SAP Performance collection. Missing samples are unknown, not a claim that SAP was down.">
-      <span>Missing Samples</span>
-      <strong>{gapTimeRangeText(from, to)}</strong>
-      <small>{gapDurationText(from, to)} between saved observations{sorted.length > 1 ? ` · +${sorted.length - 1} more` : ''}</small>
-    </summary>
-    <div className="rundeckNetworkGapDetails">
-      {sorted.slice(0,8).map((gap,index) => <div key={String(gap.before) + String(gap.after)}>
-        <b>{index+1}</b>
-        <span>{gapTimeRangeText(Date.parse(gap.before), Date.parse(gap.after))}</span>
-        <small>{gapDurationText(Date.parse(gap.before), Date.parse(gap.after))}</small>
-      </div>)}
-      <small>Network observations were not saved in these intervals. SAP status is not inferred.</small>
-    </div>
-  </details>
 }
 
 function TrendFreshness({ trend }) {
@@ -322,7 +291,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           const y = Math.max(6, Math.min(8, size.viewSize[1] - size.contentSize[1] - 6))
           return [x, y]
         },
-        extraCssText: 'max-width:340px;min-width:230px;white-space:normal;line-height:1.35;pointer-events:none;',
+        extraCssText: 'max-width:220px;min-width:0;white-space:normal;line-height:1.25;pointer-events:none;overflow-wrap:anywhere;',
         backgroundColor: colors.panel,
         borderWidth: 0,
         textStyle: { color: colors.text, fontSize: 11 },
@@ -394,7 +363,7 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           data: [{ coord: [Date.parse(markerPeak.bucket), markerPeak.value], value: markerPeak.value }],
         } : undefined,
         markLine: index === 0 && visibleThresholds.length ? { silent: true, symbol: ['none', 'none'], data: visibleThresholds } : undefined,
-        markArea: index === 0 && gaps.length ? {
+        markArea: index === 0 && gaps.length && !trend?.network_source && !['network_rx','network_tx'].includes(trend?.metric) ? {
           silent: true,
           label: { show: true, formatter: (params) => params?.name || (availabilityMode ? 'NO OBSERVATION' : 'COLLECTION GAP'), fontSize: 8, color: availabilityMode ? colors.attention : colors.warning, position: 'insideTop' },
           itemStyle: { color: availabilityMode ? colors.attention : colors.warning, opacity: availabilityMode ? .035 : .06, borderColor: availabilityMode ? colors.attention : colors.warning, borderWidth: 1, borderType: 'dashed' },
@@ -1276,7 +1245,6 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             {' · ' + networkInfo.outliers + ' outside typical view'}
             <button type="button" onClick={() => panel.setNetworkAxis('full')}>Full Range</button>
           </div>}
-          {isNetwork && !panel.loading && !panel.error && <InfrastructureGapBand trend={panel.trend} />}
           {renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
             technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
           {panelPeak && <div className="rundeckTrendPeakSummary" role="status"
