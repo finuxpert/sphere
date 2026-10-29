@@ -31,7 +31,12 @@ const MORE_RANGES = [...SHORT_RANGES]
 const ALL_RANGES = [...RANGES, ...MORE_RANGES]
 const LONG_RANGES = new Set(HISTORY_RANGES.map(([key]) => key))
 const BUCKETS = [['auto', 'Auto'], ['10m', '10m'], ['30m', '30m'], ['1h', '1H'], ['6h', '6H'], ['1d', '1D']]
-const METRICS = [['cpu', 'CPU'], ['ram', 'RAM'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'], ['availability', 'Availability']]
+const METRICS = [
+  ['cpu', 'CPU'], ['ram', 'RAM'], ['iowait', 'I/O Wait'], ['wp', 'Critical WP'],
+  ['availability', 'SAP Availability'], ['load', 'Host Load'], ['swap', 'Swap I/O'],
+  ['network', 'Network'], ['hana', 'HANA'], ['replication', 'Replication'],
+  ['ssh', 'SSH'], ['web', 'Web Dispatcher'],
+]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
 const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
 const BUCKET_INTERVAL_MS = {
@@ -785,12 +790,18 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [fitObserved, setFitObserved] = React.useState(false)
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
-  const [technicalMetric, setTechnicalMetric] = React.useState(['load','swap','network','hana','replication','ssh','web'].includes(saved.technicalMetric) ? saved.technicalMetric : 'load')
+  const [technicalMetric, setTechnicalMetric] = React.useState(METRICS.some(([key]) => key === saved.technicalMetric) ? saved.technicalMetric : 'network')
   const [networkDirection, setNetworkDirection] = React.useState(saved.networkDirection === 'tx' ? 'tx' : 'rx')
+  const [networkDirection1, setNetworkDirection1] = React.useState(saved.networkDirection1 === 'tx' ? 'tx' : 'rx')
+  const [networkDirection2, setNetworkDirection2] = React.useState(saved.networkDirection2 === 'tx' ? 'tx' : 'rx')
   const [mode, setMode] = React.useState(saved.mode === 'avg' ? 'avg' : 'max')
   const [scaleMode, setScaleMode] = React.useState('full')
   const [loadScaleMode, setLoadScaleMode] = React.useState('full')
+  const [loadScaleMode1, setLoadScaleMode1] = React.useState('full')
+  const [loadScaleMode2, setLoadScaleMode2] = React.useState('full')
   const [networkScaleMode, setNetworkScaleMode] = React.useState(saved.networkScaleMode === 'full' ? 'full' : 'typical')
+  const [networkScaleMode1, setNetworkScaleMode1] = React.useState(saved.networkScaleMode1 === 'full' ? 'full' : 'typical')
+  const [networkScaleMode2, setNetworkScaleMode2] = React.useState(saved.networkScaleMode2 === 'full' ? 'full' : 'typical')
   const [serverTrend1, setServerTrend1] = React.useState(null)
   const [serverTrend2, setServerTrend2] = React.useState(null)
   const [technicalTrend, setTechnicalTrend] = React.useState(null)
@@ -855,24 +866,24 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   React.useEffect(() => {
     try {
       window.localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify({
-        range, bucket, serverMetric1, serverMetric2, technicalMetric, networkDirection, networkScaleMode, mode,
+        range, bucket, serverMetric1, serverMetric2, technicalMetric, networkDirection, networkDirection1, networkDirection2, networkScaleMode, networkScaleMode1, networkScaleMode2, mode,
       }))
     } catch { /* best effort */ }
-  }, [bucket, mode, networkDirection, networkScaleMode, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, mode, networkDirection, networkDirection1, networkDirection2, networkScaleMode, networkScaleMode1, networkScaleMode2, range, serverMetric1, serverMetric2, technicalMetric])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
-    loadTrend(serverMetric1, setServerTrend1, setServerLoading1, setServerError1, controller.signal)
+    loadTrend(serverMetric1, setServerTrend1, setServerLoading1, setServerError1, controller.signal, networkDirection1)
     return () => controller.abort()
-  }, [databaseEnabled, loadTrend, refreshToken, serverMetric1])
+  }, [databaseEnabled, loadTrend, networkDirection1, refreshToken, serverMetric1])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
     const controller = new AbortController()
-    loadTrend(serverMetric2, setServerTrend2, setServerLoading2, setServerError2, controller.signal)
+    loadTrend(serverMetric2, setServerTrend2, setServerLoading2, setServerError2, controller.signal, networkDirection2)
     return () => controller.abort()
-  }, [databaseEnabled, loadTrend, refreshToken, serverMetric2])
+  }, [databaseEnabled, loadTrend, networkDirection2, refreshToken, serverMetric2])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
@@ -888,7 +899,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     setTimeline(null)
     setTimelineLoading(false)
     setTimelineError('')
-  }, [bucket, customWindow, mode, networkDirection, range, serverMetric1, serverMetric2, technicalMetric])
+  }, [bucket, customWindow, mode, networkDirection, networkDirection1, networkDirection2, range, serverMetric1, serverMetric2, technicalMetric])
 
   React.useEffect(() => {
     if (range !== 'custom' || !customWindow || !databaseEnabled) return undefined
@@ -1150,70 +1161,82 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       onBlurCapture={event => {
         if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(':hover')) setUnifiedHovered(false)
       }}>
-      <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-1" aria-label={metricLabel(serverMetric1) + " Trend"}>
-        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from grouped workload CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric1)} Trend</h3></div>
-        <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric" value={serverMetric1} onChange={event => setServerMetric1(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
-        {renderTrendState(serverTrend1, serverLoading1, serverError1, selectPoint, { showGap: false })}
-      </section>
-
-      <section className="rundeckServerTrendPanelV1234 is-server-trend is-server-trend-2" aria-label={metricLabel(serverMetric2) + " Trend"}>
-        <div className="rundeckMonitoringHead"><h3 title="APP host measurement; separate from workload PSS and CPU"><SphereIcon name="trend" /> {metricLabel(serverMetric2)} Trend</h3></div>
-        <div className="rundeckTrendToolbar"><select className="rundeckTrendMetricSelect" aria-label="Server Trend 2 metric" value={serverMetric2} onChange={event => setServerMetric2(event.target.value)}>{METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
-        {renderTrendState(serverTrend2, serverLoading2, serverError2, selectPoint, { showGap: false })}
-      </section>
-
-      <section className="rundeckServerTrendPanelV1234 is-technical-trend" aria-label="Technical Trend">
-        <div className="rundeckMonitoringHead rundeckTechnicalTrendHeading"><h3 title={technicalMetric === 'load' ? 'Linux load average, not CPU usage percent. Compare with logical CPU count and saved evidence.' : technicalNetwork ? 'Infrastructure Collector · highest single-interface observed throughput per APP; not summed across interfaces.' : 'Saved technical measurements'}><SphereIcon name="server" /> {technicalMetric === 'load' ? 'Host Load' : technicalNetwork ? 'Network' : metricLabel(technicalMetric)} <small>{technicalNetwork ? networkDirection.toUpperCase() + ' · Mbps' : ''}</small></h3>
-          {technicalMetric === 'load' && <button type="button" className="rundeckTechnicalScaleToggle"
-            aria-pressed={loadScaleMode === 'typical'} aria-label="Switch Technical Load between Full and Typical scale"
-            title="Typical zooms the plotted Load axis when extreme saved samples compress other observations. Peak and timestamp remain visible; Full restores every value."
-            onClick={() => setLoadScaleMode(value => value === 'full' ? 'typical' : 'full')}>
-            Load Y · {loadScaleMode === 'typical' ? 'Typical' : 'Full'}
-          </button>}
-          {technicalNetwork && <button type="button" className="rundeckTechnicalScaleToggle rundeckNetworkScaleToggle"
-            aria-pressed={networkScaleMode === 'typical'} aria-label="Switch Network Y axis between Full and Typical scale"
-            title="Typical adjusts the display only. Saved Mbps, exact peak time and NIC identity remain unchanged. Full shows every measured peak."
-            onClick={() => setNetworkScaleMode(value => value === 'full' ? 'typical' : 'full')}>
-            Y: {networkScaleMode === 'typical' ? 'Typical' : 'Full'}
-          </button>}
-          {technicalNetwork && <div className="rundeckNetworkDirection" role="group" aria-label="Network throughput direction">
-            <button type="button" aria-pressed={networkDirection === 'rx'} className={networkDirection === 'rx' ? 'is-active' : ''} onClick={() => setNetworkDirection('rx')}>RX</button>
-            <button type="button" aria-pressed={networkDirection === 'tx'} className={networkDirection === 'tx' ? 'is-active' : ''} onClick={() => setNetworkDirection('tx')}>TX</button>
+      {[
+        { index: 1, metric: serverMetric1, setMetric: setServerMetric1, trend: serverTrend1, loading: serverLoading1, error: serverError1,
+          direction: networkDirection1, setDirection: setNetworkDirection1,
+          loadAxis: loadScaleMode1, setLoadAxis: setLoadScaleMode1, networkAxis: networkScaleMode1, setNetworkAxis: setNetworkScaleMode1,
+          className: 'is-server-trend is-server-trend-1' },
+        { index: 2, metric: serverMetric2, setMetric: setServerMetric2, trend: serverTrend2, loading: serverLoading2, error: serverError2,
+          direction: networkDirection2, setDirection: setNetworkDirection2,
+          loadAxis: loadScaleMode2, setLoadAxis: setLoadScaleMode2, networkAxis: networkScaleMode2, setNetworkAxis: setNetworkScaleMode2,
+          className: 'is-server-trend is-server-trend-2' },
+        { index: 3, metric: technicalMetric, setMetric: setTechnicalMetric, trend: technicalTrend, loading: technicalLoading, error: technicalError,
+          direction: networkDirection, setDirection: setNetworkDirection,
+          loadAxis: loadScaleMode, setLoadAxis: setLoadScaleMode, networkAxis: networkScaleMode, setNetworkAxis: setNetworkScaleMode,
+          className: 'is-technical-trend' },
+      ].map(panel => {
+        const isNetwork = panel.metric === 'network'
+        const isLoad = panel.metric === 'load'
+        const isAvailability = Boolean(AVAILABILITY_CATEGORIES[panel.metric])
+        const loadInfo = panel.index === 3 ? loadScale : technicalLoadScale(panel.trend?.items, mode)
+        const networkInfo = panel.index === 3 ? networkScale : networkTrendScale(panel.trend?.items, mode)
+        const clippedLoad = isLoad && panel.loadAxis === 'typical' && loadInfo.axisMax != null
+        const clippedNetwork = isNetwork && panel.networkAxis === 'typical' && networkInfo.axisMax != null
+        return <section key={panel.index} className={'rundeckServerTrendPanelV1234 rundeckConfigurableTrend ' + panel.className}
+          aria-label={metricLabel(panel.metric) + ' Trend · chart ' + panel.index}>
+          <div className="rundeckMonitoringHead rundeckConfigurableTrendHead">
+            <h3>Chart {panel.index}</h3>
+            <select className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect" value={panel.metric}
+              aria-label={'Chart ' + panel.index + ' metric'} onChange={event => panel.setMetric(event.target.value)}>
+              {METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </select>
+            <div className="rundeckConfigurableTrendActions">
+              {isNetwork && <div className="rundeckNetworkDirection" role="group" aria-label={'Chart ' + panel.index + ' network direction'}>
+                <button type="button" aria-pressed={panel.direction === 'rx'} className={panel.direction === 'rx' ? 'is-active' : ''} onClick={() => panel.setDirection('rx')}>RX</button>
+                <button type="button" aria-pressed={panel.direction === 'tx'} className={panel.direction === 'tx' ? 'is-active' : ''} onClick={() => panel.setDirection('tx')}>TX</button>
+              </div>}
+              {(isLoad || isNetwork) && <select className="rundeckTrendAxisSelect"
+                aria-label={'Chart ' + panel.index + ' Y axis scale'}
+                title="Typical changes the display axis only. Full restores the complete saved peak."
+                value={isNetwork ? panel.networkAxis : panel.loadAxis}
+                onChange={event => isNetwork ? panel.setNetworkAxis(event.target.value) : panel.setLoadAxis(event.target.value)}>
+                <option value="typical">Y: Typical</option>
+                <option value="full">Y: Full</option>
+              </select>}
+            </div>
+          </div>
+          {isNetwork && <div className="rundeckConfigurableTrendMeta">
+            {!panel.loading && (!panel.trend?.network_source || (panel.trend.observed_hosts?.length || 0) !== 5) &&
+              <span className="rundeckNetworkCoverage" title="Infrastructure Collector coverage in selected period, not a live status.">
+                {panel.trend?.network_source ? `${panel.trend.observed_hosts?.length || 0}/5 APP` : 'Source unverified'}
+              </span>}
+            <span className="rundeckNetworkSampleTime" role="status"
+              title="Last stored AOP Infrastructure Network observation, not the current time.">
+              {panel.trend?.last_observed_at ? formatWib(panel.trend.last_observed_at, true) + ' WIB' : 'Not observed'}
+            </span>
           </div>}
-        </div>
-        <div className="rundeckTrendToolbar">
-          <Segmented options={[["load","Load"],["swap","Swap I/O"],["network","Network"],["hana","HANA"],["replication","Replication"],["ssh","SSH"],["web","Web Dispatcher"]]} value={technicalMetric} onChange={setTechnicalMetric} ariaLabel="Technical metric" />
-          {technicalNetwork && !technicalLoading && (!technicalTrend?.network_source || (technicalTrend.observed_hosts?.length || 0) !== 5) &&
-            <span className="rundeckNetworkCoverage"
-              title="Infrastructure Collector: observed host coverage for the selected period, not necessarily current. Peak is the highest single interface, not NICs summed.">
-              {technicalTrend?.network_source ? `${technicalTrend.observed_hosts?.length || 0}/5 APP` : 'Source unverified'}
-            </span>}
-
-          {technicalAvailability && <span className="rundeckTrendModeNote">Status timeline · Avg/Peak applies to Server Trends only</span>}
-          {technicalNetwork && <span className="rundeckNetworkSampleTime" role="status"
-            title="Last stored AOP Infrastructure Network observation. The 5/5 coverage label means observed in the selected range, not necessarily simultaneously fresh.">
-            {technicalTrend?.last_observed_at ? formatWib(technicalTrend.last_observed_at, true) + ' WIB' : 'Not observed'}
-          </span>}
-        </div>
-        {typicalLoadActive && loadScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice" role="status"
-          title={'Typical crops ' + loadScale.outliers + ' samples above ' + loadScale.axisMax + '. Peak ' + numberText(loadScale.peak,1) + (loadScale.peakHost ? ' · ' + shortHost(loadScale.peakHost) : '') + (loadScale.peakAt ? ' · ' + formatWib(loadScale.peakAt,true) + ' WIB' : '') + '. Full shows saved outliers; this is not an SAP outage.'}>
-          Peak {numberText(loadScale.peak,1)}
-          {loadScale.peakHost ? ' · ' + shortHost(loadScale.peakHost) : ''}
-          {' · ' + loadScale.outliers + ' above axis'}
-          <button type="button" onClick={() => setLoadScaleMode('full')}>Show Full</button>
-        </div>}
-        {typicalNetworkActive && networkScale.axisMax != null && <div className="rundeckTechnicalLoadPeakNotice rundeckNetworkPeakNotice" role="status"
-          title={'Typical crops ' + networkScale.outliers + ' samples above ' + numberText(networkScale.axisMax,1) + ' Mbps. Peak ' + numberText(networkScale.peak,1) + ' Mbps' + (networkScale.peakHost ? ' · ' + shortHost(networkScale.peakHost) : '') + (networkScale.peakInterface ? ' · NIC ' + networkScale.peakInterface : '') + (networkScale.peakAt ? ' · ' + formatWib(networkScale.peakAt,true) + ' WIB' : '') + '. Full shows original saved values.'}>
-          Peak {numberText(networkScale.peak,1)} Mbps
-          {networkScale.peakHost ? ' · ' + shortHost(networkScale.peakHost) : ''}
-          {' · ' + networkScale.outliers + ' above axis'}
-          <button type="button" onClick={() => setNetworkScaleMode('full')}>Show Full</button>
-        </div>}
-        {technicalNetwork && !technicalLoading && !technicalError && <InfrastructureGapBand trend={technicalTrend} />}
-        {/* Source samples, gap markers and peak identity are preserved in both scales. */}
-        {renderTrendState(technicalTrend, technicalLoading, technicalError, selectPoint, { showGap: false,
-          technicalAxisMax: typicalLoadActive ? loadScale.axisMax : typicalNetworkActive ? networkScale.axisMax : null })}
-      </section>
+          {isAvailability && <div className="rundeckConfigurableTrendMeta"><span className="rundeckTrendModeNote">Saved status timeline</span></div>}
+          {clippedLoad && <div className="rundeckTechnicalLoadPeakNotice" role="status"
+            title={'Typical clips ' + loadInfo.outliers + ' samples above the display axis. Full shows all saved observations.'}>
+            Peak {numberText(loadInfo.peak,1)}
+            {loadInfo.peakHost ? ' · ' + shortHost(loadInfo.peakHost) : ''}
+            {' · ' + loadInfo.outliers + ' above axis'}
+            <button type="button" onClick={() => panel.setLoadAxis('full')}>Show Full</button>
+          </div>}
+          {clippedNetwork && <div className="rundeckTechnicalLoadPeakNotice rundeckNetworkPeakNotice" role="status"
+            title={'Typical clips ' + networkInfo.outliers + ' samples above the display axis. Full shows all saved Mbps values and NIC provenance.'}>
+            Peak {numberText(networkInfo.peak,1)} Mbps
+            {networkInfo.peakHost ? ' · ' + shortHost(networkInfo.peakHost) : ''}
+            {networkInfo.peakInterface ? ' · NIC ' + networkInfo.peakInterface : ''}
+            {networkInfo.peakAt ? ' · ' + formatWib(networkInfo.peakAt,true) + ' WIB' : ''}
+            {' · ' + networkInfo.outliers + ' above axis'}
+            <button type="button" onClick={() => panel.setNetworkAxis('full')}>Show Full</button>
+          </div>}
+          {isNetwork && !panel.loading && !panel.error && <InfrastructureGapBand trend={panel.trend} />}
+          {renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
+            technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
+        </section>
+      })}
       {temporalReady && <>
         <canvas ref={unifiedCanvasRef} className="rundeckUnifiedVortexCanvas" aria-hidden="true" />
         <div className="rundeckUnifiedVortexLabels" aria-hidden="true">
