@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { PRIMARY_PERFORMANCE_VIEWS } from './RundeckPerformanceNavigationState.js'
 
-export default function RundeckPerformanceNavigation({ activeView = 'performance', onNavigate }) {
+export default function RundeckPerformanceNavigation({ activeView = 'performance', onNavigate, onOpenCollection, onManualUpload }) {
   // Full labels are the normal desktop experience, compact icons are optional.
   // Old route IDs continue to work even when absent from the primary nav.
   const [collapsed, setCollapsed] = React.useState(false)
@@ -30,5 +30,9 @@ export default function RundeckPerformanceNavigation({ activeView = 'performance
         <SphereIcon name={item.icon} /><span>{item.label}</span>
       </a>
     })}
+    <div className="sphereSidebarUtilities" role="group" aria-label="Collection tools">
+      <button type="button" onClick={onOpenCollection} title="Collector status, history and token details"><SphereIcon name="database" /><span>Collector</span></button>
+      <button type="button" onClick={onManualUpload} title="Upload WP-SCOUT or Daily Check data"><SphereIcon name="upload" /><span>Upload Data</span></button>
+    </div>
   </nav>
 }
