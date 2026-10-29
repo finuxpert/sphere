@@ -71,17 +71,16 @@
 .sphereMonthlyReview .sphereMonthlyHostSummary h4,
 .sphereMonthlyReview .sphereMonthlyPriorities h4 { margin: 0 0 7px; }
 .sphereMonthlyReview .sphereMonthlyHostSummary .sphereMonthlyTableScroll {
-  overflow-x: auto;
+  overflow: visible;
   max-height: none;
 }
 .sphereMonthlyReview .sphereMonthlyHostSummary table { width: 100%; table-layout: fixed; }
 .sphereMonthlyReview .sphereMonthlyHostSummary th,
 .sphereMonthlyReview .sphereMonthlyHostSummary td {
   font-size: 11px;
-  white-space: nowrap;
+  white-space: normal;
   padding: 7px 6px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 .sphereMonthlyReview .sphereMonthlyHostSummary th:first-child,
 .sphereMonthlyReview .sphereMonthlyHostSummary td:first-child { width: 16%; }
@@ -137,20 +136,50 @@
 
 .sphereMonthlyReview .sphereMonthlyEvidencePage { display: grid; gap: 8px; min-width: 0; }
 .sphereMonthlyReview .sphereMonthlyEvidenceDisclosure {
+  display: grid;
+  gap: 8px;
   min-width: 0;
-  border: 1px solid var(--sphere-border, rgba(159,177,191,.18));
-  border-radius: 6px;
+  border: 0;
 }
-.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure > summary {
-  padding: 12px 14px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
+.sphereMonthlyReview .sphereMonthlyEvidenceTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
 }
-.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure[open] > summary {
-  border-bottom: 1px solid var(--sphere-border, rgba(159,177,191,.15));
+.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure .sphereMonthlyImpact { padding: 0; }
+.sphereMonthlyReview .sphereMonthlySourceNote {
+  padding: 7px 9px;
+  border-left: 2px solid var(--sphere-warning, #d2ae69);
+  font-size: 11px;
+  color: var(--sphere-text-secondary, #bdc6cb);
 }
-.sphereMonthlyReview .sphereMonthlyEvidenceDisclosure .sphereMonthlyImpact { padding: 8px; }
+.sphereMonthlyReview .sphereMonthlyTableScroll {
+  max-height: none;
+  overflow: visible;
+}
+.sphereMonthlyReview .sphereMonthlyEvidencePage table {
+  table-layout: fixed;
+}
+.sphereMonthlyReview .sphereMonthlyEvidencePage table th,
+.sphereMonthlyReview .sphereMonthlyEvidencePage table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+  padding: 7px 6px;
+}
+.sphereMonthlyReview .sphereMonthlyEvidencePage table th:first-child,
+.sphereMonthlyReview .sphereMonthlyEvidencePage table td:first-child { width: 22%; }
+.sphereMonthlyReview .sphereMonthlyEvidencePage table td small { display: block; margin-top: 3px; }
+.sphereMonthlyReview .sphereMonthlyTrend { overflow: visible; }
+.sphereMonthlyReview .sphereMonthlyTrend svg { min-width: 0; }
+.sphereMonthlyReview .sphereMonthlyPriorityRow strong,
+.sphereMonthlyReview .sphereMonthlyPriorityRow small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .sphereMonthlyReview .sphereMonthlyPressureMode {
   display: flex;
   justify-content: flex-end;
