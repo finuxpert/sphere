@@ -173,7 +173,10 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ? 'Saved SAP error signals: '+fmt(errorCount,0)+' categories/rows; '+String(errors[0].error_code||'Error code unavailable')+
       ' ('+hostName(errors[0].host)+'). Confirm attribution in SAP.'
     : 'SAP error evidence: no matching saved error rows in this report; absence of evidence is not proof of no errors.'
-  write(pdf,textLines(pdf,errorText,width,7.3),margin,198,{color:[73,91,104]},7.3)
+  pdf.setFont('helvetica','normal')
+  pdf.setFontSize(7.3)
+  pdf.setTextColor(73,91,104)
+  pdf.text(textLines(pdf,errorText,width,7.3),margin,198)
   write(pdf,'Source: SPHERE saved observations  '+fmt(quality.complete_checks,0)+' / ~'+fmt(quality.expected_checks,0)+
     ' expected ('+percent(quality.coverage_pct)+').',margin,H-5,{color:[94,107,117]},7)
   write(pdf,'Page 1 of 1',W-margin,H-5,{align:'right',color:[94,107,117]},7)
