@@ -367,12 +367,12 @@
 }
 
 /* Jobs & Programs: full readable identity, compact technical columns. */
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(2){width:39%!important}
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(3){width:11%!important}
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(4){width:10%!important}
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(5){width:8%!important}
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(6){width:10%!important}
-.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(7){width:15%!important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(2){width: 39% !important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(3){width: 11% !important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(4){width: 10% !important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(5){width: 8% !important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(6){width: 10% !important}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkload td:nth-child(7){width: 15% !important}
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspace .rundeckCurrentWorkloadName button{
  display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;
  white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;

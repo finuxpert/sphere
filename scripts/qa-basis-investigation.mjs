@@ -744,7 +744,7 @@ const checks = [
   ['System Health explains old or missing Availability without inferring SAP DOWN',
     files.systemHealth.includes('availabilityFreshnessSignal(availabilityAge)') &&
     files.systemHealthState.includes("text: 'Availability observation missing'") &&
-    files.systemHealthState.includes('Availability data old') &&
+    files.systemHealthState.includes('Availability data ${minutes}m old') &&
     files.systemHealthState.includes('outside the freshness window') &&
     files.systemHealthState.includes('This does not mean SAP DOWN.') &&
     files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
