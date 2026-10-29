@@ -200,10 +200,10 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   }, [initialAppHost, availableHostKey, requestedHost])
   const allLoaded = workloadMeta.total === rows.length
   const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
-    ? 'Latest complete observed collection'
+    ? 'latest collection · observed'
     : workloadMeta.coverageScope === 'TOP_CONSUMERS_ONLY'
-      ? 'Only top consumers loaded'
-      : 'Collection coverage unverified'
+      ? 'top consumers only'
+      : 'coverage unverified'
   const query = loadedSearch.trim().toLocaleLowerCase()
   const visible = loaded.filter(row => {
     if (hostFilter !== 'ALL' && row.host !== hostFilter) return false
