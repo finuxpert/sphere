@@ -180,7 +180,7 @@ test('tab switching retains Current/Review state and labels technical scope',()=
   assert.match(workspace,/rundeckCurrentPersistentPane/)
   assert.match(workspace,/reviewVisited &&/)
   assert.match(workspace,/selectMode\('review'\)/)
-  assert.match(wrapper,/Infrastructure telemetry and saved host evidence/)
+  assert.match(wrapper,/Saved server measurements/)
   assert.match(wrapper,/sphereHealthSubnav/)
   assert.match(trend,/APP % Axis/)
   assert.match(trend,/Linux load average, not CPU usage percent/)

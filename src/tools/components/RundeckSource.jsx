@@ -57,7 +57,7 @@ function StatusPill({ value = 'UNKNOWN', title = '' }) {
 
 function switchParentSource(value) {
   const select = document.querySelector('.logV2Header select')
-  if (!select) return
+  if (!select) { window.dispatchEvent(new CustomEvent('sphere:set-source', { detail: value })); return }
   const descriptor = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')
   if (descriptor?.set) descriptor.set.call(select, value)
   else select.value = value

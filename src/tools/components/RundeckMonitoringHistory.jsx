@@ -10,7 +10,6 @@ import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
 import RundeckDataCollection from './RundeckDataCollection.jsx'
-import './RundeckRevitalization.css'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, shortHost } from './sapUiFormat.js'
 import { currentAppSample } from './rundeckUnifiedHost.js'
@@ -43,6 +42,7 @@ import './RundeckLandscapeOperations.css'
 import './RundeckOperationsCompactV140.css'
 import './RundeckProfessionalCockpitV141.css'
 import './RundeckEnterpriseShellV143.css'
+import './RundeckRevitalization.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))

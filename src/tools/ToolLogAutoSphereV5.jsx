@@ -312,6 +312,19 @@ function SampleDrilldownSummary({ focus, rows = [], onClear }) {
 
 export default function ToolLogAutoSphereV5() {
   const [source, setSource] = React.useState('automatic')
+  React.useEffect(() => {
+    const onSourceRequest = (event) => {
+      const next = event?.detail
+      if (!['manual', 'automatic'].includes(next)) return
+      setSource(next)
+      setAnalysis(null)
+      setRca(null)
+      setStatus('')
+      setShowAllCurrentWorkload(false)
+    }
+    window.addEventListener('sphere:set-source', onSourceRequest)
+    return () => window.removeEventListener('sphere:set-source', onSourceRequest)
+  }, [])
   const [busy, setBusy] = React.useState(false)
   const [status, setStatus] = React.useState('')
   const [analysis, setAnalysis] = React.useState(null)

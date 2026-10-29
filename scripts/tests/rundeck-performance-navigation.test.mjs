@@ -162,4 +162,6 @@ test('three main sections preserve older monitoring deep links', () => {
   assert.match(jobs,/const tabs = \['live', 'review'\]/)
   assert.match(review,/React\.useState\(embedded\)/)
   assert.match(wrapper,/sphereOverviewDetailTabs/)
+  assert.match(read('RundeckSource.jsx'),/sphere:set-source/)
+  assert.match(read('RundeckDataCollection.jsx'),/Open Manual Upload/)
 })
