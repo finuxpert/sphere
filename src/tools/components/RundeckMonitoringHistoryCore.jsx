@@ -16,7 +16,10 @@ export default function RundeckMonitoringHistoryCore(props) {
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
     // Fit only when all visible source-backed overview sections have room.
     const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
-    if (fit) {
+    // A sixth UNKNOWN/UNVERIFIED membership lane must never be squeezed into
+    // the five-row desktop allocation. Use natural page flow instead.
+    const additionalLane = overview.querySelectorAll('.rundeckAppEvalLane').length > 5
+    if (fit && !additionalLane) {
       overview.style.setProperty('--sphere-overview-room', available + 'px')
       overview.dataset.viewportFit = 'true'
     } else {
