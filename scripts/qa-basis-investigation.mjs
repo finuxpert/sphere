@@ -204,7 +204,7 @@ const checks = [
   })()],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
   ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
-  ['Historical workload search is a distinct merged-workspace mode with an empty pre-query state', files.jobsPrograms.includes("mode === 'search'") && files.jobsPrograms.includes("forceSearch: mode === 'search'") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes("forceSearch && appliedQuery.length < 2") && files.performanceReview.includes('appliedQuery') && files.performanceReview.includes('Type at least 2 characters to search historical jobs and programs.')],
+  ['Historical workload search is always accessible inside Review; server search still requires two characters', files.jobsPrograms.includes("const tabs = ['live', 'review']") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('React.useState(embedded)') && files.performanceReview.includes('normalizedSearch.length >= 2') && files.performanceReview.includes('appliedQuery')],
   ['Evidence Issues and System Data use content-aware drawer modes', files.wrapper.includes('size="evidence"') && files.wrapper.includes('size="issues"') && files.wrapper.includes('size="system-data"') && files.accessibilityThemeFinal.includes('.is-evidence,.is-issues,.is-system-data')],
   ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
 
@@ -305,7 +305,7 @@ const checks = [
     files.wrapper.includes('<RundeckJobsProgramsWorkspace') &&
     files.jobsPrograms.includes("mode === 'live'") &&
     files.jobsPrograms.includes("mode === 'review'") &&
-    files.jobsPrograms.includes("mode === 'search'") &&
+    files.jobsPrograms.includes("const tabs = ['live', 'review']") &&
     files.appThreePanelCss.includes('rundeckJobsProgramsWorkspaceBody.is-live .rundeckCurrentWorkloadTableWrap') &&
     files.appThreePanelCss.includes('overflow: visible !important') &&
     files.appThreePanelCss.includes('rundeckReviewTableWrapV1231') &&
@@ -321,7 +321,7 @@ const checks = [
     files.jobsPrograms.includes("selectMode('live')") &&
     files.jobsPrograms.includes('>Current</button>') &&
     files.jobsPrograms.includes('>Review</button>') &&
-    files.jobsPrograms.includes('>Search</button>')],
+    files.jobsPrograms.includes("const tabs = ['live', 'review']")],
   ['Six Operational Checks pages replace retired APP shortcuts',
     ['jobs','events','sap-checks','infrastructure','system-data','monthly-review']
       .every(id => files.performanceNavigation.includes("id: '" + id + "'")) &&
