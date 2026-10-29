@@ -26,6 +26,8 @@ jobs:
         run: npm run qa
       - name: Boot built DEV app in Chromium and reject blank dashboard
         run: bash scripts/qa-browser-boot.sh
+      - name: Verify full-width APP evaluation geometry in Chromium
+        run: node scripts/qa-evaluation-layout.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
