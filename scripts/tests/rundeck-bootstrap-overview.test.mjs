@@ -18,7 +18,8 @@ test('compact monitoring keeps four charts, live data and navigation with Bootst
   assert.match(trends, /row-cols-1 row-cols-md-2 row-cols-xxl-4 g-2/)
   assert.match(trends, /formatTrendPeakWib\(panelPeak\.timestamp\)/)
   assert.match(trends, /<select className="rundeckTrendMetricSelect/)
-  assert.match(trends, /<InfrastructureGapBand trend=\{panel\.trend\} \/>/)
+  assert.doesNotMatch(trends, /InfrastructureGapBand/)
+  assert.match(trends, /gapPoints.map/)
 })
 
 test('dashboard previews are bounded but full drilldowns remain available', () => {
