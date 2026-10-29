@@ -2,14 +2,14 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
-test('Network fits the Technical Trend controls with RX/TX and APP focus', () => {
+test('Network is selectable on all three independent charts with RX/TX and APP focus', () => {
   const src = read('RundeckServerTrend.jsx')
-  assert.match(src, /\["network","Network"\]/)
-  assert.match(src, /networkDirection === 'rx'/)
-  assert.match(src, /networkDirection === 'tx'/)
+  assert.match(src, /\['network', 'Network'\]/)
+  assert.match(src, /panel.direction === 'rx'/)
+  assert.match(src, /panel.direction === 'tx'/)
   assert.match(src, /queriedMetric = metric === 'network' \? 'network_' \+ direction/)
   assert.match(src, /networkDirection, refreshToken, technicalMetric/)
-  assert.match(src, /technicalNetwork \? networkDirection\.toUpperCase\(\) \+ ' · Mbps'/)
+  assert.match(src, /networkDirection1, refreshToken, serverMetric1/)
   assert.match(src, /trend\.network_source/)
 })
 test('Network preserves NIC provenance, shows Mbps and avoids SAP timeline', () => {
@@ -27,10 +27,10 @@ test('Network scale, freshness and independent gap keep original collection evid
   const src = read('RundeckServerTrend.jsx')
   assert.match(src, /networkTrendScale\(technicalTrend\?\.items, mode\)/)
   assert.match(src, /networkScaleMode === 'full' \? 'full' : 'typical'/)
-  assert.match(src, /Y: \{networkScaleMode === 'typical'/)
+  assert.match(src, /<option value="typical">Y: Typical<\/option>/)
   assert.match(src, /Last stored AOP Infrastructure Network observation/)
-  assert.match(src, /InfrastructureGapBand trend=\{technicalTrend\}/)
+  assert.match(src, /InfrastructureGapBand trend=\{panel.trend\}/)
   assert.match(src, /collection_gaps/)
-  assert.match(src, /networkScale\.peakInterface/)
-  assert.match(src, /typicalNetworkActive \? networkScale\.axisMax/)
+  assert.match(src, /networkInfo\.peakInterface/)
+  assert.match(src, /clippedNetwork \? networkInfo\.axisMax/)
 })
