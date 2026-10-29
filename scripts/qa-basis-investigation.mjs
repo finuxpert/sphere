@@ -493,7 +493,7 @@ const checks = [
   ['Correlated Events improves timestamp state and timeline readability', files.evidenceTimelineCss.includes('grid-template-columns:118px 12px') && files.evidenceTimelineCss.includes('background-position:123px 11px')],
   ['Unified APP analysis names SAP and Infrastructure while preserving selected job/program context',
     files.wrapper.includes("shortHost(activeOverlay.app.host) + ' Analysis'") &&
-    files.wrapper.includes("props.latestCollectionAt ? formatWib(props.latestCollectionAt, true)") &&
+    files.wrapper.includes("currentAppSample(activeOverlay.app, true)") && files.wrapper.includes("formatWib(activeOverlay.app.collected_at, true)") &&
     files.wrapper.includes("performanceCollectedAt={props.latestCollectionAt || ''}") &&
     files.wrapper.includes('size="unified-app"') &&
     files.unifiedAnalysis.includes('aria-label="SAP performance evidence"') &&
