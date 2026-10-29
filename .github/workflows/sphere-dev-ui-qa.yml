@@ -58,7 +58,8 @@ jobs:
           grep -Rqs "${GITHUB_SHA:0:7}" dist/assets
           STAGE="$RUNNER_TEMP/sphere-offline-release"
           mkdir -p "$STAGE/wheels"
-          git branch -f rundeck-sphere-dev "$GITHUB_SHA"
+          test "$(git branch --show-current)" = rundeck-sphere-dev
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git bundle create "$STAGE/source.bundle" refs/heads/rundeck-sphere-dev
           git bundle verify "$STAGE/source.bundle"
           tar -czf "$STAGE/web-dist.tar.gz" -C dist .
