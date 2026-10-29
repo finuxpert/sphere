@@ -779,7 +779,7 @@ const checks = [
     files.infrastructure.includes("const observedStatus=(state)=>infrastructureObservationStatus(state,freshness)") &&
     files.infraFreshness.includes("return freshness === 'FRESH' ? rawStatus : freshness") &&
     !files.infrastructure.includes("statusFs(row.used_pct)==='NORMAL'?<span className=\"is-normal-muted\">—</span>")],
-  ['Run identity separates committed Collection, running Collection, and Availability cycles', files.source.includes("quality.performanceValid ? 'READY' : 'LAST READY'") && files.source.includes('Collection running #') && files.availability.includes('Availability Run #')],
+  ['Run identity separates committed Collection, running Collection, and Availability cycles', files.source.includes("quality.performanceValid ? 'READY' : 'LAST READY'") && files.source.includes('collectionAction={runState.enabled') && files.source.includes('onClick={collectNow}') && files.availability.includes('Availability Run #')],
   ['Long-range trend reduces point clutter while preserving hover emphasis', files.serverTrend.includes("compactPoints = ['custom', '30m', '1h', '3h', '6h']") && files.serverTrend.includes("showSymbol: availabilityMode || compactPoints") && files.serverTrend.includes("emphasis: { focus: 'series'")],
   ['watchdog audit route is read-only and available', files.apiCore.includes('@app.get("/watchdog/events")') && files.apiCore.includes('read_watchdog_events')],
   ['Prometheus scrape and alert rules are versioned', files.promConfig.includes('/dev/api/metrics') && files.promRules.includes('SphereCollectorExecutionStuck') && files.promRules.includes('SphereWatchdogAutoRecovery')],
