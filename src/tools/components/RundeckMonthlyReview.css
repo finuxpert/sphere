@@ -144,7 +144,7 @@
 .sphereMonthlyTableHead>div:first-child{display:grid;gap:4px}
 .sphereMonthlyFilters{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .sphereMonthlyFilters input{width:min(240px,100%)}
-.sphereMonthlyTableScroll{max-height:min(440px,54vh);overflow:auto;width:100%;border-radius:7px;border:1px solid var(--mr-border)}
+.sphereMonthlyTableScroll{max-height:none;overflow:visible;width:100%;border-radius:7px;border:1px solid var(--mr-border)}
 .sphereMonthlyReview table{
   width:100%;
   border-collapse:collapse;
@@ -250,19 +250,19 @@
 .sphereMonthlyReview.is-v2 .sphereMonthlyWide{grid-column:1/-1}
 .sphereMonthlyReview.is-v2 .sphereMonthlyStats{grid-template-columns:repeat(4,minmax(0,1fr))}
 .sphereMonthlyReview.is-v2 .sphereMonthlyHead>div:first-child strong{font-size:15px}
-.sphereMonthlyReview.is-v2 .sphereMonthlyTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.sphereMonthlyReview.is-v2 .sphereMonthlyTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTabs button{min-width:0;padding:10px 5px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTrendDuo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTrendDuo>div{min-width:0}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTrendDuo h4{margin-bottom:7px}
-.sphereMonthlyReview.is-v2 .sphereMonthlyTrend{overflow:hidden}
+.sphereMonthlyReview.is-v2 .sphereMonthlyTrend{overflow:visible}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTrend svg{min-width:0;width:100%;max-height:200px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTrendLegend{display:flex;flex-wrap:wrap;gap:5px 10px;margin:4px 0 6px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTrendLegend span{display:inline-flex;gap:5px;align-items:center;font-size:10px;color:#afc1cc}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTrendLegend i{display:inline-block;height:6px;width:12px;border-radius:2px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyImpact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
 .sphereMonthlyReview.is-v2 .sphereMonthlyImpact .sphereMonthlyWide{grid-column:1/-1}
-.sphereMonthlyReview.is-v2 .sphereMonthlyImpact .sphereMonthlyTableScroll{max-height:260px;overflow:auto}
+.sphereMonthlyReview.is-v2 .sphereMonthlyImpact .sphereMonthlyTableScroll{max-height:none;overflow:visible}
 .sphereMonthlyReview.is-v2 .sphereMonthlyStatStrip{display:flex;flex-wrap:wrap;gap:7px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyStatStrip span{background:#1c3847;border:1px solid #2d5060;border-radius:5px;padding:7px 9px;font-size:11px;color:#bcd2dd}
 .sphereMonthlyReview.is-v2 .sphereMonthlyRank .sphereMonthlyName{min-width:170px}
@@ -278,7 +278,7 @@
 .sphereMonthlyReview.is-v2 .sphereMonthlyFilters{max-width:100%}
 .sphereMonthlyReview.is-v2 .sphereMonthlyFilters input{min-width:195px;flex:1 1 195px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyFilters select{max-width:175px}
-.sphereMonthlyReview.is-v2 .sphereMonthlyTableScroll{overscroll-behavior:contain}
+.sphereMonthlyReview.is-v2 .sphereMonthlyTableScroll{overscroll-behavior:auto}
 .sphereMonthlyReview.is-v2 .sphereMonthlyTableScroll th,.sphereMonthlyReview.is-v2 .sphereMonthlyTableScroll td{white-space:normal;overflow-wrap:anywhere}
 @media(max-width:950px){
  .sphereMonthlyReview.is-v2 .sphereMonthlyTrendDuo,.sphereMonthlyReview.is-v2 .sphereMonthlyImpact{grid-template-columns:minmax(0,1fr)}
@@ -287,7 +287,7 @@
  .sphereMonthlyReview.is-v2 .sphereMonthlyFilters select{max-width:none}
 }
 @media(max-width:600px){
- .sphereMonthlyReview.is-v2 .sphereMonthlyTabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sphereMonthlyReview.is-v2 .sphereMonthlyTabs{grid-template-columns:repeat(3,minmax(0,1fr))}
  .sphereMonthlyReview.is-v2 .sphereMonthlyTabs button{white-space:normal}
  .sphereMonthlyReview.is-v2 .sphereMonthlyReportOverview{grid-template-columns:minmax(0,1fr)}
  .sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame iframe{height:280px}
@@ -327,7 +327,8 @@
   gap:8px;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyErrors .sphereMonthlyTableScroll{
-  max-height:360px;
+  max-height:none;
+  overflow:visible;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyPdfFrame .sphereMonthlyPager a{
   display:inline-flex;
@@ -557,7 +558,7 @@
   .sphereMonthlyReview.is-v2 .sphereMonthlyDashboardKpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:600px){
-  .sphereMonthlyReview.is-v2 .sphereMonthlyTabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sphereMonthlyReview.is-v2 .sphereMonthlyTabs{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sphereMonthlyReview.is-v2 .sphereMonthlyMixBody{grid-template-columns:minmax(0,1fr)}
   .sphereMonthlyReview.is-v2 .sphereMonthlyDashboardKpis{gap:6px}
   .sphereMonthlyReview.is-v2 .sphereMonthlyDashboardKpi{padding:10px;min-height:105px}
