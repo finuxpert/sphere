@@ -23,13 +23,15 @@ test('422 on other parameters stays explicit and errors are sanitized', () => {
   assert.match(trendApiError(503, null, 'network_rx'), /Infrastructure/)
   assert.match(trendApiError(500, null, 'network_rx'), /HTTP 500/)
 })
-test('Network selector moved to Technical header before the metric toolbar', () => {
-  const header = component.indexOf('rundeckTechnicalTrendHeading')
-  const direction = component.indexOf('aria-label="Network throughput direction"')
-  const metric = component.indexOf('ariaLabel="Technical metric"')
-  assert.ok(header >= 0 && header < direction && direction < metric)
-  assert.match(styles, /\.rundeckTechnicalTrendHeading h3/)
-  assert.match(styles, /flex-wrap:nowrap/)
+test('Network selection and RX/TX controls belong to each independent chart header', () => {
+  const metric = component.indexOf('className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect"')
+  const direction = component.indexOf("panel.direction === 'rx'")
+  const chart = component.indexOf('rundeckConfigurableTrendHead')
+  assert.ok(chart >= 0 && chart < metric && metric < direction)
+  assert.match(component, /onChange=\{event => panel.setMetric\(event.target.value\)\}/)
+  assert.match(component, /onClick=\{\(\) => panel.setDirection\('tx'\)\}/)
+  assert.match(component, /<option value="typical">Y: Typical<\/option>/)
+  assert.match(styles, /\.rundeckNetworkDirection button/)
 })
 test('Custom picker uses modal with focus trap and applied-range semantics', () => {
   assert.match(component, /<RundeckCustomRangeDialog/)
