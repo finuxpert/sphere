@@ -248,16 +248,19 @@ export default function RundeckMonitoringHistory(props) {
             healthSummary={<section className="sphereOverviewDetails" aria-label="System Health">
             <header className="sphereHealthSummaryHeader">
               <h3>System Health</h3>
-              <button type="button" onClick={() => setActiveOverlay({ type:'evidence', returnTo:{ type:'selected' } })}>Recent Events</button>
             </header>
             <div className="sphereHealthSummaryGrid">
-              <RundeckAvailability refreshToken={refreshToken} compact onOpen={() => setActiveOverlay({ type:'availability' })} />
-              <RundeckSapIssues refreshToken={refreshToken} compact onOpen={() => setActiveOverlay({ type:'issues' })} />
+              <RundeckAvailability refreshToken={refreshToken} inlineSummary onOpen={() => setActiveOverlay({ type:'availability' })} />
+              <RundeckSapIssues refreshToken={refreshToken} inlineSummary onOpen={() => setActiveOverlay({ type:'issues' })} onInspectApp={inspectApp} />
               <React.Suspense fallback={<span role="status" className="sphereHealthLoading">Loading server health…</span>}>
-                <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} compact
+                <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} inlineSummary
                   onOpen={() => setActiveOverlay({ type:'infrastructure' })} />
               </React.Suspense>
             </div>
+            <React.Suspense fallback={<span className="sphereHealthLoading">Loading events…</span>}>
+              <RundeckEvidenceTimeline refreshToken={refreshToken} incidentActive inlineSummary job={null}
+                onOpen={() => setActiveOverlay({ type:'evidence', returnTo:{ type:'selected' } })} />
+            </React.Suspense>
           </section>}
           /></> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
           {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2 title={currentPage?.[1] || 'Source-backed observations'}>{currentPage?.[0] || 'SAP Operations'}</h2></header>}

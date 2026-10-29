@@ -42,7 +42,7 @@ function ageMinutes(value) {
   return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
 }
 
-export default function RundeckAvailability({ refreshToken = '', compact = false, onOpen = null, paired = false, summaryRoot = null }) {
+export default function RundeckAvailability({ refreshToken = '', compact = false, inlineSummary = false, onOpen = null, paired = false, summaryRoot = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [bundle, setBundle] = React.useState(null)
@@ -183,6 +183,15 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
     <span title="SSH and HANA replication only. PASS counts reported positive checks; missing or failed checks do not count. SM37 is separate."><b>SSH / REPL</b><strong>{technicalCheckCount ? `${lastSnapshot ? 'Last check: ' : ''}${technicalPassCount}/${technicalCheckCount} PASS` : '—'}</strong></span>
   </div>
 
+  if (inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="SAP Availability overview">
+    <div className="sphereHealthInlineHead"><h4>SAP Availability</h4><button type="button" onClick={onOpen}>Details</button></div>
+    <div className="sphereHealthInlineValues">
+      <span><b>APP</b><strong>{apps.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${appsUp}/${apps.length}` : 'No Data'}</strong></span>
+      <span><b>HANA</b><strong>{hanaRows.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${hanaUp}/${hanaRows.length}` : 'No Data'}</strong></span>
+      <span><b>Web</b><strong>{webRows.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${webUp}/${webRows.length}` : 'No Data'}</strong></span>
+    </div>
+    <small>{stale ? `Last check ${availabilityAge}m ago · current state unverified` : unverified ? 'Availability not verified' : data?.collected_at ? `Checked ${formatWib(data.collected_at, true)} WIB` : 'Awaiting service check'}</small>
+  </section>
   if (compact) {
     return <button type="button" className="rundeckEvidenceCard rundeckAvailabilityCard" onClick={onOpen} aria-label="Open SAP Availability details">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> SAP Availability</span>

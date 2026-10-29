@@ -36,7 +36,7 @@ function Status({ value }) {
   return <span className={`rundeckIssueStatus ${statusClass(value)}`}><i aria-hidden="true" />{value}</span>
 }
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, onOpen = null, paired = false, readinessRoot = null, historyRoot = null }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, inlineSummary = false, onOpen = null, paired = false, readinessRoot = null, historyRoot = null }) {
   const [snapshot, setSnapshot] = React.useState({ ...EMPTY_SNAPSHOT, requestKey: refreshToken })
   const data = snapshot.requestKey === refreshToken ? snapshot : EMPTY_SNAPSHOT
   const failedSources = data.failedSources
@@ -142,6 +142,21 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const showWpThreshold=displayedIndicators.some(row=>row.indicator==='APP Critical WP')
   const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
+  if(inlineSummary){
+    const priority = reviewIndicators.filter(row => ['CRITICAL','WARNING','ATTENTION'].includes(row.status)
+      && !['CPU','RAM'].includes(row.indicator)).slice(0,2)
+    return <section className="sphereHealthInlineBlock" aria-label="SAP Issues overview">
+      <div className="sphereHealthInlineHead"><h4>SAP Issues</h4><button type="button" onClick={onOpen}>Details</button></div>
+      <div className="sphereHealthIssueSummary"><strong>{loading ? 'Checking…' : `${activeFindings} Attention / Critical`}</strong>
+        <small>{loading ? '' : `${unknownCount} No Data`}</small></div>
+      <div className="sphereHealthInlineIssues">{priority.map((row,i) =>
+        <div key={[row.scope,row.indicator,i].join(':')} title={row.reason}>
+          <span>{row.scope} · {row.indicator}</span><b>{row.current}</b>
+        </div>)}
+        {!priority.length && <small>{loading ? 'Checking saved signals…' : failedSources.length ? 'Some sources unavailable' : 'No additional verified issue details'}</small>}
+      </div>
+    </section>
+  }
   if(compact){
     const statusText = `${activeFindings} Attention / Critical · ${unknownCount} No Data`
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">

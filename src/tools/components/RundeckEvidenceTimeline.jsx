@@ -44,7 +44,7 @@ function eventRelation(eventAt = '', issueAt = '', thresholdMinutes = 15, source
   return deltaMinutes < 0 ? 'BEFORE ISSUE' : 'AFTER ISSUE'
 }
 
-export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false, compact = false, onOpen = null, paired = false, scopeLabel = '' }) {
+export default function RundeckEvidenceTimeline({ refreshToken = '', job = null, incidentActive = false, compact = false, inlineSummary = false, onOpen = null, paired = false, scopeLabel = '' }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [loading, setLoading] = React.useState(false)
@@ -122,6 +122,18 @@ export default function RundeckEvidenceTimeline({ refreshToken = '', job = null,
     ? formatDurationMinutes(Math.round(Math.abs(workloadTime - issueTime) / 60000))
     : 'unverified'
 
+  if (inlineSummary) {
+    const recentEvents = events.filter(event => Number.isFinite(Date.parse(event.at || '')))
+      .sort((a,b) => Date.parse(b.at) - Date.parse(a.at)).slice(0,3)
+    return <section className="sphereEventsInline" aria-label="Recent saved monitoring events">
+      <div className="sphereHealthInlineHead"><h4>Recent Events</h4><button type="button" onClick={onOpen}>View all</button></div>
+      {recentEvents.length ? <div className="sphereEventsInlineList">{recentEvents.map((event,i) =>
+        <div key={[event.at,event.kind,i].join(':')} title={event.detail || evidenceEventTitle(event)}>
+          <time>{formatWib(event.at,true)} WIB</time>
+          <span>{evidenceEventTitle(event)}</span>
+        </div>)}</div> : <p>{loading ? 'Checking saved events…' : error ? 'Event source unavailable' : 'No saved events in this window'}</p>}
+    </section>
+  }
   if (compact) {
     const timingDetail = state === 'NO OVERLAP' && hasWorkloadGap
       ? `No overlap · ${formatDurationMinutes(workloadGapMinutes)} apart`

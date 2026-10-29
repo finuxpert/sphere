@@ -140,7 +140,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
   </div>
 }
 
-export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,onOpen=null,initialContext=null,lockedHost=false,hideHostCards=false}){
+export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,inlineSummary=false,onOpen=null,initialContext=null,lockedHost=false,hideHostCards=false}){
   const [data,setData]=React.useState({host:'',hosts:[],fs:[],network:[],storage:[]})
   const [allHostFilesystems,setAllHostFilesystems]=React.useState([])
   const [error,setError]=React.useState('')
@@ -276,6 +276,16 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
 
   const openTrend=(metricType,series='')=>{setTrendMetric(metricType);setSelectedSeries(series)}
 
+  if(inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="Server Health overview">
+    <div className="sphereHealthInlineHead"><h4>Server Health</h4><button type="button" onClick={onOpen}>Details</button></div>
+    <div className="sphereHealthInfraScope">{shortHost(host || 'Host —')} · {error ? 'No Data' : sourcesLoading ? 'Checking…' : overall}{stale ? ' · Last sample' : ''}</div>
+    <div className="sphereHealthInlineValues">
+      <span><b>Filesystem</b><strong>{error || sourcesLoading ? '—' : fsState}</strong></span>
+      <span><b>Storage I/O</b><strong>{error || sourcesLoading ? '—' : storageState}</strong></span>
+      <span><b>Network</b><strong>{error || sourcesLoading ? '—' : netState}</strong></span>
+    </div>
+    <small>{error ? 'Source unavailable' : topFilesystem ? `${topFilesystem.mount_point || 'Filesystem'} ${metric(topFilesystem.used_pct,'%')} · ${formatTime(observedAt)} WIB` : observedAt ? `Observed ${formatTime(observedAt)} WIB` : 'No saved server measurements'}</small>
+  </section>
   if(compact){
     return <button type="button" className="rundeckEvidenceCard rundeckInfrastructureCard" onClick={onOpen} aria-label="Open Infrastructure Analysis">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> Server Health</span>
