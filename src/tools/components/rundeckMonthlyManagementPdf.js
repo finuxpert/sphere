@@ -146,11 +146,15 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     seen.add(name);return true
   }).slice(0,5)
   let py=160
-  priority.forEach((row,i)=>{
+  let shown=0
+  for(const [i,row] of priority.entries()) {
     const name=String(row.consumer_key)
     const lines=textLines(pdf,(i+1)+'. '+name,107,8.2)
     const reasonLines=textLines(pdf,reason(row),76,8)
-    const h=Math.max(6.3,lines.length*3.6+1.5,reasonLines.length*3.5+1.5)
+    const h=Math.max(5.6,lines.length*3.6+1.5,reasonLines.length*3.5+1.5)
+    // The one-page budget wins over candidate count; never clip a name or
+    // force tiny text. Remaining candidates are all in the technical report.
+    if(py+h>187)break
     if(i%2===1){pdf.setFillColor(247,249,250);pdf.rect(margin,py-3,width,h,'F')}
     pdf.setFontSize(8.2);pdf.setTextColor(35,49,60);pdf.text(lines,margin+2,py)
     pdf.setFontSize(8);pdf.text(reasonLines,margin+114,py)
@@ -158,15 +162,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     write(pdf,asNumber(row.peak_pss_gb)==null?'N/A':fmt(row.peak_pss_gb,2)+' GB',margin+242,py,{align:'right'},8)
     write(pdf,fmt(row.occurrences,0),W-margin-2,py,{align:'right'},8)
     py+=h
-  })
-  if(!priority.length)write(pdf,'No priority program candidate in saved evidence.',margin+2,160,{},8)
-  const nextY=Math.max(185,py+3)
-  if(nextY>192) {
-    // Fail closed if unusually long identifiers cannot fit at readable size.
-    // Never shrink type below legibility or silently cut content.
-    throw Error('One-page report cannot accommodate long candidate names; open Technical Report')
+    shown+=1
   }
-  write(pdf,'Showing '+priority.length+' of '+candidates.length+' candidates. Full program details in Technical Report.',
+  if(!priority.length)write(pdf,'No priority program candidate in saved evidence.',margin+2,160,{},8)
+  const nextY=Math.max(185,py+2)
+  write(pdf,'Showing '+shown+' of '+candidates.length+' candidates. Full program details in Technical Report.',
     margin,nextY,{color:[94,108,117]},7.3)
   const errorCount=errors.length
   const errorText=errorCount
