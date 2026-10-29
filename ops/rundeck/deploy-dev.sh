@@ -206,6 +206,19 @@ fi
 if [[ -n "$PREVIOUS_API" && -x /opt/sphere-rundeck-dev/venv/bin/python ]] &&
    cmp -s "$PREVIOUS_API/backend/requirements.txt" "$RELEASE/backend/requirements.txt"; then
   echo "PYTHON_DEPENDENCIES=UNCHANGED"
+elif [[ -n "${SPHERE_OFFLINE_WHEELHOUSE:-}" ]]; then
+  # An offline bundle must never silently fall through to PyPI or the internet.
+  test -d "$SPHERE_OFFLINE_WHEELHOUSE"
+  if test -x /opt/sphere/tools/bin/uv; then
+    /opt/sphere/tools/bin/uv pip install --offline --no-index \
+      --find-links "$SPHERE_OFFLINE_WHEELHOUSE" \
+      --python /opt/sphere-rundeck-dev/venv/bin/python \
+      -r "$RELEASE/backend/requirements.txt"
+  else
+    /opt/sphere-rundeck-dev/venv/bin/python -m pip install --no-index \
+      --find-links "$SPHERE_OFFLINE_WHEELHOUSE" \
+      -r "$RELEASE/backend/requirements.txt"
+  fi
 elif test -x /opt/sphere/tools/bin/uv; then
   /opt/sphere/tools/bin/uv pip install --python /opt/sphere-rundeck-dev/venv/bin/python -r "$RELEASE/backend/requirements.txt"
 else

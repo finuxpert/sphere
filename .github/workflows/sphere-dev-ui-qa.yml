@@ -11,9 +11,11 @@ permissions:
 jobs:
   frontend:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
@@ -24,3 +26,58 @@ jobs:
         run: npm run qa
       - name: Boot built DEV app in Chromium and reject blank dashboard
         run: bash scripts/qa-browser-boot.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download Linux x86_64 wheels for offline deployment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RUNNER_TEMP/sphere-wheels"
+          python -m pip download --only-binary=:all: \
+            -r backend/requirements.txt -d "$RUNNER_TEMP/sphere-wheels"
+      - name: Backend unit tests with offline wheels
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python -m pip install --no-index --find-links "$RUNNER_TEMP/sphere-wheels" \
+            -r backend/requirements.txt
+          python -m unittest \
+            backend.tests.test_rundeck_evaluation_v1194 \
+            backend.tests.test_rundeck_evaluation_paging_dev \
+            backend.tests.test_rundeck_custom_window \
+            backend.tests.test_rundeck_network_trends \
+            backend.tests.test_rundeck_monthly_review
+      - name: Prepare verified DEV offline release artifact
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REF_NAME" = "rundeck-sphere-dev"
+          test -f dist/index.html
+          grep -q '/dev/assets/' dist/index.html
+          grep -Rqs "${GITHUB_SHA:0:7}" dist/assets
+          STAGE="$RUNNER_TEMP/sphere-offline-release"
+          mkdir -p "$STAGE/wheels"
+          git branch -f rundeck-sphere-dev "$GITHUB_SHA"
+          git bundle create "$STAGE/source.bundle" refs/heads/rundeck-sphere-dev
+          git bundle verify "$STAGE/source.bundle"
+          tar -czf "$STAGE/web-dist.tar.gz" -C dist .
+          cp "$RUNNER_TEMP"/sphere-wheels/*.whl "$STAGE/wheels/"
+          cp ops/rundeck/release-dev-offline.sh "$STAGE/release-dev-offline.sh"
+          printf '%s\n' "$GITHUB_SHA" > "$STAGE/source.sha"
+          (
+            cd "$STAGE"
+            find . -type f ! -name SHA256SUMS -print0 |
+              LC_ALL=C sort -z | xargs -0 sha256sum > SHA256SUMS
+          )
+          tar -czf "sphere-dev-$GITHUB_SHA.tar.gz" -C "$STAGE" .
+          sha256sum "sphere-dev-$GITHUB_SHA.tar.gz" > "sphere-dev-$GITHUB_SHA.tar.gz.sha256"
+      - name: Upload offline DEV release (only after complete QA)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphere-dev-${{ github.sha }}
+          path: |
+            sphere-dev-${{ github.sha }}.tar.gz
+            sphere-dev-${{ github.sha }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 14
