@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts, filesystemCapacitySummary } from '../../src/tools/components/rundeckUnifiedHost.js'
+import { appSignalState, appSignalReason, chooseUnifiedApp, hostInfrastructureEvidence, matchedInfrastructureHost, splitInfrastructureHosts, filesystemCapacitySummary, appSampleFreshness, currentAppSample } from '../../src/tools/components/rundeckUnifiedHost.js'
 import { OPERATOR_THRESHOLDS, hostResourceState, filesystemResourceState, sapWorkloadState, metricResourceState } from '../../src/tools/components/rundeckStatusSemantics.js'
 
 const now = Date.parse('2026-10-11T06:00:00Z')
@@ -163,4 +163,21 @@ test('v1.35.7 APP1 critical WP does not recolor normal CPU and RAM metrics', () 
   assert.match(source,/Promise\.allSettled/)
   assert.match(source,/infraRetry/)
   assert.doesNotMatch(source,/\[refreshToken, nowMs\]/)
+})
+
+test('each APP has independent freshness; stale or future samples never become NORMAL', () => {
+  const verified = { cpu_pct: 12, ram_pct: 44, io_wait_pct: 1, wp_critical: 0 }
+  const checkedAt = Date.parse('2026-10-28T14:52:00Z')
+  const fresh = { ...verified, collected_at: '2026-10-28T14:49:00Z' }
+  const stale = { ...verified, collected_at: '2026-10-28T14:31:59Z' }
+  const future = { ...verified, collected_at: '2026-10-28T14:54:00Z' }
+  assert.equal(appSampleFreshness(fresh, true, checkedAt), 'FRESH')
+  assert.equal(appSampleFreshness(stale, true, checkedAt), 'STALE')
+  assert.equal(appSampleFreshness(future, true, checkedAt), 'UNKNOWN')
+  assert.equal(appSampleFreshness({ ...verified }, true, checkedAt), 'UNKNOWN')
+  assert.equal(appSampleFreshness(fresh, false, checkedAt), 'UNKNOWN')
+  assert.equal(currentAppSample(fresh, true, checkedAt), true)
+  assert.equal(currentAppSample(stale, true, checkedAt), false)
+  assert.equal(appSignalState(stale, currentAppSample(stale, true, checkedAt)), 'UNKNOWN')
+  assert.equal(appSignalState(fresh, currentAppSample(fresh, true, checkedAt)), 'NORMAL')
 })

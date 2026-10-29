@@ -6,6 +6,7 @@ import RundeckSystemData from './RundeckSystemData.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { formatWib, numberText, shortHost } from './sapUiFormat.js'
+import { coalesceAsyncRefresh } from './rundeckRefreshCoordinator.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
 import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage } from './rundeckDataQuality.js'
 import './RundeckSource.css'
@@ -216,14 +217,16 @@ export default function RundeckSource({ onCollection }) {
     setAvailabilitySnapshot(availabilityResult.status === 'fulfilled' ? availabilityResult.value : null)
   }, [])
 
-  const refreshAll = React.useCallback(async () => {
+  // Timer and collection_ready may fire together. Only one source refresh
+  // can commit at a time; later triggers coalesce into one follow-up read.
+  const refreshAll = React.useMemo(() => coalesceAsyncRefresh(async () => {
     try {
       await Promise.all([loadLatest(), refreshMeta()])
       setError('')
     } catch (failure) {
       setError(failure.message || 'Rundeck data unavailable.')
     }
-  }, [loadLatest, refreshMeta])
+  }), [loadLatest, refreshMeta])
 
   React.useEffect(() => {
     refreshAll()

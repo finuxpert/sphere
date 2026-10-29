@@ -68,6 +68,12 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
   const [retryToken, setRetryToken] = React.useState(0)
+  // A saved 1D evaluation can change without a new APP collection ID.
+  // Tick separately; the 5 minute guard below avoids redundant API requests.
+  React.useEffect(() => {
+    const timer = window.setInterval(() => setRetryToken(value => value + 1), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
   const loadedAt = React.useRef(0)
   const loadedRefreshToken = React.useRef(null)
   const dotGridRef = React.useRef(null)
@@ -88,7 +94,6 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     if (loadedAt.current > 0 && loadedRefreshToken.current === refreshToken &&
         Date.now() - loadedAt.current < MIN_REFRESH_MS) return undefined
     const controller = new AbortController()
-    let retryTimer
     setLoading(true)
     setError('')
     readVerifiedPopulation(controller.signal).then(result => {
@@ -102,9 +107,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       loadedAt.current = 0
       loadedRefreshToken.current = null
       setError(failure.message || 'Evaluation unavailable')
-      retryTimer = window.setTimeout(() => setRetryToken(value => value + 1), 60_000)
     }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => { controller.abort(); window.clearTimeout(retryTimer) }
+    return () => controller.abort()
   }, [refreshToken, retryToken])
 
   const preview = loading || error ? null : data?.preview

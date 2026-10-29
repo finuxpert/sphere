@@ -4,6 +4,19 @@ import { hostResourceState, sapWorkloadState, filesystemResourceState, metricRes
 
 const numeric = value => value === null || value === undefined || value === '' ? null : (Number.isFinite(Number(value)) ? Number(value) : null)
 
+// Per-APP freshness is independent of a READY collection and Infrastructure FS.
+// Reject missing, future, and retained stale host samples rather than displaying
+// their CPU/RAM/WP as current. Use the same 15 minute APP freshness window as
+// the source quality check, with a 60 second tolerated clock difference.
+export function appSampleFreshness(host = {}, sourceVerified = false, nowMs = Date.now()) {
+  if (!sourceVerified) return 'UNKNOWN'
+  const observedAt = host?.collected_at ? Date.parse(host.collected_at) : NaN
+  if (!Number.isFinite(observedAt) || observedAt > nowMs + 60_000) return 'UNKNOWN'
+  return nowMs - observedAt >= 15 * 60_000 ? 'STALE' : 'FRESH'
+}
+export const currentAppSample = (host, sourceVerified, nowMs) =>
+  appSampleFreshness(host, sourceVerified, nowMs) === 'FRESH'
+
 export function appSignalState(host = {}, verified = true) {
   if (!verified) return 'UNKNOWN'
   const resource = hostResourceState(host)
