@@ -199,6 +199,11 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     setListPage(0)
   }, [initialAppHost, availableHostKey, requestedHost])
   const allLoaded = workloadMeta.total === rows.length
+  const coverageLabel = workloadMeta.coverageScope === 'ALL_OBSERVED_ACTIVE_WORKLOADS'
+    ? 'Latest complete observed collection'
+    : workloadMeta.coverageScope === 'TOP_CONSUMERS_ONLY'
+      ? 'Only top consumers loaded'
+      : 'Collection coverage unverified'
   const query = loadedSearch.trim().toLocaleLowerCase()
   const visible = loaded.filter(row => {
     if (hostFilter !== 'ALL' && row.host !== hostFilter) return false
@@ -270,7 +275,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
       <button type="button" className="sphereAttentionTrigger" onClick={()=>setAttentionOpen(true)} aria-label={`Open manually marked workloads, ${attentionRows.length} marked observations`} title="Manual marked workload list; independent of SAP Critical WP Attention and saved 24h evaluations">Marked <b>{attentionRows.length}</b></button>
-       <span className="rundeckCurrentWorkloadCount" title="Saved observations from the latest collection, not SAP job executions.">{allLoaded ? `${rows.length} observations` : `${rows.length} of ${workloadMeta.total} loaded`}</span>
+       <span className="rundeckCurrentWorkloadCount" title={'Saved observations from the latest collection, not SAP job executions. ' + coverageLabel}>{allLoaded ? `${rows.length} observations` : `${rows.length} of ${workloadMeta.total} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
         <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APP · global</option>

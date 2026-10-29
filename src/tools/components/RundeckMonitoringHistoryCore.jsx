@@ -14,7 +14,8 @@ export default function RundeckMonitoringHistoryCore(props) {
     if (!overview) return
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
     // Fit only when all visible source-backed overview sections have room.
-    const fit = false // The new compact summary uses natural flow; never stretch empty tracks.
+    const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
+    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
     // A sixth UNKNOWN/UNVERIFIED membership lane must never be squeezed into
     // the five-row desktop allocation. Use natural page flow instead.
     const additionalLane = overview.querySelectorAll('.rundeckAppEvalLane').length > 5
