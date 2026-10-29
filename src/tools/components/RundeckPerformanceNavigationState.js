@@ -4,7 +4,7 @@ export const PERFORMANCE_VIEWS = [
   { id: 'events', label: 'Related Events', icon: 'history' },
   { id: 'sap-checks', label: 'SAP Checks', icon: 'activity' },
   { id: 'infrastructure', label: 'Infrastructure', icon: 'server' },
-  { id: 'system-data', label: 'System Data', icon: 'database' },
+  { id: 'system-data', label: 'Data Collection', icon: 'database' },
   { id: 'monthly-review', label: 'Monthly Review', icon: 'history' },
 ]
 
@@ -19,8 +19,7 @@ export function performanceViewFromHash() {
 // The primary sidebar is deliberately small. Legacy routes remain recognized
 // by performanceViewFromHash() for saved bookmarks and investigation drawers.
 export const PRIMARY_PERFORMANCE_VIEWS = [
-  { id:'performance', label:'Dashboard', icon:'activity' },
-  { id:'jobs', label:'Workloads', icon:'workload' },
-  { id:'sap-checks', label:'Health', icon:'activity' },
+  { id:'performance', label:'Monitoring', icon:'activity' },
+  { id:'system-data', label:'Data Collection', icon:'database' },
   { id:'monthly-review', label:'Reports', icon:'history' },
 ]

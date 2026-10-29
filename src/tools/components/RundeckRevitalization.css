@@ -1,0 +1,32 @@
+/* SPHERE DEV: compact, readable navigation without decorative panels. */
+.spherePerformanceShell .spherePerformanceMain{min-width:0}
+.sphereMonitoringTabs,.sphereCollectionTabs,.sphereOverviewDetailTabs{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.sphereMonitoringTabs{padding:0 0 10px;margin:0 0 8px;border-bottom:1px solid var(--sphere-design-edge,rgba(140,150,160,.17))}
+.sphereMonitoringTabs a,.sphereCollectionTabs button,.sphereOverviewDetailTabs button{
+  color:var(--sphere-text-secondary,#aeb9c0);text-decoration:none;background:transparent;border:0;border-radius:5px;
+  padding:9px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer
+}
+.sphereMonitoringTabs a[aria-current="page"],.sphereCollectionTabs button.is-active,.sphereOverviewDetailTabs button[aria-pressed="true"]{
+  color:var(--sphere-text,#e8eff2);background:var(--sphere-surface-2,#21303b)
+}
+.sphereMonitoringTabs a:focus-visible,.sphereCollectionTabs button:focus-visible,.sphereOverviewDetailTabs button:focus-visible,.sphereUploadAction:focus-visible{outline:2px solid var(--sphere-accent,#55bfc2);outline-offset:2px}
+.sphereOverviewDetails{margin:8px 0 0;padding:6px 0 0}
+.sphereOverviewDetailTabs{border-top:1px solid var(--sphere-design-edge,rgba(140,150,160,.17));padding-top:8px}
+.sphereOverviewDetailsBody{margin:10px 0;min-width:0}
+.sphereOverviewDetailsBody .rundeckInfraWorkspace{max-width:100%}
+.sphereCollectionWorkspace,.sphereReportsWorkspace{min-width:0;width:100%}
+.sphereCollectionTabs{margin-bottom:10px;border-bottom:1px solid var(--sphere-design-edge,rgba(140,150,160,.17));padding-bottom:8px}
+.sphereCollectionActions,.sphereReportsActions{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:4px 0 12px}
+.sphereCollectionActions>strong{font-size:13px}
+.sphereCollectionBody{min-width:0}
+.spherePlainLink{margin:9px 0;border:0;background:transparent;color:var(--sphere-accent,#6ccbc9);text-decoration:underline;font:inherit;cursor:pointer}
+.sphereManualCollection{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:18px 4px}
+.sphereManualCollection h3{margin:0 0 5px;font-size:15px}
+.sphereManualCollection p{margin:0;color:var(--sphere-text-secondary,#aeb9c0);font-size:12px}
+.sphereUploadAction,.sphereReportsActions button{padding:9px 14px;border-radius:5px;border:1px solid var(--sphere-design-edge,rgba(130,150,160,.3));background:var(--sphere-surface-2,#25313c);color:var(--sphere-text,#e8eff2);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.sphereScreenReaderOnly{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.rundeckUnifiedVortexCanvas,.rundeckUnifiedVortexLabels,.rundeckUnifiedVortexCore{display:none!important}
+.rundeckNetworkGapNotice{border:0!important;border-left:2px solid var(--sphere-attention,#729dbd)!important;background:transparent!important;padding:3px 8px!important}
+.rundeckNetworkGapNotice summary span{font-size:10px!important;letter-spacing:0!important;text-transform:none!important}
+@media(max-width:760px){.sphereMonitoringTabs a,.sphereCollectionTabs button,.sphereOverviewDetailTabs button{padding:8px 9px;font-size:11px}.sphereManualCollection{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.sphereMonitoringTabs *,.sphereCollectionTabs *{transition:none!important}}

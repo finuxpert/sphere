@@ -24,22 +24,22 @@ function State({value='UNKNOWN'}){
   return <span className={`rundeckSystemDataState is-${normalized.toLowerCase()}`}>{name}</span>
 }
 
-export default function RundeckSystemData({history=[],platform=null,platformState='UNKNOWN',serviceSummary='',releaseState='NORMAL',onOpenPdf=null}){
-  const [tab,setTab]=React.useState('collections')
+export default function RundeckSystemData({history=[],platform=null,platformState='UNKNOWN',serviceSummary='',releaseState='NORMAL',onOpenPdf=null,initialTab='collections',hideTabs=false}){
+  const [tab,setTab]=React.useState(initialTab)
   const [showAll,setShowAll]=React.useState(false)
   const [selected,setSelected]=React.useState(null)
   const rows=showAll?history:history.slice(0,8)
   const tokenStatus=platform?.token_management
   const tokenRows=tokenStatus?.items?.length?tokenStatus.items:[{kind:'reader',label:'Monitoring Reader',state:'UNKNOWN'},{kind:'runner',label:'Job Runner',state:'UNKNOWN'}]
   return <section className="rundeckSystemData" aria-label="System Data">
-    <div className="rundeckSystemDataToolbar">
+    {!hideTabs && <div className="rundeckSystemDataToolbar">
     <div className="rundeckSystemDataTabs" role="tablist" aria-label="System data view">
       <button type="button" role="tab" aria-selected={tab==='collections'} className={tab==='collections'?'is-active':''} onClick={()=>setTab('collections')}><SphereIcon name="history"/> Collection History <small>{history.length}</small></button>
       <button type="button" role="tab" aria-selected={tab==='services'} className={tab==='services'?'is-active':''} onClick={()=>setTab('services')}><SphereIcon name="database"/> SPHERE Services <small>{serviceSummary||platformState}</small></button>
       <button type="button" role="tab" aria-selected={tab==='tokens'} className={tab==='tokens'?'is-active':''} onClick={()=>setTab('tokens')}><SphereIcon name="database"/> Token Management <small>Reader / Runner</small></button>
     </div>
     {onOpenPdf && <button type="button" className="rundeckSystemPdfAction" onClick={onOpenPdf} aria-label="Open PDF Preview"><SphereIcon name="pdf" /> PDF Preview</button>}
-    </div>
+    </div>}
 
     {tab==='collections'&&<div className="rundeckSystemDataPane">
       <header><div><strong>Collection History</strong><small>Committed Performance collection runs</small></div><State value={history[0]?.status||'UNKNOWN'}/></header>

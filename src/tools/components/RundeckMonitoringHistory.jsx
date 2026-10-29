@@ -9,6 +9,8 @@ import RundeckPerformanceReview from './RundeckPerformanceReview.jsx'
 import RundeckSapIssues from './RundeckSapIssues.jsx'
 import RundeckSm37LivePortal from './RundeckSm37LivePortal.jsx'
 import RundeckSystemHealth from './RundeckSystemHealth.jsx'
+import RundeckDataCollection from './RundeckDataCollection.jsx'
+import './RundeckRevitalization.css'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, shortHost } from './sapUiFormat.js'
 import { currentAppSample } from './rundeckUnifiedHost.js'
@@ -70,6 +72,7 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [activeOverlay, setActiveOverlay] = React.useState(null)
+  const [overviewDetail, setOverviewDetail] = React.useState('')
   const [activeView, setActiveView] = React.useState(performanceViewFromHash)
   React.useEffect(() => {
     const sync = () => { setActiveView(performanceViewFromHash()); setActiveOverlay(null) }
@@ -155,12 +158,12 @@ export default function RundeckMonitoringHistory(props) {
   />
 
   const pageNames = {
-    jobs: ['Jobs & Programs', 'Current workload, saved evaluations and search'],
-    events: ['Related Events', 'Event correlation and collection evidence'],
-    'sap-checks': ['Health', 'SAP service checks and saved indicators'],
-    infrastructure: ['Health', 'Infrastructure telemetry and saved host evidence'],
-    'system-data': ['Administration', 'Collection history and platform status'],
-    'monthly-review': ['Reports', 'Monthly performance summary and detailed evidence'],
+    jobs: ['Jobs & Programs', 'Current and saved workloads'],
+    events: ['Recent Events', 'Saved monitoring events'],
+    'sap-checks': ['SAP Services', 'Availability and SAP issues'],
+    infrastructure: ['Server Health', 'Saved server measurements'],
+    'system-data': ['Data Collection', 'Automatic collection, uploads and history'],
+    'monthly-review': ['Reports', 'Monthly Review'],
   }
   const currentPage = pageNames[activeView]
   const inlinePage = activeView === 'jobs'
@@ -208,18 +211,27 @@ export default function RundeckMonitoringHistory(props) {
               <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} />
             </React.Suspense>
           : activeView === 'system-data'
-            ? systemDataContent || <p role="status">System data unavailable.</p>
+            ? <RundeckDataCollection systemDataContent={systemDataContent}
+                onManualUpload={props.onManualUpload} collectionAction={props.collectionAction} />
             : activeView === 'monthly-review'
-              ? <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading monthly review…</div>}>
-                  <RundeckMonthlyReview refreshToken={refreshToken} sourceHosts={props.sourceHosts || []} />
-                </React.Suspense>
+              ? <div className="sphereReportsWorkspace">
+                  {props.onOpenPdf && <div className="sphereReportsActions"><button type="button"
+                    disabled={props.exportingPdf} onClick={props.onOpenPdf}>Preview Performance PDF</button></div>}
+                  <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading monthly review…</div>}>
+                    <RundeckMonthlyReview refreshToken={refreshToken} sourceHosts={props.sourceHosts || []} />
+                  </React.Suspense>
+                </div>
               : null
 
   return <>
     <div className="spherePerformanceShell">
       <RundeckPerformanceNavigation activeView={activeView} onNavigate={(view) => { setActiveView(view); setActiveOverlay(null) }} />
       <div className="spherePerformanceMain">
-        {activeView === 'performance' ? <RundeckMonitoringHistoryCore
+        {['performance','jobs'].includes(activeView) && <nav className="sphereMonitoringTabs" aria-label="Monitoring sections">
+          <a href="#/tool/logs" aria-current={activeView === 'performance' ? 'page' : undefined}>Overview</a>
+          <a href="#/tool/logs/jobs" aria-current={activeView === 'jobs' ? 'page' : undefined}>Jobs & Programs</a>
+        </nav>}
+        {activeView === 'performance' ? <><RundeckMonitoringHistoryCore
             {...props}
             currentWorkloadContent={currentWorkloadContent}
             onSelectJob={inspectJob}
@@ -236,11 +248,34 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendInfrastructure={(context) => setActiveOverlay({ type: 'infrastructure', trendContext: context, returnTo: { type: 'selected' } })}
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
-          /> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
+          />
+          <section className="sphereOverviewDetails" aria-label="More monitoring details">
+            <nav className="sphereOverviewDetailTabs" aria-label="Additional checks">
+              {[['services','SAP Services'], ['server','Server Health'], ['events','Recent Events']].map(([id,label]) =>
+                <button type="button" key={id} aria-pressed={overviewDetail === id}
+                  onClick={() => setOverviewDetail(value => value === id ? '' : id)}>
+                  {label}{overviewDetail === id ? ' −' : ' +'}
+                </button>)}
+            </nav>
+            {overviewDetail === 'services' && <div className="sphereOverviewDetailsBody">
+              <RundeckAvailability refreshToken={refreshToken} />
+              <RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} />
+            </div>}
+            {overviewDetail === 'server' && <div className="sphereOverviewDetailsBody">
+              <React.Suspense fallback={<div role="status">Loading server data…</div>}>
+                <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} />
+              </React.Suspense>
+            </div>}
+            {overviewDetail === 'events' && <div className="sphereOverviewDetailsBody">
+              <React.Suspense fallback={<div role="status">Loading events…</div>}>
+                <RundeckEvidenceTimeline refreshToken={refreshToken} job={selectedJob} incidentActive />
+              </React.Suspense>
+            </div>}
+          </section></> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
           {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2 title={currentPage?.[1] || 'Source-backed observations'}>{currentPage?.[0] || 'SAP Operations'}</h2></header>}
           {['sap-checks','infrastructure'].includes(activeView) && <nav className="sphereHealthSubnav" aria-label="Health sections">
-            <a href="#/tool/logs/sap-checks" aria-current={activeView==='sap-checks'?'page':undefined}>SAP Services & Indicators</a>
-            <a href="#/tool/logs/infrastructure" aria-current={activeView==='infrastructure'?'page':undefined}>Infrastructure</a>
+            <a href="#/tool/logs/sap-checks" aria-current={activeView==='sap-checks'?'page':undefined}>SAP Services</a>
+            <a href="#/tool/logs/infrastructure" aria-current={activeView==='infrastructure'?'page':undefined}>Server Health</a>
           </nav>}
           {inlinePage}
         </section>}
