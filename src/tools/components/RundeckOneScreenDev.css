@@ -52,10 +52,10 @@
   }
   .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
   .rundeckMonitoring[data-viewport-fit="compact"] .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendPlot {
-    flex: 0 0 clamp(124px, calc(var(--sphere-overview-room) - 565px), 164px) !important;
-    height: clamp(124px, calc(var(--sphere-overview-room) - 565px), 164px) !important;
-    min-height: 124px !important;
-    max-height: 164px !important;
+    flex: 0 0 clamp(160px, calc(var(--sphere-overview-room) - 525px), 220px) !important;
+    height: clamp(160px, calc(var(--sphere-overview-room) - 525px), 220px) !important;
+    min-height: 160px !important;
+    max-height: 220px !important;
   }
   .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
   .rundeckMonitoring[data-viewport-fit="compact"] .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendChart {
@@ -108,21 +108,6 @@
   min-width:0;
   white-space:normal;
   overflow-wrap:anywhere;
-}
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring .rundeckNetworkGapNotice:not([open]) > summary {
-  display:flex;
-  flex-wrap:nowrap;
-  align-items:center;
-  gap:5px;
-  min-width:0;
-}
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring .rundeckNetworkGapNotice:not([open]) > summary > strong {
-  overflow:hidden;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-  min-width:0;
 }
 @media (max-width: 1199px) {
   .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
