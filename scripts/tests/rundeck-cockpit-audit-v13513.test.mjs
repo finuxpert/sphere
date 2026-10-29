@@ -35,9 +35,11 @@ test('paginated Current table has no nested scrollbar, Review/Search remain unto
 
 test('host trends keep all metrics in accessible compact selectors', () => {
   const trend = read('RundeckServerTrend.jsx')
-  assert.match(trend, /className="rundeckTrendMetricSelect" aria-label="Server Trend 1 metric"/)
-  assert.match(trend, /className="rundeckTrendMetricSelect" aria-label="Server Trend 2 metric"/)
+  assert.match(trend, /className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect"/)
+  assert.match(trend, /aria-label=\{'Chart ' \+ panel.index \+ ' metric'\}/)
   assert.match(trend, /METRICS\.map\(\(\[key, label\]\) => <option/)
+  assert.match(trend, /\['network', 'Network'\]/)
+  assert.match(trend, /\['hana', 'HANA'\]/)
   assert.match(trend, /Linux load average, not CPU usage percent/)
   assert.match(trend, /APP host/)
 })
