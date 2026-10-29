@@ -174,7 +174,7 @@ test('DEV motion restoration keeps source data correct and animation interactive
   assert.match(health, /tabIndex=\{index === activeDotIndex \? 0 : -1\}/)
   assert.match(health, /onKeyDown=\{event => handleDotNavigation\(event, index\)\}/)
   assert.match(health, /Saved 24h/)
-  assert.match(status, /<span>Monitoring Status<\/span>/)
+  assert.match(status, /<span>Monitoring<\/span>/)
   assert.match(css, /\.rundeckWorkloadDot:focus-visible/)
 })
 
@@ -211,7 +211,7 @@ test('DEV idle braid reveals full verified ECharts on hover/focus and keeps inci
   assert.match(finalStyle, /\.rundeckSapChecksHistoryDock \.rundeckSapIssuesTableWrap \{[\s\S]*?max-height:none!important;overflow-y:visible!important/)
 
   // Manual marker list must never be confused with APP Critical WP warning.
-  assert.match(workload, />Marked Workloads <b>\{attentionRows\.length\}<\/b>/)
+  assert.match(workload, />Marked <b>\{attentionRows\.length\}<\/b>/)
   assert.match(workload, /latest collection · observed/)
   assert.match(infra, /Collector interval/)
   assert.match(infra, /Latest collected readings/)
