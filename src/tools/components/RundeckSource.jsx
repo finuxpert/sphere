@@ -775,25 +775,6 @@ export default function RundeckSource({ onCollection }) {
         </div>
       </div>
       <div className="rundeckActions">
-        <div className="rundeckActionCluster">
-        <div className="rundeckModeSwitch" role="group" aria-label="Data source">
-          <button type="button" className="is-active" aria-pressed="true" title="Automatic Rundeck source"><SphereIcon name="refresh" /> Rundeck</button>
-          <button type="button" onClick={() => switchParentSource('manual')} title="Manual Upload Logs"><SphereIcon name="upload" /> Manual</button>
-        </div>
-        <button type="button" className="rundeckPdfButton" disabled={exporting} onClick={exportPdf} title="Preview one-page performance report"><SphereIcon name="pdf" /> {exporting ? 'Generating…' : 'PDF Preview'}</button>
-        <a className="rundeckQuickEventsLink" href="#/tool/logs/events" title="Investigate saved related events" aria-label="Open Related Events"><SphereIcon name="history" /> Events</a>
-        {runState.enabled && (
-          <button
-            type="button"
-            className="rundeckCollectButton"
-            disabled={actionBusy || !runState.allowed}
-            onClick={collectNow}
-            title={runState.running ? `Collector execution #${runState.execution_id || '—'} is still running; Collection READY remains the last committed snapshot.` : runState.cooldown ? 'Collect Now is in cooldown' : 'Run the approved SPHERE Rundeck job'}
-          >
-            <SphereIcon name="refresh" /> {actionBusy ? 'Collection starting' : runState.running ? `Collection running #${runState.execution_id || '—'}` : runState.cooldown ? 'Collect cooldown' : 'Collect Now'}
-          </button>
-        )}
-        </div>
         <div className="rundeckStateCluster">
           <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
             <summary title={dataAlignmentTitle + ' · ' + freshnessSummary} aria-label={'SAP data ' + qualityDisplay + ' · ' + freshnessShort}>
@@ -820,8 +801,8 @@ export default function RundeckSource({ onCollection }) {
       <strong>{quality.state !== 'FRESH' ? `Data ${quality.state}` : historyRefreshFailed ? 'History coverage unverified' : 'Data current · historical gap retained'}</strong>
       <span>{quality.state !== 'FRESH'
         ? freshnessMessage
-        : 'Current performance data is fresh; missing historical samples have not been reconstructed. Infrastructure has separate freshness.'}</span>
-      {historyRefreshFailed && <small>History fetch failed · known observations remain historical; gap coverage cannot be fully verified.</small>}
+        : 'Current data is available. Missing historical samples remain unknown.'}</span>
+      {historyRefreshFailed && <small>History unavailable.</small>}
       {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY {formatTime(new Date(recentGap.before).toISOString())} WIB and {formatTime(new Date(recentGap.after).toISOString())} WIB · {dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
     </div>}
 
@@ -849,7 +830,15 @@ export default function RundeckSource({ onCollection }) {
       sourceAvailability={availabilitySnapshot}
       onTrendContext={setTrendContext}
       systemDataSummary={historyRefreshFailed ? 'Collector history unverified' : `Last ${collectionCount} collector runs · 90D · ${failedCount} failed · ${partialCount} partial`}
-      systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} onOpenPdf={exportPdf} />}
+      systemDataContent={<RundeckSystemData history={history} platform={platform} platformState={platformState} serviceSummary={serviceSummary} releaseState={releaseState} />}
+      onManualUpload={() => switchParentSource('manual')}
+      onOpenPdf={exportPdf}
+      exportingPdf={exporting}
+      collectionAction={runState.enabled ? <button type="button" className="rundeckCollectButton"
+        disabled={actionBusy || !runState.allowed} onClick={collectNow}
+        title={runState.running ? 'Collection in progress' : runState.cooldown ? 'Collection cooldown' : 'Run approved Rundeck collector'}>
+        <SphereIcon name="refresh" /> {actionBusy ? 'Starting…' : runState.running ? 'Running' : runState.cooldown ? 'Cooldown' : 'Collect Now'}
+      </button> : null}
     />
 
     {pdfPreview && <div className="rundeckPdfPreviewBackdrop" role="dialog" aria-modal="true" aria-label="PDF preview">

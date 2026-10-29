@@ -231,7 +231,7 @@ function InfrastructureGapBand({ trend }) {
   if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return null
   return <details className="rundeckNetworkGapNotice" role="status">
     <summary title="Based on separate saved Infrastructure Network collection timestamps, not the SAP Performance collection. Missing samples are unknown, not a claim that SAP was down.">
-      <span>Infrastructure Gap</span>
+      <span>Missing Samples</span>
       <strong>{gapTimeRangeText(from, to)}</strong>
       <small>{gapDurationText(from, to)} between saved observations{sorted.length > 1 ? ` · +${sorted.length - 1} more` : ''}</small>
     </summary>
@@ -241,7 +241,7 @@ function InfrastructureGapBand({ trend }) {
         <span>{gapTimeRangeText(Date.parse(gap.before), Date.parse(gap.after))}</span>
         <small>{gapDurationText(Date.parse(gap.before), Date.parse(gap.after))}</small>
       </div>)}
-      <small>No saved Infrastructure Network observation between the displayed timestamps. This is separate from Performance collection coverage.</small>
+      <small>Network observations were not saved in these intervals. SAP status is not inferred.</small>
     </div>
   </details>
 }
@@ -1182,7 +1182,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         return <section key={panel.index} className={'rundeckServerTrendPanelV1234 rundeckConfigurableTrend ' + panel.className}
           aria-label={metricLabel(panel.metric) + ' Trend · chart ' + panel.index}>
           <div className="rundeckMonitoringHead rundeckConfigurableTrendHead">
-            <h3>Chart {panel.index}</h3>
+            <h3 className="sphereScreenReaderOnly">Chart {panel.index}</h3>
             <select className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect" value={panel.metric}
               aria-label={'Chart ' + panel.index + ' metric'}
               title={isLoad ? 'Linux load average, not CPU usage percent' : isNetwork
@@ -1229,8 +1229,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             {networkInfo.peakHost ? ' · ' + shortHost(networkInfo.peakHost) : ''}
             {networkInfo.peakInterface ? ' · NIC ' + networkInfo.peakInterface : ''}
             {networkInfo.peakAt ? ' · ' + formatWib(networkInfo.peakAt,true) + ' WIB' : ''}
-            {' · ' + networkInfo.outliers + ' above axis'}
-            <button type="button" onClick={() => panel.setNetworkAxis('full')}>Show Full</button>
+            {' · ' + networkInfo.outliers + ' outside typical view'}
+            <button type="button" onClick={() => panel.setNetworkAxis('full')}>Full Range</button>
           </div>}
           {isNetwork && !panel.loading && !panel.error && <InfrastructureGapBand trend={panel.trend} />}
           {renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
