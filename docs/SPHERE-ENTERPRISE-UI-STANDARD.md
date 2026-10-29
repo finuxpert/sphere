@@ -1,79 +1,52 @@
-# SPHERE — Enterprise Monitoring UI Standard
+# SPHERE — Enterprise UI Standard
 
-Applies to SPHERE SAP Performance, Operational Checks and Monthly Review. This standard
-describes intended operating behavior and maintained frontend constraints, not a
-substitute for browser QA. Use existing product data and verified evidence throughout.
+**Applies to:** Monitoring, Jobs & Programs, Data Collection, Reports/Monthly Review and investigation dialogs on `rundeck-sphere-dev`. This is the maintained **source-level UI contract**. It does not establish a live deployment or passing browser screenshot inspection.
 
-## Information architecture
+## Navigation and operator hierarchy
 
-1. Status and SAP data freshness come first; a successful Rundeck collection does
-   not prove current SAP Availability.
-2. APP Fleet exposes APP1–APP5 source status. An APP selection controls related
-   details, not the meaning of past observations.
-3. Performance Trends contain two APP measurements plus one technical measurement.
-   All three share the chosen query period and observed-data focus.
-4. Job & Program Evaluation is a saved evaluation summary. Membership totals per
-   APP are **not** distinct job counts, confirmed failed SM37 runs or ST22 dumps.
-5. Related Events, SAP Checks, Infrastructure and Monthly Review have dedicated
-   navigation routes and preserve provenance, timestamps and source-specific UNKNOWN.
+- Keep the two top-level workspaces: ST03N Analysis and Performance Analysis.
+- Keep the **four** primary Performance sidebar labels: **Monitoring**, **Jobs & Programs**, **Data Collection**, **Reports**. Related Events, SAP Checks, Infrastructure and history remain reachable in detail/deep-link flows, not duplicated in the main navigation.
+- Monitoring order: **SAP APP Landscape → Performance Trends → Jobs & Programs/System Health**.
+- Present status, source freshness, severity, key metric and exact WIB timestamp before explanatory text. Use common SAP Basis, Infrastructure, Functional and management terminology.
 
-## Enterprise design rules
+## Design system and Bootstrap scope
 
-- Flat graphite surfaces with semantic tokens in
-  `RundeckEnterpriseMonitoringV137.css`. Avoid a new visual-overlay stylesheet for
-  every iteration; update the established layer and remove superseded declarations
-  when verified.
-- Reserve semantic red, amber and green for status. Five stable APP time-series
-  colors are separate (`--v36-series-1..5`) and remain identifiable in both themes.
-- Dense monitoring content uses small but legible controls, consistent alignment,
-  quiet borders, keyboard-visible focus, and no nonfunctional decorations.
-- Show historical absence explicitly as unknown, not zero or healthy.
-- Use a single row of filters where possible. Prefer table/list detail views over
-  hundreds of tiny categorical symbols.
-- Maintain breakpoints at desktop, <=1260px, <=1050px and <=650px, preserving
-  readable host labels and controls without content truncation.
-- Keep APP status and job execution distinct; do not infer root cause from
-  temporal co-observation.
+- Use **Bootstrap 5 Grid** for the four trend panels and the lower Monitoring two-column split. The remainder of SPHERE still uses custom CSS compatibility layers; do not call the app 'full Bootstrap'.
+- Existing Bootstrap responsive grid: four charts in one row on wide desktops, two on medium viewports, one on narrow.
+- The bottom panels use a 5/7 column ratio at desktop widths where it fits, stacking on smaller screens.
+- Prefer consistent Bootstrap spacing, typography and form primitives when progressively consolidating CSS. Keep necessary SPHERE semantic tokens and domain-specific styles for APP state, ECharts and specialized investigations.
+- Do not add React-Bootstrap or Bootstrap JavaScript merely to duplicate existing React/Radix interactions. Do not delete old CSS by filename alone: inspect imports/selectors and run browser regression before consolidation.
+- Use restrained flat enterprise surfaces, minimal borders, readable tabular numbers, stable APP colors, accessible focus styles, no decorative filler/animation or overlapping controls.
 
-## Time series
+## Performance Trends
 
-- ECharts presents exact retained values, zero-preserving samples, gap/null breaks,
-  unchanged warning and critical thresholds, and explicit WIB timestamps.
-- The historical query period remains the operator-selected 1D/7D/30D/Last Month/
-  3M/6M/custom interval. **Fit observed** changes only display-axis bounds on
-  historical ranges. The button has an explicit pressed state; **Full range**
-  restores the entire requested period.
-- Use a single ECharts ResizeObserver when available; fallback to window resize
-  only for older browsers. Preserve exact-click point drilldown and tooltip.
-- Load optional decorative canvas code only when explicitly activated. Default
-  SAP Performance always renders the actual trends.
+Four configurable ECharts plots, initially CPU, Memory, Network and Critical WP. Preserve all metric dropdowns, shared Time Range, Interval, Aggregation, APP highlight, Network RX/TX and Typical/Full controls, percentage Y-axis focus, click-to-detail, and gap evidence.
 
-## Frontend modules
+- Exact saved peak **value + APP + date/time WIB** must be clear for each chart.
+- Keep thresholds truthful; display-only axes never change the source readings, peak or warning/critical limits.
+- ECharts instance/ResizeObserver lifecycle must be cleaned up; avoid duplicate resize observers and unnecessary chart work.
+- Preserve source-backed gaps as gaps, not zeros. Network measurements are Infrastructure samples, not SAP execution telemetry.
 
-- `RundeckServerTrend.jsx`: live controls, ECharts and exact-point drilldowns
-- `rundeckObservedWindow.js`: pure derived display window; does not mutate samples
-- `rundeckTrendFocus.js`: pure APP color identity and trace focus
-- `rundeckTrendAmbientData.js`: small pure optional-display provenance helpers
-- `rundeckTrendAmbient.js`: lazily loaded optional canvas renderer
-- `RundeckWorkloadAppLanes.jsx`: source-backed APP membership distribution
-- `RundeckEnterpriseMonitoringV137.css`: final enterprise visual tokens and rules
+## Desktop height and overflow
 
-## Verification
+- **1536 × 864 at browser zoom 100%** is the principal one-screen Overview acceptance target; also check 1366 × 768 and 1920 × 1080.
+- Dashboard summary may be compact; details remain available through View Details/View All/modals.
+- For compact Monitoring, preview up to **two priority programs and two current workloads**. This only changes the preview, not saved/full backend records.
+- Do **not** set global `overflow:hidden` to conceal unfinished content; unexpected warnings, expanded sections and narrow/mobile views may scroll naturally.
+- Four charts must keep legible axes, thresholds and peak timestamps. A no-scroll result is invalid if text is clipped, chart is squashed or controls become inaccessible.
 
-Run `npm run qa` and confirm lint, integrity, history, Basis source-provenance
-checks, cockpit tests and Vite build succeed. Existing visual tests can run via
-`npm run qa:visual` once DEV is deployed and reachable. Check desktop 1920, 1536,
-1366 and mobile 393, both themes, keyboard navigation, threshold labels, selected
-APP, fit/full axes, loading/empty/error states and historical data source age.
+## Data trust and visual state
 
-**Release discipline:** Deploy to `rundeck-sphere-dev` and confirm `FINAL=PASS`
-before considering a separate, explicit promotion to PROD. Static QA alone does
-not establish pixel-perfect browser appearance or production readiness.
+- Distinguish stale/partial/unverified/missing from healthy or zero.
+- Separate APP status, collector status, data quality, Infrastructure snapshots, and SAP service availability.
+- Historical point timestamp is different from exact peak timestamp. WP trace may be historical; SM37 is authoritative for SAP job completion.
+- Keep PSS workload memory separate from host RAM. Grouped CPU may exceed 100%.
+- Correlation is not a causal finding. Severity and counts must use the correct verified source and observed period.
 
-## Deferred technical debt
+## Verification and modernization guardrails
 
-SPHERE still imports multiple historical CSS compatibility layers and maintains
-a large `RundeckServerTrend.jsx`. Avoid blanket deletion: first inventory
-selectors used by legacy modals and external routes, extract modules with
-regression coverage, then remove old declarations in a dedicated review. Treat
-these items as open work rather than declaring all legacy code removed.
+- `npm run qa` must pass lint, source integrity, trend/data-quality, bootstrap-overview regression and build.
+- Run browser boot, full-width evaluation geometry, light/dark, desktop/mobile, keyboard/modal, exact click and report QA; see [VISUAL-QA.md](VISUAL-QA.md).
+- Compare pre/post DOM geometry, compiled CSS bytes, request waterfall and Lighthouse/Core Web Vitals before claiming performance improvement.
+- The **next** broader CSS consolidation or modular Bootstrap migration is **planned, not completed** by the four-chart implementation. Preserve responsive behavior and roll back source changes if visual QA regresses.
+- Only release through the guarded DEV process with an explicit no-migration review; PROD remains unchanged without separate approval.

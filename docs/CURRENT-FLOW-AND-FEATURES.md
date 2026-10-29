@@ -1,469 +1,88 @@
-# SPHERE Current Flow and Features
+# SPHERE — Current Flow and Features
 
-This document records the operating flow through the **v1.34.80 DEV source candidate** on `rundeck-sphere-dev`. The last operator-observed DEV browser build is **v1.34.78-dev · b878142**; v1.34.79 is **not a verified deployment** until DEV QA, release guards, and screenshot inspection pass.
+**Scope:** `rundeck-sphere-dev` source as reviewed on 30 October 2026, beginning with the four-trend/Bootstrap Monitoring changes through `96abb706`. This describes repository behavior, **not** a verified deployment to the DEV host. Application version comes from `src/app/version.js`, not this file.
 
-It describes current behavior only. Future roadmap ideas, presentation copy, and unmeasured benefit claims are intentionally excluded.
-
-## Product position
-
-**SPHERE — SAP Performance Health Evaluation & Reporting**
-
-Operational position:
-
-**SAP Performance Monitoring, Evaluation & Investigation Platform**
-
-SPHERE helps SAP Basis/Infrastructure teams move from a broad symptom such as “SAP is slow” toward a narrower, evidence-backed investigation scope.
-
-SPHERE does not replace ST03N, SM50/SM66, SM37, STAD, ST05, SAT, SQL analysis, enqueue/lock analysis, dumps, or traces.
-
-## End-to-end flow
-
-```text
-SAP Application Servers
-        ↓
-Rundeck collection/orchestration
-        ↓
-Rundeck REST API
-        ↓
-SPHERE FastAPI ingestion/validation
-        ↓
-PostgreSQL + retained raw evidence
-        ↓
-Live Monitoring / History
-        ↓
-Detect operational signals
-        ↓
-Correlate server resource + SAP workload
-        ↓
-Evaluate Job / Program patterns
-        ↓
-Investigate selected context
-        ↓
-Operational evidence / PDF report
-```
-
-Short form:
+## Product workflow
 
 ```text
 Collect → Monitor → Detect → Correlate → Evaluate → Investigate → Report
 ```
 
-## 1. Collect and ingest
+Rundeck is the SAP-side collection/orchestration boundary. Python ingestion persists available raw/normalized evidence to PostgreSQL. FastAPI exposes read-only operational and historical views to a React dashboard. SPHERE helps Basis, Infrastructure, Functional and management teams investigate SAP performance; it does not prove cause or replace authoritative SAP tools.
 
-Rundeck is the SAP-side automation layer.
+## Navigation
 
-SPHERE:
+- Global: **ST03N Analysis**, **Performance Analysis**.
+- Primary Performance sidebar: **Monitoring**, **Jobs & Programs**, **Data Collection**, **Reports**.
+- Legacy/deep links for Related Events, SAP Checks, Infrastructure and system data are still recognized and are reachable through detail flows. Do not reintroduce duplicate primary navigation.
+- Detailed analysis uses existing drawers/dialogs, with preserved Back, Close, keyboard, focus and source context.
 
-- discovers eligible completed executions;
-- reads execution metadata/output through Rundeck REST API;
-- validates expected hosts;
-- stores collection manifests and retained raw evidence;
-- projects normalized host/workload data into PostgreSQL;
-- keeps READY / PARTIAL / FAILED semantics explicit.
+## Monitoring overview
 
-SPHERE must not SSH/SCP directly to SAP Application Servers.
+### 1. SAP APP Landscape
 
-## 2. Live Monitoring layout
+Five APP cards (APP1–APP5) show available CPU, host RAM and APP Critical WP evidence. A selected APP highlights its corresponding trace and supports APP-specific investigation. Host state is derived from its own verified measurements, not from a different host's latest sample or from Infrastructure filesystem status. Stale/unverified source data must remain explicit.
 
-The active Live Monitoring hierarchy is:
+### 2. Performance Trends
 
-```text
-System / Collector / Data status
+There are **four configurable charts**. Their default selections are CPU Usage, Memory Usage, Network and Critical WP. The panels use ECharts; Bootstrap 5 Grid is currently used for the four-chart row, while many other UI styles remain custom.
 
-Infrastructure summary
+Shared controls:
 
-SAP App Servers              Server Trend
-Selected Job / Program
-Correlated Events | SAP Availability | SAP Issues
-Observation History | Infrastructure Analysis | System Data
+- Time Range: 1D (rolling 24h), 7D, 30D, Last Month, 3M, 6M, shorter preset and Custom.
+- Interval with backend-supported bucket options and Auto; long-range constraints are enforced by the API.
+- Aggregation **Avg** / **Peak**; independent APP highlight across available APP traces.
+- Each panel retains its metric dropdown; Network has RX/TX and Typical/Full Y-axis display controls when applicable.
+- Percentage focus changes chart display bounds, never actual SAP thresholds or stored values.
 
-Current Jobs & Programs      Selected Job / Program      Jobs & Programs to Review
-```
+Always show the exact peak value, APP, and date/time in **WIB** when present. Historical peak is different from aggregate bucket timestamp. Network is retained Infrastructure traffic from a selected single interface per APP/sample, not the sum of bonded/virtual/physical interfaces and not SAP job network usage. Missing samples are evidence gaps, not zeros or outages.
 
-The UI uses progressive disclosure. Deep evidence is opened in drawers/modals instead of expanding the live page indefinitely.
+On wide desktop, the four charts are one row. Medium/narrow layouts wrap to two/one columns. A compact layout may fit the overview in one screen at generous viewport dimensions, but this is a **visual acceptance target** rather than an unconditional guarantee. Preserve data access and natural scrolling when constrained.
 
-## 3. Infrastructure
+### 3. Jobs & Programs overview
 
-### Current summary
+The lower Monitoring area displays four source-backed saved evaluation categories (Review, Attention, Data limited, Normal), a **two-item preview** of programs needing review and a **two-item preview** of current observed workloads. Those counts and previews have different populations/time windows: saved 1D evaluation versus latest collection. The full source-backed data remains available through **View Details**, **View All**, Jobs & Programs Current, Review and Search; preview truncation never limits backend results.
 
-Infrastructure summary distinguishes:
+Grouping, CPU/PSS, execution identity, Critical WP observation and review status are not equal to a failed SM37 job. A job/program can be a performance review candidate without an execution failure.
 
-- **Filesystem Capacity**
-- **Network**
-- **Storage I/O Activity**
+### 4. System Health overview
 
-A full filesystem and normal storage I/O are not contradictory; they are different metrics.
+System Health includes SAP Availability, SAP Issues, Server Health, Recent Events and Data Collection. Full detail retains source timestamps, freshness and independent source status. A successful performance collector does not prove SAP APP/HANA/Web availability now. Missing availability = UNKNOWN/PARTIAL, not DOWN.
 
-### Infrastructure Analysis
+## Jobs & Programs detail
 
-Infrastructure Analysis provides current state plus retained history.
+The page has current workloads from the latest aligned retained collection and historical saved evaluation Review/Search workflows. Current observations may be fetched per verified host; pagination/partial coverage must be explicit. Review/Search use backend-filtered/validated pagination and do not infer results from a loaded subset. Selecting a workload opens the shared investigation surface with host, source and selected period carried through.
 
-History ranges use explicit WIB date/time labels and retained-history coverage. Time before the first retained sample is not presented as zero.
+## Data Collection
 
-Storage `util_pct` values above 100 are kept visible as source-quality evidence and marked for verification rather than silently clamped.
+Automatic collection uses Rundeck and protected service credentials. The Manual Upload workflow is separate and accepts appropriate WP-SCOUT/Daily Check logs. Collection History describes saved Rundeck runs, not SM37 job executions. API/collector status, source timestamp and readiness are distinct.
 
-## 4. SAP Application Servers
+## Reports
 
-APP1–APP5 provide current retained host context.
+Monthly Review uses saved SPHERE/Rundeck evidence for manual Basis evaluation, Jobs & Programs impact and management PDF output. Source-backed WP trace errors must be distinguished by **AT SNAPSHOT / HISTORICAL / unknown** recency. A sampled trace error does not prove an ABAP program or SM37 job failed. The report should use concise common English SAP/IT terms, readable threshold/time labels and clear data-source limitations without inventing results.
 
-APP Critical WP is an APP-server observation. It is not a workload execution result.
+## Investigation evidence semantics
 
-Selecting an APP opens Application Server Analysis. Cross-focus may highlight the related APP but must not auto-expand unrelated drill-downs.
+- Correlated events are temporal/context evidence, not a root-cause verdict.
+- APP Critical WP is independent of a selected workload's observed Critical WP; a measured zero differs from an unobserved value.
+- Grouped workload CPU can exceed 100% in multi-process/multi-core workloads.
+- Use host RAM for server utilization and PSS Memory for retained workload memory; legacy RSS is not directly comparable to PSS.
+- A single current observation must not be presented as a time-series trend.
+- Historical buckets retain `bucket`, `peak_at`, `peak_value` and peak collection identity; clicking a bucket must not substitute a nearest sample.
+- WP `Latest Trace Error` may be historical; `Error at Snapshot` requires matching snapshot-recency evidence.
+- SM37 is authoritative for background-job execution, and source omissions never become NORMAL, UP, zero, or success.
 
-## 5. Server Trend
+## Main source modules
 
-Server Trend supports selectable ranges, metrics, Average/Peak modes, collection gaps, date-aware WIB axes, and point selection.
+| Area | Primary source |
+|---|---|
+| Monitoring shell | `RundeckMonitoringHistory.jsx` and `RundeckMonitoringHistoryCore.jsx` |
+| Four interactive trends | `RundeckServerTrend.jsx` and `RundeckBootstrapTrend.css` |
+| Jobs & Programs | `RundeckJobsProgramsWorkspace.jsx`, `RundeckWorkloadHealth.jsx`, `RundeckCurrentWorkload.jsx` |
+| Sidebar | `RundeckPerformanceNavigationState.js` |
+| Collection | `RundeckDataCollection.jsx` |
+| API | `backend/rundeck_api.py`, `backend/rundeck_api_core.py` |
+| Historical trends | `backend/rundeck_trends.py`, `backend/rundeck_network_trends.py` |
+| Database | `backend/db/` |
 
-### Historical bucket semantics
-
-Server Trend is bucketed for longer ranges.
-
-Peak mode keeps these separate:
-
-- **Bucket** — aggregation interval shown on the chart;
-- **Peak At** — exact retained sample timestamp producing the bucket peak;
-- **Peak Value** — exact selected metric value;
-- **Peak Collection** — exact saved collection used for workload detail.
-
-Trend Details must preserve all four. The mini-history marker is anchored to the clicked bucket, while the displayed peak timestamp remains the exact sample time.
-
-Average mode represents the bucket average and must not be presented as a raw sample.
-
-## 6. Current Jobs & Programs
-
-Current workloads are grouped Job/Program observations from the latest aligned READY collection.
-
-Displayed workload evidence includes:
-
-- grouped CPU;
-- PSS Memory;
-- process count;
-- APP Critical WP context;
-- Program/Job identity when captured.
-
-Grouped workload CPU may exceed 100% because multiple processes/CPU cores can be aggregated.
-
-## 7. Selected Job / Program
-
-Selected workload context exposes:
-
-- CPU / Avg CPU depending on source;
-- PSS Memory / Avg PSS;
-- Processes / Avg Processes;
-- APP Critical WP or APP Critical WP overlap;
-- Analyze Performance action.
-
-APP Critical WP is scoped carefully in the selected-workload surface:
-
-- `0` means the selected observation retained an APP Critical WP value of zero;
-- `Not observed for selected workload` means the value was not retained for that selection;
-- neither state is an SM37 job result.
-
-A selection originating from Performance Review uses review-period metrics rather than pretending to be a current live snapshot.
-
-## 8. Performance Analysis
-
-Performance Analysis is one shared investigation surface for current, review, historical, and trend-snapshot launches.
-
-### Selected Period
-
-Episode summary includes:
-
-- First Seen / First Loaded when history is truly truncated at the selected episode boundary;
-- Last Seen;
-- Observation Span / Loaded Span;
-- Observations;
-- Avg CPU;
-- Peak CPU;
-- Avg PSS;
-- Avg Processes.
-
-History truncation is episode-aware. A globally truncated response does not automatically make every selected episode “First Loaded”.
-
-### Ranges
-
-- Current
-- 3H
-- 6H
-- 24H
-- 7D
-- 30D
-
-`Current` means the selected workload episode.
-
-Low-sample episodes are labelled explicitly.
-
-### Chart lanes
-
-Current observation analysis can expose:
-
-- CPU
-- PSS Memory
-- I/O
-- WP Count
-- APP Critical WP
-
-When Current contains only one saved observation, SPHERE shows a **Selected Observation** summary instead of drawing a trend line from one point.
-
-Historical ranges use aggregate data and must not be presented as raw observations.
-
-### Point drill-down
-
-Clicking a raw/current chart point opens **Observation Details**.
-
-Clicking a historical bucket opens **Historical Bucket Details**.
-
-The two are intentionally different evidence types.
-
-## 9. SAP WP / Trace Signals
-
-When retained by the collector, Performance Analysis exposes process/WP-level evidence including:
-
-- PID;
-- WP type / WP number;
-- Program;
-- CPU Signal;
-- Error at Snapshot;
-- Latest Trace Error;
-- Error Recency;
-- RABAX;
-- RXMSG;
-- SXPG;
-- JobStart counter;
-- Log Path;
-- observed timestamp.
-
-Rows are drillable into **SAP WP Signal Details**.
-
-Important rules:
-
-- `Error at Snapshot` is populated only when collector `error_recency=AT_SNAPSHOT`.
-- `Latest Trace Error` may be historical.
-- WP trace counters are retained observation evidence, not authoritative job execution status.
-- SM37 remains the authority for SAP background-job execution status.
-
-Older retained observations may legitimately show that WP/Trace signals were not retained.
-
-## 10. Correlated Events
-
-Correlation timing uses retained timestamps.
-
-Possible states include aligned/same-window, limited evidence, insufficient timing data, and no overlap.
-
-For live/review investigation, exact selected episode boundaries are used where available.
-
-Historical selected-time analysis is anchored to the selected observation and is not automatically reclassified against the current incident.
-
-Correlation is supporting evidence only. Root cause remains unconfirmed until validated with SAP and infrastructure evidence.
-
-## 11. SAP Availability
-
-Availability categories remain explicit:
-
-- SAP Application availability
-- HANA System DB availability
-- HANA replication availability
-- SSH reachability
-- Web Dispatcher availability
-
-Missing observations are not inferred as DOWN.
-
-Observed availability percentages describe retained checks; they are not automatically an SLA calculation.
-
-## 12. Jobs & Programs to Review
-
-Performance Review supports:
-
-- 1 Day
-- 7 Days
-- 30 Days
-- All / Programs / Jobs
-
-Evaluation uses retained workload observations and includes average/peak CPU, Avg PSS, occurrence/coverage context, and APP Critical WP overlap.
-
-The review queue is presented as **items sorted by review priority**. It supports operator investigation and does not present the ordering as an automatic root-cause or optimization verdict.
-
-Review Result defaults to further investigation rather than an automatic program-optimization verdict.
-
-No automatic ABAP/Application owner is assigned without explicit evidence.
-
-Evaluation results are cached per committed collection so repeated reads do not recompute the same window unnecessarily.
-
-## 13. History and Workload Explorer
-
-History mode supports retained workload investigation without implying that old evidence caused the current incident.
-
-Historical selections remain visually and semantically distinct from live/current state.
-
-Trend-snapshot launches reuse the same Performance Analysis surface and carry the exact saved workload snapshot when available.
-
-## 14. System and collector health
-
-SPHERE keeps separate concepts for:
-
-- System Health
-- Collector Health
-- Performance READY cycle
-- Collector RUNNING cycle
-- Availability READY cycle
-- Data freshness/alignment
-- watchdog and auto-healing state
-
-These must not be collapsed into one status.
-
-## 15. SM37 trust boundary
-
-SPHERE distinguishes:
-
-1. sampled Work Process / workload observations;
-2. authoritative SAP job execution evidence.
-
-A sampled WP observation must never be promoted to an SM37 execution match by inference.
-
-Until an approved authoritative feed is connected, the UI reports SM37 as not connected/not configured.
-
-See `docs/BASIS-JOB-INTELLIGENCE.md`.
-
-## 16. Reporting
-
-PDF export/reporting is a one-page quick report intended for fast Basis/Infrastructure handoff, including chat/mobile sharing.
-
-Current report sections are:
-
-- **SUMMARY**
-- Availability
-- SAP APP Server Status
-- Server CPU Trend
-- Selected Workload
-- Jobs / Programs to Review
-- **CHECK SUMMARY**
-- **NOTES**
-
-Report semantics:
-
-- selected workload keeps `0` distinct from `Not observed` for APP Critical WP;
-- report data alignment is derived from the Performance and Availability timestamps used for the report;
-- both source times are printed in the report;
-- `ALIGNED` and `PARTIAL` remain explicit;
-- correlation is described as time-based context only;
-- job execution status must be checked in SAP/SM37 while the authoritative feed is not connected;
-- PDF operational state follows the same System Health semantics as the UI: service/resource criticality can be CRITICAL, APP Critical WP alone is ATTENTION, and stale performance/availability data is WARNING.
-
-A report must not convert correlation into a final root-cause verdict.
-
-## Presentation-safe feature list
-
-1. Automated SAP performance data collection
-2. Live SAP performance monitoring
-3. Application Server and infrastructure health
-4. Current Job/Program workload detection
-5. Resource-to-workload correlation
-6. Job/Program performance review
-7. Historical trend and Workload Explorer
-8. Observation/Bucket/WP signal drill-down
-9. Availability, SAP Issues, and operational evidence
-10. PDF reporting and retained evidence
-
-## Claims that must not be made without measured evidence
-
-Do not claim:
-
-- fixed percentage reduction in investigation time;
-- guaranteed root-cause detection;
-- guaranteed incident prevention;
-- guaranteed performance improvement;
-- authoritative live SM37 monitoring while no approved feed is connected;
-- SLA availability from retained observation percentages.
-
-
-### v1.34.61 layout refinements
-
-- Current Jobs and Jobs & Programs to Review use equal-height internal scroll areas; the Live page remains the outer one-screen cockpit.
-- Selected Job stays fixed between the two workload lists with six analysis launchers in two rows.
-- Infrastructure Analysis is history-first: the retained trend is shown above the Current Snapshot; Filesystem / Network / Storage I/O use a 45 / 20 / 35 snapshot layout.
-- Correlated Events shows an explicit timing strip, issue-relative event labels, and keeps the RCA boundary visible with `Cause not confirmed`.
-
-
-### v1.34.61 live flow
-
-1. SAP App Servers + Infrastructure overview.
-2. Server Trend (60%) + Technical Trend (40%) with shared range controls.
-3. Current Jobs & Programs (50%) + Jobs & Programs to Review (50%).
-4. Current or Review row click opens the shared Performance Analysis drawer directly.
-5. Historical search lives inside Jobs & Programs to Review; there is no separate History tab.
-6. Performance Analysis exposes Correlated Events, SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data.
-
-
-### v1.34.61 cockpit geometry
-
-1. SAP App Servers 42% + Infrastructure 58%, both content-driven.
-2. Shared trend controls.
-3. Server Trend 1 (CPU default) 35% + Server Trend 2 (Memory default) 35% + Technical Trend (Load default) 30%.
-4. Six analysis shortcuts.
-5. Current Jobs 50% + Jobs & Programs to Review 50%.
-6. Analysis drawers use the same flat header, summary, table, divider, and navigation treatment.
-
-
-### v1.34.61 semantic polish
-
-- Host/server memory = RAM (%); workload memory = PSS Memory (GB).
-- One shared collection coverage strip applies to the two Server Trends; availability observation gaps remain metric-specific in Technical Trend.
-- Analysis shortcuts inherit an explicit current workload context line.
-- Bottom Current/Review panes are content-adaptive with bounded scrolling.
-- SAP Issues is sorted by severity and uses the drawer as the primary scroll owner.
-
-
-### v1.34.61 consistency pass
-
-The live cockpit, six analysis shortcuts, drawers and PDF now share one terminology and hierarchy: RAM for APP/server memory, PSS Memory for workload memory, WP Context for SAP work-process context, and timing-correlation wording that does not claim causation or an exact Critical WP start unless the source proves it.
-
-
-### v1.34.61 final cockpit flow
-
-1. SAP Performance header and operational status.
-2. SAP App Servers + Infrastructure.
-3. Server Trend 1 + Server Trend 2 + Technical Trend.
-4. Selected workload context + six analysis shortcuts.
-5. One Jobs & Programs workspace with Live / Review / Search modes.
-6. All row selections open the shared Performance Analysis flow.
-7. PDF uses the same RAM / PSS Memory / WP Context / APP Critical WP terminology as the web UI.
-
-
-### v1.34.61 workspace behavior
-
-Jobs & Programs has three exclusive modes. Live shows current observations, Review shows Basis review priority, and Search shows no historical rows until at least two characters are entered. All rows continue into the same Performance Analysis drawer.
-
-### v1.34.79 DEV source candidate — 11 October 2026
-
-Source-only work; **not deployment evidence**. Last browser-observed DEV release remains v1.34.78-dev · b878142 until new operator QA/screenshot.
-
-- System Health now shares the SAP Data freshness decision, host snapshot and availability payload; separate collector status and historical gaps remain independent.
-- The performance age and alignment decision share the exact data-quality timestamp; a failed availability refresh is classified as partial/unverified rather than SAP DOWN.
-- Trend entry transitions are shortened to 300ms, ECharts labels are larger, selected Jobs have a restrained identity cue, and infrastructure labels can wrap. Small viewports retain accessible scrolling.
-- No backend API/schema, migration, SAP job, Rundeck authorization, or PROD changes. Server QA/build, 1366×768 / 1536×864 / 1920×1080 + Android visual checks, guarded DEV deployment and PROD readiness are **pending**.
-
-### SPHERE v1.34.80 DEV candidate — operator motion and active trace focus (11 October 2026)
-
-- **Source-only GitHub change**, not evidence of an active DEV deployment. v1.34.79 QA and deployment remain unverified until the operator completes the DEV gate.
-- Existing Server Trend CPU/RAM/Technical evidence is unchanged. Chart instances persist for focus/option updates; APP1–APP5 + All form a keyboard-accessible color-coded highlight control. The selected APP trace changes emphasis; it never fabricates points, bridges null collection gaps, or alters threshold interpretation.
-- Jobs & Programs retains Live / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
-- Reduced motion disables entrance/transition effects; no blinking health, infinite pulses, synthetic number counters, polling changes, backend migrations or SAP job execution.
-- Run DEV regression, lint, build and manual visual QA (1366×768, 1536×864, 1920×1080, Android) before authorizing the revision-bound deployment. PROD remains unchanged.
-
-## v1.34.81 DEV candidate — unified APP + Infrastructure (11 October 2026)
-
-Top cockpit SAP APP Servers and Infrastructure are one host-oriented workspace: five APP cards combine SAP CPU/RAM/Critical WP evidence and separately qualified filesystem evidence. There is one APP selector (the cards), one detail section for the active host, with Inspect SAP and Infrastructure Analysis actions. No top dashboard host dropdown or second SAP APP table. Independent freshness/status is never conflated: missing/mismatched infrastructure remains UNKNOWN/STALE; stale SAP performance is not marked current NORMAL. The selected job remains a default focus; an operator may override it by selecting an APP card. Modal Infrastructure Analysis remains available for filesystem/network/storage history.
-
-Source-only candidate; QA/build and runtime screenshot validation required before DEV deploy. No PROD/backend/migrations/collector/SAP jobs changed.
-
-Infrastructure Analysis popup also uses the five APP cards instead of a host dropdown. Each card labels filesystem-only evidence and source freshness, while Network/Storage states remain confined to the selected host's detail view. All host detail selection uses existing initialContext so the dashboard can pass the active APP into the popup; overlay animation is finite and reduced-motion safe.
-
-### SPHERE DEV v1.34.82 release candidate — one-click APP analysis and density recovery (11 October 2026)
-
-- The five APP cards are **direct actions**: click APPn -> one centered analysis modal containing independent SAP Performance (current collection evidence) and Infrastructure (host-specific filesystem, network and storage I/O, independently qualified by freshness).
-- The redundant Inspect SAP / Infrastructure Analysis toolbar and long inline Infrastructure summary were removed from the dashboard. The existing source-specific analysis components remain intact inside the modal; no collector, SAP job, schema or threshold changed. If the host mapping is missing, no other host's source is substituted in the locked Infrastructure view.
-- Six analysis shortcuts use six bounded tiles with internal metadata truncation; Correlated Events shows an honest no-active-correlation shortcut even without an incident. Selected job identity is shown once before them.
-- Desktop cockpit recovers row height for the internally scrollable Jobs & Programs table. Counter distinguishes all observed vs loaded in this response. Screen-height limitations on laptops still allow page scroll rather than clipping evidence.
-- Trend Details explicitly declares *historical observation* and retains actual vs bucket times. Modal uses finite 220 ms reveal, Escape/keyboard focus trap and reduced-motion fallback.
-- APP and Infrastructure analysis modules are lazy-loaded via explicit dynamic imports. No claim of reduced bundle size without post-build artifact measurements.
-- Visual tests: six tiles, five APP cards, one-click modal, tall viewport scroll geometry, keyboard, Android. DEV source-only until verified QA/build and revision-bound deploy. PROD unchanged.
+See [Enterprise UI Standard](SPHERE-ENTERPRISE-UI-STANDARD.md) and [Visual QA](VISUAL-QA.md) before editing layout. See [Rundeck Development](rundeck-development.md) for release/rollback. Do not claim deployment or performance gains based on source or CI alone.

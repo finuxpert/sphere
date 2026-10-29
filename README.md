@@ -1,340 +1,107 @@
 # SPHERE
 
-SPHERE — **SAP Performance Health Evaluation & Reporting** — is a SAP performance monitoring, evaluation, investigation, and reporting platform for SAP operations.
+**SPHERE — SAP Performance Health Evaluation & Reporting** is a SAP monitoring, investigation and reporting application. It correlates **retained evidence**, not a definitive SAP root cause, job-failure diagnosis, or proof of continuous service availability.
 
-Rundeck DEV source version is declared in [`src/app/version.js`](src/app/version.js) (check the file for the current version; do not rely on a hardcoded README version). Source and deployed builds may differ: verify the active DEV release SHA and public UI before claiming a release is live. PROD promotion is a separate guarded process.
+- DEV: https://sphere.astraotoparts.co.id/dev/
+- PROD: https://sphere.astraotoparts.co.id/
+- Repository: `finuxpert/sphere`
+- Current DEV source version: [`src/app/version.js`](src/app/version.js). A GitHub commit or CI PASS **does not** prove that a particular release is active on the server.
 
-- Production: https://sphere.astraotoparts.co.id
-- Development: https://sphere.astraotoparts.co.id/dev/
-
-## Fast Rundeck DEV release
-
-On `JAHSVR-SPHERE`, for a reviewed **no-migration DEV release**:
-
-```bash
-cd /root/rundeck-sphere-dev && SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/release-dev-fast.sh
-```
-
-This single script handles source sync, guarded QA/build, DEV backend tests and guarded DEV API/web deployment. It emits compact `SOURCE/QA/DEPLOY/FINAL` results, stores detailed output in `/tmp/sphere-dev-release-last.log`, and can reuse verified QA artifacts or skip an already-active healthy SHA. It **does not** auto-approve schema changes or deploy PROD. Do not run separate QA/deploy commands around this wrapper or substitute the frontend-only `sphere deploy dev` when backend code changed.
-
-**Full procedure, failure diagnosis, approval gates and post-deploy verification:** [Fast DEV deployment — operator runbook](docs/rundeck-development.md#fast-dev-deployment--operator-runbook-v1357). Visual QA on desktop and Android remains a separate requirement.
-
-## Product position
-
-SPHERE centralizes retained SAP performance evidence, correlates SAP Application Server resource conditions with Job/Program workload context, supports historical investigation, and provides a consistent operator drill-down path.
-
-SPHERE is not a replacement for SAP standard troubleshooting tools and it does not declare a final root cause automatically.
-
-Primary operating flow:
+## Active architecture
 
 ```text
-Collect → Monitor → Detect → Correlate → Evaluate → Investigate → Report
+SAP APP1–APP5 → Rundeck collectors → Python ingestion → PostgreSQL
+                                                    ↓
+                                    FastAPI → React/Vite dashboard
 ```
 
-The implementation source of truth is:
+Frontend: React 19, Vite, ECharts 6, Bootstrap 5 **grid for Monitoring**, and existing custom CSS. Bootstrap is not yet the entire design system. Backend: Python/FastAPI, SQLAlchemy, psycopg and Alembic. Nginx proxies separated DEV/PROD releases on the same host.
 
-`docs/CURRENT-FLOW-AND-FEATURES.md`
+SPHERE does not directly SSH/SCP to SAP servers. SAP standard transactions remain authoritative for underlying SAP diagnostics and SM37 execution outcomes.
 
-## Active release lines
+## Branches and runtime separation
 
-| Branch | Purpose |
+| Branch | Role |
 |---|---|
-| `sphere-dev` | Manual Upload Logs development line |
-| `sphere-prod` | Manual Upload Logs production line |
-| `rundeck-sphere-dev` | Active Rundeck-integrated development/test line |
-| `rundeck-sphere-prod` | Active Rundeck-integrated production line |
+| `rundeck-sphere-dev` | Active integrated DEV |
+| `rundeck-sphere-prod` | Active integrated PROD |
+| `sphere-dev`, `sphere-prod` | Separate Manual Upload Logs lines |
 
-Promotion path:
+| Environment | Checkout | API | Active web | Active API |
+|---|---|---|---|---|
+| DEV | `/root/rundeck-sphere-dev` | `127.0.0.1:8091` | `/var/www/sphere-dev/current` | `/opt/sphere-rundeck-dev/current` |
+| PROD | `/root/rundeck-sphere-prod` | `127.0.0.1:8092` | `/var/www/sphere.astraotoparts.co.id/current` | `/opt/sphere-rundeck-prod/current` |
 
-```text
-rundeck-sphere-dev
-    ↓ QA + readiness
-    ↓ reviewed promotion
-rundeck-sphere-prod
-    ↓ production build/deploy
-https://sphere.astraotoparts.co.id
-```
+DEV Vite base is `/dev/`; PROD uses `/`. Changes to DEV must never implicitly modify PROD, Rundeck production jobs, SAP systems or runtime credentials. PROD promotion is a separate approved process.
 
-Do not force-reset PROD to DEV. PROD-only deployment/routing files must be preserved during promotion.
+## Current operator interface — DEV source
 
-## Single-server DEV/PROD deployment topology
+Two top-level workspaces: **ST03N Analysis** and **Performance Analysis**.
 
-The active Rundeck-integrated DEV and PROD runtimes are deployed on the **same SPHERE server** with separate Git checkouts and isolated runtime paths:
+Performance Analysis has four primary sidebar destinations: **Monitoring**, **Jobs & Programs**, **Data Collection**, **Reports**. Existing deep-link routes and modal investigations remain available.
 
-```text
-JAHSVR-SPHERE
-├─ /root/rundeck-sphere-dev   → branch rundeck-sphere-dev  → https://sphere.astraotoparts.co.id/dev/
-└─ /root/rundeck-sphere-prod  → branch rundeck-sphere-prod → https://sphere.astraotoparts.co.id/
-```
+The Monitoring overview contains:
 
-Runtime separation:
+1. **SAP APP Landscape**: five source-backed APP cards with CPU, host RAM and Critical WP/status, including provenance/freshness.
+2. **Performance Trends**: **four configurable ECharts charts**, initially CPU Usage, Memory Usage, Network and Critical WP. Bootstrap Grid uses four columns on wide desktop, two on medium viewports and one on narrow screens. Shared Time Range, Interval, Aggregation (Avg/Peak), APP focus and chart metric dropdowns remain operational. Peak host, value, date and time are presented in WIB.
+3. **Jobs & Programs**: summary counts, short saved-review candidates, and short latest-workload preview. The complete review, search and current workloads remain accessible through details/pages. Preview counts must not be mistaken for total observed/evaluated records.
+4. **System Health**: SAP availability, SAP issues, server health, recent events and recent collection summaries, with links to full evidence.
 
-- DEV API: port `8091`, current API symlink `/opt/sphere-rundeck-dev/current`, current web symlink `/var/www/sphere-dev/current`.
-- PROD API: port `8092`, current API symlink `/opt/sphere-rundeck-prod/current`, current web symlink `/var/www/sphere.astraotoparts.co.id/current`.
-- DEV and PROD use different branch-aware Vite bases: `/dev/` and `/`.
-- A DEV deployment must leave the current PROD web/API release unchanged.
-- A PROD deployment must leave the current DEV web/API release unchanged.
-- Branch promotion is completed before production deployment. The production checkout consumes the approved `rundeck-sphere-prod` branch; it must not merge DEV during deployment.
+The new compact Monitoring layout uses a Bootstrap Grid split for lower panels and conditional viewport fitting. **One-screen fit at 1536 × 864 is a visual QA target, not a verified runtime result.** Preserve natural page scrolling when the viewport is too small or unexpected evidence requires more space; never clip or hide raw records to fabricate a no-scroll claim.
 
-## Runtime architecture
+Data Collection separates Automatic/Rundeck, Manual Upload, and historical collection context. Reports includes Monthly Review and PDF workflows. Manual Upload is unrelated to a Monthly Review's manual evaluation notes.
 
-```text
-SAP Application Servers
-        ↓
-Rundeck collection/orchestration
-        ↓
-Rundeck REST API
-        ↓
-SPHERE FastAPI ingestion
-        ↓
-PostgreSQL + retained raw evidence
-        ↓
-React/Vite operator UI
-```
+## Evidence and data-quality rules
 
-- Frontend: React + Vite
-- Backend: FastAPI
-- Database: PostgreSQL
-- Collector/orchestrator: Rundeck
-- Reverse proxy: Nginx
-- DEV API: port 8091
-- PROD API: port 8092
-- Observability: Prometheus-compatible metrics + alert rules
+- Missing/stale/invalid measurements are **UNKNOWN, unavailable or PARTIAL**, not zero, NORMAL or SAP DOWN.
+- Performance collection freshness and service-availability freshness are independent. A READY collection does not prove the SAP service is currently available.
+- APP Critical WP is APP-level evidence; it does not prove an individual Job/Program failed. **SM37** is authoritative for SAP background-job execution.
+- Workload grouped CPU may exceed 100%; PSS workload memory and host RAM are different metrics.
+- A chart's aggregate bucket, exact peak time/value and collection identity remain separate. Network RX/TX uses saved Infrastructure samples; a Typical Y-axis crop does not change stored peaks.
+- Missing samples are gaps rather than fabricated zero points; temporal correlation is not causality.
+- WP trace errors may be AT SNAPSHOT or HISTORICAL, and do not independently establish SAP job failure.
 
-SPHERE must not SSH/SCP directly to SAP Application Servers.
-
-## Current operator workspace
-
-Main navigation:
-
-1. **ST03N Analysis**
-2. **Performance Analysis**
-
-Performance Analysis is a single SAP Performance cockpit (the obsolete Live Monitoring and standalone History tabs were removed). It exposes:
-
-- SAP App Servers (CPU, host RAM, I/O Wait, APP Critical WP) and an Infrastructure overview with source/freshness context.
-- Two selectable Server Trends, complementary CPU / RAM by default, plus Technical Trend; shared range, interval and Avg/Peak controls.
-- Four main Operational Analysis shortcuts: Related Events, SAP Checks, Infrastructure and System Data. Detailed historical checks remain available through the existing analysis drawers.
-- One full-width **Jobs & Programs** workspace with **Current / Review / Search** tabs. Current observations are paginated; Review/Search have their own bounded list behavior.
-- Historical workload evidence and APP-level investigation through contextual analysis drawers; System Data is a centered accessible dialog.
-- System Health and Collector Health with distinct freshness/observation semantics; absence of a sample is never an SAP outage verdict.
-- PDF preview/quick reporting for Basis and Infrastructure handoff, with host RAM separate from workload PSS Memory.
-
-## Important evidence semantics
-
-- Correlation is temporal/context evidence; it is not proof of causation.
-- Missing availability observations are not inferred as DOWN.
-- APP Critical WP is APP-server evidence, not workload execution status. Selected-workload UI keeps **0** distinct from **Not observed for selected workload**.
-- CPU for grouped workloads may exceed 100% because multiple processes/CPU cores can be aggregated.
-- PSS is the current memory metric used in workload analysis. Legacy RSS evidence must not be compared 1:1.
-- Historical Server Trend uses bucketed values. Peak mode keeps **Bucket**, **Peak At**, **Peak Value**, and **Peak Collection** separate.
-- WP trace `Error at Snapshot` is only current-at-snapshot evidence when collector recency is `AT_SNAPSHOT`.
-- `Latest Trace Error` may be historical and does not mean the SAP job failed. The UI labels retained trace errors as **AT SNAPSHOT** or **HISTORICAL**.
-- SM37 remains the authority for SAP background-job execution status.
-- A Current Performance Analysis range with one saved observation is shown as a **Selected Observation**, not as a misleading trend line.
-- PDF reports show Performance and Availability source times and keep `ALIGNED` / `PARTIAL` explicit when the report sources are not from the same timing window.
-- PDF operational state uses the same service/resource/freshness semantics as the System Health header; Critical WP alone raises ATTENTION rather than declaring a service outage.
-
-## Build paths
-
-Vite base is branch-aware:
-
-- `rundeck-sphere-dev` → `/dev/`
-- `rundeck-sphere-prod` → `/`
-
-Production deploy blocks activation if the built bundle still references `/dev/assets/`.
-
-## Validation and deployment
-
-Canonical DEV refresh, QA, readiness, and deployment:
+## Development and validation
 
 ```bash
-cd /root/rundeck-sphere-dev && \
-git fetch origin && \
-git reset --hard origin/rundeck-sphere-dev && \
-bash ops/rundeck/qa-build-dev.sh && \
-bash ops/rundeck/prod-readiness-check.sh && \
-bash ops/rundeck/deploy-dev.sh
+npm ci
+npm run qa
+npm run qa:visual           # separate browser/visual suite when environment is ready
 ```
 
-Canonical PROD deployment after the approved DEV release has already been promoted to `rundeck-sphere-prod`:
+The GitHub workflow also checks browser boot, APP evaluation geometry, PDF output, backend unit tests and DEV release artifact production. A successful CI build does not validate the deployed browser UI against live data.
+
+For a **read-only DEV API baseline**, after updating a clean DEV checkout:
 
 ```bash
-cd /root/rundeck-sphere-prod && \
-git fetch origin && \
-git reset --hard origin/rundeck-sphere-prod && \
-npm ci && \
-npm run qa && \
-npm run build && \
-bash ops/rundeck/deploy-prod.sh
+npm run perf:baseline:dev -- --samples=10 > /tmp/sphere-dev-perf-baseline.json
 ```
 
-Expected production source is the remote `rundeck-sphere-prod` HEAD. Do **not** merge `rundeck-sphere-dev` inside the production checkout during deployment.
+This queries bounded GET endpoints through `127.0.0.1:8091`. It does **not** benchmark the browser UI, collector cadence, or database execution in isolation. Compare measured before/after values; do not claim improvements without numbers.
 
-`deploy-dev.sh` and `deploy-prod.sh` are transactional. They validate their target branch/runtime, update only their managed Nginx/runtime paths, perform smoke checks, and roll back the target environment on failure. Cross-environment guards verify that deploying one environment does not replace the other.
+### Standard guarded DEV full-stack release
 
-A Vite chunk-size warning is informational. Failed QA, readiness, Nginx validation, API smoke tests, route isolation, cross-environment guards, or transactional deploy checks are release blockers.
+On `JAHSVR-SPHERE`, only after reviewing migrations and confirming no schema changes require execution:
 
-## Documentation map
+```bash
+cd /root/rundeck-sphere-dev
+SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/release-dev-fast.sh
+```
 
-- `docs/CURRENT-FLOW-AND-FEATURES.md` — current implemented product flow and UI contract
-- `docs/RUNDECK_INTEGRATION_RUNBOOK.md` — Rundeck integration/security boundary
-- `docs/BASIS-JOB-INTELLIGENCE.md` — workload/WP trace/SM37 trust boundary
-- `docs/LEGACY-TELEMETRY-COMPATIBILITY.md` — retained legacy protocol compatibility
-- `docs/rundeck-development.md` — DEV/PROD runtime contract
-- `docs/VISUAL-QA.md` — current visual and interaction QA checklist
-- `ops/rundeck/OPERATIONS.md` — deployment, rollback, health, retention, and release operations
-- `docs/presentation/` — presentation-specific material; not runtime source of truth
+The wrapper checks clean branch, fast-forward sync, QA/build, backend tests, migration guard, guarded DEV deployment and health. **Never use migration skip to bypass changed migration scripts.** The deployment result must include `FINAL=PASS`; then verify the active DEV web and API release SHA, public route and visual layout. PROD remains a separate approval. See [Rundeck development](docs/rundeck-development.md).
 
-## Repository guardrails
+## Documentation — source of truth
 
-- Preserve active release branches.
-- Preserve PROD-only deployment/routing/service files during promotion.
-- Do not introduce RCA wording as a product verdict.
-- Never commit Rundeck tokens, SAP credentials, passwords, private keys, raw SAP logs, or runtime secrets.
-- Keep missing-data semantics explicit; do not synthesize unavailable evidence as zero.
-- Production changes must be validated on DEV before promotion.
+Start at [Documentation Index](docs/DOCUMENTATION-INDEX.md).
 
+- [Current Features & Flow](docs/CURRENT-FLOW-AND-FEATURES.md)
+- [Enterprise UI Standard](docs/SPHERE-ENTERPRISE-UI-STANDARD.md)
+- [Visual QA](docs/VISUAL-QA.md)
+- [Rundeck DEV/PROD runbook](docs/rundeck-development.md)
+- [Rundeck integration](docs/RUNDECK_INTEGRATION_RUNBOOK.md)
+- [SAP Job Intelligence & SM37 trust boundary](docs/BASIS-JOB-INTELLIGENCE.md)
+- [Six-month history & retention](docs/rundeck-historical-analysis-six-months.md)
+- [Monthly Review WP-error validation](docs/monthly-review-wp-error-dev-validation.md)
+- [Operational safety and rollback](ops/rundeck/OPERATIONS.md)
 
-### Live cockpit v1.34.61
-
-- Live Monitoring is the single primary workspace; standalone History was removed.
-- Historical Job / Program search is available from Jobs & Programs to Review and opens the shared Performance Analysis drawer.
-- Current Jobs and Review use a direct 50/50 workflow; clicking either side opens Performance Analysis without an intermediate Selected Job card.
-- Trend workspace is split into Server Trend (60%) and Technical Trend (40%) with a shared time range.
-- SAP App Servers includes operational summary/status, and SAP Issues consolidates performance, availability, technical checks, and SM37 feed state.
-
-
-### Live cockpit v1.34.61
-
-- Top cockpit is content-driven at 42/58 for SAP App Servers and Infrastructure; dead vertical space is removed.
-- Trend workspace now shows Server Trend 1 / Server Trend 2 / Technical Trend at roughly 35/35/30 with one shared Time Range, Interval, and Avg/Peak control rail. Defaults are CPU, Memory, and Load.
-- Current Jobs and Jobs & Programs to Review stay 50/50, use a compact equal-height scan area, and Current Jobs fills its full pane width.
-- Six analysis shortcuts remain always visible.
-- Analysis drawers share one restrained visual contract with fewer separators, lighter tables, consistent Back/Close navigation, and no “Back to Selected Job” wording.
-
-
-### Live cockpit v1.34.61
-
-- Host memory wording is now explicit RAM; workload memory remains PSS Memory.
-- Server Trend 1 and Server Trend 2 share one collection-gap strip instead of duplicating the same gap message.
-- The six analysis shortcuts show the selected workload context above them and use compact whole-tile actions.
-- Current Jobs and Review use adaptive bounded height rather than a fixed lower-band height.
-- SAP Issues uses drawer-level scrolling and clearer checked-indicator wording.
-- Observation History separates CPU, PSS and Critical WP ranges.
-- Infrastructure history is shorter on desktop so Current Snapshot is visible sooner and Network numeric values are not clipped.
-
-
-### v1.34.61 visual consistency
-
-- Cockpit and drawer typography use one hierarchy for titles, labels, status text and numeric data.
-- Host memory is RAM; workload memory is PSS Memory everywhere including PDF.
-- Trend titles show the active metric with a middle-dot separator.
-- Analysis shortcuts and context text are more readable with less border chrome.
-- Current Jobs and Review tables use larger operational text and tabular numeric alignment.
-- PDF Preview chrome is more compact, while the one-page PDF increases report typography and uses RAM / PSS Memory / WP Context wording.
-
-
-### v1.34.61 cockpit consolidation
-
-- The obsolete Live Monitoring tab is removed; SAP Performance is the single cockpit view.
-- Current Jobs, Review and historical Search are merged into one full-width Jobs & Programs workspace with Live / Review / Search modes.
-- The analysis rail removes redundant helper labels and uses one-line shortcut summaries with a concise selected-workload context.
-- Infrastructure now uses the same SphereIcon title treatment as the other cockpit sections.
-- Correlated Events and SAP Availability drawers use the same spacing and hierarchy as the other analysis drawers.
-- PDF preview now mirrors the current cockpit more closely with two Server Trend charts, a Technical Status strip, Analysis Context and Jobs & Programs Review.
-
-
-### v1.34.61 finishing
-
-- Jobs & Programs now keeps Live / Review / Search beside the workspace title and uses the full available width.
-- Review no longer has a second Search button; Search is a dedicated mode with an empty pre-query state.
-- Live selected-row emphasis is reduced to a subtle background plus left accent.
-- Performance Analysis is slightly narrower, chart-first, and uses a restrained backdrop for focus.
-- Compact Correlated Events copy is shortened to avoid truncation.
-- The duplicate visible SAP Performance title text is suppressed while preserving an accessible heading.
-
-### Infrastructure observation freshness (v1.34.75 DEV)
-
-The embedded Infrastructure overview and Infrastructure Analysis use one 15-minute freshness rule for the selected host's collection timestamp. A missing/invalid/future timestamp is `UNKNOWN`; a late collection is `STALE`. Filesystem, Network, and Storage I/O retain their last observed values for investigation but do **not** show old `CRITICAL`/`ATTENTION`/`NORMAL` as current host conditions. The main overview refreshes the host and telemetry endpoints every 60 seconds without using a mutating collection endpoint. This UI guard does **not** claim a new collector result, synthesize a filesystem percentage, or modify the SAP host.
-
-If `/INTF` shows last-observed 92% but a fresh SAP `df -h /INTF` shows 88%, investigate the Rundeck infrastructure collection/poller. They reflect different observations until a new valid collection is persisted. See `ops/rundeck/OPERATIONS.md` for read-only checks and standard DEV QA/deploy.
-
-### SPHERE operator motion (v1.34.76 DEV)
-
-Subtle first-render entrance for cockpit regions and analysis drawers, 300ms chart traces with 180ms updates, and short interaction transitions. Motion runs client-side only: no polling frequency change, no fake live animation or extra API calls. Stale infrastructure samples remain labelled historical. Motion respects the browser's reduced-motion preference and is shortened for mobile devices. QA includes an explicit fresh NORMAL filesystem state assertion and animation accessibility contract.
-
-### Monitoring reliability and retained observation gaps (v1.34.77 DEV)
-
-The cockpit distinguishes current monitoring **data quality** from SAP operational health. `FRESH` indicates a recent READY performance sample and recent availability data; `STALE` indicates old READY evidence (not a live observation); `DEGRADED` indicates a source/watchdog problem despite a recently retained sample; `PARTIAL` means availability evidence is unavailable/old; `UNKNOWN` means required source identity or health verification is missing. The header says **LAST READY** rather than implying a current collection when performance evidence is invalid.
-
-After a recovery, a compact **historical observation gap** remains visible for up to 24 hours when two adjacent retained READY collections exceed the expected cadence; the display quotes the timestamps bounding actual observations and does not invent a start time for SAP downtime. Existing trend gap bands remain available for historical review. The token-expiry incident from 10 October 2026 showed why this separation is required. Regression tests run through `npm run qa:data-quality` in the default QA sequence; PROD is not automatically changed.
-
-
-### SPHERE DEV checkpoint — v1.34.78 (11 October 2026)
-
-**Evidence:** Operator screenshot of `https://sphere.astraotoparts.co.id/dev/`
-displays `Build v1.34.78-dev · b878142`, the complementary **CPU** and **RAM**
-Server Trend charts, Technical Trend on Swap I/O, six analysis shortcuts
-and Jobs & Programs (Live mode). The foreground screenshot indicates
-the new frontend is serving on DEV; it is not, by itself, a full
-backend/PROD deployment transcript or browser compatibility test.
-
-**Observed at that screenshot (point-in-time only):**
-
-- Collector Health: **NORMAL**. System Health: **ATTENTION**, with APP3
-  Critical WP evidence; this is not an automatic service-down judgment.
-- SAP Data: **ALIGNED**; displayed Performance age ~3 minutes and
-  Availability age ~15 minutes. Infrastructure host shown as refreshed
-  ~1 minute ago; `/SAP_ARCH` and `/usr/sap/AOP` show filesystem
-  attention (89% and 86%) on that observation, not a fabricated current
-  measurement.
-- A retained **8h 32m observation gap** between READY samples on
-  10 October is explicitly preserved. That interval is **not** labelled
-  SAP downtime.
-- Jobs & Programs showed **203 observed, showing 50** in Live mode;
-  further entries are available in the table scroll region.
-- The screenshot provides no proof that every viewport is page-scroll-free,
-  that System Data keyboard focus works in all browsers, or that animations
-  meet performance targets. Treat these as follow-up visual checks, not
-  blockers retrospectively claimed as passed.
-
-**Validated earlier in this release train:** migration-target regression
-6/6 PASS; target `sphere_rundeck_dev` was locally classified and
-Alembic `20260929_0007` matched the live DEV schema. The earlier
-v1.34.77 deploy explicitly skipped migrations, verified PROD routing
-unchanged and confirmed `Collect Now=DISABLED`. The v1.34.78 operator
-screenshot confirms the displayed frontend revision; the final complete
-v1.34.78 deploy stdout has not been pasted into this handover.
-
-**Security and ownership:** Collect Now stays fail-closed (HTTP 403
-backend), Renew Now stays locked, SM37 remains not connected, and Runner
-ACL/rotation and Rundeck host/service ownership remain with the infra
-team. UI animation is finite and supports reduced-motion preference.
-No SAP/Rundeck execution, credential rotation, migration, or PROD
-promotion was authorized by this documentation update.
-
-**Paused / next session:** keep PROD on hold; if development resumes,
-validate System Data modal focus and backdrop close, desktop (including
-short laptop screens) and Android scroll/overflow, chart animation
-with reduced-motion, and freshness/availability labels. Run ordinary
-DEV QA/readiness before any future deployment; do not modify Rundeck
-host policies or force a production promotion. Full operational
-evidence and rollback gates are in `ops/rundeck/OPERATIONS.md`.
-
-### v1.34.79 DEV source candidate — 11 October 2026
-
-Source-only work; **not deployment evidence**. Last browser-observed DEV release remains v1.34.78-dev · b878142 until new operator QA/screenshot.
-
-- System Health now shares the SAP Data freshness decision, host snapshot and availability payload; separate collector status and historical gaps remain independent.
-- The performance age and alignment decision share the exact data-quality timestamp; a failed availability refresh is classified as partial/unverified rather than SAP DOWN.
-- Trend entry transitions are shortened to 300ms, ECharts labels are larger, selected Jobs have a restrained identity cue, and infrastructure labels can wrap. Small viewports retain accessible scrolling.
-- No backend API/schema, migration, SAP job, Rundeck authorization, or PROD changes. Server QA/build, 1366×768 / 1536×864 / 1920×1080 + Android visual checks, guarded DEV deployment and PROD readiness are **pending**.
-
-### SPHERE v1.34.80 DEV candidate — operator motion and active trace focus (11 October 2026)
-
-- **Source-only GitHub change**, not evidence of an active DEV deployment. v1.34.79 QA and deployment remain unverified until the operator completes the DEV gate.
-- Existing Server Trend CPU/RAM/Technical evidence is unchanged. Chart instances persist for focus/option updates; APP1–APP5 + All form a keyboard-accessible color-coded highlight control. The selected APP trace changes emphasis; it never fabricates points, bridges null collection gaps, or alters threshold interpretation.
-- Jobs & Programs shows Current / Review / Search with accessible tab semantics and an 180 ms finite mode transition. System/Collector status indicators animate only on a genuine state change.
-- Reduced motion disables entrance/transition effects; no blinking health, infinite pulses, synthetic number counters, polling changes, backend migrations or SAP job execution.
-- Run DEV regression, lint, build and manual visual QA (1366×768, 1536×864, 1920×1080, Android) before authorizing the revision-bound deployment. PROD remains unchanged.
+Historical release notes are not live runbooks. Keep documentation aligned to source behavior and verify runtime/deployment independently.

@@ -1,210 +1,64 @@
-# v1.34.83 Modal Recovery & Cockpit Visual QA (DEV only)
+# SPHERE — Current Visual and Functional QA (DEV)
 
-**Runtime status: NOT VERIFIED until Playwright runs against the patched build.**
+This is the current checklist for `rundeck-sphere-dev`. **GitHub QA success is not proof that the current source is deployed or that a one-screen target is met in a live browser.** Take screenshots and record deployed SHA separately.
 
-- Viewports: 1366×768, 1536×864, 1920×1080, Android 393×852.
-- Unified APP dialog: after motion all four edges inside viewport, title/close in bounds; keyboard Tab, Escape, backdrop, focus restore and reduced-motion.
-- Six analysis tiles: consistent bounded text, keyboard focus and correct destinations. No legacy visible overflow.
-- APP5 click must retain APP5 SAP identity; Infrastructure uses an independently verified matching host or UNKNOWN, never APP1 fallback.
-- Verify repeated /SAP_ARCH 89% with hostname, collection ID and raw host filesystem readings; identical values alone are not proof of duplication.
-- Scroll through all loaded workload rows, inspect Live/Review/Search, retained trends, historical sample/bucket times and collection gaps.
-- Keep SAP, collector and Infrastructure freshness independent. No synthetic heartbeat.
-- Run lint, unit regression, Basis QA, Vite build and Playwright geometry. Never claim visual PASS from source-only checks.
-- For UI-only v1.34.83, run `ops/rundeck/release-ui-dev.sh <verified-sha>` from the server after updating the checkout. It performs exactly one source QA/build, 4-viewport Playwright geometry against a local preview using the existing DEV API, a read-only DEV DB revision guard, and an atomic static web-only switch. Failure rolls back the static symlink. Neither the backend, collector, SAP jobs, migrations, credentials, Nginx config nor PROD is changed.
+## Required viewport matrix
 
----
+| Viewport | Required check |
+|---|---|
+| 1536 × 864 desktop, 100% zoom | Target: whole Monitoring Overview visible without browser page scroll, with no clipped information |
+| 1366 × 768 desktop | Legibility and controlled natural scrolling where necessary |
+| 1920 × 1080 desktop | Full-width layout and four charts in one row |
+| 393 × 852 Android/mobile | No horizontal overflow, correct stacking, functional dialogs |
+| Desktop light/dark | Contrast, focus, status colors, tooltips |
 
-# SPHERE Visual QA
+Record `window.innerWidth/innerHeight`, `document.documentElement.scrollHeight/clientHeight`, browser zoom and displayed/active DEV source SHA when assessing one-screen fit. Do not report PASS if important information is clipped using `overflow:hidden`.
 
-This checklist covers the current v1.34.53 operator UI.
+## Monitoring
 
-Visual QA is separate from the default `npm run qa` release gate.
+- Top navigation and sidebar are not duplicated; primary sidebar is Monitoring, Jobs & Programs, Data Collection, Reports.
+- SAP APP1–APP5 labels, CPU, RAM, Critical WP and actual source timestamps stay aligned; clicking each APP selects the same host's evidence (especially APP5).
+- Four metric dropdowns remain usable. Default charts are CPU Usage, Memory Usage, Network and Critical WP.
+- At wide desktop width: **4 charts × 1 row**. At smaller widths: 2 or 1 columns. No overlap, blank panels, clipped axes or horizontal page scrollbar.
+- Shared 1D/7D/30D/Last Month/3M/6M, Short, Custom, Interval, Avg/Peak and APP filter work and preserve selected data semantics.
+- Every chart with data presents readable peak **value, APP, date, time (WIB)**; verify exact timestamp against tooltip and selected bucket detail.
+- Network RX/TX, Y: Typical/Y: Full, source NIC/peak and Missing Samples/Full Range controls work without hiding actual peak.
+- Warning/Critical thresholds remain accurate across APP-focus and zoom; unobserved windows show gaps rather than zero.
+- Bottom row is Jobs & Programs and System Health. Preview shows a bounded two-row priority list and two current workloads, while View Details/View All exposes complete records.
+- System Health shows separate availability, SAP issues, server health, events and collection summary with independent missing/stale states.
+- No vertical scroll at **1536 × 864** only if all essential overview content is genuinely visible; scroll on smaller screens is acceptable.
 
-## Viewports
+## Click and modal flows
 
-Review at minimum:
-
-- 1920×1080
-- 1600×900
-- 1366×768
-- browser scaling around 125% where available
-
-## Live Monitoring
-
-Validate:
-
-- SAP App Servers + Server Trend keep the intended two-column balance;
-- Server Trend chart remains readable without creating dead space;
-- Current Jobs & Programs rows remain compact and clickable;
-- Selected Job / Program metrics use PSS Memory and workload-scoped APP Critical WP wording;
-- observed zero and `Not observed for selected workload` remain visually/semantically distinct;
-- primary evidence rows remain visually stronger than Observation History / Infrastructure Analysis / System Data launchers;
-- Current Jobs & Programs and Jobs & Programs to Review remain balanced side by side without horizontal overflow;
-- Infrastructure issue strip is visible but not a full-page alert;
-- System Health, Collector Health, and data freshness remain distinct.
-
-## Click/drill-down behavior
-
-Validate:
-
-- APP row → Application Server Analysis;
-- Server Trend point → Trend Details;
-- Trend Details workload → Performance Analysis;
-- Current Job/Program row → Performance Analysis;
-- Review row → Performance Analysis;
-- performance raw point → Observation Details;
-- historical bucket → Historical Bucket Details;
-- WP/Trace row → SAP WP Signal Details;
-- drawer Back/Close returns to the correct investigation context.
-
-Clickable rows should show pointer/hover affordance without adding noisy Action columns.
-
-## Server Trend historical accuracy
-
-For Average mode:
-
-- tooltip says Avg;
-- selected timestamp is the bucket timestamp.
-
-For Peak mode:
-
-- tooltip shows Bucket;
-- Peak Value matches the clicked chart point;
-- Peak At is the exact retained sample timestamp;
-- Trend Details marker stays on the clicked bucket;
-- exact Peak Collection is used to load saved workloads;
-- the mini-history value must not jump to a nearest bucket value.
-
-## Performance Analysis
-
-Validate:
-
-- Current means selected workload episode;
-- <=5 observations show Limited samples where applicable;
-- a Current range with exactly one saved observation shows **Selected Observation** and **Single saved observation - no trend line** instead of a large empty trend chart;
-- low-sample chart height is compact;
-- Current raw observations and historical buckets open different detail dialogs;
-- x-axis formatting is readable for same-day and multi-day ranges;
-- issue marker label is horizontal and does not cover critical data;
-- bottom evidence cards remain reachable without excessive blank space;
-- WP/Trace table remains readable and rows open detail;
-- Latest Trace Error shows AT SNAPSHOT or HISTORICAL directly beside the retained error.
-
-## Infrastructure Analysis
-
-Validate:
-
-- Filesystem is labelled as Capacity;
-- Storage I/O is labelled as I/O Activity;
-- graph uses the full plot area;
-- 1H/6H axis shows time;
-- 24H shows date + time;
-- 7D/30D shows date;
-- retained-history coverage is explicit;
-- source storage util >100% is flagged, not silently clamped;
-- network drop display is labelled as a delta/peak delta, not an absolute packet-loss claim.
-
-## PDF quick report
-
-Validate the one-page report at browser PDF preview around 77% and at a mobile-friendly zoom:
-
-- SUMMARY remains readable;
-- APP Server Status remains scannable;
-- chart legend, threshold labels, and dates are readable;
-- Selected Workload keeps 0 distinct from Not observed;
-- Jobs / Programs to Review reasons remain readable;
-- CHECK SUMMARY shows Availability, Critical WP, Data, and Timing;
-- Performance and Availability source times are printed;
-- mismatched report source timing stays PARTIAL;
-- NOTES uses plain Basis wording and points job-status verification to SAP/SM37;
-- the report remains one page without clipping;
-- PDF Operational State matches the System Health severity semantics for the same source state.
+- APP card → APP analysis and selected host identity.
+- Trend point → saved exact point/bucket detail; workload selection → shared Job/Program Analysis.
+- Jobs & Programs Current/Review/Search and pagination have no fabricated completeness.
+- Related Events, SAP Checks, Infrastructure, Data Collection and Reports remain reachable.
+- Modal Close, Back, Tab, Escape, backdrop and focus restore; no modal content outside viewport. Reduced-motion preference is respected.
+- Manual Upload remains a Data Collection action, not Monthly Review's manual findings workflow.
 
 ## Evidence semantics
 
-Visual copy must not imply:
+- A missing or stale performance or availability observation is UNKNOWN/PARTIAL, not NORMAL/UP/DOWN by inference.
+- APP Critical WP ≠ individual failed SAP job; review candidate ≠ SM37 execution failure.
+- CPU for grouped processes may exceed 100%; host RAM ≠ workload PSS.
+- WP Trace Error is clearly AT SNAPSHOT or HISTORICAL, not automatically current.
+- Historic Avg bucket vs exact Peak At/Peak Value/Collection ID must remain distinct; no nearest-bucket rewrite.
+- API/network/collection errors are shown, not replaced by last good values as current.
 
-- correlation = causation;
-- APP Critical WP = job failure;
-- Latest Trace Error = current error;
-- historical trace error = SM37 failure;
-- missing availability = DOWN;
-- historical selection = current incident causation.
+## Monthly Review / PDF
 
-## Optional Playwright setup
+- Review month and all four Monthly Review tabs are navigable.
+- Programs/jobs and confirmed trace errors are sourced from saved SPHERE evidence.
+- Table headers, timestamps and thresholds are readable; report copies use common English SAP/IT terms.
+- PDF page breaks and long program names remain readable and do not imply unavailable errors or jobs succeeded/failed.
 
-```bash
-npm install --no-save @playwright/test
-npx playwright install chromium
-```
+## Validation and sign-off
 
-Run against DEV:
+1. Run `npm run qa` and repository/Trend/Bootstrap tests.
+2. Run `npm run qa:visual`, browser boot/geometry QA and any applicable Python unit tests; record actual outcomes.
+3. Use guarded DEV release (see [rundeck-development.md](rundeck-development.md)), not a build-only shortcut.
+4. Validate public `/dev/` SHA and API health, compare screenshots at the matrix above, and record scroll dimensions.
+5. If QA or data trust regresses, rollback DEV. Do not promote PROD based solely on GitHub CI.
 
-```bash
-SPHERE_VISUAL_BASE_URL='https://sphere.astraotoparts.co.id/dev/#/tool/logs' npm run qa:visual
-```
-
-Only update screenshot baselines after manual review. Do not update snapshots merely to make a failure disappear.
-
-
-## v1.34.61 cockpit and drawer checks
-
-- bottom workflow is equal-height Current / Selected / Review;
-- Current and Review lists scroll internally with sticky table headers;
-- Selected Job does not scroll in the compact cockpit;
-- Infrastructure History appears above Current Snapshot;
-- Current Snapshot columns remain Filesystem 45%, Network 20%, Storage I/O 35%;
-- Correlated Events shows Timing, relation labels, and Cause not confirmed without implying causation.
-
-
-## v1.34.61 checks
-
-- no standalone History tab;
-- Current Jobs and Review are equal 50/50 panels with internal scrolling;
-- clicking a Current or Review row opens Performance Analysis directly;
-- Server Trend and Technical Trend render side by side at roughly 60/40;
-- historical search is available in Review and clearly labels historical matches;
-- SAP App Servers uses the available width with summary and Status;
-- SAP Issues shows performance, availability, HANA/Web/SSH and SM37 source indicators with NORMAL/WARNING/ATTENTION/CRITICAL states.
-
-
-## v1.34.61 cockpit checks
-
-- no large dead space between the top cockpit row and trend controls;
-- SAP App Servers has no desktop horizontal scrollbar;
-- Server Trend 1, Server Trend 2, and Technical Trend render side by side near 35/35/30;
-- shared Time Range / Interval / View controls appear once;
-- Current Jobs fills its 50% pane and Review controls stay compact;
-- six analysis shortcuts remain visible in one restrained rail;
-- Correlated Events relies on the vertical timeline instead of repeated horizontal rules;
-- SAP Availability, SAP Issues, Observation History, Infrastructure Analysis, and System Data use lighter separators and consistent drawer chrome;
-- Back labels read Live Monitoring or Performance Analysis, never Selected Job.
-
-
-## v1.34.84 — restrained Cloudflare-inspired operator interactions (DEV)
-
-- CSS-only focus/hover APP and six shortcut tile soft glow, 2px composited hover lift; selected and UNKNOWN/STALE indicators are unchanged and never animated.
-- Jobs & Programs tab ink eases on state change; modal backdrop fades once over 190ms. APP dialog keeps the established fixed-center 220ms geometry.
-- Coarse pointers receive no hover translation, `prefers-reduced-motion: reduce` and print disable transitions and backdrop animations. Keyboard focus continues to expose the action.
-- Production release candidate PR #49 is pinned to v1.34.83; this v1.34.84 DEV-only change does not mutate that PR or PROD.
-- QA must pass before the optional gated DEV web-only rollout; run `bash ops/rundeck/release-ui-dev.sh <exact-v1.34.84-source-sha>` on JAHSVR-SPHERE. Run full QA/build because frontend files changed, not artifact reuse.
-
-
-## v1.34.85 — Cloudflare-inspired LIGHT theme, analysis geometry and status evidence
-
-- Light palette resolved at `.logV2Inner`, which previously shadowed root light tokens with dark values. Neutral white/f8fafc surfaces, dark text, accessible green/amber/red status semantics; Dark theme remains unchanged.
-- APP cards explicitly distinguish `SAP · STATE` and `Infra FS ...` with independent source timestamps. These labels do not merge health evidence.
-- Unified modal uses 45/55 SAP/Infrastructure grid on desktop; Infrastructure pane has independent full-width snapshot and history bands and wrapped Network/Storage numeric columns. Mobile stacks the bands.
-- ECharts palette recomputes on the html `data-theme` attribute event; no data polling, root-cause inference, or fabricated metrics.
-- Browser regression covers light/dark four project viewports and APP2 modal geometry. Screenshots and manual light/dark inspection still needed after guarded DEV deploy.
-- This version only targets `rundeck-sphere-dev`; PROD and PR #49 are not promoted.
-
-
-## v1.34.86 — centered operator modal contract, paired analysis, honest SAP identity
-
-- Six visible launchers are retained; Correlated Events + Observation History share related nav, SAP Availability + SAP Issues share related nav. Infrastructure and System Data remain standalone.
-- All legacy right drawers use the centered viewport-capped modal with one focus trap, Escape close, scrim, body scrolling, and focus return. The APP detail width remains content-aware.
-- Duplicate dashboard selected-context strip removed; selected workload / host / time remains available in Correlated Events modal subtitle and selected row state.
-- SAP source identity consisting only of question marks/punctuation is displayed as 'SAP name unresolved'; raw keys are preserved in title and API contexts. Inspect SAP collection encoding separately.
-- v1.34.85 visual tests now use document.documentElement tokens instead of an ungrounded nested selector and wait for real APP cards before computed styles. Additional geometry tests cover every analysis destination and related nav.
-- Server QA/Playwright must PASS before any DEV deploy; PROD and PR #49 unchanged.
+Visual sign-off must state date, commit SHA, deployed SHA, tested browser/viewport, PASS/FAIL and any remaining scroll or content limitation.
