@@ -278,8 +278,8 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
 
   if(compact){
     return <button type="button" className="rundeckEvidenceCard rundeckInfrastructureCard" onClick={onOpen} aria-label="Open Infrastructure Analysis">
-      <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> Infrastructure Analysis</span>
-      <strong>{error ? 'Unavailable' : `${overall} · ${compactSignal}`}</strong>
+      <span className="rundeckEvidenceCardTitle"><SphereIcon name="server" /> Server Health</span>
+      <strong>{error ? 'No Data' : `${shortHost(host || 'Server')} · ${overall} · ${compactSignal}`}</strong>
       <em aria-hidden="true">›</em>
     </button>
   }

@@ -143,10 +143,10 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
   if(compact){
-    const reviewText=`${reviewIndicators.length} non-normal indicators`
+    const statusText = `${activeFindings} Attention / Critical · ${unknownCount} No Data`
     return <button type="button" className="rundeckEvidenceCard rundeckIssuesCard" onClick={onOpen} aria-label="Open SAP Issues">
       <span className="rundeckEvidenceCardTitle"><SphereIcon name="alert" /> SAP Issues</span>
-      <strong>{loading ? 'Checking source data…' : failedSources.length ? `${failedSources.length} source(s) unavailable · ${reviewText}` : `${reviewText}${sm37 === 'READY' ? '' : sm37 === 'UNKNOWN' ? ' · SM37 unverified' : ' · SM37 not connected'}`}</strong>
+      <strong>{loading ? 'Checking…' : statusText}{failedSources.length ? ' · Source unavailable' : ''}</strong>
       <em aria-hidden="true">›</em>
     </button>
   }

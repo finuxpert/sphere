@@ -30,3 +30,13 @@
 .rundeckNetworkGapNotice summary span{font-size:10px!important;letter-spacing:0!important;text-transform:none!important}
 @media(max-width:760px){.sphereMonitoringTabs a,.sphereCollectionTabs button,.sphereOverviewDetailTabs button{padding:8px 9px;font-size:11px}.sphereManualCollection{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.sphereMonitoringTabs *,.sphereCollectionTabs *{transition:none!important}}
+
+/* One System Health summary on Overview; details remain in existing drawers. */
+.sphereHealthSummaryHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px}
+.sphereHealthSummaryHeader h3{font-size:13px;font-weight:650;margin:0}
+.sphereHealthSummaryHeader button{font:inherit;font-size:11px;font-weight:600;background:transparent;border:0;color:var(--sphere-text-secondary,#aeb9c0);cursor:pointer;padding:6px}
+.sphereHealthSummaryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:stretch}
+.sphereHealthSummaryGrid .rundeckEvidenceCard{width:100%;min-width:0;height:100%;text-align:left;box-sizing:border-box}
+.sphereHealthSummaryGrid .rundeckEvidenceCard strong{overflow-wrap:anywhere;font-size:11px;line-height:1.4}
+.sphereHealthLoading{padding:14px;color:var(--sphere-text-secondary,#aeb9c0);font-size:11px}
+@media(max-width:900px){.sphereHealthSummaryGrid{grid-template-columns:1fr}}

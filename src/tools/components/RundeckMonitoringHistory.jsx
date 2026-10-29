@@ -72,7 +72,6 @@ export default function RundeckMonitoringHistory(props) {
   const focusSequence = React.useRef(0)
   const [appFocusRequest, setAppFocusRequest] = React.useState(null)
   const [activeOverlay, setActiveOverlay] = React.useState(null)
-  const [overviewDetail, setOverviewDetail] = React.useState('')
   const [activeView, setActiveView] = React.useState(performanceViewFromHash)
   React.useEffect(() => {
     const sync = () => { setActiveView(performanceViewFromHash()); setActiveOverlay(null) }
@@ -160,8 +159,8 @@ export default function RundeckMonitoringHistory(props) {
   const pageNames = {
     jobs: ['Jobs & Programs', 'Current and saved workloads'],
     events: ['Recent Events', 'Saved monitoring events'],
-    'sap-checks': ['SAP Services', 'Availability and SAP issues'],
-    infrastructure: ['Server Health', 'Saved server measurements'],
+    'sap-checks': ['System Health', 'SAP service details'],
+    infrastructure: ['System Health', 'Server measurements'],
     'system-data': ['Data Collection', 'Automatic collection, uploads and history'],
     'monthly-review': ['Reports', 'Monthly Review'],
   }
@@ -247,34 +246,21 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
           />
-          <section className="sphereOverviewDetails" aria-label="More monitoring details">
-            <nav className="sphereOverviewDetailTabs" aria-label="Additional checks">
-              {[['services','SAP Services'], ['server','Server Health'], ['events','Recent Events']].map(([id,label]) =>
-                <button type="button" key={id} aria-pressed={overviewDetail === id}
-                  onClick={() => setOverviewDetail(value => value === id ? '' : id)}>
-                  {label}{overviewDetail === id ? ' −' : ' +'}
-                </button>)}
-            </nav>
-            {overviewDetail === 'services' && <div className="sphereOverviewDetailsBody">
-              <RundeckAvailability refreshToken={refreshToken} />
-              <RundeckSapIssues refreshToken={refreshToken} onInspectApp={inspectApp} />
-            </div>}
-            {overviewDetail === 'server' && <div className="sphereOverviewDetailsBody">
-              <React.Suspense fallback={<div role="status">Loading server data…</div>}>
-                <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} />
+          <section className="sphereOverviewDetails" aria-label="System Health">
+            <header className="sphereHealthSummaryHeader">
+              <h3>System Health</h3>
+              <button type="button" onClick={() => setActiveOverlay({ type:'evidence', returnTo:{ type:'selected' } })}>Recent Events</button>
+            </header>
+            <div className="sphereHealthSummaryGrid">
+              <RundeckAvailability refreshToken={refreshToken} compact onOpen={() => setActiveOverlay({ type:'availability' })} />
+              <RundeckSapIssues refreshToken={refreshToken} compact onOpen={() => setActiveOverlay({ type:'issues' })} />
+              <React.Suspense fallback={<span role="status" className="sphereHealthLoading">Loading server health…</span>}>
+                <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} compact
+                  onOpen={() => setActiveOverlay({ type:'infrastructure' })} />
               </React.Suspense>
-            </div>}
-            {overviewDetail === 'events' && <div className="sphereOverviewDetailsBody">
-              <React.Suspense fallback={<div role="status">Loading events…</div>}>
-                <RundeckEvidenceTimeline refreshToken={refreshToken} job={selectedJob} incidentActive />
-              </React.Suspense>
-            </div>}
+            </div>
           </section></> : <section className={`spherePerformancePage is-${activeView}`} aria-label={currentPage?.[0] || 'SAP Operations'}>
           {!['jobs', 'events', 'monthly-review'].includes(activeView) && <header className="spherePerformancePageHeader"><h2 title={currentPage?.[1] || 'Source-backed observations'}>{currentPage?.[0] || 'SAP Operations'}</h2></header>}
-          {['sap-checks','infrastructure'].includes(activeView) && <nav className="sphereHealthSubnav" aria-label="Health sections">
-            <a href="#/tool/logs/sap-checks" aria-current={activeView==='sap-checks'?'page':undefined}>SAP Services</a>
-            <a href="#/tool/logs/infrastructure" aria-current={activeView==='infrastructure'?'page':undefined}>Server Health</a>
-          </nav>}
           {inlinePage}
         </section>}
       </div>
