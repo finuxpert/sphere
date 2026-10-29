@@ -798,8 +798,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [fitObserved, setFitObserved] = React.useState(false)
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
-  const [technicalMetric, setTechnicalMetric] = React.useState(METRICS.some(([key]) => key === saved.technicalMetric) ? saved.technicalMetric : 'network')
-  const [fourthMetric, setFourthMetric] = React.useState(METRICS.some(([key]) => key === saved.fourthMetric) ? saved.fourthMetric : 'wp')
+  const [technicalMetric, setTechnicalMetric] = React.useState(initialServerMetrics.third)
+  const [fourthMetric, setFourthMetric] = React.useState(initialServerMetrics.fourth)
   const [networkDirection, setNetworkDirection] = React.useState(saved.networkDirection === 'tx' ? 'tx' : 'rx')
   const [networkDirection1, setNetworkDirection1] = React.useState(saved.networkDirection1 === 'tx' ? 'tx' : 'rx')
   const [networkDirection2, setNetworkDirection2] = React.useState(saved.networkDirection2 === 'tx' ? 'tx' : 'rx')
@@ -1084,6 +1084,20 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         {[serverTrend1,serverTrend2].filter(trend => trend?.unit === '%').map((trend,index) =>
           <span key={trend.metric || index}>{metricLabel(trend.metric)} warn {trend.warning ?? '—'}% / crit {trend.critical ?? '—'}%</span>)} · thresholds unchanged
       </small>}
+      <button type="button" className="rundeckTrendReset"
+        title="Restore CPU, Memory, Network and Critical WP. Keep the selected time range and source observations."
+        onClick={() => {
+          setServerMetric1('cpu')
+          setServerMetric2('ram')
+          setTechnicalMetric('network')
+          setFourthMetric('wp')
+          setNetworkDirection('rx')
+          setScaleMode('full')
+          setNetworkScaleMode('full')
+          setNetworkScaleMode1('full')
+          setNetworkScaleMode2('full')
+          setFourthNetworkScaleMode('full')
+        }}>Reset charts</button>
       <button type="button" className="rundeckTrendYAxisToggle"
         aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
         title="Focus rescales percent-based APP charts to observed samples. SAP Warning/Critical thresholds do not change; markers above the zoomed axis are not plotted. Full restores 0–100%."
@@ -1255,7 +1269,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           </div>}
           {clippedNetwork && <div className="rundeckTechnicalLoadPeakNotice rundeckNetworkPeakNotice" role="status"
             title={'Typical clips ' + networkInfo.outliers + ' samples above the display axis. Full shows all saved Mbps values and NIC provenance.'}>
-            Peak {numberText(networkInfo.peak,1)} Mbps
+            All APPs peak {numberText(networkInfo.peak,1)} Mbps
             {networkInfo.peakHost ? ' · ' + shortHost(networkInfo.peakHost) : ''}
             {networkInfo.peakInterface ? ' · NIC ' + networkInfo.peakInterface : ''}
             {networkInfo.peakAt ? ' · ' + formatWib(networkInfo.peakAt,true) + ' WIB' : ''}
@@ -1268,7 +1282,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           {panelPeak && <div className="rundeckTrendPeakSummary" role="status"
             title={peakKind + ' from saved observations; source timestamp shown when available'}>
             <strong>{peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
-            <span>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB</span>
+            <span>{activeFocus ? 'Selected ' + activeFocus : 'All APPs'} · {panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB</span>
           </div>}
         </section>
       })}

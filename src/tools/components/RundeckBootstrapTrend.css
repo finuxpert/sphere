@@ -75,25 +75,9 @@
   }
 }
 
-/* Compact Overview (DEV): Bootstrap 5 grid for both lower columns.
-   Keep full lists in the Jobs & Programs pages, not the small home preview. */
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring .sphereOverviewBottomRow.row {
-  display:flex!important;
-  flex-wrap:wrap!important;
-  --bs-gutter-x:8px;
-  --bs-gutter-y:6px;
-  width:100%!important;
-  margin:0!important;
-  gap:0!important;
-  align-items:stretch!important;
-}
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring .sphereOverviewBottomRow.row > :is(.rundeckJobsProgramsOverview,.sphereOverviewDetails) {
-  box-sizing:border-box!important;
-  align-self:stretch!important;
-  min-width:0!important;
-}
+/* The Overview bottom row is a two-column CSS grid, not Bootstrap flex.
+   The authoritative rule lives in RundeckOneScreenDev.css, imported last.
+   Keep Bootstrap scoped to the four trend chart columns. */
 /* No fixed-height clipping: if an unexpected banner or extra evidence appears,
    permit natural page scrolling rather than concealing SAP monitoring data. */
 @media (min-width:1400px) and (min-height:760px) {

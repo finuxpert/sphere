@@ -47,7 +47,7 @@ The Monitoring overview contains:
 3. **Jobs & Programs**: summary counts, short saved-review candidates, and short latest-workload preview. The complete review, search and current workloads remain accessible through details/pages. Preview counts must not be mistaken for total observed/evaluated records.
 4. **System Health**: SAP availability, SAP issues, server health, recent events and recent collection summaries, with links to full evidence.
 
-The new compact Monitoring layout uses a Bootstrap Grid split for lower panels and conditional viewport fitting. **One-screen fit at 1536 × 864 is a visual QA target, not a verified runtime result.** Preserve natural page scrolling when the viewport is too small or unexpected evidence requires more space; never clip or hide raw records to fabricate a no-scroll claim.
+The compact Monitoring layout uses a two-column CSS grid for the lower panels (44% Jobs & Programs, 56% System Health) and Bootstrap 5 grid for four chart slots. Saved duplicate chart choices are normalized on load; Reset charts restores CPU, RAM, Network RX and Critical WP. Peak footers distinguish selected APP from all APPs. Conditional viewport fitting is retained. **One-screen fit at 1536 × 864 is a visual QA target, not a verified runtime result.** Preserve natural page scrolling when the viewport is too small or unexpected evidence requires more space; never clip or hide raw records to fabricate a no-scroll claim.
 
 Data Collection separates Automatic/Rundeck, Manual Upload, and historical collection context. Reports includes Monthly Review and PDF workflows. Manual Upload is unrelated to a Monthly Review's manual evaluation notes.
 

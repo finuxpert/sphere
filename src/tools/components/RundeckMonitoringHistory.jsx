@@ -45,6 +45,7 @@ import './RundeckEnterpriseShellV143.css'
 import './RundeckRevitalization.css'
 import '../../vendor/bootstrap-grid.min.css'
 import './RundeckBootstrapTrend.css'
+import './RundeckOneScreenDev.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))

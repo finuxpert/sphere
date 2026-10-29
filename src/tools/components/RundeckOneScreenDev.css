@@ -1,0 +1,143 @@
+/* DEV-only Monitoring overview: authoritative last-loaded layout contract.
+ * Never hide source evidence, error messages or rows to manufacture a fit.
+ * At 1536x960 keep the Jobs and System Health panels on the same row.
+ * Bootstrap grid classes remain on the markup for existing tests/routes,
+ * but only the four ECharts slots use Bootstrap flex widths. */
+@media (min-width: 1200px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491 .sphereOverviewBottomRow.row {
+    display: grid !important;
+    grid-template-columns: minmax(0,44fr) minmax(0,56fr) !important;
+    grid-template-rows: auto !important;
+    gap: 7px !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: start !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491 .sphereOverviewBottomRow.row >
+  :is(.rundeckJobsProgramsOverview.col,.rundeckJobsProgramsOverview.col-12,.sphereOverviewDetails.col,.sphereOverviewDetails.col-12) {
+    box-sizing: border-box !important;
+    display: block !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    flex: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding-inline: 8px !important;
+    align-self: stretch !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .sphereOverviewBottomRow .sphereOverviewDetails {
+    margin-top: 0 !important;
+    padding-block: 7px !important;
+  }
+}
+@media (min-width: 1400px) and (min-height: 760px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .rundeckTrendSharedControls {
+    margin-bottom: 4px !important;
+    gap: 3px 9px !important;
+    align-items: center !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .rundeckTrendSharedGroup {
+    min-width: 0 !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendPlot {
+    flex: 0 0 clamp(124px, calc(var(--sphere-overview-room) - 565px), 164px) !important;
+    height: clamp(124px, calc(var(--sphere-overview-room) - 565px), 164px) !important;
+    min-height: 124px !important;
+    max-height: 164px !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .rundeckTripleTrendGrid.sphereTrendBootstrapRow .rundeckTrendChart {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .sphereOverviewBottomRow .sphereWorkloadSummaryMetrics {
+    grid-template-rows: minmax(38px,auto) !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .sphereOverviewBottomRow .sphereCurrentWorkloadRow,
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .sphereOverviewBottomRow .sphereWorkloadPriorityRow {
+    padding-block: 3px !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="compact"] .sphereOverviewDetails .sphereHealthSummaryGrid {
+    grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  }
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendEditorial {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:5px 10px;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendReset {
+  order: 2;
+  border:0;
+  background:transparent;
+  color:var(--sphere-accent,#70bed0);
+  cursor:pointer;
+  font:inherit;
+  font-size:10px;
+  padding:3px 6px;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendReset:focus-visible {
+  outline:2px solid var(--sphere-accent,#70bed0);
+  outline-offset:2px;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendPeakSummary {min-width:0;max-width:100%;min-height:24px}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendPeakSummary span {
+  display:block;
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckNetworkGapNotice:not([open]) > summary {
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckNetworkGapNotice:not([open]) > summary > strong {
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  min-width:0;
+}
+@media (max-width: 1199px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491 .sphereOverviewBottomRow.row {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:8px !important;
+    width:100% !important;
+    margin:0 !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491 .sphereOverviewBottomRow.row > * {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    padding-inline:0 !important;
+  }
+}
