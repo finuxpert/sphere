@@ -1,0 +1,212 @@
+/* V1.43 — professional flat SAP operations shell.
+ * Sidebar is part of the application, not a floating dashboard card.
+ * Keep live evidence, routes, page contents and source-led severity unchanged.
+ */
+
+/* Use screen width, not a centered marketing-page container, for operations. */
+.appShell.isTool:has(.rundeckPanel) {
+  --sphere-operations-gutter:clamp(10px,1.15vw,20px);
+}
+.appShell.isTool:has(.rundeckPanel) main > .container,
+.appShell.isTool:has(.rundeckPanel) main.container {
+  width:100% !important;
+  max-width:none !important;
+  margin-inline:0 !important;
+  padding-inline:var(--sphere-operations-gutter) !important;
+}
+.appShell.isTool:has(.rundeckPanel) .sphereNavInner {
+  width:100% !important;
+  max-width:none !important;
+  padding-inline:var(--sphere-operations-gutter) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell {
+  display:grid !important;
+  grid-template-columns:64px minmax(0,1fr) !important;
+  align-items:stretch !important;
+  gap:12px !important;
+  width:100%;
+  min-width:0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell:has(.spherePerformanceSidebar.is-expanded) {
+  grid-template-columns:196px minmax(0,1fr) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceShell:has(.spherePerformanceSidebar.is-collapsed) {
+  grid-template-columns:64px minmax(0,1fr) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar {
+  position:sticky !important;
+  top:12px !important;
+  align-self:stretch !important;
+  box-sizing:border-box !important;
+  height:auto !important;
+  min-height:calc(100dvh - 190px) !important;
+  max-height:none !important;
+  padding:9px 6px !important;
+  border:0 !important;
+  border-right:1px solid var(--cockpit-outline,rgba(116,159,178,.18)) !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  gap:4px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarBrand {
+  padding:0 0 8px !important;
+  margin:0 0 4px !important;
+  border:0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarToggle {
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:9px;
+  width:100%;
+  min-height:36px;
+  padding:6px 8px;
+  color:var(--cockpit-text,#e9edf2);
+  font-size:12px;
+  text-align:left;
+  background:transparent;
+  border:0;
+  border-radius:5px;
+  cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarToggle:hover {
+  background:rgba(105,164,188,.09);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarToggle:focus-visible,
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink:focus-visible {
+  outline:2px solid var(--cockpit-focus,#67a9e7);
+  outline-offset:-2px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebarToggle .sphereIcon {
+  width:16px; height:16px; flex:none;
+}
+.appShell:has(.rundeckPanel) .sphereSidebarToggleGlyph {
+  font-size:17px;line-height:1;
+  margin-left:auto;
+  color:var(--cockpit-muted,#9baabb);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavGroup {
+  margin:7px 0 3px !important;
+  padding:0 8px !important;
+  border:0 !important;
+  font-size:9.5px !important;
+  letter-spacing:.035em !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:11px !important;
+  min-height:39px !important;
+  padding:8px 10px !important;
+  border:0 !important;
+  border-radius:5px !important;
+  color:var(--cockpit-muted,#a9b5bb);
+  background:transparent !important;
+  font-size:12px !important;
+  font-weight:520 !important;
+  transition:background-color 130ms ease,color 130ms ease !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink:is(:hover,.is-active) {
+  color:var(--cockpit-text,#e9edf2) !important;
+  background:rgba(93,153,187,.11) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink.is-active {
+  box-shadow:inset 2px 0 0 var(--cockpit-focus,#67a9e7);
+  font-weight:640 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar.is-collapsed
+:is(.spherePerformanceNavGroup,.spherePerformanceNavLink > span,.spherePerformanceSidebarToggle > strong,.sphereSidebarToggleGlyph) {
+  display:none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar.is-collapsed
+:is(.spherePerformanceNavLink,.spherePerformanceSidebarToggle) {
+  justify-content:center !important;
+  padding-inline:6px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar.is-collapsed .spherePerformanceNavLink {
+  min-height:44px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain {
+  min-width:0;
+  width:100%;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain .spherePerformancePage {
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  padding:0 !important;
+  box-shadow:none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring > :is(.rundeckTrendBandV13454,.rundeckJobsProgramsOverview) {
+  box-shadow:none !important;
+  border:0 !important;
+  background:var(--cockpit-surface,#1b242e) !important;
+  border-radius:6px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTripleTrendGrid > .rundeckServerTrendPanelV1234 {
+  border:0 !important;
+  background:var(--cockpit-surface-alt,#1d2833) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckWorkloadCategory,
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckAppEvalLane {
+  border:0 !important;
+  box-shadow:none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelector.is-active {
+  outline:0 !important;
+  box-shadow:inset 0 0 0 1px var(--cockpit-focus,#67a9e7) !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape {
+  grid-template-columns:minmax(62px,.85fr) minmax(75px,1.35fr) !important;
+  column-gap:7px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexShape > small {font-size:10px !important;}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckFleetMeterTrack {height:6px !important;}
+@media(max-width:899px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceShell {
+    grid-template-columns:54px minmax(0,1fr) !important;
+    gap:7px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceShell:has(.spherePerformanceSidebar.is-expanded) {
+    grid-template-columns:54px minmax(0,1fr) !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceSidebar {
+    min-height:0 !important;
+    top:8px !important;
+    max-height:calc(100dvh - 20px) !important;
+    padding:7px 3px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceSidebar.is-expanded {
+    position:fixed !important;
+    z-index:150 !important;
+    inset:var(--rca-nav-h,60px) auto auto 8px !important;
+    width:min(230px,calc(100vw - 22px)) !important;
+    min-height:0 !important;
+    max-height:calc(100dvh - var(--rca-nav-h,60px) - 14px) !important;
+    padding:9px !important;
+    background:var(--cockpit-surface,#1b242e) !important;
+    box-shadow:0 10px 30px rgba(0,0,0,.25) !important;
+    border:1px solid var(--cockpit-outline,rgba(116,159,178,.21)) !important;
+    border-radius:7px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceSidebar.is-expanded
+  :is(.spherePerformanceNavGroup,.spherePerformanceNavLink > span,.spherePerformanceSidebarToggle > strong,.sphereSidebarToggleGlyph) {display:initial !important;}
+}
+@media(prefers-reduced-motion:reduce){
+  .appShell:has(.rundeckPanel) .spherePerformanceNavLink {transition:none !important;}
+}

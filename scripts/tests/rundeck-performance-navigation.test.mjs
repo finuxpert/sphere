@@ -127,3 +127,20 @@ test('Jobs & Programs reclaims full width but preserves tabs, saved evaluation a
     assert.ok(workspace.includes(text), text + ' remains operational')
   }
 })
+
+test('V1.43 sidebar is collapsible, keyboard labeled and retains all SAP workspaces', () => {
+  const nav=read('RundeckPerformanceNavigation.jsx')
+  const wrapper=read('RundeckMonitoringHistory.jsx')
+  const css=read('RundeckEnterpriseShellV143.css')
+  assert.match(nav,/React\.useState\(true\)/)
+  assert.match(nav,/data-sidebar-state=\{collapsed \? 'collapsed' : 'expanded'\}/)
+  assert.match(nav,/aria-expanded=\{!collapsed\}/)
+  assert.match(nav,/aria-label=\{item\.label\}/)
+  assert.match(nav,/onClick=\{\(\) => setCollapsed\(value => !value\)\}/)
+  assert.match(wrapper,/RundeckEnterpriseShellV143\.css/)
+  assert.match(css,/spherePerformanceShell:has\(\.spherePerformanceSidebar\.is-collapsed\)/)
+  assert.match(css,/grid-template-columns: 64px minmax\(0,1fr\)/)
+  assert.match(css,/spherePerformanceSidebar\.is-expanded/)
+  assert.match(css,/@media \(max-width: 899px\)/)
+  assert.doesNotMatch(css,/\.rundeckAppEvalLane\s*\{[\s\S]*display:\s*none/)
+})

@@ -272,8 +272,8 @@ export default function RundeckUnifiedAppInfrastructure({
             onClick={() => { openAppAnalysis(host); selectApp(key); onSelectApp?.(host.host) }}>
             <span className="rundeckAppHexShape" aria-hidden="true">
               <strong>{key}</strong>
-              <small>{state === 'ATTENTION' ? 'ATTN' : state === 'WARNING' ? 'WARN' : state}</small>
-              <em>WP {metric(hostWp)}</em>
+              <small>{state === 'ATTENTION' ? 'ATTENTION' : state === 'WARNING' ? 'WARNING' : state}</small>
+              <em title={verified ? 'Critical SAP work processes: ' + metric(hostWp) : 'Critical work processes unverified'}>WP {metric(hostWp)}</em>
               <span className="rundeckFleetMeters">
                 {[
                   { key: 'cpu', label: 'CPU', value: hostCpu },
