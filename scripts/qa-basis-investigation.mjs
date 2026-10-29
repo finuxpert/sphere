@@ -203,7 +203,7 @@ const checks = [
       && files.version.includes("LOG_UI_REVISION = 'monitoring-flow-ui-v" + version + "'"))
   })()],
   ['Obsolete Live Monitoring tab and wording are removed', !files.wrapper.includes('>Live Monitoring</button>') && !files.wrapper.includes('Back to Live Monitoring')],
-  ['Standalone History tab is removed from the live cockpit', !files.wrapper.includes('>History</button>') && !files.wrapper.includes('RundeckWorkloadExplorer')],
+  ['Standalone History tab is removed; dashboard History opens a collection modal', !files.wrapper.includes('aria-label="Monitoring sections"') && files.wrapper.includes("type:'collection-history'") && !files.wrapper.includes('RundeckWorkloadExplorer')],
   ['Historical workload search is always accessible inside Review; server search still requires two characters', files.jobsPrograms.includes("const tabs = ['live', 'review']") && files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('React.useState(embedded)') && files.performanceReview.includes('normalizedSearch.length >= 2') && files.performanceReview.includes('appliedQuery')],
   ['Evidence Issues and System Data use content-aware drawer modes', files.wrapper.includes('size="evidence"') && files.wrapper.includes('size="issues"') && files.wrapper.includes('size="system-data"') && files.accessibilityThemeFinal.includes('.is-evidence,.is-issues,.is-system-data')],
   ['Correlated events expose state chips without causal wording', files.evidenceTimeline.includes('rundeckEvidenceStateChip') && files.evidenceTimeline.includes('event.state') && files.evidenceTimeline.includes('Operational events')],
