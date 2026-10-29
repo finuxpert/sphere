@@ -161,6 +161,8 @@ function drawTopTable(pdf, title, rows, metric, x, y, width) {
 }
 
 async function loadLogo() {
+  // Node-side PDF regression runner does not have the DOM Image API.
+  if (typeof Image === 'undefined') return null
   return new Promise(resolve => {
     const image = new Image()
     image.onload = () => resolve(image)
@@ -169,7 +171,7 @@ async function loadLogo() {
   })
 }
 
-export async function buildMonthlyPdf({ month, data }) {
+export async function buildMonthlyPdf({ month, data, returnInstance = false }) {
   const [{ jsPDF }, brand] = await Promise.all([import('jspdf'), loadLogo()])
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
   const W = pdf.internal.pageSize.getWidth()
@@ -388,68 +390,109 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.text('A related program is not necessarily the cause. Confirm in SAP before reporting.', margin, ey + 9)
   }
 
-  // Management-facing priority list: one concise page. All 25 source-backed
-  // candidates remain available with drilldown in the Monthly Review interface.
+  // Source-ranked ABAP performance candidates are not confirmed failed jobs.
+  // Use a flowing table: readable typography, complete program IDs and
+  // page-safe rows, rather than fixed 11mm rows with clipped names.
+  // Program-level timestamps are NOT supplied by the candidate contract; do
+  // not attach host peak times to the program or invent a per-program event.
   if (tuningCandidates.length) {
-    pdf.addPage()
-    pdf.setFillColor(248, 250, 251)
-    pdf.rect(0, 0, W, H, 'F')
-    pdf.setFillColor(15, 21, 26)
-    pdf.roundedRect(margin, 7, contentW, 17, 1, 1, 'F')
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(11)
-    pdf.setTextColor(240, 245, 248)
-    pdf.text('Programs Requiring Review', margin + 4, 18)
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7)
-    pdf.setTextColor(87, 101, 113)
-    pdf.text('Priority ABAP review candidates from saved CPU and memory observations; no job failure is implied.', margin, 31)
-    // The full monthly count is already visible on page 1.
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(7)
-    pdf.setTextColor(45, 63, 77)
-    pdf.text('JOB / PROGRAM', margin + 2, 40)
-    pdf.text('REVIEW REASON', margin + 119, 40)
-    pdf.text('MAX CPU CORES', margin + 184, 40, { align: 'right' })
-    pdf.text('MAX MEMORY', margin + 236, 40, { align: 'right' })
-    pdf.text('MONITORING RECORDS', margin + 279, 40, { align: 'right' })
-    pdf.setDrawColor(204, 216, 224)
-    pdf.line(margin, 42, W-margin, 42)
-
     const reviewReason = row => [
       row.signals?.sustained_high_cpu && 'High CPU',
       row.signals?.high_memory && 'High memory',
       row.signals?.cpu_spike && 'CPU spike',
       row.signals?.baseline_anomaly && 'Above usual level',
-    ].filter(Boolean).slice(0,2).join(', ') || 'Resource usage'
+    ].filter(Boolean).join(', ') || 'Resource usage'
 
-    let y = 46
-    tuningCandidates.slice(0, 10).forEach((row, index) => {
-      const jobName = String(row.consumer_key || 'Name not available')
-      const apps = (row.hosts || []).map(labelHost).join(', ') || 'APP not identified'
+    const candidateHosts = row => {
+      const names = [...new Set((row.hosts || []).map(labelHost).filter(Boolean))].sort()
+      if (!names.length) return 'APP not identified'
+      if (names.length === 5 && ['APP1','APP2','APP3','APP4','APP5'].every(host => names.includes(host))) {
+        return 'APP1-APP5 (5 APPs)'
+      }
+      return names.join(', ')
+    }
+    const left = margin + 3
+    const nameX = left
+    const reasonX = margin + 116
+    const cpuX = margin + 186
+    const memoryX = margin + 235
+    const samplesX = W - margin - 3
+    const bottom = H - 21
+    let y = 0
+    const header = (continued = false) => {
+      pdf.addPage()
+      pdf.setFillColor(255, 255, 255)
+      pdf.rect(0, 0, W, H, 'F')
+      pdf.setFillColor(20, 32, 41)
+      pdf.rect(margin, 7, contentW, 17, 'F')
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(7)
-      pdf.setTextColor(36, 53, 66)
-      const nameLines = pdf.splitTextToSize((index+1) + '. ' + jobName, 110).slice(0,2)
-      pdf.text(nameLines, margin + 2, y + 2.3)
+      pdf.setFontSize(12)
+      pdf.setTextColor(246, 249, 251)
+      pdf.text('Programs Requiring Review' + (continued ? ' (cont.)' : ''), margin + 4, 17.9)
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(6.1)
-      pdf.setTextColor(106, 122, 133)
-      pdf.text('Server: ' + apps, margin + 2, y + 6.8)
-      pdf.setFontSize(6.8)
-      pdf.setTextColor(45, 63, 77)
-      pdf.text(pdf.splitTextToSize(reviewReason(row), 54).slice(0,2), margin + 119, y + 2.3)
-      pdf.text(coreEquivalent(row.peak_cpu_pct).replace(' core eq.', ' cores'), margin + 184, y + 2.3, {align:'right'})
-      pdf.text(format(row.peak_pss_gb, 2) + ' GB', margin + 236, y + 2.3, {align:'right'})
-      pdf.text(format(row.occurrences, 0), margin + 279, y + 2.3, {align:'right'})
-      y += 11
-      pdf.setDrawColor(230, 235, 240)
-      pdf.line(margin, y, W-margin, y)
+      pdf.setFontSize(8)
+      pdf.setTextColor(73, 89, 102)
+      pdf.text('ABAP performance review candidates from saved CPU and memory observations.', margin + 2, 30.5)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(7.7)
+      pdf.setTextColor(41, 57, 70)
+      pdf.text('JOB / PROGRAM', nameX, 42)
+      pdf.text('REVIEW REASON', reasonX, 42)
+      pdf.text('MAX CPU CORES', cpuX, 42, { align:'right' })
+      pdf.text('MAX MEMORY', memoryX, 42, { align:'right' })
+      pdf.text('OBSERVED SAMPLES', samplesX, 42, { align:'right' })
+      pdf.setDrawColor(205, 218, 225)
+      pdf.setLineWidth(.3)
+      pdf.line(margin + 2, 45, W - margin - 2, 45)
+      y = 48
+    }
+    const footnote = () => {
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7.4)
+      pdf.setTextColor(88, 103, 113)
+      pdf.text('Monitoring records count saved observations, not job runs.', margin + 2, H - 13)
+      pdf.text('Review reason is performance-based; SAP job failure and error attribution are not established here.', margin + 2, H - 9)
+    }
+
+    header()
+    tuningCandidates.slice(0, 10).forEach((row, index) => {
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(8.5)
+      const fullName = String(row.consumer_key || 'Name not available')
+      const nameLines = pdf.splitTextToSize((index + 1) + '. ' + fullName, 107)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(7.8)
+      const hostLines = pdf.splitTextToSize('APP: ' + candidateHosts(row), 106)
+      const reasonLines = pdf.splitTextToSize(reviewReason(row), 60)
+      const rowH = Math.max(12, nameLines.length * 4.1 + hostLines.length * 3.3 + 3,
+        reasonLines.length * 3.9 + 4)
+      if (y + rowH > bottom) {
+        footnote()
+        header(true)
+      }
+      if (index % 2 === 1) {
+        pdf.setFillColor(247, 249, 250)
+        pdf.rect(margin + 1, y - 1, contentW - 2, rowH, 'F')
+      }
+      pdf.setFont('helvetica','bold')
+      pdf.setFontSize(8.5)
+      pdf.setTextColor(31, 47, 59)
+      pdf.text(nameLines, nameX, y + 3.1)
+      pdf.setFont('helvetica','normal')
+      pdf.setFontSize(7.5)
+      pdf.setTextColor(90, 105, 116)
+      pdf.text(hostLines, nameX, y + 3.1 + nameLines.length * 4.1)
+      pdf.setFontSize(8)
+      pdf.setTextColor(45, 62, 75)
+      pdf.text(reasonLines, reasonX, y + 3.1)
+      const cpu = coreEquivalent(row.peak_cpu_pct)
+      const memory = format(row.peak_pss_gb, 2)
+      pdf.text(cpu === 'N/A' ? cpu : cpu.replace(' core eq.', ' cores'), cpuX, y + 3.1, {align:'right'})
+      pdf.text(memory === 'N/A' ? memory : memory + ' GB', memoryX, y + 3.1, {align:'right'})
+      pdf.text(format(row.occurrences, 0), samplesX, y + 3.1, {align:'right'})
+      y += rowH
     })
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(6.7)
-    pdf.setTextColor(90, 105, 115)
-    pdf.text('Monitoring records count saved observations, not job runs.', margin, 163)
+    footnote()
   }
 
   // Detailed WP counters and traces remain available for SAP Basis in SPHERE.
@@ -465,5 +508,5 @@ export async function buildMonthlyPdf({ month, data }) {
     pdf.text('SAP Monthly Performance Review  -  ' + month, margin, H-4)
     pdf.text('Page '+i+' of '+pages, W-margin, H-4,{align:'right'})
   }
-  return pdf.output('blob')
+  return returnInstance ? pdf : pdf.output('blob')
 }
