@@ -51,9 +51,7 @@ const issueSignalText = (label, value) => {
   return [normalized, value].filter(Boolean).join(' ')
 }
 
-function StatusPill({ value = 'UNKNOWN', title = '' }) {
-  return <span key={String(value)} className={`rundeckStatus rundeckStatusMotion is-${String(value).toLowerCase()}`} title={title || undefined}>{value}</span>
-}
+
 
 function switchParentSource(value) {
   const select = document.querySelector('.logV2Header select')

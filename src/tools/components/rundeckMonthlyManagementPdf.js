@@ -93,22 +93,22 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
 
   section(pdf,'Executive Summary',51,width,margin)
   const findings=[
-    peakCpu ? 'Highest observed APP CPU: '+hostName(peakCpu.host)+' '+percent(peakCpu.peak_cpu_pct)+'.' : 'APP CPU peak: not available.',
-    peakRam ? 'Highest observed APP RAM: '+hostName(peakRam.host)+' '+percent(peakRam.peak_ram_pct)+'.' : 'APP RAM peak: not available.',
-    'CPU threshold '+percent(pressure.thresholds?.cpu_warning_pct)+
-      '; RAM threshold '+percent(pressure.thresholds?.ram_warning_pct)+'.',
-    'Saved performance readings do not confirm job failures or root causes.',
+    peakCpu ? 'Highest CPU: '+hostName(peakCpu.host)+' '+percent(peakCpu.peak_cpu_pct) : 'CPU peak: No Data',
+    peakRam ? 'Highest RAM: '+hostName(peakRam.host)+' '+percent(peakRam.peak_ram_pct) : 'RAM peak: No Data',
+    'Programs to review: '+fmt(summary.review_required,0),
+    'Data coverage: '+percent(quality.coverage_pct),
   ]
-  write(pdf,findings.slice(0,3).join('   '),margin,58,{},8.3)
-  write(pdf,findings[3],margin,64,{color:[87,103,114]},7.8)
+  // Two columns keep the management summary readable without tiny single-line text.
+  findings.forEach((value,i)=>write(pdf,value,margin+2+(i%2)*width/2,58+Math.floor(i/2)*7,
+    {bold:i<2,color:i<2?[35,49,60]:[83,100,111]},8.5))
 
   section(pdf,'APP Server Performance',74,width,margin)
   const appColumns=[
-    ['APP',margin+2],['AVG CPU',margin+48],['MAX CPU',margin+90],
-    ['AVG RAM',margin+137],['MAX RAM',margin+180],
-    ['HIGH CPU (READINGS/DAYS)',margin+220],['HIGH RAM (READINGS/DAYS)',W-margin-2]
+    ['APP',margin+2],['AVG CPU',margin+47],['PEAK CPU',margin+82],
+    ['AVG RAM',margin+118],['PEAK RAM',margin+157],
+    ['CPU WARN',margin+198],['RAM WARN',W-margin-2]
   ]
-  appColumns.forEach(([label,x],i)=>write(pdf,label,x,81,{bold:true,color:[87,101,111],align:i===6?'right':undefined},7.5))
+  appColumns.forEach(([label,x],i)=>write(pdf,label,x,81,{bold:true,color:[87,101,111],align:i===6?'right':undefined},7.4))
   hosts.forEach((row,i)=>{
     const y=89+i*6
     if(i%2===1){pdf.setFillColor(246,248,249);pdf.rect(margin,y-4.5,width,5.8,'F')}
@@ -119,15 +119,18 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     v.forEach((value,j)=>write(pdf,value,appColumns[j][1],y,{align:j===6?'right':undefined},8.3))
   })
   if(!hosts.length)write(pdf,'APP host readings were not recorded for this period.',margin+2,90,{},8)
-  write(pdf,'Warning readings are monitoring observations, not unique incidents or job executions.',margin,119,{color:[92,105,113]},7.2)
+  write(pdf,'CPU WARN and RAM WARN show saved readings / APP-days, not failed jobs.',margin,119,{color:[92,105,113]},7.2)
 
   section(pdf,'Threshold Review',129,width,margin)
   const cpuLine='CPU: '+fmt(pressure.cpu?.observed_pressure_host_checks,0)+' readings at or above '+percent(pressure.thresholds?.cpu_warning_pct)+
     ' across '+fmt(pressure.cpu?.observed_warning_app_days,0)+' APP-days'
   const ramLine='RAM: '+fmt(pressure.ram?.observed_pressure_host_checks,0)+' readings at or above '+percent(pressure.thresholds?.ram_warning_pct)+
     ' across '+fmt(pressure.ram?.observed_warning_app_days,0)+' APP-days'
-  write(pdf,cpuLine,margin+2,137,{},8.2)
-  write(pdf,ramLine,margin+width/2,137,{},8.2)
+  pdf.setFillColor(246,248,250)
+  pdf.roundedRect(margin,132,width/2-3,11,1.2,1.2,'F')
+  pdf.roundedRect(margin+width/2+3,132,width/2-3,11,1.2,1.2,'F')
+  write(pdf,cpuLine,margin+3,139,{},8)
+  write(pdf,ramLine,margin+width/2+6,139,{},8)
 
   section(pdf,'Priority ABAP Programs for Review',147,width,margin)
   write(pdf,'PROGRAM / JOB',margin+2,154,{bold:true,color:[87,101,111]},7.5)
@@ -170,13 +173,13 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     margin,nextY,{color:[94,108,117]},7.3)
   const errorCount=errors.length
   const errorText=errorCount
-    ? 'Saved SAP error signals: '+fmt(errorCount,0)+' categories/rows; '+String(errors[0].error_code||'Error code unavailable')+
-      ' ('+hostName(errors[0].host)+'). Confirm attribution in SAP.'
-    : 'SAP error evidence: no matching saved error rows in this report; absence of evidence is not proof of no errors.'
+    ? 'SAP errors to check: '+fmt(errorCount,0)+' saved categories; '+String(errors[0].error_code||'Code unavailable')+
+      ' ('+hostName(errors[0].host)+'). Check SAP for the affected program.'
+    : 'SAP errors: No matching saved error data. This does not confirm zero errors.'
   pdf.setFont('helvetica','normal')
   pdf.setFontSize(7.3)
   pdf.setTextColor(73,91,104)
-  pdf.text(textLines(pdf,errorText,width,7.3),margin,198)
+  pdf.text(textLines(pdf,errorText,width,7.3).slice(0,1),margin,198)
   write(pdf,'Source: SPHERE saved observations  '+fmt(quality.complete_checks,0)+' / ~'+fmt(quality.expected_checks,0)+
     ' expected ('+percent(quality.coverage_pct)+').',margin,H-5,{color:[94,107,117]},7)
   write(pdf,'Page 1 of 1',W-margin,H-5,{align:'right',color:[94,107,117]},7)

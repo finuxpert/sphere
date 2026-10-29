@@ -1,6 +1,6 @@
 import React from 'react'
 import { getCurrentHashRoute } from '../app/routeUtils.js'
-import { APP_BUILD_LABEL, APP_DISPLAY_VERSION, APP_NAME, APP_PREVIOUS_VERSION, APP_TAGLINE, APP_VERSION } from '../app/version.js'
+import { APP_BUILD_LABEL, APP_DISPLAY_VERSION, APP_NAME, APP_TAGLINE, APP_VERSION } from '../app/version.js'
 import { tools, preloadTool } from '../tools'
 import SphereLogo from './SphereLogo.jsx'
 

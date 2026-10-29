@@ -13,7 +13,6 @@ export default function RundeckMonitoringHistoryCore(props) {
     const overview = overviewRef.current
     if (!overview) return
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
-    const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
     // Fit only when all visible source-backed overview sections have room.
     const fit = false // The new compact summary uses natural flow; never stretch empty tracks.
     // A sixth UNKNOWN/UNVERIFIED membership lane must never be squeezed into
