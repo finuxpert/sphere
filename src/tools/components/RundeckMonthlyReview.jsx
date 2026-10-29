@@ -491,17 +491,15 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
           <h4>Server Performance by APP</h4>
           <div className="sphereMonthlyTableScroll"><table><thead><tr>
-            <th>APP</th><th>CPU Avg</th><th>CPU Peak</th><th>RAM Avg</th><th>RAM Peak</th>
-            <th>High CPU (Times / Days)</th><th>High RAM (Times / Days)</th><th>WP Flagged Readings</th>
+            <th>APP</th><th>CPU Peak</th><th>RAM Peak</th><th>CPU / RAM Warnings</th><th>Critical WP</th>
           </tr></thead><tbody>
             {hosts.map(row=><tr key={row.host}><td>{hostLabel(row.host)}</td>
-              <td>{pct(row.avg_cpu_pct)}</td><td>{pct(row.peak_cpu_pct)}</td><td>{pct(row.avg_ram_pct)}</td><td>{pct(row.peak_ram_pct)}</td>
-              <td>{fmt(row.cpu_warning_host_checks,0)} / {fmt(row.cpu_warning_days,0)}</td>
-              <td>{fmt(row.ram_warning_host_checks,0)} / {fmt(row.ram_warning_days,0)}</td>
+              <td title={'Average CPU '+pct(row.avg_cpu_pct)}>{pct(row.peak_cpu_pct)}</td><td title={'Average RAM '+pct(row.avg_ram_pct)}>{pct(row.peak_ram_pct)}</td>
+              <td title={'CPU '+fmt(row.cpu_warning_host_checks,0)+' readings / '+fmt(row.cpu_warning_days,0)+' days; RAM '+fmt(row.ram_warning_host_checks,0)+' readings / '+fmt(row.ram_warning_days,0)+' days'}>{fmt(row.cpu_warning_host_checks,0)} / {fmt(row.ram_warning_host_checks,0)}</td>
               <td>{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
-            {!hosts.length&&<tr><td colSpan="8">No historical host samples available.</td></tr>}
+            {!hosts.length&&<tr><td colSpan="5">No historical host samples available.</td></tr>}
           </tbody></table></div>
-          <small title="Times = readings above threshold. Days = distinct affected days. WP is an APP signal, not a confirmed SAP SM37 job failure.">Readings / affected days · WP is host evidence</small>
+          <small title="CPU/RAM warnings are host-checks. Averages and affected-day counts are in the source evidence and table tooltips; Critical WP is not a confirmed SM37 failure.">Warnings count host observations, not job failures.</small>
         </div>
         <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
           <div className="sphereMonthlyTableHead"><div><h4>Programs to Review</h4><small>{fmt(tuningCandidates.length,0)} saved evaluation candidates · not confirmed failed jobs</small></div>
