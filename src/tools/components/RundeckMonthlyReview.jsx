@@ -6,7 +6,7 @@ import { buildManagementMonthlyPdf } from './rundeckMonthlyManagementPdf.js'
 import './RundeckMonthlyReview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
-const PAGE_SIZE = 25
+const PAGE_SIZE = 10
 const fmt = (value, digits = 1) => value === null || value === undefined || !Number.isFinite(Number(value))
   ? '—' : Number(value).toLocaleString('id-ID', { maximumFractionDigits: digits })
 const pct = value => fmt(value) === '—' ? '—' : fmt(value) + '%'
@@ -131,7 +131,7 @@ function WorkloadDistribution({ summary = {}, onSelect }) {
   })
   return <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyMix" aria-label="Workload review distribution">
     <div className="sphereMonthlyVisualHeading">
-      <div><h4>Job and Program Status</h4>
+      <div><h4>Job & Program Status</h4>
         <small>How observed jobs and programs were classified this month</small></div>
     </div>
     {total>0 ? <div className="sphereMonthlyMixBody">
@@ -185,12 +185,12 @@ function PressureRows({ label, evidence, metric }) {
   </section>
 }
 
-function PressureEpisodes({ metric, pressure }) {
+function PressureObservations({ metric, pressure }) {
   const evidence = pressure?.[metric] || {}
   return <section className="sphereMonthlyPanel">
     <div className="sphereMonthlyTableHead">
-      <div><h4>{metric.toUpperCase()} Melewati Batas Warning</h4>
-        <small>{fmt(evidence.observed_pressure_host_checks,0)} pemeriksaan APP. Puncak {pct(evidence.peak?.peak_pct)} pada {hostLabel(evidence.peak?.host)} tanggal {when(evidence.peak?.peak_at)}</small></div>
+      <div><h4>{metric.toUpperCase()} Warning Observations</h4>
+        <small>{fmt(evidence.observed_pressure_host_checks,0)} APP checks · Peak {pct(evidence.peak?.peak_pct)} · {hostLabel(evidence.peak?.host)} · {when(evidence.peak?.peak_at)}</small></div>
     </div>
     <div className="sphereMonthlyTableScroll"><table>
       <thead><tr><th>APP</th><th>First observed</th><th>Last observed</th><th>Peak time</th><th>Peak value</th><th>Checks</th></tr></thead>
@@ -198,14 +198,14 @@ function PressureEpisodes({ metric, pressure }) {
         <td>{hostLabel(row.host)}</td><td>{when(row.first_at)}</td><td>{when(row.last_at)}</td>
         <td>{when(row.peak_at)}</td><td>{pct(row.peak_pct)}</td><td>{fmt(row.observed_host_checks,0)}</td>
       </tr>)}
-      {!evidence.recent_episodes?.length && <tr><td colSpan="6">{evidence.episodes === null ? "Belum ada data APP untuk bulan ini." : "Tidak ada pengamatan melewati batas warning."}</td></tr>}
+      {!evidence.recent_episodes?.length && <tr><td colSpan="6">{evidence.episodes === null ? "No APP observations retained for this month." : "No observations reached the warning threshold."}</td></tr>}
       </tbody>
     </table></div>
   </section>
 }
 
 function relatedMonthlyErrorCodes(row, errorEvidence = {}) {
-  if (errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED') return 'Source unavailable'
+  if (errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED') return '—'
   const identity = String(row.consumer_key || '').toUpperCase()
   const type = String(row.consumer_type || '').toUpperCase()
   const linked = (errorEvidence.top_errors || []).filter(item =>
@@ -315,7 +315,6 @@ export default function RundeckMonthlyReview() {
   const [data,setData]=React.useState(null)
   const [loading,setLoading]=React.useState(true)
   const [error,setError]=React.useState('')
-  const [expanded,setExpanded]=React.useState(null)
   const [chartMode,setChartMode]=React.useState('peak')
   const [chartHost,setChartHost]=React.useState('ALL')
   const [chartMetric,setChartMetric]=React.useState('cpu')
@@ -359,11 +358,11 @@ export default function RundeckMonthlyReview() {
   const changeMonth=value=>{
     pdfGenerationRef.current += 1
     setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
-    setSearch('');setAppliedSearch('');setExpanded(null);setPdfError('')
+    setSearch('');setAppliedSearch('');setPdfError('')
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
   }
-  const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0);setExpanded(null)}
+  const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
   const items=data?.items||[]
   const quality=data?.quality||{}
   const summary=data?.summary||{}
@@ -426,7 +425,7 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyVisualGrid">
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
-              <div><h4>Daily Server CPU and RAM</h4>
+              <div><h4>Daily Server Performance</h4>
                 <small>{chartMode==='peak'?'Highest':'Average'} reading each day · {month}</small></div>
               <div className="sphereMonthlyFilters sphereMonthlyVisualFilters">
                 <select aria-label="Resource metric" value={chartMetric} onChange={event=>setChartMetric(event.target.value)}>
@@ -451,7 +450,7 @@ export default function RundeckMonthlyReview() {
           </section>
           <WorkloadDistribution summary={summary} onSelect={value=>{
             setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
-            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setExpanded(null);setTab('jobs')
+            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setTab('evidence')
           }}/>
         </div>
         <div className="sphereMonthlySummaryBottom">
@@ -485,7 +484,7 @@ export default function RundeckMonthlyReview() {
       {tab==='evidence'&&<div className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} dari {pages}</small></div>
+          <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} of {pages}</small></div>
           <div className="sphereMonthlyFilters">
             <input type="search" value={search} onChange={event=>{pdfGenerationRef.current+=1;setSearch(event.target.value);setPage(0)}}
               placeholder="Search full job / program name" aria-label="Search job and program"/>
@@ -507,33 +506,29 @@ export default function RundeckMonthlyReview() {
             </select>
           </div>
         </div>
+        {errors.status==='ERROR_SOURCE_NOT_RETAINED' && <div className="sphereMonthlySourceNote" role="status">ABAP error data unavailable for this month. Confirm error history in ST22 / SM37.</div>}
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
-          <th>Job / Program</th><th>APP teramati</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
-          <th>Checks</th><th>CPU / RAM warning</th><th>Critical WP</th><th>Error Evidence</th>
+          <th>Job / Program</th><th>Observed APPs</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
+          <th>Observations</th><th>CPU / RAM Warnings</th><th>Critical WP Checks</th><th>ABAP Error Code</th>
         </tr></thead><tbody>
-          {items.map(row=><React.Fragment key={id(row)}>
-            <tr><td className="sphereMonthlyName"><button type="button" className="sphereMonthlyJobDetailToggle" aria-expanded={expanded===id(row)}
-                onClick={()=>setExpanded(value=>value===id(row)?null:id(row))}>{row.consumer_key}</button>
-                <small>{row.consumer_type} · {row.assessment||'Observed'}</small></td>
-              <td>{hostsFor(row)||'—'}</td>
-              <td className="sphereMonthlyCpuValue">
-                <strong>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</strong>
-                <small>{wpCoreEq(row.avg_cpu_pct)} / {wpCoreEq(row.peak_cpu_pct)}</small>
-              </td>
-              <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td><td>{fmt(row.occurrences,0)}</td>
-              <td>{fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} / {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}</td>
-              <td>{fmt(row.pressure_overlap?.wp_host_checks,0)}</td>
-              <td title="Explicit WP error code only; job linkage may be contextual. Check ST22 and SM37.">{relatedMonthlyErrorCodes(row,errors)}</td>
-            </tr>
-            {expanded===id(row)&&<tr className="sphereMonthlyEvidenceDetail"><td colSpan="8"><div>
-              <strong>Saved monthly workload evidence</strong>
-              <span>First observed {when(row.first_seen)} · Last observed {when(row.last_seen)}</span>
-              <span>Host observations {fmt(row.host_observations,0)} · Prev-month avg WP CPU {pct(row.previous?.avg_cpu_pct)} · Max process count {fmt(row.peak_process_count,0)} (not necessarily at the CPU peak)</span>
-              <span>WP CPU scale: 100% = 1 logical CPU-core equivalent. APP host CPU is a separate percent of full host capacity. Historical APP logical-CPU capacity is not retained, so no host-share percentage is calculated.</span>
-              <span>Korelasi waktu: CPU {fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} pada {pressureHostsFor(row,'cpu')||'—'}; RAM {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)} pada {pressureHostsFor(row,'ram')||'—'}; WP {fmt(row.pressure_overlap?.wp_host_checks,0)} pemeriksaan APP</span>
-              <span>Collection counts are not SM37 executions. Same-host overlap does not prove causation.</span>
-            </div></td></tr>}
-          </React.Fragment>)}
+          {items.map(row=><tr key={id(row)}>
+            <td className="sphereMonthlyName">
+              <strong>{row.consumer_key}</strong>
+              <small>{row.consumer_type} · {row.assessment||'Observed'}</small>
+              {(row.first_seen || row.last_seen) && <small>Observed {when(row.first_seen)} – {when(row.last_seen)}</small>}
+            </td>
+            <td>{hostsFor(row)||'—'}</td>
+            <td className="sphereMonthlyCpuValue">
+              <strong>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</strong>
+              <small>{wpCoreEq(row.avg_cpu_pct)} / {wpCoreEq(row.peak_cpu_pct)}</small>
+            </td>
+            <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td>
+            <td>{fmt(row.occurrences,0)}<small>{fmt(row.host_observations,0)} host checks · max {fmt(row.peak_process_count,0)} processes</small></td>
+            <td>{fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} / {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}
+              <small>CPU: {pressureHostsFor(row,'cpu')||'—'} · RAM: {pressureHostsFor(row,'ram')||'—'}</small></td>
+            <td>{fmt(row.pressure_overlap?.wp_host_checks,0)}</td>
+            <td>{relatedMonthlyErrorCodes(row,errors)}</td>
+          </tr>)}
           {!items.length&&<tr><td colSpan="8">No jobs or programs match these filters.</td></tr>}
         </tbody></table></div>
         <div className="sphereMonthlyPager"><small>Filters use saved SPHERE observations</small>
@@ -541,7 +536,8 @@ export default function RundeckMonthlyReview() {
           <button type="button" disabled={page+1>=pages} onClick={()=>setPage(n=>n+1)}>Next</button>
         </div>
       </div>
-      <details className="sphereMonthlyEvidenceDisclosure"><summary>CPU/RAM pressure and ABAP error evidence</summary>
+      <section className="sphereMonthlyEvidenceDisclosure" aria-label="Resource pressure and ABAP error evidence">
+      <h4 className="sphereMonthlyEvidenceTitle">Resource Pressure & ABAP Errors</h4>
       <div className="sphereMonthlyImpact">
         <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>CPU & RAM Warning Observations</h4>
           <div className="sphereMonthlyStatStrip">
@@ -552,12 +548,12 @@ export default function RundeckMonthlyReview() {
           </div>
           <p title="Saved APP measurements. Workloads seen during high CPU or RAM are not confirmed root causes.">Saved observations · cause unconfirmed</p>
         </div>
-        <PressureEpisodes metric="cpu" pressure={evidence}/>
-        <PressureEpisodes metric="ram" pressure={evidence}/>
+        <PressureObservations metric="cpu" pressure={evidence}/>
+        <PressureObservations metric="ram" pressure={evidence}/>
         <div className="sphereMonthlyPressureMode"><label>Workloads under pressure <select aria-label="Pressure workload type" value={pressureMetric} onChange={event=>setPressureMetric(event.target.value)}><option value="cpu">CPU</option><option value="ram">RAM</option></select></label></div>
         <PressureRows label="Jobs / Programs During Resource Pressure" evidence={evidence} metric={pressureMetric}/>
         <MonthlyErrorAnalysis key={month} evidence={errors}/>
-      </div></details></div>}
+      </div></section></div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
           <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
