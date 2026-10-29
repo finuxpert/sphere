@@ -215,8 +215,6 @@ export default function RundeckMonitoringHistory(props) {
                 onManualUpload={props.onManualUpload} collectionAction={props.collectionAction} />
             : activeView === 'monthly-review'
               ? <div className="sphereReportsWorkspace">
-                  {props.onOpenPdf && <div className="sphereReportsActions"><button type="button"
-                    disabled={props.exportingPdf} onClick={props.onOpenPdf}>Preview Performance PDF</button></div>}
                   <React.Suspense fallback={<div className="rundeckAnalysisLoading">Loading monthly review…</div>}>
                     <RundeckMonthlyReview refreshToken={refreshToken} sourceHosts={props.sourceHosts || []} />
                   </React.Suspense>
