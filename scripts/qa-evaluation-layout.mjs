@@ -45,8 +45,9 @@ const row = name => `<section class="rundeckAppEvalLane">
 const lanes = ['APP1','APP2','APP3','APP4','APP5'].map(row).join('\n')
 
 try {
-  for (const fit of [false,true]) {
-    for (const theme of ['dark','light']) {
+  for (const sidebarState of ['collapsed','expanded']) {
+    for (const fit of [false,true]) {
+      for (const theme of ['dark','light']) {
       const html=`<!doctype html><html data-theme="${theme}"><head><meta charset="utf-8">
       ${cssLinks}
       <style>
@@ -56,7 +57,7 @@ try {
       </style>
       </head><body><div class="appShell fixtureRoot">
       <div class="rundeckPanel"><div class="spherePerformanceShell">
-      <nav class="spherePerformanceSidebar">SAP Operations</nav>
+      <nav class="spherePerformanceSidebar is-${sidebarState}">SAP Operations</nav>
       <main class="spherePerformanceMain"><div class="spherePerformancePage">
       <section class="rundeckMonitoring rundeckCockpitV13491"
         ${fit ? 'data-viewport-fit="true" style="--sphere-overview-room:710px"' : ''}>
@@ -86,6 +87,11 @@ try {
           const rowWidth=first.getBoundingClientRect().width
           const parentLayout=getComputedStyle(health).display
           const headLayout=getComputedStyle(head).display
+          const sidebar=document.querySelector('.spherePerformanceSidebar')
+          const sidebarWidth=sidebar.getBoundingClientRect().width
+          const expectedSidebar=sidebar.classList.contains('is-collapsed')?64:196
+          const sidebarOk=Math.abs(sidebarWidth-expectedSidebar)<3
+          const mainWidth=document.querySelector('.spherePerformanceMain').getBoundingClientRect().width
           const readable = (selector, min) => {
             const item=document.querySelector(selector)
             return Boolean(item) && parseFloat(getComputedStyle(item).fontSize) >= min
@@ -99,15 +105,17 @@ try {
             headerStyle?.whiteSpace === 'normal'
           const ok=healthWidth>700 && laneWidth/healthWidth>.93 &&
             rowWidth/healthWidth>.93 && parentLayout==='flex' && headLayout==='grid' &&
-            typographyOk
+            typographyOk && sidebarOk && mainWidth>1100
           document.body.setAttribute('data-geometry',ok?'PASS':'FAIL')
           document.body.setAttribute('data-type',typographyOk?'PASS':'FAIL')
+          document.body.setAttribute('data-sidebar-geometry',sidebarOk?'PASS':'FAIL')
+          document.body.setAttribute('data-sidebar-width',sidebarWidth.toFixed(1))
           document.body.setAttribute('data-actual',[
             healthWidth.toFixed(1),laneWidth.toFixed(1),rowWidth.toFixed(1),
             parentLayout,headLayout].join(','))
         })
       </script></body></html>`
-      const filename=join(temp,`layout-${fit?'fitted':'natural'}-${theme}.html`)
+      const filename=join(temp,`layout-${sidebarState}-${fit?'fitted':'natural'}-${theme}.html`)
       writeFileSync(filename,html)
       const run=spawnSync(chrome,[
         '--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
@@ -115,11 +123,12 @@ try {
         '--virtual-time-budget=1500','--dump-dom',pathToFileURL(filename).href
       ],{encoding:'utf8',timeout:30000,maxBuffer:5*1024*1024})
       if (run.status!==0 || !run.stdout.includes('data-geometry="PASS"')) {
-        const details=run.stdout.match(/data-(?:geometry|actual)="[^"]*"/g)
-        throw new Error(`LAYOUT=FAIL fit=${fit} theme=${theme} result=${run.status} data=${details} ${run.stderr?.slice(-1000)}`)
+        const details=run.stdout.match(/data-(?:geometry|actual|sidebar-geometry|sidebar-width)="[^"]*"/g)
+        throw new Error(`LAYOUT=FAIL sidebar=${sidebarState} fit=${fit} theme=${theme} result=${run.status} data=${details} ${run.stderr?.slice(-1000)}`)
       }
       const details=run.stdout.match(/data-actual="[^"]*"/)?.[0]
-      console.log(`LAYOUT=PASS fit=${fit} theme=${theme} ${details}`)
+      console.log(`LAYOUT=PASS sidebar=${sidebarState} fit=${fit} theme=${theme} ${details}`)
+      }
     }
   }
 } finally {

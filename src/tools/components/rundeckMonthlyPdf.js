@@ -328,7 +328,7 @@ export async function buildMonthlyPdf({ month, data, returnInstance = false }) {
       pdf.setTextColor(70, 85, 94)
       pdf.text('Reporting month ' + month + '. Based on saved SAP logs; job failure not confirmed.', margin, 30)
       ey = 40
-      pdf.setFontSize(6.3)
+      pdf.setFontSize(7.4)
       pdf.setFont('helvetica', 'bold')
       pdf.setTextColor(47, 64, 76)
       ;[
@@ -354,27 +354,27 @@ export async function buildMonthlyPdf({ month, data, returnInstance = false }) {
       const detailLines = pdf.splitTextToSize(
         association + '. ' + dateInfo, 88
       )
-      const rowH = Math.max(6.2, 3.3 * Math.max(cat.length, code.length, program.length + detailLines.length) + 1.8)
+      const rowH = Math.max(8, 4.05 * Math.max(cat.length, code.length, program.length + detailLines.length) + 2)
       if (ey + rowH > H - 17) {
         pdf.addPage()
         header(true)
       }
       pdf.setFont('helvetica', 'normal')
-      pdf.setFontSize(7)
+      pdf.setFontSize(8)
       pdf.setTextColor(34, 49, 59)
-      pdf.text(cat, margin, ey + 3)
-      pdf.text(code, margin + 40, ey + 3)
-      pdf.text(program, margin + 106, ey + 3)
+      pdf.text(cat, margin, ey + 3.6)
+      pdf.text(code, margin + 40, ey + 3.6)
+      pdf.text(program, margin + 106, ey + 3.6)
       if (detailLines.length) {
-        pdf.setFontSize(6)
+        pdf.setFontSize(7.1)
         pdf.setTextColor(100, 116, 125)
-        pdf.text(detailLines, margin + 106, ey + 3 + 3.3 * program.length)
-        pdf.setFontSize(7)
+        pdf.text(detailLines, margin + 106, ey + 3.6 + 4.05 * program.length)
+        pdf.setFontSize(8)
         pdf.setTextColor(34, 49, 59)
       }
-      pdf.text(labelHost(row.host), margin + 201, ey + 3)
-      pdf.text(String(row.event_count ?? 'N/A'), margin + 229, ey + 3, {align: 'right'})
-      pdf.text(String(row.snapshot_host_checks ?? 'N/A'), margin + 258, ey + 3, {align: 'right'})
+      pdf.text(labelHost(row.host), margin + 201, ey + 3.6)
+      pdf.text(String(row.event_count ?? 'N/A'), margin + 229, ey + 3.6, {align: 'right'})
+      pdf.text(String(row.snapshot_host_checks ?? 'N/A'), margin + 258, ey + 3.6, {align: 'right'})
       pdf.setDrawColor(222, 231, 235)
       pdf.line(margin, ey + rowH, W - margin, ey + rowH)
       ey += rowH
