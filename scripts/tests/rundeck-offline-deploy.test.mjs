@@ -1,0 +1,47 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+const root = new URL('../../', import.meta.url)
+const read = name => readFileSync(new URL(name,root),'utf8')
+
+test('offline release is local-bundle-only and preserves DEV deployment guards',()=>{
+  const source=read('ops/rundeck/release-dev-offline.sh')
+  assert.match(source,/git fetch --no-tags "\$SCRATCH\/source\.bundle"/)
+  assert.match(source,/sha256sum -c SHA256SUMS/)
+  assert.match(source,/git merge-base --is-ancestor HEAD "\$SHA"/)
+  assert.match(source,/git diff --quiet "\$ACTIVE" "\$SHA" -- backend\/db\/migrations/)
+  assert.match(source,/SPHERE_DEV_MIGRATION_APPROVED_SHA/)
+  assert.match(source,/SPHERE_OFFLINE_WHEELHOUSE/)
+  assert.match(source,/UV_NO_INDEX=1/)
+  assert.match(source,/PIP_NO_INDEX=1/)
+  assert.match(source,/ops\/rundeck\/deploy-dev\.sh/)
+  assert.match(source,/trap 'rc=\$\?/)
+  assert.match(source,/rm -rf -- "\$SCRATCH"/)
+  assert.doesNotMatch(source,/https:\/\/github\.com|npm ci|npm run qa|git fetch --no-tags origin/)
+  const result=spawnSync('bash',['-n',new URL('ops/rundeck/release-dev-offline.sh',root).pathname],{encoding:'utf8'})
+  assert.equal(result.status,0,result.stderr)
+})
+test('offline deployment only installs prepackaged wheels, not network dependency resolution',()=>{
+  const source=read('ops/rundeck/deploy-dev.sh')
+  assert.match(source,/SPHERE_OFFLINE_WHEELHOUSE/)
+  assert.match(source,/uv pip install --offline --no-index/)
+  assert.match(source,/python -m pip install --no-index/)
+  assert.match(source,/PRODUCTION ROUTING VERIFIED/)
+  assert.match(source,/DEPLOY FAILED - rolling back \/dev/)
+})
+test('CI publishes only after build + browser smoke and pinned backend tests',()=>{
+  const workflow=read('.github/workflows/sphere-dev-ui-qa.yml')
+  assert.ok(workflow.indexOf('Boot built DEV app in Chromium')<workflow.indexOf('Prepare verified DEV offline release artifact'))
+  assert.match(workflow,/fetch-depth: 0/)
+  assert.match(workflow,/git bundle create/)
+  assert.match(workflow,/pip download --only-binary=:all:/)
+  assert.match(workflow,/python -m pip install --no-index --find-links/)
+  assert.match(workflow,/actions\/upload-artifact@v4/)
+  const laptop=read('ops/rundeck/push-dev-offline.ps1')
+  assert.match(laptop,/gh run list/)
+  assert.match(laptop,/Get-FileHash/)
+  assert.match(laptop,/& scp/)
+  assert.match(laptop,/& ssh/)
+  assert.match(laptop,/Remove-Item -LiteralPath \$tmp -Recurse/)
+})
