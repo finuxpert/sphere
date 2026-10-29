@@ -1,20 +1,13 @@
-// Keep Server Trends complementary when restoring a legacy saved dashboard.
-// Operators can still select any metric after the page has loaded.
-export const SERVER_TREND_METRICS = ['cpu', 'ram', 'iowait', 'wp', 'availability']
+// The three chart slots share metrics, but their selections are independent.
+export const SERVER_TREND_METRICS = [
+  'cpu', 'ram', 'iowait', 'wp', 'availability',
+  'load', 'swap', 'network', 'hana', 'replication', 'ssh', 'web',
+]
 
 export function resolveServerTrendMetrics(saved = {}) {
-  const requestedFirst = SERVER_TREND_METRICS.includes(saved.serverMetric1)
-    ? saved.serverMetric1
-    : SERVER_TREND_METRICS.includes(saved.serverMetric)
-      ? saved.serverMetric
-      : 'cpu'
-  const requestedSecond = SERVER_TREND_METRICS.includes(saved.serverMetric2)
-    ? saved.serverMetric2
-    : 'ram'
+  const valid = metric => SERVER_TREND_METRICS.includes(metric)
   return {
-    first: requestedFirst,
-    second: requestedSecond === requestedFirst
-      ? (requestedFirst === 'cpu' ? 'ram' : 'cpu')
-      : requestedSecond,
+    first: valid(saved.serverMetric1) ? saved.serverMetric1 : valid(saved.serverMetric) ? saved.serverMetric : 'cpu',
+    second: valid(saved.serverMetric2) ? saved.serverMetric2 : 'ram',
   }
 }
