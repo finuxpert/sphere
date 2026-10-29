@@ -28,6 +28,14 @@ jobs:
         run: bash scripts/qa-browser-boot.sh
       - name: Verify full-width APP evaluation geometry in Chromium
         run: node scripts/qa-evaluation-layout.mjs
+      - name: Render and validate monthly SAP ABAP PDF (long programs, errors and page breaks)
+        run: |
+          node scripts/qa-monthly-pdf.mjs
+          if command -v pdfinfo >/dev/null; then pdfinfo "$RUNNER_TEMP/sphere-monthly-qa-fixture.pdf" | grep -E 'Pages:|Page size:'; fi
+          if command -v pdftotext >/dev/null; then
+            pdftotext -layout "$RUNNER_TEMP/sphere-monthly-qa-fixture.pdf" "$RUNNER_TEMP/sphere-monthly-qa-fixture.txt"
+            grep -q 'ZLAST_CANDIDATE_10' "$RUNNER_TEMP/sphere-monthly-qa-fixture.txt"
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
