@@ -369,3 +369,17 @@ test('LaMa and OpManager-inspired cockpit fills measured desktop viewport withou
   assert.match(trends, /InfrastructureGapBand trend=\{technicalTrend\}/)
   assert.match(health, /validatedAppEvaluationMemberships\(verified\.rows, preview\.total\)/)
 })
+
+test('v1.41.1 PARTIAL warning does not collapse evaluation lanes into first grid column',()=>{
+  const css=read('RundeckProfessionalCockpitV141.css')
+  const section=css.slice(css.indexOf('v1.41.1 | PARTIAL-source'))
+  assert.ok(section.length>800)
+  assert.match(section,/grid-template-areas: "heading summary" "lanes lanes" "foot foot"/)
+  assert.match(section,/grid-area: lanes !important/)
+  assert.match(section,/grid-column: 1 \/ -1 !important/)
+  assert.match(section,/grid-area: summary !important/)
+  assert.match(section,/grid-area: heading !important/)
+  assert.match(section,/grid-area: foot !important/)
+  assert.match(section,/@media \(max-width:899px\)/)
+  assert.doesNotMatch(section,/display:\s*none|visibility:\s*hidden|overflow:\s*hidden/)
+})

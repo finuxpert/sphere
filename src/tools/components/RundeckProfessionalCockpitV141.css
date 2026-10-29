@@ -288,3 +288,53 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain .ru
     transform: none !important;
   }
 }
+
+/* v1.41.1 | PARTIAL-source / short-viewport regression:
+   the evaluation lanes must span both cockpit grid columns even when
+   data-viewport-fit is disabled by an availability warning. */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app {
+  display: grid !important;
+  grid-template-columns: minmax(185px,30%) minmax(0,1fr) !important;
+  grid-template-areas: "heading summary" "lanes lanes" "foot foot" !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealthTitle {
+  grid-area: heading !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealthLegend {
+  grid-area: summary !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview :is(.rundeckAppEvaluationLanes,.rundeckAppEvalState) {
+  grid-area: lanes !important;
+  grid-column: 1 / -1 !important;
+  justify-self: stretch !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckAppEvalLane {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealthFooter {
+  grid-area: foot !important;
+  grid-column: 1 / -1 !important;
+}
+@media (max-width:899px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app {
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-areas: "heading" "summary" "lanes" "foot" !important;
+  }
+}
