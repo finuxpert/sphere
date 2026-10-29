@@ -196,7 +196,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     </details> : failedSources.includes('incidents') ? <div className="rundeckIssueEmpty" role="status">Incident history unavailable.</div> : loading ? <div className="rundeckIssueEmpty">Checking incident history…</div> : null
 
   return <section className="rundeckSapIssuesV1231 is-indicator-console" aria-label="SAP operational issues">
-    {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{reviewIndicators.length} non-normal indicators</span></header>}
+    {!paired && <header><h3><SphereIcon name="alert" /> SAP Issues</h3><span>{activeFindings} issues · {unknownCount} no data</span></header>}
     {loading && <div className="rundeckReviewState" role="status">Checking SAP source data…</div>}
     {failedSources.length>0 && <div className="rundeckReviewState is-error" role="status">Unavailable: {failedSources.map(name=>SAP_ISSUE_SOURCE_LABELS[name]).join(', ')}. Successful checks remain visible; failed sources are UNKNOWN.</div>}
     {paired && readinessRoot ? createPortal(readinessSummary, readinessRoot) : readinessSummary}
@@ -215,13 +215,13 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
           label="Indicator view"
           value={indicatorView}
           options={[
-            { value: 'review', label: `Non-normal (${reviewIndicators.length})` },
+            { value: 'review', label: `Issues ${activeFindings} · No Data ${unknownCount}` },
             { value: 'all', label: `All indicators (${indicators.length})` },
           ]}
           onChange={setIndicatorView}
         />
       </div>
-      <p className="rundeckSapIssueBreakdown">Verified findings: {criticalCount} Critical · {warningCount} Attention/Warning · {unknownCount} Unknown. Unknown is missing or stale evidence, not confirmed SAP downtime.</p>
+      <p className="rundeckSapIssueBreakdown">Verified issues: {criticalCount} Critical · {warningCount} Warning. No Data: {unknownCount} missing or stale indicators (not confirmed SAP downtime).</p>
       {sm37!=='READY'&&<p className="rundeckIssueSourceNote">{sm37SourceFailed ? 'SM37 readiness unavailable' : sm37 === 'UNKNOWN' ? 'SM37 readiness unverified' : `SM37 not connected · ${sm37}`}. Confirm job execution status in SAP SM37.</p>}
       {paired && indicatorView==='review' && <button type="button" className="rundeckSapChecksFilterToggle" aria-expanded={filtersExpanded} onClick={()=>{ if(filtersExpanded){ setIndicatorQuery(''); setAppFilter('ALL'); setShowFilters(false) } else setShowFilters(true) }}>{filtersExpanded ? 'Clear and hide filters' : 'Filter indicators'}</button>}
       {filtersExpanded && <div className="rundeckIssueFilters" role="group" aria-label="Filter SAP indicators">
@@ -231,7 +231,7 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
         </select></label>
         <small aria-live="polite">{visibleIndicators.length} shown</small>
       </div>}
-      {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">0 non-normal indicators · status based on available samples</p>}
+      {indicatorView==='review'&&!reviewIndicators.length&&<p className="rundeckIssueEmpty">No issues or unavailable indicators in verified samples</p>}
       {!visibleIndicators.length && baseIndicators.length>0 && <p className="rundeckIssueEmpty">No indicators match these filters.</p>}
       {visibleIndicators.length>0&&<div className="rundeckIssueIndicatorTableWrap">
         <table className="rundeckIssueIndicatorTable">
