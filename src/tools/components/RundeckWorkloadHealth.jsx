@@ -16,8 +16,8 @@ const MAX_VISIBLE_DOTS = 800
 const SEVERITY_ORDER = { review: 0, attention: 1, unknown: 2, normal: 3 }
 const LEVELS = [
   { key: 'review', label: 'Review', health: 'REVIEW' },
-  { key: 'attention', label: 'Attention', health: 'ATTENTION' },
-  { key: 'unknown', label: 'Data limited', health: 'UNKNOWN' },
+  { key: 'attention', label: 'Watch', health: 'ATTENTION' },
+  { key: 'unknown', label: 'Limited Data', health: 'UNKNOWN' },
   { key: 'normal', label: 'Normal', health: 'NORMAL' },
 ]
 
