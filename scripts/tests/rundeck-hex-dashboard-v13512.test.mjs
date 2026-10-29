@@ -46,7 +46,7 @@ test('Workload Health keeps validated 1D identities and adds hexagon title icon'
   assert.match(health,/<SphereIcon name="hexagon" \/>/)
   assert.match(health,/Job &amp; Program Evaluation/)
   assert.match(health,/1 hexagon = 1 saved evaluation/)
-  assert.match(health,/label: 'Data limited'/)
+  assert.match(health,/label: 'Limited Data'/)
   assert.match(read('SphereIcon.jsx'),/hexagon: <>/)
   assert.match(health,/validatedWorkloadDots\(first, following, 0, completePageSize\)/)
   assert.match(health,/onClick=\{\(\) => openWorkload\(row\)\}/)
