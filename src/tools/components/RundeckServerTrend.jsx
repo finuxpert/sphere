@@ -9,7 +9,7 @@ import * as echarts from './logEcharts.js'
 import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
-import { resolveServerTrendMetrics } from './rundeckTrendPreferences.js'
+import { resolveOverviewTrendMetrics } from './rundeckTrendPreferences.js'
 import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
@@ -782,7 +782,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
-  const initialServerMetrics = React.useMemo(() => resolveServerTrendMetrics(saved), [saved])
+  const initialServerMetrics = React.useMemo(() => resolveOverviewTrendMetrics(saved), [saved])
   const [range, setRange] = React.useState(saved.range !== 'custom' && ALL_RANGES.some(([key]) => key === saved.range) ? saved.range : DEFAULT_RANGE)
   const [customOpen, setCustomOpen] = React.useState(false)
   const [customStart, setCustomStart] = React.useState(() => wibMinuteInput(new Date(Date.now() - 15 * 60000)))
