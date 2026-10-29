@@ -439,3 +439,21 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain .ru
     grid-column: 1 !important;
   }
 }
+
+/* V1.41.3: the viewport-fit selector has an extra attribute-specificity
+ * versus the ordinary overview selector. Override that exact legacy rule
+ * instead of relying on source ordering or wrapping the element again.
+ * Proven by the Chromium geometry gate for both fit states. */
+@media (min-width:1280px) and (min-height:760px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    grid-template-areas: none !important;
+    gap: 6px !important;
+  }
+}
