@@ -273,7 +273,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
   if (summaryOnly) {
     const top = sortedRows.filter(row => row.consumer_key && row.cpu_pct !== null &&
-      row.cpu_pct !== undefined && row.cpu_pct !== '' && Number.isFinite(Number(row.cpu_pct))).slice(0,4)
+      row.cpu_pct !== undefined && row.cpu_pct !== '' && Number.isFinite(Number(row.cpu_pct))).slice(0,2)
     return <section className="sphereCurrentWorkloadSummary" aria-label="Top Current Workloads">
       <header><strong>Top Current Workloads</strong><a href="#/tool/logs/jobs">View all</a></header>
       <small title={coverageLabel}>Latest collection · {loading ? 'Loading…' : error ? 'Source unavailable' : `${rows.length} loaded observations`}{!allLoaded ? ' · Partial list' : ''}</small>

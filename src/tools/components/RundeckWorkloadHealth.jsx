@@ -209,8 +209,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         <span>{level.label}</span>
       </button>)}
     </div>
-  const priorityRows = rows.filter(row => workloadHealthLevel(row) === 'review').slice(0,4)
-  const fallbackRows = priorityRows.length ? priorityRows : rows.filter(row => workloadHealthLevel(row) === 'attention').slice(0,4)
+  const priorityRows = rows.filter(row => workloadHealthLevel(row) === 'review').slice(0,2)
+  const fallbackRows = priorityRows.length ? priorityRows : rows.filter(row => workloadHealthLevel(row) === 'attention').slice(0,2)
   if (compactSummary) return <section className="rundeckWorkloadHealth sphereWorkloadSummary" data-state={state} aria-label="Jobs and Programs summary" aria-busy={loading}>
     <header className="sphereWorkloadSummaryHead"><h3>Jobs &amp; Programs</h3><a href="#/tool/logs/jobs">View details</a></header>
     <div className="sphereWorkloadSummaryMetrics">{LEVELS.map(level => <button type="button" key={level.key}

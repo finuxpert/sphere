@@ -244,7 +244,7 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendInfrastructure={(context) => setActiveOverlay({ type: 'infrastructure', trendContext: context, returnTo: { type: 'selected' } })}
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
-            healthSummary={<section className="sphereOverviewDetails" aria-label="System Health">
+            healthSummary={<section className="sphereOverviewDetails col-12 col-xl-7" aria-label="System Health">
             <header className="sphereHealthSummaryHeader">
               <h3>System Health</h3>
             </header>

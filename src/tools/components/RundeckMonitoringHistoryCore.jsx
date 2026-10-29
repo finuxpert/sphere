@@ -12,12 +12,19 @@ export default function RundeckMonitoringHistoryCore(props) {
   const measureViewport = React.useCallback(() => {
     const overview = overviewRef.current
     if (!overview) return
-    // The compact KPI row is content-sized. Old viewport-fit rules allocated
-    // 200+ pixels to the removed evaluation table, leaving a blank card and
-    // pushing System Health below the viewport.
+    // Compact summary uses a separate layout contract. Never activate the
+    // legacy 5-lane fit, which allocates a tall empty evaluation grid.
+    // The CSS only compresses *preview* rows; all records remain in View Details.
     if (overview.querySelector('.sphereWorkloadSummary')) {
-      overview.style.removeProperty('--sphere-overview-room')
-      delete overview.dataset.viewportFit
+      const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
+      const compactFit = window.innerWidth >= 1400 && window.innerHeight >= 760 && available >= 540
+      if (compactFit) {
+        overview.style.setProperty('--sphere-overview-room', available + 'px')
+        overview.dataset.viewportFit = 'compact'
+      } else {
+        overview.style.removeProperty('--sphere-overview-room')
+        delete overview.dataset.viewportFit
+      }
       return
     }
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
@@ -99,8 +106,8 @@ export default function RundeckMonitoringHistoryCore(props) {
       />
     </section>
 
-    <div className="sphereOverviewBottomRow">
-    <section className="rundeckJobsProgramsOverview" aria-label="Job & Program Evaluation">
+    <div className="sphereOverviewBottomRow row g-2">
+    <section className="rundeckJobsProgramsOverview col-12 col-xl-5" aria-label="Job & Program Evaluation">
       <div className="rundeckJobsProgramsHealthSide">
         <RundeckWorkloadHealth
           refreshToken={props.refreshToken}
