@@ -189,16 +189,17 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       : '1 hexagon = 1 saved evaluation (not an OS process)'
     : 'Open Review to inspect individual evaluations'
 
-  return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : '')}
-    data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
-    aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
-    <header className="rundeckWorkloadHealthTitle">
+  // The APP evaluation lanes must be a full-width sibling of the header/KPI
+  // row. Keeping title, KPIs and lanes inside one two-column grid caused APP
+  // rows to collapse into the first column even while the outer panel filled
+  // the screen. This also fixes the PARTIAL-data / non-viewport-fit case.
+  const evaluationTitle = <header className="rundeckWorkloadHealthTitle">
       <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Job &amp; Program Evaluation</strong></span>
         {viewMode !== 'by-app' && <small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Saved 24h · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small>}</span>
       {viewMode !== 'by-app' && <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
         aria-label="Open Jobs & Programs Review">Open Review</button>}
     </header>
-    <div className="rundeckWorkloadHealthLegend" aria-label="Filter saved evaluations by review category">
+  const evaluationCategories = <div className="rundeckWorkloadHealthLegend" aria-label="Filter saved evaluations by review category">
       {LEVELS.map(level => <button type="button" key={level.key} className={'rundeckWorkloadCategory is-' + level.key}
         onClick={() => onReview?.(level.health)} disabled={!preview}
         title={level.key === 'unknown' ? unknownDescription + ' Click to review full saved evaluations.' : 'Click to open 1D saved evaluations filtered to ' + level.label}
@@ -208,6 +209,12 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         <span>{level.label}</span>
       </button>)}
     </div>
+  return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : '')}
+    data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
+    aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
+    {viewMode === 'by-app'
+      ? <div className="rundeckWorkloadOverviewHead">{evaluationTitle}{evaluationCategories}</div>
+      : <>{evaluationTitle}{evaluationCategories}</>}
     {viewMode === 'by-app'
       ? rows.length > 0
         ? <RundeckWorkloadAppLanes rows={rows} onSelectWorkload={openWorkload} onOpenApp={onOpenApp} period={period} />

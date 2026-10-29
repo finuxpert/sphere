@@ -338,3 +338,104 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .spherePerformanceMain .ru
     grid-template-areas: "heading" "summary" "lanes" "foot" !important;
   }
 }
+
+/* V1.41.2: fix the actual DOM hierarchy (title/KPIs vs host rows).
+ * A single two-column grid at the WorkloadHealth level used to constrain
+ * APP evaluation rows to the left column despite full-width panels.
+ * The nested head grid owns the 30/70 split; all APP lanes are full width.
+ */
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  grid-template-areas: none !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadOverviewHead {
+  display: grid !important;
+  grid-template-columns: minmax(190px,26%) minmax(0,1fr) !important;
+  align-items: center !important;
+  gap: 8px 12px !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadOverviewHead > .rundeckWorkloadHealthTitle {
+  grid-area: auto !important;
+  grid-column: 1 !important;
+  align-self: center !important;
+  margin: 0 !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadOverviewHead > .rundeckWorkloadHealthLegend {
+  grid-area: auto !important;
+  grid-column: 2 !important;
+  align-self: stretch !important;
+  margin: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 42px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app > .rundeckAppEvaluationLanes,
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app > .rundeckAppEvalState {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  grid-area: auto !important;
+  grid-column: auto !important;
+  box-sizing: border-box !important;
+  gap: 4px !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app .rundeckAppEvalColumnHead,
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app .rundeckAppEvalLane {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app > .rundeckWorkloadHealthFooter {
+  grid-area: auto !important;
+  grid-column: auto !important;
+  flex: 0 0 auto !important;
+}
+@media (min-width:1280px) and (min-height:760px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app > .rundeckAppEvaluationLanes {
+    justify-content: space-between !important;
+    height: auto !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring[data-viewport-fit="true"] .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-by-app .rundeckAppEvalLane {
+    min-height: 32px !important;
+  }
+}
+@media (max-width:899px) {
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadOverviewHead {
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 7px !important;
+  }
+  .appShell:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .rundeckJobsProgramsOverview .rundeckWorkloadOverviewHead > :is(.rundeckWorkloadHealthTitle,.rundeckWorkloadHealthLegend) {
+    grid-column: 1 !important;
+  }
+}
