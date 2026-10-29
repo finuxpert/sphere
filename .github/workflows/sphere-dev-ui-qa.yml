@@ -48,6 +48,20 @@ jobs:
             backend.tests.test_rundeck_custom_window \
             backend.tests.test_rundeck_network_trends \
             backend.tests.test_rundeck_monthly_review
+      - name: Validate Windows PowerShell deployment bootstrap
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            'ops/rundeck/push-dev-offline.ps1',
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            throw 'PowerShell bootstrap has syntax errors'
+          }
       - name: Prepare verified DEV offline release artifact
         shell: bash
         run: |
