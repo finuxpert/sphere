@@ -506,6 +506,7 @@ export default function RundeckMonthlyReview() {
             </select>
           </div>
         </div>
+        <small className="sphereMonthlyCpuNote">WP CPU: 100% = 1 logical CPU-core equivalent; not host CPU utilization.</small>
         {errors.status==='ERROR_SOURCE_NOT_RETAINED' && <div className="sphereMonthlySourceNote" role="status">ABAP error data unavailable for this month. Confirm error history in ST22 / SM37.</div>}
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
           <th>Job / Program</th><th>Observed APPs</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
