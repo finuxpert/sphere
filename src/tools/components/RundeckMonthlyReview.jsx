@@ -79,7 +79,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
       {names.map((name,i) => {
         const points = rows.filter(row => hostLabel(row.host) === name && row[field] !== null && row[field] !== undefined)
           .map(row => ({day:Number(String(row.day).slice(-2)),value:row[field],
-            warningChecks:Number(row[metric+'_warning_checks']||0)})).sort((a,b)=>a.day-b.day)
+            warningChecks:Number(row[metric+'_warning_checks']||0), peakAt:row['peak_'+metric+'_at']||null})).sort((a,b)=>a.day-b.day)
         return <g key={name}>
           {points.map((point,k) => <g key={point.day}>
             {k>0 && point.day===points[k-1].day+1 && <path
@@ -93,7 +93,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
             {mode==='peak' && point.warningChecks>0 && <circle cx={xFor(point.day)} cy={yFor(point.value)}
               r="5.5" fill="none" stroke="#e6ad67" strokeWidth="1.3" aria-hidden="true"/>}
             <circle cx={xFor(point.day)} cy={yFor(point.value)} r="2.9" fill={CHART_COLORS[i%CHART_COLORS.length]}>
-              <title>{name} · {month}-{String(point.day).padStart(2,'0')} · {pct(point.value)} {mode} {metric.toUpperCase()} · {fmt(point.warningChecks,0)} warning host-checks</title>
+              <title>{name} · {month}-{String(point.day).padStart(2,'0')} · {pct(point.value)} {mode} {metric.toUpperCase()} · {fmt(point.warningChecks,0)} warning host-checks{mode==='peak' && point.peakAt ? ' · Peak time '+when(point.peakAt) : ''}</title>
             </circle>
           </g>)}
         </g>
@@ -336,7 +336,8 @@ function MonthlyErrorAnalysis({ evidence }) {
 
 export default function RundeckMonthlyReview() {
   const [month,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
-  const [tab,setTab]=React.useState('overview')
+  const [tab,setTab]=React.useState('summary')
+  const [pressureMetric,setPressureMetric]=React.useState('cpu')
   const [kind,setKind]=React.useState('ALL')
   const [health,setHealth]=React.useState('REVIEW')
   const [pressureFilter,setPressureFilter]=React.useState('ALL')
@@ -442,7 +443,7 @@ export default function RundeckMonthlyReview() {
       </div>
     </div>
     <div className="sphereMonthlyTabs" role="tablist" aria-label="Monthly report sections">
-      {[['overview','Overview'],['jobs','Jobs & Programs'],['impact','Performance Impact'],['report','Report']]
+      {[['summary','Summary'],['evidence','Detailed Evidence'],['report','PDF Report']]
         .map(([value,label])=><button key={value} type="button" role="tab"
           aria-selected={tab===value} className={tab===value?'is-active':''}
           onClick={()=>setTab(value)}>{label}</button>)}
@@ -454,7 +455,7 @@ export default function RundeckMonthlyReview() {
         <span><b>{fmt(quality.complete_checks,0)}</b> records · {pct(quality.coverage_pct)} coverage</span>
         <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
       </div>
-      {tab==='overview'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
+      {tab==='summary'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
         <div className="sphereMonthlyVisualGrid">
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
@@ -486,7 +487,8 @@ export default function RundeckMonthlyReview() {
             setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setExpanded(null);setTab('jobs')
           }}/>
         </div>
-        <div className="sphereMonthlyPanel sphereMonthlyWide">
+        <div className="sphereMonthlySummaryBottom">
+        <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
           <h4>Server Performance by APP</h4>
           <div className="sphereMonthlyTableScroll"><table><thead><tr>
             <th>APP</th><th>CPU Avg</th><th>CPU Peak</th><th>RAM Avg</th><th>RAM Peak</th>
@@ -501,8 +503,22 @@ export default function RundeckMonthlyReview() {
           </tbody></table></div>
           <small title="Times = readings above threshold. Days = distinct affected days. WP is an APP signal, not a confirmed SAP SM37 job failure.">Readings / affected days · WP is host evidence</small>
         </div>
+        <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
+          <div className="sphereMonthlyTableHead"><div><h4>Programs to Review</h4><small>{fmt(tuningCandidates.length,0)} saved evaluation candidates · not confirmed failed jobs</small></div>
+            <button type="button" onClick={()=>setTab('evidence')}>View All</button></div>
+          <div className="sphereMonthlyPriorityList">
+            {tuningCandidates.slice(0,5).map(row=><div key={id(row)} className="sphereMonthlyPriorityRow">
+              <span><strong title={row.consumer_key}>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)||'APP unavailable'}</small></span>
+              <span title="Work process CPU, not APP utilization">{pct(row.peak_cpu_pct)} WP CPU</span>
+            </div>)}
+            {!tuningCandidates.length&&<p>No review candidates in retained observations.</p>}
+          </div>
+          <small>ABAP errors: {errors.status==='ERROR_SOURCE_NOT_RETAINED' ? 'Source not retained — check archives' : fmt(errors.error_program_count,0)+' programs with retained error evidence'}</small>
+        </section>
+        </div>
       </div>}
-      {tab==='jobs'&&<div className="sphereMonthlyPanel">
+      {tab==='evidence'&&<div className="sphereMonthlyEvidencePage">
+      <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
           <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} dari {pages}</small></div>
           <div className="sphereMonthlyFilters">
@@ -559,7 +575,8 @@ export default function RundeckMonthlyReview() {
           <button type="button" disabled={page+1>=pages} onClick={()=>setPage(n=>n+1)}>Next</button>
         </div>
       </div>}
-      {tab==='impact'&&<div className="sphereMonthlyImpact">
+      <details className="sphereMonthlyEvidenceDisclosure"><summary>CPU/RAM pressure and ABAP error evidence</summary>
+      <div className="sphereMonthlyImpact">
         <div className="sphereMonthlyPanel sphereMonthlyWide"><h4>CPU & RAM Warning Observations</h4>
           <div className="sphereMonthlyStatStrip">
             <span>CPU warning ≥ {pct(evidence.thresholds?.cpu_warning_pct)}</span>
@@ -571,11 +588,11 @@ export default function RundeckMonthlyReview() {
         </div>
         <PressureEpisodes metric="cpu" pressure={evidence}/>
         <PressureEpisodes metric="ram" pressure={evidence}/>
-        <PressureRows label="Jobs / Programs During CPU Pressure" evidence={evidence} metric="cpu"/>
-        <PressureRows label="Jobs / Programs During RAM Pressure" evidence={evidence} metric="ram"/>
+        <div className="sphereMonthlyPressureMode"><label>Workloads under pressure <select aria-label="Pressure workload type" value={pressureMetric} onChange={event=>setPressureMetric(event.target.value)}><option value="cpu">CPU</option><option value="ram">RAM</option></select></label></div>
+        <PressureRows label="Jobs / Programs During Resource Pressure" evidence={evidence} metric={pressureMetric}/>
         <MonthlyErrorAnalysis key={month} evidence={errors}/>
         <AbapTuningCandidates rows={tuningCandidates} errorEvidence={errors} />
-      </div>}
+      </div></details></div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
           <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
