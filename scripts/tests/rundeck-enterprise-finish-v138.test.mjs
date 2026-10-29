@@ -39,7 +39,7 @@ test('Monthly PDF remains observational and explains candidate review status', (
   assert.match(pdf, /Highest observed APP CPU/)
   assert.match(pdf, /Highest observed APP RAM/)
   assert.match(pdf, /not confirmed failed jobs or root causes/)
-  assert.match(pdf, /no job failure is implied/)
+  assert.match(pdf, /Review reason is performance-based; SAP job failure and error attribution are not established here/)
   assert.match(pdf, /data\.monthly_errors/)
   assert.match(pdf, /data\.monthly_abap_candidates/)
   assert.match(pdf, /quality\.complete_checks/)
