@@ -204,49 +204,16 @@ function PressureEpisodes({ metric, pressure }) {
   </section>
 }
 
-function AbapTuningCandidates({ rows = [], errorEvidence = {} }) {
-  const traceMatches = errorEvidence.top_errors || []
-  const relatedEvidence = row => traceMatches.filter(item => (
-    (row.consumer_type === 'PROGRAM' &&
-      item.program_link === 'EXPLICIT_ERROR_PROGRAM' &&
-      item.program?.toUpperCase() === row.consumer_key?.toUpperCase()) ||
-    (row.consumer_type === 'JOB' &&
-      (item.job_names || []).some(name=>name.toUpperCase() === row.consumer_key?.toUpperCase()))
-  ))
-  return <section className="sphereMonthlyPanel sphereMonthlyWide sphereMonthlyTuning" aria-label="ABAP tuning candidates">
-    <div className="sphereMonthlyTableHead">
-      <div><h4>ABAP Tuning Candidates</h4>
-        <small>Jobs and programs flagged by saved SPHERE history. Confirm job execution in SAP SM37.</small>
-      </div>
-      <span className="sphereMonthlyErrorCounter">{fmt(rows.length, 0)} candidates</span>
-    </div>
-    <div className="sphereMonthlyTableScroll"><table><thead><tr>
-      <th>Job / Program</th><th>Observed APP</th><th>WP CPU Avg / Peak</th>
-      <th>PSS Avg / Peak</th><th>Checks</th><th>CPU / RAM Pressure Checks</th><th>Review Signal</th><th>WP Error Context</th>
-    </tr></thead><tbody>
-      {rows.map(row => <tr key={id(row)}>
-        <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · {row.status}</small></td>
-        <td>{hostsFor(row) || '—'}</td>
-        <td className="sphereMonthlyCpuValue"><strong>{pct(row.avg_cpu_pct)} / {pct(row.peak_cpu_pct)}</strong>
-          <small>{wpCoreEq(row.avg_cpu_pct)} / {wpCoreEq(row.peak_cpu_pct)}</small></td>
-        <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td>
-        <td>{fmt(row.occurrences,0)}</td>
-        <td>{fmt(row.cpu_pressure_host_checks,0)} / {fmt(row.ram_pressure_host_checks,0)}</td>
-        <td>{[
-          row.signals?.sustained_high_cpu && 'High CPU',
-          row.signals?.high_memory && 'High PSS',
-          row.signals?.cpu_spike && 'CPU spike',
-          row.signals?.baseline_anomaly && 'Above baseline',
-        ].filter(Boolean).join(', ') || 'Review Required'}</td>
-        <td>{relatedEvidence(row).length ? <>
-          <strong>{[...new Set(relatedEvidence(row).map(item=>item.error_code))].join(', ')}</strong>
-          <small>{row.consumer_type === 'PROGRAM' ? 'Same program in monthly WP trace' : 'Observed job context only'}</small>
-        </> : '—'}</td>
-      </tr>)}
-      {!rows.length && <tr><td colSpan="8">No Review Required workloads observed for this reporting period.</td></tr>}
-    </tbody></table></div>
-    <p>Aggregated WP CPU: 100% = 1 logical CPU-core equivalent, not 100% of the APP host. CPU/PSS snapshots and host pressure checks are separate measurements; co-observation does not establish causation or failed job status. Host vCPU capacity is not available in retained historical evidence, so no host-capacity percentage is estimated.</p>
-  </section>
+function relatedMonthlyErrorCodes(row, errorEvidence = {}) {
+  if (errorEvidence.status === 'ERROR_SOURCE_NOT_RETAINED') return 'Source unavailable'
+  const identity = String(row.consumer_key || '').toUpperCase()
+  const type = String(row.consumer_type || '').toUpperCase()
+  const linked = (errorEvidence.top_errors || []).filter(item =>
+    (type === 'PROGRAM' && item.program_link === 'EXPLICIT_ERROR_PROGRAM' &&
+      String(item.program || '').toUpperCase() === identity) ||
+    (type === 'JOB' && (item.job_names || []).some(name => String(name).toUpperCase() === identity))
+  )
+  return [...new Set(linked.map(item => item.error_code).filter(Boolean))].join(', ') || '—'
 }
 
 function MonthlyErrorAnalysis({ evidence }) {
@@ -542,7 +509,7 @@ export default function RundeckMonthlyReview() {
         </div>
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
           <th>Job / Program</th><th>APP teramati</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
-          <th>Checks</th><th>CPU / RAM warning</th><th>Critical WP</th>
+          <th>Checks</th><th>CPU / RAM warning</th><th>Critical WP</th><th>Error Evidence</th>
         </tr></thead><tbody>
           {items.map(row=><React.Fragment key={id(row)}>
             <tr><td className="sphereMonthlyName"><button type="button" className="sphereMonthlyJobDetailToggle" aria-expanded={expanded===id(row)}
@@ -556,8 +523,9 @@ export default function RundeckMonthlyReview() {
               <td>{fmt(row.avg_pss_gb,2)} / {fmt(row.peak_pss_gb,2)} GB</td><td>{fmt(row.occurrences,0)}</td>
               <td>{fmt(row.pressure_overlap?.cpu_pressure_host_checks,0)} / {fmt(row.pressure_overlap?.ram_pressure_host_checks,0)}</td>
               <td>{fmt(row.pressure_overlap?.wp_host_checks,0)}</td>
+              <td title="Explicit WP error code only; job linkage may be contextual. Check ST22 and SM37.">{relatedMonthlyErrorCodes(row,errors)}</td>
             </tr>
-            {expanded===id(row)&&<tr className="sphereMonthlyEvidenceDetail"><td colSpan="7"><div>
+            {expanded===id(row)&&<tr className="sphereMonthlyEvidenceDetail"><td colSpan="8"><div>
               <strong>Saved monthly workload evidence</strong>
               <span>First observed {when(row.first_seen)} · Last observed {when(row.last_seen)}</span>
               <span>Host observations {fmt(row.host_observations,0)} · Prev-month avg WP CPU {pct(row.previous?.avg_cpu_pct)} · Max process count {fmt(row.peak_process_count,0)} (not necessarily at the CPU peak)</span>
@@ -566,7 +534,7 @@ export default function RundeckMonthlyReview() {
               <span>Collection counts are not SM37 executions. Same-host overlap does not prove causation.</span>
             </div></td></tr>}
           </React.Fragment>)}
-          {!items.length&&<tr><td colSpan="7">Tidak ada job atau program sesuai filter bulan ini.</td></tr>}
+          {!items.length&&<tr><td colSpan="8">No jobs or programs match these filters.</td></tr>}
         </tbody></table></div>
         <div className="sphereMonthlyPager"><small>Filters use saved SPHERE observations</small>
           <button type="button" disabled={page===0} onClick={()=>setPage(n=>n-1)}>Previous</button>
@@ -589,7 +557,6 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyPressureMode"><label>Workloads under pressure <select aria-label="Pressure workload type" value={pressureMetric} onChange={event=>setPressureMetric(event.target.value)}><option value="cpu">CPU</option><option value="ram">RAM</option></select></label></div>
         <PressureRows label="Jobs / Programs During Resource Pressure" evidence={evidence} metric={pressureMetric}/>
         <MonthlyErrorAnalysis key={month} evidence={errors}/>
-        <AbapTuningCandidates rows={tuningCandidates} errorEvidence={errors} />
       </div></details></div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
