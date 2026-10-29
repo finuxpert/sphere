@@ -2,6 +2,7 @@ import React from 'react'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { shortHost } from './sapUiFormat.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
+import { buildManagementMonthlyPdf } from './rundeckMonthlyManagementPdf.js'
 import './RundeckMonthlyReview.css'
 
 const API = import.meta.env.BASE_URL + 'api'
@@ -350,6 +351,7 @@ export default function RundeckMonthlyReview() {
   const [chartMode,setChartMode]=React.useState('peak')
   const [chartHost,setChartHost]=React.useState('ALL')
   const [chartMetric,setChartMetric]=React.useState('cpu')
+  const [pdfMode,setPdfMode]=React.useState('management')
   const [pdfBusy,setPdfBusy]=React.useState(false)
   const [pdfError,setPdfError]=React.useState('')
   const [pdfUrl,setPdfUrl]=React.useState('')
@@ -403,13 +405,20 @@ export default function RundeckMonthlyReview() {
   const hosts=evidence.hosts||[]
   const total=Number(data?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
+  const changePdfMode=mode=>{
+    if(!['management','technical'].includes(mode))return
+    pdfGenerationRef.current+=1
+    if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
+    pdfRef.current='';setPdfUrl('');setPdfError('')
+    setPdfMode(mode)
+  }
   const previewPdf=React.useCallback(async()=>{
     if(!data||loading||pdfBusy||pdfInFlightRef.current)return
     pdfInFlightRef.current=true
     const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
     try{
-      const blob=await buildMonthlyPdf({month,data})
+      const blob=await (pdfMode==='management' ? buildManagementMonthlyPdf({month,data}) : buildMonthlyPdf({month,data}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
@@ -417,7 +426,7 @@ export default function RundeckMonthlyReview() {
       setPdfUrl(url)
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{pdfInFlightRef.current=false;setPdfBusy(false)}
-  },[data,loading,pdfBusy,month])
+  },[data,loading,pdfBusy,month,pdfMode])
   // One click on Report generates a source-backed preview. Errors stop auto-retries.
   React.useEffect(()=>{
     if(tab==='report' && data && !loading && !pdfBusy && !pdfUrl && !pdfError) void previewPdf()
@@ -569,18 +578,26 @@ export default function RundeckMonthlyReview() {
       </div>}
       {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Monthly Report</h4></div>
+          <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
+          <div className="sphereMonthlyReportActions">
+            <label htmlFor="sphere-monthly-pdf-mode">Report type</label>
+            <select id="sphere-monthly-pdf-mode" aria-label="Report type" value={pdfMode}
+              onChange={event=>changePdfMode(event.target.value)}>
+              <option value="management">Management · 1 page</option>
+              <option value="technical">Technical · full detail</option>
+            </select>
           <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
             {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
           </button>
+          </div>
         </div>
         {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
           <div className="sphereMonthlyPager">
-            <a href={pdfUrl} download={'SPHERE-Monthly-Performance-'+month+'.pdf'}>Download PDF</a>
+            <a href={pdfUrl} download={'SPHERE-Monthly-'+(pdfMode==='management'?'Management-Summary-':'Technical-Review-')+month+'.pdf'}>Download PDF</a>
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Full screen</a>
           </div>
-          <iframe title="SPHERE monthly PDF preview" src={pdfUrl}/>
+          <iframe title={'SPHERE '+(pdfMode==='management'?'management summary':'technical report')+' PDF preview'} src={pdfUrl}/>
         </div>}
       </div>}
     </>}

@@ -571,3 +571,22 @@
 @media(prefers-reduced-motion:reduce){
   .sphereMonthlyReview.is-v2 .sphereMonthlyTabs button{transition:none}
 }
+
+/* V1.44: the report selector replaces duplicate export actions. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyReportActions {
+  display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyReportActions label {font-size:11.5px;color:var(--mr-muted)}
+.sphereMonthlyReview.is-v2 .sphereMonthlyReportActions select {
+  min-height:33px;border-radius:5px;padding:5px 8px;
+  border:1px solid var(--mr-border);background:var(--mr-surface-2);
+  color:var(--mr-text);font-size:12px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyReportPreview .sphereMonthlyTableHead small {
+  display:block;margin-top:4px;font-size:11px;color:var(--mr-muted);
+}
+@media(max-width:600px) {
+  .sphereMonthlyReview.is-v2 .sphereMonthlyReportActions {
+    justify-content:flex-start;width:100%;
+  }
+}
