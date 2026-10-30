@@ -240,3 +240,28 @@
     transition: none !important;
   }
 }
+
+/* Header and source status use the same readable baseline as the dashboard. */
+.appShell.isTool:has(.rundeckPanel) .rundeckLandscapeHeader {
+  align-items: center;
+  gap: 6px 12px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckLandscapeHeader :is(h1,h2) {
+  font-size: clamp(18px, 1.55vw, 22px) !important;
+  line-height: 1.25 !important;
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckStateCluster {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  min-width: 0;
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckStateCluster
+:is(.rundeckSystemHealthReasonV132,.rundeckDataQualityState,.rundeckDataFreshnessInline) {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckCollectorHealthV131.is-fixed > small {
+  font-size: 11px !important;
+}
