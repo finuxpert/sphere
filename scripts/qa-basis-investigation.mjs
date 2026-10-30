@@ -657,7 +657,7 @@ const checks = [
     && themeSelectStyle.includes('cursor:pointer')
     && files.accessibilityThemeFinal.includes('outline:2px solid rgba(79,198,200,.26)')
     && files.accessibilityThemeFinal.includes('html[data-theme="light"] .sphereThemeControl select')
-    && files.navbar.includes('<select aria-label="Display theme"')
+    && files.navbar.includes('<select className="form-select form-select-sm" aria-label="Display theme"')
     && files.navbar.includes('<option value="dark">Dark</option>')
     && files.navbar.includes('<option value="light">Light</option>')
     && files.navbar.includes('<option value="system">System</option>')
