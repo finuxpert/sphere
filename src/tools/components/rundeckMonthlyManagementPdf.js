@@ -82,7 +82,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ['PROGRAMS TO REVIEW',fmt(summary.review_required,0)],
     ['CPU WARNING READINGS',fmt(pressure.cpu?.observed_pressure_host_checks,0)],
     ['RAM WARNING READINGS',fmt(pressure.ram?.observed_pressure_host_checks,0)],
-    ['DATA COVERAGE',percent(quality.coverage_pct)],
+    ['EST. DATA COVERAGE',percent(quality.coverage_pct)],
   ]
   summaryMetrics.forEach(([label,value],i)=>{
     const x=margin+i*width/4
@@ -91,16 +91,19 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   })
   pdf.setDrawColor(224,230,234);pdf.line(margin,44,W-margin,44)
 
-  section(pdf,'Executive Summary',51,width,margin)
+  section(pdf,'Operational Findings',51,width,margin)
+  const peakAt=(sample)=>sample?.peak_at ? wib(sample.peak_at) : null
+  const errorStatus=String(data.monthly_errors?.status||'UNKNOWN')
+  const errorUnavailable=errorStatus==='ERROR_SOURCE_NOT_RETAINED'
   const findings=[
-    peakCpu ? 'Highest CPU: '+hostName(peakCpu.host)+' '+percent(peakCpu.peak_cpu_pct) : 'CPU peak: No Data',
-    peakRam ? 'Highest RAM: '+hostName(peakRam.host)+' '+percent(peakRam.peak_ram_pct) : 'RAM peak: No Data',
-    'Programs to review: '+fmt(summary.review_required,0),
-    'Data coverage: '+percent(quality.coverage_pct),
+    peakCpu ? 'CPU peak: '+hostName(peakCpu.host)+' '+percent(peakCpu.peak_cpu_pct)+(peakAt(pressure.cpu?.peak) ? ' · '+peakAt(pressure.cpu.peak) : '') : 'CPU peak: Not observed',
+    peakRam ? 'RAM peak: '+hostName(peakRam.host)+' '+percent(peakRam.peak_ram_pct)+(peakAt(pressure.ram?.peak) ? ' · '+peakAt(pressure.ram.peak) : '') : 'RAM peak: Not observed',
+    'Review focus: Investigate jobs and programs recorded near server warnings',
+    errorUnavailable ? 'ABAP error evidence not retained · verify ST22 / SM37' :
+      'ABAP error evidence: '+(data.monthly_errors?.error_program_count==null ? 'Unverified' : fmt(data.monthly_errors.error_program_count,0)+' linked programs'),
   ]
-  // Two columns keep the management summary readable without tiny single-line text.
   findings.forEach((value,i)=>write(pdf,value,margin+2+(i%2)*width/2,58+Math.floor(i/2)*7,
-    {bold:i<2,color:i<2?[35,49,60]:[83,100,111]},8.5))
+    {bold:i<2,color:i<2?[35,49,60]:[83,100,111]},i<2?7.6:8))
 
   section(pdf,'APP Server Performance',74,width,margin)
   const appColumns=[
@@ -132,12 +135,12 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   write(pdf,cpuLine,margin+3,139,{},8)
   write(pdf,ramLine,margin+width/2+6,139,{},8)
 
-  section(pdf,'Priority ABAP Programs for Review',147,width,margin)
+  section(pdf,'Priority Jobs & Programs for Review',147,width,margin)
   write(pdf,'PROGRAM / JOB',margin+2,154,{bold:true,color:[87,101,111]},7.5)
   write(pdf,'REVIEW REASON',margin+114,154,{bold:true,color:[87,101,111]},7.5)
-  write(pdf,'MAX CPU',margin+207,154,{bold:true,color:[87,101,111],align:'right'},7.5)
-  write(pdf,'MAX RAM',margin+242,154,{bold:true,color:[87,101,111],align:'right'},7.5)
-  write(pdf,'SAMPLES',W-margin-2,154,{bold:true,color:[87,101,111],align:'right'},7.5)
+  write(pdf,'WP CPU CORES',margin+207,154,{bold:true,color:[87,101,111],align:'right'},7.5)
+  write(pdf,'PEAK PSS (GB)',margin+242,154,{bold:true,color:[87,101,111],align:'right'},7.5)
+  write(pdf,'OBSERVATIONS',W-margin-2,154,{bold:true,color:[87,101,111],align:'right'},7.5)
 
   // Deduplicate by actual ABAP identifier, preserving the source-ranked order.
   // The one-page edition includes up to five; all source rows remain in the
@@ -162,7 +165,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     pdf.setFontSize(8.2);pdf.setTextColor(35,49,60);pdf.text(lines,margin+2,py)
     pdf.setFontSize(8);pdf.text(reasonLines,margin+114,py)
     write(pdf,cpuCores(row.peak_cpu_pct),margin+207,py,{align:'right'},8)
-    write(pdf,asNumber(row.peak_pss_gb)==null?'N/A':fmt(row.peak_pss_gb,2)+' GB',margin+242,py,{align:'right'},8)
+    write(pdf,asNumber(row.peak_pss_gb)==null?'N/A':fmt(row.peak_pss_gb,2),margin+242,py,{align:'right'},8)
     write(pdf,fmt(row.occurrences,0),W-margin-2,py,{align:'right'},8)
     py+=h
     shown+=1
@@ -172,16 +175,18 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   write(pdf,'Showing '+shown+' of '+candidates.length+' candidates. Full program details in Technical Report.',
     margin,nextY,{color:[94,108,117]},7.3)
   const errorCount=errors.length
-  const errorText=errorCount
-    ? 'SAP errors to check: '+fmt(errorCount,0)+' saved categories; '+String(errors[0].error_code||'Code unavailable')+
-      ' ('+hostName(errors[0].host)+'). Check SAP for the affected program.'
-    : 'SAP errors: No matching saved error data. This does not confirm zero errors.'
+  const errorText=errorUnavailable
+    ? 'ABAP errors: Source records not retained. Check ST22, SM37 and available SPHERE archives.'
+    : errorCount
+      ? 'ABAP errors to verify: '+fmt(errorCount,0)+' retained groups; '+String(errors[0].error_code||'Code unavailable')+
+        ' ('+hostName(errors[0].host)+'). Correlation is not proof of root cause.'
+      : 'ABAP errors: No matching retained code found. This does not establish zero errors.'
   pdf.setFont('helvetica','normal')
   pdf.setFontSize(7.3)
   pdf.setTextColor(73,91,104)
-  pdf.text(textLines(pdf,errorText,width,7.3).slice(0,1),margin,198)
-  write(pdf,'Source: SPHERE saved observations  '+fmt(quality.complete_checks,0)+' / ~'+fmt(quality.expected_checks,0)+
-    ' expected ('+percent(quality.coverage_pct)+').',margin,H-5,{color:[94,107,117]},7)
+  pdf.text(textLines(pdf,errorText,width,7.3).slice(0,2),margin,196)
+  write(pdf,'Source: SPHERE complete collections '+fmt(quality.complete_checks,0)+' / ~'+fmt(quality.expected_checks,0)+
+    ' estimated expected ('+percent(quality.coverage_pct)+').',margin,H-5,{color:[94,107,117]},7)
   write(pdf,'Page 1 of 1',W-margin,H-5,{align:'right',color:[94,107,117]},7)
 
   if(pdf.internal.getNumberOfPages()!==1)throw Error('Management report exceeded 1 page')
