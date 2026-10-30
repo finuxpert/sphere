@@ -1,6 +1,12 @@
+import json
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
 from backend.rundeck_infra_parser import parse
-from backend.rundeck_infra_poller import _group_output_entries
+from backend.rundeck_infra_poller import _group_output_entries, _stored_execution_hosts
+from backend.rundeck_infra_store import identifier
 
 POSITIONAL_SAMPLE=b"""## SPHERE-INFRA-V1-BEGIN
 snapshot_ts=2026-09-23T18:15:37+07:00
@@ -100,3 +106,60 @@ class InfraMultiHostPollerTests(unittest.TestCase):
         payload={"completed":True,"execCompleted":True,"entries":[{"node":"AOPH1PAPPDC","log":"x"}]}
         with self.assertRaisesRegex(ValueError,"AOPH2PAPPDC"):
             _group_output_entries(payload,["AOPH1PAPPDC","AOPH2PAPPDC"])
+
+class InfraManifestFastPathTests(unittest.TestCase):
+    def _manifest(self, root: Path, eid: str, host: str, *,
+                  multi: bool, status: str = "STORED",
+                  recorded_execution: str | None = None,
+                  recorded_host: str | None = None):
+        cid = identifier(eid, host if multi else None)
+        path = root / "manifests" / f"{cid}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({
+            "collection_id": cid,
+            "execution_id": recorded_execution or eid,
+            "host": recorded_host or host,
+            "database_status": status,
+        }))
+        return path
+
+    def test_reads_only_matching_single_host_execution(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._manifest(root, "1234", "AOPH1QAPPDC", multi=False)
+            # Historical broken manifest must not be scanned or decoded.
+            (root / "manifests" / "infra-rundeck-1000.json").write_text("{corrupt")
+            with patch("backend.rundeck_infra_poller.ROOT", root):
+                self.assertEqual(
+                    _stored_execution_hosts("1234", ["AOPH1QAPPDC"]),
+                    {"AOPH1QAPPDC"},
+                )
+                self.assertEqual(
+                    _stored_execution_hosts("1235", ["AOPH1QAPPDC"]),
+                    set(),
+                )
+
+    def test_multi_host_requires_each_matching_stored_manifest(self):
+        hosts = ["AOPH1PAPPDC", "AOPH2PAPPDC", "AOPH3PAPPDC"]
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._manifest(root, "2345", hosts[0], multi=True)
+            self._manifest(root, "2345", hosts[1], multi=True, status="ERROR")
+            self._manifest(root, "2345", hosts[2], multi=True, recorded_host="OTHER")
+            with patch("backend.rundeck_infra_poller.ROOT", root):
+                self.assertEqual(_stored_execution_hosts("2345", hosts), {hosts[0]})
+            self._manifest(root, "2345", hosts[1], multi=True)
+            self._manifest(root, "2345", hosts[2], multi=True)
+            with patch("backend.rundeck_infra_poller.ROOT", root):
+                self.assertEqual(_stored_execution_hosts("2345", hosts), set(hosts))
+
+    def test_current_corrupt_manifest_fails_closed(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path=self._manifest(root, "3456", "AOPH1QAPPDC", multi=False)
+            path.write_text("{malformed")
+            with patch("backend.rundeck_infra_poller.ROOT", root):
+                with self.assertRaises(json.JSONDecodeError):
+                    _stored_execution_hosts("3456", ["AOPH1QAPPDC"])
+
+
