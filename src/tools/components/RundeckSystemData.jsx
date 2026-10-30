@@ -42,7 +42,7 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
     </div>}
 
     {tab==='collections'&&<div className="rundeckSystemDataPane">
-      <header><div><strong>Collection History</strong><small>Committed Performance collection runs</small></div><State value={history[0]?.status||'UNKNOWN'}/></header>
+      <header><div>{hideTabs && <strong>Collection History</strong>}<small>Committed Performance collection runs</small></div><State value={history[0]?.status||'UNKNOWN'}/></header>
       <div className="rundeckSystemDataTableWrap"><table>
         <thead><tr><th>Run</th><th>Time WIB</th><th>APP</th><th>Status</th></tr></thead>
         <tbody>
@@ -60,7 +60,7 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
 
     {tab==='services'&&<div className="rundeckSystemDataPane">
       {(!platform?.backup?.status || String(platform.backup.status).toUpperCase()==='NOT_CONFIGURED') && <p className="spherePlatformBackupNotice" role="status">Backup not configured. Healthy collector services do not confirm database and archive backup protection.</p>}
-      <header><div><strong>SPHERE Services</strong><small>{serviceSummary||'Collector, storage, database and maintenance services'} · Backup status shown separately</small></div><State value={platformState}/></header>
+      <header><div>{hideTabs && <strong>SPHERE Services</strong>}<small>{serviceSummary||'Collector, storage, database and maintenance services'}</small></div><State value={platformState}/></header>
       <div className="rundeckSystemDataTableWrap"><table>
         <thead><tr><th>Component</th><th>State</th><th>Detail</th></tr></thead>
         <tbody>
@@ -70,14 +70,14 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
           <tr><td>Raw Logs</td><td><State value={platform?.filesystem?.status||'UNKNOWN'}/></td><td>{platform?.archive?`${platform.archive.files} files · ${formatBytes(platform.archive.bytes)}`:'—'}</td></tr>
           <tr><td>PostgreSQL</td><td><State value={platform?.database?.status==='ok'?'NORMAL':String(platform?.database?.status||'UNKNOWN').toUpperCase()}/></td><td>{platform?.database?`${formatBytes(platform.database.database_bytes)} · ${platform.database.connections??'—'} connections`:'—'}</td></tr>
           <tr><td>Retention</td><td><State value={platform?.maintenance?.status||'UNKNOWN'}/></td><td>{platform?.maintenance?.last_run?`${formatTime(platform.maintenance.last_run)} · ${platform.maintenance.retention_days} days`:'No maintenance result yet'}</td></tr>
-          <tr><td>Backup</td><td><State value={platform?.backup?.status||'NOT_CONFIGURED'}/></td><td>{platform?.backup?.last_success?`Last success ${formatTime(platform.backup.last_success)}`:'Backup not configured'}</td></tr>
+          <tr><td>Backup</td><td><State value={platform?.backup?.status||'NOT_CONFIGURED'}/></td><td>{platform?.backup?.last_success?`Last success ${formatTime(platform.backup.last_success)}`:'—'}</td></tr>
           <tr><td>Releases</td><td><State value={releaseState}/></td><td>{platform?.releases?`${platform.releases.backend.count} backend · ${platform.releases.web.count} web`:'—'}</td></tr>
         </tbody>
       </table></div>
     </div>}
 
     {tab==='tokens'&&<div className="rundeckSystemDataPane rundeckTokenManagement" aria-label="Rundeck credential expiry">
-      <header><div><strong>Token Management</strong><small>Rundeck credential expiry · DEV only · WIB</small></div><State value={tokenStatus?.read_only ? "REPORTED" : "UNKNOWN"}/></header>
+      <header><div>{hideTabs && <strong>Token Management</strong>}<small>Rundeck credential expiry · DEV only · WIB</small></div><State value={tokenStatus?.read_only ? "REPORTED" : "UNKNOWN"}/></header>
       <p className="rundeckTokenNotice">Last reported expiry information — not a live token validity check. Reader and Runner are separate credentials.</p>
       <div className="rundeckTokenGrid">
         {tokenRows.map((item)=><article className="rundeckTokenCard" key={item.kind}>
@@ -88,10 +88,10 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
             <div><dt>Identity</dt><dd>{item.identity||'Not verified'}</dd></div>
             <div><dt>Last report</dt><dd>{item.last_reported_at||'Not registered'}</dd></div>
           </dl>
-          <button type="button" className="rundeckTokenRenew" disabled title="Locked until maintainer authentication, Runner ACL and safe server-side rotation are verified">Renew Now · Locked</button>
+          <span className="rundeckTokenRenew" title="Rotation requires maintainer authentication, Runner ACL verification, approval, and rollback protection">Renewal by administrator</span>
         </article>)}
       </div>
-      <p className="rundeckTokenFootnote">Expiry warnings appear within 7, 3 and 1 days and after the reported expiry. Renew Now requires an authenticated maintainer gateway, GET-only verification, approval, atomic rollback and systemd consumer checks. No token is accepted on this monitoring page yet.</p>
+      <p className="rundeckTokenFootnote">Expiry warnings are reported at 7, 3 and 1 days. Credential rotation requires administrator approval and verification; this page does not accept tokens.</p>
     </div>}
   </section>
 }
