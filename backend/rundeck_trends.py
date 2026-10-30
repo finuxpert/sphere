@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -280,11 +281,14 @@ def trend_series(
         if until is not None:
             params["until"] = until
 
+    query_started = time.perf_counter()
     with engine.connect() as conn:
         result = conn.execute(query, params)
         items = [dict(row._mapping) for row in result]
+    sql_ms = round((time.perf_counter() - query_started) * 1000, 1)
 
     return {
+        "runtime": {"sql_ms": sql_ms},
         "since": since,
         "window_end": until,
         "observation_time_basis": "host_sample" if range_key == "custom" else "collection",
