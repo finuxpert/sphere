@@ -14,6 +14,16 @@ if [[ ! -s dist/index.html ]]; then
   exit 2
 fi
 
+if ! grep -q '/dev/assets/' dist/index.html; then
+  echo "VISUAL_QA=BLOCKED build does not target the DEV base URL." >&2
+  exit 2
+fi
+CURRENT_SHA="$(git rev-parse --short=7 HEAD)"
+if ! grep -Rqs "$CURRENT_SHA" dist/assets; then
+  echo "VISUAL_QA=BLOCKED build is stale for source SHA $CURRENT_SHA. Run: npm run qa" >&2
+  exit 2
+fi
+
 CHROME=""
 for cmd in google-chrome google-chrome-stable chromium chromium-browser; do
   if command -v "$cmd" >/dev/null 2>&1; then
