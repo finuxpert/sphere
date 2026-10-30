@@ -48,7 +48,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     setAppliedQuery('')
     setSearchOpen(embedded)
     setPageIndex(0)
-  }, [reviewJumpToken, reviewJumpHealth])
+  }, [reviewJumpToken, reviewJumpHealth, embedded])
   React.useLayoutEffect(() => {
     if (typeof window === 'undefined') return undefined
     const updateFit = () => {
