@@ -1,0 +1,242 @@
+/* SPHERE DEV — focused enterprise monitoring finish, 30 October 2026.
+ * Keep every source-backed value, drilldown, and chart visible. These rules
+ * affect presentation only; no source status or threshold is recomputed. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereOverviewBottomRow.row {
+  align-items: start !important;
+  gap: 8px !important;
+}
+@media (min-width: 1200px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491 .sphereOverviewBottomRow.row {
+    grid-template-columns: minmax(0, 58fr) minmax(0, 42fr) !important;
+  }
+}
+
+/* The health section is an operations summary, not three cards in a card.
+   Each source retains its own timestamp, severity, and Details action. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereOverviewDetails .sphereHealthSummaryGrid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+  align-items: start !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthSummaryHeader {
+  min-height: 27px;
+  align-items: center;
+  margin-bottom: 2px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthSummaryHeader h3,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadSummaryHead h3 {
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  font-weight: 650 !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineBlock {
+  display: grid !important;
+  grid-template-columns: minmax(118px, 28%) minmax(0, 1fr) !important;
+  align-items: start;
+  gap: 3px 10px !important;
+  padding: 8px 2px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--sphere-design-edge, rgba(135,157,169,.13)) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineBlock:last-child {
+  border-bottom: 0 !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineHead {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 7px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineHead h4 {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  font-weight: 650 !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineHead button {
+  min-height: 26px !important;
+  font-size: 11px !important;
+  padding: 2px 1px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineValues,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthIssueSummary {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  min-width: 0;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineValues {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  column-gap: 8px;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineValues b {
+  font-size: 10.5px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineValues strong,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthIssueSummary strong {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  font-variant-numeric: tabular-nums;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthIssueSummary small {
+  font-size: 10.5px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineBlock > small,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineBlock > .sphereHealthInlineIssues,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineBlock > .sphereHealthInfraScope {
+  grid-column: 2;
+  min-width: 0;
+  font-size: 10.5px !important;
+  line-height: 1.35 !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineBlock > .sphereHealthInlineIssues > div {
+  gap: 8px;
+  font-size: 10.5px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineIssues span {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthInlineIssues b {
+  font-size: 11px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereHealthBackupState {
+  max-width: 60%;
+  white-space: normal;
+  text-align: right;
+  font-size: 10.5px;
+}
+
+/* Larger operational labels without adding decorative panels. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadSummaryMetrics {
+  min-width: 0;
+  gap: 6px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadSummaryMetric {
+  min-height: 43px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadSummaryMetric strong {
+  font-size: 16px !important;
+  font-variant-numeric: tabular-nums;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadSummaryMetric span {
+  font-size: 10.5px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadPriorityTitle,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereCurrentWorkloadSummary header strong {
+  font-size: 12px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadPriorityName,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereCurrentWorkloadName {
+  font-size: 11.5px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereWorkloadPriorityRow,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .sphereCurrentWorkloadRow {
+  min-height: 26px;
+  padding-block: 4px !important;
+}
+
+/* Four full charts and shared filters. Do not hide a selected metric,
+   reset action, a gap warning, or an axis selector. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendEditorial h3 {
+  font-size: 14px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendSharedControls {
+  align-items: end !important;
+  column-gap: 12px !important;
+  row-gap: 6px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendSharedGroup > span {
+  font-size: 11px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendSharedControls :is(button,select) {
+  min-height: 26px;
+  font-size: 11.5px !important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendPeakSummary strong {
+  font-size: 11.5px;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendPeakSummary span {
+  font-size: 10.5px;
+  white-space: normal;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckTrendMetricSelect {
+  font-size: 12px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckSystemHealthV1231,
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131,
+.appShell:has(.rundeckPanel) .rundeckDataAlignment {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 699px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .sphereHealthInlineBlock {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .sphereHealthInlineBlock > * {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .sphereHealthInlineHead {
+    justify-content: space-between;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring .sphereHealthInlineBlock * {
+    transition: none !important;
+  }
+}
