@@ -67,7 +67,8 @@ jobs:
             backend.tests.test_rundeck_evaluation_paging_dev \
             backend.tests.test_rundeck_custom_window \
             backend.tests.test_rundeck_network_trends \
-            backend.tests.test_rundeck_monthly_review
+            backend.tests.test_rundeck_monthly_review \
+            backend.tests.test_rundeck_infra
       - name: Validate Windows PowerShell deployment bootstrap
         shell: pwsh
         run: |
