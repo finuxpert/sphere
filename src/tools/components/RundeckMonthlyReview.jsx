@@ -499,8 +499,7 @@ export default function RundeckMonthlyReview() {
               mode={chartMode} host={chartHost} fitObserved={chartFitObserved}
               threshold={evidence.thresholds?.[chartMetric+'_warning_pct']}/>
             <div className="sphereMonthlyVisualFooter">
-              <span>{chartMetric.toUpperCase()} warning threshold <b>{pct(evidence.thresholds?.[chartMetric+'_warning_pct'])}</b></span>
-              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} warning checks across {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days</span>
+              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} {chartMetric.toUpperCase()} warning checks across {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days</span>
             </div>
           </section>
                   <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
