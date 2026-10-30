@@ -50,3 +50,17 @@ test('DEV release must smoke-check local and public Network RX/TX', () => {
   assert.match(deploy, /smoke-network-trends-dev\.sh/)
   assert.match(packageJson.scripts['qa:trend-focus'], /rundeck-trend-api-error\.test\.mjs/)
 })
+
+test('default CPU RAM and Critical WP load with one bounded SQL-backed request', () => {
+  const backend = readFileSync(new URL('../../backend/rundeck_api_core.py', import.meta.url), 'utf8')
+  const sql = readFileSync(new URL('../../backend/rundeck_trends.py', import.meta.url), 'utf8')
+  assert.match(component, /defaultTrendBundle = serverMetric1 === 'cpu'/)
+  assert.match(component, /history\/trends\?metrics=cpu%2Cram%2Cwp/)
+  assert.match(component, /AbortSignal\.timeout\(20_000\)/)
+  assert.match(component, /loadTrend\('cpu', setServerTrend1/)
+  assert.match(backend, /@app\.get\("\/history\/trends"\)/)
+  assert.match(sql, /def trend_series_bundle\(/)
+  assert.match(sql, /CROSS JOIN LATERAL/)
+  assert.match(sql, /PARTITION BY bucket, host, metric/)
+  assert.match(component, /technicalMetric === 'network'/)
+})
