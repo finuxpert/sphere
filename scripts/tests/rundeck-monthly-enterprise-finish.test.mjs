@@ -86,7 +86,8 @@ test('Report UI follows system light/dark tokens and does not suppress data', ()
 
 
 test('Monthly Summary prioritizes host preview before full workload evaluation', () => {
-  assert.match(ui, /tab==='summary' && hostPreview\?\.month!==month && !hostPreviewError/)
+  assert.match(ui, /fullEvaluationReady = tab!=='summary' \|\| hostPreview\?\.month===month \|\| Boolean\(hostPreviewError\)/)
+  assert.match(ui, /if\(!fullEvaluationReady\)/)
   assert.ok(ui.includes('setHostPreview(payload)'), 'verified host data must be rendered')
   assert.match(ui, /setHostPreviewRetry\(count=>count\+1\)/)
   assert.match(ui, /Retry server data/)
