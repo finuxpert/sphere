@@ -14,7 +14,6 @@ import { dirname, join, normalize, resolve } from 'node:path'
 const root = process.cwd()
 const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
   .split('\0').filter(Boolean).map(value => value.replaceAll('\\', '/'))
-const tracked = new Set(files)
 const customCss = files.filter(value => /^src\/.*\.css$/i.test(value))
 const scanFiles = files.filter(value => /\.(?:[cm]?[jt]sx?|css|html)$/i.test(value))
 const references = new Map(customCss.map(value => [value, new Set()]))
