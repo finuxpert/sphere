@@ -24,7 +24,7 @@ test('422 on other parameters stays explicit and errors are sanitized', () => {
   assert.match(trendApiError(500, null, 'network_rx'), /HTTP 500/)
 })
 test('Network selection and RX/TX controls belong to each independent chart header', () => {
-  const metric = component.indexOf('className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect"')
+  const metric = component.indexOf('className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect form-select form-select-sm"')
   const direction = component.indexOf("panel.direction === 'rx'")
   const chart = component.indexOf('rundeckConfigurableTrendHead')
   assert.ok(chart >= 0 && chart < metric && metric < direction)
