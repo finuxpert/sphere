@@ -34,7 +34,8 @@ test('Saved evaluation status and WP CPU semantics are retained', () => {
   assert.match(ui, /wpCpuCoreEquivalent/)
   assert.match(ui, /not host CPU utilization/)
   assert.match(ui, /model\?\.candidates/)
-  assert.match(ui, /critical_wp_host_checks/)
+  const pressure = readFileSync(new URL('../../backend/rundeck_monthly_pressure.py', import.meta.url),'utf8')
+  assert.match(pressure,/critical_wp_host_checks/)
   assert.match(ui, /summary\.health/)
 })
 
