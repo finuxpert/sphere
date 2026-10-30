@@ -358,8 +358,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     const controller=new AbortController()
     setHostPreview(null)
     setHostPreviewError('')
+    const previewDeadline=AbortSignal.timeout(20_000)
     fetch(API+'/evaluation/workloads/monthly/hosts?'+new URLSearchParams({month}), {
-      cache:'no-store', signal:controller.signal,
+      cache:'no-store', signal:AbortSignal.any([controller.signal,previewDeadline]),
     })
       .then(async response=>{
         if(!response.ok)throw Error('Monthly host summary unavailable (HTTP '+response.status+')')
@@ -373,7 +374,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         setHostPreview(payload)
       })
       .catch(failure=>{
-        if(!controller.signal.aborted)setHostPreviewError(failure.message||'Monthly host summary unavailable')
+        if(!controller.signal.aborted)setHostPreviewError(previewDeadline.aborted
+          ? 'Monthly host summary exceeded 20 seconds; check API and database'
+          : failure.message||'Monthly host summary unavailable')
       })
     return ()=>controller.abort()
   },[month])
@@ -387,7 +390,10 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
     setLoading(true);setError('');setData(null)
-    fetch(API+'/evaluation/workloads/monthly?'+params.toString(),{cache:'no-store',signal:controller.signal})
+    const evaluationDeadline=AbortSignal.timeout(35_000)
+    fetch(API+'/evaluation/workloads/monthly?'+params.toString(),{
+      cache:'no-store',signal:AbortSignal.any([controller.signal,evaluationDeadline]),
+    })
       .then(async response=>{
         if(!response.ok){const body=await response.json().catch(()=>({}));throw Error(body.detail||'Monthly evidence unavailable (HTTP '+response.status+')')}
         return response.json()
@@ -398,7 +404,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         if(!payload.monthly_pressure||!payload.monthly_errors)throw Error('Monthly pressure or error evidence is unavailable on this backend')
         setData(payload)
       })
-      .catch(failure=>{if(!controller.signal.aborted)setError(failure.message||'Historical evidence unavailable')})
+      .catch(failure=>{if(!controller.signal.aborted)setError(evaluationDeadline.aborted
+        ? 'Monthly evaluation exceeded 35 seconds; inspect backend SQL timings'
+        : failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
   },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page])
