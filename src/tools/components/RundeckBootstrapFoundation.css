@@ -1,0 +1,97 @@
+/* SPHERE DEV: Bootstrap v5.3.8 is a low-priority CSS foundation.
+   React controls navigation, popups, theme, selection and dropdown behavior. */
+@import "bootstrap/dist/css/bootstrap.min.css" layer(sphere-bootstrap);
+
+html[data-theme="dark"] .appShell:has(.rundeckPanel) {
+ --bs-body-color:#e7edf0;--bs-body-bg:#101820;--bs-secondary-color:#a6b8c2;
+ --bs-secondary-bg:#172530;--bs-tertiary-bg:#1b2a35;--bs-border-color:rgba(135,157,169,.22);
+ --bs-focus-ring-color:rgba(83,187,201,.30);color-scheme:dark;
+}
+html[data-theme="light"] .appShell:has(.rundeckPanel) {
+ --bs-body-color:#243442;--bs-body-bg:#fff;--bs-secondary-color:#566975;
+ --bs-secondary-bg:#edf3f6;--bs-tertiary-bg:#f5f8fa;--bs-border-color:rgba(56,83,101,.20);
+ --bs-focus-ring-color:rgba(46,138,164,.24);color-scheme:light;
+}
+.appShell:has(.rundeckPanel) :is(.form-control,.form-select) {
+ font-family:inherit;line-height:1.35;min-width:0;min-height:32px;
+ background-color:var(--sphere-design-panel,var(--bs-body-bg));
+ border:1px solid var(--sphere-design-edge,var(--bs-border-color));border-radius:5px;
+ color:var(--sphere-text,var(--bs-body-color));box-shadow:none;
+}
+.appShell:has(.rundeckPanel) :is(.form-control,.form-select)::placeholder {
+ color:var(--sphere-text-secondary,var(--bs-secondary-color));opacity:.9;
+}
+.appShell:has(.rundeckPanel) :is(.form-control,.form-select):focus-visible,
+.appShell:has(.rundeckPanel) :is(.btn,.nav-link):focus-visible {
+ border-color:var(--sphere-accent,#55b9c5);outline:2px solid var(--bs-focus-ring-color);
+ outline-offset:1px;
+}
+.appShell:has(.rundeckPanel) :is(.form-control,.form-select,.btn):disabled {opacity:.55;cursor:not-allowed}
+.appShell:has(.rundeckPanel) .spherePerformanceNavLink.nav-link {
+ display:flex;align-items:center;gap:9px;min-height:38px;text-decoration:none;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes.btn-group {display:inline-flex;width:auto;flex-wrap:nowrap}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes.btn-group .btn,
+.appShell:has(.rundeckPanel) .rundeckReviewSegmented.btn-group .btn {
+ padding:4px 10px;min-height:32px;font-weight:600;border-radius:4px;
+}
+.appShell:has(.rundeckPanel) .rundeckJobsProgramsModes.btn-group .btn[aria-selected="true"],
+.appShell:has(.rundeckPanel) .rundeckReviewSegmented.btn-group .btn[aria-pressed="true"] {
+ color:var(--sphere-text,var(--bs-body-color));background:rgba(83,187,201,.11);
+ box-shadow:inset 0 -2px 0 var(--sphere-accent,#55b9c5);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadHead,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewHeadV1231 {
+ display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs :is(.rundeckCurrentWorkloadTools,.rundeckReviewControlsV1231) {
+ display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-width:0;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs :is(.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231) {
+ width:100%;max-height:none;overflow-x:auto;overflow-y:visible;scrollbar-gutter:auto;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereBootstrapWorkloadTable.table {
+ --bs-table-bg:transparent;--bs-table-color:var(--sphere-text,var(--bs-body-color));
+ --bs-table-border-color:rgba(135,157,169,.12);
+ --bs-table-hover-bg:rgba(95,156,178,.055);--bs-table-hover-color:var(--sphere-text,var(--bs-body-color));
+ width:100%;margin-bottom:0;border-collapse:collapse;font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereBootstrapWorkloadTable :is(th,td) {
+ padding:7px 10px;border-bottom:1px solid var(--bs-table-border-color);
+ box-shadow:none;vertical-align:middle;font-size:12px;line-height:1.35;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereBootstrapWorkloadTable th {
+ font-size:11px;font-weight:700;white-space:normal;letter-spacing:0;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereBootstrapWorkloadTable tbody tr:hover > * {
+ background:var(--bs-table-hover-bg);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereBootstrapWorkloadTable tbody tr.is-selected > * {
+ background:rgba(76,177,196,.09);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereAttentionMark {
+ display:inline-flex;align-items:center;gap:7px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereAttentionMark .form-check-input {
+ appearance:checkbox;-webkit-appearance:checkbox;width:15px;height:15px;margin:0;
+ flex:0 0 15px;border:1px solid var(--bs-border-color);
+ accent-color:var(--sphere-accent,#55b9c5);box-shadow:none;cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs :is(.rundeckReviewPager,.rundeckWorkloadPager) .btn {
+ min-height:30px;padding:4px 10px;font-size:11px;line-height:1.2;
+ border:1px solid var(--bs-border-color);border-radius:5px;
+ background:transparent;color:var(--sphere-text,var(--bs-body-color));
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs :is(.rundeckReviewPager,.rundeckWorkloadPager) .btn:not(:disabled):hover {
+ background:var(--bs-secondary-bg);
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewSearch.input-group {
+ display:flex;align-items:center;min-height:32px;
+}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewSearch .form-control {
+ flex:1 1 auto;min-height:32px;min-width:0;width:100%;
+}
+@media(max-width:760px){
+ .appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .sphereBootstrapWorkloadTable.table {min-width:760px}
+ .appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewSearch.input-group {flex:1 1 100%}
+}
