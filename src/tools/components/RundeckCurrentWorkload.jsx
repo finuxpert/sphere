@@ -300,10 +300,10 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
   return <section className="rundeckCurrentWorkload" aria-label="Current SAP jobs and programs">
     <div className={`rundeckCurrentWorkloadHead${embedded ? ' is-embedded' : ''}`}>
       {!embedded && <h3><SphereIcon name="workload" /> Current Jobs & Programs</h3>}
-      <button type="button" className="sphereAttentionTrigger" onClick={()=>setAttentionOpen(true)} aria-label={`Open manually marked workloads, ${attentionRows.length} marked observations`} title="Manual marked workload list; independent of SAP Critical WP Attention and saved 24h evaluations">Marked <b>{attentionRows.length}</b></button>
+      <button type="button" className="sphereAttentionTrigger btn btn-sm" onClick={()=>setAttentionOpen(true)} aria-label={`Open manually marked workloads, ${attentionRows.length} marked observations`} title="Manual marked workload list; independent of SAP Critical WP Attention and saved 24h evaluations">Marked <b>{attentionRows.length}</b></button>
        <span className="rundeckCurrentWorkloadCount" title={'Saved observations from the latest collection, not SAP job executions. ' + coverageLabel}>{allLoaded ? `${rows.length} observations` : `${rows.length} of ${workloadMeta.total} loaded`}</span>
       <div className="rundeckCurrentWorkloadTools">
-        <select className="rundeckWorkloadHostFilter" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
+        <select className="rundeckWorkloadHostFilter form-select form-select-sm" aria-label="Filter workload APP" title="Independent from selected APP Trend focus. All APP includes saved workload observations from all loaded APP hosts." value={hostFilter} onChange={event => {setHostFilter(event.target.value);setListPage(0)}}>
           <option value="ALL">All APPs</option>
           {availableHosts.map(host => <option key={host} value={host}>{shortHost(host)}</option>)}
           {hostFilter !== 'ALL' && !availableHosts.includes(hostFilter) &&
@@ -311,7 +311,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
         </select>
         <label className="rundeckCurrentWorkloadSearch">
           <span>Search {rows.length} observations</span>
-          <input type="search" aria-label={`Search ${rows.length} loaded jobs and programs`} placeholder="Search job / program" value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
+          <input type="search" className="form-control form-control-sm" aria-label={`Search ${rows.length} loaded jobs and programs`} placeholder="Search job / program" value={loadedSearch} onChange={event => {setLoadedSearch(event.target.value);setListPage(0)}} />
         </label>
         {showFreshness && <span className="rundeckWorkloadFreshness is-stale" title="Age of the latest stored Rundeck workload observation">STALE · {formatWib(latestObservedAt, true)} WIB · {freshness}</span>}
       </div>
@@ -321,7 +321,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     {error && <div className="rundeckCurrentWorkloadState is-error">{error}</div>}
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap" ref={tableWrapRef}>
-      <table>
+      <table className="table table-sm table-hover align-middle sphereBootstrapWorkloadTable">
         <thead><tr><th scope="col">APP / Mark</th><th scope="col">Job / Program</th><th scope="col" title={CPU_HINT}>CPU (cores) ↓<small className="rundeckWorkloadCpuUnit">multi-core %</small></th><th scope="col" title="Proportional Set Size; not APP host RAM">PSS (GB)</th><th scope="col">Processes</th><th scope="col" title="SAP work process type / number context">WP Context</th><th scope="col" title="Observation timestamp; not job completion">Last Seen (WIB)</th></tr></thead>
         <tbody>
           {pageRows.map((row) => {
@@ -345,7 +345,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
               onFocusCapture={()=>snapshot&&setAttentionPreview(snapshot)}
             >
               <td title={row.host}><label className="sphereAttentionMark" title="Manual attention, not SAP job status">
-                <input type="checkbox" disabled={!snapshot} checked={Boolean(marked)}
+                <input type="checkbox" className="form-check-input" disabled={!snapshot} checked={Boolean(marked)}
                   aria-label={`Mark ${snapshot?.name||row.consumer_key} on ${shortHost(row.host)} for manual attention`}
                   onClick={event=>event.stopPropagation()}
                   onChange={event=>{event.stopPropagation();markAttention(snapshot,event.target.checked)}} />
@@ -372,15 +372,15 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
     </div>}
     {!loading&&!error&&visible.length>0&&<nav ref={pagerRef} className="rundeckWorkloadPager" aria-label="Current collection workload pages">
       <small>{query || hostFilter !== 'ALL' ? `${visible.length} matches · ${rows.length} loaded` : `Showing ${currentPage * pageSize + 1}–${Math.min((currentPage + 1) * pageSize, visible.length)} of ${visible.length}`}</small>
-      <label className="rundeckWorkloadPageJump">
+      <label className="rundeckWorkloadPageJump d-inline-flex align-items-center gap-1">
         <span>Page</span>
-        <select aria-label="Jump to workload page" value={currentPage}
+        <select className="form-select form-select-sm" aria-label="Jump to workload page" value={currentPage}
           onChange={event=>setListPage(Number(event.target.value))}>
           {Array.from({length:totalPages},(_,page)=><option key={page} value={page}>{page+1}/{totalPages}</option>)}
         </select>
       </label>
-      <button type="button" disabled={currentPage===0} onClick={()=>setListPage(n=>Math.max(0,n-1))}>Previous</button>
-      <button type="button" disabled={currentPage>=totalPages-1} onClick={()=>setListPage(n=>Math.min(totalPages-1,n+1))}>Next</button>
+      <button type="button" className="btn btn-sm btn-outline-secondary" disabled={currentPage===0} onClick={()=>setListPage(n=>Math.max(0,n-1))}>Previous</button>
+      <button type="button" className="btn btn-sm btn-outline-secondary" disabled={currentPage>=totalPages-1} onClick={()=>setListPage(n=>Math.min(totalPages-1,n+1))}>Next</button>
     </nav>}
     <RundeckManualAttention open={attentionOpen} rows={attentionRows} preview={attentionPreview}
       onClose={closeAttention} onRemove={id=>setAttentionRows(items=>items.filter(row=>row.id!==id))}

@@ -66,14 +66,14 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="navbar sphereNav">
-        <div className="navInner sphereNavInner">
+      <header className="navbar sphereNav px-2">
+        <div className="navInner sphereNavInner container-fluid d-flex align-items-center gap-2">
           <a className="brand sphereBrand" href="#/tool/logs" aria-label={`${APP_NAME} ${APP_DISPLAY_VERSION} LOG analysis`}>
             <SphereLogo theme={resolvedTheme} />
             <span className="brandText" title={APP_TAGLINE + ' · ' + APP_BUILD_LABEL} />
           </a>
 
-          <nav className="navQuick sphereToolTabs" aria-label={`${APP_NAME} SAP analysis workspaces`}>
+          <nav className="navQuick sphereToolTabs d-flex align-items-center gap-2" aria-label={`${APP_NAME} SAP analysis workspaces`}>
             {tools.map((tool) => {
               const href = `/tool/${tool.slug}`
               const active = isActive(href)
@@ -95,7 +95,7 @@ export default function Navbar() {
 
           <label className="sphereThemeControl" title="Display theme">
             <span>Theme</span>
-            <select aria-label="Display theme" value={themeMode} onChange={(event) => {
+            <select className="form-select form-select-sm" aria-label="Display theme" value={themeMode} onChange={(event) => {
               const next = event.target.value
               try { window.localStorage.setItem('sphere.theme', next) } catch {/* preference storage is best effort */}
               setThemeMode(next)

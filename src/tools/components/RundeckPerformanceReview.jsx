@@ -13,8 +13,8 @@ const pct = (value, digits = 1) => value === null || value === undefined ? '—'
 const gb = (value) => value === null || value === undefined ? '—' : `${numberText(value, 2)} GB`
 
 function Segmented({ options, value, onChange, label, disabled = false }) {
-  return <div className="rundeckReviewSegmented" role="group" aria-label={label}>
-    {options.map(([key, text]) => <button key={key} type="button" className={value === key ? 'is-active' : ''} aria-pressed={value === key} disabled={disabled} onClick={() => onChange(key)}>{text}</button>)}
+  return <div className="rundeckReviewSegmented btn-group btn-group-sm" role="group" aria-label={label}>
+    {options.map(([key, text]) => <button key={key} type="button" className={'btn' + (value === key ? ' is-active' : '')} aria-pressed={value === key} disabled={disabled} onClick={() => onChange(key)}>{text}</button>)}
   </div>
 }
 
@@ -173,16 +173,17 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         {!forceSearch && !hideSearchButton && <button type="button" className={searchOpen ? 'is-active' : ''} onClick={() => { setSearchOpen((value) => !value); if (searchOpen) setSearchQuery('') }}>Search</button>}
         <Segmented options={PERIODS} value={period} onChange={changePeriod} label="Review period" disabled={loading && !hasLoaded} />
         <Segmented options={TYPES} value={type} onChange={changeType} label="Workload type" disabled={loading && !hasLoaded} />
-        <select className="rundeckReviewHealthFilter" aria-label="Evaluation category" value={healthGroup} onChange={event => changeGroup(event.target.value)}>
+        <select className="rundeckReviewHealthFilter form-select form-select-sm" aria-label="Evaluation category" value={healthGroup} onChange={event => changeGroup(event.target.value)}>
           <option value="REVIEW">Review required</option>
           <option value="ATTENTION">Watch</option>
           <option value="NORMAL">Normal</option>
           <option value="UNKNOWN">Limited / unknown</option>
           <option value="ALL">All evaluations</option>
         </select>
-    {effectiveSearchOpen && <div className="rundeckReviewSearch">
+    {effectiveSearchOpen && <div className="rundeckReviewSearch input-group input-group-sm">
       <input
         type="search"
+        className="form-control form-control-sm"
         value={searchQuery}
         onChange={(event) => { setSearchQuery(event.target.value); setPageIndex(0) }}
         placeholder="Search job / program"
@@ -207,8 +208,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         {incomplete > 0 && <span>{numberText(incomplete, 0)} incomplete check{incomplete === 1 ? '' : 's'} excluded</span>}
       </div>}
 
-      <div ref={tableWrapRef} className={`rundeckReviewTableWrapV1231${loading && hasLoaded ? ' is-updating' : ''}`}>
-        <table className="rundeckReviewTableV1231">
+      <div ref={tableWrapRef} className={`table-responsive rundeckReviewTableWrapV1231${loading && hasLoaded ? ' is-updating' : ''}`}>
+        <table className="table table-sm table-hover align-middle sphereBootstrapWorkloadTable rundeckReviewTableV1231">
           <thead><tr><th scope="col">Job / Program</th><th scope="col">Review Reason</th><th scope="col" title={CPU_HINT}>Avg CPU (cores)</th><th scope="col" title={CPU_HINT}>Peak CPU (cores)</th><th scope="col" title="Proportional Set Size; not APP host RAM">Avg PSS (GB)</th></tr></thead>
           <tbody>
             {visibleRows.map((row) => {
@@ -255,8 +256,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
       </div>
       <nav className="rundeckReviewPager" aria-label="Historical evaluation pages">
         <small>{totalMatching} {totalMatching === 1 ? 'match' : 'matches'} · Page {currentPage+1}/{totalPages}</small>
-        <button type="button" disabled={loading || currentPage === 0} onClick={() => changePage(currentPage - 1)}>Previous</button>
-        <button type="button" disabled={loading || currentPage >= totalPages - 1} onClick={() => changePage(currentPage + 1)}>Next</button>
+        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={loading || currentPage === 0} onClick={() => changePage(currentPage - 1)}>Previous</button>
+        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={loading || currentPage >= totalPages - 1} onClick={() => changePage(currentPage + 1)}>Next</button>
       </nav>
     </>}
     {!onOpenQuickAnalysis && quickRow && <React.Suspense fallback={<div className="rundeckReviewState" role="status">Loading quick analysis…</div>}><RundeckReviewQuickAnalysis
