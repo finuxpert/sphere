@@ -6,6 +6,43 @@ from unittest.mock import MagicMock, patch
 from backend.rundeck_network_trends import app_network_trend, network_collection_gaps
 
 
+from backend.rundeck_trends import trend_series_bundle
+
+
+class BundledSapTrendTests(unittest.TestCase):
+    def test_three_metrics_share_one_sql_scan_with_distinct_real_samples(self):
+        start = datetime(2026, 10, 30, 5, 0, tzinfo=timezone.utc)
+        engine = MagicMock()
+        execute = engine.connect.return_value.__enter__.return_value.execute
+        base = {
+            "bucket": start, "host": "AOPH2PAPPDC", "peak_at": start,
+            "peak_collection_id": "READY-123", "samples": 1, "affected_samples": 0,
+        }
+        execute.return_value = [
+            SimpleNamespace(_mapping={**base, "metric": "cpu", "avg_value": 25.2, "max_value": 25.2, "min_value": 25.2}),
+            SimpleNamespace(_mapping={**base, "metric": "ram", "avg_value": 36.3, "max_value": 36.3, "min_value": 36.3}),
+            SimpleNamespace(_mapping={**base, "metric": "wp", "avg_value": None, "max_value": None, "min_value": None, "samples": 0}),
+        ]
+        with patch("backend.rundeck_trends.get_engine", return_value=engine):
+            result = trend_series_bundle(start, "24h", "auto", ["cpu", "ram", "wp"])
+        self.assertEqual(execute.call_count, 1)
+        sql, params = execute.call_args.args
+        self.assertIn("CROSS JOIN LATERAL", str(sql))
+        self.assertIn("PARTITION BY bucket, host, metric", str(sql))
+        self.assertEqual(params["stride"], "30 minutes")
+        self.assertEqual(result["cpu"]["items"][0]["max_value"], 25.2)
+        self.assertEqual(result["ram"]["items"][0]["max_value"], 36.3)
+        self.assertIsNone(result["wp"]["items"][0]["max_value"])
+        self.assertEqual(result["wp"]["items"][0]["samples"], 0)
+        self.assertEqual(result["cpu"]["items"][0]["peak_collection_id"], "READY-123")
+        self.assertEqual(result["wp"]["unit"], "")
+
+    def test_bundle_rejects_unknown_metrics_before_running_sql(self):
+        start = datetime(2026, 10, 30, 5, 0, tzinfo=timezone.utc)
+        with self.assertRaises(ValueError):
+            trend_series_bundle(start, "24h", "auto", ["cpu", "not_real"])
+
+
 class AppNetworkTrendTests(unittest.TestCase):
     def setUp(self):
         self.start = datetime(2026, 10, 15, 5, 49, tzinfo=timezone.utc)
