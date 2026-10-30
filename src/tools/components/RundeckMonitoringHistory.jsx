@@ -468,7 +468,10 @@ export default function RundeckMonitoringHistory(props) {
                         raw===''||!Number.isFinite(Number(raw)) ? '—' : Number(raw).toLocaleString('en-US',{maximumFractionDigits:1})+suffix
                     }
                     return <tr key={app}>
-                      <td><strong>{app}</strong></td>
+                      <td>{source && sourceState==='FRESH'
+                        ? <button type="button" className="sphereSystemHealthAppOpen"
+                            onClick={()=>setActiveOverlay({type:'app',app:source,returnTo:{type:'system-health'}})}>{app}</button>
+                        : <strong>{app}</strong>}</td>
                       <td>{reading('cpu_pct','%')}</td>
                       <td>{reading('ram_pct','%')}</td>
                       <td>{reading('wp_critical')}</td>
