@@ -185,6 +185,14 @@ html[data-theme="light"] .sphereSystemHealthCompact{
   line-height:1.2;
   overflow-wrap:anywhere;
 }
+.sphereHealthMatrixSecondary{
+  display:block;
+  color:var(--health-muted);
+  font-size:10px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+
 .sphereHealthState{
   display:inline-flex;
   width:max-content;
