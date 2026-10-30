@@ -1,7 +1,7 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
-import { hostInfrastructureEvidence, splitInfrastructureHosts, matchedInfrastructureHost } from './rundeckUnifiedHost.js'
+import { hostInfrastructureEvidence, splitInfrastructureHosts, matchedInfrastructureHost, appSampleFreshness } from './rundeckUnifiedHost.js'
 import { filesystemResourceState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 import { shortHost } from './sapUiFormat.js'
 import './RundeckInfrastructure.css'
@@ -140,7 +140,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
   </div>
 }
 
-export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,inlineSummary=false,onOpen=null,hideDetailsAction=false,initialContext=null,lockedHost=false,hideHostCards=false}){
+export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,inlineSummary=false,healthMatrix=false,sourceHosts=[],sourceQuality=null,sourceLoading=false,onOpen=null,hideDetailsAction=false,initialContext=null,lockedHost=false,hideHostCards=false}){
   const [data,setData]=React.useState({host:'',hosts:[],fs:[],network:[],storage:[]})
   const [allHostFilesystems,setAllHostFilesystems]=React.useState([])
   const [error,setError]=React.useState('')
@@ -200,7 +200,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       const hosts=(await hr.json()).items||[]
       if(signal.aborted)return
       const available=hosts.map(row=>row.host)
-      const target=lockedHost ? selectedHost : (selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||''))
+      const target=healthMatrix ? '' : lockedHost ? selectedHost : (selectedHost&&available.includes(selectedHost)?selectedHost:(available[0]||''))
       const resolvedTarget=requestedSapHost ? (matchedInfrastructureHost({host:requestedSapHost}, hosts)?.host || '') : target
       if(resolvedTarget!==selectedHost){setSelectedHost(resolvedTarget);setFsPage(0);setStoragePage(0)}
       if(requestedSapHost&&!resolvedTarget){
@@ -210,21 +210,28 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         return
       }
       const q=resolvedTarget?`?host=${encodeURIComponent(resolvedTarget)}`:''
-      const values=await Promise.all(['filesystems','network','storage','filesystems'].map(async (path,index)=>{
-        const scope=index===3?'':q
-        const response=await fetch(`${API}/${path}${scope}`,{cache:'no-store',signal})
+      const values=await Promise.all((healthMatrix?['filesystems','network','storage']:['filesystems','network','storage','filesystems']).map(async (path,index)=>{
+        const scope=healthMatrix||index===3?'':q
+        const extra=healthMatrix&&path==='filesystems'?'?primary_only=false':''
+        const response=await fetch(`${API}/${path}${scope||extra}`,{cache:'no-store',signal})
         if(!response.ok)throw new Error(`Infrastructure API ${path} unavailable`)
         return response.json()
       }))
       if(signal.aborted)return
-      const collection = hosts.find(row=>row.host===resolvedTarget)?.collection_id
-      const belongsToSnapshot = row => row?.host === resolvedTarget && collection != null && String(row.collection_id || '') === String(collection)
-      setData({host:resolvedTarget,hosts,fs:(values[0].items||[]).filter(belongsToSnapshot),network:(values[1].items||[]).filter(belongsToSnapshot),storage:(values[2].items||[]).filter(belongsToSnapshot)})
-      setAllHostFilesystems(values[3].items||[])
+      const collections=new Map(hosts.map(row=>[String(row.host||'').toUpperCase(),String(row.collection_id||'')]))
+      const belongsToSnapshot=row=>{
+        const sourceHost=healthMatrix?String(row?.host||'').toUpperCase():String(resolvedTarget).toUpperCase()
+        return sourceHost && (!healthMatrix ? String(row?.host||'').toUpperCase()===sourceHost : true)
+          && Boolean(collections.get(sourceHost))
+          && String(row?.collection_id||'')===collections.get(sourceHost)
+      }
+      const fs=(values[0].items||[]).filter(belongsToSnapshot)
+      setData({host:resolvedTarget,hosts,fs,network:(values[1].items||[]).filter(belongsToSnapshot),storage:(values[2].items||[]).filter(belongsToSnapshot)})
+      setAllHostFilesystems(healthMatrix?fs:(values[3].items||[]))
       setError('')
     }catch(e){if(!signal.aborted&&e.name!=='AbortError'){setData({host:'',hosts:[],fs:[],network:[],storage:[]});setAllHostFilesystems([]);setError(e.message)}}
     finally { if(!signal.aborted) setSourcesLoading(false) }
-  },[selectedHost,lockedHost,requestedSapHost])
+  },[selectedHost,lockedHost,requestedSapHost,healthMatrix])
 
   React.useEffect(()=>{
     const controller=new AbortController()
@@ -233,7 +240,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
     return()=>{window.clearInterval(timer);controller.abort()}
   },[refresh,refreshToken])
   React.useEffect(()=>{if(lockedHost||requestedSapHost||!selectedHost)return;try{window.localStorage.setItem(HOST_STORAGE_KEY,selectedHost)}catch{/* best-effort preference */}},[lockedHost,requestedSapHost,selectedHost])
-  React.useEffect(()=>{let active=true;(async()=>{if(requestedSapHost && !host)return;try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:[],meta:null});setError(e.message)}}})();return()=>{active=false}},[range,trendMetric,host,collectedAt,requestedSapHost])
+  React.useEffect(()=>{let active=true;(async()=>{if(healthMatrix || (requestedSapHost && !host))return;try{const q=new URLSearchParams({range,metric:trendMetric});if(host&&host!=='AOQ')q.set('host',host);const r=await fetch(`${API}/trend?${q}`,{cache:'no-store'});if(!r.ok)throw new Error('Infrastructure trend unavailable');const body=await r.json();if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:body.items||[],meta:body})}}catch(e){if(active){setTrendData({scope:[host,range,trendMetric].join(':'),items:[],meta:null});setError(e.message)}}})();return()=>{active=false}},[range,trendMetric,host,collectedAt,requestedSapHost,healthMatrix])
 
   const fsState=observedData.fs.length?observedStatus(observedData.fs.reduce((state,row)=>worst(state,statusFs(row.used_pct)),'NORMAL')):'UNKNOWN'
   const netState=observedData.network.length?observedStatus(observedData.network.reduce((state,row)=>worst(state,signalNetwork(row.metrics)),'NORMAL')):'UNKNOWN'
@@ -275,6 +282,89 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   },[selectedSeries,trend,trendMetric])
 
   const openTrend=(metricType,series='')=>{setTrendMetric(metricType);setSelectedSeries(series)}
+
+  if(healthMatrix){
+    const perfVerified=sourceQuality?.performanceValid===true && !sourceQuality?.collectorBad
+    const labels=Array.from({length:5},(_,index)=>'APP'+(index+1))
+    const checkedMetric=(raw,suffix='')=>hasNumericSample(raw)?metric(raw,suffix):'—'
+    const infraMetric=(infra,items,signal)=>{
+      if(!infra) return {status:'UNKNOWN',rows:[]}
+      const same=items.filter(row=>String(row.host||'').toUpperCase()===String(infra.host||'').toUpperCase()
+        && String(row.collection_id||'')===String(infra.collection_id||''))
+      const freshness=infrastructureTelemetryFreshness(infra.snapshot_ts,infra.collection_id,same,clockNow)
+      if(freshness!=='FRESH')return {status:freshness,rows:same}
+      if(!same.length)return {status:'UNKNOWN',rows:same}
+      const states=same.map(signal)
+      const status=states.includes('CRITICAL')?'CRITICAL':states.includes('ATTENTION')?'ATTENTION'
+        :states.includes('UNKNOWN')?'UNKNOWN':'NORMAL'
+      return {status,rows:same}
+    }
+    const stateCell=(status,label,detail)=>{
+      const verified=status==='FRESH'||status==='NORMAL'||status==='ATTENTION'||status==='CRITICAL'
+      return <div className="sphereHealthMatrixMetric" title={detail||''}>
+        <span className="sphereHealthMatrixValue">{label||'—'}</span>
+        <small className={'sphereHealthState is-'+String(status).toLowerCase()}><i aria-hidden="true"/>{status==='CHECKING'?'Checking':status==='UNKNOWN'?'No Data':status==='STALE'?'Stale':status==='NORMAL'?'Normal':status==='ATTENTION'?'Attention':status==='CRITICAL'?'Critical':verified?'Fresh':status}</small>
+      </div>
+    }
+    return <section className="sphereSystemHealthAppOverview" aria-label="Application Servers and Infrastructure">
+      <div className="sphereSystemHealthAppHeading">
+        <h3>Application Servers &amp; Infrastructure</h3>
+        <small>Live APP performance and independently collected infrastructure</small>
+      </div>
+      {error && <p className="sphereHealthMatrixError" role="status">Infrastructure source unavailable: {error}</p>}
+      <div className="sphereSystemHealthTableWrap">
+      <table className="sphereSystemHealthAppTable">
+        <thead><tr><th>APP</th><th>CPU</th><th>RAM</th><th>Critical WP</th><th>Filesystem</th><th>Storage I/O</th><th>Network</th><th>Observed (WIB)</th></tr></thead>
+        <tbody>{labels.map(app=>{
+          const sap=(sourceHosts||[]).find(row=>shortHost(row?.host||'').toUpperCase()===app)
+          const sapFreshness=sourceLoading?'CHECKING':sap?appSampleFreshness(sap,perfVerified,clockNow):'UNKNOWN'
+          const infra=matchedInfrastructureHost(sap||{host:app},data.hosts)
+          const fs=hostInfrastructureEvidence(sap||{host:app},data.hosts,data.fs,clockNow)
+          const st=infraMetric(infra,data.storage,row=>signalStorage(row.metrics))
+          const nt=infraMetric(infra,data.network,row=>signalNetwork(row.metrics))
+          const stPeak=st.rows.filter(row=>hasNumericSample(row.metrics?.util_pct))
+            .sort((a,b)=>Number(b.metrics.util_pct)-Number(a.metrics.util_pct))[0]
+          const netPeak=nt.rows.filter(row=>hasNumericSample(row.metrics?.rx_mbps))
+            .sort((a,b)=>Number(b.metrics.rx_mbps)-Number(a.metrics.rx_mbps))[0]
+          const sapTitle=sap?.collected_at ? 'SAP '+sap.collected_at : 'SAP sample unknown'
+          const infraTitle=infra ? 'Infrastructure '+infra.snapshot_ts+' · '+infra.host+' · collection '+infra.collection_id : 'Infrastructure host unverified'
+          const fsStatus=sourcesLoading?'CHECKING':error?'UNKNOWN':fs.state
+          const stStatus=sourcesLoading?'CHECKING':error?'UNKNOWN':st.status
+          const ntStatus=sourcesLoading?'CHECKING':error?'UNKNOWN':nt.status
+          const fsLabel=fs.topFs && fsStatus!=='UNKNOWN'
+            ? checkedMetric(fs.topFs.used_pct,'%')+' · '+(fs.topFs.mount_point||'mount')
+            : '—'
+          const stLabel=stPeak && stStatus!=='UNKNOWN'
+            ? checkedMetric(stPeak.metrics.util_pct,'%')+' · '+(stPeak.metrics?.mount||stPeak.sample_key||'device')
+            : '—'
+          const netLabel=netPeak && ntStatus!=='UNKNOWN'
+            ? 'RX '+checkedMetric(netPeak.metrics.rx_mbps,' Mbps')
+            : '—'
+          const wpRaw=sapFreshness==='FRESH' ? sap.wp_critical : null
+          return <tr key={app}>
+            <td><strong>{app}</strong><small className="sphereHealthMatrixHost" title={sap?.host||app}>{infra?.source||'AOP PROD'}</small></td>
+            <td>{stateCell(sapFreshness,sapFreshness==='FRESH'?checkedMetric(sap.cpu_pct,'%'):'—',sapTitle)}</td>
+            <td>{stateCell(sapFreshness,sapFreshness==='FRESH'?checkedMetric(sap.ram_pct,'%'):'—',sapTitle)}</td>
+            <td>{stateCell(sapFreshness,
+              wpRaw===null||wpRaw===undefined?'—':metric(wpRaw),
+              sapTitle+' · WP is a SAP work-process count')}</td>
+            <td>{stateCell(fsStatus,fsLabel,infraTitle+(fs.topFs?' · Device '+(fs.topFs.device||'unknown'):'') )}</td>
+            <td>{stateCell(stStatus,stLabel,infraTitle)}</td>
+            <td>{stateCell(ntStatus,netLabel,infraTitle+(netPeak?' · TX '+checkedMetric(netPeak.metrics.tx_mbps,' Mbps'):'') )}</td>
+            <td><span className="sphereHealthMatrixTime" title={sapTitle}>{sap?.collected_at?formatTime(sap.collected_at)+' WIB':'—'}</span>
+              <small className="sphereHealthMatrixTime" title={infraTitle}>{infra?.snapshot_ts?formatTime(infra.snapshot_ts)+' WIB':'—'}</small></td>
+          </tr>
+        })}
+        </tbody>
+      </table>
+      </div>
+      <div className="sphereHealthMatrixLegend">
+        <span>SAP / Infra observations use separate collection timestamps.</span>
+        <span>Missing or stale data is not normal.</span>
+        <span>Critical WP = SAP work-process count, not host CPU.</span>
+      </div>
+    </section>
+  }
 
   if(inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="Server Health overview">
     <div className="sphereHealthInlineHead"><h4>Server Health</h4>{!hideDetailsAction && <button type="button" onClick={onOpen}>Details</button>}</div>
