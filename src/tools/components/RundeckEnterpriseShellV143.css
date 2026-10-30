@@ -241,3 +241,23 @@
 .appShell:has(.rundeckPanel) .rundeckQuickEventsLink:hover {
   text-decoration:underline;
 }
+
+
+/* Single desktop release identity; never repeat live collector or SAP timestamps. */
+.appShell:has(.rundeckPanel) .sphereSidebarRelease {
+  margin-top:auto;
+  padding:12px 8px 4px;
+  font-size:10px;
+  font-weight:500;
+  line-height:1.4;
+  color:var(--cockpit-muted,#9baabb);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar.is-collapsed .sphereSidebarRelease {
+  display:none !important;
+}
+@media(max-width:899px) {
+  .appShell:has(.rundeckPanel) .sphereSidebarRelease {display:none !important;}
+}
