@@ -366,3 +366,20 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2 .sphereMonthlySourceNote {
   color:#6f4d19;
   background:#fff8e7;
 }
+
+/* Legible chart tick marks, without changing the source plotted values. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyTrend svg text {
+  font-size:10.5px;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+button:hover:not(:disabled):not(.is-active) {
+  color:var(--mr-text);
+  background:#e5f1f5;
+  border-color:#afcbd5;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+.sphereMonthlyTabs button.is-active {
+  color:#135469 !important;
+  background:#dceff2 !important;
+  border-color:#77b9c5 !important;
+}
