@@ -236,12 +236,13 @@ function MonthlyErrorAnalysis({ evidence }) {
       </div>
       <span className="sphereMonthlyErrorCounter">
         {state === 'TRUNCATED' ? 'Partial error history' : state === 'ERROR_SOURCE_NOT_RETAINED' ? 'Error source not retained' :
-        state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'Tidak ditemukan kode error' :
-        state === 'WP_SIGNALS_ONLY' ? 'Ada sinyal diagnostik WP' :
-        state === 'SNAPSHOT_ONLY' ? 'Hanya observasi snapshot' :
+        state === 'NO_RETAINED_ERROR_EVIDENCE' ? 'No retained error code' :
+        state === 'WP_SIGNALS_ONLY' ? 'WP diagnostic signals only' :
+        state === 'SNAPSHOT_ONLY' ? 'Snapshot observations only' :
         state === 'UNTIMED_TRACE_ONLY' ? 'Untimed WP trace' : fmt(errors.timestamped_events, 0) + ' timestamped events'}
       </span>
     </div>
+    {unknownSource ? <p className="sphereMonthlySourceNote">WP error fields were not retained in this period. Verify historical errors in ST22, SM37, or saved SPHERE archives. This does not mean zero errors.</p> : <>
     <div className="sphereMonthlyStatStrip">
       <span>Timestamped events: {unknownSource ? 'Unavailable' : state === 'TRUNCATED' ? 'Partial' : fmt(errors.timestamped_events, 0)}</span>
       <span>Error observations at snapshot: {unknownSource ? 'Unavailable' : fmt(errors.snapshot_host_checks, 0)}</span>
@@ -251,7 +252,7 @@ function MonthlyErrorAnalysis({ evidence }) {
       <span>RXMSG: {unknownSource ? 'Unavailable' : fmt(errors.rxmsg_wp_checks,0) + ' WP checks'}</span>
     </div>
     <div className="sphereMonthlyErrorTools">
-      <span>{fmt(rows.length,0)} dari {fmt(errors.groups ?? rows.length,0)} error groups tersedia untuk drilldown</span>
+      <span>{fmt(rows.length,0)} of {fmt(errors.groups ?? rows.length,0)} retained error groups</span>
       <label>Category <select aria-label="Filter error category" value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
         <option value="ALL">All categories</option>{categories.map(value=><option value={value} key={value}>{value}</option>)}
       </select></label>
@@ -261,7 +262,7 @@ function MonthlyErrorAnalysis({ evidence }) {
     </div>
     <div className="sphereMonthlyTableScroll"><table><thead><tr>
       <th>Related program</th><th>Issue type</th><th>SAP error code</th><th>APP / WP / PID</th><th>WP CPU / PSS at snapshot</th>
-      <th>Kejadian berwaktu</th><th>Waktu error (WIB)</th><th>Observasi WP</th><th>Hubungan program</th>
+      <th>Dated events</th><th>Error time (WIB)</th><th>WP checks</th><th>Program link</th>
     </tr></thead><tbody>
       {visible.map((row,index)=><tr key={[row.host,row.error_code,row.program,index].join(':')}>
         <td className="sphereMonthlyName"><strong>{row.program || 'Unidentified program'}</strong>
@@ -286,7 +287,7 @@ function MonthlyErrorAnalysis({ evidence }) {
         ? 'WP error fields were not retained in the selected workload history. Recoverable raw SPHERE archives should be checked before concluding no errors.'
         : rows.length ? 'No error evidence matches these filters.'
         : 'No error code was found in available retained observations. Check ST22 and SM37 for authoritative SAP records.'}</td></tr>}
-    </tbody></table></div>
+    </tbody></table></div></>}
     {(errors.wp_diagnostics || []).length > 0 && <div className="sphereMonthlyWpDiagnostics">
       <h4>WP Trace Signals for ABAP Review</h4>
       <small>RABAX and RXMSG are WP trace signals, not confirmed ST22 dump or failed-job counts.</small>
@@ -508,7 +509,6 @@ export default function RundeckMonthlyReview() {
           </div>
         </div>
         <small className="sphereMonthlyCpuNote">WP CPU: 100% = 1 logical CPU-core equivalent; not host CPU utilization.</small>
-        {errors.status==='ERROR_SOURCE_NOT_RETAINED' && <div className="sphereMonthlySourceNote" role="status">ABAP error data unavailable for this month. Confirm error history in ST22 / SM37.</div>}
         <div className="sphereMonthlyTableScroll"><table><thead><tr>
           <th>Job / Program</th><th>Observed APPs</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
           <th>Observations</th><th>CPU / RAM Warnings</th><th>Critical WP Checks</th><th>ABAP Error Code</th>
