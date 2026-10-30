@@ -299,10 +299,12 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         :states.includes('UNKNOWN')?'UNKNOWN':'NORMAL'
       return {status,rows:same}
     }
-    const stateCell=(status,label,detail)=>{
+    const capacity=bytes=>hasNumericSample(bytes)?metric(Number(bytes)/(1024**3),' GiB'):'—'
+    const stateCell=(status,label,detail,secondary='')=>{
       const verified=status==='FRESH'||status==='NORMAL'||status==='ATTENTION'||status==='CRITICAL'
       return <div className="sphereHealthMatrixMetric" title={detail||''}>
         <span className="sphereHealthMatrixValue">{label||'—'}</span>
+        {secondary&&<small className="sphereHealthMatrixSecondary">{secondary}</small>}
         <small className={'sphereHealthState is-'+String(status).toLowerCase()}><i aria-hidden="true"/>{status==='CHECKING'?'Checking':status==='UNKNOWN'?'No Data':status==='STALE'?'Stale':status==='NORMAL'?'Normal':status==='ATTENTION'?'Attention':status==='CRITICAL'?'Critical':verified?'Fresh':status}</small>
       </div>
     }
@@ -324,8 +326,9 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
           const nt=infraMetric(infra,data.network,row=>signalNetwork(row.metrics))
           const stPeak=st.rows.filter(row=>hasNumericSample(row.metrics?.util_pct))
             .sort((a,b)=>Number(b.metrics.util_pct)-Number(a.metrics.util_pct))[0]
-          const netPeak=nt.rows.filter(row=>hasNumericSample(row.metrics?.rx_mbps))
-            .sort((a,b)=>Number(b.metrics.rx_mbps)-Number(a.metrics.rx_mbps))[0]
+          const netPeak=nt.rows.filter(row=>hasNumericSample(row.metrics?.rx_mbps)||hasNumericSample(row.metrics?.tx_mbps))
+            .sort((a,b)=>Math.max(Number(b.metrics.rx_mbps||0),Number(b.metrics.tx_mbps||0))-
+              Math.max(Number(a.metrics.rx_mbps||0),Number(a.metrics.tx_mbps||0)))[0]
           const sapTitle=sap?.collected_at ? 'SAP '+sap.collected_at : 'SAP sample unknown'
           const infraTitle=infra ? 'Infrastructure '+infra.snapshot_ts+' · '+infra.host+' · collection '+infra.collection_id : 'Infrastructure host unverified'
           const fsStatus=sourcesLoading?'CHECKING':error?'UNKNOWN':fs.state
@@ -340,6 +343,14 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
           const netLabel=netPeak && ntStatus!=='UNKNOWN'
             ? 'RX '+checkedMetric(netPeak.metrics.rx_mbps,' Mbps')
             : '—'
+          const fsSecondary=fs.topFs&&fsStatus!=='UNKNOWN'
+            ? 'Total '+capacity(fs.topFs.total_bytes)+' · Free '+capacity(fs.topFs.avail_bytes) : ''
+          const stSecondary=stPeak&&stStatus!=='UNKNOWN'
+            ? 'Write '+checkedMetric(stPeak.metrics.write_iops,' IOPS')+' · '+checkedMetric(stPeak.metrics.write_mbps,' MB/s') : ''
+          const netSecondary=netPeak&&ntStatus!=='UNKNOWN'
+            ? 'TX '+checkedMetric(netPeak.metrics.tx_mbps,' Mbps')+' · Drop Δ '+
+              (hasNumericSample(netPeak.metrics.rx_dropped_delta)&&hasNumericSample(netPeak.metrics.tx_dropped_delta)
+                ? metric(Number(netPeak.metrics.rx_dropped_delta)+Number(netPeak.metrics.tx_dropped_delta)):'—') : ''
           const wpRaw=sapFreshness==='FRESH' ? sap.wp_critical : null
           const cpuState=sapFreshness==='FRESH'?metricResourceState(sap.cpu_pct,'cpu'):sapFreshness
           const ramState=sapFreshness==='FRESH'?metricResourceState(sap.ram_pct,'ram'):sapFreshness
@@ -351,9 +362,9 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
             <td>{stateCell(wpState,
               wpRaw===null||wpRaw===undefined?'—':metric(wpRaw),
               sapTitle+' · WP is a SAP work-process count')}</td>
-            <td>{stateCell(fsStatus,fsLabel,infraTitle+(fs.topFs?' · Device '+(fs.topFs.device||'unknown'):'') )}</td>
-            <td>{stateCell(stStatus,stLabel,infraTitle)}</td>
-            <td>{stateCell(ntStatus,netLabel,infraTitle+(netPeak?' · TX '+checkedMetric(netPeak.metrics.tx_mbps,' Mbps'):'') )}</td>
+            <td>{stateCell(fsStatus,fsLabel,infraTitle+(fs.topFs?' · Device '+(fs.topFs.device||'unknown'):''),fsSecondary)}</td>
+            <td>{stateCell(stStatus,stLabel,infraTitle,stSecondary)}</td>
+            <td>{stateCell(ntStatus,netLabel,infraTitle,netSecondary)}</td>
             <td><span className="sphereHealthMatrixTime" title={sapTitle}>{sap?.collected_at?formatTime(sap.collected_at)+' WIB':'—'}</span>
               <small className="sphereHealthMatrixTime" title={infraTitle}>{infra?.snapshot_ts?formatTime(infra.snapshot_ts)+' WIB':'—'}</small></td>
           </tr>
