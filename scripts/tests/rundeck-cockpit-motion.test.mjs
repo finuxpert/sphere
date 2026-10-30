@@ -204,8 +204,8 @@ test('DEV idle braid reveals full verified ECharts on hover/focus and keeps inci
   assert.match(issue, /open=\{!paired\}/)
   assert.match(issue, /<summary>Incident history/)
   assert.match(issue, /const activeFindings = criticalCount \+ warningCount/)
-  assert.match(issue, /<b>Data unavailable<\/b>/)
-  assert.match(issue, /Unknown is missing or stale evidence, not confirmed SAP downtime/)
+  assert.match(issue, /<b>No Data<\/b>/)
+  assert.match(issue, /Missing or stale source data; not confirmed SAP downtime/)
   assert.match(checksStyle, /\.rundeckSapChecksHistoryDisclosure\[open\]>summary::after/)
   // The final style wins over legacy 194px scroll caps.
   const finalStyle = source('RundeckInvestigationFinishingV135.css')
