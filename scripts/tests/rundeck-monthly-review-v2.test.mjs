@@ -308,7 +308,7 @@ test('monthly fixed evidence keeps error provenance and repairs donut navigation
   assert.doesNotMatch(ui, /setTab\('jobs'\)/)
   assert.doesNotMatch(ui, /<details|<summary|setExpanded/)
   assert.match(ui, /<section className="sphereMonthlyEvidenceDisclosure"/)
-  assert.match(ui, /Error Data Unavailable|ABAP error data unavailable/)
+  assert.match(ui, /WP error fields were not retained in this period/)
   assert.match(ui, /Page \{page\+1\} of \{pages\}/)
   assert.match(css, /\.sphereMonthlyReview \.sphereMonthlyTableScroll \{\s*max-height: none;\s*overflow: visible;/)
   assert.doesNotMatch(trend, /Missing Samples|InfrastructureGapBand/)
