@@ -4,6 +4,7 @@ import { shortHost } from './sapUiFormat.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import { buildManagementMonthlyPdf } from './rundeckMonthlyManagementPdf.js'
 import './RundeckMonthlyReview.css'
+import './RundeckMonthlyFinal20261030.css'
 
 const API = import.meta.env.BASE_URL + 'api'
 const PAGE_SIZE = 8
@@ -54,13 +55,22 @@ const PRESSURE_FILTERS = [
   ['ALL', 'All observations'], ['CPU', 'CPU Pressure'], ['RAM', 'RAM Pressure'], ['WP', 'Critical WP'],
 ]
 
-function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', threshold = null }) {
+function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', threshold = null, fitObserved = true }) {
   const field = (mode === 'avg' ? 'avg_' : 'peak_') + metric + '_pct'
   const [year, monthNum] = month.split('-').map(Number)
   const days = new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
   const names = [...new Set(rows.map(row => hostLabel(row.host)))].sort().filter(name => host === 'ALL' || name === host)
+  const observedDays = rows
+    .filter(row => (host === 'ALL' || hostLabel(row.host) === host) &&
+      row[field] !== null && row[field] !== undefined && Number.isFinite(Number(row[field])))
+    .map(row => Number(String(row.day).slice(-2)))
+    .filter(day => Number.isInteger(day) && day >= 1 && day <= days)
+  const firstObservedDay = observedDays.length ? Math.min(...observedDays) : 1
+  // Display-only focus. Days before the first retained sample remain unavailable,
+  // never zero; Full month shows the complete calendar domain on demand.
+  const startDay = fitObserved ? firstObservedDay : 1
   const width = 620; const left = 36; const plotW = 566; const top = 12; const plotH = 124
-  const xFor = day => left + (day - 1) * plotW / Math.max(1, days - 1)
+  const xFor = day => left + (day - startDay) * plotW / Math.max(1, days - startDay)
   const yFor = val => top + plotH * (1 - Math.max(0, Math.min(100, Number(val))) / 100)
   const showThreshold = threshold != null && Number.isFinite(Number(threshold))
   return <div className="sphereMonthlyTrend" role="group" aria-label={metric.toUpperCase() + ' daily APP ' + mode + ' trend'}>
@@ -70,7 +80,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
         <line x1={left} x2={left + plotW} y1={yFor(level)} y2={yFor(level)} stroke="currentColor" strokeOpacity=".11" strokeDasharray="3 4"/>
         <text x="5" y={yFor(level)+3} fontSize="9" fill="currentColor" opacity=".6">{level}%</text>
       </g>)}
-      {[1,5,10,15,20,25,days].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{day === 1 || day === days ? day + ' ' + new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1))) : day}</text>)}
+      {[...new Set([startDay,5,10,15,20,25,days].filter(day=>day>=startDay && day<=days))].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{day === 1 || day === days ? day + ' ' + new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1))) : day}</text>)}
       {showThreshold && <g>
         <line x1={left} x2={left + plotW} y1={yFor(threshold)} y2={yFor(threshold)} stroke="#e2b56a" strokeWidth="1.5" strokeDasharray="6 4"/>
         <rect x={left + plotW - 115} y={yFor(threshold) - 15} width="114" height="13" rx="2" fill="#253642"/>
@@ -102,7 +112,11 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
     <div className="sphereMonthlyTrendLegend">
       {names.map((name,i)=><span key={name}><i style={{background:CHART_COLORS[i%CHART_COLORS.length]}}/>{name}</span>)}
     </div>
-    <small>Daily peak is the highest saved sample per APP per day. Gold rings mark days with raw samples at or above warning. One day may contain several host-checks.</small>
+    <small>Daily peak is the highest saved APP sample per day; gold rings indicate warning readings. Missing dates are not zero.</small>
+    {firstObservedDay>1 && <small className="sphereMonthlyObservedNote">
+      Data starts {String(firstObservedDay).padStart(2,'0')} {new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1)))}.
+      {fitObserved ? ' Earlier dates are outside this display, not missing-value zeros.' : ' Earlier dates have no retained observations.'}
+    </small>}
   </div>
 }
 
@@ -194,12 +208,15 @@ function PressureObservations({ metric, pressure }) {
         <small>{fmt(evidence.observed_pressure_host_checks,0)} APP checks · Peak {pct(evidence.peak?.peak_pct)} · {hostLabel(evidence.peak?.host)} · {when(evidence.peak?.peak_at)}</small></div>
     </div>
     <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable">
-      <thead><tr><th>APP</th><th>First observed</th><th>Last observed</th><th>Peak time</th><th>Peak value</th><th>Checks</th></tr></thead>
+      <thead><tr><th>APP</th><th>Observed window (WIB)</th><th>Peak / time</th><th>Checks</th></tr></thead>
       <tbody>{(evidence.recent_episodes || []).map((row,index)=><tr key={row.host+String(row.first_at)+index}>
-        <td>{hostLabel(row.host)}</td><td>{when(row.first_at)}</td><td>{when(row.last_at)}</td>
-        <td>{when(row.peak_at)}</td><td>{pct(row.peak_pct)}</td><td>{fmt(row.observed_host_checks,0)}</td>
+        <td>{hostLabel(row.host)}</td>
+        <td>{when(row.first_at)}{row.last_at && row.last_at!==row.first_at && <small>– {when(row.last_at)}</small>}</td>
+        <td><strong>{pct(row.peak_pct)}</strong>
+          {row.peak_at && row.peak_at!==row.first_at && row.peak_at!==row.last_at && <small>{when(row.peak_at)}</small>}</td>
+        <td>{fmt(row.observed_host_checks,0)}</td>
       </tr>)}
-      {!evidence.recent_episodes?.length && <tr><td colSpan="6">{evidence.episodes === null ? "No APP observations retained for this month." : "No observations reached the warning threshold."}</td></tr>}
+      {!evidence.recent_episodes?.length && <tr><td colSpan="4">{evidence.episodes === null ? "No APP observations retained for this month." : "No observations reached the warning threshold."}</td></tr>}
       </tbody>
     </table></div>
   </section>
@@ -299,7 +316,7 @@ function MonthlyErrorAnalysis({ evidence }) {
         </tr>)}</tbody>
       </table></div>
     </div>}
-    <p>{state === 'TRUNCATED' ? 'Retained history is incomplete. ' : ''}RABAX and RXMSG indicate WP trace signals, not ST22 dump counts. Confirm job status in SM37. A related program is not a confirmed error source.</p>
+    {!unknownSource && <p>{state === 'TRUNCATED' ? 'Retained history is incomplete. ' : ''}RABAX and RXMSG are WP trace signals, not confirmed ST22 dumps. Confirm job status in SM37; program attribution is unverified.</p>}
   </section>
 }
 
@@ -320,6 +337,7 @@ export default function RundeckMonthlyReview() {
   const [chartMode,setChartMode]=React.useState('peak')
   const [chartHost,setChartHost]=React.useState('ALL')
   const [chartMetric,setChartMetric]=React.useState('cpu')
+  const [chartFitObserved,setChartFitObserved]=React.useState(true)
   const [pdfMode,setPdfMode]=React.useState('management')
   const [pdfBusy,setPdfBusy]=React.useState(false)
   const [pdfError,setPdfError]=React.useState('')
@@ -365,6 +383,17 @@ export default function RundeckMonthlyReview() {
     pdfRef.current='';setPdfUrl('')
   }
   const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
+  const handleTabKeyDown=(event,value)=>{
+    const order=['summary','evidence','report']
+    const current=order.indexOf(value)
+    const next=event.key==='ArrowRight'?order[(current+1)%order.length]
+      :event.key==='ArrowLeft'?order[(current+order.length-1)%order.length]
+        :event.key==='Home'?order[0]:event.key==='End'?order[order.length-1]:null
+    if(!next)return
+    event.preventDefault()
+    setTab(next)
+    event.currentTarget.parentElement?.querySelector('#sphere-month-tab-'+next)?.focus()
+  }
   const items=data?.items||[]
   const quality=data?.quality||{}
   const summary=data?.summary||{}
@@ -387,7 +416,24 @@ export default function RundeckMonthlyReview() {
     const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
     try{
-      const blob=await (pdfMode==='management' ? buildManagementMonthlyPdf({month,data}) : buildMonthlyPdf({month,data}))
+      // Reports must never depend on Detailed Evidence paging, search or filters.
+      // Fetch a canonical month-scoped population before building either PDF.
+      const params = new URLSearchParams({
+        month, type:'ALL', health:'ALL', pressure:'ALL', flag:'ALL',
+        q:'', limit:String(PAGE_SIZE), offset:'0',
+      })
+      const response = await fetch(API+'/evaluation/workloads/monthly?'+params.toString(), {cache:'no-store'})
+      if(!response.ok) throw Error('Monthly PDF evidence unavailable (HTTP '+response.status+')')
+      const reportData = await response.json()
+      if(generation!==pdfGenerationRef.current) return
+      if(reportData.month!==month || reportData.period!=='month' ||
+          reportData.page?.scope!=='FULL_EVALUATED_POPULATION' ||
+          !reportData.monthly_pressure || !reportData.monthly_errors || !reportData.quality) {
+        throw Error('PDF evidence does not match the selected reporting month')
+      }
+      const blob=await (pdfMode==='management'
+        ? buildManagementMonthlyPdf({month,data:reportData})
+        : buildMonthlyPdf({month,data:reportData}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
@@ -413,7 +459,10 @@ export default function RundeckMonthlyReview() {
     <div className="sphereMonthlyTabs" role="tablist" aria-label="Monthly report sections">
       {[['summary','Summary'],['evidence','Detailed Evidence'],['report','PDF Report']]
         .map(([value,label])=><button key={value} type="button" role="tab"
-          aria-selected={tab===value} className={tab===value?'is-active':''}
+          id={'sphere-month-tab-'+value} aria-controls={'sphere-month-panel-'+value}
+          aria-selected={tab===value} tabIndex={tab===value?0:-1}
+          className={tab===value?'is-active':''}
+          onKeyDown={event=>handleTabKeyDown(event,value)}
           onClick={()=>setTab(value)}>{label}</button>)}
     </div>
     {loading&&<div className="sphereMonthlyState" role="status">Loading historical CPU, RAM and workload evidence…</div>}
@@ -423,8 +472,8 @@ export default function RundeckMonthlyReview() {
         <span><b>{fmt(quality.complete_checks,0)}</b> complete collections · Estimated coverage {pct(quality.coverage_pct)}{quality.expected_checks_is_estimate ? ` (~${fmt(quality.expected_checks,0)} expected)` : ''}</span>
         <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
       </div>
-      {tab==='summary'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
-        <div className="sphereMonthlyVisualGrid">
+      {tab==='summary'&&<div id="sphere-month-panel-summary" role="tabpanel" aria-labelledby="sphere-month-tab-summary" className="sphereMonthlyLayout sphereMonthlyDashboard">
+        <div className="sphereMonthlyVisualGrid sphereMonthlyMainColumn col-12 col-xl-7">
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
               <div><h4>Daily Server Performance</h4>
@@ -440,23 +489,20 @@ export default function RundeckMonthlyReview() {
                   <option value="ALL">All APP</option>
                   {hosts.map(row=><option key={row.host} value={hostLabel(row.host)}>{hostLabel(row.host)}</option>)}
                 </select>
+                <button type="button" className="sphereMonthlyChartFit" aria-pressed={chartFitObserved}
+                  onClick={()=>setChartFitObserved(value=>!value)} title="Fit saved observations or view the full month without inventing missing data">
+                  {chartFitObserved?'Full month':'Fit observed'}
+                </button>
               </div>
             </div>
             <HostTrend rows={evidence.daily_hosts||[]} month={month} metric={chartMetric}
-              mode={chartMode} host={chartHost}
+              mode={chartMode} host={chartHost} fitObserved={chartFitObserved}
               threshold={evidence.thresholds?.[chartMetric+'_warning_pct']}/>
             <div className="sphereMonthlyVisualFooter">
-              <span>{chartMetric.toUpperCase()} warning threshold <b>{pct(evidence.thresholds?.[chartMetric+'_warning_pct'])}</b></span>
-              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} warning checks across {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days</span>
+              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} {chartMetric.toUpperCase()} warning checks across {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days</span>
             </div>
           </section>
-          <WorkloadDistribution summary={summary} onSelect={value=>{
-            setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
-            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setTab('evidence')
-          }}/>
-        </div>
-        <div className="sphereMonthlySummaryBottom">
-        <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
+                  <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
           <h4>Server Performance by APP</h4>
           <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr>
             <th>APP</th><th>CPU Peak</th><th>RAM Peak</th><th>CPU / RAM Warning Checks</th><th>Critical WP Checks</th>
@@ -464,12 +510,20 @@ export default function RundeckMonthlyReview() {
             {hosts.map(row=><tr key={row.host}><td>{hostLabel(row.host)}</td>
               <td title={'Average CPU '+pct(row.avg_cpu_pct)}>{pct(row.peak_cpu_pct)}</td><td title={'Average RAM '+pct(row.avg_ram_pct)}>{pct(row.peak_ram_pct)}</td>
               <td title={'CPU '+fmt(row.cpu_warning_host_checks,0)+' readings / '+fmt(row.cpu_warning_days,0)+' days; RAM '+fmt(row.ram_warning_host_checks,0)+' readings / '+fmt(row.ram_warning_days,0)+' days'}>{fmt(row.cpu_warning_host_checks,0)} / {fmt(row.ram_warning_host_checks,0)}</td>
-              <td>{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
+              <td title="Saved APP host checks with critical work processes; not confirmed failures">{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
             {!hosts.length&&<tr><td colSpan="5">No historical host samples available.</td></tr>}
           </tbody></table></div>
           <small>Warning and Critical WP counts are saved APP host checks, not confirmed job failures.</small>
         </div>
-        <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
+        
+        </div>
+        <div className="sphereMonthlySideColumn col-12 col-xl-5">
+          <WorkloadDistribution summary={summary} onSelect={value=>{
+            setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
+            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setTab('evidence')
+          }}/>
+
+          <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
           <div className="sphereMonthlyTableHead"><div><h4>Programs to Review</h4><small>{fmt(tuningCandidates.length,0)} saved evaluation candidates · not confirmed failed jobs</small></div>
             <button type="button" onClick={()=>setTab('evidence')}>View All</button></div>
           <div className="sphereMonthlyPriorityList">
@@ -483,7 +537,7 @@ export default function RundeckMonthlyReview() {
         </section>
         </div>
       </div>}
-      {tab==='evidence'&&<div className="sphereMonthlyEvidencePage">
+      {tab==='evidence'&&<div id="sphere-month-panel-evidence" role="tabpanel" aria-labelledby="sphere-month-tab-evidence" className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
           <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} of {pages}</small></div>
@@ -508,7 +562,7 @@ export default function RundeckMonthlyReview() {
             </select>
           </div>
         </div>
-        <small className="sphereMonthlyCpuNote">WP CPU: 100% = 1 logical CPU-core equivalent; not host CPU utilization.</small>
+        <small className="sphereMonthlyCpuNote">WP CPU: 100% = 1 logical CPU core; not host CPU utilization.</small>
         <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr>
           <th>Job / Program</th><th>Observed APPs</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
           <th>Observations</th><th>CPU / RAM Warnings</th><th>Critical WP Checks</th><th>ABAP Error Code</th>
@@ -517,7 +571,9 @@ export default function RundeckMonthlyReview() {
             <td className="sphereMonthlyName">
               <strong>{row.consumer_key}</strong>
               <small>{row.consumer_type} · {row.assessment||'Observed'}</small>
-              {(row.first_seen || row.last_seen) && <small>First {row.first_seen ? when(row.first_seen) : '—'} · Last {row.last_seen ? when(row.last_seen) : '—'}</small>}
+              {(row.first_seen || row.last_seen) && <small>{row.first_seen && row.last_seen && row.first_seen===row.last_seen
+                ? 'Observed ' + when(row.first_seen)
+                : 'First ' + (row.first_seen ? when(row.first_seen) : '—') + ' · Last ' + (row.last_seen ? when(row.last_seen) : '—')}</small>}
             </td>
             <td>{hostsFor(row)||'—'}</td>
             <td className="sphereMonthlyCpuValue">
@@ -543,10 +599,8 @@ export default function RundeckMonthlyReview() {
       <div className="sphereMonthlyImpact">
         <div className="sphereMonthlyPanel sphereMonthlyPressureSummary sphereMonthlyWide"><h4>Resource Warning Summary</h4>
           <div className="sphereMonthlyStatStrip">
-            <span>CPU warning ≥ {pct(evidence.thresholds?.cpu_warning_pct)}</span>
-            <span>RAM warning ≥ {pct(evidence.thresholds?.ram_warning_pct)}</span>
-            <span>CPU warning {fmt(evidence.cpu?.observed_pressure_host_checks,0)} checks</span>
-            <span>RAM warning {fmt(evidence.ram?.observed_pressure_host_checks,0)} checks</span>
+            <span>CPU ≥ {pct(evidence.thresholds?.cpu_warning_pct)} · {fmt(evidence.cpu?.observed_pressure_host_checks,0)} checks</span>
+            <span>RAM ≥ {pct(evidence.thresholds?.ram_warning_pct)} · {fmt(evidence.ram?.observed_pressure_host_checks,0)} checks</span>
           </div>
           <p>APP readings are historical observations; matching workloads are review candidates, not confirmed causes.</p>
         </div>
@@ -555,7 +609,7 @@ export default function RundeckMonthlyReview() {
         <PressureRows label="Jobs & Programs During Resource Pressure" evidence={evidence} metric={pressureMetric} onMetricChange={setPressureMetric}/>
         <MonthlyErrorAnalysis key={month} evidence={errors}/>
       </div></section></div>}
-      {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
+      {tab==='report'&&<div id="sphere-month-panel-report" role="tabpanel" aria-labelledby="sphere-month-tab-report" className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
           <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
           <div className="sphereMonthlyReportActions">
@@ -565,18 +619,23 @@ export default function RundeckMonthlyReview() {
               <option value="management">Management · 1 page</option>
               <option value="technical">Technical · full detail</option>
             </select>
-          <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
+          <button type="button" className="is-primary" disabled={pdfBusy || !data} onClick={previewPdf}>
             {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
           </button>
+          {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
+            download={'SPHERE-Monthly-'+(pdfMode==='management'?'Management-Summary-':'Technical-Review-')+month+'.pdf'}>
+            Download PDF
+          </a>}
           </div>
         </div>
         {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
-          <div className="sphereMonthlyPager">
-            <a href={pdfUrl} download={'SPHERE-Monthly-'+(pdfMode==='management'?'Management-Summary-':'Technical-Review-')+month+'.pdf'}>Download PDF</a>
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Full screen</a>
+          <iframe title={'SPHERE '+(pdfMode==='management'?'management summary':'technical report')+' PDF preview'}
+            src={pdfUrl+'#toolbar=0&navpanes=0&view=FitH'}/>
+          <div className="sphereMonthlyPdfActions">
+            <span>Preview may show browser controls. Full report is available above.</span>
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Open full screen</a>
           </div>
-          <iframe title={'SPHERE '+(pdfMode==='management'?'management summary':'technical report')+' PDF preview'} src={pdfUrl}/>
         </div>}
       </div>}
     </>}
