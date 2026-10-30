@@ -1,6 +1,7 @@
 """DEV: regression checks for full-population review/search and 30-hex population distribution."""
 import unittest
 import time
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from unittest.mock import patch
@@ -89,6 +90,31 @@ class EvaluationPagingDevTests(unittest.TestCase):
         self.assertEqual([result["ok"] for result in results], [True] * 4)
         self.assertTrue(all(result["runtime"]["lock_wait_ms"] >= 0 for result in results))
         self.assertEqual(highest_concurrent, 1)
+
+    def test_cache_anchor_uses_collection_identity_even_when_time_is_equal(self):
+        at = datetime(2026, 10, 30, 5, 0, tzinfo=timezone.utc)
+
+        class FakeConnection:
+            def __init__(self, collection_id):
+                self.collection_id = collection_id
+
+            def execute(self, *_args, **_kwargs):
+                return self
+
+            def mappings(self):
+                return self
+
+            def first(self):
+                return {"collection_id": self.collection_id, "anchor_at": at}
+
+        first_time, first_id = rundeck_evaluation._anchor_collection(FakeConnection("ready-A"))
+        second_time, second_id = rundeck_evaluation._anchor_collection(FakeConnection("ready-B"))
+        self.assertEqual(first_time, second_time)
+        self.assertNotEqual(first_id, second_id)
+        self.assertNotEqual(
+            rundeck_evaluation._calendar_month_collection_anchor(FakeConnection("ready-A"), at, at),
+            rundeck_evaluation._calendar_month_collection_anchor(FakeConnection("ready-B"), at, at),
+        )
 
     def test_runtime_reports_sql_and_lock_wait_separately(self):
         payload = rundeck_evaluation._runtime_payload(
