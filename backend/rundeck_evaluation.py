@@ -547,7 +547,9 @@ def _collection_quality(conn, start: datetime, end: datetime) -> dict:
         and int(row.get("received_host_count") or 0) >= int(row.get("expected_host_count") or 0)
         and row.get("observed_at") is not None
     ]
-    partial = [row for row in rows if row not in complete]
+    # Every row is either complete or partial. Avoid a quadratic dict-membership
+    # scan across thousands of monthly collections (also used by host preview).
+    partial_count = len(rows) - len(complete)
     times = [row["observed_at"] if row["observed_at"].tzinfo else row["observed_at"].replace(tzinfo=timezone.utc) for row in complete]
     window_seconds = max(1.0, (end - start).total_seconds())
     observed_span_seconds = max(0.0, (times[-1] - times[0]).total_seconds()) if len(times) > 1 else 0.0
@@ -575,7 +577,7 @@ def _collection_quality(conn, start: datetime, end: datetime) -> dict:
     return {
         "confidence": confidence,
         "complete_checks": len(complete),
-        "partial_or_incomplete_checks": len(partial),
+        "partial_or_incomplete_checks": partial_count,
         "expected_checks": expected_checks,
         "coverage_pct": coverage_pct,
         "complete_record_ratio_pct": round(check_coverage_pct, 1),
