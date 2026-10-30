@@ -183,3 +183,112 @@ def trend(
         "last_observed_at": last_observed_at,
         "items": items,
     }
+
+
+# Month-scoped filesystem evidence, intentionally separate from latest snapshots.
+# Mount-category mapping must be explicit: do not infer "SAP Archive" from names.
+_STORAGE_CATEGORIES = ("File System OS", "FS SAP Archive", "Archive INTF", "INTF")
+
+def _monthly_storage_mapping():
+    """JSON: {"File System OS":{"host":"AOPH1PAPPDC","mount":"/"}, ...}.
+
+    A real host+mount pair is required for every mapped category to avoid
+    arbitrary host selection when several APP servers share the same mount.
+    """
+    import os
+    raw = os.environ.get("SPHERE_MONTHLY_STORAGE_MOUNTS", "{}")
+    try:
+        config = json.loads(raw)
+    except (ValueError, TypeError) as error:
+        raise HTTPException(503, "Invalid monthly storage mount mapping") from error
+    if not isinstance(config, dict):
+        raise HTTPException(503, "Monthly storage mount mapping must be a JSON object")
+    return config
+
+
+def _storage_used_bytes(row):
+    """Recover actual df used_kb from saved raw collector fields, never estimate
+    used as total minus available (filesystem reserve blocks make that wrong)."""
+    details = row.get("details") or {}
+    if not isinstance(details, dict):
+        return None
+    for key in ("used_bytes",):
+        try:
+            if details.get(key) is not None:
+                n = int(details[key])
+                return n if n >= 0 else None
+        except (ValueError, TypeError):
+            return None
+    raw = details.get("_positional") or []
+    if raw and str(raw[0]).lower() == "filesystem":
+        raw = raw[1:]
+    if len(raw) >= 6:
+        try:
+            kb = int(raw[3])
+            return kb * 1024 if kb >= 0 else None
+        except (ValueError, TypeError):
+            return None
+    return None
+
+
+def monthly_storage_evidence(month: str, conn, mapping: dict):
+    from zoneinfo import ZoneInfo
+    import re
+    if not re.fullmatch(r"20\d{2}-(0[1-9]|1[0-2])", str(month or "")):
+        raise ValueError("month must be YYYY-MM")
+    year, mon = map(int, month.split("-"))
+    wib = ZoneInfo("Asia/Jakarta")
+    start = datetime(year, mon, 1, tzinfo=wib).astimezone(timezone.utc)
+    end = datetime(year + (mon == 12), mon % 12 + 1, 1, tzinfo=wib).astimezone(timezone.utc)
+    if start > datetime.now(timezone.utc):
+        raise ValueError("Future reporting month is unavailable")
+    # Restrict query to the reported month and committed READY samples.
+    rows = conn.execute(text("""
+       SELECT f.host, f.mount_point, f.collected_at, f.device, f.fstype,
+              f.total_bytes, f.avail_bytes, f.used_pct, f.details
+       FROM rundeck_infra_filesystems f
+       JOIN rundeck_infra_collections c ON c.collection_id=f.collection_id
+       WHERE c.status='READY' AND f.collected_at>=:start AND f.collected_at<:end
+         AND c.snapshot_ts>=:start AND c.snapshot_ts<:end
+       ORDER BY f.collected_at DESC, f.host, f.mount_point
+    """), {"start": start, "end": end}).mappings().all()
+    observed = {}
+    for row in rows:
+        key = (str(row["host"]).upper(), str(row["mount_point"]))
+        if key not in observed:
+            observed[key] = dict(row)
+    result = []
+    for category in _STORAGE_CATEGORIES:
+        target = mapping.get(category)
+        host = str(target.get("host") or "").upper() if isinstance(target, dict) else ""
+        mount = str(target.get("mount") or "") if isinstance(target, dict) else ""
+        source = observed.get((host, mount)) if host and mount else None
+        total = source.get("total_bytes") if source else None
+        free = source.get("avail_bytes") if source else None
+        used = _storage_used_bytes(source) if source else None
+        pct = source.get("used_pct") if source else None
+        complete = all(isinstance(n, (int, float)) and n >= 0
+                       for n in (total, free, used, pct)) and total > 0 and used <= total
+        result.append({
+            "category": category,
+            "status": "COLLECTED" if complete else "NOT_COLLECTED",
+            "host": host or None, "mount_point": mount or None,
+            "total_bytes": total if complete else None,
+            "used_bytes": used if complete else None,
+            "free_bytes": free if complete else None,
+            "used_pct": pct if complete else None,
+            "sample_at": source.get("collected_at") if source and complete else None,
+            "source": "rundeck_infra_filesystems",
+        })
+    return {"month": month, "timezone": "Asia/Jakarta",
+            "source": "rundeck_infra_filesystems", "items": result}
+
+
+@router.get("/monthly-storage")
+def monthly_storage(month: str = Query(..., pattern=r"^20\d{2}-(0[1-9]|1[0-2])$")):
+    engine = _engine()
+    try:
+        with engine.connect() as conn:
+            return monthly_storage_evidence(month, conn, _monthly_storage_mapping())
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
