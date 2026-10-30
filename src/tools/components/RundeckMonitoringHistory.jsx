@@ -435,47 +435,55 @@ export default function RundeckMonitoringHistory(props) {
           {['availability', 'issues', 'system-health'].includes(activeOverlay?.type) && <RundeckWorkspaceDrawer
             title="System Health"
             size="wide"
-            subtitle="SAP Availability · Active Issues · Server Health"
+            subtitle={'SAP Availability · SAP Issues · Server Health · '+(props.sourceQuality?.state || 'UNKNOWN')}
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo && activeOverlay.returnTo.type !== 'selected'
               ? () => returnFromOverlay(activeOverlay.returnTo) : null}
           >
-            <div className="rundeckSapChecksLayout">
-              <div className="rundeckSapChecksSummaryRail" aria-label="Availability and SAP SM37 readiness summary">
-                <div className="rundeckSapChecksSummaryAvailability" ref={setAvailabilitySummaryRoot} />
-                <div className="rundeckSapChecksSummaryReadiness" ref={setReadinessSummaryRoot} />
-              </div>
-              <div className="rundeckOperatorPairedWorkspace is-sap-checks rundeckSapChecksDetailGrid">
-                <section className="rundeckOperatorPairedPane" aria-label="SAP technical checks">
-                  <h3 title="Independent saved service availability checks">Technical Checks</h3>
-                  <RundeckAvailability refreshToken={refreshToken} paired summaryRoot={availabilitySummaryRoot} />
-                </section>
-                <section className="rundeckOperatorPairedPane" aria-label="Current SAP issues">
-                  <h3 title="Latest verified APP signals; unavailable sources remain UNKNOWN">SAP Indicators</h3>
-                  <RundeckSapIssues
-                    paired
-                    readinessRoot={readinessSummaryRoot}
-                    historyRoot={incidentHistoryRoot}
-                    refreshToken={refreshToken}
-                    onInspectApp={(context) => {
-                      if (!context?.host) return
-                      focusSequence.current += 1
-                      setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
-                      setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'system-health', returnTo: activeOverlay.returnTo || null } })
-                    }}
-                  />
-                </section>
-              </div>
-              <section className="sphereUnifiedHealthInfrastructure" aria-label="Server infrastructure health">
-                <h3>Server Health</h3>
-                <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading server measurements…</div>}>
-                  <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} />
+            <div className="sphereSystemHealthCompact" aria-label="SAP System Health overview">
+              <div className="sphereSystemHealthCompactGrid">
+                <RundeckAvailability refreshToken={refreshToken} inlineSummary hideDetailsAction />
+                <RundeckSapIssues refreshToken={refreshToken} inlineSummary hideDetailsAction onInspectApp={inspectApp} />
+                <React.Suspense fallback={<div role="status" className="sphereHealthLoading">Checking server health…</div>}>
+                  <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} inlineSummary hideDetailsAction />
                 </React.Suspense>
+              </div>
+              <section className="sphereSystemHealthAppOverview" aria-label="Infrastructure APP1 to APP5">
+                <div className="sphereSystemHealthAppHeading">
+                  <h3>Application Servers</h3>
+                  <button type="button" onClick={() => setActiveOverlay({
+                    type:'infrastructure',returnTo:{type:'system-health'}
+                  })}>Infrastructure History</button>
+                </div>
+                <table className="sphereSystemHealthAppTable">
+                  <thead><tr><th>APP</th><th>CPU</th><th>RAM</th><th>Critical WP</th><th>Sample WIB</th><th>Source</th></tr></thead>
+                  <tbody>{Array.from({length:5},(_,index)=>{
+                    const app='APP'+(index+1)
+                    const source=(props.sourceHosts||[]).find(row=>shortHost(row?.host||'').toUpperCase()===app)
+                    const sourceState=props.sourceLoading?'CHECKING'
+                      : !source?'UNKNOWN'
+                        : props.sourceQuality?.performanceValid===true && !props.sourceQuality?.collectorBad?'FRESH':'STALE'
+                    const reading=(key,suffix='')=>{
+                      const raw=source?.[key]
+                      return sourceState!=='FRESH'||raw===null||raw===undefined||
+                        raw===''||!Number.isFinite(Number(raw)) ? '—' : Number(raw).toLocaleString('en-US',{maximumFractionDigits:1})+suffix
+                    }
+                    return <tr key={app}>
+                      <td><strong>{app}</strong></td>
+                      <td>{reading('cpu_pct','%')}</td>
+                      <td>{reading('ram_pct','%')}</td>
+                      <td>{reading('wp_critical')}</td>
+                      <td>{source?.collected_at ? formatWib(source.collected_at,true)+' WIB'
+                        : props.latestCollectionAt ? formatWib(props.latestCollectionAt,true)+' WIB' : '—'}</td>
+                      <td>{sourceState}</td>
+                    </tr>
+                  })}</tbody>
+                </table>
+                <small>{props.sourceLoading?'Checking source data…'
+                  : 'Performance '+(props.sourceQuality?.state||'UNKNOWN')+
+                    ' · Collector '+(props.sourceCollector?.status||'UNKNOWN')+
+                    ' · Availability '+(props.sourceQuality?.availabilityValid===true?'Verified':'Unverified')}</small>
               </section>
-              <div className="rundeckSapChecksHistoryDock" ref={setIncidentHistoryRoot} aria-label="SAP incident history" />
-              <p className="sphereUnifiedHealthBackup" title="Backup monitoring configuration only; not proof of a successful SAP database backup">
-                Backup monitor: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState === 'NOT_CONFIGURED' ? 'Not configured' : backupState.replaceAll('_',' ').toLowerCase()}
-              </p>
             </div>
           </RundeckWorkspaceDrawer>}
 
