@@ -168,10 +168,10 @@ function PressureRows({ label, evidence, metric, onMetricChange }) {
     <div className="sphereMonthlyTableHead">
       <div><h4>{label}</h4>
         <small>Top 5 observed workload identities at matching APP and collection · WP CPU 100% = one logical core.</small></div>
-      <label className="sphereMonthlyPressureMode">Resource <select aria-label="Pressure workload type" value={metric} onChange={event=>onMetricChange?.(event.target.value)}><option value="cpu">CPU</option><option value="ram">RAM</option></select></label>
+      <label className="sphereMonthlyPressureMode">Resource <select className="form-select form-select-sm" aria-label="Pressure workload type" value={metric} onChange={event=>onMetricChange?.(event.target.value)}><option value="cpu">CPU</option><option value="ram">RAM</option></select></label>
     </div>
     <div className="sphereMonthlyTableScroll">
-      <table><thead><tr><th>Job / Program</th><th>APP host-checks</th><th>{metric === 'ram' ? 'Peak PSS' : 'Peak WP CPU'}</th></tr></thead>
+      <table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr><th>Job / Program</th><th>APP host-checks</th><th>{metric === 'ram' ? 'Peak PSS' : 'Peak WP CPU'}</th></tr></thead>
         <tbody>{rows.map(row => <tr key={id(row)}>
           <td className="sphereMonthlyName"><strong>{row.consumer_key}</strong><small>{row.consumer_type} · Observed APP: {pressureHostsFor(row, metric) || '—'}</small></td>
           <td>{fmt(row.pressure_overlap?.[metric + '_pressure_host_checks'],0)}</td>
@@ -193,7 +193,7 @@ function PressureObservations({ metric, pressure }) {
       <div><h4>{metric.toUpperCase()} Warning Observations</h4>
         <small>{fmt(evidence.observed_pressure_host_checks,0)} APP checks · Peak {pct(evidence.peak?.peak_pct)} · {hostLabel(evidence.peak?.host)} · {when(evidence.peak?.peak_at)}</small></div>
     </div>
-    <div className="sphereMonthlyTableScroll"><table>
+    <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable">
       <thead><tr><th>APP</th><th>First observed</th><th>Last observed</th><th>Peak time</th><th>Peak value</th><th>Checks</th></tr></thead>
       <tbody>{(evidence.recent_episodes || []).map((row,index)=><tr key={row.host+String(row.first_at)+index}>
         <td>{hostLabel(row.host)}</td><td>{when(row.first_at)}</td><td>{when(row.last_at)}</td>
@@ -253,14 +253,14 @@ function MonthlyErrorAnalysis({ evidence }) {
     </div>
     <div className="sphereMonthlyErrorTools">
       <span>{fmt(rows.length,0)} of {fmt(errors.groups ?? rows.length,0)} retained error groups</span>
-      <label>Category <select aria-label="Filter error category" value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
+      <label>Category <select className="form-select form-select-sm" aria-label="Filter error category" value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
         <option value="ALL">All categories</option>{categories.map(value=><option value={value} key={value}>{value}</option>)}
       </select></label>
-      <label>APP <select aria-label="Filter error APP" value={appFilter} onChange={e=>setAppFilter(e.target.value)}>
+      <label>APP <select className="form-select form-select-sm" aria-label="Filter error APP" value={appFilter} onChange={e=>setAppFilter(e.target.value)}>
         <option value="ALL">All APPs</option>{apps.map(value=><option value={value} key={value}>{value}</option>)}
       </select></label>
     </div>
-    <div className="sphereMonthlyTableScroll"><table><thead><tr>
+    <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr>
       <th>Related program</th><th>Issue type</th><th>SAP error code</th><th>APP / WP / PID</th><th>WP CPU / PSS at snapshot</th>
       <th>Dated events</th><th>Error time (WIB)</th><th>WP checks</th><th>Program link</th>
     </tr></thead><tbody>
@@ -291,7 +291,7 @@ function MonthlyErrorAnalysis({ evidence }) {
     {(errors.wp_diagnostics || []).length > 0 && <div className="sphereMonthlyWpDiagnostics">
       <h4>WP Trace Signals for ABAP Review</h4>
       <small>RABAX and RXMSG are WP trace signals, not confirmed ST22 dump or failed-job counts.</small>
-      <div className="sphereMonthlyTableScroll"><table><thead><tr><th>Signal</th><th>APP</th><th>Related program</th><th>WP checks</th><th>Peak trace value</th></tr></thead>
+      <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr><th>Signal</th><th>APP</th><th>Related program</th><th>WP checks</th><th>Peak trace value</th></tr></thead>
         <tbody>{errors.wp_diagnostics.map((item,index)=><tr key={item.signal+item.host+item.program+index}>
           <td>{item.signal}</td><td>{hostLabel(item.host)}</td><td className="sphereMonthlyName"><strong>{item.program}</strong>
             <small>{item.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Program explicitly identified' : 'Workload context only: '+(item.sample_workload || 'unavailable')}</small></td>
@@ -400,12 +400,12 @@ export default function RundeckMonthlyReview() {
   React.useEffect(()=>{
     if(tab==='report' && data && !loading && !pdfBusy && !pdfUrl && !pdfError) void previewPdf()
   },[tab,data,loading,pdfBusy,pdfUrl,pdfError,previewPdf])
-  return <section className="sphereMonthlyReview is-v2" aria-label="Monthly SAP Performance and Job Impact">
+  return <section className="sphereMonthlyReview is-v2 container-fluid px-0" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
       <div><strong>Monthly Review</strong></div>
       <div className="sphereMonthlyPicker">
         <label htmlFor="sphere-month-choice">Reporting month</label>
-        <select id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
+        <select className="form-select form-select-sm" id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
           {MONTHS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </div>
@@ -430,13 +430,13 @@ export default function RundeckMonthlyReview() {
               <div><h4>Daily Server Performance</h4>
                 <small>{chartMode==='peak'?'Highest':'Average'} reading each day · {month}</small></div>
               <div className="sphereMonthlyFilters sphereMonthlyVisualFilters">
-                <select aria-label="Resource metric" value={chartMetric} onChange={event=>setChartMetric(event.target.value)}>
+                <select className="form-select form-select-sm" aria-label="Resource metric" value={chartMetric} onChange={event=>setChartMetric(event.target.value)}>
                   <option value="cpu">CPU</option><option value="ram">RAM</option>
                 </select>
-                <select aria-label="Trend statistic" value={chartMode} onChange={event=>setChartMode(event.target.value)}>
+                <select className="form-select form-select-sm" aria-label="Trend statistic" value={chartMode} onChange={event=>setChartMode(event.target.value)}>
                   <option value="peak">Daily peak</option><option value="avg">Daily average</option>
                 </select>
-                <select aria-label="Select APP trend" value={chartHost} onChange={event=>setChartHost(event.target.value)}>
+                <select className="form-select form-select-sm" aria-label="Select APP trend" value={chartHost} onChange={event=>setChartHost(event.target.value)}>
                   <option value="ALL">All APP</option>
                   {hosts.map(row=><option key={row.host} value={hostLabel(row.host)}>{hostLabel(row.host)}</option>)}
                 </select>
@@ -458,7 +458,7 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlySummaryBottom">
         <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
           <h4>Server Performance by APP</h4>
-          <div className="sphereMonthlyTableScroll"><table><thead><tr>
+          <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr>
             <th>APP</th><th>CPU Peak</th><th>RAM Peak</th><th>CPU / RAM Warning Checks</th><th>Critical WP Checks</th>
           </tr></thead><tbody>
             {hosts.map(row=><tr key={row.host}><td>{hostLabel(row.host)}</td>
@@ -488,28 +488,28 @@ export default function RundeckMonthlyReview() {
         <div className="sphereMonthlyTableHead">
           <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} of {pages}</small></div>
           <div className="sphereMonthlyFilters">
-            <input type="search" value={search} onChange={event=>{pdfGenerationRef.current+=1;setSearch(event.target.value);setPage(0)}}
+            <input type="search" className="form-control form-control-sm" value={search} onChange={event=>{pdfGenerationRef.current+=1;setSearch(event.target.value);setPage(0)}}
               placeholder="Search full job / program name" aria-label="Search job and program"/>
-            <select aria-label="Workload type" value={kind} onChange={event=>changeFilter(setKind,event.target.value)}>
+            <select className="form-select form-select-sm" aria-label="Workload type" value={kind} onChange={event=>changeFilter(setKind,event.target.value)}>
               <option value="ALL">All types</option><option value="JOB">Jobs</option><option value="PROGRAM">Programs</option>
             </select>
-            <select aria-label="Evaluation group" value={health} onChange={event=>changeFilter(setHealth,event.target.value)}>
+            <select className="form-select form-select-sm" aria-label="Evaluation group" value={health} onChange={event=>changeFilter(setHealth,event.target.value)}>
               <option value="REVIEW">Review required</option><option value="ATTENTION">Watch</option>
               <option value="ALL">All evaluations</option><option value="NORMAL">Normal</option><option value="UNKNOWN">Limited Data</option>
             </select>
-            <select aria-label="Workload signal" value={signalFilter} onChange={event=>changeFilter(setSignalFilter,event.target.value)}>
+            <select className="form-select form-select-sm" aria-label="Workload signal" value={signalFilter} onChange={event=>changeFilter(setSignalFilter,event.target.value)}>
               <option value="ALL">All signals</option>
               <option value="HIGH_CPU">High CPU</option>
               <option value="HIGH_MEMORY">High memory</option>
               <option value="RECURRING">Recurring</option>
             </select>
-            <select aria-label="Resource pressure filter" value={pressureFilter} onChange={event=>changeFilter(setPressureFilter,event.target.value)}>
+            <select className="form-select form-select-sm" aria-label="Resource pressure filter" value={pressureFilter} onChange={event=>changeFilter(setPressureFilter,event.target.value)}>
               {PRESSURE_FILTERS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
             </select>
           </div>
         </div>
         <small className="sphereMonthlyCpuNote">WP CPU: 100% = 1 logical CPU-core equivalent; not host CPU utilization.</small>
-        <div className="sphereMonthlyTableScroll"><table><thead><tr>
+        <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr>
           <th>Job / Program</th><th>Observed APPs</th><th>Avg / Peak WP CPU</th><th>Avg / Peak PSS</th>
           <th>Observations</th><th>CPU / RAM Warnings</th><th>Critical WP Checks</th><th>ABAP Error Code</th>
         </tr></thead><tbody>
@@ -560,7 +560,7 @@ export default function RundeckMonthlyReview() {
           <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
           <div className="sphereMonthlyReportActions">
             <label htmlFor="sphere-monthly-pdf-mode">Report type</label>
-            <select id="sphere-monthly-pdf-mode" aria-label="Report type" value={pdfMode}
+            <select className="form-select form-select-sm" id="sphere-monthly-pdf-mode" aria-label="Report type" value={pdfMode}
               onChange={event=>changePdfMode(event.target.value)}>
               <option value="management">Management · 1 page</option>
               <option value="technical">Technical · full detail</option>

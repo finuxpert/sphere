@@ -89,8 +89,8 @@ export default function RundeckWorkspaceDrawer({ title, subtitle = '', onClose, 
           {subtitle && <small>{subtitle}</small>}
         </div>
         <div className="rundeckWorkspaceDrawerHeaderActions">
-          {onBack && <button type="button" className="rundeckWorkspaceBack" onClick={onBack} aria-label={backLabel}>← <em>{backLabel}</em></button>}
-          <button type="button" className="rundeckWorkspaceClose" onClick={onClose} aria-label="Close analysis">×</button>
+          {onBack && <button type="button" className="rundeckWorkspaceBack btn btn-sm" onClick={onBack} aria-label={backLabel}>← <em>{backLabel}</em></button>}
+          <button type="button" className="rundeckWorkspaceClose btn btn-sm" onClick={onClose} aria-label="Close analysis">×</button>
         </div>
       </header>
       {navigation && <div className="rundeckWorkspaceDrawerNavigation">{navigation}</div>}

@@ -106,7 +106,7 @@ export default function RundeckMonitoringHistoryCore(props) {
       />
     </section>
 
-    <div className="sphereOverviewBottomRow row g-2">
+    <div className="sphereOverviewBottomRow row g-2 align-items-start">
     <section className="rundeckJobsProgramsOverview col-12 col-xl-5" aria-label="Job & Program Evaluation">
       <div className="rundeckJobsProgramsHealthSide">
         <RundeckWorkloadHealth

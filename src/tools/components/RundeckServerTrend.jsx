@@ -1079,7 +1079,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <Segmented options={RANGES} value={range}
             onChange={value => { setRange(value); setCustomOpen(false); setWindowModal(false) }}
             ariaLabel="Shared trend period" />
-          <select className="rundeckTrendHistoricalSelect" aria-label="Short performance ranges"
+          <select className="rundeckTrendHistoricalSelect form-select form-select-sm" aria-label="Short performance ranges"
             title={longHistoricalRange && serverTrend1?.range === range
               ? `Historical observations · configured retention ${serverTrend1.configured_retention_days ?? 'unknown'} days. Missing days are unknown, not zero.`
               : 'Choose a historical period. Observations depend on available retained data.'}
@@ -1105,7 +1105,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         <span>Interval</span>
         {range === 'custom'
           ? <strong className="rundeckCustomRangeRaw" title="Custom range uses unaggregated observations">Raw · observed</strong>
-          : <select className="rundeckTrendBucketSelect" aria-label="Bucket interval"
+          : <select className="rundeckTrendBucketSelect form-select form-select-sm" aria-label="Bucket interval"
               title={bucket === 'auto' && serverTrend1?.bucket
                 ? `Automatic bucket · source resolved ${String(serverTrend1.bucket).toUpperCase()}`
                 : 'Aggregation bucket for saved trend samples'}
@@ -1196,7 +1196,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           aria-label={metricLabel(panel.metric) + ' Trend · chart ' + panel.index}>
           <div className="rundeckMonitoringHead rundeckConfigurableTrendHead">
             <h3 className="sphereScreenReaderOnly">Chart {panel.index}</h3>
-            <select className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect" value={panel.metric}
+            <select className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect form-select form-select-sm" value={panel.metric}
               aria-label={'Chart ' + panel.index + ' metric'}
               title={isLoad ? 'Linux load average, not CPU usage percent' : isNetwork
                 ? 'Infrastructure Network throughput; highest observed single interface' : 'Select the metric for this chart'}
@@ -1208,7 +1208,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
                 <button type="button" aria-pressed={panel.direction === 'rx'} className={panel.direction === 'rx' ? 'is-active' : ''} onClick={() => panel.setDirection('rx')}>RX</button>
                 <button type="button" aria-pressed={panel.direction === 'tx'} className={panel.direction === 'tx' ? 'is-active' : ''} onClick={() => panel.setDirection('tx')}>TX</button>
               </div>}
-              {(isLoad || isNetwork) && <select className="rundeckTrendAxisSelect"
+              {(isLoad || isNetwork) && <select className="rundeckTrendAxisSelect form-select form-select-sm"
                 aria-label={'Chart ' + panel.index + ' Y axis scale'}
                 title="Typical changes the display axis only. Full restores the complete saved peak."
                 value={isNetwork ? panel.networkAxis : panel.loadAxis}
