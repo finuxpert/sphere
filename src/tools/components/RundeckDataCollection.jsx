@@ -30,7 +30,7 @@ export default function RundeckDataCollection({ systemDataContent, onManualUploa
       {credentialsOpen && renderData('tokens')}
     </div>}
     {tab === 'manual' && <div className="sphereCollectionBody sphereManualCollection" role="tabpanel">
-      <div><h3>Manual Upload</h3><p>Upload WP-SCOUT or Daily Check logs for analysis.</p></div>
+      <div><p>Upload WP-SCOUT or Daily Check logs for analysis.</p></div>
       <button type="button" className="sphereUploadAction" onClick={onManualUpload} disabled={!onManualUpload}>
         <SphereIcon name="upload" /> Open Manual Upload
       </button>
