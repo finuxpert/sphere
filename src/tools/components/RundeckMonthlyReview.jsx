@@ -540,7 +540,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const preview=hostPreview?.month===month ? hostPreview : null
   const completedData=data?.month===month ? data : null
   const items=completedData?.items||[]
-  const evidence=hostData?.monthly_pressure||{}
+  const evidence=(completedData||preview)?.monthly_pressure||{}
   const errors=completedData?.monthly_errors||{}
   const total=Number(completedData?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
