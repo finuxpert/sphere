@@ -31,7 +31,7 @@ async function readPage(offset, signal) {
   return response.json()
 }
 
-async function readVerifiedPopulation(signal) {
+async function readVerifiedPopulation(signal, compactSummary = false) {
   const first = await readPage(0, signal)
   const preview = workloadHealthPreview(first)
   if (!preview || !Array.isArray(first.items) ||
@@ -41,6 +41,14 @@ async function readVerifiedPopulation(signal) {
       first.page?.returned !== first.items.length ||
       first.items.length !== Math.min(preview.total, API_PAGE_SIZE)) {
     throw new Error('Evaluated workload population unverified')
+  }
+  // The dashboard summary needs one verified page plus the backend's full-population
+  // counts. Do not fan out up to eight history pages merely to show four KPIs.
+  if (compactSummary) {
+    const verifiedPage = validatedWorkloadDots(first, [], 0, Math.max(1, Math.min(preview.total, API_PAGE_SIZE)))
+    if (!verifiedPage) throw new Error('Evaluation summary page is inconsistent')
+    return { preview: verifiedPage.preview, rows: verifiedPage.rows, tooMany: false,
+      partialRows: preview.total > verifiedPage.rows.length, start: verifiedPage.start, end: verifiedPage.end }
   }
   if (preview.total > MAX_VISIBLE_DOTS) {
     return { preview, rows: [], tooMany: true, start: first.start || '', end: first.end || '' }
@@ -94,24 +102,31 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     if (loadedAt.current > 0 && loadedRefreshToken.current === refreshToken &&
         Date.now() - loadedAt.current < MIN_REFRESH_MS) return undefined
     const controller = new AbortController()
+    let active = true
+    let timedOut = false
+    // Surface a real failure instead of leaving the summary in Checking forever.
+    const timeoutId = window.setTimeout(() => { timedOut = true; controller.abort() }, 20_000)
     setLoading(true)
     setError('')
-    readVerifiedPopulation(controller.signal).then(result => {
-      if (controller.signal.aborted) return
+    readVerifiedPopulation(controller.signal, compactSummary).then(result => {
+      if (!active || controller.signal.aborted) return
       setData(result)
       loadedAt.current = Date.now()
       loadedRefreshToken.current = refreshToken
     }).catch(failure => {
-      if (controller.signal.aborted) return
-      setData(null)
+      if (!active || (controller.signal.aborted && !timedOut)) return
+      // Retain the last verified snapshot, but mark refresh failures as stale.
       loadedAt.current = 0
       loadedRefreshToken.current = null
-      setError(failure.message || 'Evaluation unavailable')
-    }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => controller.abort()
-  }, [refreshToken, retryToken])
+      setError(timedOut ? 'Evaluation request timed out (20s)' : failure.message || 'Evaluation unavailable')
+    }).finally(() => {
+      window.clearTimeout(timeoutId)
+      if (active) setLoading(false)
+    })
+    return () => { active = false; window.clearTimeout(timeoutId); controller.abort() }
+  }, [refreshToken, retryToken, compactSummary])
 
-  const preview = loading || error ? null : data?.preview
+  const preview = data?.preview || null
   const rows = React.useMemo(() =>
     preview && !data?.tooMany ? [...(data?.rows || [])].sort((left, right) =>
       SEVERITY_ORDER[workloadHealthLevel(left)] - SEVERITY_ORDER[workloadHealthLevel(right)] ||
@@ -147,14 +162,14 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const unknownDescription = otherUnknown === null
     ? 'Unknown evaluations need evidence review.'
     : `${insufficient} insufficient data · ${otherUnknown} other unknown statuses. Evidence: ${gapDetails || 'reason unavailable'}. From saved evaluation confidence; not confirmed SAP SM37 errors.`
-  const state = error ? 'unavailable' : loading ? 'loading' : !preview ? 'unavailable' :
+  const state = error && preview ? 'stale' : error ? 'unavailable' : loading && !preview ? 'loading' : !preview ? 'unavailable' :
     preview.total === 0 ? 'empty' : preview.reviewRequired > 0 ? 'review' :
     Number(preview.health.attention) > 0 ? 'attention' :
     (preview.limited || Number(preview.health.unknown) > 0) ? 'limited' : 'normal'
   const period = data?.start && data?.end
     ? `${formatWib(data.start, true)} – ${formatWib(data.end, true)} WIB`
     : 'Window unavailable'
-  const outcome = error ? 'Evaluation unavailable' : loading ? 'Loading evaluations…' :
+  const outcome = error && !preview ? 'Evaluation unavailable' : loading && !preview ? 'Loading evaluations…' :
     !preview ? 'No verified evaluation' : preview.total === 0 ? 'No evaluations' :
       data?.tooMany ? 'Open Review for individual evaluations' :
       preview.reviewRequired ? 'Needs review' :
@@ -231,7 +246,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         </button>)}
       </div> : <p className="sphereWorkloadPriorityEmpty">{!preview ? 'Data unavailable' : data?.tooMany ? 'Open Review to see programs' : 'No priority programs in saved evaluations'}</p>}
     </div>
-    {!preview && <small role="status">{error ? 'Evaluation unavailable' : 'Checking evaluations…'}</small>}
+    {!preview && <small role="status" title={error || undefined}>{error ? 'Evaluation unavailable' : 'Checking evaluations…'}</small>}
+    {preview && error && <small role="status" title={error}>Last verified evaluation · refresh failed · {data?.end ? formatWib(data.end, true) + ' WIB' : 'time unavailable'}</small>}
   </section>
   return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : '')}
     data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
