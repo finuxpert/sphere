@@ -232,6 +232,11 @@ def _storage_used_bytes(row):
 
 
 def monthly_storage_evidence(month: str, conn, mapping: dict):
+    """Report only independently verified, month-scoped infrastructure samples.
+
+    Preserve the difference between absent mapping, no historical samples, a
+    missing mapped mount and partial source data. No current-month fallback.
+    """
     from zoneinfo import ZoneInfo
     import re
     if not re.fullmatch(r"20\d{2}-(0[1-9]|1[0-2])", str(month or "")):
@@ -242,7 +247,7 @@ def monthly_storage_evidence(month: str, conn, mapping: dict):
     end = datetime(year + (mon == 12), mon % 12 + 1, 1, tzinfo=wib).astimezone(timezone.utc)
     if start > datetime.now(timezone.utc):
         raise ValueError("Future reporting month is unavailable")
-    # Restrict query to the reported month and committed READY samples.
+    # Only READY collection records in the same exact WIB month.
     rows = conn.execute(text("""
        SELECT f.host, f.mount_point, f.collected_at, f.device, f.fstype,
               f.total_bytes, f.avail_bytes, f.used_pct, f.details
@@ -257,21 +262,39 @@ def monthly_storage_evidence(month: str, conn, mapping: dict):
         key = (str(row["host"]).upper(), str(row["mount_point"]))
         if key not in observed:
             observed[key] = dict(row)
+
     result = []
+    mapped_count = 0
     for category in _STORAGE_CATEGORIES:
         target = mapping.get(category)
-        host = str(target.get("host") or "").upper() if isinstance(target, dict) else ""
-        mount = str(target.get("mount") or "") if isinstance(target, dict) else ""
-        source = observed.get((host, mount)) if host and mount else None
+        host = str(target.get("host") or "").strip().upper() if isinstance(target, dict) else ""
+        mount = str(target.get("mount") or "").strip() if isinstance(target, dict) else ""
+        configured = bool(host and mount)
+        if configured:
+            mapped_count += 1
+        source = observed.get((host, mount)) if configured else None
         total = source.get("total_bytes") if source else None
         free = source.get("avail_bytes") if source else None
         used = _storage_used_bytes(source) if source else None
         pct = source.get("used_pct") if source else None
-        complete = all(isinstance(n, (int, float)) and n >= 0
-                       for n in (total, free, used, pct)) and total > 0 and used <= total
+        complete = (source is not None and
+                    all(isinstance(n, (int, float)) and n >= 0
+                        for n in (total, free, used, pct)) and
+                    total > 0 and used <= total and free <= total and pct <= 100)
+        if complete:
+            reason = None
+        elif not configured:
+            reason = "MAPPING_NOT_CONFIGURED"
+        elif not rows:
+            reason = "NO_MONTHLY_INFRA_HISTORY"
+        elif not source:
+            reason = "MAPPED_MOUNT_NOT_COLLECTED"
+        else:
+            reason = "INCOMPLETE_FILESYSTEM_FIELDS"
         result.append({
             "category": category,
             "status": "COLLECTED" if complete else "NOT_COLLECTED",
+            "reason": reason,
             "host": host or None, "mount_point": mount or None,
             "total_bytes": total if complete else None,
             "used_bytes": used if complete else None,
@@ -280,8 +303,15 @@ def monthly_storage_evidence(month: str, conn, mapping: dict):
             "sample_at": source.get("collected_at") if source and complete else None,
             "source": "rundeck_infra_filesystems",
         })
-    return {"month": month, "timezone": "Asia/Jakarta",
-            "source": "rundeck_infra_filesystems", "items": result}
+    return {
+        "month": month,
+        "timezone": "Asia/Jakarta",
+        "source": "rundeck_infra_filesystems",
+        "source_rows": len(rows),
+        "distinct_mounts": len(observed),
+        "configured_categories": mapped_count,
+        "items": result,
+    }
 
 
 @router.get("/monthly-storage")
