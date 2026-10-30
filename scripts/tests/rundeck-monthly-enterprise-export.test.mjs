@@ -42,6 +42,15 @@ const fixture={
   ],
 }
 
+fixture.monthly_top_wp_cpu=fixture.monthly_abap_candidates.filter(r=>r.peak_cpu_pct!=null).sort((a,b)=>b.peak_cpu_pct-a.peak_cpu_pct)
+fixture.monthly_top_wp_pss=fixture.monthly_abap_candidates.filter(r=>r.peak_pss_gb!=null).sort((a,b)=>b.peak_pss_gb-a.peak_pss_gb)
+fixture.monthly_storage={month:'2026-09',items:[
+  {category:'File System OS',status:'COLLECTED',host:'AOPH1PAPPDC',mount_point:'/',
+    total_bytes:80e9,used_bytes:60e9,free_bytes:20e9,used_pct:75,
+    sample_at:'2026-09-24T16:28:00Z'},
+  ...['FS SAP Archive','Archive INTF','INTF'].map(category=>({category,status:'NOT_COLLECTED'})),
+]}
+
 test('monthly enterprise model uses retained data and does not fill missing calendar days',()=>{
   const model=monthlyEnterpriseReportModel('2026-09',fixture)
   assert.equal(model.daily.length,30)
@@ -56,9 +65,9 @@ test('monthly enterprise model uses retained data and does not fill missing cale
   assert.equal(model.cpuPeak.host,'APP1')
   assert.equal(model.candidates.length,3)
   assert.deepEqual(model.sortedCpu.map(v=>v.consumer_key),[
-    'ZCPU_INTENSIVE','ZMEMORY_INTENSIVE','ZNO_MEMORY'])
+    'ZCPU_INTENSIVE','ZMEMORY_INTENSIVE'])
   assert.deepEqual(model.sortedPss.map(v=>v.consumer_key),[
-    'ZMEMORY_INTENSIVE','ZCPU_INTENSIVE','ZNO_MEMORY'])
+    'ZMEMORY_INTENSIVE','ZCPU_INTENSIVE'])
   assert.equal(model.candidates[2].peak_pss_gb,null)
 })
 
@@ -73,7 +82,7 @@ test('monthly enterprise PDF is exactly one A3 landscape page with evidence labe
     'SAP Monthly Performance Report','Application Server Performance',
     'Top 10 Jobs for Tuning Review','Top 10 Jobs by Peak WP CPU',
     'Top 10 Jobs by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
-    'REPORTING PERIOD','MONITORING COVERAGE',
+    'Storage Capacity','File System OS','Not Collected',
   ])assert.ok(stream.includes(token),'Missing PDF label: '+token)
   assert.ok(!stream.includes('PROTOTYPE DATA'),'Live export must not claim simulation')
   assert.ok(!stream.includes('Average Runtime'),'Unknown SM37 duration must not be invented')
@@ -83,15 +92,15 @@ test('monthly enterprise PDF is exactly one A3 landscape page with evidence labe
     'WP CPU is core-equivalent',
     'Highest CPU:','Highest RAM:','Alert limit:',
     'CPU WARNING READINGS','RAM WARNING READINGS','DATA COVERAGE',
-    'Daily highest observed APP reading',
+    'Daily highest observed APP reading','REPORTING PERIOD','MONITORING COVERAGE',
+    'AOP Production','TOP TUNING PRIORITIES','JOBS & PROGRAMS EVALUATED',
   ])assert.ok(!stream.includes(removed),'Redundant copy remains: '+removed)
   for(const expected of [
     'APP1','APP2','APP3','APP4','APP5',
     'CPU High Reads','RAM High Reads',
-    'TOP TUNING PRIORITIES','JOBS & PROGRAMS EVALUATED',
     'Peak','Limit 75%','Limit 80%',
     '0%','25%','50%','75%','100%',
-    '30 Sep','AOP Production',
+    '30 Sep','Storage Capacity',
   ])assert.ok(stream.includes(expected),'Missing reviewed label: '+expected)
   const bytes=new Uint8Array(pdf.output('arraybuffer'))
   assert.equal(String.fromCharCode(...bytes.slice(0,5)),'%PDF-')
@@ -101,4 +110,17 @@ test('monthly enterprise PDF is exactly one A3 landscape page with evidence labe
 test('monthly enterprise PDF refuses unverified evidence and bad dates',async()=>{
   assert.throws(()=>monthlyEnterpriseReportModel('2026-13',fixture),/Invalid/)
   await assert.rejects(buildManagementMonthlyPdf({month:'2026-09',data:{}}),/Saved monthly/)
+})
+
+
+test('management export rejects wrong-month infrastructure and missing full rankings',()=>{
+  assert.throws(()=>monthlyEnterpriseReportModel('2026-10',fixture),/Month-scoped/)
+  assert.throws(()=>monthlyEnterpriseReportModel('2026-09',{...fixture,monthly_top_wp_cpu:null}),/Full-population/)
+})
+test('top WP rankings are independent of tuning candidate order',()=>{
+  const data={...fixture,monthly_top_wp_cpu:[fixture.monthly_abap_candidates[1]],
+    monthly_top_wp_pss:[fixture.monthly_abap_candidates[0]]}
+  const model=monthlyEnterpriseReportModel('2026-09',data)
+  assert.equal(model.sortedCpu[0].consumer_key,'ZMEMORY_INTENSIVE')
+  assert.equal(model.sortedPss[0].consumer_key,'ZCPU_INTENSIVE')
 })
