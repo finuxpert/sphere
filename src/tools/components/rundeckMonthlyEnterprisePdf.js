@@ -165,7 +165,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     text(x,y,s,sz,weight,color,align,width-7)
   }
   // Report header: no repeated logo, evidence badge or source label.
-  const systemName=(pressure.hosts||[]).some(row=>
+  const systemName=(m.pressure.hosts||[]).some(row=>
     /^AOPH[1-5]PAPPDC(?:\.|$)/i.test(String(row.host||'')))
     ? 'AOP Production' : 'SAP Production'
   text(M,H-44,'SAP Monthly Performance Report',20,'bold','navy')
