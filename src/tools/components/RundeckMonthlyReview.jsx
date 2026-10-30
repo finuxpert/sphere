@@ -4,6 +4,7 @@ import { shortHost } from './sapUiFormat.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import { buildManagementMonthlyPdf } from './rundeckMonthlyManagementPdf.js'
 import './RundeckMonthlyReview.css'
+import './RundeckMonthlyFinal20261030.css'
 
 const API = import.meta.env.BASE_URL + 'api'
 const PAGE_SIZE = 8
