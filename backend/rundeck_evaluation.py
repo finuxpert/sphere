@@ -828,6 +828,36 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
     } for row in rows]
 
 
+def monthly_host_preview(month: str) -> dict:
+    """Fast, source-backed monthly APP summary independent from workload evaluation.
+
+    The full report still computes workload correlations, error attribution and
+    validated classification. This path reads only saved READY host metrics.
+    """
+    started = time.perf_counter()
+    start, end, _previous_start = calendar_month_bounds(month)
+    engine = get_engine()
+    if engine is None:
+        raise RuntimeError("Database history is not enabled")
+    with engine.connect() as conn:
+        anchor = _calendar_month_collection_anchor(conn, start, end)
+        quality = _collection_quality(conn, start, end)
+        pressure = monthly_pressure_observations(
+            conn, start, end, "rundeck_top_consumers",
+            _complete_collection_clause('c'), include_correlation=False,
+        )
+    # Never infer NORMAL for months without complete READY samples.
+    return {
+        "month": month, "period": "month",
+        "start": start, "end": end,
+        "collection_anchor": anchor,
+        "quality": quality,
+        "monthly_pressure": pressure,
+        "preview_only": True,
+        "runtime": {"duration_ms": round((time.perf_counter() - started) * 1000.0, 1)},
+    }
+
+
 def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None, pressure: str = "ALL", flag: str = "ALL") -> dict:
     """Serialize cold full-population computations; cached pages use the same source anchor."""
     queued_at = time.perf_counter()
