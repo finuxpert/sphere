@@ -731,14 +731,15 @@ const checks = [
   ['HANA and technical availability preserve category-specific labels', files.availabilityBackend.includes('HANA System DB Availability') && files.availabilityBackend.includes('HANA Replication Availability') && files.availabilityBackend.includes('Web Dispatcher Availability')],
   ['watchdog uses exact job identity and confirmation guard', files.watchdog.includes('job_matches') && files.watchdog.includes('required_confirmations') && files.watchdog.includes('SPHERE_WATCHDOG_AUTO_ABORT')],
   ['Prometheus exposes collector reliability metrics', files.metrics.includes('sphere_collection_age_seconds') && files.metrics.includes('sphere_rundeck_execution_stuck') && files.metrics.includes('sphere_watchdog_auto_abort_total')],
-  ['System Health exposes collector watchdog and auto-healing context',
+  ['System Health exposes source-backed collector watchdog and auto-healing context',
     files.source.includes('json(`${API}/platform/health`)') &&
     files.source.includes('sourceCollector={platform?.collector || null}') &&
     files.wrapper.includes('sourceCollector={props.sourceCollector}') &&
     files.systemHealth.includes('sourceCollector = null') &&
-    files.systemHealth.includes('<span>Watchdog</span>') &&
-    files.systemHealth.includes('<span>Auto-healing</span>') &&
-    files.systemHealth.includes('<span>Last Recovery</span>') &&
+    files.systemHealth.includes('collectorTitle(collector)') &&
+    files.systemHealth.includes('watchdog_status') &&
+    files.systemHealth.includes('auto_healing_enabled') &&
+    files.systemHealth.includes('last_successful_collection') &&
     !files.systemHealth.includes('fetch(')],
   ['System Health exposes concrete Critical WP signal instead of generic workload status', files.systemHealth.includes('Critical WP ${top.wp}') && !files.systemHealth.includes('Jobs / Programs CRITICAL') && !files.systemHealth.includes('Jobs / Programs ATTENTION')],
   ['System Health explains old or missing Availability without inferring SAP DOWN',
@@ -749,7 +750,7 @@ const checks = [
     files.systemHealthState.includes('This does not mean SAP DOWN.') &&
     files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
-  ['Global data status exposes clickable performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataAlignmentPopover')],
+  ['Global data status shows fixed performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataQualityState') && files.source.includes('initialSourceCheck')],
   ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table',
     files.unifiedApp.includes('SAP APP Landscape') &&
     files.unifiedApp.includes('highest CPU') &&
