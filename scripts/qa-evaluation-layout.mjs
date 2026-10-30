@@ -45,6 +45,7 @@ const row = name => `<section class="rundeckAppEvalLane">
 const lanes = ['APP1','APP2','APP3','APP4','APP5'].map(row).join('\n')
 
 try {
+  for (const viewport of [{width:1366,height:768},{width:1536,height:864},{width:1920,height:1080}]) {
   for (const sidebarState of ['collapsed','expanded']) {
     for (const fit of [false,true]) {
       for (const theme of ['dark','light']) {
@@ -52,7 +53,7 @@ try {
       ${cssLinks}
       <style>
       body { margin:0; }
-      .fixtureRoot { width:1536px; min-height:900px; margin:0 auto; }
+      .fixtureRoot { width:${viewport.width}px; min-height:${viewport.height}px; margin:0 auto; }
       .fixtureRoot .rundeckJobsProgramsOverview { width:100%; min-width:0; }
       </style>
       </head><body><div class="appShell fixtureRoot">
@@ -115,11 +116,11 @@ try {
             parentLayout,headLayout].join(','))
         })
       </script></body></html>`
-      const filename=join(temp,`layout-${sidebarState}-${fit?'fitted':'natural'}-${theme}.html`)
+      const filename=join(temp,`layout-${viewport.width}x${viewport.height}-${sidebarState}-${fit?'fitted':'natural'}-${theme}.html`)
       writeFileSync(filename,html)
       const run=spawnSync(chrome,[
         '--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
-        '--allow-file-access-from-files','--window-size=1536,960',
+        '--allow-file-access-from-files',`--window-size=${viewport.width},${viewport.height}`,
         '--virtual-time-budget=1500','--dump-dom',pathToFileURL(filename).href
       ],{encoding:'utf8',timeout:30000,maxBuffer:5*1024*1024})
       if (run.status!==0 || !run.stdout.includes('data-geometry="PASS"')) {
@@ -127,9 +128,10 @@ try {
         throw new Error(`LAYOUT=FAIL sidebar=${sidebarState} fit=${fit} theme=${theme} result=${run.status} data=${details} ${run.stderr?.slice(-1000)}`)
       }
       const details=run.stdout.match(/data-actual="[^"]*"/)?.[0]
-      console.log(`LAYOUT=PASS sidebar=${sidebarState} fit=${fit} theme=${theme} ${details}`)
+      console.log(`LAYOUT=PASS viewport=${viewport.width}x${viewport.height} sidebar=${sidebarState} fit=${fit} theme=${theme} ${details}`)
       }
     }
+  }
   }
 } finally {
   rmSync(temp,{recursive:true,force:true})
