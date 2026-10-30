@@ -43,7 +43,7 @@ test('peak scope, four dropdowns and reset remain source-preserving', () => {
   const trend = component('RundeckServerTrend.jsx')
   assert.match(trend, /Reset charts/)
   assert.match(trend, /All APPs peak/)
-  assert.match(trend, /Selected ' \+ activeFocus/)
+  assert.match(trend, /\{panelPeak\.host\} · \{formatTrendPeakWib\(panelPeak\.timestamp\)\} WIB/)
   assert.match(trend, /savedTrendPeak\(panel\.trend, mode, activeFocus\)/)
   assert.match(trend, /<select className="rundeckTrendMetricSelect/)
   assert.doesNotMatch(trend, /InfrastructureGapBand/)
