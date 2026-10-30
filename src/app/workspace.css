@@ -708,3 +708,14 @@ label {
     transition-duration: .01ms !important;
   }
 }
+
+/* Mobile build version visibility (consolidated from app shell). */
+.mobileVersionBadge {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .mobileVersionBadge {
+    display: inline-flex;
+  }
+}

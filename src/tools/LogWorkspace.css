@@ -1,0 +1,171 @@
+/* SPHERE LOG workspace styles. Maintain source order for CSS cascade compatibility. */
+
+/* LOG controls, history and incident report */
+/* v1.5.3 LOG final clarity and incident-report polish */
+
+/* Analytical controls: one visual system, less form-like. */
+.rca26ControlBar{border-color:rgba(115,145,160,.2);background:rgba(8,18,22,.5)}
+.rca26Control select{background:#071318;border-color:rgba(113,148,163,.3)}
+.rca26TimelineModeGroup{background:#071318}
+.rca26Completeness{padding-left:12px}
+
+/* Incident comparison language and scope. */
+.rca26IncidentScope{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:2px 6px;border:1px solid rgba(115,145,160,.2);border-radius:5px;color:#8da2aa;font-size:9px;font-weight:700;vertical-align:middle}
+.rca26Deviation[title]{cursor:help}
+
+/* Compact workload activity: normal samples stay quiet; changes carry attention. */
+.rca26AggregateTrackInner{gap:3px}
+.rca26AggregatePoint{min-width:48px;grid-template-columns:1fr;padding:5px 6px;gap:2px;text-align:center;transition:border-color .12s ease,background .12s ease}
+.rca26AggregatePoint b{grid-column:1;font-size:8px}
+.rca26AggregatePoint span{display:none}
+.rca26AggregatePoint .warn,.rca26AggregatePoint .crit,.rca26AggregatePoint .rca26MissingHint{display:block;font-size:7px}
+.rca26AggregatePoint:hover{min-width:78px;text-align:left;background:#0b1a20;border-color:rgba(50,199,207,.3)}
+.rca26AggregatePoint:hover span{display:block}
+
+/* Forensic history is secondary and collapsed by default. */
+.rca26HistoryDisclosure{margin-top:8px;border:1px solid rgba(115,145,160,.18);border-radius:7px;background:#081419;overflow:hidden}
+.rca26HistoryDisclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:38px;padding:0 10px;cursor:pointer;color:#dce8eb;font-size:11px;font-weight:800;list-style:none}
+.rca26HistoryDisclosure>summary::-webkit-details-marker{display:none}
+.rca26HistoryDisclosure>summary::after{content:'Open';font-size:9px;color:#7f949d;font-weight:700}
+.rca26HistoryDisclosure[open]>summary::after{content:'Close'}
+.rca26HistoryDisclosure .rca26Panel{margin:0;border:0;border-top:1px solid rgba(115,145,160,.16);border-radius:0}
+.rca26IncidentErrors{border-top:2px solid rgba(255,107,120,.22)}
+
+/* Incident report: dense, evidence-first, no raw dump. */
+.rca26ReportFindings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:6px}
+.rca26ReportFinding{border:1px solid #d7e0e5;background:#fff;padding:6px}
+.rca26ReportFinding span{display:block;color:#65747d;font-size:7px;text-transform:uppercase;letter-spacing:.05em}
+.rca26ReportFinding b{display:block;margin-top:2px;color:#17212a;font-size:9px;line-height:1.25}
+.rca26ReportTopWorkload{margin-top:6px}
+.rca26ReportTopWorkload .rca26JobCharts{grid-template-columns:1fr 1fr;gap:6px}
+.rca26ReportTopWorkload .rca26MiniChart{height:118px}
+.rca26ReportTopWorkload .rca26AggregateTrack{display:none}
+
+@media print{
+  .rca26HistoryDisclosure{display:none!important}
+}
+
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportFindings{display:grid}
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportTopWorkload .rca26PanelHead p{color:#52616b}
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportTopWorkload .rca26MiniHead{color:#52616b}
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportTopWorkload .rca26MiniHead b{color:#17212a}
+
+@media (max-width:900px){
+  .rca26AggregatePoint{min-width:44px}
+  .rca26ReportFindings{grid-template-columns:1fr}
+}
+
+/* Evidence scope, responsive controls and PDF pagination */
+/* v1.5.4 LOG incident focus and report pagination polish */
+
+.rca26EvidenceScope{display:inline-flex;align-items:center;gap:2px;padding:2px;border:1px solid rgba(105,141,155,.24);border-radius:7px;background:#071318;flex:0 0 auto}
+.rca26EvidenceScope button{min-height:27px;padding:0 9px;border:0;border-radius:5px;background:transparent;color:#81959d;font:inherit;font-size:9px;font-weight:750;cursor:pointer;white-space:nowrap}
+.rca26EvidenceScope button:hover{color:#d9e7eb;background:rgba(49,198,207,.06)}
+.rca26EvidenceScope button[data-active="true"]{color:#dffcff;background:rgba(49,198,207,.13);box-shadow:inset 0 0 0 1px rgba(49,198,207,.32)}
+
+.rca26TableToolbar:has(.rca26EvidenceScope) .rca26Search{min-width:260px}
+
+@media (max-width:1100px){
+  .rca26TableToolbar:has(.rca26EvidenceScope){flex-wrap:wrap}
+  .rca26TableToolbar:has(.rca26EvidenceScope) .rca26Search{min-width:220px;flex:1 1 300px}
+}
+
+@media (max-width:700px){
+  .rca26EvidenceScope{order:2;width:100%}
+  .rca26EvidenceScope button{flex:1}
+}
+
+/* PDF export is paginated section-by-section by sphereExport.js in v1.5.4. */
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportTopWorkload{page-break-inside:avoid;break-inside:avoid}
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportTopWorkload .rca26JobCharts{page-break-inside:avoid;break-inside:avoid}
+
+/* Evidence qualification and report layout */
+/* v1.5.5 LOG RCA qualification and final incident-report polish */
+
+.rca26EvidenceScope{position:relative}
+.rca26EvidenceScope::after{content:'Qualified';display:none;position:absolute;top:-16px;right:2px;color:#6f8992;font-size:7px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.rca26EvidenceScope:focus-within::after{display:block}
+
+/* Keep the PDF's second page visually balanced without re-introducing raw evidence. */
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportTopWorkload .rca26MiniChart{height:132px}
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportTopWorkload .rca26AggregateTrack{display:none!important}
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportFindings{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.rcaPdfExportMode .rca26IncidentReportOnly .rca26ReportFinding{min-height:38px;padding:7px 9px}
+
+@media (max-width:700px){
+  .rca26EvidenceScope::after{display:none!important}
+}
+
+/* Incident status and responsive metric layout */
+/* v1.5.6 — incident episode UX and multi-day timeline density */
+
+.rca26MetricStrip{
+  grid-template-columns:1.2fr 1.25fr .72fr 1.15fr repeat(5,minmax(105px,1fr));
+}
+
+.rca26IncidentControl select{
+  min-width:220px;
+}
+
+.rca26StatusLine button{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  min-width:0;
+  padding:6px 8px;
+  border:1px solid var(--line2);
+  border-radius:5px;
+  background:transparent;
+  color:#a9bac2;
+  font:inherit;
+  font-size:9px;
+  cursor:pointer;
+}
+
+.rca26StatusLine button b{
+  overflow:hidden;
+  color:#e5eef1;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.rca26StatusLine button.crit{
+  border-color:rgba(255,89,100,.35);
+  background:rgba(255,89,100,.06);
+  color:#ff8d95;
+}
+
+.rca26StatusLine button.warn{
+  border-color:rgba(245,166,35,.3);
+  color:#ffc665;
+}
+
+.rca26StatusLine button.normal,
+.rca26StatusLine button.ok{
+  color:#67df9a;
+}
+
+.rca26StatusLine button[data-active='true']{
+  outline:1px solid rgba(49,208,200,.72);
+  outline-offset:1px;
+}
+
+@media(max-width:1400px){
+  .rca26MetricStrip{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+
+@media(max-width:1260px){
+  .rca26MetricStrip{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .rca26Metric:nth-child(4n){border-right:1px solid var(--line2)}
+  .rca26Metric:nth-child(3n){border-right:0}
+}
+
+@media(max-width:980px){
+  .rca26MetricStrip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rca26IncidentControl select{min-width:0}
+}
+
+@media(max-width:520px){
+  .rca26MetricStrip{grid-template-columns:minmax(0,1fr)}
+}

@@ -4,6 +4,8 @@
 
 ## Maintained product and operations references
 
+Architecture and file naming: [SPHERE Codebase Architecture](ARCHITECTURE.md).
+
 | Document | Authority |
 |---|---|
 | [README](../README.md) | Project entry, branch topology, current feature summary |
