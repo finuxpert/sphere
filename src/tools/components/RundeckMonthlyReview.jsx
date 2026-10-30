@@ -2,7 +2,7 @@ import React from 'react'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { shortHost } from './sapUiFormat.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
-import { buildManagementMonthlyPdf } from './rundeckMonthlyManagementPdf.js'
+import { buildManagementMonthlyPdf } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
 
@@ -650,7 +650,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       </div></section></div>}
       {completedData&&tab==='report'&&<div id="sphere-month-panel-report" role="tabpanel" aria-labelledby="sphere-month-tab-report" className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
-          <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
+          <div><h4>Monthly Report</h4><small>Management: one A3 landscape page · Technical: detailed saved evidence</small></div>
           <div className="sphereMonthlyReportActions">
             <label htmlFor="sphere-monthly-pdf-mode">Report type</label>
             <select className="form-select form-select-sm" id="sphere-monthly-pdf-mode" aria-label="Report type" value={pdfMode}
@@ -662,7 +662,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
             {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
           </button>
           {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
-            download={'SPHERE-Monthly-'+(pdfMode==='management'?'Management-Summary-':'Technical-Review-')+month+'.pdf'}>
+            download={pdfMode==='management'?'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf':'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>
             Download PDF
           </a>}
           </div>
