@@ -7,8 +7,9 @@ const read = name => readFileSync(new URL('../../src/tools/components/' + name, 
 test('monitoring uses a source-preserving final stylesheet after Bootstrap foundation', () => {
   const page = read('RundeckMonitoringHistory.jsx')
   assert.match(page, /import '\.\/RundeckBootstrapFoundation\.css'\s*\nimport '\.\/RundeckMonitoringPolish\.css'/)
-  assert.match(page, /Backup monitor:/)
-  assert.match(page, /Backup monitoring configuration only/)
+  assert.match(page, /sphereSystemHealthCompact/)
+  assert.match(page, /Infrastructure History/)
+  assert.doesNotMatch(page, /Backup monitor:/)
 })
 
 test('desktop overview allocates room for jobs and presents health as flat rows', () => {
