@@ -47,7 +47,7 @@ test('SAP Checks preserve verified availability and UNKNOWN data source states',
   const issues = read('RundeckSapIssues.jsx')
   assert.match(availability, /Last verified sample/)
   assert.match(issues, /SM37 readiness unavailable/)
-  assert.match(issues, /Unknown is missing or stale evidence/)
+  assert.match(issues, /Missing or stale source data; not confirmed SAP downtime/)
   assert.match(issues, /onClick=\{\(\)=>inspect\(row\)\}/)
   assert.match(css, /\.rundeckSapChecksDetailGrid/)
   assert.match(css, /\.rundeckSapChecksHistoryDock/)
