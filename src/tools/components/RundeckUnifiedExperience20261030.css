@@ -31,94 +31,243 @@ html[data-theme="light"] .rundeckTrendSharedControls select {color-scheme:light}
 }
 
 
-/* Compact System Health modal: three provenanced summaries + APP1-5 only. */
+/* One dialog: Availability, Issues, then 5-APP Infrastructure with source provenance.
+   Theme tokens are scoped to the dialog; semantic accents describe real state only. */
+html[data-theme="dark"] .sphereSystemHealthCompact{
+  --health-panel:#17222c;--health-header:#202f3b;--health-border:#384955;
+  --health-text:#e4ebf0;--health-muted:#a8bac5;--health-selected:#69c4d6;
+  --health-normal:#76bf9e;--health-attention:#e2b56c;--health-critical:#f18b94;
+  --health-inactive:#94a5b0;--health-hover:rgba(116,167,190,.07);
+}
+html[data-theme="light"] .sphereSystemHealthCompact{
+  --health-panel:#fff;--health-header:#eef3f7;--health-border:#d3dfe7;
+  --health-text:#20394b;--health-muted:#506779;--health-selected:#237d9b;
+  --health-normal:#237c58;--health-attention:#9b6720;--health-critical:#b9414a;
+  --health-inactive:#667d8d;--health-hover:rgba(43,112,147,.055);
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-wide:has(.sphereSystemHealthCompact){
+  width:min(1360px,calc(100vw - 28px))!important;
+  max-width:calc(100vw - 28px)!important;
+}
+.rundeckWorkspacePortal>.rundeckWorkspaceDrawer.is-wide:has(.sphereSystemHealthCompact)>.rundeckWorkspaceDrawerBody{
+  overflow-y:auto;
+  padding:12px 16px;
+}
 .sphereSystemHealthCompact{
   width:100%;
   min-width:0;
   display:grid;
   grid-template-columns:minmax(0,1fr);
-  gap:10px;
+  gap:9px;
+  color:var(--health-text);
+  font-variant-numeric:tabular-nums;
 }
 .sphereSystemHealthCompactGrid{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
   align-items:stretch;
-  gap:8px;
+}
+.sphereSystemHealthCompactGrid .sphereHealthInlineBlock,
+.sphereSystemHealthCompact .sphereSystemHealthAppOverview{
   min-width:0;
+  margin:0;
+  padding:10px 12px;
+  border:1px solid var(--health-border);
+  background:var(--health-panel);
+  color:var(--health-text);
+  border-radius:6px;
+  box-shadow:none;
 }
 .sphereSystemHealthCompactGrid .sphereHealthInlineBlock{
   display:flex;
   flex-direction:column;
-  min-width:0;
   height:100%;
-  padding:11px;
-  border:1px solid var(--mr-border,#33424b);
-  border-radius:5px;
-  overflow-wrap:anywhere;
+  gap:6px;
 }
-.sphereSystemHealthAppOverview{
-  min-width:0;
-  border:1px solid var(--mr-border,#33424b);
-  border-radius:5px;
-  padding:9px 11px;
+.sphereSystemHealthCompactGrid .sphereHealthInlineHead{
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.sphereSystemHealthCompactGrid .sphereHealthInlineHead h4,
+.sphereSystemHealthCompact .sphereSystemHealthAppHeading h3{
+  font-size:13px;
+  font-weight:700;
+  color:var(--health-text);
+  margin:0;
+  line-height:1.25;
+}
+.sphereSystemHealthCompactGrid :is(.sphereHealthInlineValues,.sphereHealthInlineIssues){
+  margin:0;
+}
+.sphereSystemHealthCompactGrid :is(.sphereHealthInlineBlock>small,.sphereHealthIssueSummary small,.sphereHealthInfraScope){
+  color:var(--health-muted);
+  opacity:1;
+  font-size:11px;
+}
+.sphereSystemHealthCompactGrid .sphereHealthInlineValues strong{
+  font-size:13px;
+  color:var(--health-text);
+}
+.sphereSystemHealthCompactGrid .sphereHealthInlineValues b{
+  color:var(--health-muted);
+}
+.sphereSystemHealthCompact .sphereSystemHealthAppOverview{
+  padding:10px 12px 8px;
 }
 .sphereSystemHealthAppHeading{
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  gap:10px;
-  margin-bottom:7px;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 9px;
+  min-width:0;
 }
-.sphereSystemHealthAppHeading h3{
-  font-size:13px;
-  margin:0;
-}
-.sphereSystemHealthAppHeading button{
-  padding:5px 8px;
+.sphereSystemHealthAppHeading>small{
+  color:var(--health-muted);
   font-size:11px;
-  color:inherit;
-  background:transparent;
-  border:1px solid var(--mr-border,#536270);
-  border-radius:4px;
+  text-align:right;
 }
+.sphereSystemHealthTableWrap{overflow-x:auto;max-width:100%;min-width:0}
 .sphereSystemHealthAppTable{
   width:100%;
+  table-layout:fixed;
   border-collapse:collapse;
-  font-size:12px;
-  font-variant-numeric:tabular-nums;
+  font-size:11px;
+  color:var(--health-text);
+  margin:0;
 }
-.sphereSystemHealthAppTable th,.sphereSystemHealthAppTable td{
+.sphereSystemHealthAppTable th,
+.sphereSystemHealthAppTable td{
+  vertical-align:middle;
   text-align:left;
-  padding:7px 9px;
-  border-bottom:1px solid var(--mr-border,#344451);
+  border-bottom:1px solid var(--health-border);
+  padding:8px 9px;
+  min-width:0;
+  background:transparent;
 }
-.sphereSystemHealthAppTable thead{
-  background:var(--mr-surface-2,transparent);
+.sphereSystemHealthAppTable th{
+  background:var(--health-header);
+  color:var(--health-muted);
+  font-size:10.5px;
+  font-weight:700;
+  white-space:nowrap;
 }
-.sphereSystemHealthAppOverview > small{
+.sphereSystemHealthAppTable tbody tr:last-child td{border-bottom:0}
+.sphereSystemHealthAppTable tbody tr:hover{background:var(--health-hover)}
+.sphereSystemHealthAppTable th:first-child{width:8%}
+.sphereSystemHealthAppTable th:nth-child(2),
+.sphereSystemHealthAppTable th:nth-child(3){width:9%}
+.sphereSystemHealthAppTable th:nth-child(4){width:10%}
+.sphereSystemHealthAppTable th:nth-child(5){width:18%}
+.sphereSystemHealthAppTable th:nth-child(6){width:18%}
+.sphereSystemHealthAppTable th:nth-child(7){width:16%}
+.sphereSystemHealthAppTable th:last-child{width:12%}
+.sphereSystemHealthAppTable td>strong{font-size:12px;font-weight:700}
+.sphereSystemHealthAppTable :is(.sphereHealthMatrixHost,.sphereHealthMatrixTime){
   display:block;
-  margin-top:8px;
+  color:var(--health-muted);
   font-size:10px;
-  opacity:.85;
+  line-height:1.35;
+  overflow-wrap:anywhere;
 }
-@media(max-width:900px){
+.sphereHealthMatrixMetric{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:0;
+}
+.sphereHealthMatrixValue{
+  color:var(--health-text);
+  font-size:11.5px;
+  line-height:1.2;
+  overflow-wrap:anywhere;
+}
+.sphereHealthState{
+  display:inline-flex;
+  width:max-content;
+  max-width:100%;
+  align-items:center;
+  gap:5px;
+  font-size:10px;
+  font-weight:600;
+  line-height:1.25;
+  color:var(--health-inactive);
+}
+.sphereHealthState i{
+  display:block;
+  width:6px;
+  height:6px;
+  flex:0 0 6px;
+  border-radius:50%;
+  background:currentColor;
+}
+.sphereHealthState.is-normal{color:var(--health-normal)}
+.sphereHealthState.is-attention,
+.sphereHealthState.is-warning{color:var(--health-attention)}
+.sphereHealthState.is-critical{color:var(--health-critical)}
+.sphereHealthState.is-stale,
+.sphereHealthState.is-unknown,
+.sphereHealthState.is-checking{color:var(--health-inactive)}
+.sphereHealthMatrixLegend{
+  display:flex;
+  justify-content:space-between;
+  gap:8px 16px;
+  flex-wrap:wrap;
+  padding-top:8px;
+  font-size:10px;
+  color:var(--health-muted);
+}
+.sphereHealthMatrixError{
+  color:var(--health-attention);
+  font-size:11px;
+  margin:0 0 7px;
+}
+@media(min-width:1100px){
+  .sphereSystemHealthCompactGrid .sphereHealthInlineBlock{min-height:94px}
+}
+@media(max-width:1020px){
+  .sphereSystemHealthAppTable{min-width:1010px}
+}
+@media(max-width:700px){
   .sphereSystemHealthCompactGrid{grid-template-columns:1fr}
-  .sphereSystemHealthAppOverview{overflow-x:auto}
-  .sphereSystemHealthAppTable{min-width:600px}
+  .sphereSystemHealthAppHeading{align-items:flex-start;flex-direction:column;gap:3px}
+  .sphereSystemHealthAppHeading>small{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){
+  .sphereSystemHealthCompact *{transition:none;animation:none}
 }
 
-.sphereSystemHealthAppOpen{
-  padding:0;
-  font:inherit;
-  font-weight:700;
-  color:var(--mr-accent,#4aa9b8);
-  border:0;
-  background:transparent;
-  cursor:pointer;
-  text-decoration:underline;
-  text-underline-offset:2px;
+/* APP selector styling: neutral surfaces, restrained semantic left marker,
+   and one consistent active focus ring across Normal/Attention/Critical. */
+html[data-theme="dark"] .appShell:has(.rundeckPanel){
+  --health-fleet-border:#3b4a55;--health-fleet-focus:#6daec1;
 }
-.sphereSystemHealthAppOpen:focus-visible{
-  outline:2px solid var(--mr-accent,#4aa9b8);
-  outline-offset:2px;
+html[data-theme="light"] .appShell:has(.rundeckPanel){
+  --health-fleet-border:#c7d7e1;--health-fleet-focus:#2d829e;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards>.rundeckAppHexSelector{
+  border-color:var(--health-fleet-border)!important;
+  border-left-width:3px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards>.rundeckAppHexSelector.is-sap-normal{
+  border-left-color:var(--sphere-success,#70b69a)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards>.rundeckAppHexSelector:is(.is-sap-warning,.is-sap-attention){
+  border-left-color:var(--sphere-warning,#d8b35f)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards>.rundeckAppHexSelector.is-sap-critical{
+  border-left-color:var(--sphere-danger,#d87f8a)!important;
+}
+.appShell:has(.rundeckPanel) .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards>.rundeckAppHexSelector.is-active{
+  outline:1px solid var(--health-fleet-focus)!important;
+  outline-offset:-1px!important;
+  box-shadow:none!important;
 }
