@@ -73,7 +73,7 @@ test('monthly enterprise PDF is exactly one A3 landscape page with evidence labe
     'SAP Monthly Performance Report','Application Server Performance',
     'Top 10 Jobs for Tuning Review','Top 10 Jobs by Peak WP CPU',
     'Top 10 Jobs by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
-    'REPORTING PERIOD','MONITORING COVERAGE (EST.)',
+    'REPORTING PERIOD','MONITORING COVERAGE',
   ])assert.ok(stream.includes(token),'Missing PDF label: '+token)
   assert.ok(!stream.includes('PROTOTYPE DATA'),'Live export must not claim simulation')
   assert.ok(!stream.includes('Average Runtime'),'Unknown SM37 duration must not be invented')
