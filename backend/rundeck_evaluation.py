@@ -843,13 +843,22 @@ def monthly_host_preview(month: str) -> dict:
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Database history is not enabled")
+    query_timings_ms: dict[str, float] = {}
+
+    def timed(label: str, operation):
+        began = time.perf_counter()
+        try:
+            return operation()
+        finally:
+            query_timings_ms[label] = round((time.perf_counter() - began) * 1000.0, 1)
+
     with engine.connect() as conn:
-        anchor = _calendar_month_collection_anchor(conn, start, end)
-        quality = _collection_quality(conn, start, end)
-        pressure = monthly_pressure_observations(
+        anchor = timed("collection_anchor", lambda: _calendar_month_collection_anchor(conn, start, end))
+        quality = timed("collection_quality", lambda: _collection_quality(conn, start, end))
+        pressure = timed("host_pressure", lambda: monthly_pressure_observations(
             conn, start, end, "rundeck_top_consumers",
             _complete_collection_clause('c'), include_correlation=False,
-        )
+        ))
     # Never infer NORMAL for months without complete READY samples.
     return {
         "month": month, "period": "month",
@@ -858,7 +867,10 @@ def monthly_host_preview(month: str) -> dict:
         "quality": quality,
         "monthly_pressure": pressure,
         "preview_only": True,
-        "runtime": {"duration_ms": round((time.perf_counter() - started) * 1000.0, 1)},
+        "runtime": {
+            "duration_ms": round((time.perf_counter() - started) * 1000.0, 1),
+            "sql_timings_ms": query_timings_ms,
+        },
     }
 
 
