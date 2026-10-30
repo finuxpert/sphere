@@ -55,3 +55,59 @@
 .appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231{min-width:740px!important}
 .appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload table{min-width:780px!important}
 }
+
+
+/* Monthly evidence toolbar: Bootstrap-compatible responsive controls (30 Oct 2026). */
+/* Keep all filters visible; the previous stacked right column wasted nearly half the panel. */
+.appShell.isTool:has(.rundeckPanel) .sphereMonthlyReview.is-v2
+.sphereMonthlyEvidencePage > .sphereMonthlyPanel > .sphereMonthlyTableHead {
+  display:grid!important;
+  grid-template-columns:minmax(180px,1fr) minmax(0,4fr)!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .sphereMonthlyReview.is-v2
+.sphereMonthlyEvidencePage > .sphereMonthlyPanel > .sphereMonthlyTableHead > .sphereMonthlyFilters {
+  display:grid!important;
+  grid-template-columns:minmax(180px,1.5fr) repeat(4,minmax(105px,1fr))!important;
+  align-items:center!important;
+  gap:6px!important;
+  min-width:0!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .sphereMonthlyReview.is-v2
+.sphereMonthlyEvidencePage .sphereMonthlyTableHead .sphereMonthlyFilters :is(input,select) {
+  box-sizing:border-box!important;
+  display:block!important;
+  min-width:0!important;
+  max-width:100%!important;
+  width:100%!important;
+  min-height:32px!important;
+  padding:5px 8px!important;
+  font-size:12px!important;
+  line-height:1.3!important;
+}
+@media(max-width:1380px){
+  .appShell.isTool:has(.rundeckPanel) .sphereMonthlyReview.is-v2
+  .sphereMonthlyEvidencePage > .sphereMonthlyPanel > .sphereMonthlyTableHead {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
+@media(max-width:850px){
+  .appShell.isTool:has(.rundeckPanel) .sphereMonthlyReview.is-v2
+  .sphereMonthlyEvidencePage > .sphereMonthlyPanel > .sphereMonthlyTableHead > .sphereMonthlyFilters {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .sphereMonthlyReview.is-v2
+  .sphereMonthlyEvidencePage .sphereMonthlyTableHead .sphereMonthlyFilters > input:first-child {
+    grid-column:1/-1!important;
+  }
+}
+@media(max-width:520px){
+  .appShell.isTool:has(.rundeckPanel) .sphereMonthlyReview.is-v2
+  .sphereMonthlyEvidencePage > .sphereMonthlyPanel > .sphereMonthlyTableHead > .sphereMonthlyFilters {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
