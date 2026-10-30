@@ -404,7 +404,24 @@ export default function RundeckMonthlyReview() {
     const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
     try{
-      const blob=await (pdfMode==='management' ? buildManagementMonthlyPdf({month,data}) : buildMonthlyPdf({month,data}))
+      // Reports must never depend on Detailed Evidence paging, search or filters.
+      // Fetch a canonical month-scoped population before building either PDF.
+      const params = new URLSearchParams({
+        month, type:'ALL', health:'ALL', pressure:'ALL', flag:'ALL',
+        q:'', limit:String(PAGE_SIZE), offset:'0',
+      })
+      const response = await fetch(API+'/evaluation/workloads/monthly?'+params.toString(), {cache:'no-store'})
+      if(!response.ok) throw Error('Monthly PDF evidence unavailable (HTTP '+response.status+')')
+      const reportData = await response.json()
+      if(generation!==pdfGenerationRef.current) return
+      if(reportData.month!==month || reportData.period!=='month' ||
+          reportData.page?.scope!=='FULL_EVALUATED_POPULATION' ||
+          !reportData.monthly_pressure || !reportData.monthly_errors || !reportData.quality) {
+        throw Error('PDF evidence does not match the selected reporting month')
+      }
+      const blob=await (pdfMode==='management'
+        ? buildManagementMonthlyPdf({month,data:reportData})
+        : buildMonthlyPdf({month,data:reportData}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
@@ -586,18 +603,23 @@ export default function RundeckMonthlyReview() {
               <option value="management">Management · 1 page</option>
               <option value="technical">Technical · full detail</option>
             </select>
-          <button type="button" className="is-primary" disabled={pdfBusy} onClick={previewPdf}>
+          <button type="button" className="is-primary" disabled={pdfBusy || !data} onClick={previewPdf}>
             {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
           </button>
+          {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
+            download={'SPHERE-Monthly-'+(pdfMode==='management'?'Management-Summary-':'Technical-Review-')+month+'.pdf'}>
+            Download PDF
+          </a>}
           </div>
         </div>
         {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
         {pdfUrl&&<div className="sphereMonthlyPdfFrame">
-          <div className="sphereMonthlyPager">
-            <a href={pdfUrl} download={'SPHERE-Monthly-'+(pdfMode==='management'?'Management-Summary-':'Technical-Review-')+month+'.pdf'}>Download PDF</a>
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Full screen</a>
+          <iframe title={'SPHERE '+(pdfMode==='management'?'management summary':'technical report')+' PDF preview'}
+            src={pdfUrl+'#toolbar=0&navpanes=0&view=FitH'}/>
+          <div className="sphereMonthlyPdfActions">
+            <span>Preview may show browser controls. Full report is available above.</span>
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Open full screen</a>
           </div>
-          <iframe title={'SPHERE '+(pdfMode==='management'?'management summary':'technical report')+' PDF preview'} src={pdfUrl}/>
         </div>}
       </div>}
     </>}
