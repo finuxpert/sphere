@@ -25,7 +25,8 @@ class CalendarMonthReviewTests(unittest.TestCase):
             yield object()
 
         class Engine:
-            connect = staticmethod(connect)
+            pass
+        Engine.connect = staticmethod(connect)
 
         preview_pressure = {
             "daily_hosts": [{"day": "2026-09-15", "host": "APP1", "peak_cpu_pct": 84.0}],
