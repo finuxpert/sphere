@@ -541,3 +541,20 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
     grid-template-columns:minmax(0,1fr);
   }
 }
+
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel.is-storage .sphereMonthlyStorageNote{
+  color:var(--mr-muted,#a4b2bd);
+  font-size:10px;
+  font-weight:500;
+  text-align:right;
+  line-height:1.3;
+}
+@media(max-width:800px){
+  .sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel.is-storage .sphereMonthlyManagerHeading{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel.is-storage .sphereMonthlyStorageNote{
+    text-align:left;
+  }
+}
