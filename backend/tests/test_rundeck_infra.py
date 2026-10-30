@@ -7,6 +7,7 @@ from unittest.mock import patch
 from backend.rundeck_infra_parser import parse
 from backend.rundeck_infra_poller import _group_output_entries, _stored_execution_hosts
 from backend.rundeck_infra_store import identifier
+from backend.rundeck_infra_api import monthly_storage_evidence, _storage_used_bytes
 
 POSITIONAL_SAMPLE=b"""## SPHERE-INFRA-V1-BEGIN
 snapshot_ts=2026-09-23T18:15:37+07:00
@@ -163,3 +164,37 @@ class InfraManifestFastPathTests(unittest.TestCase):
                     _stored_execution_hosts("3456", ["AOPH1QAPPDC"])
 
 
+
+
+class MonthlyStorageHistoryTests(unittest.TestCase):
+    def test_actual_df_used_kb_is_not_total_minus_free(self):
+        self.assertEqual(_storage_used_bytes({"details":{"_positional":[
+            "filesystem","/dev/root","xfs","1000","620","62","/"]}}),620*1024)
+
+    def test_missing_month_samples_never_report_zero(self):
+        class Result:
+            def mappings(self): return self
+            def all(self): return []
+        class Conn:
+            def execute(self, sql, params): return Result()
+        res=monthly_storage_evidence("2026-09",Conn(),{
+            "File System OS":{"host":"AOPH1PAPPDC","mount":"/"}})
+        self.assertTrue(all(row["status"]=="NOT_COLLECTED" for row in res["items"]))
+        self.assertTrue(all(row["used_bytes"] is None for row in res["items"]))
+
+    def test_latest_historical_sample_selected_for_mapped_host_mount(self):
+        from datetime import datetime, timezone
+        def record(day,used):
+            return {"host":"AOPH1PAPPDC","mount_point":"/",
+              "collected_at":datetime(2026,9,day,tzinfo=timezone.utc),
+              "details":{"_positional":["filesystem","/dev/root","xfs","1000",str(used),"60","/"]},
+              "total_bytes":1000*1024,"avail_bytes":(1000-used)*1024,"used_pct":60}
+        class Result:
+            def mappings(self): return self
+            def all(self): return [record(26,600),record(22,500)]
+        class Conn:
+            def execute(self, sql, params): return Result()
+        res=monthly_storage_evidence("2026-09",Conn(),{
+            "File System OS":{"host":"AOPH1PAPPDC","mount":"/"}})
+        self.assertEqual(res["items"][0]["used_bytes"],600*1024)
+        self.assertEqual(res["items"][0]["status"],"COLLECTED")
