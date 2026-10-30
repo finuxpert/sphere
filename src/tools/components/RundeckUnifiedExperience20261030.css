@@ -29,3 +29,80 @@ html[data-theme="light"] .rundeckTrendSharedControls select {color-scheme:light}
  .sphereMonthlyReview.is-single-page .sphereMonthlyOnePageActions {justify-content:flex-start}
  .rundeckTrendControlRange .rundeckTrendControlInline {width:100%}
 }
+
+
+/* Compact System Health modal: three provenanced summaries + APP1-5 only. */
+.sphereSystemHealthCompact{
+  width:100%;
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:10px;
+}
+.sphereSystemHealthCompactGrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;
+  gap:8px;
+  min-width:0;
+}
+.sphereSystemHealthCompactGrid .sphereHealthInlineBlock{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  height:100%;
+  padding:11px;
+  border:1px solid var(--mr-border,#33424b);
+  border-radius:5px;
+  overflow-wrap:anywhere;
+}
+.sphereSystemHealthAppOverview{
+  min-width:0;
+  border:1px solid var(--mr-border,#33424b);
+  border-radius:5px;
+  padding:9px 11px;
+}
+.sphereSystemHealthAppHeading{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:7px;
+}
+.sphereSystemHealthAppHeading h3{
+  font-size:13px;
+  margin:0;
+}
+.sphereSystemHealthAppHeading button{
+  padding:5px 8px;
+  font-size:11px;
+  color:inherit;
+  background:transparent;
+  border:1px solid var(--mr-border,#536270);
+  border-radius:4px;
+}
+.sphereSystemHealthAppTable{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+.sphereSystemHealthAppTable th,.sphereSystemHealthAppTable td{
+  text-align:left;
+  padding:7px 9px;
+  border-bottom:1px solid var(--mr-border,#344451);
+}
+.sphereSystemHealthAppTable thead{
+  background:var(--mr-surface-2,transparent);
+}
+.sphereSystemHealthAppOverview > small{
+  display:block;
+  margin-top:8px;
+  font-size:10px;
+  opacity:.85;
+}
+@media(max-width:900px){
+  .sphereSystemHealthCompactGrid{grid-template-columns:1fr}
+  .sphereSystemHealthAppOverview{overflow-x:auto}
+  .sphereSystemHealthAppTable{min-width:600px}
+}
