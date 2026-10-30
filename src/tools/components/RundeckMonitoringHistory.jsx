@@ -271,7 +271,7 @@ export default function RundeckMonitoringHistory(props) {
       </div>
     </div>
     <RundeckSm37LivePortal selectedJob={selectedJob} refreshToken={refreshToken} />
-          <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
+          <RundeckSystemHealth sourceQuality={props.sourceQuality} sourceLoading={props.sourceLoading} sourceCollector={props.sourceCollector} sourceHosts={props.sourceHosts} sourceAvailability={props.sourceAvailability} />
 
           {activeOverlay?.type === 'monthly-review' && <RundeckWorkspaceDrawer
             title="Monthly Review"
