@@ -142,7 +142,9 @@ test('V1.43 sidebar is collapsible, keyboard labeled and retains all SAP workspa
   assert.match(css,/grid-template-columns:64px minmax\(0,1fr\)/)
   assert.match(css,/spherePerformanceSidebar\.is-expanded/)
   assert.match(css,/@media\(max-width:899px\)/)
-  assert.doesNotMatch(css,/\.rundeckAppEvalLane\s*\{[\s\S]*display:\s*none/)
+  // Limit the assertion to the lane declaration; a greedy cross-rule match
+  // incorrectly fails when an unrelated collapsed-sidebar rule hides its labels.
+  assert.doesNotMatch(css,/\.rundeckAppEvalLane\s*\{[^}]*\bdisplay:\s*none\b/)
 })
 
 test('three main sections preserve older monitoring deep links and collection utilities', () => {
@@ -225,4 +227,12 @@ test('DEV navigation and collector history stay available without duplicate top 
  assert.match(view,/activeOverlay\?\.type === 'collection-history'/)
  assert.match(view,/collectionHistory\.slice\(0,80\)/)
  assert.match(d,/\['history','History'\]/)
+})
+
+test('compact Jobs & Programs validates one API page and never launches the full-page fan-out', () => {
+  const health = read('RundeckWorkloadHealth.jsx')
+  assert.match(health, /if \(compactSummary\) \{[\s\S]*?validatedWorkloadDots\(first, \[\], 0/)
+  assert.match(health, /readVerifiedPopulation\(controller\.signal, compactSummary\)/)
+  assert.match(health, /setError\(timedOut \? 'Evaluation request timed out/)
+  assert.match(health, /const preview = data\?\.preview \|\| null/)
 })
