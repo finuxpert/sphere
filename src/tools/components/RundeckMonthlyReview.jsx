@@ -458,7 +458,7 @@ export default function RundeckMonthlyReview() {
         <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
       </div>
       {tab==='summary'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
-        <div className="sphereMonthlyVisualGrid">
+        <div className="sphereMonthlyVisualGrid sphereMonthlyMainColumn col-12 col-xl-7">
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
               <div><h4>Daily Server Performance</h4>
@@ -488,13 +488,7 @@ export default function RundeckMonthlyReview() {
               <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} warning checks across {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days</span>
             </div>
           </section>
-          <WorkloadDistribution summary={summary} onSelect={value=>{
-            setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
-            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setTab('evidence')
-          }}/>
-        </div>
-        <div className="sphereMonthlySummaryBottom">
-        <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
+                  <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
           <h4>Server Performance by APP</h4>
           <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr>
             <th>APP</th><th>CPU Peak</th><th>RAM Peak</th><th>CPU / RAM Warning Checks</th><th>Critical WP Checks</th>
@@ -507,7 +501,15 @@ export default function RundeckMonthlyReview() {
           </tbody></table></div>
           <small>Warning and Critical WP counts are saved APP host checks, not confirmed job failures.</small>
         </div>
-        <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
+        
+        </div>
+        <div className="sphereMonthlySideColumn col-12 col-xl-5">
+          <WorkloadDistribution summary={summary} onSelect={value=>{
+            setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
+            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setTab('evidence')
+          }}/>
+
+          <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
           <div className="sphereMonthlyTableHead"><div><h4>Programs to Review</h4><small>{fmt(tuningCandidates.length,0)} saved evaluation candidates · not confirmed failed jobs</small></div>
             <button type="button" onClick={()=>setTab('evidence')}>View All</button></div>
           <div className="sphereMonthlyPriorityList">
