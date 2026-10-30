@@ -82,13 +82,16 @@ def _cache_put(key: tuple[str, str, str], payload: dict) -> None:
         _EVALUATION_CACHE.pop(oldest_key, None)
 
 
-def _runtime_payload(payload: dict, *, cache: str, duration_ms: float) -> dict:
+def _runtime_payload(payload: dict, *, cache: str, duration_ms: float, sql_timings_ms: dict | None = None) -> dict:
+    timings = sql_timings_ms or {}
     return {
         **payload,
         "runtime": {
             "cache": cache,
             "duration_ms": round(max(0.0, duration_ms), 1),
             "cache_entries": len(_EVALUATION_CACHE),
+            "sql_ms": round(sum(timings.values()), 1),
+            "sql_timings_ms": timings,
         },
     }
 
@@ -821,10 +824,15 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
 
 def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None, pressure: str = "ALL", flag: str = "ALL") -> dict:
     """Serialize cold full-population computations; cached pages use the same source anchor."""
+    queued_at = time.perf_counter()
     with _EVALUATION_COMPUTE_LOCK:
+        wait_ms = round((time.perf_counter() - queued_at) * 1000.0, 1)
         if month is None:
-            return _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
-        return _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure, flag)
+            result = _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
+        else:
+            result = _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure, flag)
+        # Expose lock queue time separately from SQL, without changing source health.
+        return {**result, "runtime": {**result.get("runtime", {}), "lock_wait_ms": wait_ms}}
 
 
 def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None, pressure: str = "ALL", flag: str = "ALL") -> dict:
@@ -856,19 +864,28 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     if engine is None:
         raise RuntimeError("Database history is not enabled")
 
+    sql_timings_ms: dict[str, float] = {}
+
+    def measure_sql(name: str, operation):
+        began = time.perf_counter()
+        try:
+            return operation()
+        finally:
+            sql_timings_ms[name] = round((time.perf_counter() - began) * 1000.0, 1)
+
     with engine.connect() as conn:
         if period_key == "month":
             start, end, previous_start = calendar_month_bounds(str(month))
             days = round((end - start).total_seconds() / 86400, 2)
             # Monthly reports are separate from rolling-period cached populations.
             # The committed collection anchor invalidates data when a new READY run arrives.
-            anchor_key = _calendar_month_collection_anchor(conn, start, end)
+            anchor_key = measure_sql("collection_anchor", lambda: _calendar_month_collection_anchor(conn, start, end))
             cache_key = (f"month:{month}", type_key, anchor_key)
         else:
             # Preserve the existing 1D/7D/30D cache contract exactly:
             # key off the committed evaluation end, independent of page limit.
             days = PERIOD_DAYS[period_key]
-            end = _anchor_time(conn) + timedelta(microseconds=1)
+            end = measure_sql("collection_anchor", lambda: _anchor_time(conn)) + timedelta(microseconds=1)
             start = end - timedelta(days=days)
             previous_start = start - timedelta(days=days)
             anchor_key = end.isoformat()
@@ -878,21 +895,21 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             page = _evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key,
                                     pressure=pressure if period_key == "month" else "ALL",
                                     flag=flag if period_key == "month" else "ALL", consumer_type=requested_type_key)
-            return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0)
-        current_quality = _collection_quality(conn, start, end)
-        previous_quality = _collection_quality(conn, previous_start, start)
-        current_rows = _aggregate_window(conn, start, end, type_key)
-        previous_rows = _aggregate_window(conn, previous_start, start, type_key)
-        historical_rows = _historical_baseline(conn, start, type_key)
-        shift_rows = _recent_shift_window(conn, end, type_key)
-        sampling = _sampling_quality(conn, start, end)
-        monthly_daily = _monthly_daily_host_trend(conn, start, end) if period_key == "month" else []
-        monthly_pressure = (monthly_pressure_observations(
+            return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0, sql_timings_ms=sql_timings_ms)
+        current_quality = measure_sql("current_quality", lambda: _collection_quality(conn, start, end))
+        previous_quality = measure_sql("previous_quality", lambda: _collection_quality(conn, previous_start, start))
+        current_rows = measure_sql("current_aggregate", lambda: _aggregate_window(conn, start, end, type_key))
+        previous_rows = measure_sql("previous_aggregate", lambda: _aggregate_window(conn, previous_start, start, type_key))
+        historical_rows = measure_sql("historical_baseline", lambda: _historical_baseline(conn, start, type_key))
+        shift_rows = measure_sql("recent_shift", lambda: _recent_shift_window(conn, end, type_key))
+        sampling = measure_sql("sampling_quality", lambda: _sampling_quality(conn, start, end))
+        monthly_daily = measure_sql("monthly_daily", lambda: _monthly_daily_host_trend(conn, start, end)) if period_key == "month" else []
+        monthly_pressure = (measure_sql("monthly_pressure", lambda: monthly_pressure_observations(
             conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
-        ) if period_key == "month" else None)
-        monthly_errors = (monthly_error_evidence(
+        )) if period_key == "month" else None)
+        monthly_errors = (measure_sql("monthly_errors", lambda: monthly_error_evidence(
             conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
-        ) if period_key == "month" else None)
+        )) if period_key == "month" else None)
 
     current_checks = int(current_quality["complete_checks"])
     previous_checks = int(previous_quality["complete_checks"])
@@ -1086,4 +1103,5 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     return _runtime_payload(_evaluation_page(result, limit=limit_key, offset=offset_key, query=query_key,
                                              health=health_key, pressure=pressure if period_key == "month" else "ALL",
                                              flag=flag if period_key == "month" else "ALL", consumer_type=requested_type_key),
-                            cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0)
+                            cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0,
+                            sql_timings_ms=sql_timings_ms)
