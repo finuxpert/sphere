@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 const read = path => readFileSync(path, 'utf8')
 const pkg = JSON.parse(read('package.json'))
 const lock = JSON.parse(read('package-lock.json'))
@@ -14,6 +14,9 @@ test('Bootstrap stable lock and React-owned runtime', () => {
  assert.match(css, /bootstrap\.min\.css" layer\(sphere-bootstrap\)/)
  assert.ok(wrapper.indexOf("import './RundeckDevFinalAudit20261030.css'") < wrapper.indexOf("import './RundeckBootstrapFoundation.css'"))
  assert.doesNotMatch(wrapper,/bootstrap\/dist\/js/)
+ assert.doesNotMatch(wrapper, /vendor\/bootstrap-grid\.min\.css/, 'Duplicate vendored grid must not load')
+ assert.equal(existsSync('src/vendor/bootstrap-grid.min.css'), false, 'Redundant grid CSS must not be tracked')
+ assert.equal(css.split('bootstrap/dist/css/bootstrap.min.css').length - 1, 1, 'Use full Bootstrap CSS exactly once')
 })
 test('Bootstrap theme matches dark and light SPHERE', () => {
  assert.match(css,/html\[data-theme="dark"\]/)
