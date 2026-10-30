@@ -79,7 +79,7 @@ node --test scripts/tests/rundeck-history-six-months.test.mjs
 This release changes backend/API behavior. **Do not** use a frontend-only
 shortcut in place of the guarded backend-aware DEV release path. After
 reviewing the backend diff and confirming no DB migration is required,
-follow `docs/rundeck-development.md`: guarded DEV QA, deployment and
+follow `docs/operations/rundeck-development.md`: guarded DEV QA, deployment and
 rollback verification. PROD remains untouched.
 
 Suggested smoke tests:

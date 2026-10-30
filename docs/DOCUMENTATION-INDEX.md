@@ -8,21 +8,21 @@
 |---|---|
 | [Project README](../README.md) | Architecture, environment boundaries and quick start |
 | [Current Features & Flow](CURRENT-FLOW-AND-FEATURES.md) | Current operator workflow and evidence semantics |
-| [Rundeck Development](rundeck-development.md) | **Primary DEV full-stack release procedure** and migration guard |
+| [Rundeck Development](operations/rundeck-development.md) | **Primary DEV full-stack release procedure** and migration guard |
 | [Operations & Rollback](../ops/rundeck/OPERATIONS.md) | Production safety, credentials, recovery and rollback |
-| [Enterprise UI Standard](SPHERE-ENTERPRISE-UI-STANDARD.md) | Layout, terminology, responsive rules and data integrity |
-| [Visual QA](VISUAL-QA.md) | Browser, viewport, interactions and accessibility acceptance |
+| [Enterprise UI Standard](standards/SPHERE-ENTERPRISE-UI-STANDARD.md) | Layout, terminology, responsive rules and data integrity |
+| [Visual QA](standards/VISUAL-QA.md) | Browser, viewport, interactions and accessibility acceptance |
 
 ## Technical references
 
 | Reference | Purpose |
 |---|---|
-| [Rundeck Integration](RUNDECK_INTEGRATION_RUNBOOK.md) | Collection/readiness, REST API access and role boundaries |
-| [SAP Job Intelligence](BASIS-JOB-INTELLIGENCE.md) | CPU, memory, WP trace and SM37 interpretation |
-| [Six-month History](rundeck-historical-analysis-six-months.md) | Time windows, aggregation and retention |
-| [Monthly Review WP Errors](monthly-review-wp-error-dev-validation.md) | Source-backed review and historical trace evidence |
-| [Legacy Telemetry Compatibility](LEGACY-TELEMETRY-COMPATIBILITY.md) | Legacy ingest/data contract |
-| [Development Workflow](ai-coding-workflow-style.md) | Change review and validation rules |
+| [Rundeck Integration](operations/RUNDECK_INTEGRATION_RUNBOOK.md) | Collection/readiness, REST API access and role boundaries |
+| [SAP Job Intelligence](technical/BASIS-JOB-INTELLIGENCE.md) | CPU, memory, WP trace and SM37 interpretation |
+| [Six-month History](technical/rundeck-historical-analysis-six-months.md) | Time windows, aggregation and retention |
+| [Monthly Review WP Errors](technical/monthly-review-wp-error-dev-validation.md) | Source-backed review and historical trace evidence |
+| [Legacy Telemetry Compatibility](technical/LEGACY-TELEMETRY-COMPATIBILITY.md) | Legacy ingest/data contract |
+| [Development Workflow](standards/ai-coding-workflow-style.md) | Change review and validation rules |
 | [Observability](../ops/observability/README.md) | Collector metrics and alert rules |
 | [Offline DEV Deployment](../ops/rundeck/OFFLINE-DEPLOY-DEV.md) | Approved offline contingency, separate from the normal release |
 
@@ -30,12 +30,12 @@
 
 Retained for audit and recovery provenance. Do **not** run dated commands, assume historical QA is a current PASS, or treat old UI specifications as the present layout.
 
-- [DEV Monitoring one-screen implementation, 30 October](DEV_MONITORING_ONE_SCREEN_20261030.md) — implementation record; current CSS is authoritative.
-- [Bootstrap foundation implementation, 30 October](SPHERE-BOOTSTRAP-DEV-20261030.md) — staged adoption record; Bootstrap is not the entire styling system.
-- [DEV full-stack recovery, 15 October](SPHERE_DEV_FULLSTACK_RELEASE_RECOVERY_20261015.md) — incident and recovery context.
-- [25-point DEV finishing, 20 October](rundeck-finishing-25-dev-20261020.md) — change/evidence manifest.
-- [Frontend-only UI promotion](SPHERE_PROMOTE_DEV_UI_TO_PROD.md) — specialized, independently approved procedure; **not** the default deployment path.
-- [v1.35.0 UI promotion](SPHERE_V135_PROD_UI_PROMOTION.md) — pinned historical PROD promotion.
+- [DEV Monitoring one-screen implementation, 30 October](archive/DEV_MONITORING_ONE_SCREEN_20261030.md) — implementation record; current CSS is authoritative.
+- [Bootstrap foundation implementation, 30 October](archive/SPHERE-BOOTSTRAP-DEV-20261030.md) — staged adoption record; Bootstrap is not the entire styling system.
+- [DEV full-stack recovery, 15 October](archive/SPHERE_DEV_FULLSTACK_RELEASE_RECOVERY_20261015.md) — incident and recovery context.
+- [25-point DEV finishing, 20 October](archive/rundeck-finishing-25-dev-20261020.md) — change/evidence manifest.
+- [Frontend-only UI promotion](operations/SPHERE_PROMOTE_DEV_UI_TO_PROD.md) — specialized, independently approved procedure; **not** the default deployment path.
+- [v1.35.0 UI promotion](archive/SPHERE_V135_PROD_UI_PROMOTION.md) — pinned historical PROD promotion.
 - [DEV v1.34.x release history](releases/README.md) — retained release records.
 - [Presentations](presentation/) — competition/deck evidence, not production guidance.
 

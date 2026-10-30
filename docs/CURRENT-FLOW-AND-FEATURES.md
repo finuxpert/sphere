@@ -85,4 +85,4 @@ Monthly Review uses saved SPHERE/Rundeck evidence for manual Basis evaluation, J
 | Historical trends | `backend/rundeck_trends.py`, `backend/rundeck_network_trends.py` |
 | Database | `backend/db/` |
 
-See [Enterprise UI Standard](SPHERE-ENTERPRISE-UI-STANDARD.md) and [Visual QA](VISUAL-QA.md) before editing layout. See [Rundeck Development](rundeck-development.md) for release/rollback. Do not claim deployment or performance gains based on source or CI alone.
+See [Enterprise UI Standard](standards/SPHERE-ENTERPRISE-UI-STANDARD.md) and [Visual QA](standards/VISUAL-QA.md) before editing layout. See [Rundeck Development](operations/rundeck-development.md) for release/rollback. Do not claim deployment or performance gains based on source or CI alone.

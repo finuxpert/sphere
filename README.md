@@ -88,10 +88,10 @@ cd /root/rundeck-sphere-dev
 SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/release-dev-fast.sh
 ```
 
-The wrapper checks clean branch, fast-forward sync, QA/build, backend tests, migration guard, guarded DEV deployment and health. **Never use migration skip to bypass changed migration scripts.** The deployment result must include `FINAL=PASS`; then verify the active DEV web and API release SHA, public route and visual layout. PROD remains a separate approval. See [Rundeck development](docs/rundeck-development.md).
+The wrapper checks clean branch, fast-forward sync, QA/build, backend tests, migration guard, guarded DEV deployment and health. **Never use migration skip to bypass changed migration scripts.** The deployment result must include `FINAL=PASS`; then verify the active DEV web and API release SHA, public route and visual layout. PROD remains a separate approval. See [Rundeck development](docs/operations/rundeck-development.md).
 
 ## Documentation — source of truth
 
-Start with the [Documentation Index](docs/DOCUMENTATION-INDEX.md). The maintained references are [Current Features & Flow](docs/CURRENT-FLOW-AND-FEATURES.md), [Rundeck DEV/PROD Runbook](docs/rundeck-development.md), [UI and Visual QA](docs/SPHERE-ENTERPRISE-UI-STANDARD.md), and [Operational Safety & Rollback](ops/rundeck/OPERATIONS.md).
+Start with the [Documentation Index](docs/DOCUMENTATION-INDEX.md). The maintained references are [Current Features & Flow](docs/CURRENT-FLOW-AND-FEATURES.md), [Rundeck DEV/PROD Runbook](docs/operations/rundeck-development.md), [UI and Visual QA](docs/standards/SPHERE-ENTERPRISE-UI-STANDARD.md), and [Operational Safety & Rollback](ops/rundeck/OPERATIONS.md).
 
 Dated release notes and recovery records are historical evidence, not active deployment instructions. GitHub CI PASS is not proof that a release is running on the host.

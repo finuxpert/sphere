@@ -57,7 +57,7 @@ Record `window.innerWidth/innerHeight`, `document.documentElement.scrollHeight/c
 
 1. Run `npm run qa` and repository/Trend/Bootstrap tests.
 2. Run `npm run qa:visual`, browser boot/geometry QA and any applicable Python unit tests; record actual outcomes.
-3. Use guarded DEV release (see [rundeck-development.md](rundeck-development.md)), not a build-only shortcut.
+3. Use guarded DEV release (see [rundeck-development.md](../operations/rundeck-development.md)), not a build-only shortcut.
 4. Validate public `/dev/` SHA and API health, compare screenshots at the matrix above, and record scroll dimensions.
 5. If QA or data trust regresses, rollback DEV. Do not promote PROD based solely on GitHub CI.
 

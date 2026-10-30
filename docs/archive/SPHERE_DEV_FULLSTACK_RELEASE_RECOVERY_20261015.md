@@ -1,6 +1,6 @@
 # DEV full-stack release recovery — 15 October 2026
 
-> **Historical incident record.** Do not use the recovery command below as the current DEV release procedure. Follow [Rundeck Development](rundeck-development.md) for the active guarded release and migration decision.
+> **Historical incident record.** Do not use the recovery command below as the current DEV release procedure. Follow [Rundeck Development](../operations/rundeck-development.md) for the active guarded release and migration decision.
 
 ## Evidence and root cause
 

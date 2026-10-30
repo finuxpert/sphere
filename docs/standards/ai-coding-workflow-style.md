@@ -36,12 +36,12 @@ For reviewed **no-migration** DEV releases, use the single guarded `ops/rundeck/
 
 ## Documentation contract
 
-- [Documentation Index](DOCUMENTATION-INDEX.md) is the canonical map.
-- [CURRENT-FLOW-AND-FEATURES.md](CURRENT-FLOW-AND-FEATURES.md) describes current product behavior.
+- [Documentation Index](../DOCUMENTATION-INDEX.md) is the canonical map.
+- [CURRENT-FLOW-AND-FEATURES.md](../CURRENT-FLOW-AND-FEATURES.md) describes current product behavior.
 - [SPHERE-ENTERPRISE-UI-STANDARD.md](SPHERE-ENTERPRISE-UI-STANDARD.md) describes intended UI structure, accessibility and Bootstrap scope.
 - [VISUAL-QA.md](VISUAL-QA.md) is the browser acceptance checklist.
-- [rundeck-development.md](rundeck-development.md) is the guarded release runbook.
-- [../ops/rundeck/OPERATIONS.md](../ops/rundeck/OPERATIONS.md) owns production operational/rollback safeguards.
+- [rundeck-development.md](../operations/rundeck-development.md) is the guarded release runbook.
+- [../ops/rundeck/OPERATIONS.md](../../ops/rundeck/OPERATIONS.md) owns production operational/rollback safeguards.
 
 Versioned design experiments and build-only shortcut notes are **not** active runbooks. When modifying source, update current docs without claiming GitHub CI equals live deployment.
 

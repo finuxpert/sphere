@@ -62,7 +62,7 @@ readlink -f /var/www/sphere-dev/current
 curl --noproxy '*' -fsS --max-time 10 http://127.0.0.1:8091/health >/dev/null && echo DEV_API_HEALTH=PASS
 ```
 
-Validate public `/dev/`, version/build SHA, APP identity and source freshness, four charts, peak timestamps, dropdowns, 1536 × 864 overview viewport, other desktop/mobile screenshots, Jobs & Programs, and modal navigation. The screenshot no-scroll target is not proven by CI or source review. See [Visual QA](VISUAL-QA.md).
+Validate public `/dev/`, version/build SHA, APP identity and source freshness, four charts, peak timestamps, dropdowns, 1536 × 864 overview viewport, other desktop/mobile screenshots, Jobs & Programs, and modal navigation. The screenshot no-scroll target is not proven by CI or source review. See [Visual QA](../standards/VISUAL-QA.md).
 
 ## Current UI contract
 
@@ -73,7 +73,7 @@ Validate public `/dev/`, version/build SHA, APP identity and source freshness, f
 - Jobs & Programs has Current, Review and Search; historical investigation uses saved data, drilldowns and source-aware periods.
 - Data Collection separates Rundeck/Automatic, Manual Upload and collection history; Reports includes Monthly Review/PDF.
 
-Detailed feature contract: [CURRENT-FLOW-AND-FEATURES.md](CURRENT-FLOW-AND-FEATURES.md).
+Detailed feature contract: [CURRENT-FLOW-AND-FEATURES.md](../CURRENT-FLOW-AND-FEATURES.md).
 
 ## Source and SAP evidence integrity
 
@@ -87,7 +87,7 @@ Detailed feature contract: [CURRENT-FLOW-AND-FEATURES.md](CURRENT-FLOW-AND-FEATU
 
 ## Monitoring credential/role boundary
 
-Use least-privilege `sphere_api`/`sphere_reader` credentials for approved read access, with expiry and rotation verified against actual Rundeck configuration. Do not use admin reader tokens or put credentials in Git, logs or chat. DEV runner credentials require independent permission/expiry review. Detailed token ownership and rotation steps: [OPERATIONS.md](../ops/rundeck/OPERATIONS.md#sphere-monitoring-token-ownership-and-30-day-rotation). Maintainer authorization is not granted by documentation.
+Use least-privilege `sphere_api`/`sphere_reader` credentials for approved read access, with expiry and rotation verified against actual Rundeck configuration. Do not use admin reader tokens or put credentials in Git, logs or chat. DEV runner credentials require independent permission/expiry review. Detailed token ownership and rotation steps: [OPERATIONS.md](../../ops/rundeck/OPERATIONS.md#sphere-monitoring-token-ownership-and-30-day-rotation). Maintainer authorization is not granted by documentation.
 
 ## DEV performance baseline (read-only)
 
@@ -101,4 +101,4 @@ The output includes API request latency P50/P95/P99, HTTP failures and response 
 
 ## Production promotion
 
-Do **not** merge DEV inside the PROD checkout, force-reset PROD, or copy `/dev/` build artifacts directly to root-path PROD. Production branch updates require explicit review/approval, branch-specific build and guarded PROD release. Preserve PROD-only deploy, routing, service and security files. Consult [OPERATIONS.md](../ops/rundeck/OPERATIONS.md) and the specialized frontend-only promotion guidance if that route is explicitly approved. This runbook authorizes **no** PROD change.
+Do **not** merge DEV inside the PROD checkout, force-reset PROD, or copy `/dev/` build artifacts directly to root-path PROD. Production branch updates require explicit review/approval, branch-specific build and guarded PROD release. Preserve PROD-only deploy, routing, service and security files. Consult [OPERATIONS.md](../../ops/rundeck/OPERATIONS.md) and the specialized frontend-only promotion guidance if that route is explicitly approved. This runbook authorizes **no** PROD change.

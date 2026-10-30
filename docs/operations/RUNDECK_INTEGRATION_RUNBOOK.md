@@ -122,6 +122,6 @@ Use Rundeck REST execution/output APIs rather than reading `.rdlog` directly fro
 ## Related documentation
 
 - `docs/CURRENT-FLOW-AND-FEATURES.md`
-- `docs/BASIS-JOB-INTELLIGENCE.md`
-- `docs/rundeck-development.md`
+- `docs/technical/BASIS-JOB-INTELLIGENCE.md`
+- `docs/operations/rundeck-development.md`
 - `ops/rundeck/OPERATIONS.md`

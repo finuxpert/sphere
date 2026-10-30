@@ -1,6 +1,6 @@
 # SPHERE UI promotion: DEV to PROD
 
-> **Specialized procedure — not the default release path.** This page describes operator-approved **frontend-only** promotion. For any backend, collector, or database change, follow the maintained [Rundeck Development](rundeck-development.md) and [Operations](../ops/rundeck/OPERATIONS.md) runbooks. Do not run this command as routine documentation cleanup.
+> **Specialized procedure — not the default release path.** This page describes operator-approved **frontend-only** promotion. For any backend, collector, or database change, follow the maintained [Rundeck Development](rundeck-development.md) and [Operations](../../ops/rundeck/OPERATIONS.md) runbooks. Do not run this command as routine documentation cleanup.
 
 Run `sphere promote dev-to-prod` as root on JAHSVR-SPHERE after reviewing the live DEV UI and modals.
 
