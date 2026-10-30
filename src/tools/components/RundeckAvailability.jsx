@@ -176,11 +176,11 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
     technicalCheckCount > 0 && technicalPassCount === technicalCheckCount &&
     availabilityAge !== null && !stale && !error && !showDataTrust
 
-  const summary = <div className="rundeckAvailabilitySummaryStrip" aria-label="Availability summary">
-    <span title="SAP application service checks reported by Service Availability, not SSH reachability or SAP workload health"><b>SAP APP</b><strong>{apps.length ? `${lastSnapshot ? 'Last check: ' : ''}${appsUp}/${apps.length} UP` : '—'}</strong></span>
-    <span title="HANA system DB service checks, separate from SSH and replication checks"><b>HANA DB</b><strong>{hanaRows.length ? `${lastSnapshot ? 'Last check: ' : ''}${hanaUp}/${hanaRows.length} UP` : '—'}</strong></span>
-    <span title="Web Dispatcher HTTP and HTTPS checks, not an end-to-end Fiori transaction"><b>WEB HTTP</b><strong>{webRows.length ? `${lastSnapshot ? 'Last check: ' : ''}${webUp}/${webRows.length} UP` : '—'}</strong></span>
-    <span title="SSH and HANA replication only. PASS counts reported positive checks; missing or failed checks do not count. SM37 is separate."><b>SSH / REPL</b><strong>{technicalCheckCount ? `${lastSnapshot ? 'Last check: ' : ''}${technicalPassCount}/${technicalCheckCount} PASS` : '—'}</strong></span>
+  const summary = <div className="rundeckAvailabilitySummaryStrip" aria-label="Availability summary" title={lastSnapshot ? 'Last recorded availability snapshot; current service state not verified' : 'Saved availability check'}>
+    <span title="SAP application service checks reported by Service Availability, not SSH reachability or SAP workload health"><b>SAP APP</b><strong>{apps.length ? `${lastSnapshot ? '' : ''}${appsUp}/${apps.length} UP` : '—'}</strong></span>
+    <span title="HANA system DB service checks, separate from SSH and replication checks"><b>HANA DB</b><strong>{hanaRows.length ? `${lastSnapshot ? '' : ''}${hanaUp}/${hanaRows.length} UP` : '—'}</strong></span>
+    <span title="Web Dispatcher HTTP and HTTPS checks, not an end-to-end Fiori transaction"><b>WEB HTTP</b><strong>{webRows.length ? `${lastSnapshot ? '' : ''}${webUp}/${webRows.length} UP` : '—'}</strong></span>
+    <span title="SSH and HANA replication only. PASS counts reported positive checks; missing or failed checks do not count. SM37 is separate."><b>SSH / REPL</b><strong>{technicalCheckCount ? `${lastSnapshot ? '' : ''}${technicalPassCount}/${technicalCheckCount} PASS` : '—'}</strong></span>
   </div>
 
   if (inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="SAP Availability overview">
