@@ -2,9 +2,6 @@ import RundeckSource from './components/RundeckSource.jsx'
 import React from 'react'
 import * as Accordion from '@radix-ui/react-accordion'
 import { expandZipAwareFiles, fileExt } from './evidence-utils.js'
-import { buildLogAnalysis, parseLogText, telemetryCapabilitiesV15 } from './logAnalysisV15.js'
-import { buildAutoPeakSphereV3 } from './logSphereEngineV3.js'
-import { rankResourceConsumersV5 } from './workloadAnalyticsV5.js'
 import { LOG_V14_METRICS } from './components/logChartMetrics.js'
 import { drilldownMeta, sampleConsumerContribution, sortSampleConsumers } from './logSampleDrilldown.js'
 import './LogAutoSphereV2.css'
@@ -344,12 +341,14 @@ export default function ToolLogAutoSphereV5() {
 
   const rankResources = React.useCallback(async (nextAnalysis, nextRca) => {
     setResourceEngine('RANKING')
+    const { rankResourceConsumersV5 } = await import('./workloadAnalyticsV5.js')
     const ranked = await rankResourceConsumersV5(nextAnalysis?.processes || [], nextRca, nextAnalysis)
     const rows = ranked.rows || []
     const verdictRow = rows.find((row) => row.host === ranked.verdict?.topHost && row.workload === ranked.verdict?.topWorkload) || null
     const defaultRow = nextRca?.collections?.length === 1 ? topObservedConsumer(rows) : verdictRow || rows[0] || null
     setResourceRows(rows); setSelectedResource(defaultRow); setResourceEngine(ranked.engine); setVerdict(ranked.verdict || null)
-    setCapabilities(ranked.telemetryCapabilities || telemetryCapabilitiesV15(nextAnalysis))
+    const fallbackCapabilities = ranked.telemetryCapabilities || (await import('./logAnalysisV15.js')).telemetryCapabilitiesV15(nextAnalysis)
+    setCapabilities(fallbackCapabilities)
     setDiagnostics({ parity: ranked.parity || { status: 'NOT_RUN' }, crossHostConfidence: ranked.crossHostConfidence || { grade: '—', skewMinutes: 0 }, landscapeConfidence: ranked.landscapeConfidence, engineReason: ranked.engineReason || '', engineDiagnostics: ranked.engineDiagnostics || {} })
     setMapping({ mappedRows: ranked.mappedRows || 0, unmappedRows: ranked.unmappedRows || 0, counts: ranked.mappingCounts || { EXACT: 0, NEAREST_2M: 0, NEAREST_5M: 0, UNMAPPED: 0 } })
     if (ranked.incidentAnchor?.host) setSelectedHost(ranked.incidentAnchor.host)
@@ -364,10 +363,17 @@ export default function ToolLogAutoSphereV5() {
       const input = []
       for (const file of expanded) input.push({ name: file.name, text: await file.text() })
       let parsedAnalysis
-      try { parsedAnalysis = await workerParse(input) } catch { parsedAnalysis = buildLogAnalysis(input.map((item) => parseLogText(item.text, item.name))) }
+      try {
+        parsedAnalysis = await workerParse(input)
+      } catch {
+        const { buildLogAnalysis, parseLogText } = await import('./logAnalysisV15.js')
+        parsedAnalysis = buildLogAnalysis(input.map((item) => parseLogText(item.text, item.name)))
+      }
+      const { buildAutoPeakSphereV3 } = await import('./logSphereEngineV3.js')
       const nextRca = buildAutoPeakSphereV3(parsedAnalysis)
       const nextAnalysis = nextRca.validatedAnalysis || parsedAnalysis
       if (!nextRca?.collections?.length) throw new Error('No host telemetry collections found in the uploaded logs.')
+      const { telemetryCapabilitiesV15 } = await import('./logAnalysisV15.js')
       const caps = telemetryCapabilitiesV15(nextAnalysis)
       setAnalysis(nextAnalysis); setRca(nextRca); setCapabilities(caps)
       setSelectedCollectionKey(nextRca.resourceLandscapePeak?.key || nextRca.collections[0]?.key || ''); setSelectedHost(nextRca.hostPeaks?.[0]?.host || nextRca.hosts?.[0] || '')
