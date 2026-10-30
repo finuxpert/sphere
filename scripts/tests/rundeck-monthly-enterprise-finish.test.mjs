@@ -110,6 +110,8 @@ test('System Health combines five APPs and matching Infrastructure without redun
   assert.match(infra,/sourceQuality\?\.performanceValid===true/)
   assert.match(infra,/appSampleFreshness/)
   assert.match(infra,/infrastructureTelemetryFreshness/)
+  assert.match(infra,/Promise\.allSettled\(requests\)/)
+  assert.match(infra,/setError\(unavailable\.length/)
   assert.match(infra,/String\(row\.collection_id\|\|''\)===String\(infra\.collection_id\|\|''\)/)
   assert.match(infra,/sourceLoading\?'CHECKING'/)
   assert.match(infra,/sapWorkloadState\(sap\)/)
