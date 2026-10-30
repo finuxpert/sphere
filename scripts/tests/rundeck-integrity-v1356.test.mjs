@@ -189,8 +189,11 @@ test('operator copy shows only evidence and does not auto-fill closing decisions
   assert.ok(!events.includes('rundeckEvidenceInterpretation'))
   assert.ok(!css.includes('.rundeckEvidenceInterpretation'))
   assert.ok(issues.includes("job_monitor ?? 'UNKNOWN'"))
-  assert.ok(issues.includes('Issues ${activeFindings} · No Data ${unknownCount}'))
-  assert.ok(issues.includes('Unknown is missing') || issues.includes('missing or stale'))
+  // The Issues tab is a navigation label; totals live in one canonical summary strip.
+  assert.ok(issues.includes("{ value: 'review', label: 'Issues' }"))
+  assert.ok(issues.includes('<b>Active findings</b><strong>{activeFindings}</strong>'))
+  assert.ok(issues.includes('<b>No Data</b><strong>{unknownCount}</strong>'))
+  assert.ok(issues.includes('not confirmed SAP downtime'))
   assert.ok(review.includes("closing_status: item?.closing_status || ''"))
   assert.ok(review.includes("closing_status: ''"))
   assert.ok(review.includes("finding: item?.finding || ''"))
