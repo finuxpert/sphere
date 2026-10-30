@@ -106,3 +106,19 @@ html[data-theme="light"] .rundeckTrendSharedControls select {color-scheme:light}
   .sphereSystemHealthAppOverview{overflow-x:auto}
   .sphereSystemHealthAppTable{min-width:600px}
 }
+
+.sphereSystemHealthAppOpen{
+  padding:0;
+  font:inherit;
+  font-weight:700;
+  color:var(--mr-accent,#4aa9b8);
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+.sphereSystemHealthAppOpen:focus-visible{
+  outline:2px solid var(--mr-accent,#4aa9b8);
+  outline-offset:2px;
+}
