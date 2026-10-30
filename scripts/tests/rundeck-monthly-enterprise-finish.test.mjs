@@ -63,3 +63,23 @@ test('PDF evidence is unfiltered, month-scoped and not reused from table paginat
   assert.match(ui, /Open full screen/)
   assert.match(css, /68dvh/)
 })
+
+test('Three tab panels expose accessible labels and keyboard navigation', () => {
+  assert.match(ui, /handleTabKeyDown/)
+  assert.match(ui, /event\.key==='ArrowRight'/)
+  assert.match(ui, /event\.key==='ArrowLeft'/)
+  for (const name of ['summary','evidence','report']) {
+    assert.ok(ui.includes('sphere-month-panel-'+name))
+    assert.ok(ui.includes('sphere-month-tab-'+name))
+  }
+  assert.match(ui, /aria-selected=\{tab===value\}/)
+  assert.match(ui, /role="tabpanel"/)
+})
+
+test('Report UI follows system light/dark tokens and does not suppress data', () => {
+  assert.match(css, /html\[data-theme="light"\]/)
+  assert.match(css, /html\[data-theme="dark"\]/)
+  assert.match(css, /color-scheme:light/)
+  assert.match(css, /color-scheme:dark/)
+  assert.match(css, /@media\(max-width:640px\)/)
+})
