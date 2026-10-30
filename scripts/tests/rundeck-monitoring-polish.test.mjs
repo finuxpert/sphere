@@ -8,7 +8,7 @@ test('monitoring uses a source-preserving final stylesheet after Bootstrap found
   const page = read('RundeckMonitoringHistory.jsx')
   assert.match(page, /import '\.\/RundeckBootstrapFoundation\.css'\s*\nimport '\.\/RundeckMonitoringPolish\.css'/)
   assert.match(page, /sphereSystemHealthCompact/)
-  assert.match(page, /Infrastructure History/)
+  assert.match(page, /RundeckInfrastructure healthMatrix/)
   assert.doesNotMatch(page, /Backup monitor:/)
 })
 
