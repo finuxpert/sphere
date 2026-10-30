@@ -894,9 +894,17 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       })
       .catch(failure => {
         if (controller.signal.aborted) return
-        const message = deadline.aborted
-          ? 'Trend API did not respond within 20 seconds. Inspect database query latency.'
-          : failure.message || 'Trend bundle unavailable.'
+        if (!deadline.aborted) {
+          // Retain the proven individual endpoints if a newly deployed bundle
+          // is unavailable; never substitute missing or fake metric values.
+          console.warn('SPHERE trend bundle failed; retrying source-backed individual trends', failure)
+          return Promise.all([
+            loadTrend('cpu', setServerTrend1, setServerLoading1, setServerError1, controller.signal),
+            loadTrend('ram', setServerTrend2, setServerLoading2, setServerError2, controller.signal),
+            loadTrend('wp', setFourthTrend, setFourthLoading, setFourthError, controller.signal),
+          ])
+        }
+        const message = 'Trend API did not respond within 20 seconds. Inspect database query latency.'
         setServerError1(message); setServerError2(message); setFourthError(message)
       })
       .finally(() => {
@@ -905,7 +913,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         }
       })
     return () => controller.abort()
-  }, [databaseEnabled, defaultTrendBundle, refreshToken, range, bucket, customWindow])
+  }, [databaseEnabled, defaultTrendBundle, refreshToken, range, bucket, customWindow, loadTrend])
 
   React.useEffect(() => {
     if (!databaseEnabled || defaultTrendBundle) return undefined
