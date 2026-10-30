@@ -383,12 +383,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   },[month,hostPreviewRetry])
   // A boolean dependency avoids re-requesting expensive evidence just because
   // the user switches between Summary, Detailed Evidence and PDF Report.
-  const fullEvaluationReady = tab!=='summary' || hostPreview?.month===month || Boolean(hostPreviewError)
+  const fullEvaluationReady = tab!=='summary' || hostPreview?.month===month
   React.useEffect(()=>{
-    // Prioritize the host-only request on the initial Summary screen.
-    // Historical workload aggregation starts after server evidence settles.
+    // Prioritize the host-only request on Summary. A failed host preview must
+    // not trigger an even heavier fallback request or leave a permanent spinner.
     if(!fullEvaluationReady) {
-      setLoading(true)
+      setLoading(!hostPreviewError)
       return
     }
     const controller=new AbortController()
@@ -419,7 +419,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         : failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
-  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady])
+  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError])
   const changeMonth=value=>{
     pdfGenerationRef.current += 1
     setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
