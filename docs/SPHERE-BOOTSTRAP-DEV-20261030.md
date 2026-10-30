@@ -20,3 +20,9 @@ After SSH onto JAHSVR-SPHERE, inspect a clean working tree before running `SPHER
 - Source of monitoring / SAP availability evidence, raw observations, retention or collection cadence
 - FastAPI endpoints, data models, migrations, or classification thresholds
 - ECharts time windows and timestamps; SAP status must not be invented when data is stale
+
+## DEV host dependency synchronization
+
+The combined DEV release checks whether the source lockfile changed after fast-forward and whether the Bootstrap 5 CSS asset is installed. It runs `npm ci --prefer-offline --no-audit --no-fund` before QA only when synchronization is necessary. This resolves the difference between a fresh GitHub runner and an existing host checkout. Direct `qa-build-dev.sh` exits with an actionable diagnostic if Bootstrap is absent.
+
+A Vite warning about minified chunks above 800 kB is not a build failure; monitor actual bundle performance separately.

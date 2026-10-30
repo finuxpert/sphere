@@ -106,3 +106,24 @@ test('DEV deployment logs and bounds each public HTTP check without bypassing ro
   assert.match(deploy, /PRODUCTION ROUTING VERIFIED/)
   assert.ok(deploy.includes('test "$(sha256sum "$PROD_WEB/index.html")" = "$PROD_HASH"'))
 })
+
+test('DEV release synchronizes missing Bootstrap and changed lockfile before QA', () => {
+  const release = read('ops/rundeck/release-dev-fast.sh')
+  const qa = read('ops/rundeck/qa-build-dev.sh')
+  const beforeFetch = release.indexOf('PREVIOUS_LOCK_SHA=')
+  const fetchAt = release.indexOf('git fetch --no-tags origin')
+  const dependencyStage = release.indexOf('STAGE=DEPENDENCIES')
+  const installAt = release.indexOf('npm ci --prefer-offline --no-audit --no-fund')
+  const qaStage = release.indexOf('STAGE=QA')
+  const deployStage = release.indexOf('STAGE=DEPLOY')
+  assert.ok(beforeFetch > 0 && beforeFetch < fetchAt)
+  assert.ok(fetchAt < dependencyStage && dependencyStage < installAt && installAt < qaStage && qaStage < deployStage)
+  assert.match(release, /CURRENT_LOCK_SHA=/)
+  assert.match(release, /node_modules\\/bootstrap\\/dist\\/css\\/bootstrap\\.min\\.css/)
+  assert.match(release, /DEPENDENCIES=PASS/)
+  assert.match(qa, /QA BLOCKED: Bootstrap dependency is missing or out of sync/)
+  for (const script of ['ops/rundeck/release-dev-fast.sh', 'ops/rundeck/qa-build-dev.sh']) {
+    const check = spawnSync('bash', ['-n', new URL(script,root).pathname], { encoding: 'utf8' })
+    assert.equal(check.status, 0, check.stderr || `${script} syntax invalid`)
+  }
+})

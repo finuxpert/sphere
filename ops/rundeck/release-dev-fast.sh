@@ -19,11 +19,37 @@ trap 'rc=$?; if ((rc != 0)); then report_failure "$rc"; fi' EXIT
 
 test "$(git branch --show-current)" = "rundeck-sphere-dev"
 test -z "$(git status --porcelain)"
+# Record the installed source dependency contract before syncing the target revision.
+# This catches new dependencies brought by a git fast-forward, even on an old host.
+PREVIOUS_LOCK_SHA="$(sha256sum package-lock.json | awk '{print $1}')"
 git fetch --no-tags origin rundeck-sphere-dev > "$LOG" 2>&1
 git merge --ff-only origin/rundeck-sphere-dev >> "$LOG" 2>&1
 SHA="$(git rev-parse HEAD)"
 test -z "$(git status --porcelain)"
 echo "SOURCE=PASS SHA=${SHA:0:8}"
+
+# QA can fail even after a successful CI build when the host has old node_modules.
+# Synchronize only this DEV checkout; never touch the PROD dependency directory.
+STAGE=DEPENDENCIES
+CURRENT_LOCK_SHA="$(sha256sum package-lock.json | awk '{print $1}')"
+if [[ "$PREVIOUS_LOCK_SHA" != "$CURRENT_LOCK_SHA" ]] ||
+   [[ ! -s node_modules/bootstrap/dist/css/bootstrap.min.css ]] ||
+   ! npm ls bootstrap --depth=0 --silent >/dev/null 2>&1; then
+  echo "DEPENDENCIES=SYNC (lockfile changed or Bootstrap missing)"
+  if ! npm ci --prefer-offline --no-audit --no-fund >> "$LOG" 2>&1; then
+    echo "DEPENDENCIES=FAIL (npm ci; inspect $LOG)"
+    exit 1
+  fi
+  echo "DEPENDENCIES=INSTALLED"
+else
+  echo "DEPENDENCIES=REUSED"
+fi
+if [[ ! -s node_modules/bootstrap/dist/css/bootstrap.min.css ]] ||
+   ! npm ls bootstrap --depth=0 --silent >/dev/null 2>&1; then
+  echo "DEPENDENCIES=FAIL Bootstrap asset missing after synchronization" | tee -a "$LOG"
+  exit 1
+fi
+echo "DEPENDENCIES=PASS"
 
 STAGE=QA
 QA_START=$SECONDS

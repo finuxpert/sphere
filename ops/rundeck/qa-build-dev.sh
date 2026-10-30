@@ -47,6 +47,15 @@ if [[ -z "$(git status --porcelain)" && -s "$STAMP" && -f dist/index.html ]] &&
   fi
 fi
 
+# Fail early with an actionable error rather than opaque Vite CSS resolution failure.
+# The combined guarded release runs npm ci first when a dependency is missing.
+if [[ ! -s node_modules/bootstrap/dist/css/bootstrap.min.css ]] ||
+   ! npm ls bootstrap --depth=0 --silent >/dev/null 2>&1; then
+  echo "QA BLOCKED: Bootstrap dependency is missing or out of sync." >&2
+  echo "Run: npm ci --prefer-offline --no-audit --no-fund" >&2
+  exit 2
+fi
+
 rm -rf dist
 
 echo "=== SPHERE DEV QA ==="
