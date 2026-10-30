@@ -332,6 +332,8 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [appliedSearch,setAppliedSearch]=React.useState('')
   const [page,setPage]=React.useState(0)
   const [data,setData]=React.useState(null)
+  const [hostPreview,setHostPreview]=React.useState(null)
+  const [hostPreviewError,setHostPreviewError]=React.useState('')
   const [loading,setLoading]=React.useState(true)
   const [error,setError]=React.useState('')
   const [chartMode,setChartMode]=React.useState('peak')
@@ -350,6 +352,31 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     const timer=window.setTimeout(()=>setAppliedSearch(search.trim()),300)
     return ()=>window.clearTimeout(timer)
   },[search])
+  // Render retained monthly CPU/RAM/APP observations independently of the slower
+  // full workload classification, correlation and WP error analysis.
+  React.useEffect(()=>{
+    const controller=new AbortController()
+    setHostPreview(null)
+    setHostPreviewError('')
+    fetch(API+'/evaluation/workloads/monthly/hosts?'+new URLSearchParams({month}), {
+      cache:'no-store', signal:controller.signal,
+    })
+      .then(async response=>{
+        if(!response.ok)throw Error('Monthly host summary unavailable (HTTP '+response.status+')')
+        return response.json()
+      })
+      .then(payload=>{
+        if(controller.signal.aborted)return
+        if(payload.month!==month||payload.preview_only!==true||
+            !payload.monthly_pressure||!payload.quality)
+          throw Error('Monthly host summary is not verified')
+        setHostPreview(payload)
+      })
+      .catch(failure=>{
+        if(!controller.signal.aborted)setHostPreviewError(failure.message||'Monthly host summary unavailable')
+      })
+    return ()=>controller.abort()
+  },[month])
   React.useEffect(()=>{
     const controller=new AbortController()
     const params=new URLSearchParams({
@@ -394,10 +421,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     setTab(next)
     event.currentTarget.parentElement?.querySelector('#sphere-month-tab-'+next)?.focus()
   }
+  const preview=hostPreview?.month===month ? hostPreview : null
+  const hostData=data||preview
   const items=data?.items||[]
-  const quality=data?.quality||{}
+  const quality=hostData?.quality||{}
   const summary=data?.summary||{}
-  const evidence=data?.monthly_pressure||{}
+  const evidence=hostData?.monthly_pressure||{}
   const errors=data?.monthly_errors||{}
   const tuningCandidates=data?.monthly_abap_candidates||[]
   const hosts=evidence.hosts||[]
@@ -465,9 +494,10 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           onKeyDown={event=>handleTabKeyDown(event,value)}
           onClick={()=>setTab(value)}>{label}</button>)}
     </div>
-    {loading&&<div className="sphereMonthlyState" role="status">Loading historical CPU, RAM and workload evidence…</div>}
+    {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved monthly performance…'}</div>}
+    {hostPreviewError&&!data&&!preview&&<div className="sphereMonthlyState is-error" role="alert">{hostPreviewError}</div>}
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
-    {data&&!loading&&<>
+    {(data || (preview && tab==='summary'))&&<>
       <div className="sphereMonthlyProvenance" title={'Reporting month: ' + month + ' · Monitoring records ' + fmt(quality.complete_checks,0) + ' / ~' + fmt(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ') · Recorded ' + dateShort(quality.first_complete_at) + ' – ' + dateShort(quality.last_complete_at)}>
         <span><b>{fmt(quality.complete_checks,0)}</b> complete collections · Estimated coverage {pct(quality.coverage_pct)}{quality.expected_checks_is_estimate ? ` (~${fmt(quality.expected_checks,0)} expected)` : ''}</span>
         <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
@@ -518,12 +548,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         
         </div>
         <div className="sphereMonthlySideColumn col-12 col-xl-5">
-          <WorkloadDistribution summary={summary} onSelect={value=>{
+          {data && <WorkloadDistribution summary={summary} onSelect={value=>{
             setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
             setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setTab('evidence')
-          }}/>
+          }}/>} 
 
-          <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
+          {data && <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
           <div className="sphereMonthlyTableHead"><div><h4>Programs to Review</h4><small>{fmt(tuningCandidates.length,0)} saved evaluation candidates · not confirmed failed jobs</small></div>
             <button type="button" onClick={()=>setTab('evidence')}>View All</button></div>
           <div className="sphereMonthlyPriorityList">
@@ -534,10 +564,10 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
             {!tuningCandidates.length&&<p>No review candidates in retained observations.</p>}
           </div>
           <small>ABAP errors: {errors.status==='ERROR_SOURCE_NOT_RETAINED' ? 'Source not retained — check archives' : fmt(errors.error_program_count,0)+' programs with retained error evidence'}</small>
-        </section>
+        </section>}
         </div>
       </div>}
-      {tab==='evidence'&&<div id="sphere-month-panel-evidence" role="tabpanel" aria-labelledby="sphere-month-tab-evidence" className="sphereMonthlyEvidencePage">
+      {data&&tab==='evidence'&&<div id="sphere-month-panel-evidence" role="tabpanel" aria-labelledby="sphere-month-tab-evidence" className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
           <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} of {pages}</small></div>
@@ -609,7 +639,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         <PressureRows label="Jobs & Programs During Resource Pressure" evidence={evidence} metric={pressureMetric} onMetricChange={setPressureMetric}/>
         <MonthlyErrorAnalysis key={month} evidence={errors}/>
       </div></section></div>}
-      {tab==='report'&&<div id="sphere-month-panel-report" role="tabpanel" aria-labelledby="sphere-month-tab-report" className="sphereMonthlyPanel sphereMonthlyReportPreview">
+      {data&&tab==='report'&&<div id="sphere-month-panel-report" role="tabpanel" aria-labelledby="sphere-month-tab-report" className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
           <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
           <div className="sphereMonthlyReportActions">
