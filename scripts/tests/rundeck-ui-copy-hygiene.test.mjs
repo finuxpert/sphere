@@ -12,6 +12,11 @@ test('the monitoring UI avoids duplicate labels while preserving verified states
   const availability = read('RundeckAvailability')
 
   assert.match(navigation, /<strong>Menu<\/strong>/)
+  assert.match(navigation, /APP_DISPLAY_VERSION/)
+  assert.match(navigation, /sphereSidebarRelease/)
+  assert.match(read('RundeckEnterpriseShellV143', 'css'), /\.spherePerformanceSidebar\.is-collapsed \.sphereSidebarRelease/)
+  assert.match(read('RundeckEnterpriseShellV143', 'css'), /margin-top:auto/)
+  assert.match(readFileSync(new URL('../../src/app/version.js', import.meta.url), 'utf8'), /slice\(0, 8\)/)
   assert.doesNotMatch(navigation, /<strong>SPHERE<\/strong>/)
 
   assert.match(issues, /<b>Active findings<\/b><strong>\{activeFindings\}<\/strong>/)
