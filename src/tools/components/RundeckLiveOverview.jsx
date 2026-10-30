@@ -45,7 +45,6 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
   const [infra, setInfra] = React.useState({ host: '', fs: [], network: [], storage: [] })
   const [clockNow, setClockNow] = React.useState(() => Date.now())
   const [refreshCycle, setRefreshCycle] = React.useState(0)
-  const [jobs, setJobs] = React.useState(null)
   const [error, setError] = React.useState('')
 
   React.useEffect(() => {
@@ -82,10 +81,8 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
       loadJson(API + '/infra/filesystems?host=' + host, controller.signal),
       loadJson(API + '/infra/network?host=' + host, controller.signal),
       loadJson(API + '/infra/storage?host=' + host, controller.signal),
-      loadJson(API + '/jobs/monitor?days=1&limit=50', controller.signal).catch(() => null),
-    ]).then(([fs, network, storage, jobData]) => {
+    ]).then(([fs, network, storage]) => {
       setInfra({ host: selectedHost, fs: fs.items || [], network: network.items || [], storage: storage.items || [] })
-      setJobs(jobData)
       setError('')
     }).catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message) })
     return () => controller.abort()
@@ -108,8 +105,6 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
   const networkOverall = dropTotal + errorTotal > 0 ? 'ATTENTION' : 'NORMAL'
   const rx = observedInfra.network.reduce((sum, row) => sum + Number(row.metrics?.rx_mbps || 0), 0)
   const tx = observedInfra.network.reduce((sum, row) => sum + Number(row.metrics?.tx_mbps || 0), 0)
-  const jobSummary = jobs?.summary || {}
-  const authoritativeJobsReady = false
   const openMetric = (metricType, series = '') => onOpenMetric?.({ host: selectedHost || hostRow?.host || '', metric: metricType, series })
   const fsDisplayState = observedInfra.fs.length ? infrastructureObservationStatus(fsOverall, snapshotFreshness) : 'UNKNOWN'
   const storageDisplayState = observedInfra.storage.length ? infrastructureObservationStatus(storageOverall, snapshotFreshness) : 'UNKNOWN'
@@ -179,9 +174,7 @@ export default function RundeckLiveOverview({ refreshToken, embedded = false, on
     </div>
     <div className="rundeckLiveJobSource">
       <strong>SAP Job Source</strong>
-      {!authoritativeJobsReady
-        ? <><span>SM37 NOT CONNECTED</span><small>SM37 job execution data is not connected.</small></>
-        : <small>Active {jobSummary.active ?? '—'} · Failed {jobSummary.failed ?? '—'} · Long running {jobSummary.long_running ?? '—'}</small>}
+      <span>SM37 NOT CONNECTED</span><small>SM37 job execution data is not connected.</small>
     </div>
   </section>
 }
