@@ -322,6 +322,23 @@ const monthlySize = bytes => {
   return fmt(Number(bytes)/(unit==='TB'?1e12:1e9),2)+' '+unit
 }
 const MONTHLY_STORAGE_ROWS=['File System OS','FS SAP Archive','Archive INTF','INTF']
+const MONTHLY_STORAGE_REASON={
+  MAPPING_NOT_CONFIGURED:'Host/mount mapping not configured',
+  NO_MONTHLY_INFRA_HISTORY:'No Infrastructure filesystem samples in the reporting month',
+  MAPPED_MOUNT_NOT_COLLECTED:'Mapped host/mount not found in the reporting month',
+  INCOMPLETE_FILESYSTEM_FIELDS:'Incomplete saved capacity fields',
+}
+const monthlyStorageNote=(storage,loading,error)=>{
+  if(error)return 'Storage source unavailable'
+  if(loading || !storage)return 'Checking historical storage…'
+  const rows=storage.items||[]
+  const missing=rows.filter(row=>row.status!=='COLLECTED')
+  if(!missing.length)return '4 of 4 filesystems collected'
+  const missingMap=missing.filter(row=>row.reason==='MAPPING_NOT_CONFIGURED').length
+  if(missingMap)return missingMap+' filesystem mapping'+(missingMap===1?'':'s')+' not configured'
+  if(!storage.source_rows)return 'No Infrastructure filesystem samples for this month'
+  return (rows.length-missing.length)+' of '+rows.length+' collected · '+(MONTHLY_STORAGE_REASON[missing[0].reason]||'Historical source incomplete')
+}
 
 function MonthlyRanking({ title, rows=[], metric }) {
   const values=rows.map(row=>metric==='cpu'?wpCpuCoreEquivalent(row.peak_cpu_pct):Number(row.peak_pss_gb))
@@ -342,7 +359,7 @@ function MonthlyRanking({ title, rows=[], metric }) {
     </div>
   </section>
 }
-function MonthlyManagementDashboard({month,full,preview,storage}) {
+function MonthlyManagementDashboard({month,full,preview,storage,storageError=''}) {
   const data=full||preview
   const pressure=data?.monthly_pressure||{}
   const model=full && Array.isArray(full.monthly_top_wp_cpu) &&
@@ -397,12 +414,14 @@ function MonthlyManagementDashboard({month,full,preview,storage}) {
       </section>
     </div>
     <section className="sphereMonthlyManagerPanel is-storage">
-      <h4>Storage Capacity</h4>
+      <div className="sphereMonthlyManagerHeading"><h4>Storage Capacity</h4>
+        <small className="sphereMonthlyStorageNote" role="status">{monthlyStorageNote(storage, !storage && !storageError, storageError)}</small>
+      </div>
       <table className="sphereMonthlyManagerTable"><thead><tr><th>File System</th><th>Mounted On / Host</th><th>Total Capacity</th><th>Used Capacity</th><th>Free Capacity</th><th>Usage %</th><th>Sample WIB</th></tr></thead><tbody>
         {MONTHLY_STORAGE_ROWS.map(name=>{
           const row=storage?.month===month?storage.items?.find(r=>r.category===name):null
           const present=row?.status==='COLLECTED'
-          return <tr key={name}><td>{name}</td>
+          return <tr key={name} title={present ? 'Saved Infrastructure sample · '+when(row.sample_at) : MONTHLY_STORAGE_REASON[row?.reason]||'Historical sample unavailable'}><td>{name}</td>
             <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
             <td>{present?monthlySize(row.total_bytes):'—'}</td><td>{present?monthlySize(row.used_bytes):'—'}</td>
             <td>{present?monthlySize(row.free_bytes):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
@@ -612,7 +631,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     </div>}
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
     {(completedData || preview)&&<>
-      <MonthlyManagementDashboard month={month} full={completedData} preview={preview} storage={storage}/>
+      <MonthlyManagementDashboard month={month} full={completedData} preview={preview} storage={storage} storageError={storageError}/>
       {evidenceOpen && <RundeckWorkspaceDrawer title="Monthly Evidence" subtitle={month+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
       <div className="sphereMonthlyReview is-v2 is-evidence-modal">
       <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData}
