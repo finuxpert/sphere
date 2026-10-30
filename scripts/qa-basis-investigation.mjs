@@ -177,9 +177,15 @@ const checks = [
     files.dataQuality.includes("row?.status === 'READY'") &&
     files.dataQuality.includes('cadenceMs * 2.2') &&
     files.source.includes('rundeckDataQualityNotice') &&
-    files.source.includes('Data current · historical gap retained') &&
+    files.source.includes('Historical collection gap') &&
+    files.source.includes('Missing historical samples remain unknown.') &&
     files.source.includes('NO COMPLETE READY OBSERVATION') &&
-    files.source.includes("'LAST READY'") && files.source.includes('rundeckCycleIdentityV132') &&
+    files.source.includes("'LAST READY'") &&
+    files.source.includes("title={'Performance collection '") &&
+    files.source.includes('aria-label="Last saved performance collection"') &&
+    files.source.includes('className="rundeckDataQualityState"') &&
+    files.source.includes('className="rundeckDataFreshnessInline"') &&
+    !files.source.includes('className="rundeckCycleIdentityV132"') &&
     files.source.includes('reportQuality') &&
     files.source.includes('metaRefreshFailed') &&
     files.sourceCss.includes('.rundeckDataQualityNotice')],
