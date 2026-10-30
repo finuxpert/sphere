@@ -666,6 +666,8 @@ def _monthly_abap_tuning_candidates(evaluated: list[dict], limit: int = 25) -> l
             "consumer_key": item.get("consumer_key"),
             "status": item.get("status"),
             "occurrences": item.get("occurrences"),
+            "observations": item.get("observations"),
+            "last_seen": item.get("last_seen"),
             "hosts": item.get("hosts") or [],
             "avg_cpu_pct": item.get("avg_cpu_pct"),
             "peak_cpu_pct": item.get("peak_cpu_pct"),
