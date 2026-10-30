@@ -117,6 +117,7 @@ export default function RundeckSource({ onCollection }) {
   const [hosts, setHosts] = React.useState([])
   const [hostSnapshot, setHostSnapshot] = React.useState(null)
   const [history, setHistory] = React.useState([])
+  const [initialSourceCheck, setInitialSourceCheck] = React.useState(true)
   const [metaRefreshFailed, setMetaRefreshFailed] = React.useState(false)
   const [availabilityRefreshFailed, setAvailabilityRefreshFailed] = React.useState(false)
   const [historyRefreshFailed, setHistoryRefreshFailed] = React.useState(false)
@@ -223,6 +224,8 @@ export default function RundeckSource({ onCollection }) {
       setError('')
     } catch (failure) {
       setError(failure.message || 'Rundeck data unavailable.')
+    } finally {
+      setInitialSourceCheck(false)
     }
   }), [loadLatest, refreshMeta])
 
@@ -767,35 +770,27 @@ export default function RundeckSource({ onCollection }) {
       <div className="rundeckTitleBlock">
         <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">Monitoring</span></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
-          <span className="rundeckLastCollected" title={'Last collected ' + formatWib(latestCollectionAt, true) + ' WIB'}>{formatWib(latestCollectionAt)} WIB</span>
+          <span className="rundeckLastCollected" title={'Last collected ' + (latestCollectionAt ? formatWib(latestCollectionAt, true) + ' WIB' : 'not available')}>{latestCollectionAt ? formatWib(latestCollectionAt) + ' WIB' : initialSourceCheck ? 'Checking sources' : 'No timestamp'}</span>
           <span className="rundeckMetaDivider" aria-hidden="true">·</span>
-          <span className="rundeckCycleIdentityV132" title={'Collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') + ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') + ' APP'}><b>{quality.performanceValid ? 'READY' : 'LAST READY'}</b></span>
+          <span className="rundeckCycleIdentityV132" title={'Collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') + ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') + ' APP'}><b>{initialSourceCheck ? 'CHECKING' : quality.performanceValid ? 'READY' : latest ? 'LAST READY' : 'UNKNOWN'}</b></span>
         </div>
       </div>
       <div className="rundeckActions">
         <div className="rundeckStateCluster">
-          <details className={`rundeckDataAlignment ${freshnessWarning ? 'is-freshness-warning' : ''}`}>
-            <summary title={dataAlignmentTitle + ' · ' + freshnessSummary} aria-label={'SAP data ' + qualityDisplay + ' · ' + freshnessShort}>
-              <span className="rundeckDataQualityLink">Data Quality</span>
-            </summary>
-            <div className="rundeckDataAlignmentPopover">
-              <div><span>Performance / Availability</span><strong>{quality.state}</strong></div>
-              <div><span>Collector</span><strong>{quality.poller} · Watchdog {quality.watchdog}</strong></div>
-              <div><span>Performance data</span><strong>{ageLabel(performanceAgeMinutes)} old</strong></div>
-              <div><span>Availability data</span><strong>{ageLabel(availabilityAgeMinutes)} old</strong></div>
-              <div><span>Time difference</span><strong>{sourceSkewMinutes === null ? 'Unknown' : `${sourceSkewMinutes}m`}</strong></div>
-              {recentGap && <div><span>Retained gap</span><strong>{dataGapDuration(recentGap.observedSpacingMs)} · No complete READY</strong></div>}
-              {historyRefreshFailed && <div><span>History coverage</span><strong>UNKNOWN · Fetch failed</strong></div>}
-              <p>{quality.state !== 'FRESH' ? freshnessMessage : 'Current samples are fresh. Any retained gap still represents unobserved history.'}</p>
-            </div>
-          </details>
+          <div className={`rundeckDataAlignment is-fixed ${freshnessWarning ? 'is-freshness-warning' : ''}`}
+            role="status" title={dataAlignmentTitle + ' · ' + freshnessSummary}
+            aria-label={'SAP Data Quality ' + (initialSourceCheck ? 'CHECKING' : qualityDisplay) + ' · ' + freshnessShort}>
+            <span className="rundeckDataQualityLink">Data Quality</span>
+            <strong className="rundeckDataQualityState">{initialSourceCheck ? 'CHECKING' : qualityDisplay}</strong>
+            <span className="rundeckDataFreshnessInline">{initialSourceCheck ? 'Reading sources' : freshnessShort}</span>
+          </div>
         </div>
       </div>
     </header>
 
     {error && <div className={`rundeckMessage ${latest ? 'is-reconnecting' : ''}`} role="status">{latest ? `Refresh delayed. Showing last good run #${latest.execution_id || '—'}.` : error}</div>}
     {!collectionAligned && <div className="rundeckMessage" role="status">Waiting for one complete aligned Rundeck run.</div>}
-    {(quality.state !== 'FRESH' || recentGap || historyRefreshFailed) && <div className={`rundeckDataQualityNotice is-${quality.state.toLowerCase()}`} role="status" aria-label="Data quality and retained observation gap">
+    {!initialSourceCheck && (quality.state !== 'FRESH' || recentGap || historyRefreshFailed) && <div className={`rundeckDataQualityNotice is-${quality.state.toLowerCase()}`} role="status" aria-label="Data quality and retained observation gap">
       <strong>{quality.state !== 'FRESH' ? `Data ${quality.state}` : historyRefreshFailed ? 'History coverage unverified' : 'Data current · historical gap retained'}</strong>
       <span>{quality.state !== 'FRESH'
         ? freshnessMessage
@@ -823,6 +818,7 @@ export default function RundeckSource({ onCollection }) {
       latestCollectionId={latest?.collection_id || ''}
       latestCollectionAt={latestCollectionAt}
       sourceQuality={quality}
+      sourceLoading={initialSourceCheck}
       sourceCollector={platform?.collector || null}
       sourceHosts={operationalHosts}
       sourceAvailability={availabilitySnapshot}
