@@ -62,7 +62,8 @@ STAGE=BACKEND_UNIT_TESTS
   backend.tests.test_rundeck_evaluation_paging_dev \
   backend.tests.test_rundeck_custom_window \
   backend.tests.test_rundeck_network_trends \
-  backend.tests.test_rundeck_monthly_review >> "$LOG" 2>&1
+  backend.tests.test_rundeck_monthly_review \
+    backend.tests.test_rundeck_infra >> "$LOG" 2>&1
 echo "BACKEND_TESTS=PASS"
 
 STAGE=MIGRATION_GUARD
