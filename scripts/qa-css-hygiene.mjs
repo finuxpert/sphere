@@ -52,8 +52,12 @@ for (const file of customCss) {
   identical.get(hash).push(file)
 }
 const duplicates = [...identical.values()].filter(group => group.length > 1)
-const important = customCss.reduce((total, file) =>
-  total + (contentByPath.get(file)?.match(/!important\b/g)?.length || 0), 0)
+const importanceByFile = customCss.map(file => ({
+  path: file,
+  declarations: contentByPath.get(file)?.match(/!important\\b/g)?.length || 0,
+  bytes: Buffer.byteLength(contentByPath.get(file) || '', 'utf8'),
+})).sort((a,b) => b.declarations - a.declarations || b.bytes - a.bytes)
+const important = importanceByFile.reduce((total, entry) => total + entry.declarations, 0)
 const result = {
   bootstrap: JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).dependencies?.bootstrap,
   tracked_custom_css: customCss.length,
@@ -62,6 +66,7 @@ const result = {
   no_static_imports: noStaticImports,
   identical_content_groups: duplicates,
   important_declarations: important,
+  top_important_files: importanceByFile.slice(0, 15),
   notes: [
     'Candidate CSS is not deleted automatically; confirm browser routes, dynamic imports, PDF and theme behavior.',
     'Bootstrap grid compatibility requires visual regression checks before removing vendor/bootstrap-grid.min.css.',
@@ -78,5 +83,6 @@ if (process.argv.includes('--json')) {
   process.stdout.write('Exact duplicate CSS groups: ' + duplicates.length + ', !important declarations: ' + important + '\n')
   for (const file of importCandidates) process.stdout.write('CANDIDATE ' + file + '\n')
   for (const group of duplicates) process.stdout.write('DUPLICATE ' + group.join(' | ') + '\n')
+  for (const entry of result.top_important_files) process.stdout.write('IMPORTANT ' + entry.declarations + ' ' + entry.path + ' (' + entry.bytes + ' bytes)\n')
   process.stdout.write('No CSS files have been deleted. Review candidates and run full DEV QA first.\n')
 }
