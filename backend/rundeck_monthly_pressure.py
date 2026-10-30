@@ -89,7 +89,7 @@ def detect_pressure_episodes(samples: list[dict], metric: str, warning: float) -
     } for episode in episodes]
 
 
-def monthly_pressure_observations(conn, start: datetime, end: datetime, source: str, complete_clause: str) -> dict:
+def monthly_pressure_observations(conn, start: datetime, end: datetime, source: str, complete_clause: str, *, include_correlation: bool = True) -> dict:
     """Return resource pressure observations and correlated retained workloads.
 
     Queries are bounded to the chosen WIB calendar-month window and join by
@@ -210,46 +210,47 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
 
     # All retained workload identities may be correlated, not just previously
     # persisted "Top Consumers"; missing workload names remain unknown.
-    correlation_rows = conn.execute(text(f"""
-        SELECT tc.consumer_type, tc.consumer_key,
-               COUNT(DISTINCT (tc.collection_id, tc.host))
-                   FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_pressure_host_checks,
-               COUNT(DISTINCT (tc.collection_id, tc.host))
-                   FILTER (WHERE hm.ram_pct >= :ram_warning) AS ram_pressure_host_checks,
-               COUNT(DISTINCT (tc.collection_id, tc.host))
-                   FILTER (WHERE COALESCE(hm.wp_critical, 0) > 0) AS wp_host_checks,
-               ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_pressure_hosts,
-               ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE hm.ram_pct >= :ram_warning) AS ram_pressure_hosts,
-               ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE COALESCE(hm.wp_critical, 0) > 0) AS wp_signal_hosts,
-               MAX(tc.cpu_pct) FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_peak_during_cpu_pressure,
-               MAX(NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision)
-                   FILTER (WHERE hm.ram_pct >= :ram_warning) AS pss_peak_during_ram_pressure
-          FROM {source} tc
-          JOIN rundeck_collections c ON c.collection_id = tc.collection_id
-          JOIN rundeck_host_metrics hm
-            ON hm.collection_id = tc.collection_id AND hm.host = tc.host
-            AND ABS(EXTRACT(EPOCH FROM (tc.collected_at - hm.collected_at))) <= :max_skew_seconds
-         WHERE {complete_clause}
-           AND COALESCE(c.finished_at, c.started_at) >= :start
-           AND COALESCE(c.finished_at, c.started_at) < :end
-           AND tc.collected_at >= :start AND tc.collected_at < :end
-           AND hm.collected_at >= :start AND hm.collected_at < :end
-           AND tc.consumer_type IN ('JOB', 'PROGRAM')
-         GROUP BY tc.consumer_type, tc.consumer_key
-    """), params).mappings().all()
     correlation = {}
-    for row in correlation_rows:
-        key = (str(row["consumer_type"]), str(row["consumer_key"]))
-        correlation[key] = {
-            "cpu_pressure_host_checks": int(row["cpu_pressure_host_checks"] or 0),
-            "ram_pressure_host_checks": int(row["ram_pressure_host_checks"] or 0),
-            "wp_host_checks": int(row["wp_host_checks"] or 0),
-            "cpu_pressure_hosts": list(row["cpu_pressure_hosts"] or []),
-            "ram_pressure_hosts": list(row["ram_pressure_hosts"] or []),
-            "wp_signal_hosts": list(row["wp_signal_hosts"] or []),
-            "cpu_peak_during_cpu_pressure": _rounded(row["cpu_peak_during_cpu_pressure"]),
-            "pss_peak_during_ram_pressure": _rounded(row["pss_peak_during_ram_pressure"], 2),
-        }
+    if include_correlation:
+        correlation_rows = conn.execute(text(f"""
+            SELECT tc.consumer_type, tc.consumer_key,
+                   COUNT(DISTINCT (tc.collection_id, tc.host))
+                       FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_pressure_host_checks,
+                   COUNT(DISTINCT (tc.collection_id, tc.host))
+                       FILTER (WHERE hm.ram_pct >= :ram_warning) AS ram_pressure_host_checks,
+                   COUNT(DISTINCT (tc.collection_id, tc.host))
+                       FILTER (WHERE COALESCE(hm.wp_critical, 0) > 0) AS wp_host_checks,
+                   ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_pressure_hosts,
+                   ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE hm.ram_pct >= :ram_warning) AS ram_pressure_hosts,
+                   ARRAY_AGG(DISTINCT tc.host ORDER BY tc.host) FILTER (WHERE COALESCE(hm.wp_critical, 0) > 0) AS wp_signal_hosts,
+                   MAX(tc.cpu_pct) FILTER (WHERE hm.cpu_pct >= :cpu_warning) AS cpu_peak_during_cpu_pressure,
+                   MAX(NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision)
+                       FILTER (WHERE hm.ram_pct >= :ram_warning) AS pss_peak_during_ram_pressure
+              FROM {source} tc
+              JOIN rundeck_collections c ON c.collection_id = tc.collection_id
+              JOIN rundeck_host_metrics hm
+                ON hm.collection_id = tc.collection_id AND hm.host = tc.host
+                AND ABS(EXTRACT(EPOCH FROM (tc.collected_at - hm.collected_at))) <= :max_skew_seconds
+             WHERE {complete_clause}
+               AND COALESCE(c.finished_at, c.started_at) >= :start
+               AND COALESCE(c.finished_at, c.started_at) < :end
+               AND tc.collected_at >= :start AND tc.collected_at < :end
+               AND hm.collected_at >= :start AND hm.collected_at < :end
+               AND tc.consumer_type IN ('JOB', 'PROGRAM')
+             GROUP BY tc.consumer_type, tc.consumer_key
+        """), params).mappings().all()
+        for row in correlation_rows:
+            key = (str(row["consumer_type"]), str(row["consumer_key"]))
+            correlation[key] = {
+                "cpu_pressure_host_checks": int(row["cpu_pressure_host_checks"] or 0),
+                "ram_pressure_host_checks": int(row["ram_pressure_host_checks"] or 0),
+                "wp_host_checks": int(row["wp_host_checks"] or 0),
+                "cpu_pressure_hosts": list(row["cpu_pressure_hosts"] or []),
+                "ram_pressure_hosts": list(row["ram_pressure_hosts"] or []),
+                "wp_signal_hosts": list(row["wp_signal_hosts"] or []),
+                "cpu_peak_during_cpu_pressure": _rounded(row["cpu_peak_during_cpu_pressure"]),
+                "pss_peak_during_ram_pressure": _rounded(row["pss_peak_during_ram_pressure"], 2),
+            }
     return {
         "thresholds": {
             "cpu_warning_pct": CPU_WARNING, "cpu_critical_pct": CPU_CRITICAL,
