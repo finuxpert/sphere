@@ -383,6 +383,17 @@ export default function RundeckMonthlyReview() {
     pdfRef.current='';setPdfUrl('')
   }
   const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
+  const handleTabKeyDown=(event,value)=>{
+    const order=['summary','evidence','report']
+    const current=order.indexOf(value)
+    const next=event.key==='ArrowRight'?order[(current+1)%order.length]
+      :event.key==='ArrowLeft'?order[(current+order.length-1)%order.length]
+        :event.key==='Home'?order[0]:event.key==='End'?order[order.length-1]:null
+    if(!next)return
+    event.preventDefault()
+    setTab(next)
+    event.currentTarget.parentElement?.querySelector('#sphere-month-tab-'+next)?.focus()
+  }
   const items=data?.items||[]
   const quality=data?.quality||{}
   const summary=data?.summary||{}
@@ -448,7 +459,10 @@ export default function RundeckMonthlyReview() {
     <div className="sphereMonthlyTabs" role="tablist" aria-label="Monthly report sections">
       {[['summary','Summary'],['evidence','Detailed Evidence'],['report','PDF Report']]
         .map(([value,label])=><button key={value} type="button" role="tab"
-          aria-selected={tab===value} className={tab===value?'is-active':''}
+          id={'sphere-month-tab-'+value} aria-controls={'sphere-month-panel-'+value}
+          aria-selected={tab===value} tabIndex={tab===value?0:-1}
+          className={tab===value?'is-active':''}
+          onKeyDown={event=>handleTabKeyDown(event,value)}
           onClick={()=>setTab(value)}>{label}</button>)}
     </div>
     {loading&&<div className="sphereMonthlyState" role="status">Loading historical CPU, RAM and workload evidence…</div>}
@@ -458,7 +472,7 @@ export default function RundeckMonthlyReview() {
         <span><b>{fmt(quality.complete_checks,0)}</b> complete collections · Estimated coverage {pct(quality.coverage_pct)}{quality.expected_checks_is_estimate ? ` (~${fmt(quality.expected_checks,0)} expected)` : ''}</span>
         <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
       </div>
-      {tab==='summary'&&<div className="sphereMonthlyLayout sphereMonthlyDashboard">
+      {tab==='summary'&&<div id="sphere-month-panel-summary" role="tabpanel" aria-labelledby="sphere-month-tab-summary" className="sphereMonthlyLayout sphereMonthlyDashboard">
         <div className="sphereMonthlyVisualGrid sphereMonthlyMainColumn col-12 col-xl-7">
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
@@ -524,7 +538,7 @@ export default function RundeckMonthlyReview() {
         </section>
         </div>
       </div>}
-      {tab==='evidence'&&<div className="sphereMonthlyEvidencePage">
+      {tab==='evidence'&&<div id="sphere-month-panel-evidence" role="tabpanel" aria-labelledby="sphere-month-tab-evidence" className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
           <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} of {pages}</small></div>
@@ -596,7 +610,7 @@ export default function RundeckMonthlyReview() {
         <PressureRows label="Jobs & Programs During Resource Pressure" evidence={evidence} metric={pressureMetric} onMetricChange={setPressureMetric}/>
         <MonthlyErrorAnalysis key={month} evidence={errors}/>
       </div></section></div>}
-      {tab==='report'&&<div className="sphereMonthlyPanel sphereMonthlyReportPreview">
+      {tab==='report'&&<div id="sphere-month-panel-report" role="tabpanel" aria-labelledby="sphere-month-tab-report" className="sphereMonthlyPanel sphereMonthlyReportPreview">
         <div className="sphereMonthlyTableHead">
           <div><h4>Monthly Report</h4><small>Management: one A4 landscape page · Technical: detailed saved evidence</small></div>
           <div className="sphereMonthlyReportActions">
