@@ -473,8 +473,8 @@ export default function RundeckMonitoringHistory(props) {
                 </React.Suspense>
               </section>
               <div className="rundeckSapChecksHistoryDock" ref={setIncidentHistoryRoot} aria-label="SAP incident history" />
-              <p className="sphereUnifiedHealthBackup" title="Configuration only; not proof of successful database backup">
-                Backup monitoring: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState === 'NOT_CONFIGURED' ? 'Not configured' : backupState.replaceAll('_',' ').toLowerCase()}
+              <p className="sphereUnifiedHealthBackup" title="Backup monitoring configuration only; not proof of a successful SAP database backup">
+                Backup monitor: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState === 'NOT_CONFIGURED' ? 'Not configured' : backupState.replaceAll('_',' ').toLowerCase()}
               </p>
             </div>
           </RundeckWorkspaceDrawer>}
