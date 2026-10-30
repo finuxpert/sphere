@@ -8,7 +8,7 @@ import time
 from urllib.parse import quote, urlencode
 from backend.rundeck_credentials import credential_mode, read_credential
 from backend.rundeck_poller import API_VERSION, execution_matches, output_text, request
-from backend.rundeck_infra_store import ROOT, collections, ingest, ingest_many, initialize, now
+from backend.rundeck_infra_store import ROOT, identifier, ingest, ingest_many, initialize, now
 
 def _write(path, value):
     tmp = path.with_suffix(".tmp")
@@ -62,6 +62,32 @@ def output_by_node(execution_id, token, expected_hosts):
     ))
     return _group_output_entries(payload, expected_hosts)
 
+def _stored_execution_hosts(execution_id: str, expected_hosts: list[str]) -> set[str]:
+    """Read only the current execution's manifests, not every archived collection.
+
+    The manifest names are deterministic in rundeck_infra_store._ingest_one.
+    Keep the full execution, host and DB status checks before reporting stored.
+    Malformed files still fail closed instead of silently claiming success.
+    """
+    multi_host = len(expected_hosts) > 1
+    stored: set[str] = set()
+    for host in expected_hosts:
+        collection_id = identifier(execution_id, host if multi_host else None)
+        manifest = ROOT / "manifests" / f"{collection_id}.json"
+        try:
+            row = json.loads(manifest.read_text())
+        except FileNotFoundError:
+            continue
+        if (
+            isinstance(row, dict)
+            and str(row.get("execution_id") or "") == str(execution_id)
+            and str(row.get("host") or "") == host
+            and row.get("database_status") == "STORED"
+        ):
+            stored.add(host)
+    return stored
+
+
 def _phase(name: str, started: float) -> None:
     """Minimal, credential-free journald breadcrumb for slow poller operations."""
     print(f"INFRA_POLLER_PHASE={name} ELAPSED_SECONDS={time.monotonic()-started:.1f}", flush=True)
@@ -97,11 +123,9 @@ def poll():
             _write(_state_path("poller"), {"status":"WAITING","checked_at":now(),"latest_execution":eid})
             return
 
-        complete_hosts = {
-            row.get("host")
-            for row in collections()
-            if row.get("execution_id") == eid and row.get("database_status") == "STORED"
-        }
+        _phase("MANIFEST_CHECK_START", started)
+        complete_hosts = _stored_execution_hosts(eid, expected_hosts)
+        _phase("MANIFEST_CHECK_DONE", started)
         if all(host in complete_hosts for host in expected_hosts):
             _write(_state_path("poller"), {
                 "status":"OK","checked_at":now(),"processed":0,"latest_execution":eid,
