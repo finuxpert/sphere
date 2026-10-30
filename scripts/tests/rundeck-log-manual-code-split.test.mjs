@@ -6,9 +6,8 @@ const src = readFileSync('src/tools/ToolLogAutoSphereV5.jsx', 'utf8')
 
 test('Monitoring does not eagerly load manual parser or resource ranking', () => {
   for (const specifier of ['./logAnalysisV15.js', './logSphereEngineV3.js', './workloadAnalyticsV5.js']) {
-    const escaped = specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    assert.doesNotMatch(src, new RegExp('^import\\s+[^\\n]+from\\s+[\\x27\\x22]' + escaped + '[\\x27\\x22]', 'm'),
-      specifier + ' must not be loaded during initial Monitoring render')
+    const eagerImports = src.split('\n').filter(line => line.startsWith('import ') && line.includes(specifier))
+    assert.equal(eagerImports.length, 0, specifier + ' must not be loaded during initial Monitoring render')
     assert.ok(src.includes("import('" + specifier + "')"), specifier + ' must remain available on demand')
   }
   assert.match(src, /source === 'automatic' && <RundeckSource onCollection=\{upload\}/)
