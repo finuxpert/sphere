@@ -86,7 +86,8 @@ class EvaluationPagingDevTests(unittest.TestCase):
                     lambda limit: rundeck_evaluation.evaluation_report(limit=limit),
                     [5, 25, 50, 100],
                 ))
-        self.assertEqual(results, [{"ok": True}] * 4)
+        self.assertEqual([result["ok"] for result in results], [True] * 4)
+        self.assertTrue(all(result["runtime"]["lock_wait_ms"] >= 0 for result in results))
         self.assertEqual(highest_concurrent, 1)
 
     def test_runtime_reports_sql_and_lock_wait_separately(self):
