@@ -276,8 +276,12 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         "correlation": correlation,
         "method": (
             "Host CPU/RAM WARNING threshold episodes from complete SPHERE collections. "
-            "Pressure-workload matches require identical collection_id and APP host "
-            "with bounded observation timestamp skew. "
-            "Episodes cover observed samples only, not incident durations or root causes."
+            + (
+                "Pressure-workload matches require identical collection_id and APP host "
+                "with bounded observation timestamp skew. "
+                if include_correlation else
+                "Host-only preview; workload correlation was not computed. "
+            )
+            + "Episodes cover observed samples only, not incident durations or root causes."
         ),
     }
