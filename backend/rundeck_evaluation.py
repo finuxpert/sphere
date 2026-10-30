@@ -1099,6 +1099,18 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             ),
         )[:5]
 
+    # Independently rank the entire month-scoped evaluated population. These are
+    # WP observations (core equivalents/PSS), not host CPU or SM37 executions.
+    def _ranked_wp(metric: str) -> list[dict]:
+        return sorted(
+            (row for row in evaluated if row.get(metric) is not None
+             and str(row.get("consumer_key") or "").strip()),
+            key=lambda row: (-float(row[metric]), str(row.get("consumer_key") or "")),
+        )[:10]
+
+    monthly_top_wp_cpu = _ranked_wp("peak_cpu_pct") if period_key == "month" else []
+    monthly_top_wp_pss = _ranked_wp("peak_pss_gb") if period_key == "month" else []
+
     # Source-backed full-month ranking; independent of per-page filters.
     monthly_abap_candidates = (
         _monthly_abap_tuning_candidates(evaluated) if period_key == "month" else []
@@ -1123,6 +1135,8 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         "monthly_pressure": monthly_pressure,
         "monthly_errors": monthly_errors,
         "monthly_abap_candidates": monthly_abap_candidates,
+        "monthly_top_wp_cpu": monthly_top_wp_cpu,
+        "monthly_top_wp_pss": monthly_top_wp_pss,
         "baseline": {
             "days": HISTORICAL_BASELINE_DAYS,
             "min_observations": HISTORICAL_BASELINE_MIN_OBSERVATIONS,
