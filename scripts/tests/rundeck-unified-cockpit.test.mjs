@@ -33,7 +33,7 @@ test('SAP+Infrastructure modal preserves host provenance, freshness and workload
   assert.match(workspace,/performanceVerified/)
   assert.match(workspace,/app.infraHostVerified === true/)
   assert.match(workspace,/no confirmed host mapping/)
-  assert.match(infrastructure,/const target=lockedHost \? selectedHost/)
+  assert.match(infrastructure,/const target=healthMatrix \? '' : lockedHost \? selectedHost/)
   assert.match(infrastructure,/trendData\.scope===trendScope/)
 })
 
