@@ -236,7 +236,7 @@ test('WP CPU report displays logical core-equivalents without inventing a 28-vCP
   const evaluation = read('backend/rundeck_evaluation.py')
   assert.match(ui, /Peak WP CPU/)
   assert.match(ui, /Avg \/ Peak WP CPU/)
-  assert.match(ui, /100% = 1 logical CPU-core equivalent/)
+  assert.ok(ui.includes('100% = 1 logical CPU core'), 'WP CPU label must describe one logical CPU core')
   assert.match(ui, /wpCoreEq\(row\.pressure_overlap\?\.cpu_peak_during_cpu_pressure\)/)
   assert.match(ui, /wpCoreEq\(row\.peak_cpu_pct\)/)
   assert.match(pdf, /MAX CPU CORES/)
