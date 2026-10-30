@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { buildMonthlyPdf } from '../src/tools/components/rundeckMonthlyPdf.js'
-import { buildManagementMonthlyPdf } from '../src/tools/components/rundeckMonthlyManagementPdf.js'
+import { buildManagementMonthlyPdf } from '../src/tools/components/rundeckMonthlyEnterprisePdf.js'
 
 // Actual jsPDF generation, not a mock of the layout or a regex-only test.
 // Contains long ABAP identifiers and both explicitly dated / snapshot errors.
@@ -30,6 +30,14 @@ const data={
     top_cpu_workloads:[],top_ram_workloads:[]
   },
   monthly_abap_candidates:candidates,
+  monthly_top_wp_cpu:[...candidates].sort((a,b)=>b.peak_cpu_pct-a.peak_cpu_pct),
+  monthly_top_wp_pss:[...candidates].sort((a,b)=>b.peak_pss_gb-a.peak_pss_gb),
+  monthly_storage:{month:'2026-09',items:[
+    {category:'File System OS',status:'NOT_COLLECTED'},
+    {category:'FS SAP Archive',status:'NOT_COLLECTED'},
+    {category:'Archive INTF',status:'NOT_COLLECTED'},
+    {category:'INTF',status:'NOT_COLLECTED'},
+  ]},
   monthly_errors:{top_errors:[{
     category:'RUNTIME',error_code:'TSV_TNEW_PAGE_ALLOC_FAILED',
     program:'ZLONG_ERROR_RELATED_ABAP_PROGRAM',
@@ -58,22 +66,22 @@ writeFileSync(out,bytes)
 console.log('MONTHLY_PDF=PASS pages='+pageCount+' bytes='+bytes.length+' fixture='+out)
 
 const executive=await buildManagementMonthlyPdf({month:'2026-09',data,returnInstance:true})
-assert.equal(executive.internal.getNumberOfPages(),1,'Management PDF must be exactly one A4 landscape page')
+assert.equal(executive.internal.getNumberOfPages(),1,'Management PDF must be exactly one A3 landscape page')
+assert.ok(Math.abs(executive.internal.pageSize.getWidth()-1190.55)<.25)
+assert.ok(Math.abs(executive.internal.pageSize.getHeight()-841.89)<.25)
 const executivePage=executive.internal.pages[1].join('\n')
-assert.match(executivePage,/Management Summary/)
-assert.match(executivePage,/Operational Findings/)
-assert.match(executivePage,/APP Server Performance/)
-assert.match(executivePage,/Priority Jobs & Programs for Review/)
-assert.match(executivePage,/Threshold Review/)
-assert.match(executivePage,/WP CPU CORES/)
-assert.match(executivePage,/PEAK PSS/)
-assert.match(executivePage,/EST\. DATA COVERAGE/)
-assert.match(executivePage,/ZCUSTOM_SAP_ABAP_PROGRAM/)
-assert.match(executivePage,/Full program details in Technical Report/)
-assert.match(executivePage,/complete collections|SPHERE complete collections/i)
-assert.doesNotMatch(executivePage,/DAILY HIGHEST CPU|MONTHLY REPORT/)
+for(const label of ['SAP Monthly Performance Report','CPU Utilization Trend',
+  'Memory Utilization Trend','Top 10 Jobs by Peak WP CPU','Top 10 Jobs by Peak WP Memory',
+  'Application Server Performance','Top 10 Jobs for Tuning Review','Storage Capacity',
+  'File System OS','Not Collected','ZLAST_CANDIDATE_10']) {
+  assert.ok(executivePage.includes(label),'Missing A3 management content: '+label)
+}
+for(const removed of ['Operational Findings','MONITORING COVERAGE','AOP Production',
+  'JOBS & PROGRAMS EVALUATED','System: AOP Production']) {
+  assert.ok(!executivePage.includes(removed),'Removed management copy is still present: '+removed)
+}
 const executiveBytes=new Uint8Array(executive.output('arraybuffer'))
 assert.equal(String.fromCharCode(...executiveBytes.slice(0,5)),'%PDF-')
 const managementPath=join(process.env.RUNNER_TEMP||tmpdir(),'sphere-monthly-management-qa.pdf')
 writeFileSync(managementPath,executiveBytes)
-console.log('MANAGEMENT_PDF=PASS pages=1 bytes='+executiveBytes.length+' fixture='+managementPath)
+console.log('MANAGEMENT_A3=PASS pages=1 bytes='+executiveBytes.length+' fixture='+managementPath)
