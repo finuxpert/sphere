@@ -88,7 +88,7 @@ export default function RundeckSystemData({history=[],platform=null,platformStat
             <div><dt>Identity</dt><dd>{item.identity||'Not verified'}</dd></div>
             <div><dt>Last report</dt><dd>{item.last_reported_at||'Not registered'}</dd></div>
           </dl>
-          <span className="rundeckTokenRenew" title="Rotation requires maintainer authentication, Runner ACL verification, approval, and rollback protection">Renewal by administrator</span>
+          <span className="rundeckTokenRenewNote" title="Rotation requires maintainer authentication, Runner ACL verification, approval, and rollback protection">Renewal by administrator</span>
         </article>)}
       </div>
       <p className="rundeckTokenFootnote">Expiry warnings are reported at 7, 3 and 1 days. Credential rotation requires administrator approval and verification; this page does not accept tokens.</p>
