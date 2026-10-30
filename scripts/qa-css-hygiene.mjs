@@ -54,7 +54,7 @@ for (const file of customCss) {
 const duplicates = [...identical.values()].filter(group => group.length > 1)
 const importanceByFile = customCss.map(file => ({
   path: file,
-  declarations: contentByPath.get(file)?.match(/!important\\b/g)?.length || 0,
+  declarations: contentByPath.get(file)?.match(/!important\b/g)?.length || 0,
   bytes: Buffer.byteLength(contentByPath.get(file) || '', 'utf8'),
 })).sort((a,b) => b.declarations - a.declarations || b.bytes - a.bytes)
 const important = importanceByFile.reduce((total, entry) => total + entry.declarations, 0)
