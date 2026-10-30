@@ -119,7 +119,7 @@ test('DEV release synchronizes missing Bootstrap and changed lockfile before QA'
   assert.ok(beforeFetch > 0 && beforeFetch < fetchAt)
   assert.ok(fetchAt < dependencyStage && dependencyStage < installAt && installAt < qaStage && qaStage < deployStage)
   assert.match(release, /CURRENT_LOCK_SHA=/)
-  assert.match(release, /node_modules\\/bootstrap\\/dist\\/css\\/bootstrap\\.min\\.css/)
+  assert.ok(release.includes('node_modules/bootstrap/dist/css/bootstrap.min.css'))
   assert.match(release, /DEPENDENCIES=PASS/)
   assert.match(qa, /QA BLOCKED: Bootstrap dependency is missing or out of sync/)
   for (const script of ['ops/rundeck/release-dev-fast.sh', 'ops/rundeck/qa-build-dev.sh']) {
