@@ -83,3 +83,13 @@ test('Report UI follows system light/dark tokens and does not suppress data', ()
   assert.match(css, /color-scheme:dark/)
   assert.match(css, /@media\(max-width:640px\)/)
 })
+
+
+test('Monthly Summary prioritizes host preview before full workload evaluation', () => {
+  assert.match(ui, /tab==='summary' && hostPreview\?\.month!==month && !hostPreviewError/)
+  assert.ok(ui.includes('setHostPreview(payload)'), 'verified host data must be rendered')
+  assert.match(ui, /setHostPreviewRetry\(count=>count\+1\)/)
+  assert.match(ui, /Retry server data/)
+  assert.match(ui, /Monthly host summary exceeded 20 seconds/)
+  assert.match(ui, /Monthly evaluation exceeded 35 seconds/)
+})
