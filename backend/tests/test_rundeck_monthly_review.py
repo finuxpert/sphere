@@ -32,9 +32,9 @@ class CalendarMonthReviewTests(unittest.TestCase):
             "hosts": [{"host": "APP1", "peak_cpu_pct": 84.0}],
             "correlation": {},
         }
-        with patch.object(evaluation, "get_engine", return_value=Engine()), \\
-             patch.object(evaluation, "_calendar_month_collection_anchor", return_value="READY:123"), \\
-             patch.object(evaluation, "_collection_quality", return_value={"complete_checks": 1}), \\
+        with patch.object(evaluation, "get_engine", return_value=Engine()), \
+             patch.object(evaluation, "_calendar_month_collection_anchor", return_value="READY:123"), \
+             patch.object(evaluation, "_collection_quality", return_value={"complete_checks": 1}), \
              patch.object(evaluation, "monthly_pressure_observations", return_value=preview_pressure) as host_only:
             result = evaluation.monthly_host_preview("2026-09")
         self.assertTrue(result["preview_only"])
