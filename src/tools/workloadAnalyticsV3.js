@@ -1,4 +1,3 @@
-import * as duckdb from '@duckdb/duckdb-wasm'
 import duckdbMvpWasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url'
 import duckdbEhWasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url'
 import duckdbMvpWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url'
@@ -202,6 +201,9 @@ async function aggregateSnapshotsDuckDb(rows = []) {
   let db
   let conn
   try {
+    // Load the heavy DuckDB runtime only when imported log evidence needs ranking.
+    // A failed/slow import still propagates to the existing JS fallback.
+    const duckdb = await withTimeout(import('@duckdb/duckdb-wasm'), DUCKDB_TIMEOUT_MS, 'DuckDB module load')
     const bundle = await withTimeout(duckdb.selectBundle(BUNDLES), 1800, 'DuckDB bundle selection')
     worker = new Worker(bundle.mainWorker)
     db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING), worker)
