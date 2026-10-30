@@ -381,11 +381,13 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       })
     return ()=>controller.abort()
   },[month,hostPreviewRetry])
+  // A boolean dependency avoids re-requesting expensive evidence just because
+  // the user switches between Summary, Detailed Evidence and PDF Report.
+  const fullEvaluationReady = tab!=='summary' || hostPreview?.month===month || Boolean(hostPreviewError)
   React.useEffect(()=>{
-    // Prioritize the small host-only monthly request. The full evaluation
-    // triggers expensive historical aggregations and must not compete with
-    // the first server-chart load on the initial Summary screen.
-    if(tab==='summary' && hostPreview?.month!==month && !hostPreviewError) {
+    // Prioritize the host-only request on the initial Summary screen.
+    // Historical workload aggregation starts after server evidence settles.
+    if(!fullEvaluationReady) {
       setLoading(true)
       return
     }
@@ -417,7 +419,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         : failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
-  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page,tab,hostPreview?.month,hostPreviewError])
+  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady])
   const changeMonth=value=>{
     pdfGenerationRef.current += 1
     setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
