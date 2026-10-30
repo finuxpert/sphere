@@ -587,7 +587,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   },[data,loading,pdfBusy,month])
   return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
-      {showTitle && <div><strong>Monthly Review</strong></div>}
+      {showTitle && <div><strong>SAP Monthly Performance Report</strong></div>}
       <div className="sphereMonthlyPicker">
         <label htmlFor="sphere-month-choice">Reporting month</label>
         <select className="form-select form-select-sm" id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
