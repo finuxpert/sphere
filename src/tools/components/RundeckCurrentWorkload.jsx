@@ -322,7 +322,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap" ref={tableWrapRef}>
       <table>
-        <thead><tr><th>APP</th><th>Job / Program</th><th title={CPU_HINT}>CPU Total ↓<small className="rundeckWorkloadCpuUnit">multi-core</small></th><th title="Proportional Set Size; workload memory in gigabytes, not APP host RAM">PSS (GB)</th><th>Processes</th><th title="SAP work process type / number context">WP Context</th><th title="Last retained workload observation time in WIB, not an SM37 completion time">Observed</th></tr></thead>
+        <thead><tr><th scope="col">APP / Mark</th><th scope="col">Job / Program</th><th scope="col" title={CPU_HINT}>CPU (cores) ↓<small className="rundeckWorkloadCpuUnit">multi-core %</small></th><th scope="col" title="Proportional Set Size; not APP host RAM">PSS (GB)</th><th scope="col">Processes</th><th scope="col" title="SAP work process context">WP</th><th scope="col" title="Observation timestamp; not job completion">Last Seen (WIB)</th></tr></thead>
         <tbody>
           {pageRows.map((row) => {
             const details = row.details || {}
@@ -353,7 +353,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
               </label></td>
               <td className="rundeckCurrentWorkloadName">
                 <button type="button" onClick={(event) => { event.stopPropagation(); context && onSelectJob?.(context) }} title={row.consumer_key}>{observedWorkloadName(row.consumer_key, details)}</button>
-                <small title={fullIdentity || identity}>{identity}</small>
+                <small title={fullIdentity || identity}>{workloadTypeLabel(row.consumer_type)} · {identity}</small>
               </td>
               <td title={CPU_HINT} className={Number.isFinite(cpu) && cpu >= 0 && cpuNeedsAttention ? 'is-attention' : ''}>{Number.isFinite(cpu) && cpu >= 0 ? numberText(cpu) + '%' : '—'}</td>
               <td>{pss === null ? '—' : `${numberText(pss, 2)} GB`}</td>

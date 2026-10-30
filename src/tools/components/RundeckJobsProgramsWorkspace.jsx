@@ -41,7 +41,7 @@ export default function RundeckJobsProgramsWorkspace({ currentContent = null, re
   return <section className="rundeckJobsProgramsWorkspace" aria-label="Jobs and Programs workspace">
     <header className="rundeckJobsProgramsWorkspaceHead">
       <div className="rundeckJobsProgramsIdentity">
-        <h3><SphereIcon name="workload" /> Jobs & Programs</h3>
+        <h3><SphereIcon name="workload" /> Workload List</h3>
         <div className="rundeckJobsProgramsModes" role="tablist" aria-label="Jobs and Programs mode">
         <button type="button" ref={(node) => { tabRefs.current.live = node }} id={`${tabId}-live`} role="tab" aria-controls={`${tabId}-panel`} aria-selected={mode === 'live'} tabIndex={mode === 'live' ? 0 : -1} className={mode === 'live' ? 'is-active' : ''} onKeyDown={handleTabKeyDown} onClick={() => selectMode('live')}>Current</button>
         <button type="button" ref={(node) => { tabRefs.current.review = node }} id={`${tabId}-review`} role="tab" aria-controls={`${tabId}-panel`} aria-selected={mode === 'review'} tabIndex={mode === 'review' ? 0 : -1} className={mode === 'review' ? 'is-active' : ''} onKeyDown={handleTabKeyDown} onClick={() => selectMode('review')}>Review</button>

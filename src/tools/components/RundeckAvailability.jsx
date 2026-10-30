@@ -184,13 +184,13 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   </div>
 
   if (inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="SAP Availability overview">
-    <div className="sphereHealthInlineHead"><h4>SAP Availability</h4><button type="button" onClick={onOpen}>Details</button></div>
+    <div className="sphereHealthInlineHead"><h4>{lastSnapshot || stale ? "SAP Availability · Last Known" : "SAP Availability"}</h4><button type="button" onClick={onOpen}>Details</button></div>
     <div className="sphereHealthInlineValues">
       <span><b>APP</b><strong>{apps.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${appsUp}/${apps.length}` : 'No Data'}</strong></span>
       <span><b>HANA</b><strong>{hanaRows.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${hanaUp}/${hanaRows.length}` : 'No Data'}</strong></span>
       <span><b>Web</b><strong>{webRows.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${webUp}/${webRows.length}` : 'No Data'}</strong></span>
     </div>
-    <small>{stale ? `Last check ${availabilityAge}m ago · current state unverified` : unverified ? 'Availability not verified' : data?.collected_at ? `Checked ${formatWib(data.collected_at, true)} WIB` : 'Awaiting service check'}</small>
+    <small>{stale ? `Checked ${data?.collected_at ? formatWib(data.collected_at, true) + " WIB · " : ""}${availabilityAge}m ago · current state unverified` : unverified ? 'Availability not verified' : data?.collected_at ? `Checked ${formatWib(data.collected_at, true)} WIB` : 'Awaiting service check'}</small>
   </section>
   if (compact) {
     return <button type="button" className="rundeckEvidenceCard rundeckAvailabilityCard" onClick={onOpen} aria-label="Open SAP Availability details">

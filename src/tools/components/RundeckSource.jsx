@@ -1,6 +1,7 @@
 import React from 'react'
 import RundeckCurrentWorkload from './RundeckCurrentWorkload.jsx'
 import RundeckMonitoringHistory from './RundeckMonitoringHistory.jsx'
+import { performanceViewFromHash } from './RundeckPerformanceNavigationState.js'
 import RundeckPerformanceIncident from './RundeckPerformanceIncident.jsx'
 import RundeckSystemData from './RundeckSystemData.jsx'
 import SphereIcon from './SphereIcon.jsx'
@@ -110,6 +111,20 @@ function availabilityServiceImpact(payload = {}) {
 }
 
 export default function RundeckSource({ onCollection }) {
+  const [headerView, setHeaderView] = React.useState(performanceViewFromHash)
+  React.useEffect(() => {
+    const sync = () => setHeaderView(performanceViewFromHash())
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
+  const headerTitle = ({
+    jobs: 'Jobs & Programs',
+    'monthly-review': 'Reports',
+    'system-data': 'Data Collection',
+    'sap-checks': 'System Health',
+    infrastructure: 'System Health',
+    events: 'Recent Events',
+  })[headerView] || 'Monitoring'
   const [latest, setLatest] = React.useState(null)
   const [health, setHealth] = React.useState(null)
   const [platform, setPlatform] = React.useState(null)
@@ -768,7 +783,7 @@ export default function RundeckSource({ onCollection }) {
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
-        <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">Monitoring</span></h2>
+        <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">{headerTitle}</span></h2>
         <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
           <span className="rundeckLastCollected" title={'Last collected ' + (latestCollectionAt ? formatWib(latestCollectionAt, true) + ' WIB' : 'not available')}>{latestCollectionAt ? formatWib(latestCollectionAt) + ' WIB' : initialSourceCheck ? 'Checking sources' : 'No timestamp'}</span>
           <span className="rundeckMetaDivider" aria-hidden="true">·</span>

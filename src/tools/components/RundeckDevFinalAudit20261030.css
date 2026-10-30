@@ -1,0 +1,57 @@
+/* SPHERE DEV 30-Oct-2026. Source-backed SAP Basis view; no data hidden to manufacture a fit. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs{padding:10px 12px!important;min-height:0!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsWorkspace{margin-top:0!important;padding-top:0!important;border-top:0!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsWorkspaceHead{padding:0 0 8px!important;margin-bottom:8px!important;border-bottom:1px solid var(--sphere-design-edge,rgba(126,147,158,.16))}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsIdentity h3{font-size:14px!important;letter-spacing:0!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsModes button{min-height:30px!important;padding:5px 10px!important;font-size:12px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewHeadV1231{display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:wrap!important;gap:8px 12px!important;margin:0 0 6px!important;min-height:35px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewControlsV1231{display:flex!important;align-items:center!important;flex-wrap:wrap!important;justify-content:flex-end!important;gap:6px!important;margin-left:auto!important;min-width:0!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewSearch{display:flex!important;align-items:center!important;flex:0 1 245px!important;width:245px!important;max-width:100%!important;margin:0!important;min-height:32px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewSearch input{width:100%!important;min-width:0!important;min-height:32px!important;font-size:12px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewHealthFilter,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewSegmented button{min-height:32px!important;font-size:12px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewWindow{padding:5px 0 8px!important;margin:0!important;font-size:11px!important;line-height:1.3!important}
+/* No nested scroll for paginated workload tables; each row remains in natural document flow. */
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsWorkspaceBody .rundeckReviewTableWrapV1231,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckJobsProgramsWorkspaceBody .rundeckCurrentWorkloadTableWrap{height:auto!important;min-height:0!important;max-height:none!important;overflow-y:visible!important;overflow-x:auto!important;scrollbar-gutter:auto!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 :is(th,td){box-sizing:border-box!important;padding:7px 10px!important;line-height:1.3!important;font-size:12px!important;vertical-align:middle!important;border-bottom:1px solid rgba(126,147,158,.10)!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 th:nth-child(1){width:35%!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 th:nth-child(2){width:29%!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 th:nth-child(3),
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 th:nth-child(4),
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 th:nth-child(5){width:12%!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 :is(th,td):nth-child(-n+2){text-align:left!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231 :is(th,td):nth-child(n+3){text-align:right!important;font-variant-numeric:tabular-nums!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewWorkloadV1231,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewWorkloadV1231 button{text-align:left!important;margin-left:0!important;max-width:100%!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewWorkloadV1231 button{font-size:12px!important;overflow-wrap:anywhere!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewWorkloadV1231 small{display:block!important;font-size:10.5px!important;line-height:1.2!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewReasonChips{display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:flex-start!important;gap:4px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewPager,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckWorkloadPager{display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:7px!important;padding:8px 0!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs :is(.rundeckReviewPager,.rundeckWorkloadPager)>small{margin-right:auto!important;font-size:11px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadHead{gap:8px!important;flex-wrap:wrap!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadTools{gap:8px!important;margin-left:auto!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadSearch input{min-height:32px!important;width:clamp(160px,20vw,300px)!important;font-size:12px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckWorkloadHostFilter{min-height:32px!important;font-size:12px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload :is(th,td){padding:7px 9px!important;line-height:1.3!important;font-size:12px!important;vertical-align:middle!important;border-bottom:1px solid rgba(126,147,158,.10)!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadName button{font-size:12px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkloadName small{font-size:10.5px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload tbody tr.is-manually-marked:not(.is-selected){box-shadow:inset 3px 0 0 #d19b46!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload tbody tr.is-selected{box-shadow:inset 3px 0 0 var(--sphere-accent,#4fc6c8)!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring .sphereOverviewBottomRow.row{align-items:start!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring .sphereOverviewBottomRow.row>*,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring .sphereOverviewBottomRow .sphereOverviewDetails,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring .sphereOverviewBottomRow .rundeckJobsProgramsOverview{align-self:start!important;min-height:0!important;height:auto!important;max-height:none!important}
+.appShell.isTool:has(.rundeckPanel) .sphereOverviewDetails .sphereHealthSummaryGrid{align-items:start!important}
+.appShell.isTool:has(.rundeckPanel) .sphereOverviewDetails .sphereHealthInlineBlock{min-height:0!important;height:auto!important}
+@media(max-width:1199px){
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewHeadV1231,
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewControlsV1231{justify-content:flex-start!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewSearch{flex:1 1 200px!important;width:auto!important}
+}
+@media(max-width:760px){
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckReviewTableV1231{min-width:740px!important}
+.appShell:has(.rundeckPanel) .spherePerformancePage.is-jobs .rundeckCurrentWorkload table{min-width:780px!important}
+}

@@ -27,7 +27,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const [viewportHeight, setViewportHeight] = React.useState(() => typeof window === 'undefined' ? 864 : window.innerHeight)
   const [fittedRows, setFittedRows] = React.useState(null)
   const tableWrapRef = React.useRef(null)
-  const initialPageSize = viewportHeight <= 800 ? 2 : viewportHeight <= 940 ? 3 : 4
+  const initialPageSize = viewportHeight <= 720 ? 5 : viewportHeight <= 860 ? 8 : 10
   const pageSize = fittedRows ?? initialPageSize
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
@@ -54,7 +54,8 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
     const updateFit = () => {
       const top = tableWrapRef.current?.getBoundingClientRect().top
       if (!Number.isFinite(top)) return
-      const fits = Math.min(8, Math.max(2, Math.floor((window.innerHeight - top - 76) / 51)))
+      // Fit complete rows; pagination remains backend owned.
+       const fits = Math.min(16, Math.max(3, Math.floor((window.innerHeight - top - 86) / 47)))
       setFittedRows(old => old === fits ? old : fits)
     }
     updateFit()
@@ -130,7 +131,6 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
   const allRows = [...(data?.items || [])] // Backend-filtered and paginated, never global top 100.
   const reviewRows = allRows
   const searchRows = allRows
-  const reviewCount = Number(data?.summary?.review_required ?? 0)
   const visibleRows = loadedKey !== requestKey ? [] : forceSearch ? (searchActive && !searchPending ? searchRows : []) : (searchActive && !searchPending ? searchRows : reviewRows)
   const totalMatching = Number(data?.page?.total ?? 0)
   const totalPages = Math.max(1, Math.ceil(totalMatching / pageSize))
@@ -180,20 +180,19 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
           <option value="UNKNOWN">Limited / unknown</option>
           <option value="ALL">All evaluations</option>
         </select>
-      </div>
-    </header>
-
     {effectiveSearchOpen && <div className="rundeckReviewSearch">
       <input
         type="search"
         value={searchQuery}
         onChange={(event) => { setSearchQuery(event.target.value); setPageIndex(0) }}
-        placeholder="Search job or program (min. 2 characters)"
+        placeholder="Search job / program"
         aria-label="Search historical job or program"
-        autoFocus
       />
       {searchQuery && <button type="button" onClick={() => {setSearchQuery('');setPageIndex(0)}} aria-label="Clear search">×</button>}
     </div>}
+      </div>
+    </header>
+
     {loading && !hasLoaded && <div className="rundeckReviewState">Loading performance review…</div>}
     {loading && hasLoaded && <div className="rundeckReviewUpdating" role="status">
       Updating {periodLabel}{type !== 'ALL' ? ` · ${typeLabel}` : ''}…
@@ -210,7 +209,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
 
       <div ref={tableWrapRef} className={`rundeckReviewTableWrapV1231${loading && hasLoaded ? ' is-updating' : ''}`}>
         <table className="rundeckReviewTableV1231">
-          <thead><tr><th>Job / Program</th><th>Reason</th><th>Avg CPU</th><th>Peak CPU</th><th>Avg PSS</th></tr></thead>
+          <thead><tr><th scope="col">Job / Program</th><th scope="col">Review Reason</th><th scope="col" title={CPU_HINT}>Avg CPU (cores)</th><th scope="col" title={CPU_HINT}>Peak CPU (cores)</th><th scope="col" title="Proportional Set Size; not APP host RAM">Avg PSS (GB)</th></tr></thead>
           <tbody>
             {visibleRows.map((row) => {
               const selected = selectedJob?.key === row.consumer_key && selectedJob?.consumerType === row.consumer_type
@@ -255,7 +254,7 @@ export default function RundeckPerformanceReview({ refreshToken = '', selectedJo
         </table>
       </div>
       <nav className="rundeckReviewPager" aria-label="Historical evaluation pages">
-        <small>{totalMatching} matches · Page {currentPage+1}/{totalPages} · {reviewCount} total Review Required</small>
+        <small>{totalMatching} {totalMatching === 1 ? 'match' : 'matches'} · Page {currentPage+1}/{totalPages}</small>
         <button type="button" disabled={loading || currentPage === 0} onClick={() => changePage(currentPage - 1)}>Previous</button>
         <button type="button" disabled={loading || currentPage >= totalPages - 1} onClick={() => changePage(currentPage + 1)}>Next</button>
       </nav>
