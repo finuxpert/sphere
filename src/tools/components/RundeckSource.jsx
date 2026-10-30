@@ -755,7 +755,7 @@ export default function RundeckSource({ onCollection }) {
   const recentGap = retainedReadyCollectionGaps(history)[0] || null
   const qualityDisplay = quality.state === 'FRESH' ? (historyRefreshFailed ? 'PARTIAL' : dataAlignment) : quality.state
   const freshnessSummary = `Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}`
-  const freshnessShort = `Perf ${ageLabel(performanceAgeMinutes)} · Avail ${ageLabel(availabilityAgeMinutes)}`
+  const freshnessShort = `Perf ${ageLabel(performanceAgeMinutes)} · Avail ${ageLabel(availabilityAgeMinutes)}${availabilityStale ? ' (unverified)' : ''}`
   const freshnessMessage = monitoringFreshnessMessage(quality, { availabilityFetchFailed: availabilityRefreshFailed })
 
   const freshnessWarning = historyRefreshFailed || quality.state !== 'FRESH' || performanceStale || availabilityStale || (sourceSkewMinutes !== null && sourceSkewMinutes > 15)
@@ -784,10 +784,13 @@ export default function RundeckSource({ onCollection }) {
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
         <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">{headerTitle}</span></h2>
-        <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="SAP performance data status">
-          <span className="rundeckLastCollected" title={'Last collected ' + (latestCollectionAt ? formatWib(latestCollectionAt, true) + ' WIB' : 'not available')}>{latestCollectionAt ? formatWib(latestCollectionAt) + ' WIB' : initialSourceCheck ? 'Checking sources' : 'No timestamp'}</span>
-          <span className="rundeckMetaDivider" aria-hidden="true">·</span>
-          <span className="rundeckCycleIdentityV132" title={'Collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') + ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') + ' APP'}><b>{initialSourceCheck ? 'CHECKING' : quality.performanceValid ? 'READY' : latest ? 'LAST READY' : 'UNKNOWN'}</b></span>
+        <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="Last saved performance collection">
+          <span className="rundeckLastCollected"
+            title={'Performance collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') +
+              ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') +
+              ' APP · ' + (latestCollectionAt ? formatWib(latestCollectionAt, true) + ' WIB' : 'time unknown')}>
+            {latestCollectionAt ? formatWib(latestCollectionAt) + ' WIB' : initialSourceCheck ? 'Checking sources' : 'No timestamp'}
+          </span>
         </div>
       </div>
       <div className="rundeckActions">
@@ -806,9 +809,13 @@ export default function RundeckSource({ onCollection }) {
     {error && <div className={`rundeckMessage ${latest ? 'is-reconnecting' : ''}`} role="status">{latest ? `Refresh delayed. Showing last good run #${latest.execution_id || '—'}.` : error}</div>}
     {!collectionAligned && <div className="rundeckMessage" role="status">Waiting for one complete aligned Rundeck run.</div>}
     {!initialSourceCheck && (quality.state !== 'FRESH' || recentGap || historyRefreshFailed) && <div className={`rundeckDataQualityNotice is-${quality.state.toLowerCase()}`} role="status" aria-label="Data quality and retained observation gap">
-      <strong>{quality.state !== 'FRESH' ? `Data ${quality.state}` : historyRefreshFailed ? 'History coverage unverified' : 'Data current · historical gap retained'}</strong>
+      {(historyRefreshFailed || recentGap) && <strong>{historyRefreshFailed ? 'History coverage unverified' : 'Historical collection gap'}</strong>}
       <span>{quality.state !== 'FRESH'
-        ? freshnessMessage
+        ? availabilityStale
+          ? 'SAP service availability is unverified; saved states are historical.'
+          : performanceStale
+            ? 'Performance samples are historical; current state is unverified.'
+            : freshnessMessage
         : 'Current data is available. Missing historical samples remain unknown.'}</span>
       {historyRefreshFailed && <small>History unavailable.</small>}
       {recentGap && <small>NO COMPLETE READY OBSERVATION · Between READY {formatTime(new Date(recentGap.before).toISOString())} WIB and {formatTime(new Date(recentGap.after).toISOString())} WIB · {dataGapDuration(recentGap.observedSpacingMs)} between stored observations</small>}
