@@ -48,6 +48,7 @@ import './RundeckOneScreenDev.css'
 import './RundeckEnterpriseCompactV144.css'
 import './RundeckDevFinalAudit20261030.css'
 import './RundeckBootstrapFoundation.css'
+import './RundeckMonitoringPolish.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -252,8 +253,8 @@ export default function RundeckMonitoringHistory(props) {
             healthSummary={<section className="sphereOverviewDetails col-12 col-xl-7" aria-label="System Health">
             <header className="sphereHealthSummaryHeader">
               <h3>System Health</h3>
-              <span className="sphereHealthBackupState" title="Backup status is independent of collector health">
-                Backup: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState.replaceAll('_',' ')}
+              <span className="sphereHealthBackupState" title="Backup monitoring configuration only; not proof of a successful SAP database backup">
+                Backup monitor: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState === 'NOT_CONFIGURED' ? 'Not configured' : backupState.replaceAll('_',' ').toLowerCase()}
               </span>
             </header>
             <div className="sphereHealthSummaryGrid">

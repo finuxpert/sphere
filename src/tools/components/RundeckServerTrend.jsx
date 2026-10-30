@@ -60,7 +60,9 @@ function formatTrendAxis(value, range) {
     return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
   }
   if (range === '24h') {
-    return new Intl.DateTimeFormat('id-ID', { ...base, hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
+    const dateLabel = new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
+    const clockLabel = new Intl.DateTimeFormat('id-ID', { ...base, hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
+    return dateLabel + '\n' + clockLabel
   }
   return formatWib(value, false)
 }
@@ -85,7 +87,7 @@ function formatSavedBucketWindow(trend, bucket) {
 function trendAxisSplitNumber(range) {
   if (['30d', 'last_month', '90d', '180d'].includes(range)) return 6
   if (range === '7d') return 6
-  if (range === '24h') return 6
+  if (range === '24h') return 4
   if (range === '6h') return 6
   return 5
 }

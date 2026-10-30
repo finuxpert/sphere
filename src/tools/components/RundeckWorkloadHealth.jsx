@@ -219,7 +219,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       <strong>{preview ? preview.health[level.key] : '—'}</strong><span>{level.label}</span>
     </button>)}</div>
     <div className="sphereWorkloadPriority" aria-label="Priority programs from saved performance review">
-      <div className="sphereWorkloadPriorityTitle"><strong>Programs to Check</strong><small>Saved 24h evaluation</small></div>
+      <div className="sphereWorkloadPriorityTitle"><strong>Programs for Review</strong><small>Saved evaluation · 24h</small></div>
       {fallbackRows.length ? <div className="sphereWorkloadPriorityList">
         {fallbackRows.map(row => <button type="button"
           key={[row.consumer_type,row.consumer_key,row.host].join(':')}
