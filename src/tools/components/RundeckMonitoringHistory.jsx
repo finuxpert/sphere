@@ -283,7 +283,7 @@ export default function RundeckMonitoringHistory(props) {
             onClose={() => setActiveOverlay(null)}
           >
             <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading Monthly Review…</div>}>
-              <RundeckMonthlyReview refreshToken={refreshToken} sourceHosts={props.sourceHosts || []} />
+              <RundeckMonthlyReview refreshToken={refreshToken} sourceHosts={props.sourceHosts || []} showTitle={false} />
             </React.Suspense>
           </RundeckWorkspaceDrawer>}
 
