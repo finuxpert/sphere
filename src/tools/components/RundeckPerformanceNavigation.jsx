@@ -14,7 +14,7 @@ export default function RundeckPerformanceNavigation({ activeView = 'performance
         aria-expanded={!collapsed} title={collapsed ? 'Expand navigation' : 'Collapse navigation'}
         onClick={() => setCollapsed(value => !value)}>
         <SphereIcon name="activity" />
-        <strong>SPHERE</strong>
+        <strong>Menu</strong>
         <span aria-hidden="true" className="sphereSidebarToggleGlyph">{collapsed ? '›' : '‹'}</span>
       </button>
     </div>
