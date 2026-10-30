@@ -33,7 +33,7 @@ test('last-loaded layout owns lower two columns and preserves natural overflow',
   const css = component('RundeckOneScreenDev.css')
   const bootstrap = component('RundeckBootstrapTrend.css')
   assert.match(wrapper, /import '\.\/RundeckBootstrapTrend\.css'\s*\nimport '\.\/RundeckOneScreenDev\.css'/)
-  assert.match(css, /grid-template-columns:\s*minmax\(0,44fr\) minmax\(0,56fr\)/)
+  assert.match(css, /grid-template-columns:\s*minmax\(0,58fr\) minmax\(0,42fr\)/)
   assert.match(css, /\.sphereOverviewBottomRow\.row\s*>/)
   assert.doesNotMatch(css, /\.sphereOverviewBottomRow[^}]*overflow:\s*hidden/s)
   assert.doesNotMatch(bootstrap, /\.sphereOverviewBottomRow\.row\s*\{\s*display:flex/)
