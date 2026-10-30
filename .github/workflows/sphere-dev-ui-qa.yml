@@ -1,15 +1,25 @@
-name: SPHERE DEV UI QA
+name: SPHERE DEV CI and Offline Release
 
 on:
   push:
     branches: [rundeck-sphere-dev]
+    # Documentation-only commits do not need a full browser/build/package run.
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
+
+# Cancel outdated push builds; keep manual offline-release runs independent.
+concurrency:
+  group: sphere-dev-ci-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 permissions:
   contents: read
 
 jobs:
   frontend:
+    name: Full QA and offline release
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
