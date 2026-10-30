@@ -1249,10 +1249,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           </div>}
           {renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
             technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
-          {panelPeak && <div className="rundeckTrendPeakSummary" role="status"
+          {panelPeak && !clippedLoad && !clippedNetwork && <div className="rundeckTrendPeakSummary" role="status"
             title={peakKind + ' from saved observations; source timestamp shown when available'}>
             <strong>{peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
-            <span>{activeFocus ? 'Selected ' + activeFocus : 'All APPs'} · {panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB</span>
+            <span>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB</span>
           </div>}
         </section>
       })}
