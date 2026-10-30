@@ -277,12 +277,12 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   const srvSpec=[[49,'left'],[52,'right'],[58,'right'],[55,'right'],[62,'right'],[54,'right'],[39,'right']]
   table(M+10,lowY+lowH-36,serverW-20,srvSpec,
     ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU Alert','RAM Alert'],srvRows,25,23,8)
-  const hostPeak=(metric,peak)=>{
+  const hostPeak=peak=>{
     if(!peak)return 'N/A'
     return peak.host+'  '+pct(peak.value)+'  '+wib(peak.at)
   }
-  text(M+16,lowY+lowH-185,'Highest CPU: '+hostPeak('cpu',m.cpuPeak),8.1)
-  text(M+16,lowY+lowH-202,'Highest RAM: '+hostPeak('ram',m.ramPeak),8.1)
+  text(M+16,lowY+lowH-185,'Highest CPU: '+hostPeak(m.cpuPeak),8.1)
+  text(M+16,lowY+lowH-202,'Highest RAM: '+hostPeak(m.ramPeak),8.1)
   text(M+16,lowY+lowH-219,'Alert limit: CPU '+pct(m.pressure.thresholds?.cpu_warning_pct)+
     ', RAM '+pct(m.pressure.thresholds?.ram_warning_pct),7.5,'normal','muted')
   const jobRows=m.candidates.map((row,i)=>{
