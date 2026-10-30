@@ -69,7 +69,7 @@ export function monthlyEnterpriseReportModel(month,data) {
   const hosts=Array.from({length:5},(_,i)=>{
     const name='APP'+(i+1)
     const row=(pressure.hosts||[]).find(v=>app(v.host)===name)
-    return {host:name,...(row||{})}
+    return {...(row||{}),host:name}
   })
   const [year,mon]=month.split('-').map(Number)
   const days=new Date(Date.UTC(year,mon,0)).getUTCDate()
