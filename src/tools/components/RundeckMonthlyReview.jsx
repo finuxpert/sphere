@@ -30,13 +30,6 @@ const when = value => {
     minute: '2-digit', hour12: false,
   }).format(date) + ' WIB'
 }
-const dateShort = value => {
-  if (!value) return '—'
-  const d = new Date(value)
-  return Number.isNaN(d.getTime()) ? '—' : new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', year: 'numeric',
-  }).format(d)
-}
 function monthOptions() {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'numeric' })
     .formatToParts(new Date())
@@ -439,10 +432,6 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [storageError,setStorageError]=React.useState('')
   const [loading,setLoading]=React.useState(true)
   const [error,setError]=React.useState('')
-  const [chartMode,setChartMode]=React.useState('peak')
-  const [chartHost,setChartHost]=React.useState('ALL')
-  const [chartMetric,setChartMetric]=React.useState('cpu')
-  const [chartFitObserved,setChartFitObserved]=React.useState(true)
   const [pdfMode,setPdfMode]=React.useState('management')
   const [pdfBusy,setPdfBusy]=React.useState(false)
   const [pdfError,setPdfError]=React.useState('')
@@ -550,14 +539,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
   const preview=hostPreview?.month===month ? hostPreview : null
   const completedData=data?.month===month ? data : null
-  const hostData=completedData||preview
   const items=completedData?.items||[]
-  const quality=hostData?.quality||{}
-  const summary=completedData?.summary||{}
   const evidence=hostData?.monthly_pressure||{}
   const errors=completedData?.monthly_errors||{}
-  const tuningCandidates=completedData?.monthly_abap_candidates||[]
-  const hosts=evidence.hosts||[]
   const total=Number(completedData?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
   const previewPdf=React.useCallback(async(reportType='management')=>{
