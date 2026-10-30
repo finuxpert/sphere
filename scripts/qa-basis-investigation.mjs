@@ -108,7 +108,7 @@ const checks = [
   ['Approved cockpit redesign exposes observed data without invented metrics',
     files.source.includes('rundeckDashboardTitle')
     && files.currentWorkload.includes('Search {rows.length} observations')
-    && files.currentWorkload.includes('>Observed</th>')
+    && files.currentWorkload.includes('>Last Seen (WIB)</th>')
     && files.currentWorkload.includes('row.collected_at')
     && files.serverTrend.includes('rundeckTrendEditorial')
     && files.operationalEvidence.includes('className="rundeckAnalysisActions"')
@@ -120,7 +120,7 @@ const checks = [
     files.wrapper.includes("import './RundeckMockupParity.css'")
     && !files.wrapper.includes('rundeckProductNavigation') && files.operationalEvidence.includes('rundeckAnalysisActions')
     && files.monitoringCore.includes('rundeckCockpitV13491')
-    && files.source.includes('className="rundeckDashboardTitle">Monitoring</span>')
+    && files.source.includes('className="rundeckDashboardTitle">{headerTitle}</span>')
     && mockupStyle.includes('.rundeckCockpitV13491 .rundeckTripleTrendGrid .rundeckTrendChart')
     && mockupStyle.includes('height:clamp(195px,24dvh,235px)!important')
     && mockupStyle.includes('.rundeckInfraTrendWorkspace')
@@ -352,7 +352,7 @@ const checks = [
   ['Correlated Events drawer uses roomier timeline rows and three-column timing details', files.evidenceTimelineCss.includes('min-height:46px!important') && files.evidenceTimelineCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important') && files.evidenceTimeline.includes('Critical Work Process first observed')],
   ['SAP Availability drawer distinguishes stale data from service failure', files.availability.includes('last reported:') && files.availability.includes('using last reliable data') && files.availability.includes("const displayState = unverified ? 'UNKNOWN' : stale ? 'STALE' : serviceState") && files.availability.includes("displayState === 'CRITICAL' ? 'has-down'")],
   ['Trend helper microcopy is removed from the cockpit', !files.serverTrend.includes('Click a chart point to inspect saved job and program data without expanding the page.')],
-  ['Monitoring title is visible with one cockpit identity and live operator actions', files.source.includes('className="rundeckDashboardTitle">Monitoring</span>') && !files.source.includes('<h2 aria-label="SAP Performance">') && !files.wrapper.includes('rundeckProductNavigation') && files.operationalEvidence.includes('rundeckAnalysisActions') && files.monitoringCore.includes('rundeckCockpitV13491')],
+  ['Monitoring title is visible with one cockpit identity and live operator actions', files.source.includes('className="rundeckDashboardTitle">{headerTitle}</span>') && !files.source.includes('<h2 aria-label="SAP Performance">') && !files.wrapper.includes('rundeckProductNavigation') && files.operationalEvidence.includes('rundeckAnalysisActions') && files.monitoringCore.includes('rundeckCockpitV13491')],
   ['Review mode has no redundant Search button because Search is a workspace mode', files.jobsPrograms.includes('hideSearchButton: true') && files.performanceReview.includes('!forceSearch && !hideSearchButton')],
   ['Live Jobs table fills the merged workspace and keeps selected-row emphasis restrained',
     files.currentWorkloadCss.includes('SPHERE v1.34.61 — full-width Live table')
@@ -427,7 +427,7 @@ const checks = [
   ['System Data moved out of inline disclosure into shared analysis drawer', !files.source.includes('rundeckSupportingDataDisclosure') && files.wrapper.includes("activeOverlay?.type === 'system-data'") && files.wrapper.includes('systemDataContent')],
   ['Current Workloads keeps explicit compact column allocation', files.currentWorkloadCss.includes('table-layout: fixed') && files.currentWorkloadCss.includes('nth-child(2)') && files.currentWorkloadCss.includes('width: 45%')],
   ['Current Workloads exposes multi-core CPU semantics and opens shared analysis without duplicate selected card',
-    files.currentWorkload.includes('CPU Total ↓') &&
+    files.currentWorkload.includes('CPU (cores) ↓') &&
     files.currentWorkload.includes('rundeckWorkloadCpuUnit') &&
     files.currentWorkload.includes("active?'is-selected':'") &&
     files.currentWorkload.includes('onSelectJob?.(context)') &&

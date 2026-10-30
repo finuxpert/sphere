@@ -322,7 +322,7 @@ export default function RundeckCurrentWorkload({ collectionId = '', selectedJob 
 
     {!loading && !error && <div className="rundeckCurrentWorkloadTableWrap" ref={tableWrapRef}>
       <table>
-        <thead><tr><th scope="col">APP / Mark</th><th scope="col">Job / Program</th><th scope="col" title={CPU_HINT}>CPU (cores) ↓<small className="rundeckWorkloadCpuUnit">multi-core %</small></th><th scope="col" title="Proportional Set Size; not APP host RAM">PSS (GB)</th><th scope="col">Processes</th><th scope="col" title="SAP work process context">WP</th><th scope="col" title="Observation timestamp; not job completion">Last Seen (WIB)</th></tr></thead>
+        <thead><tr><th scope="col">APP / Mark</th><th scope="col">Job / Program</th><th scope="col" title={CPU_HINT}>CPU (cores) ↓<small className="rundeckWorkloadCpuUnit">multi-core %</small></th><th scope="col" title="Proportional Set Size; not APP host RAM">PSS (GB)</th><th scope="col">Processes</th><th scope="col" title="SAP work process type / number context">WP Context</th><th scope="col" title="Observation timestamp; not job completion">Last Seen (WIB)</th></tr></thead>
         <tbody>
           {pageRows.map((row) => {
             const details = row.details || {}
