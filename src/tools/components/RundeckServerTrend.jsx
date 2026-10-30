@@ -867,19 +867,59 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     } catch { /* best effort */ }
   }, [bucket, mode, networkDirection, networkDirection1, networkDirection2, fourthNetworkDirection, networkScaleMode, networkScaleMode1, networkScaleMode2, fourthNetworkScaleMode, range, serverMetric1, serverMetric2, technicalMetric, fourthMetric])
 
+  // Default SAP host charts share a saved collection window. Load CPU/RAM/WP
+  // in one SQL scan; Network remains independently sourced from Infrastructure.
+  const defaultTrendBundle = serverMetric1 === 'cpu' && serverMetric2 === 'ram' &&
+    technicalMetric === 'network' && fourthMetric === 'wp'
+
   React.useEffect(() => {
-    if (!databaseEnabled) return undefined
+    if (!databaseEnabled || !defaultTrendBundle || (range === 'custom' && !customWindow)) return undefined
+    const controller = new AbortController()
+    const deadline = AbortSignal.timeout(20_000)
+    setServerLoading1(true); setServerLoading2(true); setFourthLoading(true)
+    setServerError1(''); setServerError2(''); setFourthError('')
+    const windowQuery = range === 'custom' ? '&' + customRangeSearch(customWindow) : ''
+    const requestBucket = range === 'custom' || LONG_RANGES.has(range) ? 'auto' : bucket
+    const url = `${API}/history/trends?metrics=cpu%2Cram%2Cwp&range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(requestBucket)}${windowQuery}`
+    json(url, AbortSignal.any([controller.signal, deadline]), 'cpu')
+      .then(payload => {
+        if (controller.signal.aborted) return
+        if (!['cpu','ram','wp'].every(name => Array.isArray(payload?.series?.[name]?.items) &&
+            payload.series[name].metric === name && payload.series[name].range === range)) {
+          throw new Error('Incomplete saved trend bundle')
+        }
+        setServerTrend1(payload.series.cpu)
+        setServerTrend2(payload.series.ram)
+        setFourthTrend(payload.series.wp)
+      })
+      .catch(failure => {
+        if (controller.signal.aborted) return
+        const message = deadline.aborted
+          ? 'Trend API did not respond within 20 seconds. Inspect database query latency.'
+          : failure.message || 'Trend bundle unavailable.'
+        setServerError1(message); setServerError2(message); setFourthError(message)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setServerLoading1(false); setServerLoading2(false); setFourthLoading(false)
+        }
+      })
+    return () => controller.abort()
+  }, [databaseEnabled, defaultTrendBundle, refreshToken, range, bucket, customWindow])
+
+  React.useEffect(() => {
+    if (!databaseEnabled || defaultTrendBundle) return undefined
     const controller = new AbortController()
     loadTrend(serverMetric1, setServerTrend1, setServerLoading1, setServerError1, controller.signal, networkDirection1)
     return () => controller.abort()
-  }, [databaseEnabled, loadTrend, networkDirection1, refreshToken, serverMetric1])
+  }, [databaseEnabled, loadTrend, networkDirection1, refreshToken, serverMetric1, defaultTrendBundle])
 
   React.useEffect(() => {
-    if (!databaseEnabled) return undefined
+    if (!databaseEnabled || defaultTrendBundle) return undefined
     const controller = new AbortController()
     loadTrend(serverMetric2, setServerTrend2, setServerLoading2, setServerError2, controller.signal, networkDirection2)
     return () => controller.abort()
-  }, [databaseEnabled, loadTrend, networkDirection2, refreshToken, serverMetric2])
+  }, [databaseEnabled, loadTrend, networkDirection2, refreshToken, serverMetric2, defaultTrendBundle])
 
   React.useEffect(() => {
     if (!databaseEnabled) return undefined
@@ -889,11 +929,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [databaseEnabled, loadTrend, networkDirection, refreshToken, technicalMetric])
 
   React.useEffect(() => {
-    if (!databaseEnabled) return undefined
+    if (!databaseEnabled || defaultTrendBundle) return undefined
     const controller = new AbortController()
     loadTrend(fourthMetric, setFourthTrend, setFourthLoading, setFourthError, controller.signal, fourthNetworkDirection)
     return () => controller.abort()
-  }, [databaseEnabled, loadTrend, fourthNetworkDirection, refreshToken, fourthMetric])
+  }, [databaseEnabled, loadTrend, fourthNetworkDirection, refreshToken, fourthMetric, defaultTrendBundle])
 
   React.useEffect(() => {
     timelineRequestSequence.current += 1
