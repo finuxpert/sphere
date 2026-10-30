@@ -8,7 +8,8 @@ const COLOR = {
   navy: [16,42,67], ink: [28,51,71], muted: [98,118,137],
   blue: [21,90,155], bluefill: [219,234,248], light: [246,249,252],
   rule: [220,229,236], red: [194,59,56], amber: [185,109,22],
-  green: [23,109,87], white: [255,255,255], header: [238,244,248],
+  green: [23,109,87], violet: [126,91,170], slate: [115,137,158],
+  teal: [34,149,144], white: [255,255,255], header: [238,244,248],
 }
 const value = input => input === null || input === undefined || input === ''
   ? null : Number.isFinite(Number(input)) ? Number(input) : null
@@ -73,25 +74,47 @@ export function monthlyEnterpriseReportModel(month,data) {
   })
   const [year,mon]=month.split('-').map(Number)
   const days=new Date(Date.UTC(year,mon,0)).getUTCDate()
+  // Retain one point per APP and calendar day; absent dates remain null.
+  // CPU/RAM line series must never join peaks from different hosts.
+  const dailySource=new Map()
+  for(const row of pressure.daily_hosts||[]) {
+    const date=String(row.day||'').slice(0,10)
+    const host=app(row.host)
+    if(!/^APP[1-5]$/.test(host) || !date.startsWith(month+'-'))continue
+    const byHost=dailySource.get(date)||{}
+    byHost[host]=row
+    dailySource.set(date,byHost)
+  }
+  const series=hosts.map(row=>({
+    host:row.host,
+    days:Array.from({length:days},(_,i)=>{
+      const date=month+'-'+String(i+1).padStart(2,'0')
+      const sample=dailySource.get(date)?.[row.host]
+      return {
+        day:i+1,host:row.host,
+        cpu:value(sample?.peak_cpu_pct),ram:value(sample?.peak_ram_pct),
+        cpuAt:sample?.peak_cpu_at||null,ramAt:sample?.peak_ram_at||null,
+      }
+    }),
+  }))
   const daily=Array.from({length:days},(_,index)=>{
     const date=month+'-'+String(index+1).padStart(2,'0')
-    const rows=(pressure.daily_hosts||[]).filter(v=>String(v.day).slice(0,10)===date)
+    const rows=dailySource.get(date)||{}
     const peak=metric=>{
       const field='peak_'+metric+'_pct'
       const timed='peak_'+metric+'_at'
-      const observed=rows.filter(row=>value(row[field])!==null)
-        .sort((a,b)=>value(b[field])-value(a[field]))
-      return observed.length?{
-        value:value(observed[0][field]),host:app(observed[0].host),
-        at:observed[0][timed]||null,
-      }:null
+      const observed=Object.entries(rows).map(([host,row])=>({
+        host,value:value(row[field]),at:row[timed]||null,
+      })).filter(item=>item.value!==null)
+        .sort((a,b)=>b.value-a.value)
+      return observed[0]||null
     }
     return {day:index+1,cpu:peak('cpu'),ram:peak('ram')}
   })
   const maximum=metric=>daily.map(row=>row[metric]).filter(Boolean)
     .sort((a,b)=>b.value-a.value)[0]||null
   return {
-    month,quality,summary,pressure,candidates,hosts,daily,days,
+    month,quality,summary,pressure,candidates,hosts,daily,days,series,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
     sortedCpu:[...candidates].sort((a,b)=>
       (value(wpCpuCoreEquivalent(b.peak_cpu_pct))??-1)-
@@ -141,79 +164,105 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     while(pdf.getTextWidth(String(s))>width-8&&sz>6.1){sz-=.2;font(weight,sz)}
     text(x,y,s,sz,weight,color,align,width-7)
   }
-  // Header - same positions and page geometry as the approved enterprise prototype.
-  text(M,H-41,'SPHERE',25,'bold','blue')
-  line(M+139,H-47,M+139,H-25)
-  text(M+160,H-40,'SAP Monthly Performance Report',19,'bold','navy')
-  text(M+160,H-61,monthName(month),10,'normal','muted')
-  fillRect(W-M-145,H-56,145,28,'header',6)
-  text(W-M-72.5,H-46,'SPHERE EVIDENCE',9,'bold','blue','center')
-  line(M,H-80,W-M,H-80,'rule',.95)
-  text(M,H-98,'System: SAP Production',9,'normal','ink')
-  text(M+227,H-98,'Period: '+month,9,'normal','ink')
-  text(M+475,H-98,'Prepared: '+wib(new Date().toISOString(),true),9,'normal','ink')
-  text(W-M,H-98,'Source: SPHERE saved records',9,'normal','muted','right')
-  // 5 metrics
+  // Report header: no repeated logo, evidence badge or source label.
+  const systemName=(pressure.hosts||[]).some(row=>
+    /^AOPH[1-5]PAPPDC(?:\.|$)/i.test(String(row.host||'')))
+    ? 'AOP Production' : 'SAP Production'
+  text(M,H-44,'SAP Monthly Performance Report',20,'bold','navy')
+  line(M,H-55,W-M,H-55,'rule',.7)
+  const metaY=H-77,metaValueY=H-94
+  text(M,metaY,'REPORTING PERIOD',7.5,'bold','muted')
+  text(M,metaValueY,monthName(month),10,'bold','ink')
+  text(M+240,metaY,'SYSTEM',7.5,'bold','muted')
+  text(M+240,metaValueY,systemName,10,'bold','ink')
+  text(M+465,metaY,'GENERATED',7.5,'bold','muted')
+  text(M+465,metaValueY,wib(new Date().toISOString(),true)+' WIB',9.8,'normal','ink')
+  text(W-M,metaY,'MONITORING COVERAGE (EST.)',7.5,'bold','muted','right')
+  text(W-M,metaValueY,pct(m.quality.coverage_pct),10,'bold','ink','right')
+  // Only two management-level indicators. Warning readings stay in the server table.
   const ky=H-171,kh=57
   rect(M,ky,CW,kh,'light',6)
-  const kp=[
-    ['PROGRAMS REVIEWED',number(m.summary.workloads,0),'ink'],
-    ['TUNING CANDIDATES',number(data.monthly_abap_candidates?.length,0),'blue'],
-    ['CPU WARNING READINGS',number(m.pressure.cpu?.observed_pressure_host_checks,0),'red'],
-    ['RAM WARNING READINGS',number(m.pressure.ram?.observed_pressure_host_checks,0),'amber'],
-    ['DATA COVERAGE',pct(m.quality.coverage_pct),'ink'],
+  const kpis=[
+    ['JOBS & PROGRAMS EVALUATED',number(m.summary.workloads,0)],
+    ['TOP TUNING PRIORITIES',number(m.candidates.length,0)],
   ]
-  kp.forEach(([label,val,color],i)=>{
-    const x=M+20+i*CW/5
-    text(x,ky+38,label,7.6,'bold','muted')
-    text(x,ky+11,val,19,'bold',color)
+  kpis.forEach(([label,val],i)=>{
+    const x=M+24+i*CW/2
+    text(x,ky+38,label,8,'bold','muted')
+    text(x,ky+12,val,20,'bold',i?'blue':'ink')
   })
-  // Daily trends - null data creates a break, not a zero and not a connected bridge.
+  // Five stable APP-specific series; missing days cause real gaps in each line.
+  // Peak values and timestamps are in the header, never floating above the plot.
   const panelY=H-374,panelH=190,gap=12,panelW=(CW-gap)/2
+  const seriesColors=['blue','green','amber','violet','slate']
+  const shortMonth=new Intl.DateTimeFormat('en-GB',{
+    month:'short',timeZone:'UTC',
+  }).format(new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7))-1,1)))
   function trend(x,title,metric,threshold) {
     rect(x,panelY,panelW,panelH,'white',7)
-    section(x+16,panelY+panelH-24,title)
-    text(x+16,panelY+panelH-38,'Daily highest observed APP reading',7.8,'normal','muted')
-    const px=x+43,py=panelY+37,pw=panelW-67,ph=panelH-94
-    for(const level of [0,25,50,75,100]){
-      const yy=py+ph*level/100
-      line(px,yy,px+pw,yy,'rule',.48)
-      text(px-10,yy-2,String(level),7,'normal','muted','right')
-    }
-    const ticks=[1,10,20,m.days]
-    for(const tick of new Set(ticks)){
-      const xx=px+(tick-1)*pw/(m.days-1)
-      text(xx,py-16,String(tick).padStart(2,'0')+' '+monthName(month).split(' ')[0].slice(0,3),7.4,'normal','muted','center')
-    }
-    if(value(threshold)!==null){
-      const yy=py+ph*Math.max(0,Math.min(100,value(threshold)))/100
-      pdf.setLineDashPattern([3,3],0);line(px,yy,px+pw,yy,'amber',.9);pdf.setLineDashPattern([],0)
-      text(x+panelW-17,panelY+panelH-24,'Threshold '+pct(threshold),7.5,'normal','muted','right')
-    }
-    let prev=null
-    for(const item of m.daily){
-      const peak=item[metric]
-      if(!peak){prev=null;continue}
-      const xx=px+(item.day-1)*pw/(m.days-1)
-      const yy=py+ph*Math.max(0,Math.min(100,peak.value))/100
-      if(prev)line(prev.x,prev.y,xx,yy,'blue',1.8)
-      pdf.setFillColor(...rgb('blue'));pdf.circle(xx,H-yy,1.6,'F')
-      prev={x:xx,y:yy}
-    }
+    section(x+16,panelY+panelH-23,title)
     const best=metric==='cpu'?m.cpuPeak:m.ramPeak
     if(best){
-      const chosen=m.daily.find(r=>r[metric]===best)
-      const xx=px+(chosen.day-1)*pw/(m.days-1)
-      const yy=py+ph*Math.max(0,Math.min(100,best.value))/100
-      pdf.setFillColor(...rgb('red'));pdf.circle(xx,H-yy,4.0,'F')
-      const ax=Math.min(xx+8,x+panelW-154)
-      const ay=Math.min(yy+9,panelY+panelH-43)
-      rect(ax,ay,132,28,'white',3)
-      text(ax+6,ay+16,pct(best.value)+'  '+best.host,9,'bold','red')
-      text(ax+6,ay+5,wib(best.at),7,'normal','muted', 'left',120)
-    }else{
-      text(x+panelW/2,py+ph/2,'No retained readings',9,'normal','muted','center')
+      text(x+panelW-16,panelY+panelH-22,
+        'Peak '+pct(best.value)+'  '+best.host,9,'bold','red','right')
+      text(x+panelW-16,panelY+panelH-37,
+        wib(best.at)+' WIB',7.3,'normal','muted','right')
     }
+    const px=x+43,py=panelY+49,pw=panelW-68,ph=90
+    const xFor=day=>px+(day-1)*pw/(m.days-1)
+    const yFor=n=>py+ph*Math.max(0,Math.min(100,n))/100
+    for(const level of [0,25,50,75,100]) {
+      const yy=yFor(level)
+      line(px,yy,px+pw,yy,'rule',.48)
+      text(px-10,yy-2,String(level)+'%',7,'normal','muted','right')
+    }
+    for(const tick of new Set([1,10,20,m.days])) {
+      const label=tick===m.days?String(tick).padStart(2,'0')+' '+shortMonth
+        :String(tick).padStart(2,'0')
+      text(xFor(tick),py-15,label,7.3,'normal','muted','center')
+    }
+    if(value(threshold)!==null){
+      const ty=yFor(value(threshold))
+      pdf.setLineDashPattern([3,3],0)
+      line(px,ty,px+pw,ty,'amber',.8)
+      pdf.setLineDashPattern([],0)
+      const label='Limit '+pct(threshold)
+      font('normal',7.1)
+      const width=pdf.getTextWidth(label)+9
+      fillRect(px+pw-width-3,ty-4,width,13,'white',2)
+      text(px+pw-7,ty,label,7.1,'normal','amber','right')
+    }
+    let observed=false
+    m.series.forEach((hostSeries,i)=>{
+      const color=seriesColors[i]
+      let previous=null
+      hostSeries.days.forEach(point=>{
+        const reading=point[metric]
+        if(reading===null){previous=null;return}
+        observed=true
+        const current={x:xFor(point.day),y:yFor(reading)}
+        if(previous)line(previous.x,previous.y,current.x,current.y,color,1.35)
+        previous=current
+      })
+    })
+    if(best){
+      const winner=m.series.find(row=>row.host===best.host)
+      const point=winner?.days.find(point=>
+        point[metric]===best.value &&
+        point[metric+'At']===best.at)
+        || winner?.days.find(point=>point[metric]===best.value)
+      if(point){
+        pdf.setFillColor(...rgb('red'))
+        pdf.circle(xFor(point.day),H-yFor(best.value),3.5,'F')
+      }
+    }
+    if(!observed)text(x+panelW/2,py+ph/2,'No retained readings',9,'normal','muted','center')
+    // Keep the same legend colors for CPU and RAM across both charts.
+    m.series.forEach((item,i)=>{
+      const lx=x+65+i*90,ly=panelY+12
+      fillRect(lx,ly,10,2.3,seriesColors[i])
+      text(lx+15,ly-1,item.host,7.4,'normal','muted')
+    })
   }
   trend(M,'CPU Utilization Trend','cpu',m.pressure.thresholds?.cpu_warning_pct)
   trend(M+panelW+gap,'Memory Utilization Trend','ram',m.pressure.thresholds?.ram_warning_pct)
@@ -274,17 +323,10 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     pct(row.avg_ram_pct),pct(row.peak_ram_pct),
     number(row.cpu_warning_host_checks,0),number(row.ram_warning_host_checks,0),
   ])
-  const srvSpec=[[49,'left'],[52,'right'],[58,'right'],[55,'right'],[62,'right'],[54,'right'],[39,'right']]
+  const srvSpec=[[43,'left'],[50,'right'],[50,'right'],[52,'right'],[52,'right'],[60,'right'],[62,'right']]
   table(M+10,lowY+lowH-36,serverW-20,srvSpec,
-    ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU Alert','RAM Alert'],srvRows,25,23,8)
-  const hostPeak=peak=>{
-    if(!peak)return 'N/A'
-    return peak.host+'  '+pct(peak.value)+'  '+wib(peak.at)
-  }
-  text(M+16,lowY+lowH-185,'Highest CPU: '+hostPeak(m.cpuPeak),8.1)
-  text(M+16,lowY+lowH-202,'Highest RAM: '+hostPeak(m.ramPeak),8.1)
-  text(M+16,lowY+lowH-219,'Alert limit: CPU '+pct(m.pressure.thresholds?.cpu_warning_pct)+
-    ', RAM '+pct(m.pressure.thresholds?.ram_warning_pct),7.5,'normal','muted')
+    ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU High Reads','RAM High Reads'],
+    srvRows,25,32,8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
     return [
@@ -309,10 +351,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     text(jobX+17,lowY+lowH-36-25-16.5*jobRows.length-11,
       'Additional candidates were not observed for this period.',7.7,'normal','muted')
   }
-  line(M,44,W-M,44,'rule',.9)
-  text(M,28,'SPHERE Monthly Performance Review',8,'bold','blue')
-  text(M+252,28,'WP CPU is core-equivalent; observed samples are not SM37 job runs.',8,'normal','muted')
-  text(W-M,28,'Page 1 of 1',8,'normal','muted','right')
+  // No repeated heading, WP methodology or page number in the PDF footer.
   if(pdf.internal.getNumberOfPages()!==1)throw Error('Enterprise report must fit one A3 landscape page')
   return returnInstance?pdf:pdf.output('blob')
 }
