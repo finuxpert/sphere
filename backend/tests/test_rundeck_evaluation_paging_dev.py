@@ -89,6 +89,19 @@ class EvaluationPagingDevTests(unittest.TestCase):
         self.assertEqual(results, [{"ok": True}] * 4)
         self.assertEqual(highest_concurrent, 1)
 
+    def test_runtime_reports_sql_and_lock_wait_separately(self):
+        payload = rundeck_evaluation._runtime_payload(
+            {"items": [], "page": {"total": 0}}, cache="HIT", duration_ms=12.5,
+            sql_timings_ms={"collection_anchor": 3.4},
+        )
+        self.assertEqual(payload["runtime"]["sql_ms"], 3.4)
+        self.assertEqual(payload["runtime"]["sql_timings_ms"]["collection_anchor"], 3.4)
+        with patch.object(rundeck_evaluation, "_evaluation_report_locked", return_value=payload):
+            report = rundeck_evaluation.evaluation_report()
+        self.assertIn("lock_wait_ms", report["runtime"])
+        self.assertGreaterEqual(report["runtime"]["lock_wait_ms"], 0)
+        self.assertEqual(report["runtime"]["cache"], "HIT")
+
     def test_empty_filter_and_invalid_parameters(self):
         report = self.report()
         page = _evaluation_page(report, limit=10, offset=0, query="NOT_FOUND", health="ALL")
