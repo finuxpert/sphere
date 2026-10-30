@@ -38,10 +38,6 @@ const wib = (input, includeYear=false) => {
     ...(includeYear?{year:'numeric'}:{}),hour:'2-digit',minute:'2-digit',hour12:false,
   }).format(d)
 }
-const clip = (input,max=55) => {
-  const s=String(input??'N/A')
-  return s.length>max?s.slice(0,max-1)+'…':s
-}
 const candidateFinding = row => row.signals?.high_memory ? 'High WP memory'
   : row.signals?.sustained_high_cpu ? 'High WP CPU'
     : row.signals?.cpu_spike ? 'WP CPU spike'
@@ -58,6 +54,12 @@ export function monthlyEnterpriseReportModel(month,data) {
   const pressure=data.monthly_pressure
   const quality=data.quality
   const summary=data.summary||{}
+  if(data.monthly_storage?.month!==month || !Array.isArray(data.monthly_storage?.items)) {
+    throw Error('Month-scoped infrastructure storage evidence is required')
+  }
+  if(!Array.isArray(data.monthly_top_wp_cpu) || !Array.isArray(data.monthly_top_wp_pss)){
+    throw Error('Full-population WP rankings are required for monthly export')
+  }
   const raw=Array.isArray(data.monthly_abap_candidates)?data.monthly_abap_candidates:[]
   const seen=new Set()
   const candidates=raw.filter(row=>{
@@ -115,12 +117,10 @@ export function monthlyEnterpriseReportModel(month,data) {
     .sort((a,b)=>b.value-a.value)[0]||null
   return {
     month,quality,summary,pressure,candidates,hosts,daily,days,series,
+    storage:data.monthly_storage.items,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
-    sortedCpu:[...candidates].sort((a,b)=>
-      (value(wpCpuCoreEquivalent(b.peak_cpu_pct))??-1)-
-      (value(wpCpuCoreEquivalent(a.peak_cpu_pct))??-1)),
-    sortedPss:[...candidates].sort((a,b)=>
-      (value(b.peak_pss_gb)??-1)-(value(a.peak_pss_gb)??-1)),
+    sortedCpu:data.monthly_top_wp_cpu.slice(0,10).filter(row=>value(row.peak_cpu_pct)!==null),
+    sortedPss:data.monthly_top_wp_pss.slice(0,10).filter(row=>value(row.peak_pss_gb)!==null),
   }
 }
 
@@ -159,41 +159,33 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   }
   function section(x,y,title) {text(x,y,title,12,'bold','navy')}
   function fitText(x,y,s,width,align='left',base=8.0,color='ink',weight='normal') {
+    const label=String(s??'N/A')
     let sz=base
     font(weight,sz)
-    while(pdf.getTextWidth(String(s))>width-8&&sz>6.1){sz-=.2;font(weight,sz)}
-    text(x,y,s,sz,weight,color,align,width-7)
+    while(pdf.getTextWidth(label)>width-9 && sz>5.5){sz-=.2;font(weight,sz)}
+    if(pdf.getTextWidth(label)<=width-9) {
+      text(x,y,label,sz,weight,color,align)
+      return
+    }
+    // Preserve complete SAP program identities: wrap rather than truncate.
+    const parts=pdf.splitTextToSize(label,width-10)
+    if(parts.length>2)throw Error('Program name exceeds two-line A3 cell: '+label)
+    parts.forEach((part,i)=>text(x,y+3-i*7,part,6.2,weight,color,align))
   }
-  // Report header: no repeated logo, evidence badge or source label.
-  const systemName=(m.pressure.hosts||[]).some(row=>
-    /^AOPH[1-5]PAPPDC(?:\.|$)/i.test(String(row.host||'')))
-    ? 'AOP Production' : 'SAP Production'
-  text(M,H-44,'SAP Monthly Performance Report',20,'bold','navy')
-  line(M,H-55,W-M,H-55,'rule',.7)
-  const metaY=H-77,metaValueY=H-94
-  text(M,metaY,'REPORTING PERIOD',7.5,'bold','muted')
-  text(M,metaValueY,monthName(month),10,'bold','ink')
-  text(M+240,metaY,'SYSTEM',7.5,'bold','muted')
-  text(M+240,metaValueY,systemName,10,'bold','ink')
-  text(M+465,metaY,'GENERATED',7.5,'bold','muted')
-  text(M+465,metaValueY,wib(new Date().toISOString(),true)+' WIB',9.8,'normal','ink')
-  text(W-M,metaY,'MONITORING COVERAGE (EST.)',7.5,'bold','muted','right')
-  text(W-M,metaValueY,pct(m.quality.coverage_pct),10,'bold','ink','right')
-  // Only two management-level indicators. Warning readings stay in the server table.
-  const ky=H-171,kh=57
-  rect(M,ky,CW,kh,'light',6)
-  const kpis=[
-    ['JOBS & PROGRAMS EVALUATED',number(m.summary.workloads,0)],
-    ['TOP TUNING PRIORITIES',number(m.candidates.length,0)],
-  ]
-  kpis.forEach(([label,val],i)=>{
-    const x=M+24+i*CW/2
-    text(x,ky+38,label,8,'bold','muted')
-    text(x,ky+12,val,20,'bold',i?'blue':'ink')
-  })
+  // Use the original repository brand asset; never synthesize a logo.
+  if(typeof document!=='undefined' && typeof window!=='undefined'){
+    const base=import.meta.env?.BASE_URL||'/'
+    const brandUrl=new URL(base+'branding/logo/sphere-logo-horizontal-light.png',window.location.origin)
+    const brand=await fetch(brandUrl,{cache:'force-cache'})
+    if(!brand.ok)throw Error('Original SPHERE logo is unavailable (HTTP '+brand.status+')')
+    pdf.addImage(new Uint8Array(await brand.arrayBuffer()),'PNG',M,13,106,30)
+  }
+  text(M+123,H-37,'SAP Monthly Performance Report',19,'bold','navy')
+  text(W-M,H-37,monthName(month),10,'bold','muted','right')
+  line(M,H-53,W-M,H-53,'rule',.7)
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
-  const panelY=H-374,panelH=190,gap=12,panelW=(CW-gap)/2
+  const panelY=H-247,panelH=180,gap=12,panelW=(CW-gap)/2
   const seriesColors=['blue','green','amber','violet','slate']
   const shortMonth=new Intl.DateTimeFormat('en-GB',{
     month:'short',timeZone:'UTC',
@@ -267,16 +259,16 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   trend(M,'CPU Utilization Trend','cpu',m.pressure.thresholds?.cpu_warning_pct)
   trend(M+panelW+gap,'Memory Utilization Trend','ram',m.pressure.thresholds?.ram_warning_pct)
   // Two rankings show the same ten candidates, sorted independently.
-  const barY=H-535,barH=149
+  const barY=H-413,barH=154
   function bars(x,title,rows,metric,labelSuffix) {
     rect(x,barY,panelW,barH,'white',7)
     section(x+16,barY+barH-22,title)
-    const start=barY+barH-44,dy=10.7,bx=x+211,bw=panelW-211-75
+    const start=barY+barH-43,dy=11.1,bx=x+292,bw=panelW-292-68
     const values=rows.map(metric)
     const max=Math.max(0,...values.filter(n=>n!==null))
     rows.slice(0,10).forEach((row,i)=>{
       const yy=start-i*dy
-      fitText(x+16,yy,row.consumer_key,panelW-291,'left',7.35)
+      fitText(x+16,yy,row.consumer_key,panelW-388,'left',7.25)
       fillRect(bx,yy-2,bw,7.2,'header',2)
       const n=metric(row)
       if(n!==null && max>0)fillRect(bx,yy-2,bw*n/max,7.2,i===0?'red':'blue',2)
@@ -289,7 +281,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   bars(M+panelW+gap,'Top 10 Jobs by Peak WP Memory',m.sortedPss,
     row=>value(row.peak_pss_gb),' GB')
   // Bottom server + program evaluation tables.
-  const lowY=58,lowH=H-549-lowY,serverW=389,jobX=M+serverW+12,jobW=CW-serverW-12
+  const lowY=172,lowH=H-427-lowY,serverW=376,jobX=M+serverW+12,jobW=CW-serverW-12
   rect(M,lowY,serverW,lowH,'white',7)
   rect(jobX,lowY,jobW,lowH,'white',7)
   section(M+15,lowY+lowH-23,'Application Server Performance')
@@ -331,7 +323,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     const hostList=(row.hosts||[]).map(app)
     return [
       String(i+1).padStart(2,'0'),
-      clip(row.consumer_key,45),
+      row.consumer_key,
       hostList.length===1?hostList[0]:hostList.length>1?'Multi':'N/A',
       number(row.observations,0),
       value(row.peak_cpu_pct)===null?'N/A':number(wpCpuCoreEquivalent(row.peak_cpu_pct),2),
@@ -346,12 +338,35 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   jobSpec[8][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
   table(jobX+10,lowY+lowH-36,jobW-20,jobSpec,
     ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Evidence (WIB)','Review finding','Tuning action'],
-    jobRows,25,16.5,7.4)
-  if(jobRows.length<10){
-    text(jobX+17,lowY+lowH-36-25-16.5*jobRows.length-11,
-      'Additional candidates were not observed for this period.',7.7,'normal','muted')
+    jobRows,25,17.8,7.2)
+
+  // Four verified mount-category rows. Absence of a correctly mapped READY
+  // historical filesystem sample remains "Not Collected", never zero/NORMAL.
+  const fsY=25,fsH=132
+  rect(M,fsY,CW,fsH,'white',7)
+  section(M+15,fsY+fsH-22,'Storage Capacity')
+  const fsSpec=[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
+  const bytes=n=>{
+    if(value(n)===null)return 'Not Collected'
+    const u=Number(n)>=1e12?'TB':'GB'
+    return number(Number(n)/(u==='TB'?1e12:1e9),2)+' '+u
   }
-  // No repeated heading, WP methodology or page number in the PDF footer.
+  const fsItems=m.storage
+  const fsOrder=['File System OS','FS SAP Archive','Archive INTF','INTF']
+  const fsRows=fsOrder.map(label=>{
+    const row=fsItems.find(item=>item.category===label)
+    if(!row||row.status!=='COLLECTED')return [label,'Not Collected','—','—','—','—','—']
+    return [
+      label,(row.mount_point||'—')+' · '+app(row.host),
+      bytes(row.total_bytes),bytes(row.used_bytes),bytes(row.free_bytes),
+      pct(row.used_pct),wib(row.sample_at)+' WIB',
+    ]
+  })
+  table(M+10,fsY+fsH-32,CW-20,fsSpec,
+    ['File System','Mounted On / Host','Total Capacity','Used Capacity',
+     'Free Capacity','Usage %','Sample WIB'],
+    fsRows,23,17.4,7.8)
+  // All report content stays on this single page.
   if(pdf.internal.getNumberOfPages()!==1)throw Error('Enterprise report must fit one A3 landscape page')
   return returnInstance?pdf:pdf.output('blob')
 }
