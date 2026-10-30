@@ -2,7 +2,7 @@ import React from 'react'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { shortHost } from './sapUiFormat.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
-import { buildManagementMonthlyPdf } from './rundeckMonthlyEnterprisePdf.js'
+import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
@@ -322,6 +322,104 @@ function MonthlyErrorAnalysis({ evidence }) {
   </section>
 }
 
+
+const monthlySize = bytes => {
+  if(bytes===null || bytes===undefined || !Number.isFinite(Number(bytes)))return 'Not Collected'
+  const unit=Number(bytes)>=1e12?'TB':'GB'
+  return fmt(Number(bytes)/(unit==='TB'?1e12:1e9),2)+' '+unit
+}
+const MONTHLY_STORAGE_ROWS=['File System OS','FS SAP Archive','Archive INTF','INTF']
+
+function MonthlyRanking({ title, rows=[], metric }) {
+  const values=rows.map(row=>metric==='cpu'?wpCpuCoreEquivalent(row.peak_cpu_pct):Number(row.peak_pss_gb))
+  const top=Math.max(0,...values.filter(v=>v!==null && Number.isFinite(v)))
+  return <section className="sphereMonthlyManagerPanel" aria-label={title}>
+    <h4>{title}</h4>
+    <div className="sphereMonthlyManagerBars">
+      {rows.slice(0,10).map((row,index)=>{
+        const val=values[index]
+        const usable=val!==null&&Number.isFinite(val)
+        return <div className="sphereMonthlyManagerBar" key={id(row)}>
+          <span className="sphereMonthlyManagerJob" title={row.consumer_key}>{row.consumer_key}</span>
+          <div className="sphereMonthlyManagerTrack"><i style={{width:usable&&top>0?(val/top*100)+'%':'0%'}}/></div>
+          <b>{usable?fmt(val,2)+(metric==='cpu'?' cores':' GB'):'—'}</b>
+        </div>
+      })}
+      {!rows.length&&<span className="sphereMonthlyManagerMissing">Not Collected</span>}
+    </div>
+  </section>
+}
+function MonthlyManagementDashboard({month,full,preview,storage}) {
+  const data=full||preview
+  const pressure=data?.monthly_pressure||{}
+  const model=full && Array.isArray(full.monthly_top_wp_cpu) &&
+    Array.isArray(full.monthly_top_wp_pss) && storage?.month===month
+    ? monthlyEnterpriseReportModel(month,{...full,monthly_storage:storage}) : null
+  const hosts=Array.from({length:5},(_,i)=>{
+    const name='APP'+(i+1)
+    return (pressure.hosts||[]).find(row=>hostLabel(row.host)===name)||{host:name}
+  })
+  const peak=metric=>{
+    const p=model?.[metric==='cpu'?'cpuPeak':'ramPeak']
+    return p ? 'Peak '+pct(p.value)+' · '+p.host+' · '+when(p.at) : 'Not Collected'
+  }
+  return <div className="sphereMonthlyManagement" aria-label="SAP Monthly Performance Report">
+    <div className="sphereMonthlyManagerPair">
+      {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
+        <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><strong>{peak(metric)}</strong></div>
+        <HostTrend rows={pressure.daily_hosts||[]} month={month} metric={metric}
+          fitObserved={false} threshold={pressure.thresholds?.[metric+'_warning_pct']}/>
+      </section>)}
+    </div>
+    <div className="sphereMonthlyManagerPair">
+      <MonthlyRanking title="Top 10 Jobs by Peak WP CPU" metric="cpu" rows={model?.sortedCpu||[]}/>
+      <MonthlyRanking title="Top 10 Jobs by Peak WP Memory" metric="ram" rows={model?.sortedPss||[]}/>
+    </div>
+    <div className="sphereMonthlyManagerPair is-tables">
+      <section className="sphereMonthlyManagerPanel">
+        <h4>Application Server Performance</h4>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>APP</th><th>CPU Avg</th><th>CPU Max</th><th>RAM Avg</th><th>RAM Max</th><th>CPU High Reads</th><th>RAM High Reads</th></tr></thead>
+          <tbody>{hosts.map(row=><tr key={row.host}>
+            <td>{hostLabel(row.host)}</td><td>{pct(row.avg_cpu_pct)}</td><td>{pct(row.peak_cpu_pct)}</td>
+            <td>{pct(row.avg_ram_pct)}</td><td>{pct(row.peak_ram_pct)}</td>
+            <td>{fmt(row.cpu_warning_host_checks,0)}</td><td>{fmt(row.ram_warning_host_checks,0)}</td>
+          </tr>)}</tbody>
+        </table>
+      </section>
+      <section className="sphereMonthlyManagerPanel">
+        <h4>Top 10 Jobs for Tuning Review</h4>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Evidence WIB</th><th>Review finding</th><th>Tuning action</th></tr></thead>
+          <tbody>{(model?.candidates||[]).map((row,index)=><tr key={id(row)}>
+            <td>{index+1}</td><td className="is-job">{row.consumer_key}</td>
+            <td>{hostsFor(row)||'—'}</td><td>{fmt(row.observations,0)}</td>
+            <td>{wpCoreEq(row.peak_cpu_pct)}</td><td>{fmt(row.peak_pss_gb,2)}</td>
+            <td>{when(row.last_seen)}</td>
+            <td>{row.signals?.high_memory?'High WP memory':row.signals?.sustained_high_cpu?'High WP CPU':row.signals?.cpu_spike?'WP CPU spike':row.signals?.baseline_anomaly?'Above baseline':'Performance review'}</td>
+            <td>{row.signals?.high_memory?'Review memory use':row.signals?.sustained_high_cpu||row.signals?.cpu_spike?'Review processing':row.signals?.baseline_anomaly?'Check workload change':'Review in SAP'}</td>
+          </tr>)}
+          {!model&&<tr><td colSpan="9">Loading saved evaluation…</td></tr>}
+          {model&&!model.candidates.length&&<tr><td colSpan="9">No candidates observed for this month</td></tr>}
+          </tbody>
+        </table>
+      </section>
+    </div>
+    <section className="sphereMonthlyManagerPanel is-storage">
+      <h4>Storage Capacity</h4>
+      <table className="sphereMonthlyManagerTable"><thead><tr><th>File System</th><th>Mounted On / Host</th><th>Total Capacity</th><th>Used Capacity</th><th>Free Capacity</th><th>Usage %</th><th>Sample WIB</th></tr></thead><tbody>
+        {MONTHLY_STORAGE_ROWS.map(name=>{
+          const row=storage?.month===month?storage.items?.find(r=>r.category===name):null
+          const present=row?.status==='COLLECTED'
+          return <tr key={name}><td>{name}</td>
+            <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
+            <td>{present?monthlySize(row.total_bytes):'—'}</td><td>{present?monthlySize(row.used_bytes):'—'}</td>
+            <td>{present?monthlySize(row.free_bytes):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
+            <td>{present?when(row.sample_at):'—'}</td></tr>
+        })}
+      </tbody></table>
+    </section>
+  </div>
+}
+
 export default function RundeckMonthlyReview({ showTitle = true }) {
   const [month,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
   const [evidenceOpen,setEvidenceOpen]=React.useState(false)
@@ -337,6 +435,8 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [hostPreview,setHostPreview]=React.useState(null)
   const [hostPreviewError,setHostPreviewError]=React.useState('')
   const [hostPreviewRetry,setHostPreviewRetry]=React.useState(0)
+  const [storage,setStorage]=React.useState(null)
+  const [storageError,setStorageError]=React.useState('')
   const [loading,setLoading]=React.useState(true)
   const [error,setError]=React.useState('')
   const [chartMode,setChartMode]=React.useState('peak')
@@ -355,6 +455,24 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     const timer=window.setTimeout(()=>setAppliedSearch(search.trim()),300)
     return ()=>window.clearTimeout(timer)
   },[search])
+  React.useEffect(()=>{
+    const controller=new AbortController()
+    setStorage(null);setStorageError('')
+    fetch(API+'/infra/monthly-storage?'+new URLSearchParams({month}),{
+      cache:'no-store',signal:controller.signal,
+    }).then(async response=>{
+      if(!response.ok)throw Error('Monthly storage history unavailable (HTTP '+response.status+')')
+      return response.json()
+    }).then(payload=>{
+      if(!controller.signal.aborted){
+        if(payload.month!==month || !Array.isArray(payload.items))throw Error('Invalid monthly storage evidence')
+        setStorage(payload)
+      }
+    }).catch(failure=>{
+      if(!controller.signal.aborted)setStorageError(failure.message||'Monthly storage unavailable')
+    })
+    return ()=>controller.abort()
+  },[month])
   // Render retained monthly CPU/RAM/APP observations independently of the slower
   // full workload classification, correlation and WP error analysis.
   React.useEffect(()=>{
@@ -442,14 +560,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const hosts=evidence.hosts||[]
   const total=Number(completedData?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
-  const changePdfMode=mode=>{
-    if(!['management','technical'].includes(mode))return
-    pdfGenerationRef.current+=1
-    if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
-    pdfRef.current='';setPdfUrl('');setPdfError('')
-    setPdfMode(mode)
-  }
-  const previewPdf=React.useCallback(async()=>{
+  const previewPdf=React.useCallback(async(reportType='management')=>{
     if(!data||loading||pdfBusy||pdfInFlightRef.current)return
     pdfInFlightRef.current=true
     const generation=pdfGenerationRef.current
@@ -470,17 +581,26 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           !reportData.monthly_pressure || !reportData.monthly_errors || !reportData.quality) {
         throw Error('PDF evidence does not match the selected reporting month')
       }
-      const blob=await (pdfMode==='management'
-        ? buildManagementMonthlyPdf({month,data:reportData})
-        : buildMonthlyPdf({month,data:reportData}))
+      let exportData=reportData
+      if(reportType==='management') {
+        const storageResponse=await fetch(API+'/infra/monthly-storage?'+new URLSearchParams({month}),{cache:'no-store'})
+        if(!storageResponse.ok)throw Error('Monthly storage evidence unavailable (HTTP '+storageResponse.status+')')
+        const monthlyStorage=await storageResponse.json()
+        if(monthlyStorage.month!==month || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected month')
+        exportData={...reportData,monthly_storage:monthlyStorage}
+      }
+      const blob=await (reportType==='management'
+        ? buildManagementMonthlyPdf({month,data:exportData})
+        : buildMonthlyPdf({month,data:exportData}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
       pdfRef.current=url
+      setPdfMode(reportType)
       setPdfUrl(url)
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{pdfInFlightRef.current=false;setPdfBusy(false)}
-  },[data,loading,pdfBusy,month,pdfMode])
+  },[data,loading,pdfBusy,month])
   return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
       {showTitle && <div><strong>Monthly Review</strong></div>}
@@ -493,16 +613,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     </div>
     <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Monthly report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
-      <label htmlFor="sphere-monthly-pdf-mode">PDF</label>
-      <select className="form-select form-select-sm" id="sphere-monthly-pdf-mode" aria-label="Report type" value={pdfMode} onChange={event=>changePdfMode(event.target.value)}>
-        <option value="management">Management · 1 page</option>
-        <option value="technical">Technical · full detail</option>
-      </select>
-      <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={previewPdf}>
-        {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
+      <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
+        {pdfBusy?'Generating…':'Generate PDF Management'}
       </button>
       {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf':'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
     </div>
+    {storageError&&<p className="sphereMonthlyWarning" role="alert">{storageError}</p>}
     {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
     {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved monthly performance…'}</div>}
     {hostPreviewError&&!data&&!preview&&<div className="sphereMonthlyState is-error" role="alert">
@@ -512,77 +628,11 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     </div>}
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
     {(completedData || preview)&&<>
-      <div className="sphereMonthlyProvenance" title={'Reporting month: ' + month + ' · Monitoring records ' + fmt(quality.complete_checks,0) + ' / ~' + fmt(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ') · Recorded ' + dateShort(quality.first_complete_at) + ' – ' + dateShort(quality.last_complete_at)}>
-        <span><b>{fmt(quality.complete_checks,0)}</b> complete collections · Estimated coverage {pct(quality.coverage_pct)}{quality.expected_checks_is_estimate ? ` (~${fmt(quality.expected_checks,0)} expected)` : ''}</span>
-        <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
-      </div>
-      <div id="sphere-month-panel-summary" className="sphereMonthlyLayout sphereMonthlyDashboard">
-        <div className="sphereMonthlyVisualGrid sphereMonthlyMainColumn col-12 col-xl-7">
-          <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
-            <div className="sphereMonthlyVisualHeading">
-              <div><h4>Daily Server Performance</h4>
-                <small>{chartMode==='peak'?'Highest':'Average'} reading each day · {month}</small></div>
-              <div className="sphereMonthlyFilters sphereMonthlyVisualFilters">
-                <select className="form-select form-select-sm" aria-label="Resource metric" value={chartMetric} onChange={event=>setChartMetric(event.target.value)}>
-                  <option value="cpu">CPU</option><option value="ram">RAM</option>
-                </select>
-                <select className="form-select form-select-sm" aria-label="Trend statistic" value={chartMode} onChange={event=>setChartMode(event.target.value)}>
-                  <option value="peak">Daily peak</option><option value="avg">Daily average</option>
-                </select>
-                <select className="form-select form-select-sm" aria-label="Select APP trend" value={chartHost} onChange={event=>setChartHost(event.target.value)}>
-                  <option value="ALL">All APP</option>
-                  {hosts.map(row=><option key={row.host} value={hostLabel(row.host)}>{hostLabel(row.host)}</option>)}
-                </select>
-                <button type="button" className="sphereMonthlyChartFit" aria-pressed={chartFitObserved}
-                  onClick={()=>setChartFitObserved(value=>!value)} title="Fit saved observations or view the full month without inventing missing data">
-                  {chartFitObserved?'Full month':'Fit observed'}
-                </button>
-              </div>
-            </div>
-            <HostTrend rows={evidence.daily_hosts||[]} month={month} metric={chartMetric}
-              mode={chartMode} host={chartHost} fitObserved={chartFitObserved}
-              threshold={evidence.thresholds?.[chartMetric+'_warning_pct']}/>
-            <div className="sphereMonthlyVisualFooter">
-              <span>{fmt(evidence[chartMetric]?.observed_pressure_host_checks,0)} {chartMetric.toUpperCase()} warning checks across {fmt(evidence[chartMetric]?.observed_warning_app_days,0)} APP-days</span>
-            </div>
-          </section>
-                  <div className="sphereMonthlyPanel sphereMonthlyHostSummary">
-          <h4>Server Performance by APP</h4>
-          <div className="sphereMonthlyTableScroll"><table className="table table-sm align-middle sphereBootstrapReportTable"><thead><tr>
-            <th>APP</th><th>CPU Peak</th><th>RAM Peak</th><th>CPU / RAM Warning Checks</th><th>Critical WP Checks</th>
-          </tr></thead><tbody>
-            {hosts.map(row=><tr key={row.host}><td>{hostLabel(row.host)}</td>
-              <td title={'Average CPU '+pct(row.avg_cpu_pct)}>{pct(row.peak_cpu_pct)}</td><td title={'Average RAM '+pct(row.avg_ram_pct)}>{pct(row.peak_ram_pct)}</td>
-              <td title={'CPU '+fmt(row.cpu_warning_host_checks,0)+' readings / '+fmt(row.cpu_warning_days,0)+' days; RAM '+fmt(row.ram_warning_host_checks,0)+' readings / '+fmt(row.ram_warning_days,0)+' days'}>{fmt(row.cpu_warning_host_checks,0)} / {fmt(row.ram_warning_host_checks,0)}</td>
-              <td title="Saved APP host checks with critical work processes; not confirmed failures">{fmt(row.critical_wp_host_checks,0)}</td></tr>)}
-            {!hosts.length&&<tr><td colSpan="5">No historical host samples available.</td></tr>}
-          </tbody></table></div>
-          <small>Warning and Critical WP counts are saved APP host checks, not confirmed job failures.</small>
-        </div>
-        
-        </div>
-        <div className="sphereMonthlySideColumn col-12 col-xl-5">
-          {completedData && <WorkloadDistribution summary={summary} onSelect={value=>{
-            setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
-            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setEvidenceOpen(true)
-          }}/>} 
-
-          {completedData && <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
-          <div className="sphereMonthlyTableHead"><div><h4>Programs to Review</h4><small>{fmt(tuningCandidates.length,0)} saved evaluation candidates · not confirmed failed jobs</small></div>
-            <button type="button" onClick={()=>setEvidenceOpen(true)}>View All</button></div>
-          <div className="sphereMonthlyPriorityList">
-            {tuningCandidates.slice(0,5).map(row=><div key={id(row)} className="sphereMonthlyPriorityRow">
-              <span><strong title={row.consumer_key}>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)||'APP unavailable'}</small></span>
-              <span title="Work process CPU, not APP utilization">{pct(row.peak_cpu_pct)} WP CPU</span>
-            </div>)}
-            {!tuningCandidates.length&&<p>No review candidates in retained observations.</p>}
-          </div>
-          <small>ABAP errors: {errors.status==='ERROR_SOURCE_NOT_RETAINED' ? 'Source not retained — check archives' : fmt(errors.error_program_count,0)+' programs with retained error evidence'}</small>
-        </section>}
-        </div>
-      </div>
+      <MonthlyManagementDashboard month={month} full={completedData} preview={preview} storage={storage}/>
       {evidenceOpen && <RundeckWorkspaceDrawer title="Monthly Evidence" subtitle={month+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
       <div className="sphereMonthlyReview is-v2 is-evidence-modal">
+      <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData}
+        onClick={()=>previewPdf('technical')}>Generate Technical PDF</button></div>
       {completedData ? <div id="sphere-month-panel-evidence" className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
