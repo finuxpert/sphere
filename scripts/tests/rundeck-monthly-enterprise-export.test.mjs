@@ -47,6 +47,11 @@ test('monthly enterprise model uses retained data and does not fill missing cale
   assert.equal(model.daily.length,30)
   assert.equal(model.daily[0].cpu.value,40)
   assert.equal(model.daily[1].cpu,null)
+  assert.equal(model.series.length,5)
+  assert.equal(model.series[0].days[0].cpu,31)
+  assert.equal(model.series[1].days[0].cpu,40)
+  assert.equal(model.series[0].days[1].cpu,null)
+  assert.equal(model.series[1].days[1].cpu,null)
   assert.equal(model.cpuPeak.value,96.9)
   assert.equal(model.cpuPeak.host,'APP1')
   assert.equal(model.candidates.length,3)
@@ -68,10 +73,26 @@ test('monthly enterprise PDF is exactly one A3 landscape page with evidence labe
     'SAP Monthly Performance Report','Application Server Performance',
     'Top 10 Jobs for Tuning Review','Top 10 Jobs by Peak WP CPU',
     'Top 10 Jobs by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
-    'Page 1 of 1',
+    'REPORTING PERIOD','MONITORING COVERAGE (EST.)',
   ])assert.ok(stream.includes(token),'Missing PDF label: '+token)
   assert.ok(!stream.includes('PROTOTYPE DATA'),'Live export must not claim simulation')
   assert.ok(!stream.includes('Average Runtime'),'Unknown SM37 duration must not be invented')
+  for(const removed of [
+    'SPHERE EVIDENCE','Source: SPHERE saved records','Page 1 of 1',
+    'SPHERE Monthly Performance Review',
+    'WP CPU is core-equivalent',
+    'Highest CPU:','Highest RAM:','Alert limit:',
+    'CPU WARNING READINGS','RAM WARNING READINGS','DATA COVERAGE',
+    'Daily highest observed APP reading',
+  ])assert.ok(!stream.includes(removed),'Redundant copy remains: '+removed)
+  for(const expected of [
+    'APP1','APP2','APP3','APP4','APP5',
+    'CPU High Reads','RAM High Reads',
+    'TOP TUNING PRIORITIES','JOBS & PROGRAMS EVALUATED',
+    'Peak','Limit 75%','Limit 80%',
+    '0%','25%','50%','75%','100%',
+    '30 Sep','AOP Production',
+  ])assert.ok(stream.includes(expected),'Missing reviewed label: '+expected)
   const bytes=new Uint8Array(pdf.output('arraybuffer'))
   assert.equal(String.fromCharCode(...bytes.slice(0,5)),'%PDF-')
   assert.ok(bytes.length>2500)
