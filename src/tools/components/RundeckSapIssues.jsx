@@ -36,7 +36,7 @@ function Status({ value }) {
   return <span className={`rundeckIssueStatus ${statusClass(value)}`}><i aria-hidden="true" />{value}</span>
 }
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, inlineSummary = false, onOpen = null, paired = false, readinessRoot = null, historyRoot = null }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, inlineSummary = false, onOpen = null, hideDetailsAction = false, paired = false, readinessRoot = null, historyRoot = null }) {
   const [snapshot, setSnapshot] = React.useState({ ...EMPTY_SNAPSHOT, requestKey: refreshToken })
   const data = snapshot.requestKey === refreshToken ? snapshot : EMPTY_SNAPSHOT
   const failedSources = data.failedSources
@@ -146,9 +146,9 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
     const priority = reviewIndicators.filter(row => ['CRITICAL','WARNING','ATTENTION'].includes(row.status)
       && !['CPU','RAM'].includes(row.indicator)).slice(0,2)
     return <section className="sphereHealthInlineBlock" aria-label="SAP Issues overview">
-      <div className="sphereHealthInlineHead"><h4>SAP Issues</h4><button type="button" onClick={onOpen}>Details</button></div>
+      <div className="sphereHealthInlineHead"><h4>SAP Issues</h4>{!hideDetailsAction && <button type="button" onClick={onOpen}>Details</button>}</div>
       <div className="sphereHealthIssueSummary"><strong>{loading ? 'Checking…' : `${activeFindings} Attention / Critical`}</strong>
-        <small>{loading ? '' : `${unknownCount} No Data`}</small></div>
+        <small>{loading ? '' : `${unknownCount} No Data · Top ${priority.length} of ${activeFindings}`}</small></div>
       <div className="sphereHealthInlineIssues">{priority.map((row,i) =>
         <div key={[row.scope,row.indicator,i].join(':')} title={row.reason}>
           <span>{row.scope} · {row.indicator}</span><b>{row.current}</b>

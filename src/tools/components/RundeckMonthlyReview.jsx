@@ -5,6 +5,8 @@ import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import { buildManagementMonthlyPdf } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
+import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
+import './RundeckUnifiedExperience20261030.css'
 
 const API = import.meta.env.BASE_URL + 'api'
 const PAGE_SIZE = 8
@@ -322,7 +324,7 @@ function MonthlyErrorAnalysis({ evidence }) {
 
 export default function RundeckMonthlyReview({ showTitle = true }) {
   const [month,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
-  const [tab,setTab]=React.useState('summary')
+  const [evidenceOpen,setEvidenceOpen]=React.useState(false)
   const [pressureMetric,setPressureMetric]=React.useState('cpu')
   const [kind,setKind]=React.useState('ALL')
   const [health,setHealth]=React.useState('REVIEW')
@@ -383,7 +385,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   },[month,hostPreviewRetry])
   // A boolean dependency avoids re-requesting expensive evidence just because
   // the user switches between Summary, Detailed Evidence and PDF Report.
-  const fullEvaluationReady = tab!=='summary' || hostPreview?.month===month
+  const fullEvaluationReady = hostPreview?.month===month
   React.useEffect(()=>{
     // Prioritize the host-only request on Summary. A failed host preview must
     // not trigger an even heavier fallback request or leave a permanent spinner.
@@ -422,23 +424,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError])
   const changeMonth=value=>{
     pdfGenerationRef.current += 1
-    setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
+    setMonth(value);setEvidenceOpen(false);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
     setSearch('');setAppliedSearch('');setPdfError('')
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
   }
   const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
-  const handleTabKeyDown=(event,value)=>{
-    const order=['summary','evidence','report']
-    const current=order.indexOf(value)
-    const next=event.key==='ArrowRight'?order[(current+1)%order.length]
-      :event.key==='ArrowLeft'?order[(current+order.length-1)%order.length]
-        :event.key==='Home'?order[0]:event.key==='End'?order[order.length-1]:null
-    if(!next)return
-    event.preventDefault()
-    setTab(next)
-    event.currentTarget.parentElement?.querySelector('#sphere-month-tab-'+next)?.focus()
-  }
   const preview=hostPreview?.month===month ? hostPreview : null
   const completedData=data?.month===month ? data : null
   const hostData=completedData||preview
@@ -490,11 +481,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{pdfInFlightRef.current=false;setPdfBusy(false)}
   },[data,loading,pdfBusy,month,pdfMode])
-  // One click on Report generates a source-backed preview. Errors stop auto-retries.
-  React.useEffect(()=>{
-    if(tab==='report' && data && !loading && !pdfBusy && !pdfUrl && !pdfError) void previewPdf()
-  },[tab,data,loading,pdfBusy,pdfUrl,pdfError,previewPdf])
-  return <section className="sphereMonthlyReview is-v2 container-fluid px-0" aria-label="Monthly SAP Performance and Job Impact">
+  return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
       {showTitle && <div><strong>Monthly Review</strong></div>}
       <div className="sphereMonthlyPicker">
@@ -504,15 +491,19 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         </select>
       </div>
     </div>
-    <div className="sphereMonthlyTabs" role="tablist" aria-label="Monthly report sections">
-      {[['summary','Summary'],['evidence','Detailed Evidence'],['report','PDF Report']]
-        .map(([value,label])=><button key={value} type="button" role="tab"
-          id={'sphere-month-tab-'+value} aria-controls={'sphere-month-panel-'+value}
-          aria-selected={tab===value} tabIndex={tab===value?0:-1}
-          className={tab===value?'is-active':''}
-          onKeyDown={event=>handleTabKeyDown(event,value)}
-          onClick={()=>setTab(value)}>{label}</button>)}
+    <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Monthly report actions">
+      <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
+      <label htmlFor="sphere-monthly-pdf-mode">PDF</label>
+      <select className="form-select form-select-sm" id="sphere-monthly-pdf-mode" aria-label="Report type" value={pdfMode} onChange={event=>changePdfMode(event.target.value)}>
+        <option value="management">Management · 1 page</option>
+        <option value="technical">Technical · full detail</option>
+      </select>
+      <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={previewPdf}>
+        {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
+      </button>
+      {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf':'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
     </div>
+    {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
     {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved monthly performance…'}</div>}
     {hostPreviewError&&!data&&!preview&&<div className="sphereMonthlyState is-error" role="alert">
       {hostPreviewError}
@@ -520,12 +511,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         onClick={()=>{setHostPreviewError('');setHostPreviewRetry(count=>count+1)}}>Retry server data</button>
     </div>}
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
-    {(completedData || (preview && tab==='summary'))&&<>
+    {(completedData || preview)&&<>
       <div className="sphereMonthlyProvenance" title={'Reporting month: ' + month + ' · Monitoring records ' + fmt(quality.complete_checks,0) + ' / ~' + fmt(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ') · Recorded ' + dateShort(quality.first_complete_at) + ' – ' + dateShort(quality.last_complete_at)}>
         <span><b>{fmt(quality.complete_checks,0)}</b> complete collections · Estimated coverage {pct(quality.coverage_pct)}{quality.expected_checks_is_estimate ? ` (~${fmt(quality.expected_checks,0)} expected)` : ''}</span>
         <span>{dateShort(quality.first_complete_at)} – {dateShort(quality.last_complete_at)}</span>
       </div>
-      {tab==='summary'&&<div id="sphere-month-panel-summary" role="tabpanel" aria-labelledby="sphere-month-tab-summary" className="sphereMonthlyLayout sphereMonthlyDashboard">
+      <div id="sphere-month-panel-summary" className="sphereMonthlyLayout sphereMonthlyDashboard">
         <div className="sphereMonthlyVisualGrid sphereMonthlyMainColumn col-12 col-xl-7">
           <section className="sphereMonthlyPanel sphereMonthlyVisualCard sphereMonthlyPrimaryTrend">
             <div className="sphereMonthlyVisualHeading">
@@ -573,12 +564,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         <div className="sphereMonthlySideColumn col-12 col-xl-5">
           {completedData && <WorkloadDistribution summary={summary} onSelect={value=>{
             setKind('ALL');setPressureFilter('ALL');setSignalFilter('ALL')
-            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setTab('evidence')
+            setHealth(value);setPage(0);setSearch('');setAppliedSearch('');setEvidenceOpen(true)
           }}/>} 
 
           {completedData && <section className="sphereMonthlyPanel sphereMonthlyPriorities" aria-label="Programs to review">
           <div className="sphereMonthlyTableHead"><div><h4>Programs to Review</h4><small>{fmt(tuningCandidates.length,0)} saved evaluation candidates · not confirmed failed jobs</small></div>
-            <button type="button" onClick={()=>setTab('evidence')}>View All</button></div>
+            <button type="button" onClick={()=>setEvidenceOpen(true)}>View All</button></div>
           <div className="sphereMonthlyPriorityList">
             {tuningCandidates.slice(0,5).map(row=><div key={id(row)} className="sphereMonthlyPriorityRow">
               <span><strong title={row.consumer_key}>{row.consumer_key}</strong><small>{row.consumer_type} · {hostsFor(row)||'APP unavailable'}</small></span>
@@ -589,8 +580,10 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           <small>ABAP errors: {errors.status==='ERROR_SOURCE_NOT_RETAINED' ? 'Source not retained — check archives' : fmt(errors.error_program_count,0)+' programs with retained error evidence'}</small>
         </section>}
         </div>
-      </div>}
-      {completedData&&tab==='evidence'&&<div id="sphere-month-panel-evidence" role="tabpanel" aria-labelledby="sphere-month-tab-evidence" className="sphereMonthlyEvidencePage">
+      </div>
+      {evidenceOpen && <RundeckWorkspaceDrawer title="Monthly Evidence" subtitle={month+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
+      <div className="sphereMonthlyReview is-v2 is-evidence-modal">
+      {completedData ? <div id="sphere-month-panel-evidence" className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
           <div><h4>Jobs & Programs to Review</h4><small>{total} results. Page {page+1} of {pages}</small></div>
@@ -661,36 +654,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         <PressureObservations metric="ram" pressure={evidence}/>
         <PressureRows label="Jobs & Programs During Resource Pressure" evidence={evidence} metric={pressureMetric} onMetricChange={setPressureMetric}/>
         <MonthlyErrorAnalysis key={month} evidence={errors}/>
-      </div></section></div>}
-      {completedData&&tab==='report'&&<div id="sphere-month-panel-report" role="tabpanel" aria-labelledby="sphere-month-tab-report" className="sphereMonthlyPanel sphereMonthlyReportPreview">
-        <div className="sphereMonthlyTableHead">
-          <div><h4>Monthly Report</h4><small>Management: one A3 landscape page · Technical: detailed saved evidence</small></div>
-          <div className="sphereMonthlyReportActions">
-            <label htmlFor="sphere-monthly-pdf-mode">Report type</label>
-            <select className="form-select form-select-sm" id="sphere-monthly-pdf-mode" aria-label="Report type" value={pdfMode}
-              onChange={event=>changePdfMode(event.target.value)}>
-              <option value="management">Management · 1 page</option>
-              <option value="technical">Technical · full detail</option>
-            </select>
-          <button type="button" className="is-primary" disabled={pdfBusy || !data} onClick={previewPdf}>
-            {pdfBusy?'Generating…':pdfUrl?'Refresh PDF':'Generate PDF'}
-          </button>
-          {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
-            download={pdfMode==='management'?'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf':'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>
-            Download PDF
-          </a>}
-          </div>
-        </div>
-        {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
-        {pdfUrl&&<div className="sphereMonthlyPdfFrame">
-          <iframe title={'SPHERE '+(pdfMode==='management'?'management summary':'technical report')+' PDF preview'}
-            src={pdfUrl+'#toolbar=0&navpanes=0&view=FitH'}/>
-          <div className="sphereMonthlyPdfActions">
-            <span>Preview may show browser controls. Full report is available above.</span>
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Open full screen</a>
-          </div>
-        </div>}
-      </div>}
+      </div></section></div> : <div className="sphereMonthlyState" role="status">Loading verified monthly evidence…</div>}
+      </div>
+      </RundeckWorkspaceDrawer>}
     </>}
   </section>
 }

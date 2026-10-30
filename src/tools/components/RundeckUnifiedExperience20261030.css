@@ -1,0 +1,31 @@
+/* DEV: one health detail entry, single-view reports and compact trend controls. */
+.sphereHealthSummaryHeader {display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sphereUnifiedHealthOpen {font-size:12px;border:1px solid var(--sphere-border,#41515c);color:inherit;background:transparent;white-space:nowrap}
+.sphereUnifiedHealthOpen:hover,.sphereUnifiedHealthOpen:focus-visible {border-color:var(--sphere-accent,#49bac3);color:var(--sphere-accent,#49bac3)}
+.sphereUnifiedHealthInfrastructure {min-width:0;margin-top:12px;padding-top:12px;border-top:1px solid var(--sphere-border,#34424b)}
+.sphereUnifiedHealthInfrastructure h3 {font-size:14px;margin:0 0 8px}
+.sphereUnifiedHealthBackup {margin:6px 0 0;font-size:11px;opacity:.74}
+.rundeckTrendControlRange .rundeckTrendControlInline {display:flex;align-items:center;flex-wrap:nowrap;gap:4px;min-width:0;max-width:100%;overflow-x:auto;scrollbar-width:thin;white-space:nowrap}
+.rundeckTrendControlRange .rundeckTrendControlInline .rundeckSegmented {display:flex;flex:0 0 auto;flex-wrap:nowrap}
+.rundeckTrendControlRange .rundeckTrendControlInline .rundeckSegmented button {padding-inline:6px;white-space:nowrap}
+.rundeckTrendControlRange .rundeckTrendHistoricalSelect {flex:0 0 92px;width:92px;min-width:92px}
+.rundeckTrendControlRange .rundeckCustomRangeToggle {flex:0 0 auto;white-space:nowrap}
+html[data-theme="dark"] .rundeckTrendSharedControls select {color-scheme:dark}
+html[data-theme="light"] .rundeckTrendSharedControls select {color-scheme:light}
+.sphereMonthlyReview.is-single-page .sphereMonthlyHead {display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sphereMonthlyReview.is-single-page .sphereMonthlyOnePageActions {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:5px 0 8px;justify-content:flex-end}
+.sphereMonthlyReview.is-single-page .sphereMonthlyOnePageActions select {width:auto;min-width:145px;max-width:225px}
+.sphereMonthlyReview.is-single-page .sphereMonthlyOnePageActions button,.sphereMonthlyReview.is-single-page .sphereMonthlyOnePageActions a {min-height:30px;padding:4px 10px;font-size:12px}
+.sphereMonthlyReview.is-single-page .sphereMonthlyDashboard {margin-top:4px}
+.sphereMonthlyReview.is-evidence-modal {min-width:0}
+.sphereMonthlyReview.is-evidence-modal .sphereMonthlyEvidencePage {display:grid;gap:10px}
+@media(min-width:1400px) and (min-height:760px){
+ .sphereMonthlyReview.is-single-page .sphereMonthlyTrend svg {max-height:142px!important}
+ .sphereMonthlyReview.is-single-page .sphereMonthlyDonut {width:120px!important;height:120px!important;flex:0 0 120px!important}
+ .sphereMonthlyReview.is-single-page .sphereMonthlyPriorityRow {min-height:28px!important}
+ .sphereMonthlyReview.is-single-page .sphereMonthlyPanel {padding-block:8px!important}
+}
+@media(max-width:950px){
+ .sphereMonthlyReview.is-single-page .sphereMonthlyOnePageActions {justify-content:flex-start}
+ .rundeckTrendControlRange .rundeckTrendControlInline {width:100%}
+}

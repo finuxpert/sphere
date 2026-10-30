@@ -49,6 +49,7 @@ import './RundeckEnterpriseCompactV144.css'
 import './RundeckDevFinalAudit20261030.css'
 import './RundeckBootstrapFoundation.css'
 import './RundeckMonitoringPolish.css'
+import './RundeckUnifiedExperience20261030.css'
 
 const RundeckEvidenceTimeline = React.lazy(() => import('./RundeckEvidenceTimeline.jsx'))
 const RundeckObservationHistory = React.lazy(() => import('./RundeckObservationHistory.jsx'))
@@ -253,16 +254,14 @@ export default function RundeckMonitoringHistory(props) {
             healthSummary={<section className="sphereOverviewDetails col-12 col-xl-7" aria-label="System Health">
             <header className="sphereHealthSummaryHeader">
               <h3>System Health</h3>
-              <span className="sphereHealthBackupState" title="Backup monitoring configuration only; not proof of a successful SAP database backup">
-                Backup monitor: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState === 'NOT_CONFIGURED' ? 'Not configured' : backupState.replaceAll('_',' ').toLowerCase()}
-              </span>
+              <button type="button" className="sphereUnifiedHealthOpen btn btn-sm" onClick={() => setActiveOverlay({ type: 'system-health' })}>View Details</button>
             </header>
             <div className="sphereHealthSummaryGrid">
-              <RundeckAvailability refreshToken={refreshToken} inlineSummary onOpen={() => setActiveOverlay({ type:'availability' })} />
-              <RundeckSapIssues refreshToken={refreshToken} inlineSummary onOpen={() => setActiveOverlay({ type:'issues' })} onInspectApp={inspectApp} />
+              <RundeckAvailability refreshToken={refreshToken} inlineSummary hideDetailsAction />
+              <RundeckSapIssues refreshToken={refreshToken} inlineSummary hideDetailsAction onInspectApp={inspectApp} />
               <React.Suspense fallback={<span role="status" className="sphereHealthLoading">Loading server health…</span>}>
                 <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} inlineSummary
-                  onOpen={() => setActiveOverlay({ type:'infrastructure' })} />
+                  hideDetailsAction />
               </React.Suspense>
             </div>
           </section>}
@@ -433,10 +432,10 @@ export default function RundeckMonitoringHistory(props) {
             </div>
           </RundeckWorkspaceDrawer>}
 
-          {['availability', 'issues'].includes(activeOverlay?.type) && <RundeckWorkspaceDrawer
-            title="SAP Checks"
-            size="issues"
-            subtitle="Service availability and current SAP issues"
+          {['availability', 'issues', 'system-health'].includes(activeOverlay?.type) && <RundeckWorkspaceDrawer
+            title="System Health"
+            size="wide"
+            subtitle="SAP Availability · Active Issues · Server Health"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo && activeOverlay.returnTo.type !== 'selected'
               ? () => returnFromOverlay(activeOverlay.returnTo) : null}
@@ -462,12 +461,21 @@ export default function RundeckMonitoringHistory(props) {
                       if (!context?.host) return
                       focusSequence.current += 1
                       setAppFocusRequest({ ...context, token: focusSequence.current, highlightOnly: true })
-                      setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'issues', returnTo: activeOverlay.returnTo || null } })
+                      setActiveOverlay({ type: 'app', app: context, returnTo: { type: 'system-health', returnTo: activeOverlay.returnTo || null } })
                     }}
                   />
                 </section>
               </div>
+              <section className="sphereUnifiedHealthInfrastructure" aria-label="Server infrastructure health">
+                <h3>Server Health</h3>
+                <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading server measurements…</div>}>
+                  <RundeckInfrastructure incidentStart="" refreshToken={refreshToken} />
+                </React.Suspense>
+              </section>
               <div className="rundeckSapChecksHistoryDock" ref={setIncidentHistoryRoot} aria-label="SAP incident history" />
+              <p className="sphereUnifiedHealthBackup" title="Configuration only; not proof of successful database backup">
+                Backup monitoring: {backupState === 'NORMAL' || backupState === 'OK' ? 'Configured' : backupState === 'NOT_CONFIGURED' ? 'Not configured' : backupState.replaceAll('_',' ').toLowerCase()}
+              </p>
             </div>
           </RundeckWorkspaceDrawer>}
 
@@ -478,7 +486,7 @@ export default function RundeckMonitoringHistory(props) {
             size="unified-app"
             onClose={() => setActiveOverlay(null)}
             onBack={activeOverlay.returnTo ? () => returnFromOverlay(activeOverlay.returnTo) : null}
-            backLabel={activeOverlay.returnTo?.type === 'issues' ? 'Back to SAP Issues' : 'Back'}
+            backLabel={activeOverlay.returnTo?.type === 'system-health' ? 'Back to System Health' : 'Back'}
           >
             <React.Suspense fallback={<div className="rundeckAnalysisLoading" role="status">Loading APP analysis…</div>}>
             <RundeckUnifiedAppAnalysis

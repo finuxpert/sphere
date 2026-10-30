@@ -32,7 +32,7 @@ test('monthly pressure queries remain complete-collection and APP-specific', () 
 test('monthly report keeps source-backed CPU RAM WP without optional appendix', () => {
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
   assert.doesNotMatch(ui, /Basis Assessment|Not assessed|Reviewed by|Manual SAP Basis Assessment/)
-  for (const term of ['CPU Pressure', 'RAM Pressure', 'Critical WP', 'Detailed Evidence', 'PDF Report']) assert.ok(ui.includes(term), term)
+  for (const term of ['CPU Pressure', 'RAM Pressure', 'Critical WP', 'Detailed Evidence', 'Generate PDF']) assert.ok(ui.includes(term), term)
   assert.match(ui, /buildMonthlyPdf/)
   assert.match(ui, /pressure:pressureFilter/)
   assert.match(ui, /flag:signalFilter/)

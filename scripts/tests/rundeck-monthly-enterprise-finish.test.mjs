@@ -59,21 +59,17 @@ test('PDF evidence is unfiltered, month-scoped and not reused from table paginat
   assert.match(ui, /buildMonthlyPdf\(\{month,data:reportData\}\)/)
   assert.match(ui, /pdfGenerationRef\.current/)
   assert.equal((ui.match(/Download PDF/g) || []).length,1)
-  assert.match(ui, /navpanes=0&view=FitH/)
-  assert.match(ui, /Open full screen/)
+  assert.match(ui, /sphereMonthlyOnePageActions/)
+  assert.doesNotMatch(ui, /sphere-month-panel-report/)
   assert.match(css, /68dvh/)
 })
 
-test('Three tab panels expose accessible labels and keyboard navigation', () => {
-  assert.match(ui, /handleTabKeyDown/)
-  assert.match(ui, /event\.key==='ArrowRight'/)
-  assert.match(ui, /event\.key==='ArrowLeft'/)
-  for (const name of ['summary','evidence','report']) {
-    assert.ok(ui.includes('sphere-month-panel-'+name))
-    assert.ok(ui.includes('sphere-month-tab-'+name))
-  }
-  assert.match(ui, /aria-selected=\{tab===value\}/)
-  assert.match(ui, /role="tabpanel"/)
+test('Monthly Report is a single-view overview with an evidence popup and direct PDF actions', () => {
+  assert.match(ui, /is-single-page/)
+  assert.match(ui, /sphereMonthlyOnePageActions/)
+  assert.match(ui, /evidenceOpen && <RundeckWorkspaceDrawer/)
+  assert.match(ui, /Download PDF/)
+  assert.doesNotMatch(ui, /sphereMonthlyTabs|sphere-month-tab-/)
 })
 
 test('Report UI follows system light/dark tokens and does not suppress data', () => {
@@ -86,7 +82,7 @@ test('Report UI follows system light/dark tokens and does not suppress data', ()
 
 
 test('Monthly Summary prioritizes host preview before full workload evaluation', () => {
-  assert.match(ui, /fullEvaluationReady = tab!=='summary' \|\| hostPreview\?\.month===month/)
+  assert.match(ui, /fullEvaluationReady = hostPreview\?\.month===month/)
   assert.match(ui, /setLoading\(!hostPreviewError\)/)
   assert.match(ui, /if\(!fullEvaluationReady\)/)
   assert.ok(ui.includes('setHostPreview(payload)'), 'verified host data must be rendered')

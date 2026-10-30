@@ -42,7 +42,7 @@ function ageMinutes(value) {
   return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
 }
 
-export default function RundeckAvailability({ refreshToken = '', compact = false, inlineSummary = false, onOpen = null, paired = false, summaryRoot = null }) {
+export default function RundeckAvailability({ refreshToken = '', compact = false, inlineSummary = false, onOpen = null, hideDetailsAction = false, paired = false, summaryRoot = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [bundle, setBundle] = React.useState(null)
@@ -184,7 +184,7 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
   </div>
 
   if (inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="SAP Availability overview">
-    <div className="sphereHealthInlineHead"><h4>{lastSnapshot || stale ? "SAP Availability · Last Known" : "SAP Availability"}</h4><button type="button" onClick={onOpen}>Details</button></div>
+    <div className="sphereHealthInlineHead"><h4>{lastSnapshot || stale ? "SAP Availability · Last Known" : "SAP Availability"}</h4>{!hideDetailsAction && <button type="button" onClick={onOpen}>Details</button>}</div>
     <div className="sphereHealthInlineValues">
       <span><b>APP</b><strong>{apps.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${appsUp}/${apps.length}` : 'No Data'}</strong></span>
       <span><b>HANA</b><strong>{hanaRows.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${hanaUp}/${hanaRows.length}` : 'No Data'}</strong></span>

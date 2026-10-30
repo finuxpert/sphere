@@ -110,7 +110,7 @@ export default function RundeckSystemHealth({ sourceQuality = null, sourceLoadin
   return createPortal(
     <div className="rundeckSystemHealthV1231">
       <div className="rundeckSystemHealthPrimary">
-        <span>Monitoring</span>
+        <span>Status</span>
         <StatusPill value={displayState} title={title} />
         {primarySignal && <span className={`rundeckSystemHealthReasonV132 is-${String(primarySignal.level || 'attention').toLowerCase()}`} title={primarySignal.detail}>{primarySignal.text}</span>}
       </div>

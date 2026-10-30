@@ -140,7 +140,7 @@ function SparkChart({items=[],metricType,selectedSeries='',incidentStart='',rang
   </div>
 }
 
-export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,inlineSummary=false,onOpen=null,initialContext=null,lockedHost=false,hideHostCards=false}){
+export default function RundeckInfrastructure({incidentStart='',refreshToken='',compact=false,inlineSummary=false,onOpen=null,hideDetailsAction=false,initialContext=null,lockedHost=false,hideHostCards=false}){
   const [data,setData]=React.useState({host:'',hosts:[],fs:[],network:[],storage:[]})
   const [allHostFilesystems,setAllHostFilesystems]=React.useState([])
   const [error,setError]=React.useState('')
@@ -277,7 +277,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
   const openTrend=(metricType,series='')=>{setTrendMetric(metricType);setSelectedSeries(series)}
 
   if(inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="Server Health overview">
-    <div className="sphereHealthInlineHead"><h4>Server Health</h4><button type="button" onClick={onOpen}>Details</button></div>
+    <div className="sphereHealthInlineHead"><h4>Server Health</h4>{!hideDetailsAction && <button type="button" onClick={onOpen}>Details</button>}</div>
     <div className="sphereHealthInfraScope">{shortHost(host || 'Host —')} · {error ? 'No Data' : sourcesLoading ? 'Checking…' : overall}{stale ? ' · Last sample' : ''}</div>
     <div className="sphereHealthInlineValues">
       <span><b>Filesystem</b><strong>{error || sourcesLoading ? '—' : fsState}</strong></span>
