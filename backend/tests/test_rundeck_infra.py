@@ -181,6 +181,10 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
             "File System OS":{"host":"AOPH1PAPPDC","mount":"/"}})
         self.assertTrue(all(row["status"]=="NOT_COLLECTED" for row in res["items"]))
         self.assertTrue(all(row["used_bytes"] is None for row in res["items"]))
+        self.assertEqual(res["source_rows"],0)
+        self.assertEqual(res["configured_categories"],1)
+        self.assertEqual(res["items"][0]["reason"],"NO_MONTHLY_INFRA_HISTORY")
+        self.assertEqual(res["items"][1]["reason"],"MAPPING_NOT_CONFIGURED")
 
     def test_latest_historical_sample_selected_for_mapped_host_mount(self):
         from datetime import datetime, timezone
@@ -198,3 +202,24 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
             "File System OS":{"host":"AOPH1PAPPDC","mount":"/"}})
         self.assertEqual(res["items"][0]["used_bytes"],600*1024)
         self.assertEqual(res["items"][0]["status"],"COLLECTED")
+        self.assertIsNone(res["items"][0]["reason"])
+        self.assertEqual(res["source_rows"],2)
+        self.assertEqual(res["distinct_mounts"],1)
+
+
+    def test_missing_mapping_does_not_fall_back_to_any_mount(self):
+        from datetime import datetime, timezone
+        class Result:
+            def mappings(self): return self
+            def all(self):
+                return [{"host":"AOPH1PAPPDC","mount_point":"/",
+                    "collected_at":datetime(2026,10,20,tzinfo=timezone.utc),
+                    "details":{"_positional":["filesystem","/dev/root","xfs","1000","600","60","/"]},
+                    "total_bytes":1000*1024,"avail_bytes":400*1024,"used_pct":60}]
+        class Conn:
+            def execute(self, sql, params):return Result()
+        result=monthly_storage_evidence("2026-10",Conn(),{})
+        self.assertEqual(result["configured_categories"],0)
+        self.assertEqual(result["source_rows"],1)
+        self.assertTrue(all(row["reason"]=="MAPPING_NOT_CONFIGURED" for row in result["items"]))
+        self.assertTrue(all(row["used_pct"] is None for row in result["items"]))
