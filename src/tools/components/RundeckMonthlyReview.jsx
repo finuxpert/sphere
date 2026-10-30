@@ -334,6 +334,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [data,setData]=React.useState(null)
   const [hostPreview,setHostPreview]=React.useState(null)
   const [hostPreviewError,setHostPreviewError]=React.useState('')
+  const [hostPreviewRetry,setHostPreviewRetry]=React.useState(0)
   const [loading,setLoading]=React.useState(true)
   const [error,setError]=React.useState('')
   const [chartMode,setChartMode]=React.useState('peak')
@@ -379,8 +380,15 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           : failure.message||'Monthly host summary unavailable')
       })
     return ()=>controller.abort()
-  },[month])
+  },[month,hostPreviewRetry])
   React.useEffect(()=>{
+    // Prioritize the small host-only monthly request. The full evaluation
+    // triggers expensive historical aggregations and must not compete with
+    // the first server-chart load on the initial Summary screen.
+    if(tab==='summary' && hostPreview?.month!==month && !hostPreviewError) {
+      setLoading(true)
+      return
+    }
     const controller=new AbortController()
     const params=new URLSearchParams({
       month,type:kind,health,pressure:pressureFilter,flag:signalFilter,q:appliedSearch,
@@ -409,7 +417,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         : failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
-  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page])
+  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page,tab,hostPreview?.month,hostPreviewError])
   const changeMonth=value=>{
     pdfGenerationRef.current += 1
     setMonth(value);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
@@ -504,7 +512,11 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           onClick={()=>setTab(value)}>{label}</button>)}
     </div>
     {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved monthly performance…'}</div>}
-    {hostPreviewError&&!data&&!preview&&<div className="sphereMonthlyState is-error" role="alert">{hostPreviewError}</div>}
+    {hostPreviewError&&!data&&!preview&&<div className="sphereMonthlyState is-error" role="alert">
+      {hostPreviewError}
+      <button type="button" className="btn btn-sm btn-outline-light ms-2"
+        onClick={()=>{setHostPreviewError('');setHostPreviewRetry(count=>count+1)}}>Retry server data</button>
+    </div>}
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
     {(completedData || (preview && tab==='summary'))&&<>
       <div className="sphereMonthlyProvenance" title={'Reporting month: ' + month + ' · Monitoring records ' + fmt(quality.complete_checks,0) + ' / ~' + fmt(quality.expected_checks,0) + ' expected (' + pct(quality.coverage_pct) + ') · Recorded ' + dateShort(quality.first_complete_at) + ' – ' + dateShort(quality.last_complete_at)}>
