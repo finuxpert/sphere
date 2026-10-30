@@ -69,7 +69,7 @@ function collectorTitle(collector) {
   return parts.join(' · ')
 }
 
-export default function RundeckSystemHealth({ sourceQuality = null, sourceCollector = null, sourceHosts = [], sourceAvailability = null }) {
+export default function RundeckSystemHealth({ sourceQuality = null, sourceLoading = false, sourceCollector = null, sourceHosts = [], sourceAvailability = null }) {
   const [target, setTarget] = React.useState(null)
   React.useEffect(() => {
     let frame = 0
@@ -97,37 +97,31 @@ export default function RundeckSystemHealth({ sourceQuality = null, sourceCollec
       hosts: sourceHosts, availability: sourceAvailability, quality: sourceQuality, collector,
     })
   const availabilityAge = sourceQuality?.availabilityAgeMs == null ? null : Math.floor(sourceQuality.availabilityAgeMs / 60000)
-  const recovery = collector?.last_recovery || null
-  const primarySignal = !sourceQuality || sourceQuality.state === 'UNKNOWN'
+  const primarySignal = sourceLoading
+    ? { level: 'UNKNOWN', text: 'Checking current sources', detail: 'Waiting for the first monitoring source refresh' }
+    : !sourceQuality || sourceQuality.state === 'UNKNOWN'
     ? { level: 'WARNING', text: 'Monitoring data: UNKNOWN', detail: 'Source quality: UNKNOWN' }
     : collectorUnreliable && !performanceEvidenceStale
       ? { level: 'WARNING', text: 'Collector: NOT VERIFIED', detail: `Poller: ${collector.poller_status || 'UNKNOWN'} · Watchdog: ${collector.watchdog_status || 'UNKNOWN'}` }
       : primaryHealthSignal(observedHosts, observedAvailability, observedImpact, performanceEvidenceStale, availabilityEvidenceStale, availabilityAge)
-  const title = `SAP monitoring: ${state} · Service Availability: ${observedAvailability}${availabilityEvidenceStale ? ' (not verified; not proof of SAP DOWN)' : ''} · Host Performance: ${performanceEvidenceStale ? 'STALE' : 'FRESH'} · Collector: ${collector.status || 'UNKNOWN'}`
+  const displayState = sourceLoading ? 'CHECKING' : state
+  const title = `SAP monitoring: ${displayState} · Service Availability: ${observedAvailability}${availabilityEvidenceStale ? ' (not verified; not proof of SAP DOWN)' : ''} · Host Performance: ${performanceEvidenceStale ? 'STALE' : 'FRESH'} · Collector: ${collector.status || 'UNKNOWN'}`
 
   return createPortal(
     <div className="rundeckSystemHealthV1231">
       <div className="rundeckSystemHealthPrimary">
         <span>Monitoring</span>
-        <StatusPill value={state} title={title} />
+        <StatusPill value={displayState} title={title} />
         {primarySignal && <span className={`rundeckSystemHealthReasonV132 is-${String(primarySignal.level || 'attention').toLowerCase()}`} title={primarySignal.detail}>{primarySignal.text}</span>}
       </div>
-      <details className="rundeckCollectorHealthV131">
-        <summary title={collectorTitle(collector)}>
-          <span>Collector</span>
-          <StatusPill value={collector.status || 'UNKNOWN'} />
-        </summary>
-        <div className="rundeckCollectorHealthPopover">
-          <div><span>Last Collection</span><strong>{collector.last_successful_collection ? `${formatWib(collector.last_successful_collection, true)} WIB` : '—'}</strong></div>
-          <div><span>Collection Age</span><strong>{ageText(collector.collection_age_seconds)}</strong></div>
-          <div><span>Watchdog</span><strong>{collector.watchdog_status || 'UNKNOWN'}</strong></div>
-          <div><span>Auto-healing</span><strong>{collector.auto_healing_enabled ? 'ON' : 'OFF'}</strong></div>
-          <div><span>Running Execution</span><strong>{collector.running_execution ? `#${collector.running_execution} · ${ageText(collector.running_duration_seconds)}` : '—'}</strong></div>
-          <div><span>Auto Recoveries</span><strong>{Number(collector.auto_abort_total || 0)}</strong></div>
-          <div><span>Last Recovery</span><strong>{recovery?.aborted_at ? `${formatWib(recovery.aborted_at, true)} WIB · #${recovery.execution_id}` : '—'}</strong></div>
-          {recovery?.next_successful_collection && <div><span>Recovery Confirmed</span><strong>{String(recovery.next_successful_collection).replace(/^rundeck-/, 'Run #')}</strong></div>}
-        </div>
-      </details>
+      <div className="rundeckCollectorHealthV131 is-fixed" title={collectorTitle(collector)}>
+        <span>Collector</span>
+        <StatusPill value={sourceLoading ? 'CHECKING' : collector.status || 'UNKNOWN'} />
+        <small>{sourceLoading ? 'Checking' :
+          collector.last_successful_collection
+            ? 'Last ' + formatWib(collector.last_successful_collection, true) + ' WIB'
+            : 'No timestamp'}</small>
+      </div>
     </div>,
     target,
   )
