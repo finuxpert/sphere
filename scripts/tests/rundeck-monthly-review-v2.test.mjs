@@ -13,7 +13,7 @@ test('monthly workload API is additive; existing rolling review remains unchange
   assert.match(monthly, /pressure: str = Query\("ALL", pattern="\^\(ALL\|CPU\|RAM\|WP\)\$"\)/)
   assert.match(monthly, /flag: str = Query\("ALL", pattern="\^\(ALL\|HIGH_CPU\|HIGH_MEMORY\|RECURRING\)\$"\)/)
   const evalSource = read('backend/rundeck_evaluation.py')
-  assert.match(evalSource, /anchor_key = end\.isoformat\(\)/)
+  assert.match(evalSource, /anchor_key = f"\{anchor_id\}@\{end\.isoformat\(\)\}"/)
   assert.match(evalSource, /cache_key = \(period_key, type_key, anchor_key\)/)
   assert.match(evalSource, /_calendar_month_collection_anchor\(conn, start, end\)/)
 })
