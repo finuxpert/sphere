@@ -320,7 +320,7 @@ function MonthlyErrorAnalysis({ evidence }) {
   </section>
 }
 
-export default function RundeckMonthlyReview() {
+export default function RundeckMonthlyReview({ showTitle = true }) {
   const [month,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
   const [tab,setTab]=React.useState('summary')
   const [pressureMetric,setPressureMetric]=React.useState('cpu')
@@ -448,7 +448,7 @@ export default function RundeckMonthlyReview() {
   },[tab,data,loading,pdfBusy,pdfUrl,pdfError,previewPdf])
   return <section className="sphereMonthlyReview is-v2 container-fluid px-0" aria-label="Monthly SAP Performance and Job Impact">
     <div className="sphereMonthlyHead">
-      <div><strong>Monthly Review</strong></div>
+      {showTitle && <div><strong>Monthly Review</strong></div>}
       <div className="sphereMonthlyPicker">
         <label htmlFor="sphere-month-choice">Reporting month</label>
         <select className="form-select form-select-sm" id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
