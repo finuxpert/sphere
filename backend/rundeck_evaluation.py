@@ -624,27 +624,33 @@ def _sampling_quality(conn, start: datetime, end: datetime) -> dict:
     }
 
 
-def _anchor_time(conn) -> datetime:
-    value = conn.execute(text(f"""
-        SELECT MAX(COALESCE(finished_at, started_at))
+def _anchor_collection(conn) -> tuple[datetime, str]:
+    """Use the latest complete collection ID and commit time for cache invalidation."""
+    row = conn.execute(text(f"""
+        SELECT c.collection_id, COALESCE(c.finished_at, c.started_at) AS anchor_at
           FROM rundeck_collections c
          WHERE {_complete_collection_clause('c')}
-    """)).scalar()
-    if value is None:
-        return datetime.now(timezone.utc)
-    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+         ORDER BY COALESCE(c.finished_at, c.started_at) DESC, c.collection_id DESC
+         LIMIT 1
+    """)).mappings().first()
+    if row is None:
+        return datetime.now(timezone.utc), "NO_COMPLETE_COLLECTION"
+    value = row["anchor_at"]
+    return (value if value.tzinfo else value.replace(tzinfo=timezone.utc)), str(row["collection_id"])
 
 
 def _calendar_month_collection_anchor(conn, start: datetime, end: datetime) -> str:
     """Cache completed months against their own READY collection anchor, not today's run."""
-    value = conn.execute(text(f"""
-        SELECT MAX(COALESCE(c.finished_at, c.started_at))
+    row = conn.execute(text(f"""
+        SELECT c.collection_id, COALESCE(c.finished_at, c.started_at) AS anchor_at
           FROM rundeck_collections c
          WHERE {_complete_collection_clause('c')}
            AND COALESCE(c.finished_at, c.started_at) >= :start
            AND COALESCE(c.finished_at, c.started_at) < :end
-    """), {"start": start, "end": end}).scalar()
-    return value.isoformat() if value is not None else "NO_COMPLETE_COLLECTION"
+         ORDER BY COALESCE(c.finished_at, c.started_at) DESC, c.collection_id DESC
+         LIMIT 1
+    """), {"start": start, "end": end}).mappings().first()
+    return f"{row['collection_id']}@{row['anchor_at'].isoformat()}" if row is not None else "NO_COMPLETE_COLLECTION"
 
 
 def _monthly_abap_tuning_candidates(evaluated: list[dict], limit: int = 25) -> list[dict]:
@@ -885,10 +891,11 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             # Preserve the existing 1D/7D/30D cache contract exactly:
             # key off the committed evaluation end, independent of page limit.
             days = PERIOD_DAYS[period_key]
-            end = measure_sql("collection_anchor", lambda: _anchor_time(conn)) + timedelta(microseconds=1)
+            anchor_at, anchor_id = measure_sql("collection_anchor", lambda: _anchor_collection(conn))
+            end = anchor_at + timedelta(microseconds=1)
             start = end - timedelta(days=days)
             previous_start = start - timedelta(days=days)
-            anchor_key = end.isoformat()
+            anchor_key = f"{anchor_id}@{end.isoformat()}"
             cache_key = (period_key, type_key, anchor_key)
         cached = _cache_get(cache_key)
         if cached:
