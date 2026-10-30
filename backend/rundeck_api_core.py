@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 
 from backend.rundeck_alert_incidents import incident_history
 from backend.rundeck_consumers import timeline_consumers
-from backend.rundeck_evaluation import evaluation_report
+from backend.rundeck_evaluation import evaluation_report, monthly_host_preview
 from backend.rundeck_incident import performance_incident_summary
 from backend.rundeck_infra_api import router as infra_router
 from backend.rundeck_job_history import current_sap_jobs, sap_job_history
@@ -173,6 +173,21 @@ def monthly_workload_evaluation(
         raise HTTPException(503, str(error)) from None
     except Exception as error:
         raise HTTPException(503, f"Monthly performance evaluation unavailable: {type(error).__name__}") from None
+
+
+@app.get("/evaluation/workloads/monthly/hosts")
+def monthly_workload_hosts(
+    month: str = Query(..., pattern=r"^20[0-9]{2}-(0[1-9]|1[0-2])$"),
+):
+    """Read-only, host-only summary; does not claim workload evaluations are ready."""
+    try:
+        return monthly_host_preview(month)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Monthly host summary unavailable: {type(error).__name__}") from None
 
 
 @app.get("/collections")
