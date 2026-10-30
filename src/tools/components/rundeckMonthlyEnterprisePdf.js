@@ -263,12 +263,12 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   function bars(x,title,rows,metric,labelSuffix) {
     rect(x,barY,panelW,barH,'white',7)
     section(x+16,barY+barH-22,title)
-    const start=barY+barH-43,dy=11.1,bx=x+292,bw=panelW-292-68
+    const start=barY+barH-43,dy=11.1,bx=x+279,bw=panelW-279-68
     const values=rows.map(metric)
     const max=Math.max(0,...values.filter(n=>n!==null))
     rows.slice(0,10).forEach((row,i)=>{
       const yy=start-i*dy
-      fitText(x+16,yy,row.consumer_key,panelW-388,'left',7.25)
+      fitText(x+16,yy,row.consumer_key,259,'left',7.25)
       fillRect(bx,yy-2,bw,7.2,'header',2)
       const n=metric(row)
       if(n!==null && max>0)fillRect(bx,yy-2,bw*n/max,7.2,i===0?'red':'blue',2)
