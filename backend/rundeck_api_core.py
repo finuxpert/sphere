@@ -38,6 +38,7 @@ from backend.rundeck_trends import (
     previous_calendar_month,
     resolve_range,
     trend_series,
+    trend_series_bundle,
     validate_custom_window,
 )
 
@@ -293,6 +294,59 @@ def history_trend(
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:
         raise HTTPException(503, str(error)) from None
+
+
+@app.get("/history/trends")
+def history_trend_bundle(
+    metrics: str = Query("cpu,ram,wp", min_length=3, max_length=40),
+    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d|180d|last_month)$"),
+    bucket: str = Query("auto", pattern="^(auto|10m|30m|1h|6h|1d)$"),
+    from_at: str | None = Query(None, max_length=64),
+    to_at: str | None = Query(None, max_length=64),
+):
+    """Share a single host-metric SQL scan across selected chart panels."""
+    try:
+        metric_keys = metrics.split(",")
+        if (not 1 <= len(metric_keys) <= 4
+                or len(set(metric_keys)) != len(metric_keys)
+                or any(key not in {"cpu", "ram", "wp", "load", "iowait", "swap"} for key in metric_keys)):
+            raise ValueError("metrics must list 1-4 unique host metrics")
+        range_config = resolve_range(range_key)
+        until = None
+        if range_key == "custom":
+            if not from_at or not to_at or bucket != "auto":
+                raise ValueError("Custom requires from_at, to_at and bucket=auto")
+            since, until = validate_custom_window(
+                datetime.fromisoformat(from_at.replace("Z", "+00:00")),
+                datetime.fromisoformat(to_at.replace("Z", "+00:00")),
+            )
+        else:
+            if from_at or to_at:
+                raise ValueError("Explicit dates require range=custom")
+            if range_key == "last_month":
+                since, until = previous_calendar_month()
+            else:
+                since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
+        series = trend_series_bundle(since, range_key, bucket, metric_keys, until=until)
+        latest_row = _latest_ready()
+        for value in series.values():
+            value.update({
+                "timezone": "Asia/Jakarta",
+                "requested_window_start": since,
+                "requested_window_end": until or datetime.now(timezone.utc),
+                "configured_retention_days": RETENTION_DAYS,
+                "requested_days": round(((until or datetime.now(timezone.utc)) - since).total_seconds() / 86400, 2),
+                "latest_collection_at": (latest_row or {}).get("finished_at"),
+                "stale_after_minutes": STALE_MINUTES,
+                "collection_cadence_seconds": max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600"))),
+            })
+        return {"series": series, "metrics": metric_keys}
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Trend bundle unavailable: {type(error).__name__}") from None
 
 
 @app.get("/history/alerts")
