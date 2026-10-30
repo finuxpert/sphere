@@ -304,3 +304,65 @@
     transition:none !important;
   }
 }
+
+/* Theme support: the V2 report previously used a dark-only native select.
+   The system theme is resolved by the application's html[data-theme]. */
+html[data-theme="light"] .sphereMonthlyReview.is-v2 {
+  --mr-surface:#ffffff;
+  --mr-surface-2:#f3f7f9;
+  --mr-border:#d2dde4;
+  --mr-text:#253a47;
+  --mr-muted:#526875;
+  --mr-accent:#166f82;
+  color-scheme:light;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+:is(input,select,textarea,.form-control,.form-select) {
+  color:var(--mr-text) !important;
+  background:var(--mr-surface-2) !important;
+  border-color:var(--mr-border) !important;
+  color-scheme:light !important;
+}
+html[data-theme="dark"] .sphereMonthlyReview.is-v2
+:is(input,select,textarea,.form-control,.form-select) {
+  color-scheme:dark;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+:is(.sphereMonthlyPanel,.sphereMonthlyVisualCard) {
+  color:var(--mr-text) !important;
+  background:var(--mr-surface) !important;
+  border-color:var(--mr-border) !important;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+table th {
+  color:#435e6b !important;
+  background:#e9f0f4 !important;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+table :is(th,td) {
+  color:var(--mr-text);
+  border-bottom-color:var(--mr-border);
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+table tbody tr:hover {
+  background:#eef5f7;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+:is(.sphereMonthlyStatStrip span,.sphereMonthlyMixItem,.sphereMonthlyDashboardKpi) {
+  color:var(--mr-text) !important;
+  background:var(--mr-surface-2) !important;
+  border-color:var(--mr-border) !important;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2
+:is(.sphereMonthlyMixItem strong,.sphereMonthlyVisualHeading h4,.sphereMonthlyDonutCenter strong) {
+  color:var(--mr-text) !important;
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2 .sphereMonthlyDonutCenter {
+  color:var(--mr-text);
+  background:var(--mr-surface);
+  box-shadow:inset 0 0 0 1px var(--mr-border);
+}
+html[data-theme="light"] .sphereMonthlyReview.is-v2 .sphereMonthlySourceNote {
+  color:#6f4d19;
+  background:#fff8e7;
+}
