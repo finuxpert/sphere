@@ -41,7 +41,11 @@ jobs:
       - name: Render and validate monthly SAP ABAP PDF (long programs, errors and page breaks)
         run: |
           node scripts/qa-monthly-pdf.mjs
-          if command -v pdfinfo >/dev/null; then pdfinfo "$RUNNER_TEMP/sphere-monthly-qa-fixture.pdf" | grep -E 'Pages:|Page size:'; fi
+          if command -v pdfinfo >/dev/null; then
+            pdfinfo "$RUNNER_TEMP/sphere-monthly-qa-fixture.pdf" | grep -E 'Pages:|Page size:'
+            pdfinfo "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" | grep -q 'Pages:[[:space:]]*1'
+            pdfinfo "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" | grep -q 'Page size:[[:space:]]*1190.55 x 841.89 pts'
+          fi
           if command -v pdftotext >/dev/null; then
             pdftotext -layout "$RUNNER_TEMP/sphere-monthly-qa-fixture.pdf" "$RUNNER_TEMP/sphere-monthly-qa-fixture.txt"
             grep -q 'ZLAST_CANDIDATE_10' "$RUNNER_TEMP/sphere-monthly-qa-fixture.txt"
