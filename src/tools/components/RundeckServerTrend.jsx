@@ -839,9 +839,19 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       : `${API}/history/trend?range=${encodeURIComponent(range)}&bucket=${encodeURIComponent(range === 'custom' || LONG_RANGES.has(range) ? 'auto' : bucket)}&metric=${encodeURIComponent(queriedMetric)}${windowQuery}`
     setLoading(true)
     setError('')
-    return json(url, signal, queriedMetric)
-      .then((result) => setter(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result))
-      .catch((failure) => { if (failure.name !== 'AbortError') setError(failure.message || 'Unable to load trend.') })
+    // A timed-out API must become an explicit error, never an infinite spinner.
+    // Do not abort or discard another panel's independent fetch.
+    const deadline = AbortSignal.timeout(20_000)
+    const requestSignal = AbortSignal.any([signal, deadline])
+    return json(url, requestSignal, queriedMetric)
+      .then((result) => {
+        if (!signal.aborted) setter(category ? { ...result, metric: 'availability', metric_label: result.metric_label || metricLabel(metric), display_metric: metric } : result)
+      })
+      .catch((failure) => {
+        if (!signal.aborted) setError(deadline.aborted
+          ? 'Trend API did not respond within 20 seconds. Check backend SQL and collector freshness.'
+          : failure.message || 'Unable to load trend.')
+      })
       .finally(() => { if (!signal.aborted) setLoading(false) })
   }, [bucket, customWindow, range])
 
