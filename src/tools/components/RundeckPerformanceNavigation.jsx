@@ -1,5 +1,6 @@
 import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
+import { APP_DISPLAY_VERSION, APP_BUILD_LABEL } from '../../app/version.js'
 import { PRIMARY_PERFORMANCE_VIEWS } from './RundeckPerformanceNavigationState.js'
 
 export default function RundeckPerformanceNavigation({ activeView = 'performance', onNavigate, onOpenCollection, onManualUpload }) {
@@ -33,6 +34,9 @@ export default function RundeckPerformanceNavigation({ activeView = 'performance
     <div className="sphereSidebarUtilities d-flex flex-column gap-1" role="group" aria-label="Collection tools">
       <button type="button" className="btn btn-sm text-start" onClick={onOpenCollection} title="Collector status, history and token details"><SphereIcon name="database" /><span>Collector</span></button>
       <button type="button" className="btn btn-sm text-start" onClick={onManualUpload} title="Upload WP-SCOUT or Daily Check data"><SphereIcon name="upload" /><span>Upload Data</span></button>
+    </div>
+    <div className="sphereSidebarRelease" aria-label={APP_BUILD_LABEL} title={APP_BUILD_LABEL}>
+      {APP_DISPLAY_VERSION}
     </div>
   </nav>
 }
