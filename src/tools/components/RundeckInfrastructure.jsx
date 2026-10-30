@@ -210,13 +210,20 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
         return
       }
       const q=resolvedTarget?`?host=${encodeURIComponent(resolvedTarget)}`:''
-      const values=await Promise.all((healthMatrix?['filesystems','network','storage']:['filesystems','network','storage','filesystems']).map(async (path,index)=>{
+      const paths=healthMatrix?['filesystems','network','storage']:['filesystems','network','storage','filesystems']
+      const requests=paths.map(async(path,index)=>{
         const scope=healthMatrix||index===3?'':q
         const extra=healthMatrix&&path==='filesystems'?'?primary_only=false':''
         const response=await fetch(`${API}/${path}${scope||extra}`,{cache:'no-store',signal})
         if(!response.ok)throw new Error(`Infrastructure API ${path} unavailable`)
         return response.json()
-      }))
+      })
+      // In the combined health matrix, a failed Network request must never
+      // erase valid Filesystem or Storage observations for the same APP.
+      const results=healthMatrix?await Promise.allSettled(requests)
+        :await Promise.all(requests).then(rows=>rows.map(value=>({status:'fulfilled',value})))
+      const unavailable=results.flatMap((row,index)=>row.status==='rejected'?[paths[index]]:[])
+      const values=results.map(row=>row.status==='fulfilled'?row.value:{items:[]})
       if(signal.aborted)return
       const collections=new Map(hosts.map(row=>[String(row.host||'').toUpperCase(),String(row.collection_id||'')]))
       const belongsToSnapshot=row=>{
@@ -228,7 +235,7 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
       const fs=(values[0].items||[]).filter(belongsToSnapshot)
       setData({host:resolvedTarget,hosts,fs,network:(values[1].items||[]).filter(belongsToSnapshot),storage:(values[2].items||[]).filter(belongsToSnapshot)})
       setAllHostFilesystems(healthMatrix?fs:(values[3].items||[]))
-      setError('')
+      setError(unavailable.length?'Unavailable sources: '+unavailable.join(', '):'')
     }catch(e){if(!signal.aborted&&e.name!=='AbortError'){setData({host:'',hosts:[],fs:[],network:[],storage:[]});setAllHostFilesystems([]);setError(e.message)}}
     finally { if(!signal.aborted) setSourcesLoading(false) }
   },[selectedHost,lockedHost,requestedSapHost,healthMatrix])
@@ -331,9 +338,9 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
               Math.max(Number(a.metrics.rx_mbps||0),Number(a.metrics.tx_mbps||0)))[0]
           const sapTitle=sap?.collected_at ? 'SAP '+sap.collected_at : 'SAP sample unknown'
           const infraTitle=infra ? 'Infrastructure '+infra.snapshot_ts+' · '+infra.host+' · collection '+infra.collection_id : 'Infrastructure host unverified'
-          const fsStatus=sourcesLoading?'CHECKING':error?'UNKNOWN':fs.state
-          const stStatus=sourcesLoading?'CHECKING':error?'UNKNOWN':st.status
-          const ntStatus=sourcesLoading?'CHECKING':error?'UNKNOWN':nt.status
+          const fsStatus=sourcesLoading?'CHECKING':fs.state
+          const stStatus=sourcesLoading?'CHECKING':st.status
+          const ntStatus=sourcesLoading?'CHECKING':nt.status
           const fsLabel=fs.topFs && fsStatus!=='UNKNOWN'
             ? checkedMetric(fs.topFs.used_pct,'%')+' · '+(fs.topFs.mount_point||'mount')
             : '—'
