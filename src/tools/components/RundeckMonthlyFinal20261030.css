@@ -383,3 +383,161 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
   background:#dceff2 !important;
   border-color:#77b9c5 !important;
 }
+
+
+/* Compact, source-backed management view. Reuses existing monthly stylesheet. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagement{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:7px;
+  width:100%;
+  min-width:0;
+  margin-top:8px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:7px;
+  min-width:0;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair.is-tables{
+  grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel{
+  background:var(--mr-surface,#1c2934);
+  border:1px solid var(--mr-border,#364553);
+  border-radius:5px;
+  padding:8px 10px;
+  min-width:0;
+  overflow:hidden;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel h4{
+  font-size:11px;
+  font-weight:700;
+  line-height:1.2;
+  margin:0 0 6px;
+  color:var(--mr-text,inherit);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerHeading{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:6px;
+  min-width:0;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerHeading strong{
+  font-size:10px;
+  font-weight:600;
+  color:var(--mr-muted,#9cafbd);
+  white-space:nowrap;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel .sphereMonthlyTrend svg{
+  display:block;
+  width:100%;
+  height:clamp(90px,12vh,135px);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel .sphereMonthlyTrendLegend{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  padding:0;
+  margin:2px 0 0;
+  font-size:10px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel .sphereMonthlyTrend > small{
+  display:none;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerBars{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:3px;
+  min-height:120px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerBar{
+  display:grid;
+  grid-template-columns:minmax(0,1.5fr) minmax(28px,1fr) 76px;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  line-height:1.1;
+  font-size:9.5px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerJob{
+  min-width:0;
+  overflow-wrap:anywhere;
+  font-weight:500;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerTrack{
+  height:5px;
+  overflow:hidden;
+  border-radius:2px;
+  background:var(--mr-border,#43505c);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerTrack i{
+  display:block;
+  background:var(--mr-accent,#4aa9b8);
+  height:100%;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerBar b{
+  text-align:right;
+  font-size:9px;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerMissing{
+  font-size:11px;
+  color:var(--mr-muted,#9cafbd);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerTable{
+  border-collapse:collapse;
+  table-layout:fixed;
+  width:100%;
+  font-size:9px;
+  line-height:1.1;
+  margin:0;
+  font-variant-numeric:tabular-nums;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerTable th,
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerTable td{
+  padding:3px 4px;
+  vertical-align:top;
+  overflow-wrap:anywhere;
+  border-bottom:1px solid var(--mr-border,#364553);
+  color:var(--mr-text,inherit);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerTable th{
+  color:var(--mr-muted,#9cafbd);
+  font-weight:700;
+  text-align:left;
+  background:var(--mr-surface-2,#1c2934);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerTable .is-job{
+  font-weight:600;
+  width:22%;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair.is-tables .sphereMonthlyManagerPanel:last-child .sphereMonthlyManagerTable{
+  font-size:8.2px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair.is-tables .sphereMonthlyManagerPanel:last-child .sphereMonthlyManagerTable th:nth-child(2){
+  width:23%;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel.is-storage{
+  padding-top:7px;
+  padding-bottom:7px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel.is-storage .sphereMonthlyManagerTable th,
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel.is-storage .sphereMonthlyManagerTable td{
+  padding-top:3px;
+  padding-bottom:3px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyTechnicalAction{
+  display:flex;
+  justify-content:flex-end;
+  padding:5px;
+}
+@media(max-width:1100px){
+  .sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair,
+  .sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair.is-tables{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
