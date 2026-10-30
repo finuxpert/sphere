@@ -210,3 +210,171 @@
   .sphereMonthlyReview .sphereMonthlyTabs > button { font-size: 11px; padding-inline: 5px; }
   .sphereMonthlyReview .sphereMonthlyPriorityRow { grid-template-columns: minmax(0,1fr); }
 }
+
+/* DEV finishing 30 Oct: one visible source status, no accordion in the global toolbar. */
+.appShell:has(.rundeckPanel) .rundeckDataAlignment.is-fixed,
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131.is-fixed {
+  display:inline-flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  width:auto;
+  min-width:0;
+  max-width:100%;
+  border:0;
+  padding:2px 4px;
+  background:transparent;
+  font-size:11px;
+  line-height:1.35;
+}
+.appShell:has(.rundeckPanel) .rundeckDataAlignment.is-fixed .rundeckDataQualityLink,
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131.is-fixed > span {
+  font-size:10px;
+  text-transform:uppercase;
+  font-weight:650;
+  color:var(--sphere-text-secondary,#aebcc5);
+}
+.appShell:has(.rundeckPanel) .rundeckDataAlignment.is-fixed .rundeckDataQualityState {
+  color:var(--sphere-text,#e5eef5);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.appShell:has(.rundeckPanel) .rundeckDataAlignment.is-fixed.is-freshness-warning .rundeckDataQualityState {
+  color:var(--sphere-warning,#d4a35d);
+}
+.appShell:has(.rundeckPanel) .rundeckDataFreshnessInline,
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131.is-fixed > small {
+  color:var(--sphere-text-muted,#9baab5);
+  font-size:10px;
+  font-weight:400;
+}
+.appShell:has(.rundeckPanel) .rundeckCollectorHealthV131.is-fixed {
+  cursor:default;
+}
+
+/* Evidence is permanently visible and arranged in reading order. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyImpact {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  align-items:start;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyImpact > .sphereMonthlyPressureSummary,
+.sphereMonthlyReview.is-v2 .sphereMonthlyImpact > .sphereMonthlyRank,
+.sphereMonthlyReview.is-v2 .sphereMonthlyImpact > .sphereMonthlyErrors,
+.sphereMonthlyReview.is-v2 .sphereMonthlyImpact > .sphereMonthlyWide {
+  grid-column:1/-1;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPressureSummary {
+  gap:6px;
+  padding:10px 12px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPressureSummary .sphereMonthlyStatStrip {
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPressureSummary .sphereMonthlyStatStrip span {
+  background:var(--mr-surface-2);
+  border:1px solid var(--mr-border);
+  border-radius:4px;
+  padding:5px 8px;
+  font-size:11px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPressureSummary p {
+  font-size:11px;
+  margin:0;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyWarningTable { min-width:0; align-content:start; }
+.sphereMonthlyReview.is-v2 .sphereMonthlyTableScroll,
+.sphereMonthlyReview.is-v2 .sphereMonthlyImpact .sphereMonthlyTableScroll,
+.sphereMonthlyReview.is-v2 .sphereMonthlyHostSummary .sphereMonthlyTableScroll {
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyHostSummary {
+  align-self:start;
+  min-height:0;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyHostSummary th,
+.sphereMonthlyReview.is-v2 .sphereMonthlyHostSummary td {
+  line-height:1.45;
+  padding:8px 7px;
+  overflow-wrap:normal;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPressureMode {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin:0;
+  font-size:11px;
+  white-space:nowrap;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPressureMode select {
+  margin:0;
+  min-width:76px;
+  padding:6px 8px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyRank .sphereMonthlyName {
+  min-width:0;
+  max-width:none;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyRank table {
+  width:100%;
+  table-layout:fixed;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyRank table th:first-child,
+.sphereMonthlyReview.is-v2 .sphereMonthlyRank table td:first-child {width:60%}
+.sphereMonthlyReview.is-v2 .sphereMonthlyEvidencePage .sphereMonthlyPanel {
+  min-width:0;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyEvidencePage .sphereMonthlyName strong {
+  overflow-wrap:anywhere;
+  font-size:11.5px;
+  line-height:1.35;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyEvidencePage table td small {
+  color:var(--mr-muted);
+  font-size:10.5px;
+  line-height:1.4;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyMixBody {
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  gap:10px;
+  align-items:center;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyDonut {
+  width:min(100%,152px);
+  height:auto;
+  aspect-ratio:1;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyMixItem {
+  font-size:11.5px;
+  padding:7px 8px;
+}
+/* Keep host and status colors semantically distinct from the report charts. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyMixItem:focus-visible {
+  outline:2px solid var(--mr-accent,#4aa9b8);
+  outline-offset:1px;
+}
+.appShell:has(.rundeckPanel) .sphereOverviewBottomRow.row {
+  align-items:start !important;
+}
+.appShell:has(.rundeckPanel) .sphereOverviewBottomRow .sphereOverviewDetails,
+.appShell:has(.rundeckPanel) .sphereOverviewBottomRow .rundeckJobsProgramsOverview {
+  height:auto !important;
+  min-height:0 !important;
+  align-self:start !important;
+}
+@media(max-width:1199px) {
+  .sphereMonthlyReview.is-v2 .sphereMonthlyImpact {grid-template-columns:minmax(0,1fr)}
+  .sphereMonthlyReview.is-v2 .sphereMonthlyImpact > * {grid-column:1}
+}
+@media(max-width:600px) {
+  .sphereMonthlyReview.is-v2 .sphereMonthlyMixBody {grid-template-columns:minmax(0,1fr)}
+  .sphereMonthlyReview.is-v2 .sphereMonthlyRank table {table-layout:auto}
+  .appShell:has(.rundeckPanel) .rundeckDataFreshnessInline,
+  .appShell:has(.rundeckPanel) .rundeckCollectorHealthV131.is-fixed > small {font-size:9px}
+}
