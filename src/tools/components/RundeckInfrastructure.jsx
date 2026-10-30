@@ -2,7 +2,7 @@ import React from 'react'
 import SphereIcon from './SphereIcon.jsx'
 import { infrastructureTelemetryFreshness, infrastructureObservationStatus } from './infrastructureFreshness.js'
 import { hostInfrastructureEvidence, splitInfrastructureHosts, matchedInfrastructureHost, appSampleFreshness } from './rundeckUnifiedHost.js'
-import { filesystemResourceState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
+import { filesystemResourceState, metricResourceState, sapWorkloadState, OPERATOR_THRESHOLDS } from './rundeckStatusSemantics.js'
 import { shortHost } from './sapUiFormat.js'
 import './RundeckInfrastructure.css'
 
@@ -341,11 +341,14 @@ export default function RundeckInfrastructure({incidentStart='',refreshToken='',
             ? 'RX '+checkedMetric(netPeak.metrics.rx_mbps,' Mbps')
             : '—'
           const wpRaw=sapFreshness==='FRESH' ? sap.wp_critical : null
+          const cpuState=sapFreshness==='FRESH'?metricResourceState(sap.cpu_pct,'cpu'):sapFreshness
+          const ramState=sapFreshness==='FRESH'?metricResourceState(sap.ram_pct,'ram'):sapFreshness
+          const wpState=sapFreshness==='FRESH'?sapWorkloadState(sap):sapFreshness
           return <tr key={app}>
-            <td><strong>{app}</strong><small className="sphereHealthMatrixHost" title={sap?.host||app}>{infra?.source||'AOP PROD'}</small></td>
-            <td>{stateCell(sapFreshness,sapFreshness==='FRESH'?checkedMetric(sap.cpu_pct,'%'):'—',sapTitle)}</td>
-            <td>{stateCell(sapFreshness,sapFreshness==='FRESH'?checkedMetric(sap.ram_pct,'%'):'—',sapTitle)}</td>
-            <td>{stateCell(sapFreshness,
+            <td><strong>{app}</strong><small className="sphereHealthMatrixHost" title={sap?.host||app}>{infra?.source||'Not mapped'}</small></td>
+            <td>{stateCell(cpuState,sapFreshness==='FRESH'?checkedMetric(sap.cpu_pct,'%'):'—',sapTitle)}</td>
+            <td>{stateCell(ramState,sapFreshness==='FRESH'?checkedMetric(sap.ram_pct,'%'):'—',sapTitle)}</td>
+            <td>{stateCell(wpState,
               wpRaw===null||wpRaw===undefined?'—':metric(wpRaw),
               sapTitle+' · WP is a SAP work-process count')}</td>
             <td>{stateCell(fsStatus,fsLabel,infraTitle+(fs.topFs?' · Device '+(fs.topFs.device||'unknown'):'') )}</td>
