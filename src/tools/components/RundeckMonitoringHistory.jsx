@@ -171,7 +171,6 @@ export default function RundeckMonitoringHistory(props) {
     'system-data': ['Data Collection', 'Automatic collection, uploads and history'],
     'monthly-review': ['Reports', 'Monthly Review'],
   }
-  const backupState = React.isValidElement(systemDataContent) ? String(systemDataContent.props.platform?.backup?.status || 'NOT_CONFIGURED').toUpperCase() : 'UNKNOWN'
   const currentPage = pageNames[activeView]
   const inlinePage = activeView === 'jobs'
     ? <RundeckJobsProgramsWorkspace initialMode="live" initialHealth="REVIEW" showHealth={false} standalone
