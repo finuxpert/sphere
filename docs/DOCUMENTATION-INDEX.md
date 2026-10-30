@@ -1,36 +1,48 @@
-# SPHERE Documentation Index
+# SPHERE Documentation
 
-**Current scope:** Rundeck-integrated SPHERE `rundeck-sphere-dev`. Updated 30 October 2026 from repository source. The source and deployment runtime may differ. Confirm live web/API release SHA on the host before claiming an implementation is deployed.
+**Current scope:** `rundeck-sphere-dev` source, reviewed 30 October 2026. Documentation describes the repository, not necessarily the version running on JAHSVR-SPHERE. Confirm the deployed web/API SHA separately.
 
-## Maintained product and operations references
+## Start here
 
-| Document | Authority |
+| Reference | Purpose |
 |---|---|
-| [README](../README.md) | Project entry, branch topology, current feature summary |
-| [Current Flow and Features](CURRENT-FLOW-AND-FEATURES.md) | Current source-level user workflow and evidence semantics |
-| [Enterprise UI Standard](SPHERE-ENTERPRISE-UI-STANDARD.md) | Four-chart Monitoring, partial Bootstrap, responsive design, data-safe one-screen target |
-| [Visual QA](VISUAL-QA.md) | Desktop/mobile/scroll/keyboard/modal acceptance |
-| [Rundeck Development](rundeck-development.md) | Current guarded DEV full-stack release, migration checks, runtime separation |
-| [Rundeck Integration](RUNDECK_INTEGRATION_RUNBOOK.md) | Collector and Rundeck access contract |
-| [SAP Basis Job Intelligence](BASIS-JOB-INTELLIGENCE.md) | WP/trace/SM37 trust boundary |
-| [Six-month Historical Analysis](rundeck-historical-analysis-six-months.md) | Historical range, bucket and retention semantics |
-| [Monthly Review WP Errors](monthly-review-wp-error-dev-validation.md) | Source-backed review/error validation |
-| [Legacy Telemetry Compatibility](LEGACY-TELEMETRY-COMPATIBILITY.md) | Necessary legacy input/data contract |
-| [Development Workflow](ai-coding-workflow-style.md) | Change, QA, documentation rules |
-| [Operations](../ops/rundeck/OPERATIONS.md) | Operational recovery, permissions, rollback and retention |
-| [Observability](../ops/observability/README.md) | Prometheus collector metrics and alert rules |
+| [Project README](../README.md) | Architecture, environment boundaries and quick start |
+| [Current Features & Flow](CURRENT-FLOW-AND-FEATURES.md) | Current operator workflow and evidence semantics |
+| [Rundeck Development](rundeck-development.md) | **Primary DEV full-stack release procedure** and migration guard |
+| [Operations & Rollback](../ops/rundeck/OPERATIONS.md) | Production safety, credentials, recovery and rollback |
+| [Enterprise UI Standard](SPHERE-ENTERPRISE-UI-STANDARD.md) | Layout, terminology, responsive rules and data integrity |
+| [Visual QA](VISUAL-QA.md) | Browser, viewport, interactions and accessibility acceptance |
 
-## Specialized or historical material (not current release instructions)
+## Technical references
 
-- [Frontend-only promotion](SPHERE_PROMOTE_DEV_UI_TO_PROD.md) and [Historical v1.35.0 PROD approval](SPHERE_V135_PROD_UI_PROMOTION.md): only for separately approved, frontend-only release/promotion procedures. Do not use them for full-stack changes.
-- [15 October full-stack recovery](SPHERE_DEV_FULLSTACK_RELEASE_RECOVERY_20261015.md) and [20 October 25-point finishing evidence](rundeck-finishing-25-dev-20261020.md): historical incidents/change records, **not** active release procedures.
-- [Release history](releases/README.md) and [Presentations](presentation/): audit/presentation history, not the runtime source of truth.
-- [Offline DEV release](../ops/rundeck/OFFLINE-DEPLOY-DEV.md): separate guarded offline contingency.
+| Reference | Purpose |
+|---|---|
+| [Rundeck Integration](RUNDECK_INTEGRATION_RUNBOOK.md) | Collection/readiness, REST API access and role boundaries |
+| [SAP Job Intelligence](BASIS-JOB-INTELLIGENCE.md) | CPU, memory, WP trace and SM37 interpretation |
+| [Six-month History](rundeck-historical-analysis-six-months.md) | Time windows, aggregation and retention |
+| [Monthly Review WP Errors](monthly-review-wp-error-dev-validation.md) | Source-backed review and historical trace evidence |
+| [Legacy Telemetry Compatibility](LEGACY-TELEMETRY-COMPATIBILITY.md) | Legacy ingest/data contract |
+| [Development Workflow](ai-coding-workflow-style.md) | Change review and validation rules |
+| [Observability](../ops/observability/README.md) | Collector metrics and alert rules |
+| [Offline DEV Deployment](../ops/rundeck/OFFLINE-DEPLOY-DEV.md) | Approved offline contingency, separate from the normal release |
 
-## Cleanup decision
+## Historical records — not active runbooks
 
-Per-version UI iteration notes from 12–15 October (old hexagon/honeycomb, outdated three-chart layout, v1.35.2–1.35.6 snapshots) and the old build-only/CLI walkthroughs have been removed from the active docs tree because they conflict with the current four-chart Monitoring, compact preview and guarded full-stack deployment procedure. Their commits remain recoverable in Git history. **Do not delete source CSS or tests solely because a historical documentation file was removed.**
+Retained for audit and recovery provenance. Do **not** run dated commands, assume historical QA is a current PASS, or treat old UI specifications as the present layout.
 
-## Release rule
+- [DEV Monitoring one-screen implementation, 30 October](DEV_MONITORING_ONE_SCREEN_20261030.md) — implementation record; current CSS is authoritative.
+- [Bootstrap foundation implementation, 30 October](SPHERE-BOOTSTRAP-DEV-20261030.md) — staged adoption record; Bootstrap is not the entire styling system.
+- [DEV full-stack recovery, 15 October](SPHERE_DEV_FULLSTACK_RELEASE_RECOVERY_20261015.md) — incident and recovery context.
+- [25-point DEV finishing, 20 October](rundeck-finishing-25-dev-20261020.md) — change/evidence manifest.
+- [Frontend-only UI promotion](SPHERE_PROMOTE_DEV_UI_TO_PROD.md) — specialized, independently approved procedure; **not** the default deployment path.
+- [v1.35.0 UI promotion](SPHERE_V135_PROD_UI_PROMOTION.md) — pinned historical PROD promotion.
+- [DEV v1.34.x release history](releases/README.md) — retained release records.
+- [Presentations](presentation/) — competition/deck evidence, not production guidance.
 
-For a reviewed no-schema-migration DEV release, use `SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/release-dev-fast.sh` from the clean DEV checkout. The wrapper guards QA, backend tests and deployment. Do not claim visual or performance success without browser/benchmark evidence. PROD changes always require explicit independent approval.
+## Source of truth and documentation maintenance
+
+1. **Runtime:** observe the live DEV/PROD release SHA and service checks; a commit, documentation page or CI PASS does not prove deployment.
+2. **Source:** verify the current `rundeck-sphere-dev` code, tests and API contracts before updating behavior descriptions. For Monitoring, Bootstrap provides the four-chart grid; `src/tools/components/RundeckOneScreenDev.css` defines the desktop lower-panel **58% Jobs & Programs / 42% System Health** split.
+3. **Release:** use the guarded DEV wrapper only after independent migration review. PROD is a separate explicit approval. Never use historical one-off commands as a shortcut.
+4. **Evidence:** preserve missing/stale/unknown states and the SM37 trust boundary; historical WP errors are not automatically failed SAP jobs.
+5. **Cleanup:** update this index when moving documentation. Preserve audit history and check links before removing or renaming files. Never delete source CSS or tests merely because a dated document is obsolete.

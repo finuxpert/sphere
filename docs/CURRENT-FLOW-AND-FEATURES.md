@@ -1,6 +1,6 @@
 # SPHERE — Current Flow and Features
 
-**Scope:** `rundeck-sphere-dev` source as reviewed on 30 October 2026, beginning with the four-trend/Bootstrap Monitoring changes through `96abb706`. This describes repository behavior, **not** a verified deployment to the DEV host. Application version comes from `src/app/version.js`, not this file.
+**Scope:** `rundeck-sphere-dev` source-level behavior as reviewed on 30 October 2026. Always verify current HEAD before using version-specific details. This describes repository behavior, **not** a verified deployment to the DEV host. Application version comes from `src/app/version.js`, not this file.
 
 ## Product workflow
 
@@ -37,7 +37,7 @@ Shared controls:
 
 Always show the exact peak value, APP, and date/time in **WIB** when present. Historical peak is different from aggregate bucket timestamp. Network is retained Infrastructure traffic from a selected single interface per APP/sample, not the sum of bonded/virtual/physical interfaces and not SAP job network usage. Missing samples are evidence gaps, not zeros or outages.
 
-On wide desktop, the four charts are one row. Medium/narrow layouts wrap to two/one columns. A compact layout may fit the overview in one screen at generous viewport dimensions, but this is a **visual acceptance target** rather than an unconditional guarantee. Preserve data access and natural scrolling when constrained.
+On wide desktop, the four charts are one row. Medium/narrow layouts wrap to two/one columns. The lower Jobs & Programs / System Health panels use an independent CSS Grid ratio of 58/42 at desktop widths ≥1200px and stack below that breakpoint (see `src/tools/components/RundeckOneScreenDev.css`). A compact layout may fit the overview in one screen at generous viewport dimensions, but this is a **visual acceptance target** rather than an unconditional guarantee. Preserve data access and natural scrolling when constrained.
 
 ### 3. Jobs & Programs overview
 

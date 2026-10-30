@@ -1,5 +1,7 @@
 # SPHERE v1.35.0 — operator-approved DEV → PROD frontend promotion
 
+> **Historical release record (12 October 2026).** The pinned commit and one-off operator command below are not an instruction to promote today's DEV build. Use the [maintained runbook](rundeck-development.md) for current release decisions and separate PROD authorization.
+
 ## Scope
 - Screenshot-approved DEV commit: `2bf89c756fb66b985875492c31d7c78057e37302` (2026-10-12), not the later tooling/documentation commits.
 - Frontend-only promotion to `https://sphere.astraotoparts.co.id/`.

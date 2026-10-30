@@ -1,5 +1,7 @@
 # SPHERE UI promotion: DEV to PROD
 
+> **Specialized procedure — not the default release path.** This page describes operator-approved **frontend-only** promotion. For any backend, collector, or database change, follow the maintained [Rundeck Development](rundeck-development.md) and [Operations](../ops/rundeck/OPERATIONS.md) runbooks. Do not run this command as routine documentation cleanup.
+
 Run `sphere promote dev-to-prod` as root on JAHSVR-SPHERE after reviewing the live DEV UI and modals.
 
 This command targets the **currently deployed DEV frontend SHA** from `/var/www/sphere-dev/current`, *not* latest remote DEV HEAD, nor the separate production branch. It verifies the source commit, active DEV release and public HTTPS HTML; checks existing PROD API endpoints and Nginx syntax; requires an interactive `PROMOTE DEV <SHA7> TO PROD` confirmation.

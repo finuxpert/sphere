@@ -3,7 +3,7 @@
 Branch: `rundeck-sphere-dev`. No change to PROD, collectors, SAP credentials, database schema or source evidence.
 
 ## Decisions
-- Keep Bootstrap for four ECharts slots. The bottom section uses one dedicated 44/56 CSS grid at >=1200px, which overrides Bootstrap column widths. On narrower screens, use a single column without hiding measurements.
+- Keep Bootstrap for four ECharts slots. The bottom section uses one dedicated 58/42 CSS Grid (Jobs & Programs / System Health) at widths ≥1200px, overriding Bootstrap column widths. The authoritative rule is in `src/tools/components/RundeckOneScreenDev.css`. On narrower screens, use a single column without hiding measurements.
 - Import `RundeckOneScreenDev.css` *after* `RundeckBootstrapTrend.css`. Do not append another competing layout override to historical versioned CSS.
 - Four charts default to CPU, Memory, Network RX and Critical WP. Duplicate metrics persisted in old localStorage are repaired on initial load; manually chosen duplicates remain possible. Reset charts resets metrics and display axes but leaves time range and source untouched.
 - Footer peak is always computed from the source-backed selected host (or all APPs if not selected). Network Typical shows an **all-APP** spike warning separate from selected-APP footer.

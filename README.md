@@ -15,7 +15,7 @@ SAP APP1–APP5 → Rundeck collectors → Python ingestion → PostgreSQL
                                     FastAPI → React/Vite dashboard
 ```
 
-Frontend: React 19, Vite, ECharts 6, Bootstrap 5 **grid for Monitoring**, and existing custom CSS. Bootstrap is not yet the entire design system. Backend: Python/FastAPI, SQLAlchemy, psycopg and Alembic. Nginx proxies separated DEV/PROD releases on the same host.
+Frontend: React 19, Vite, ECharts 6, Bootstrap 5.3.8 as a low-priority CSS foundation and responsive grid for four Monitoring charts, plus application-specific CSS. The lower Monitoring panels use CSS Grid, not Bootstrap columns; Bootstrap has not replaced the entire design system. Backend: Python/FastAPI, SQLAlchemy, psycopg and Alembic. Nginx proxies separated DEV/PROD releases on the same host.
 
 SPHERE does not directly SSH/SCP to SAP servers. SAP standard transactions remain authoritative for underlying SAP diagnostics and SM37 execution outcomes.
 
@@ -47,7 +47,7 @@ The Monitoring overview contains:
 3. **Jobs & Programs**: summary counts, short saved-review candidates, and short latest-workload preview. The complete review, search and current workloads remain accessible through details/pages. Preview counts must not be mistaken for total observed/evaluated records.
 4. **System Health**: SAP availability, SAP issues, server health, recent events and recent collection summaries, with links to full evidence.
 
-The compact Monitoring layout uses a two-column CSS grid for the lower panels (44% Jobs & Programs, 56% System Health) and Bootstrap 5 grid for four chart slots. Saved duplicate chart choices are normalized on load; Reset charts restores CPU, RAM, Network RX and Critical WP. Peak footers distinguish selected APP from all APPs. Conditional viewport fitting is retained. **One-screen fit at 1536 × 864 is a visual QA target, not a verified runtime result.** Preserve natural page scrolling when the viewport is too small or unexpected evidence requires more space; never clip or hide raw records to fabricate a no-scroll claim.
+The compact Monitoring layout uses a two-column CSS grid for the lower panels (58% Jobs & Programs, 42% System Health at desktop widths ≥1200px) and Bootstrap 5 grid for four chart slots. Saved duplicate chart choices are normalized on load; Reset charts restores CPU, RAM, Network RX and Critical WP. Peak footers distinguish selected APP from all APPs. Conditional viewport fitting is retained. **One-screen fit at 1536 × 864 is a visual QA target, not a verified runtime result.** Preserve natural page scrolling when the viewport is too small or unexpected evidence requires more space; never clip or hide raw records to fabricate a no-scroll claim.
 
 Data Collection separates Automatic/Rundeck, Manual Upload, and historical collection context. Reports includes Monthly Review and PDF workflows. Manual Upload is unrelated to a Monthly Review's manual evaluation notes.
 
@@ -92,16 +92,6 @@ The wrapper checks clean branch, fast-forward sync, QA/build, backend tests, mig
 
 ## Documentation — source of truth
 
-Start at [Documentation Index](docs/DOCUMENTATION-INDEX.md).
+Start with the [Documentation Index](docs/DOCUMENTATION-INDEX.md). The maintained references are [Current Features & Flow](docs/CURRENT-FLOW-AND-FEATURES.md), [Rundeck DEV/PROD Runbook](docs/rundeck-development.md), [UI and Visual QA](docs/SPHERE-ENTERPRISE-UI-STANDARD.md), and [Operational Safety & Rollback](ops/rundeck/OPERATIONS.md).
 
-- [Current Features & Flow](docs/CURRENT-FLOW-AND-FEATURES.md)
-- [Enterprise UI Standard](docs/SPHERE-ENTERPRISE-UI-STANDARD.md)
-- [Visual QA](docs/VISUAL-QA.md)
-- [Rundeck DEV/PROD runbook](docs/rundeck-development.md)
-- [Rundeck integration](docs/RUNDECK_INTEGRATION_RUNBOOK.md)
-- [SAP Job Intelligence & SM37 trust boundary](docs/BASIS-JOB-INTELLIGENCE.md)
-- [Six-month history & retention](docs/rundeck-historical-analysis-six-months.md)
-- [Monthly Review WP-error validation](docs/monthly-review-wp-error-dev-validation.md)
-- [Operational safety and rollback](ops/rundeck/OPERATIONS.md)
-
-Historical release notes are not live runbooks. Keep documentation aligned to source behavior and verify runtime/deployment independently.
+Dated release notes and recovery records are historical evidence, not active deployment instructions. GitHub CI PASS is not proof that a release is running on the host.

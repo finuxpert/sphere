@@ -11,9 +11,9 @@
 
 ## Design system and Bootstrap scope
 
-- Use **Bootstrap 5 Grid** for the four trend panels and the lower Monitoring two-column split. The remainder of SPHERE still uses custom CSS compatibility layers; do not call the app 'full Bootstrap'.
+- Use **Bootstrap 5.3.8** as a low-priority CSS foundation and responsive grid for the four trend panels. The lower Monitoring panels use an independent CSS Grid. Application-specific compatibility CSS remains; do not call the app 'full Bootstrap'.
 - Existing Bootstrap responsive grid: four charts in one row on wide desktops, two on medium viewports, one on narrow.
-- The bottom panels use a 5/7 column ratio at desktop widths where it fits, stacking on smaller screens.
+- The bottom panels use a 58/42 ratio (Jobs & Programs / System Health) at desktop widths ≥1200px, stacking on smaller screens. The authoritative source is `src/tools/components/RundeckOneScreenDev.css`.
 - Prefer consistent Bootstrap spacing, typography and form primitives when progressively consolidating CSS. Keep necessary SPHERE semantic tokens and domain-specific styles for APP state, ECharts and specialized investigations.
 - Do not add React-Bootstrap or Bootstrap JavaScript merely to duplicate existing React/Radix interactions. Do not delete old CSS by filename alone: inspect imports/selectors and run browser regression before consolidation.
 - Use restrained flat enterprise surfaces, minimal borders, readable tabular numbers, stable APP colors, accessible focus styles, no decorative filler/animation or overlapping controls.

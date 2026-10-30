@@ -69,7 +69,7 @@ Validate public `/dev/`, version/build SHA, APP identity and source freshness, f
 - Top-level **ST03N Analysis** and **Performance Analysis**.
 - Primary Performance sidebar: **Monitoring**, **Jobs & Programs**, **Data Collection**, **Reports**. Existing deep-link/drawer views for Related Events, SAP Checks, Infrastructure and others remain functional.
 - Monitoring: SAP APP1–APP5; four configurable **ECharts** trends (CPU/Memory/Network/Critical WP by default) with shared range, interval, Avg/Peak and APP focus; compact Jobs & Programs/System Health preview.
-- Bootstrap 5 Grid is currently applied to the four charts and the lower overview 5/7 split; other styling is still custom CSS. A full Bootstrap redesign is **not implemented**.
+- Bootstrap 5.3.8 is imported as a low-priority CSS foundation; the Bootstrap responsive grid handles the four trend charts. The lower Jobs & Programs / System Health panels use a dedicated 58/42 CSS Grid at desktop widths ≥1200px, not Bootstrap columns. Application-specific styling remains; a complete Bootstrap redesign has **not** been implemented.
 - Jobs & Programs has Current, Review and Search; historical investigation uses saved data, drilldowns and source-aware periods.
 - Data Collection separates Rundeck/Automatic, Manual Upload and collection history; Reports includes Monthly Review/PDF.
 
