@@ -16,6 +16,33 @@ from backend import backfill_monthly_wp_errors as backfill_module
 
 
 class CalendarMonthReviewTests(unittest.TestCase):
+    def test_fast_monthly_host_preview_does_not_run_workload_correlation(self):
+        from backend import rundeck_evaluation as evaluation
+        from contextlib import contextmanager
+
+        @contextmanager
+        def connect():
+            yield object()
+
+        class Engine:
+            connect = staticmethod(connect)
+
+        preview_pressure = {
+            "daily_hosts": [{"day": "2026-09-15", "host": "APP1", "peak_cpu_pct": 84.0}],
+            "hosts": [{"host": "APP1", "peak_cpu_pct": 84.0}],
+            "correlation": {},
+        }
+        with patch.object(evaluation, "get_engine", return_value=Engine()), \\
+             patch.object(evaluation, "_calendar_month_collection_anchor", return_value="READY:123"), \\
+             patch.object(evaluation, "_collection_quality", return_value={"complete_checks": 1}), \\
+             patch.object(evaluation, "monthly_pressure_observations", return_value=preview_pressure) as host_only:
+            result = evaluation.monthly_host_preview("2026-09")
+        self.assertTrue(result["preview_only"])
+        self.assertEqual(result["month"], "2026-09")
+        self.assertEqual(result["monthly_pressure"]["hosts"][0]["peak_cpu_pct"], 84.0)
+        self.assertEqual(result["quality"]["complete_checks"], 1)
+        self.assertEqual(host_only.call_args.kwargs["include_correlation"], False)
+
     def test_monthly_coverage_estimate_explains_2842_of_4321_monitoring_runs(self):
         """Missing early-month monitoring is not equivalent to SAP downtime."""
         local_tz = timezone(timedelta(hours=7))
