@@ -4,6 +4,8 @@
 
 ## Start here
 
+- [Repository Architecture and Refactoring](standards/REPOSITORY-ARCHITECTURE.md) — stable filenames, module ownership and before/after gates.
+
 | Reference | Purpose |
 |---|---|
 | [Project README](../README.md) | Architecture, environment boundaries and quick start |
