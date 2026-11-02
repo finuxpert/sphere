@@ -95,8 +95,8 @@ test('Monthly Summary prioritizes host preview before full workload evaluation',
 
 
 test('weekly and monthly report show verified host peaks independently of storage and workload evaluation',()=>{
-  assert.match(ui,/function savedPeriodPeak\(pressure,metric,month,weekStart\)/)
-  assert.match(ui,/const p=savedPeriodPeak\(pressure,metric,month,weekStart\)/)
+  assert.match(ui,/function savedPeriodPeak\(pressure,metric,month,weekStart,customStart=null,customEnd=null\)/)
+  assert.match(ui,/const p=savedPeriodPeak\(pressure,metric,month,weekStart,customStart,customEnd\)/)
   assert.match(ui,/model\?\.sortedCpu\|\|full\?\.monthly_top_wp_cpu\|\|\[\]/)
   assert.match(ui,/model\?\.sortedPss\|\|full\?\.monthly_top_wp_pss\|\|\[\]/)
   assert.match(ui,/model\?\.candidates\|\|full\?\.monthly_abap_candidates\?\.slice\(0,10\)\|\|\[\]/)
