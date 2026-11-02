@@ -211,7 +211,7 @@ test('Overview keeps current workloads while collection history opens on demand'
   const wrapper = read('RundeckMonitoringHistory.jsx')
   const styles = read('RundeckRevitalization.css')
   const data = read('RundeckDataCollection.jsx')
-  assert.match(core,/viewMode="globe"/)
+  assert.match(core,/viewMode="status"/)
   assert.match(core,/onReview=/)
   assert.match(work,/if \(summaryOnly\)/)
   assert.match(work,/sphereCurrentWorkloadRow/)
