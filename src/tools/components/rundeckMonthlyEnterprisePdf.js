@@ -51,11 +51,22 @@ export function monthlyEnterpriseReportModel(month,data) {
     throw Error('Saved monthly pressure, coverage and error evidence is required')
   }
   monthName(month)
+  const weekStart=data?.week_start||null
+  if(weekStart){
+    const start=new Date(weekStart+'T00:00:00Z')
+    if(Number.isNaN(start.getTime()) || start.getUTCDay()!==1 ||
+        start.toISOString().slice(0,10)!==weekStart || !weekStart.startsWith(month+'-') ||
+        data.period!=='week'){
+      throw Error('Invalid weekly reporting period')
+    }
+  }
   const pressure=data.monthly_pressure
   const quality=data.quality
   const summary=data.summary||{}
-  if(data.monthly_storage?.month!==month || !Array.isArray(data.monthly_storage?.items)) {
-    throw Error('Month-scoped infrastructure storage evidence is required')
+  if(data.monthly_storage?.month!==month || !Array.isArray(data.monthly_storage?.items) ||
+      (weekStart ? data.monthly_storage?.week_start!==weekStart :
+        Boolean(data.monthly_storage?.week_start))) {
+    throw Error('Period-scoped infrastructure storage evidence is required')
   }
   if(!Array.isArray(data.monthly_top_wp_cpu) || !Array.isArray(data.monthly_top_wp_pss)){
     throw Error('Full-population WP rankings are required for monthly export')
@@ -75,14 +86,18 @@ export function monthlyEnterpriseReportModel(month,data) {
     return {...(row||{}),host:name}
   })
   const [year,mon]=month.split('-').map(Number)
-  const days=new Date(Date.UTC(year,mon,0)).getUTCDate()
+  const days=weekStart?7:new Date(Date.UTC(year,mon,0)).getUTCDate()
+  const dates=Array.from({length:days},(_,i)=>weekStart
+    ? new Date(Date.parse(weekStart+'T00:00:00Z')+i*86400000).toISOString().slice(0,10)
+    : month+'-'+String(i+1).padStart(2,'0'))
+  const allowedDates=new Set(dates)
   // Retain one point per APP and calendar day; absent dates remain null.
   // CPU/RAM line series must never join peaks from different hosts.
   const dailySource=new Map()
   for(const row of pressure.daily_hosts||[]) {
     const date=String(row.day||'').slice(0,10)
     const host=app(row.host)
-    if(!/^APP[1-5]$/.test(host) || !date.startsWith(month+'-'))continue
+    if(!/^APP[1-5]$/.test(host) || !allowedDates.has(date))continue
     const byHost=dailySource.get(date)||{}
     byHost[host]=row
     dailySource.set(date,byHost)
@@ -90,7 +105,7 @@ export function monthlyEnterpriseReportModel(month,data) {
   const series=hosts.map(row=>({
     host:row.host,
     days:Array.from({length:days},(_,i)=>{
-      const date=month+'-'+String(i+1).padStart(2,'0')
+      const date=dates[i]
       const sample=dailySource.get(date)?.[row.host]
       return {
         day:i+1,host:row.host,
@@ -100,7 +115,7 @@ export function monthlyEnterpriseReportModel(month,data) {
     }),
   }))
   const daily=Array.from({length:days},(_,index)=>{
-    const date=month+'-'+String(index+1).padStart(2,'0')
+    const date=dates[index]
     const rows=dailySource.get(date)||{}
     const peak=metric=>{
       const field='peak_'+metric+'_pct'
@@ -116,7 +131,7 @@ export function monthlyEnterpriseReportModel(month,data) {
   const maximum=metric=>daily.map(row=>row[metric]).filter(Boolean)
     .sort((a,b)=>b.value-a.value)[0]||null
   return {
-    month,quality,summary,pressure,candidates,hosts,daily,days,series,
+    month,weekStart,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
     storage:data.monthly_storage.items,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
     sortedCpu:data.monthly_top_wp_cpu.slice(0,10).filter(row=>value(row.peak_cpu_pct)!==null),
@@ -180,8 +195,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     if(!brand.ok)throw Error('Original SPHERE logo is unavailable (HTTP '+brand.status+')')
     pdf.addImage(new Uint8Array(await brand.arrayBuffer()),'PNG',M,13,106,30)
   }
-  text(M+123,H-37,'SAP Monthly Performance Report',19,'bold','navy')
-  text(W-M,H-37,monthName(month),10,'bold','muted','right')
+  text(M+123,H-37,m.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report',19,'bold','navy')
+  const periodLabel=m.weekStart
+    ? m.dates[0]+' to '+m.dates[m.dates.length-1]+' (WIB)'
+    : monthName(month)
+  text(W-M,H-37,periodLabel,10,'bold','muted','right')
   line(M,H-53,W-M,H-53,'rule',.7)
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
@@ -208,9 +226,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       line(px,yy,px+pw,yy,'rule',.48)
       text(px-10,yy-2,String(level)+'%',7,'normal','muted','right')
     }
-    for(const tick of new Set([1,10,20,m.days])) {
-      const label=tick===m.days?String(tick).padStart(2,'0')+' '+shortMonth
-        :String(tick).padStart(2,'0')
+    for(const tick of new Set(m.weekStart?[1,4,m.days]:[1,10,20,m.days])) {
+      const label=m.weekStart
+        ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(m.dates[tick-1]+'T00:00:00Z'))
+        :tick===m.days?String(tick).padStart(2,'0')+' '+shortMonth
+          :String(tick).padStart(2,'0')
       text(xFor(tick),py-15,label,7.3,'normal','muted','center')
     }
     if(value(threshold)!==null){
