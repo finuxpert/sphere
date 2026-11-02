@@ -80,8 +80,8 @@ test('monthly enterprise PDF is exactly one A3 landscape page with evidence labe
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   for(const token of [
     'SAP Monthly Performance Report','Application Server Performance',
-    'Top 10 Jobs for Tuning Review','Top 10 Jobs by Peak WP CPU',
-    'Top 10 Jobs by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
+    'Top 10 Tuning Candidates','Top 10 Workloads by Peak WP CPU',
+    'Top 10 Workloads by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
     'Storage Capacity','File System OS','Not Collected',
   ])assert.ok(stream.includes(token),'Missing PDF label: '+token)
   assert.ok(!stream.includes('PROTOTYPE DATA'),'Live export must not claim simulation')
