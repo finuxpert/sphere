@@ -567,7 +567,7 @@ const checks = [
     files.wrapper.includes("activeOverlay?.type === 'job'") &&
     files.wrapper.includes("activeOverlay?.type === 'app'")],
   ['APP Server Analysis uses the same single-overlay manager', files.wrapper.includes("setActiveOverlay({ type: 'app', app: context })") && files.wrapper.includes('<RundeckUnifiedAppAnalysis') && files.wrapper.includes("returnTo: { type: 'app', app: activeOverlay.app")],
-  ['APP Server drawer resolves latest host metrics and lists current jobs/programs', files.appServerAnalysis.includes('/history/hosts/latest') && files.appServerAnalysis.includes('/history/jobs/current') && files.appServerAnalysis.includes('Job / Program observations') && files.appServerAnalysis.includes('Critical WP')],
+  ['APP Server drawer resolves latest host metrics and lists current jobs/programs', files.appServerAnalysis.includes('/history/hosts/latest') && files.appServerAnalysis.includes('/history/jobs/current') && files.appServerAnalysis.includes('Jobs &amp; Programs · {hostLabel}') && files.appServerAnalysis.includes('Critical WP')],
   ['APP Server job/program rows transition into Job Performance Analysis', files.appServerAnalysis.includes("source:'app-server-analysis'") && files.wrapper.includes('onSelectJob?.(job)')],
   ['Selected job opens detail-on-demand drawer instead of page scroll', files.wrapper.includes("setActiveOverlay({ type: 'job' })") && !files.wrapper.includes('scrollToSelectedWorkload')],
   ['SM37 source is compact integration status instead of a fourth infrastructure card', files.liveOverview.includes('rundeckLiveJobSource') && files.liveOverview.includes('SM37 NOT CONNECTED') && !files.liveOverview.includes('rundeckLiveJobsCard')],
