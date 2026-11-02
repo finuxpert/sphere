@@ -37,8 +37,9 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
   const records=state.data.filter(item=>validNumber(item.value)&&Number.isFinite(Date.parse(item.collected_at||'')))
   const values=records.map(item=>Number(item.value))
   const max=values.length?Math.max(...values):null
-  const minTs=Math.min(...records.map(item=>Date.parse(item.collected_at)))
-  const maxTs=Math.max(...records.map(item=>Date.parse(item.collected_at)))
+  // Display the requested 7D/30D time window, not a stretched 1-hour subset.
+  const maxTs=Date.now()
+  const minTs=maxTs-(range==='30d'?30:range==='7d'?7:1)*86400_000
   const chartX=at=>L+(at-minTs)/Math.max(1,maxTs-minTs)*(W-L-R)
   const chartY=percent=>T+(100-Math.max(0,Math.min(100,percent)))/100*(H-T-B)
   const grouped=new Map()
@@ -57,7 +58,7 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
     const sorted=[...points].sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at))
     const intervals=sorted.slice(1).map((point,index)=>Date.parse(point.collected_at)-Date.parse(sorted[index].collected_at)).filter(ms=>ms>0)
     const sample=intervals.length?[...intervals].sort((a,b)=>a-b)[Math.floor(intervals.length/2)]:0
-    const threshold=Math.max(sample*2.6, range==='30d'?3600000:range==='7d'?1800000:300000)
+    const threshold=Math.min(Math.max(sample*2.6, 90*60_000), 3*3600_000)
     const segments=[]
     for(const point of sorted){
       const segment=segments[segments.length-1]
@@ -97,8 +98,8 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
           </circle>)}
         </g>
       })}
-      <text x={L} y={H-5} fontSize="9" fill="currentColor">{formatWib(oldest.collected_at,false)}</text>
-      <text x={W-R} y={H-5} textAnchor="end" fontSize="9" fill="currentColor">{formatWib(newest.collected_at,false)}</text>
+      <text x={L} y={H-5} fontSize="9" fill="currentColor">{formatWib(minTs,true)} WIB</text>
+      <text x={W-R} y={H-5} textAnchor="end" fontSize="9" fill="currentColor">{formatWib(maxTs,true)} WIB</text>
     </svg>}
     {!!records.length && <div className="sphereFilesystemTrendFooter">
       <span>Last peak {Number(newest.value).toFixed(1)}%</span>

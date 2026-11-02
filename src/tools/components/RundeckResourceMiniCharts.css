@@ -1,0 +1,54 @@
+
+/* SPHERE mini charts: source-backed operator evidence, not decorative sparklines. */
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5 {
+  grid-area:eval-top5!important;min-width:0;min-height:0;
+  display:flex;flex-direction:column;gap:4px;
+  border-top:1px solid var(--cockpit-outline,#304150);
+  padding-top:7px;overflow:hidden;
+}
+.sphereEvaluationTop5Head{
+  display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0;
+}
+.sphereEvaluationTop5Head strong{font-size:10px;white-space:nowrap}
+.sphereEvaluationTop5Actions{display:inline-flex;gap:2px;align-items:center}
+.sphereEvaluationTop5Actions button{
+  padding:2px 6px;border-radius:4px;font-size:10px;font-weight:500;line-height:1.2;
+  color:var(--sphere-text-secondary,#aab7c5);background:transparent;
+  border:1px solid var(--cockpit-outline,#304150);cursor:pointer;
+}
+.sphereEvaluationTop5Actions button[aria-pressed="true"]{
+  color:var(--sphere-accent,#67a9e8);background:var(--sphere-surface-2,#243342);
+  border-color:var(--sphere-accent,#67a9e8);
+}
+.sphereEvaluationTop5Bars{display:grid;gap:3px;min-height:0}
+.sphereEvaluationTop5Row{
+  border:0;background:transparent;text-align:left;color:inherit;padding:1px 0;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(38px,1.1fr) minmax(45px,auto);
+  align-items:center;gap:6px;min-height:17px;cursor:pointer;
+}
+.sphereEvaluationTop5Row:hover .sphereEvaluationTop5Name,
+.sphereEvaluationTop5Row:focus-visible .sphereEvaluationTop5Name{color:var(--sphere-accent,#67a9e8)}
+.sphereEvaluationTop5Name{
+  font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sphereEvaluationTop5Track{
+  height:5px;background:var(--sphere-chart-grid,#344555);
+  border-radius:9px;overflow:hidden;
+}
+.sphereEvaluationTop5Track i{
+  display:block;height:100%;min-width:1px;
+  background:var(--sphere-accent,#67a9e8);border-radius:9px;
+  transition:width .25s ease;
+}
+.sphereEvaluationTop5Value{
+  font-size:9px;text-align:right;white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.sphereEvaluationTop5Unavailable{
+  font-size:10px;color:var(--sphere-text-secondary,#aab7c5);
+  padding:12px 0;text-align:center;
+}
+@media(prefers-reduced-motion:reduce){
+  .sphereEvaluationTop5Track i{transition:none}
+}
+.rundeckMonitoring[data-motion="off"] .sphereEvaluationTop5Track i{transition:none!important}

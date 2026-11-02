@@ -4,6 +4,8 @@ import { formatWib } from './sapUiFormat.js'
 import { evaluationEvidenceGapReasons, validatedWorkloadDots, workloadHealthLevel, workloadHealthPreview } from './rundeckWorkloadHealthState.js'
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
+import { topResourceConsumers, workloadMetric } from './rundeckResourceMiniCharts.js'
+import './RundeckResourceMiniCharts.css'
 import RundeckWorkloadAppLanes from './RundeckWorkloadAppLanes.jsx'
 import { validatedAppEvaluationMemberships } from './rundeckWorkloadAppLanes.js'
 
@@ -92,6 +94,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   // flag prevents blur from collapsing the grid while the mouse remains over it.
   const globeHoverRef = React.useRef(false)
   const [activeDotIndex, setActiveDotIndex] = React.useState(0)
+  const [resourceMetric, setResourceMetric] = React.useState('cpu')
   React.useEffect(() => {
     if (typeof window.matchMedia !== 'function') return undefined
     const query = window.matchMedia('(min-width:900px) and (prefers-reduced-motion: no-preference)')
@@ -201,6 +204,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     setActiveDotIndex(next)
     buttons[next]?.focus({ preventScroll: true })
   }
+  const resourceTop5 = React.useMemo(() => topResourceConsumers(rows, resourceMetric), [rows, resourceMetric])
+  const resourcePeak = resourceTop5.length ? workloadMetric(resourceTop5[0], resourceMetric) : null
   const statusNote = rows.length && dotLayout.fits
     ? viewMode === 'by-app'
       ? '1 hexagon = 1 saved evaluation–APP link (not an OS process)'
@@ -325,6 +330,37 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
       </span>}
     </div>}
+    {viewMode !== 'by-app' && <section className="sphereEvaluationTop5" aria-label="Top five evaluated resource consumers">
+      <div className="sphereEvaluationTop5Head">
+        <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
+          Top 5 Resource Consumers
+        </strong>
+        <div role="group" aria-label="Resource metric" className="sphereEvaluationTop5Actions">
+          {['cpu','pss'].map(metric => <button key={metric} type="button"
+            aria-pressed={resourceMetric === metric}
+            onClick={() => setResourceMetric(metric)}>{metric.toUpperCase()}</button>)}
+        </div>
+      </div>
+      {resourceTop5.length && !error ? <div className="sphereEvaluationTop5Bars">
+        {resourceTop5.map(row => {
+          const amount = workloadMetric(row, resourceMetric)
+          return <button type="button" key={row.consumer_type + ':' + row.consumer_key}
+            className="sphereEvaluationTop5Row"
+            title={String(row.consumer_key) + ' · ' + String(row.consumer_type || 'Workload') +
+              ' · 24h avg grouped ' + (resourceMetric === 'cpu' ? 'CPU ' + amount + '%' : 'PSS ' + amount + ' GB') +
+              ' · click for saved evaluation details'}
+            onClick={() => openWorkload(row)}>
+            <span className="sphereEvaluationTop5Name">{row.consumer_key}</span>
+            <span className="sphereEvaluationTop5Track" aria-hidden="true">
+              <i style={{ width: resourcePeak > 0 ? Math.max(0,Math.min(100,amount / resourcePeak * 100)) + '%' : '0%' }} />
+            </span>
+            <span className="sphereEvaluationTop5Value">{amount.toFixed(1)}{resourceMetric === 'cpu' ? '%' : ' GB'}</span>
+          </button>
+        })}</div> :
+        <span className="sphereEvaluationTop5Unavailable" role="status">
+          {error ? 'Evaluation refresh failed' : loading ? 'Checking evaluations…' : 'No verified ' + resourceMetric.toUpperCase() + ' values'}
+        </span>}
+    </section>}
     {(viewMode !== 'by-app' || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
       {viewMode !== 'by-app' && <span className={'is-' + state} title={statusNote + ' · Evaluation priority uses saved observations, not SAP SM37 execution status.'}>{preview ? preview.total.toLocaleString('en-US') + ' evaluated · saved 24h' : outcome}</span>}
       {viewMode !== 'by-app' && preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&

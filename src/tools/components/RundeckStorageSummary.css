@@ -60,3 +60,20 @@
 .rundeckMonitoring.is-three-panel .sphereStorageLabel small{font-size:9px}
 .rundeckMonitoring.is-three-panel .sphereStorageGrowth{flex:1 1 auto}
 @media(prefers-reduced-motion:reduce){.sphereStorageTrack i{transition:none}}
+.rundeckMonitoring.is-three-panel .sphereStorageSummary{
+  gap:4px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageRows{gap:2px!important}
+.rundeckMonitoring.is-three-panel .sphereStorageRow{
+  min-height:23px!important;padding:2px 4px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowth{
+  flex:0 1 auto!important;min-height:0;gap:2px;padding-top:4px;
+}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrend{min-height:0}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrend svg{
+  min-height:58px!important;max-height:92px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{
+  gap:3px!important;font-size:9px!important;
+}

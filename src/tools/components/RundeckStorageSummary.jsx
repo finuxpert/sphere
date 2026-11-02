@@ -3,6 +3,7 @@ import { shortHost, formatWib } from './sapUiFormat.js'
 import { filesystemResourceState } from './rundeckStatusSemantics.js'
 import { infrastructureTelemetryFreshness } from './infrastructureFreshness.js'
 import RundeckFilesystemTrend from './RundeckFilesystemTrend.jsx'
+import RundeckDiskIoTrend from './RundeckDiskIoTrend.jsx'
 import './RundeckStorageSummary.css'
 
 const API = import.meta.env.BASE_URL + 'api/infra'
@@ -95,6 +96,7 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
       </div>
       <RundeckFilesystemTrend mount={selectedMount} range={growthRange} refreshToken={refreshToken} />
     </div>
+    <RundeckDiskIoTrend refreshToken={refreshToken} />
     {snapshot.error && <small className="sphereStorageError" role="status">{snapshot.error}</small>}
     {snapshot.loading && <small className="sphereStorageError" role="status">Checking storage…</small>}
   </section>
