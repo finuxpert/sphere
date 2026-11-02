@@ -77,6 +77,7 @@ try{
         <button class="sphereMonitoringMotionToggle">Motion On</button>
         </section></main></div></div>
         <script>window.addEventListener('load',()=>{
+          const chartMode='${chartMode}'
           const $=selector=>document.querySelector(selector)
           const rect=selector=>$(selector)?.getBoundingClientRect()
           const a=rect('.sphereMonitoringApp'),b=rect('.rundeckJobsProgramsOverview'),c=rect('.sphereStorageSummary')
