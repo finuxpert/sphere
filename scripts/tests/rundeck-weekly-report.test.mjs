@@ -8,7 +8,7 @@ const example={
   period:'week',month,week_start:weekStart,
   quality:{complete_checks:15,expected_checks:30,coverage_pct:50},
   monthly_errors:{status:'ERROR_SOURCE_NOT_RETAINED'},
-  monthly_pressure:{hosts:[],daily_hosts:[
+  monthly_pressure:{thresholds:{cpu_warning_pct:75,ram_warning_pct:80},hosts:[],daily_hosts:[
     {host:'AOPH1PAPPDC',day:'2026-10-25',peak_cpu_pct:100,peak_cpu_at:'2026-10-25T11:00:00Z'},
     {host:'AOPH1PAPPDC',day:'2026-10-26',peak_cpu_pct:83,peak_cpu_at:'2026-10-26T11:00:00Z'},
     {host:'AOPH1PAPPDC',day:'2026-10-31',peak_cpu_pct:90,peak_cpu_at:'2026-10-31T11:00:00Z'},
