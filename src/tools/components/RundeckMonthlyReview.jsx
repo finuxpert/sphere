@@ -56,7 +56,7 @@ function weekOptions() {
   const label = date => new Intl.DateTimeFormat('en-GB',{
     timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',
   }).format(date)
-  return Array.from({length:16},(_,index)=>{
+  return Array.from({length:26},(_,index)=>{
     const start=new Date(monday-index*7*86400000)
     const end=new Date(start.getTime()+6*86400000)
     return {
@@ -240,7 +240,7 @@ function PressureObservations({ metric, pressure }) {
           {row.peak_at && row.peak_at!==row.first_at && row.peak_at!==row.last_at && <small>{when(row.peak_at)}</small>}</td>
         <td>{fmt(row.observed_host_checks,0)}</td>
       </tr>)}
-      {!evidence.recent_episodes?.length && <tr><td colSpan="4">{evidence.episodes === null ? "No APP observations retained for this month." : "No observations reached the warning threshold."}</td></tr>}
+      {!evidence.recent_episodes?.length && <tr><td colSpan="4">{evidence.episodes === null ? "No APP observations retained for this period." : "No observations reached the warning threshold."}</td></tr>}
       </tbody>
     </table></div>
   </section>
@@ -355,7 +355,7 @@ const MONTHLY_STORAGE_REASON={
   MAPPING_NOT_CONFIGURED:'Host/mount mapping not configured',
   NO_MONTHLY_INFRA_HISTORY:'No Infrastructure filesystem samples in the reporting month',
   NO_WEEKLY_INFRA_HISTORY:'No Infrastructure filesystem samples in the reporting week',
-  MAPPED_MOUNT_NOT_COLLECTED:'Mapped host/mount not found in the reporting month',
+  MAPPED_MOUNT_NOT_COLLECTED:'Mapped host/mount not found in the reporting period',
   INCOMPLETE_FILESYSTEM_FIELDS:'Incomplete saved capacity fields',
 }
 const monthlyStorageNote=(storage,loading,error)=>{
@@ -508,7 +508,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     fetch(API+'/infra/monthly-storage?'+reportParams(),{
       cache:'no-store',signal:controller.signal,
     }).then(async response=>{
-      if(!response.ok)throw Error('Monthly storage history unavailable (HTTP '+response.status+')')
+      if(!response.ok)throw Error('Reporting period storage history unavailable (HTTP '+response.status+')')
       return response.json()
     }).then(payload=>{
       if(!controller.signal.aborted){
@@ -516,7 +516,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         setStorage(payload)
       }
     }).catch(failure=>{
-      if(!controller.signal.aborted)setStorageError(failure.message||'Monthly storage unavailable')
+      if(!controller.signal.aborted)setStorageError(failure.message||'Reporting period storage unavailable')
     })
     return ()=>controller.abort()
   },[month,reportMode,weekStart])
@@ -531,20 +531,20 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       cache:'no-store', signal:AbortSignal.any([controller.signal,previewDeadline]),
     })
       .then(async response=>{
-        if(!response.ok)throw Error('Monthly host summary unavailable (HTTP '+response.status+')')
+        if(!response.ok)throw Error('Reporting period host summary unavailable (HTTP '+response.status+')')
         return response.json()
       })
       .then(payload=>{
         if(controller.signal.aborted)return
         if(!matchesScope(payload)||payload.preview_only!==true||
             !payload.monthly_pressure||!payload.quality)
-          throw Error('Monthly host summary is not verified')
+          throw Error('Reporting period host summary is not verified')
         setHostPreview(payload)
       })
       .catch(failure=>{
         if(!controller.signal.aborted)setHostPreviewError(previewDeadline.aborted
-          ? 'Monthly host summary exceeded 20 seconds; check API and database'
-          : failure.message||'Monthly host summary unavailable')
+          ? 'Host summary exceeded 20 seconds; check API and database'
+          : failure.message||'Reporting period host summary unavailable')
       })
     return ()=>controller.abort()
   },[month,reportMode,weekStart,hostPreviewRetry])
@@ -572,17 +572,17 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       cache:'no-store',signal:AbortSignal.any([controller.signal,evaluationDeadline]),
     })
       .then(async response=>{
-        if(!response.ok){const body=await response.json().catch(()=>({}));throw Error(body.detail||'Monthly evidence unavailable (HTTP '+response.status+')')}
+        if(!response.ok){const body=await response.json().catch(()=>({}));throw Error(body.detail||'Reporting period evidence unavailable (HTTP '+response.status+')')}
         return response.json()
       })
       .then(payload=>{
         if(controller.signal.aborted)return
-        if(!matchesScope(payload)||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid monthly evidence contract')
-        if(!payload.monthly_pressure||!payload.monthly_errors)throw Error('Monthly pressure or error evidence is unavailable on this backend')
+        if(!matchesScope(payload)||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid reporting period evidence contract')
+        if(!payload.monthly_pressure||!payload.monthly_errors)throw Error('Resource pressure or error evidence is unavailable on this backend')
         setData(payload)
       })
       .catch(failure=>{if(!controller.signal.aborted)setError(evaluationDeadline.aborted
-        ? 'Monthly evaluation exceeded 35 seconds; inspect backend SQL timings'
+        ? 'Evaluation exceeded 35 seconds; inspect backend SQL timings'
         : failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
@@ -611,27 +611,27 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     setPdfBusy(true);setPdfError('')
     try{
       // Reports must never depend on Detailed Evidence paging, search or filters.
-      // Fetch a canonical month-scoped population before building either PDF.
+      // Fetch a canonical period-scoped population before building either PDF.
       const params = new URLSearchParams({
         month, type:'ALL', health:'ALL', pressure:'ALL', flag:'ALL',
         ...(requestedWeek?{week_start:requestedWeek}:{}),
         q:'', limit:String(PAGE_SIZE), offset:'0',
       })
       const response = await fetch(API+'/evaluation/workloads/monthly?'+params.toString(), {cache:'no-store'})
-      if(!response.ok) throw Error('Monthly PDF evidence unavailable (HTTP '+response.status+')')
+      if(!response.ok) throw Error('Reporting period PDF evidence unavailable (HTTP '+response.status+')')
       const reportData = await response.json()
       if(generation!==pdfGenerationRef.current) return
       if(reportData.month!==month || !matchesScope(reportData) ||
           reportData.page?.scope!=='FULL_EVALUATED_POPULATION' ||
           !reportData.monthly_pressure || !reportData.monthly_errors || !reportData.quality) {
-        throw Error('PDF evidence does not match the selected reporting month')
+        throw Error('PDF evidence does not match the selected reporting period')
       }
       let exportData=reportData
       if(reportType==='management') {
         const storageResponse=await fetch(API+'/infra/monthly-storage?'+reportParams(),{cache:'no-store'})
-        if(!storageResponse.ok)throw Error('Monthly storage evidence unavailable (HTTP '+storageResponse.status+')')
+        if(!storageResponse.ok)throw Error('Reporting period storage evidence unavailable (HTTP '+storageResponse.status+')')
         const monthlyStorage=await storageResponse.json()
-        if(monthlyStorage.month!==month || !matchesScope(monthlyStorage) || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected month')
+        if(monthlyStorage.month!==month || !matchesScope(monthlyStorage) || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected reporting period')
         exportData={...reportData,monthly_storage:monthlyStorage}
       }
       const blob=await (reportType==='management'
@@ -666,7 +666,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           </select></div>}
       </div>
     </div>
-    <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Monthly report actions">
+    <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
         {pdfBusy?'Generating…':'Generate PDF Management'}
@@ -675,7 +675,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     </div>
     {storageError&&<p className="sphereMonthlyWarning" role="alert">{storageError}</p>}
     {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
-    {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved monthly performance…'}</div>}
+    {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved performance…'}</div>}
     {hostPreviewError&&!data&&!preview&&<div className="sphereMonthlyState is-error" role="alert">
       {hostPreviewError}
       <button type="button" className="btn btn-sm btn-outline-light ms-2"
@@ -759,7 +759,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         <PressureObservations metric="ram" pressure={evidence}/>
         <PressureRows label="Jobs & Programs During Resource Pressure" evidence={evidence} metric={pressureMetric} onMetricChange={setPressureMetric}/>
         <MonthlyErrorAnalysis key={requestedWeek||month} evidence={errors}/>
-      </div></section></div> : <div className="sphereMonthlyState" role="status">Loading verified monthly evidence…</div>}
+      </div></section></div> : <div className="sphereMonthlyState" role="status">Loading verified evidence…</div>}
       </div>
       </RundeckWorkspaceDrawer>}
     </>}
