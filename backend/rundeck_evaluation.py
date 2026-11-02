@@ -823,6 +823,33 @@ def calendar_week_bounds(week_start: str, now: datetime | None = None) -> tuple[
     )
 
 
+def calendar_custom_bounds(start_date: str, end_date: str, now: datetime | None = None) -> tuple[datetime, datetime, datetime]:
+    """Inclusive WIB calendar dates; 1-31 days, future/invalid dates rejected."""
+    from re import fullmatch
+    for label, date_string in (("start_date", start_date), ("end_date", end_date)):
+        if not fullmatch(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}", str(date_string or "")):
+            raise ValueError(f"{label} must be YYYY-MM-DD")
+    try:
+        first = datetime.strptime(start_date, "%Y-%m-%d")
+        last = datetime.strptime(end_date, "%Y-%m-%d")
+    except ValueError as error:
+        raise ValueError("Invalid custom reporting date") from error
+    days = (last - first).days + 1
+    if not 1 <= days <= 31:
+        raise ValueError("Custom reporting range must be 1-31 calendar days")
+    wib = ZoneInfo("Asia/Jakarta")
+    start_local = first.replace(tzinfo=wib)
+    end_local = (last + timedelta(days=1)).replace(tzinfo=wib)
+    now_local = (now or datetime.now(timezone.utc)).astimezone(wib)
+    if start_local > now_local:
+        raise ValueError("Future reporting dates are unavailable")
+    return (
+        start_local.astimezone(timezone.utc),
+        min(end_local, now_local).astimezone(timezone.utc),
+        (first - timedelta(days=days)).replace(tzinfo=wib).astimezone(timezone.utc),
+    )
+
+
 def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict]:
     """Host CPU / Critical WP observations per WIB day. Not SAP transaction response time."""
     rows = conn.execute(text(f"""
@@ -855,14 +882,20 @@ def _monthly_daily_host_trend(conn, start: datetime, end: datetime) -> list[dict
     } for row in rows]
 
 
-def monthly_host_preview(month: str, week_start: str | None = None) -> dict:
+def monthly_host_preview(month: str, week_start: str | None = None, start_date: str | None = None, end_date: str | None = None) -> dict:
     """Fast, source-backed monthly APP summary independent from workload evaluation.
 
     The full report still computes workload correlations, error attribution and
     validated classification. This path reads only saved READY host metrics.
     """
     started = time.perf_counter()
-    start, end, _previous_start = (calendar_week_bounds(week_start) if week_start else calendar_month_bounds(month))
+    if bool(start_date) != bool(end_date) or (week_start and start_date):
+        raise ValueError("Custom dates must be paired and cannot be combined with week_start")
+    if start_date and not start_date.startswith(month + "-"):
+        raise ValueError("Selected month must match custom range start")
+    start, end, _previous_start = (calendar_custom_bounds(start_date, end_date) if start_date
+                                   else calendar_week_bounds(week_start) if week_start
+                                   else calendar_month_bounds(month))
     if week_start and not week_start.startswith(month + "-"):
         raise ValueError("Week start must belong to selected month")
     engine = get_engine()
@@ -886,8 +919,8 @@ def monthly_host_preview(month: str, week_start: str | None = None) -> dict:
         ))
     # Never infer NORMAL for months without complete READY samples.
     return {
-        "month": month, "period": "week" if week_start else "month",
-        "week_start": week_start,
+        "month": month, "period": "custom" if start_date else "week" if week_start else "month",
+        "week_start": week_start, "start_date": start_date, "end_date": end_date,
         "start": start, "end": end,
         "collection_anchor": anchor,
         "quality": quality,
@@ -900,7 +933,7 @@ def monthly_host_preview(month: str, week_start: str | None = None) -> dict:
     }
 
 
-def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None, pressure: str = "ALL", flag: str = "ALL", week_start: str | None = None) -> dict:
+def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int = 30, offset: int = 0, query: str = "", health: str = "ALL", month: str | None = None, pressure: str = "ALL", flag: str = "ALL", week_start: str | None = None, start_date: str | None = None, end_date: str | None = None) -> dict:
     """Serialize cold full-population computations; cached pages use the same source anchor."""
     queued_at = time.perf_counter()
     with _EVALUATION_COMPUTE_LOCK:
@@ -908,26 +941,31 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         if month is None:
             result = _evaluation_report_locked(period, consumer_type, limit, offset, query, health)
         else:
-            result = _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure, flag, week_start)
+            result = _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure, flag, week_start, start_date, end_date)
         # Expose lock queue time separately from SQL, without changing source health.
         return {**result, "runtime": {**result.get("runtime", {}), "lock_wait_ms": wait_ms}}
 
 
-def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None, pressure: str = "ALL", flag: str = "ALL", week_start: str | None = None) -> dict:
+def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offset: int, query: str, health: str, month: str | None = None, pressure: str = "ALL", flag: str = "ALL", week_start: str | None = None, start_date: str | None = None, end_date: str | None = None) -> dict:
     started = time.perf_counter()
     period_key = str(period or "1d").lower()
-    if period_key not in PERIOD_DAYS and period_key not in {"month", "week"}:
-        raise ValueError("period must be one of 1d, 7d, 30d, month, week")
+    if period_key not in PERIOD_DAYS and period_key not in {"month", "week", "custom"}:
+        raise ValueError("period must be one of 1d, 7d, 30d, month, week, custom")
     if period_key == "month" and not month:
         raise ValueError("month is required when period=month")
-    if period_key not in {"month", "week"} and month:
-        raise ValueError("month requires period=month or week")
+    if period_key not in {"month", "week", "custom"} and month:
+        raise ValueError("month requires period=month, week or custom")
     if period_key == "week" and not week_start:
         raise ValueError("week_start is required for weekly reports")
     if period_key != "week" and week_start:
         raise ValueError("week_start requires period=week")
     if period_key == "week" and (not month or not week_start.startswith(month + "-")):
         raise ValueError("Selected month must match week start")
+    if period_key == "custom":
+        if not start_date or not end_date or week_start or not month or not start_date.startswith(month + "-"):
+            raise ValueError("Custom reporting requires start_date and end_date within the selected start month")
+    elif start_date or end_date:
+        raise ValueError("Custom dates require period=custom")
     type_key = str(consumer_type or "ALL").upper()
     if type_key not in {"ALL", "JOB", "PROGRAM"}:
         raise ValueError("type must be ALL, JOB or PROGRAM")
@@ -937,7 +975,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     # full population. Type-specific browsing is applied only at paging time.
     if period_key == "month":
         type_key = "ALL"
-    if period_key == "week":
+    if period_key in {"week", "custom"}:
         type_key = "ALL"
 
     limit_key = max(1, min(int(limit), 100))
@@ -960,13 +998,15 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             sql_timings_ms[name] = round((time.perf_counter() - began) * 1000.0, 1)
 
     with engine.connect() as conn:
-        if period_key in {"month", "week"}:
-            start, end, previous_start = (calendar_week_bounds(week_start) if week_start else calendar_month_bounds(str(month)))
+        if period_key in {"month", "week", "custom"}:
+            start, end, previous_start = (calendar_custom_bounds(start_date, end_date) if period_key == "custom"
+                                           else calendar_week_bounds(week_start) if week_start
+                                           else calendar_month_bounds(str(month)))
             days = round((end - start).total_seconds() / 86400, 2)
             # Monthly reports are separate from rolling-period cached populations.
             # The committed collection anchor invalidates data when a new READY run arrives.
             anchor_key = measure_sql("collection_anchor", lambda: _calendar_month_collection_anchor(conn, start, end))
-            cache_key = (f"week:{week_start}" if week_start else f"month:{month}", type_key, anchor_key)
+            cache_key = (f"custom:{start_date}:{end_date}" if period_key == "custom" else f"week:{week_start}" if week_start else f"month:{month}", type_key, anchor_key)
         else:
             # Preserve the existing 1D/7D/30D cache contract exactly:
             # key off the committed evaluation end, independent of page limit.
@@ -980,8 +1020,8 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         cached = _cache_get(cache_key)
         if cached:
             page = _evaluation_page(cached, limit=limit_key, offset=offset_key, query=query_key, health=health_key,
-                                    pressure=pressure if period_key in {"month", "week"} else "ALL",
-                                    flag=flag if period_key in {"month", "week"} else "ALL", consumer_type=requested_type_key)
+                                    pressure=pressure if period_key in {"month", "week", "custom"} else "ALL",
+                                    flag=flag if period_key in {"month", "week", "custom"} else "ALL", consumer_type=requested_type_key)
             return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0, sql_timings_ms=sql_timings_ms)
         current_quality = measure_sql("current_quality", lambda: _collection_quality(conn, start, end))
         previous_quality = measure_sql("previous_quality", lambda: _collection_quality(conn, previous_start, start))
@@ -990,13 +1030,13 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         historical_rows = measure_sql("historical_baseline", lambda: _historical_baseline(conn, start, type_key))
         shift_rows = measure_sql("recent_shift", lambda: _recent_shift_window(conn, end, type_key))
         sampling = measure_sql("sampling_quality", lambda: _sampling_quality(conn, start, end))
-        monthly_daily = measure_sql("monthly_daily", lambda: _monthly_daily_host_trend(conn, start, end)) if period_key in {"month", "week"} else []
+        monthly_daily = measure_sql("monthly_daily", lambda: _monthly_daily_host_trend(conn, start, end)) if period_key in {"month", "week", "custom"} else []
         monthly_pressure = (measure_sql("monthly_pressure", lambda: monthly_pressure_observations(
             conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
-        )) if period_key in {"month", "week"} else None)
+        )) if period_key in {"month", "week", "custom"} else None)
         monthly_errors = (measure_sql("monthly_errors", lambda: monthly_error_evidence(
             conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
-        )) if period_key in {"month", "week"} else None)
+        )) if period_key in {"month", "week", "custom"} else None)
 
     current_checks = int(current_quality["complete_checks"])
     previous_checks = int(previous_quality["complete_checks"])
@@ -1142,18 +1182,20 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             key=lambda row: (-float(row[metric]), str(row.get("consumer_key") or "")),
         )[:10]
 
-    monthly_top_wp_cpu = _ranked_wp("peak_cpu_pct") if period_key in {"month", "week"} else []
-    monthly_top_wp_pss = _ranked_wp("peak_pss_gb") if period_key in {"month", "week"} else []
+    monthly_top_wp_cpu = _ranked_wp("peak_cpu_pct") if period_key in {"month", "week", "custom"} else []
+    monthly_top_wp_pss = _ranked_wp("peak_pss_gb") if period_key in {"month", "week", "custom"} else []
 
     # Source-backed full-month ranking; independent of per-page filters.
     monthly_abap_candidates = (
-        _monthly_abap_tuning_candidates(evaluated) if period_key in {"month", "week"} else []
+        _monthly_abap_tuning_candidates(evaluated) if period_key in {"month", "week", "custom"} else []
     )
 
     result = {
         "period": period_key,
-        "month": str(month) if period_key in {"month", "week"} else None,
+        "month": str(month) if period_key in {"month", "week", "custom"} else None,
         "week_start": week_start if period_key == "week" else None,
+        "start_date": start_date if period_key == "custom" else None,
+        "end_date": end_date if period_key == "custom" else None,
         "days": days,
         "type": type_key,
         "recommended_period": "1d",
@@ -1203,7 +1245,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     }
     _cache_put(cache_key, result)
     return _runtime_payload(_evaluation_page(result, limit=limit_key, offset=offset_key, query=query_key,
-                                             health=health_key, pressure=pressure if period_key in {"month", "week"} else "ALL",
-                                             flag=flag if period_key in {"month", "week"} else "ALL", consumer_type=requested_type_key),
+                                             health=health_key, pressure=pressure if period_key in {"month", "week", "custom"} else "ALL",
+                                             flag=flag if period_key in {"month", "week", "custom"} else "ALL", consumer_type=requested_type_key),
                             cache="MISS", duration_ms=(time.perf_counter() - started) * 1000.0,
                             sql_timings_ms=sql_timings_ms)
