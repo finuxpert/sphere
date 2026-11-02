@@ -154,6 +154,7 @@ def workload_evaluation(
 @app.get("/evaluation/workloads/monthly")
 def monthly_workload_evaluation(
     month: str = Query(..., pattern=r"^20[0-9]{2}-(0[1-9]|1[0-2])$"),
+    week_start: str | None = Query(None, pattern=r"^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"),
     consumer_type: str = Query("ALL", alias="type", pattern="^(ALL|JOB|PROGRAM)$"),
     limit: int = Query(25, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100000),
@@ -165,8 +166,9 @@ def monthly_workload_evaluation(
     """Calendar-month workload observations for the SPHERE-only manual Basis report."""
     try:
         return evaluation_report(
-            period="month", consumer_type=consumer_type, limit=limit,
+            period="week" if week_start else "month", consumer_type=consumer_type, limit=limit,
             offset=offset, query=q, health=health, month=month, pressure=pressure, flag=flag,
+            week_start=week_start,
         )
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
@@ -179,10 +181,11 @@ def monthly_workload_evaluation(
 @app.get("/evaluation/workloads/monthly/hosts")
 def monthly_workload_hosts(
     month: str = Query(..., pattern=r"^20[0-9]{2}-(0[1-9]|1[0-2])$"),
+    week_start: str | None = Query(None, pattern=r"^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"),
 ):
     """Read-only, host-only summary; does not claim workload evaluations are ready."""
     try:
-        return monthly_host_preview(month)
+        return monthly_host_preview(month, week_start=week_start)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
     except RuntimeError as error:
