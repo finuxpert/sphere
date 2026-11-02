@@ -455,8 +455,8 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>)}
     </div>
     <div className="sphereMonthlyManagerPair">
-      <MonthlyRanking title="Top 10 Jobs by Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
-      <MonthlyRanking title="Top 10 Jobs by Peak WP Memory" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 10 Workloads by Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 10 Workloads by Peak WP Memory" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
     </div>
     <div className="sphereMonthlyManagerPair is-tables">
       <section className="sphereMonthlyManagerPanel">
@@ -470,7 +470,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
         </table>
       </section>
       <section className="sphereMonthlyManagerPanel">
-        <h4>Top 10 Jobs for Tuning Review</h4>
+        <h4>Top 10 Tuning Candidates</h4>
         <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Evidence WIB</th><th>Review finding</th><th>Tuning action</th></tr></thead>
           <tbody>{candidates.map((row,index)=><tr key={id(row)}>
             <td>{index+1}</td><td className="is-job">{row.consumer_key}</td>
@@ -738,7 +738,8 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   },[data,loading,pdfBusy,month,requestedWeek,requestedStart,requestedEnd,reportParams,matchesScope])
   return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="SAP Performance Report and Job Impact">
     <div className="sphereMonthlyHead">
-      {showTitle && <div><strong>SAP {reportMode==='custom'?'Custom':reportMode==='week'?'Weekly':'Monthly'} Performance Report</strong></div>}
+      {showTitle && <div className="sphereMonthlyReportTitle"><strong>SAP Performance Report</strong></div>}
+      <div className="sphereMonthlyHeaderControls">
       <div className="sphereMonthlyPicker d-flex align-items-end gap-2">
         <div><label htmlFor="sphere-period-mode">Report period</label>
           <select className="form-select form-select-sm" id="sphere-period-mode" value={reportMode}
@@ -765,16 +766,17 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
             {MONTHS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
           </select></div>}
       </div>
-    </div>
-    {reportMode==='custom'&&customDateError(draftStart,draftEnd)&&
-      <small className="sphereMonthlyWarning" role="alert">{customDateError(draftStart,draftEnd)}</small>}
-    <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
+      <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
         {pdfBusy?'Generating…':'Generate PDF Management'}
       </button>
       {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?(requestedStart?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd+'.pdf':requestedWeek?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf'):'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
+      </div>
+      </div>
     </div>
+    {reportMode==='custom'&&customDateError(draftStart,draftEnd)&&
+      <small className="sphereMonthlyWarning" role="alert">{customDateError(draftStart,draftEnd)}</small>}
     {storageError&&<p className="sphereMonthlyWarning" role="alert">{storageError}</p>}
     {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
     {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved performance…'}</div>}
