@@ -340,8 +340,8 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
           return lines.join('<br/>')
         },
       },
-      xAxis: { type: 'time', min: displayWindow?.from ?? (Number.isFinite(rangeStart) ? rangeStart : undefined), max: displayWindow?.to ?? rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 12, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
-      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 12, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' || Boolean(trend?.network_source) ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (['load','network_rx','network_tx'].includes(trend?.metric) && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
+      xAxis: { type: 'time', min: displayWindow?.from ?? (Number.isFinite(rangeStart) ? rangeStart : undefined), max: displayWindow?.to ?? rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 11, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 11, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' || Boolean(trend?.network_source) ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (['load','network_rx','network_tx'].includes(trend?.metric) && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
         const traceStyle = trendFocusStyle(shortHost(host), selectedKey, availabilityMode)
@@ -1269,7 +1269,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             <h3 className="sphereScreenReaderOnly">Chart {panel.index}</h3>
             <select className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect form-select form-select-sm" value={panel.metric}
               aria-label={'Chart ' + panel.index + ' metric'}
-              title={isLoad ? 'Linux load average (not CPU %). APP configured reference: 28 CPUs per host; verify online CPUs and quotas with OS data.' : isNetwork
+              title={isLoad ? 'Linux load average, not CPU usage percent. APP configured reference: 28 CPUs per host; verify online CPUs and quotas with OS data.' : isNetwork
                 ? 'Infrastructure Network throughput; highest observed single interface' : 'Select the metric for this chart'}
               onChange={event => panel.setMetric(event.target.value)}>
               {METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
