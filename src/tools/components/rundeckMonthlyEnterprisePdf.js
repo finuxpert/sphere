@@ -10,6 +10,9 @@ const COLOR = {
   rule: [220,229,236], red: [194,59,56], amber: [185,109,22],
   green: [23,109,87], violet: [126,91,170], slate: [115,137,158],
   teal: [34,149,144], white: [255,255,255], header: [238,244,248],
+  // APP colors mirror the React monitoring trend on both light and dark UIs.
+  app1: [38,165,175], app2: [85,112,211], app3: [155,115,203],
+  app4: [207,126,64], app5: [83,157,113],
 }
 const value = input => input === null || input === undefined || input === ''
   ? null : Number.isFinite(Number(input)) ? Number(input) : null
@@ -204,24 +207,33 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     if(parts.length>2)throw Error('Program name exceeds two-line A3 cell: '+label)
     parts.forEach((part,i)=>text(x,y+3-i*7,part,6.2,weight,color,align))
   }
-  // Use the original repository brand asset; never synthesize a logo.
+  // Preserve the original logo's native aspect ratio; the previous fixed
+  // 106x30 pt box squeezed a wide 1255x266 image horizontally.
   if(typeof document!=='undefined' && typeof window!=='undefined'){
     const base=import.meta.env?.BASE_URL||'/'
     const brandUrl=new URL(base+'branding/logo/sphere-logo-horizontal-light.png',window.location.origin)
     const brand=await fetch(brandUrl,{cache:'force-cache'})
     if(!brand.ok)throw Error('Original SPHERE logo is unavailable (HTTP '+brand.status+')')
-    pdf.addImage(new Uint8Array(await brand.arrayBuffer()),'PNG',M,13,106,30)
+    const logoBytes=new Uint8Array(await brand.arrayBuffer())
+    const dimensions=pdf.getImageProperties(logoBytes)
+    const scale=Math.min(138/dimensions.width,32/dimensions.height)
+    pdf.addImage(logoBytes,'PNG',M,14,dimensions.width*scale,dimensions.height*scale)
   }
-  text(M+123,H-37,m.customStart?'SAP Custom Performance Report':m.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report',19,'bold','navy')
+  const reportTitle=m.customStart?'SAP Custom Performance Report':
+    m.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report'
+  const readableDate=date=>new Intl.DateTimeFormat('en-GB',{
+    timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',
+  }).format(new Date(date+'T00:00:00Z'))
   const periodLabel=m.customStart||m.weekStart
-    ? m.dates[0]+' to '+m.dates[m.dates.length-1]+' (WIB)'
-    : monthName(month)
-  text(W-M,H-37,periodLabel,10,'bold','muted','right')
-  line(M,H-53,W-M,H-53,'rule',.7)
+    ? readableDate(m.dates[0])+' - '+readableDate(m.dates[m.dates.length-1])+' (WIB)'
+    : monthName(month)+' (WIB)'
+  // The report name and period share a clear left-aligned hierarchy.
+  text(M+158,H-28,reportTitle,16,'bold','navy')
+  text(M+158,H-46,periodLabel,9.4,'normal','muted')
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
   const panelY=H-247,panelH=180,gap=12,panelW=(CW-gap)/2
-  const seriesColors=['blue','green','amber','violet','slate']
+  const seriesColors=['app1','app2','app3','app4','app5']
   const shortMonth=new Intl.DateTimeFormat('en-GB',{
     month:'short',timeZone:'UTC',
   }).format(new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7))-1,1)))
@@ -315,16 +327,16 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     })
     if(!rows.length)text(x+panelW/2,barY+75,'No tuning candidates recorded',9,'normal','muted','center')
   }
-  bars(M,'Top 10 Jobs by Peak WP CPU',m.sortedCpu,
+  bars(M,'Top 10 Workloads by Peak WP CPU',m.sortedCpu,
     row=>value(wpCpuCoreEquivalent(row.peak_cpu_pct)),' cores')
-  bars(M+panelW+gap,'Top 10 Jobs by Peak WP Memory',m.sortedPss,
+  bars(M+panelW+gap,'Top 10 Workloads by Peak WP Memory',m.sortedPss,
     row=>value(row.peak_pss_gb),' GB')
   // Bottom server + program evaluation tables.
   const lowY=172,lowH=H-427-lowY,serverW=376,jobX=M+serverW+12,jobW=CW-serverW-12
   rect(M,lowY,serverW,lowH,'white',7)
   rect(jobX,lowY,jobW,lowH,'white',7)
   section(M+15,lowY+lowH-23,'Application Server Performance')
-  section(jobX+15,lowY+lowH-23,'Top 10 Jobs for Tuning Review')
+  section(jobX+15,lowY+lowH-23,'Top 10 Tuning Candidates')
   function table(x,top,width,spec,head,rows,headH,rowH,size) {
     fillRect(x,top-headH,width,headH,'header',3)
     rows.forEach((_,i)=>{
@@ -377,7 +389,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   jobSpec[8][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
   table(jobX+10,lowY+lowH-36,jobW-20,jobSpec,
     ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Evidence (WIB)','Review finding','Tuning action'],
-    jobRows,25,17.8,7.2)
+    jobRows,25,17.8,7.5)
 
   // Four verified mount-category rows. Absence of a correctly mapped READY
   // historical filesystem sample remains "Not Collected", never zero/NORMAL.
