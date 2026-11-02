@@ -51,7 +51,7 @@ test('Evidence is readable without losing source timestamps or SAP error status'
   assert.match(css, /overflow-x:auto\s*!important/)
 })
 
-test('PDF evidence is unfiltered, month-scoped and not reused from table pagination', () => {
+test('PDF evidence is unfiltered, selected-period scoped and not reused from table pagination', () => {
   assert.match(ui, /month, type:'ALL', health:'ALL', pressure:'ALL', flag:'ALL'/)
   assert.match(ui, /reportData\.month!==month/)
   assert.match(ui, /reportData\.page\?\.scope!=='FULL_EVALUATED_POPULATION'/)
@@ -89,8 +89,8 @@ test('Monthly Summary prioritizes host preview before full workload evaluation',
   assert.ok(ui.includes('setHostPreview(payload)'), 'verified host data must be rendered')
   assert.match(ui, /setHostPreviewRetry\(count=>count\+1\)/)
   assert.match(ui, /Retry server data/)
-  assert.match(ui, /Monthly host summary exceeded 20 seconds/)
-  assert.match(ui, /Monthly evaluation exceeded 35 seconds/)
+  assert.match(ui, /Host summary exceeded 20 seconds/)
+  assert.match(ui, /Evaluation exceeded 35 seconds/)
 })
 
 
