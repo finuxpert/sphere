@@ -57,7 +57,7 @@ test('APP evaluation host buttons open the filtered current workload instead of 
   const parent = read('RundeckMonitoringHistoryCore.jsx')
   const health = read('RundeckWorkloadHealth.jsx')
   const lanes = read('RundeckWorkloadAppLanes.jsx')
-  assert.match(parent, /viewMode="globe"/)
+  assert.match(parent, /viewMode="status"/)
   assert.match(parent, /onReview=/)
   assert.match(health, /onSelectWorkload, onOpenApp, viewMode/)
   assert.match(health, /<RundeckWorkloadAppLanes[^>]*onOpenApp=\{onOpenApp\}/)
