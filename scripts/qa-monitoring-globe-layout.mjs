@@ -97,7 +97,7 @@ try{
           const background=getComputedStyle(selected).backgroundColor
           const severity='${theme}'==='light'||background==='rgb(33, 67, 57)'
           const spacious=a&&b&&c&&a.height>=600&&b.height>=600&&c.height>=600&&
-            t.height>=650&&rect('.rundeckMonitoring').height>size.h
+            t.height>=650&&rect('.rundeckMonitoring').height>${size.h}
           const capacity=document.querySelector('.sphereAppHardwareReference')?.textContent?.includes('256 GB RAM')
           const valid=columns&&order&&after&&inside&&all&&severity&&twoByTwo&&spacious&&capacity
           document.body.dataset.qa=valid?'PASS':'FAIL'
