@@ -522,3 +522,157 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
     align-items:flex-start;
   }
 }
+
+/* DEV 2026-11-02: dedicated 50:50 monitoring overview. Older by-app,
+   Jobs workspace and full details screens intentionally retain their layouts. */
+@media (min-width:1200px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491 .sphereOverviewBottomRow.row {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    align-items:stretch!important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+  .sphereOverviewBottomRow.row > .rundeckJobsProgramsOverview {
+    align-self:stretch!important;display:flex!important;flex-direction:column!important;
+    min-height:0!important;height:auto!important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+  .sphereOverviewBottomRow.row > .sphereStorageSummary {
+    align-self:stretch!important;min-height:265px!important;
+  }
+}
+@media(min-width:1200px) and (min-height:860px){
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.rundeckCockpitV13491[data-viewport-fit="true"] {
+    grid-template-rows:max-content minmax(245px,1.1fr) minmax(265px,1.25fr)!important;
+  }
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .rundeckJobsProgramsHealthSide {
+  display:flex!important;flex:1 1 auto!important;
+  min-width:0!important;min-height:0!important;width:100%!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-monitoring-globe {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-areas:"eval-heading" "eval-kpis" "eval-globe" "eval-footer"!important;
+  grid-template-rows:auto auto minmax(155px,1fr) auto!important;
+  align-items:stretch!important;align-content:stretch!important;
+  gap:5px!important;padding:8px 10px!important;
+  width:100%!important;height:100%!important;min-width:0!important;
+  min-height:255px!important;max-height:none!important;
+  overflow:hidden!important;box-sizing:border-box!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadHealthTitle {
+  grid-area:eval-heading!important;position:static!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  min-width:0!important;width:100%!important;
+  min-height:24px!important;margin:0!important;padding:0!important;
+  overflow:visible!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadHealthLegend {
+  grid-area:eval-kpis!important;position:static!important;
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-rows:minmax(38px,auto)!important;
+  min-width:0!important;min-height:38px!important;height:auto!important;
+  width:100%!important;gap:5px!important;margin:0!important;padding:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe .rundeckWorkloadCategory {
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:2px!important;
+  min-height:38px!important;height:auto!important;padding:3px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe .rundeckWorkloadCategory strong {
+  font-size:16px!important;line-height:1.1!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe .rundeckWorkloadCategory span {
+  font-size:10px!important;line-height:1.2!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadDotGrid {
+  grid-area:eval-globe!important;position:relative!important;
+  display:grid!important;align-content:center!important;justify-content:center!important;
+  min-width:0!important;min-height:155px!important;width:100%!important;
+  height:100%!important;overflow:hidden!important;margin:0!important;padding:1px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe .rundeckWorkloadDotEmpty {
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;min-height:130px!important;
+  grid-column:1/-1!important;white-space:normal!important;
+  font-size:12px!important;line-height:1.4!important;text-align:center!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadHealthFooter {
+  grid-area:eval-footer!important;position:static!important;
+  display:flex!important;align-items:center!important;
+  justify-content:space-between!important;align-self:end!important;
+  flex-wrap:wrap!important;gap:6px!important;
+  min-height:16px!important;margin:0!important;padding:0!important;
+  font-size:10px!important;line-height:1.3!important;
+}
+/* Source summaries are grouped into one bar without hiding their status or timestamp. */
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereMonitoringServices {
+  display:flex!important;align-items:center!important;
+  gap:7px 14px!important;padding:8px 10px!important;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereServiceToolbarAvailability {
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereServiceToolbarCounts {
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereServiceToolbarCounts span {
+  display:inline-flex;align-items:center;gap:5px;font-size:11px;white-space:nowrap;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereServiceToolbarCounts strong {
+  font-size:12px;font-variant-numeric:tabular-nums;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring
+:is(.sphereServiceToolbarAvailability small,.sphereServiceToolbarIssues small){
+  font-size:10px;white-space:nowrap;color:var(--sphere-text-secondary,#aab7c5);
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereServiceToolbarIssues {
+  display:flex;align-items:center;gap:8px;font-size:11px;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereServiceToolbarIssues strong{
+  font-size:11px;color:var(--sphere-warning,#e7b65d);
+}
+/* APP selected = outline; card fill must always represent severity. */
+html[data-theme="dark"] .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors > .rundeckAppHexSelector.is-sap-normal:is(.is-active,:hover,:focus-visible){
+  --hex-fill:#214339!important;background:#214339!important;border-color:#367b65!important;
+}
+html[data-theme="dark"] .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors > .rundeckAppHexSelector:is(.is-sap-attention,.is-sap-warning):is(.is-active,:hover,:focus-visible){
+  --hex-fill:#664922!important;background:#664922!important;border-color:#c89b45!important;
+}
+html[data-theme="dark"] .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors > .rundeckAppHexSelector.is-sap-critical:is(.is-active,:hover,:focus-visible){
+  --hex-fill:#6b3039!important;background:#6b3039!important;border-color:#df7580!important;
+}
+html[data-theme="dark"] .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors > .rundeckAppHexSelector.is-active::before{
+  background:transparent!important;clip-path:none!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors > .rundeckAppHexSelector.is-active{
+  outline:2px solid var(--sphere-accent,#67a9e8)!important;outline-offset:-2px!important;
+}
+@media(max-width:1199px){
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+  .rundeckJobsProgramsOverview .is-monitoring-globe{min-height:235px!important}
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+  .rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadDotGrid{min-height:130px!important}
+}

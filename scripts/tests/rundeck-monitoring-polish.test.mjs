@@ -65,3 +65,31 @@ test('enterprise dark theme uses common surface and preserves severity markers',
   }
   assert.doesNotMatch(css, /\.sphereWorkloadUnavailable[^}]*display:\s*none/s)
 })
+
+test('Monitoring globe uses dedicated four-area layout without overwriting by-app reports', () => {
+  const source = read('RundeckWorkloadHealth.jsx')
+  const css = read('RundeckUnifiedExperience20261030.css')
+  assert.match(source, /is-monitoring-globe/)
+  assert.match(css, /grid-template-areas:"eval-heading" "eval-kpis" "eval-globe" "eval-footer"/)
+  for (const key of ['eval-heading','eval-kpis','eval-globe','eval-footer']) assert.match(css, new RegExp('grid-area:'+key))
+  assert.match(css, /--hex-fill:#214339!important/)
+  assert.match(css, /sphereServiceToolbarCounts/)
+})
+test('SAP overview keeps last-check provenance and compact issue counts', () => {
+  const monitor = read('RundeckMonitoringHistory.jsx')
+  const availability = read('RundeckAvailability.jsx')
+  const issues = read('RundeckSapIssues.jsx')
+  assert.match(monitor, /inlineSummary toolbarSummary hideDetailsAction/)
+  assert.match(availability, /inlineSummary && toolbarSummary/)
+  assert.match(availability, /Last check/)
+  assert.match(issues, /inlineSummary && toolbarSummary/)
+  assert.match(issues, /No Data/)
+})
+test('APP source identity remains available behind a concise label', () => {
+  const app = read('RundeckAppServerAnalysis.jsx')
+  const css = read('RundeckUnifiedAppAnalysis.css')
+  assert.match(app, /title=\{\[identity\.full/)
+  assert.match(app, /onClick=\{openWorkload\}/)
+  assert.match(css, /\.rundeckAppFullIdentity > strong/)
+  assert.match(css, /text-overflow:ellipsis!important/)
+})

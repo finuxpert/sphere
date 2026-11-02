@@ -60,3 +60,14 @@ test('calm sphere only samples visible source-backed evaluation hexagons', () =>
   assert.match(style, /prefers-reduced-motion:reduce/)
   assert.match(style, /font-variant-numeric:tabular-nums/)
 })
+
+test('globe mouse and touch selection does not force the flat hexagon layout on hover', () => {
+  const read = file => readFileSync(new URL('../../src/tools/components/' + file, import.meta.url), 'utf8')
+  const globe = read('RundeckEvaluationGlobe.jsx')
+  const health = read('RundeckWorkloadHealth.jsx')
+  assert.match(globe, /selectFromIdlePointer/)
+  assert.match(globe, /\['mouse','touch','pen'\]/)
+  assert.match(globe, /onPointerDown=\{selectFromIdlePointer\}/)
+  assert.doesNotMatch(health, /onPointerEnter=\{event => \{ if \(globeEnabled/)
+  assert.match(health, /onFocusCapture=\{\(\) => setGlobeExpanded\(true\)\}/)
+})

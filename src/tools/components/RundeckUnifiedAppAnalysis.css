@@ -350,3 +350,52 @@
     padding-top:5px;padding-bottom:5px;
   }
 }
+
+/* Compact APP workload identities: one line, full source name in button title
+   and existing drilldown. Legacy two-row selectors do not target this table. */
+@media(min-width:1100px){
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+  .rundeckAppServerTableWrap th:nth-child(1){width:42%!important}
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+  .rundeckAppServerTableWrap th:nth-child(2){width:9%!important}
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+  .rundeckAppServerTableWrap th:nth-child(3){width:11%!important}
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+  .rundeckAppServerTableWrap th:nth-child(4){width:7%!important}
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+  .rundeckAppServerTableWrap th:nth-child(5){width:16%!important}
+  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+  .rundeckAppServerTableWrap th:nth-child(6){width:15%!important}
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+.rundeckAppServerTableWrap .rundeckAppFullIdentity{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  gap:5px!important;justify-content:flex-start!important;min-width:0!important;
+  width:100%!important;overflow:hidden!important;white-space:nowrap!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+.rundeckAppServerTableWrap .rundeckAppFullIdentity > strong{
+  display:block!important;flex:1 1 auto!important;width:auto!important;
+  min-width:0!important;white-space:nowrap!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;
+  overflow-wrap:normal!important;word-break:normal!important;
+  font-size:10.5px!important;line-height:1.35!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+.rundeckAppServerTableWrap .rundeckAppFullIdentity > .rundeckAppTypeBadge{
+  display:inline-flex!important;flex:0 0 auto!important;width:auto!important;
+  max-width:76px!important;margin:0!important;padding:1px 4px!important;
+  min-height:17px!important;overflow:visible!important;
+  white-space:nowrap!important;word-break:normal!important;
+  font-size:9px!important;line-height:1.2!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysis
+.rundeckAppServerTableWrap .rundeckAppWorkloadMetricsRow > :is(th,td) {
+  padding-top:7px!important;padding-bottom:7px!important;vertical-align:middle!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckWorkspaceDrawerBody{
+  padding-bottom:8px!important;flex:0 1 auto!important;
+}
+.rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-unified-app .rundeckUnifiedAnalysisGrid{
+  align-items:start!important;
+}
