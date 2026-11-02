@@ -52,3 +52,52 @@ test('weekly reporting rejects wrong-week storage and invalid weeks',()=>{
     ...example,period:'month',
   }),/Invalid weekly/)
 })
+
+test('custom report keeps only dates in an inclusive cross-month window',()=>{
+  const data={...example,period:'custom',week_start:null,
+    start_date:'2026-10-30',end_date:'2026-11-01',
+    monthly_storage:{month,period:'custom',week_start:null,
+      start_date:'2026-10-30',end_date:'2026-11-01',items:[]},
+  }
+  const m=monthlyEnterpriseReportModel(month,data)
+  assert.equal(m.days,3)
+  assert.deepEqual(m.dates,['2026-10-30','2026-10-31','2026-11-01'])
+  assert.equal(m.cpuPeak.value,95)
+  assert.equal(m.series[0].days[0].cpu,null)
+  assert.equal(m.series[0].days[1].cpu,90)
+  assert.equal(m.series[0].days[2].cpu,95)
+})
+
+test('one-day custom report remains one landscape A3 PDF',async()=>{
+  const data={...example,period:'custom',week_start:null,
+    start_date:'2026-10-31',end_date:'2026-10-31',
+    monthly_storage:{month,period:'custom',week_start:null,
+      start_date:'2026-10-31',end_date:'2026-10-31',items:[]},
+  }
+  const pdf=await buildManagementMonthlyPdf({month,data,returnInstance:true})
+  assert.equal(pdf.internal.getNumberOfPages(),1)
+  const stream=pdf.internal.pages.slice(1).flat().join('\n')
+  assert.ok(stream.includes('SAP Custom Performance Report'))
+  assert.ok(stream.includes('2026-10-31 to 2026-10-31'))
+})
+
+test('custom export refuses wrong date scopes, reversed dates and over 31 days',()=>{
+  const data={...example,period:'custom',week_start:null,
+    start_date:'2026-10-01',end_date:'2026-10-31',
+    monthly_storage:{month,period:'custom',week_start:null,
+      start_date:'2026-10-01',end_date:'2026-10-31',items:[]},
+  }
+  assert.equal(monthlyEnterpriseReportModel(month,data).days,31)
+  assert.throws(()=>monthlyEnterpriseReportModel(month,{
+    ...data,end_date:'2026-11-01',
+  }),/Invalid custom/)
+  assert.throws(()=>monthlyEnterpriseReportModel(month,{
+    ...data,end_date:'2026-09-30',
+  }),/Invalid custom/)
+  assert.throws(()=>monthlyEnterpriseReportModel(month,{
+    ...data,monthly_storage:{...data.monthly_storage,end_date:'2026-10-30'},
+  }),/Period-scoped/)
+  assert.throws(()=>monthlyEnterpriseReportModel(month,{
+    ...data,week_start:'2026-10-26',
+  }),/Invalid custom/)
+})
