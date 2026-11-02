@@ -162,7 +162,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
                 <button type="button" className="rundeckAppFullIdentity" onClick={openWorkload}
                   aria-label={`Analyze ${type} ${workloadName}`}
                   title={[identity.full, relatedName && relatedName !== workloadName ? 'Program: ' + relatedName : '',
-                    'Observed identity: '+(row.details?.identity_source || 'unverified')].filter(Boolean).join(' · ')}>
+                    'Observed identity: '+(row.details?.identity_source || 'unverified'), 'Authority: '+(row.details?.identity_authority || 'unverified')].filter(Boolean).join(' · ')}>
                   <strong>{workloadName}</strong>
                   <small>{type}</small>
                 </button>
