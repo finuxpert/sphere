@@ -252,8 +252,8 @@ export default function RundeckMonitoringHistory(props) {
             onInspectApp={inspectApp}
             serviceSummary={<section className="sphereMonitoringServices" aria-label="SAP Services and issues">
               <strong className="sphereMonitoringServicesLabel">SAP Services</strong>
-              <RundeckAvailability refreshToken={refreshToken} inlineSummary hideDetailsAction />
-              <RundeckSapIssues refreshToken={refreshToken} inlineSummary hideDetailsAction onInspectApp={inspectApp} />
+              <RundeckAvailability refreshToken={refreshToken} inlineSummary toolbarSummary hideDetailsAction />
+              <RundeckSapIssues refreshToken={refreshToken} inlineSummary toolbarSummary hideDetailsAction onInspectApp={inspectApp} />
               <button type="button" className="sphereUnifiedHealthOpen btn btn-sm" onClick={() => setActiveOverlay({type:'system-health'})}>Health details</button>
             </section>}
             onOpenHealthDetails={() => setActiveOverlay({type:'system-health'})}
