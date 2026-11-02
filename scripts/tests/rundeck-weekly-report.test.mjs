@@ -37,7 +37,7 @@ test('weekly management PDF is A3 landscape and has the weekly title and exact b
   assert.equal(pdf.internal.getNumberOfPages(),1)
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   assert.ok(stream.includes('SAP Weekly Performance Report'))
-  assert.ok(stream.includes('2026-10-26 to 2026-11-01')) // PDF escapes parentheses in text operators
+  assert.ok(stream.includes('26 Oct 2026 - 01 Nov 2026'))
   assert.ok(!stream.includes('SAP Monthly Performance Report'))
 })
 
@@ -78,7 +78,7 @@ test('one-day custom report remains one landscape A3 PDF',async()=>{
   assert.equal(pdf.internal.getNumberOfPages(),1)
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   assert.ok(stream.includes('SAP Custom Performance Report'))
-  assert.ok(stream.includes('2026-10-31 to 2026-10-31'))
+  assert.ok(stream.includes('31 Oct 2026 - 31 Oct 2026'))
 })
 
 test('custom export refuses wrong date scopes, reversed dates and over 31 days',()=>{
