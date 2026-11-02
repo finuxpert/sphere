@@ -250,6 +250,13 @@ export default function RundeckMonitoringHistory(props) {
             onOpenTrendInfrastructure={(context) => setActiveOverlay({ type: 'infrastructure', trendContext: context, returnTo: { type: 'selected' } })}
             onOpenTrendEvidence={(job) => setActiveOverlay({ type: 'evidence', job, returnTo: { type: 'selected' } })}
             onInspectApp={inspectApp}
+            serviceSummary={<section className="sphereMonitoringServices" aria-label="SAP Services and issues">
+              <strong className="sphereMonitoringServicesLabel">SAP Services</strong>
+              <RundeckAvailability refreshToken={refreshToken} inlineSummary hideDetailsAction />
+              <RundeckSapIssues refreshToken={refreshToken} inlineSummary hideDetailsAction onInspectApp={inspectApp} />
+              <button type="button" className="sphereUnifiedHealthOpen btn btn-sm" onClick={() => setActiveOverlay({type:'system-health'})}>Health details</button>
+            </section>}
+            onOpenHealthDetails={() => setActiveOverlay({type:'system-health'})}
             healthSummary={<section className="sphereOverviewDetails col-12 col-xl-7" aria-label="System Health">
             <header className="sphereHealthSummaryHeader">
               <h3>System Health</h3>

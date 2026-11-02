@@ -2,6 +2,7 @@ import React from 'react'
 import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.jsx'
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
+import RundeckStorageSummary from './RundeckStorageSummary.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   const overviewRef = React.useRef(null)
@@ -88,6 +89,7 @@ export default function RundeckMonitoringHistoryCore(props) {
         onOpenMetric={props.onOpenInfrastructureMetric}
         fleetMode
       />
+      {props.serviceSummary}
     </section>
 
     <section className="rundeckTrendBandV13454">
@@ -107,22 +109,18 @@ export default function RundeckMonitoringHistoryCore(props) {
     </section>
 
     <div className="sphereOverviewBottomRow row g-2 align-items-start">
-    <section className="rundeckJobsProgramsOverview col-12 col-xl-5" aria-label="Job & Program Evaluation">
-      <div className="rundeckJobsProgramsHealthSide">
-        <RundeckWorkloadHealth
-          refreshToken={props.refreshToken}
-          performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
-          onSelectWorkload={props.onOpenEvaluatedWorkload}
-          onOpenApp={props.onOpenAppJobs}
-          viewMode="by-app"
-          compactSummary
-          onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
-        />
-        {React.isValidElement(props.currentWorkloadContent) &&
-          React.cloneElement(props.currentWorkloadContent, { summaryOnly: true })}
-      </div>
-    </section>
-    {props.healthSummary}
+      <section className="rundeckJobsProgramsOverview col-12 col-xl-5" aria-label="Job & Program Evaluation">
+        <div className="rundeckJobsProgramsHealthSide">
+          <RundeckWorkloadHealth
+            refreshToken={props.refreshToken}
+            performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+            onSelectWorkload={props.onOpenEvaluatedWorkload}
+            viewMode="globe"
+            onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
+          />
+        </div>
+      </section>
+      <RundeckStorageSummary refreshToken={props.refreshToken} onOpenDetails={props.onOpenHealthDetails} />
     </div>
   </section>
 }

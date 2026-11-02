@@ -1,0 +1,23 @@
+.appShell:has(.rundeckPanel) .rundeckMonitoring .sphereStorageSummary {
+  box-sizing:border-box;min-width:0;padding:9px 12px;display:flex;flex-direction:column;
+  gap:8px;background:var(--cockpit-surface,#1b2835);
+  border:1px solid var(--cockpit-outline,#304150);border-radius:8px;
+}
+.sphereStorageSummaryHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sphereStorageSummaryHead h3{font-size:13px;font-weight:680;margin:0}
+.sphereStorageDetails{font-size:11px;min-height:26px;color:var(--sphere-accent,#67a9e8);background:transparent;border:1px solid var(--sphere-border-subtle,#304150)}
+.sphereStorageRows{display:grid;gap:7px;flex:1 1 auto;align-content:space-around}
+.sphereStorageRow{display:grid;grid-template-columns:minmax(90px,1.2fr) minmax(45px,2fr) 49px;gap:9px;align-items:center}
+.sphereStorageLabel{display:flex;flex-direction:column;gap:0;min-width:0;line-height:1.2}
+.sphereStorageLabel strong{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sphereStorageLabel small{font-size:10px;color:var(--sphere-text-secondary,#aab7c5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sphereStorageTrack{height:7px;border-radius:10px;background:var(--sphere-chart-grid,#344555);overflow:hidden}
+.sphereStorageTrack i{display:block;height:100%;border-radius:10px;background:#8899a8}
+.sphereStorageTrack i.is-normal{background:var(--sphere-positive,#67c8a0)}
+.sphereStorageTrack i.is-attention,.sphereStorageTrack i.is-warning{background:var(--sphere-warning,#e7b65d)}
+.sphereStorageTrack i.is-critical{background:var(--sphere-danger,#e87984)}
+.sphereStoragePercent{text-align:right;font-size:11px;font-variant-numeric:tabular-nums}
+.sphereStoragePercent.is-attention,.sphereStoragePercent.is-warning{color:var(--sphere-warning,#e7b65d)}
+.sphereStoragePercent.is-critical{color:var(--sphere-danger,#e87984)}
+.sphereStorageError{font-size:10px;color:var(--sphere-text-secondary,#aab7c5)}
+@media(max-width:570px){.sphereStorageRow{grid-template-columns:85px minmax(35px,1fr) 42px;gap:5px}}
