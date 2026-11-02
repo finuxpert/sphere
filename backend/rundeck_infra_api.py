@@ -124,6 +124,7 @@ def trend(
     range_key: str = Query("6h", alias="range", pattern="^(1h|6h|24h|7d|30d)$"),
     metric: str = Query("filesystem", pattern="^(filesystem|network|storage)$"),
     host: str | None = Query(None, max_length=120),
+    mount: str | None = Query(None, max_length=240),
 ):
     since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
     engine = _engine()
@@ -135,11 +136,17 @@ def trend(
 
     with engine.connect() as conn:
         if metric == "filesystem":
+            # An explicit mount may be secondary; do not silently omit its history.
+            # Without a mount filter, preserve the original primary-only contract.
+            mount_clause = "AND is_primary=true"
+            if isinstance(mount, str) and mount:
+                mount_clause = "AND mount_point=:mount"
+                params["mount"] = mount
             rows = conn.execute(text(f"""
               SELECT host,collected_at,mount_point AS series_key,used_pct AS value,
                      NULL::double precision AS value2
               FROM rundeck_infra_filesystems
-              WHERE collected_at>=:since AND is_primary=true {host_clause}
+              WHERE collected_at>=:since {mount_clause} {host_clause}
               ORDER BY collected_at,host,mount_point
             """), params)
         elif metric == "network":

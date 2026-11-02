@@ -215,7 +215,7 @@ test('DEV idle braid reveals full verified ECharts on hover/focus and keeps inci
   assert.match(workload, />Marked <b>\{attentionRows\.length\}<\/b>/)
   assert.match(workload, /latest collection · observed/)
   assert.match(infra, /Collector interval/)
-  assert.match(infra, /Latest collected readings/)
+  assert.match(infra, /Latest Readings/)
   assert.match(infra, /Last retained readings/)
   assert.match(cockpitStyle, /font-size:10\.5px!important/)
 })

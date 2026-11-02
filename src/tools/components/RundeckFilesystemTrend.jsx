@@ -25,7 +25,7 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
       const hosts=(available.items||[]).filter(x=>/^APP[1-5]$/i.test(shortHost(x.host)))
       const selected=isRoot ? (hostChoice==='ALL'?hosts:hosts.filter(x=>shortHost(x.host)===hostChoice))
         : hosts.filter(x=>shortHost(x.host)==='APP1')
-      const result=await Promise.allSettled(selected.map(row=>get(API+'/trend?range='+encodeURIComponent(range)+'&metric=filesystem&host='+encodeURIComponent(row.host),controller.signal)))
+      const result=await Promise.allSettled(selected.map(row=>get(API+'/trend?range='+encodeURIComponent(range)+'&metric=filesystem&host='+encodeURIComponent(row.host)+'&mount='+encodeURIComponent(mount),controller.signal)))
       if(controller.signal.aborted)return
       const rows=result.flatMap((item,i)=>item.status==='fulfilled'
         ? (item.value.items||[]).filter(point=>String(point.series_key||'').toUpperCase()===mount.toUpperCase()&&validNumber(point.value))
