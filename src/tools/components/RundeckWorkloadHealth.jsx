@@ -226,6 +226,24 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     </div>
   const priorityRows = rows.filter(row => workloadHealthLevel(row) === 'review').slice(0,2)
   const fallbackRows = priorityRows.length ? priorityRows : rows.filter(row => workloadHealthLevel(row) === 'attention').slice(0,2)
+  // Do not render four empty KPI tiles beside conflicting loading/error messages.
+  // A failed fetch is distinct from an unverified initial load; verified zero counts
+  // remain visible through the regular summary below.
+  if (compactSummary && !preview) return <section
+    className="rundeckWorkloadHealth sphereWorkloadSummary"
+    data-state={state}
+    aria-label="Jobs and Programs summary"
+    aria-busy={loading}>
+    <header className="sphereWorkloadSummaryHead">
+      <h3>Jobs &amp; Programs</h3><a href="#/tool/logs/jobs">View details</a>
+    </header>
+    <div className="sphereWorkloadUnavailable" role={error ? 'alert' : 'status'}>
+      <strong>{error ? 'Evaluation unavailable' : loading ? 'Loading evaluations…' : 'No verified evaluation'}</strong>
+      {error && <small title={error}>{error}</small>}
+      {error && <button type="button" onClick={() => setRetryToken(token => token + 1)}
+        disabled={loading} className="sphereWorkloadRetry">Retry</button>}
+    </div>
+  </section>
   if (compactSummary) return <section className="rundeckWorkloadHealth sphereWorkloadSummary" data-state={state} aria-label="Jobs and Programs summary" aria-busy={loading}>
     <header className="sphereWorkloadSummaryHead"><h3>Jobs &amp; Programs</h3><a href="#/tool/logs/jobs">View details</a></header>
     <div className="sphereWorkloadSummaryMetrics">{LEVELS.map(level => <button type="button" key={level.key}
