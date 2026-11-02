@@ -17,7 +17,7 @@ export default function RundeckMonitoringHistoryCore(props) {
     // legacy 5-lane fit, which allocates a tall empty evaluation grid.
     // The CSS only compresses *preview* rows; all records remain in View Details.
     if (overview.querySelector('.sphereWorkloadSummary')) {
-      const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
+      const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 28)
       const compactFit = window.innerWidth >= 1400 && window.innerHeight >= 760 && available >= 540
       if (compactFit) {
         overview.style.setProperty('--sphere-overview-room', available + 'px')
@@ -28,7 +28,7 @@ export default function RundeckMonitoringHistoryCore(props) {
       }
       return
     }
-    const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 10)
+    const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 28)
     // Fit only when all visible source-backed overview sections have room.
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
     const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
