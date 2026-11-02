@@ -37,11 +37,16 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
   const records=state.data.filter(item=>validNumber(item.value)&&Number.isFinite(Date.parse(item.collected_at||'')))
   const values=records.map(item=>Number(item.value))
   const max=values.length?Math.max(...values):null
+  // The full 0–100% axis can flatten 7D/30D filesystem changes into a single
+  // unreadable line. Keep the axis explicitly labelled; never modify samples.
+  const axisMin=values.length?Math.max(0,Math.floor((Math.min(...values)-5)/10)*10):0
+  const axisMax=values.length?Math.min(100,Math.max(axisMin+10,Math.ceil((max+5)/10)*10)):100
+  const ticks=[0,1,2,3,4].map(index=>axisMin+(axisMax-axisMin)*index/4)
   // Display the requested 7D/30D time window, not a stretched 1-hour subset.
   const maxTs=Date.now()
   const minTs=maxTs-(range==='30d'?30:range==='7d'?7:1)*86400_000
   const chartX=at=>L+(at-minTs)/Math.max(1,maxTs-minTs)*(W-L-R)
-  const chartY=percent=>T+(100-Math.max(0,Math.min(100,percent)))/100*(H-T-B)
+  const chartY=percent=>T+(axisMax-Math.max(axisMin,Math.min(axisMax,percent)))/(axisMax-axisMin)*(H-T-B)
   const grouped=new Map()
   for(const point of records){
     const key=point.displayHost
@@ -70,7 +75,7 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
   return <div className="sphereFilesystemTrend" aria-label={'Filesystem usage history '+mount}>
     <div className="sphereFilesystemTrendTop">
       <span title={isRoot?'Root is measured independently on each APP':'APP1 is the selected representative; verify shared mount mapping separately'}>
-        {mount} · {isRoot ? 'APP root' : 'APP1'} · hourly peak
+        {mount} · {isRoot ? 'APP root' : 'APP1'} · hourly peak · Y {axisMin}–{axisMax}%
       </span>
       {isRoot && <select value={hostChoice} onChange={e=>setHostChoice(e.target.value)}
         aria-label="Root filesystem APP selection">
@@ -80,10 +85,10 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
     {state.loading && <p role="status">Loading filesystem history…</p>}
     {!state.loading && state.error && <p role="status" className="sphereFilesystemWarn">{state.error}</p>}
     {!state.loading && !records.length && !state.error && <p role="status">Not Collected · no matching filesystem history.</p>}
-    {!!records.length && <svg viewBox={'0 0 '+W+' '+H} role="img" aria-label={'Usage percent over '+range}>
-      {[0,25,50,75,100].map(v=><g key={v}>
+    {!!records.length && <svg viewBox={'0 0 '+W+' '+H} role="img" aria-label={'Filesystem hourly peak usage over '+range+', axis '+axisMin+' to '+axisMax+' percent'}>
+      {ticks.map(v=><g key={v}>
         <line x1={L} y1={chartY(v)} x2={W-R} y2={chartY(v)} stroke="currentColor" opacity=".16"/>
-        <text x={L-5} y={chartY(v)+3} textAnchor="end" fontSize="9" fill="currentColor">{v}%</text>
+        <text x={L-5} y={chartY(v)+3} textAnchor="end" fontSize="10" fill="currentColor">{Number.isInteger(v)?v:v.toFixed(1)}%</text>
       </g>)}
       {[...grouped].map(([name,points],i)=>{
         points.sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at))
@@ -102,8 +107,8 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
       <text x={W-R} y={H-5} textAnchor="end" fontSize="9" fill="currentColor">{formatWib(maxTs,true)} WIB</text>
     </svg>}
     {!!records.length && <div className="sphereFilesystemTrendFooter">
-      <span>Last peak {Number(newest.value).toFixed(1)}%</span>
-      <span>Peak {max.toFixed(1)}%</span>
+      <span title="Latest historical hourly peak sample, not current filesystem usage">Latest hourly peak {Number(newest.value).toFixed(1)}%</span>
+      <span title="Highest hourly peak within the selected history window">Window max {max.toFixed(1)}%</span>
       <span title={delta===null ? 'Select one APP to compare its first and last observed hourly peak' :
         'Difference between first and last recorded hourly-peak samples; not the difference from the highest peak'}>
         {delta===null ? 'Change — (select APP)' : 'Observed change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}
