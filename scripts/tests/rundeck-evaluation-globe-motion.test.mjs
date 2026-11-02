@@ -61,13 +61,18 @@ test('calm sphere only samples visible source-backed evaluation hexagons', () =>
   assert.match(style, /font-variant-numeric:tabular-nums/)
 })
 
-test('globe mouse and touch selection does not force the flat hexagon layout on hover', () => {
+test('hover over the globe expands verified hexagons; leaving restores the sphere without collapsing keyboard focus', () => {
   const read = file => readFileSync(new URL('../../src/tools/components/' + file, import.meta.url), 'utf8')
   const globe = read('RundeckEvaluationGlobe.jsx')
   const health = read('RundeckWorkloadHealth.jsx')
-  assert.match(globe, /selectFromIdlePointer/)
-  assert.match(globe, /\['mouse','touch','pen'\]/)
-  assert.match(globe, /onPointerDown=\{selectFromIdlePointer\}/)
-  assert.doesNotMatch(health, /onPointerEnter=\{event => \{ if \(globeEnabled/)
+  assert.match(health, /onPointerEnter=\{event => \{/)
+  assert.match(health, /\['mouse', 'pen'\]\.includes\(event\.pointerType\)/)
+  assert.match(health, /globeHoverRef\.current = true/)
+  assert.match(health, /globeHoverRef\.current = false/)
+  assert.match(health, /setGlobeExpanded\(true\)/)
+  assert.match(health, /if \(!event\.currentTarget\.contains\(document\.activeElement\)\) setGlobeExpanded\(false\)/)
+  assert.match(health, /!globeHoverRef\.current\) setGlobeExpanded\(false\)/)
   assert.match(health, /onFocusCapture=\{\(\) => setGlobeExpanded\(true\)\}/)
+  assert.match(health, /onSelectIndex=\{index => \{ if \(rows\[index\]\) openWorkload\(rows\[index\]\) \}\}/)
+  assert.match(globe, /onPointerDown=\{selectFromIdlePointer\}/)
 })

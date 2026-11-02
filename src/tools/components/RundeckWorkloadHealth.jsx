@@ -88,6 +88,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const [dotLayout, setDotLayout] = React.useState({ size: 10, gap: 2, columns: 1, fits: true })
   const [globeEnabled, setGlobeEnabled] = React.useState(false)
   const [globeExpanded, setGlobeExpanded] = React.useState(false)
+  // Pointer hover and keyboard focus share one expansion state. The pointer
+  // flag prevents blur from collapsing the grid while the mouse remains over it.
+  const globeHoverRef = React.useRef(false)
   const [activeDotIndex, setActiveDotIndex] = React.useState(0)
   React.useEffect(() => {
     if (typeof window.matchMedia !== 'function') return undefined
@@ -279,8 +282,21 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         : <div className="rundeckAppEvalState" role="status">{outcome}</div>
       : <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
       role="group" aria-label="Individual saved workload evaluations"
+      title={globeEnabled && dotLayout.fits && rows.length ? 'Hover to expand evaluations; move away to return to globe' : undefined}
+      onPointerEnter={event => {
+        if (!globeEnabled || !dotLayout.fits || !rows.length || !['mouse', 'pen'].includes(event.pointerType)) return
+        globeHoverRef.current = true
+        setGlobeExpanded(true)
+      }}
+      onPointerLeave={event => {
+        if (!['mouse', 'pen'].includes(event.pointerType)) return
+        globeHoverRef.current = false
+        if (!event.currentTarget.contains(document.activeElement)) setGlobeExpanded(false)
+      }}
       onFocusCapture={() => setGlobeExpanded(true)}
-      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setGlobeExpanded(false) }}
+      onBlurCapture={event => {
+        if (!event.currentTarget.contains(event.relatedTarget) && !globeHoverRef.current) setGlobeExpanded(false)
+      }}
       style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
       {globeEnabled && dotLayout.fits && rows.length > 0 &&
         <RundeckEvaluationGlobe rows={rows} layout={dotLayout} expanded={globeExpanded}
