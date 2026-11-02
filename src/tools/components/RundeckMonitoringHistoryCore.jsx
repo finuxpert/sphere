@@ -3,7 +3,6 @@ import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.j
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 import RundeckStorageSummary from './RundeckStorageSummary.jsx'
-import './RundeckMonitoringReadable.css'
 
 export default function RundeckMonitoringHistoryCore(props) {
   const overviewRef = React.useRef(null)
