@@ -125,6 +125,7 @@ def trend(
     metric: str = Query("filesystem", pattern="^(filesystem|network|storage)$"),
     host: str | None = Query(None, max_length=120),
     mount: str | None = Query(None, max_length=240),
+    resolution: str = Query("raw", pattern="^(raw|hourly_peak)$"),
 ):
     since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
     engine = _engine()
@@ -142,13 +143,27 @@ def trend(
             if isinstance(mount, str) and mount:
                 mount_clause = "AND mount_point=:mount"
                 params["mount"] = mount
-            rows = conn.execute(text(f"""
-              SELECT host,collected_at,mount_point AS series_key,used_pct AS value,
-                     NULL::double precision AS value2
-              FROM rundeck_infra_filesystems
-              WHERE collected_at>=:since {mount_clause} {host_clause}
-              ORDER BY collected_at,host,mount_point
-            """), params)
+            if resolution == "hourly_peak":
+                # One actual highest-usage observation per hour per host/mount.
+                # Keep its source timestamp and value, never synthetic averages.
+                rows = conn.execute(text(f"""
+                  SELECT DISTINCT ON (host, mount_point, date_trunc('hour',collected_at))
+                    host,collected_at,mount_point AS series_key,used_pct AS value,
+                    NULL::double precision AS value2
+                  FROM rundeck_infra_filesystems
+                  WHERE collected_at>=:since {mount_clause} {host_clause}
+                    AND used_pct IS NOT NULL
+                  ORDER BY host,mount_point,date_trunc('hour',collected_at),
+                    used_pct DESC, collected_at DESC
+                """), params)
+            else:
+                rows = conn.execute(text(f"""
+                  SELECT host,collected_at,mount_point AS series_key,used_pct AS value,
+                         NULL::double precision AS value2
+                  FROM rundeck_infra_filesystems
+                  WHERE collected_at>=:since {mount_clause} {host_clause}
+                  ORDER BY collected_at,host,mount_point
+                """), params)
         elif metric == "network":
             rows = conn.execute(text(f"""
               SELECT host,collected_at,sample_key AS series_key,
@@ -185,6 +200,7 @@ def trend(
     return {
         "range": range_key,
         "metric": metric,
+        "resolution": resolution if metric == "filesystem" else "raw",
         "since": since,
         "first_observed_at": first_observed_at,
         "last_observed_at": last_observed_at,
