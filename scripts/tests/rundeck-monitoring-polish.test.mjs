@@ -137,5 +137,5 @@ test('Monitoring uses natural scroll with 28 CPU and 256 GB per APP configured',
   assert.match(app,/configured/)
   assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/)
   assert.match(css,/min-height:640px!important/)
-  assert.match(trends,/Grouped multi-core workload CPU; may exceed 100%/)
+  assert.match(trends,/Grouped CPU is multicore and may exceed 100%/)
 })
