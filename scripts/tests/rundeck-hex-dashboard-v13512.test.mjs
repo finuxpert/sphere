@@ -112,7 +112,7 @@ test('v1.35.17 chart Focus is explicit, reversible, and preserves threshold refe
   assert.match(trend,/trendPercentAxisMax\(rows, valueKey, scaleMode\)/)
   assert.match(trend,/visibleThresholds/)
   assert.match(trend,/thresholds unchanged/)
-  assert.match(trend,/APP % Axis · \{scaleMode === 'focus' \? 'Focus' : '0–100%'/)
+  assert.match(trend,/Percent Axis · \{scaleMode === 'focus' \? 'Focus' : '0–100%'/)
   assert.match(trend,/aria-pressed=\{scaleMode === 'focus'\} onClick=\{\(\) => setScaleMode\(value => value === 'full' \? 'focus' : 'full'\)\}/)
   assert.match(css,/\.rundeckTrendYAxisToggle/)
   assert.match(css,/aria-pressed="true"/)
