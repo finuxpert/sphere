@@ -88,11 +88,16 @@
 .sphereMonthlyReview.is-v2 .sphereMonthlyPicker{display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px;min-width:0}
 .sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div{min-width:125px}
 .sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div:last-child{min-width:190px}
-.sphereMonthlyReview.is-v2 .sphereMonthlyPicker select{height:34px;max-width:290px;font-size:12px}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker select,
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker input[type="date"]{height:34px;max-width:290px;font-size:12px}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker input[type="date"]{min-width:155px;color:var(--mr-text);color-scheme:dark;background:var(--mr-panel,#202b35);border-color:var(--mr-border)}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker>button{min-height:34px;align-self:flex-end}
+html[data-theme="light"] .sphereMonthlyReview.is-v2 .sphereMonthlyPicker input[type="date"]{color-scheme:light}
+
 @media(max-width:600px){
   .sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div{flex:1 1 125px}
   .sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div:last-child{flex:2 1 190px}
-  .sphereMonthlyReview.is-v2 .sphereMonthlyPicker select{max-width:none;width:100%}
+  .sphereMonthlyReview.is-v2 .sphereMonthlyPicker select,.sphereMonthlyReview.is-v2 .sphereMonthlyPicker input[type="date"]{max-width:none;width:100%}
 }
 
 .sphereMonthlyTabs{display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--mr-border);padding-bottom:8px}
