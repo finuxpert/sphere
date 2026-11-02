@@ -29,13 +29,14 @@ try{
   for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
     for(const theme of ['dark','light']){
       const html=`<!doctype html><html data-theme="${theme}"><head><meta charset="utf-8">${links}
-        <style>body{margin:0}.appShell{width:${size.w}px;min-height:${size.h}px}.spherePerformanceMain{width:calc(100% - 190px);margin-left:190px;box-sizing:border-box}.rundeckMonitoring{--sphere-overview-room:735px}.rundeckTrendBandV13454{min-height:220px}</style></head>
+        <style>body{margin:0}.appShell{width:${size.w}px;min-height:${size.h}px}.spherePerformanceMain{width:calc(100% - 190px);margin-left:190px;box-sizing:border-box}.rundeckTrendBandV13454{min-height:230px}</style></head>
         <body><div class="appShell isTool"><div class="rundeckPanel"><main class="spherePerformanceMain">
-        <section class="rundeckMonitoring rundeckCockpitV13491 is-three-panel" data-viewport-fit="true" data-motion="on">
+        <section class="rundeckMonitoring rundeckCockpitV13491 is-three-panel" data-motion="on">
         <div class="sphereMonitoringThreeUp sphereOverviewBottomRow row g-2">
           <section class="sphereMonitoringApp rundeckTopBandV13454 is-unified-app-infra col-12 col-xl-4">
           <section class="rundeckUnifiedAppInfra" data-layout="landscape-operations">
           <header class="rundeckUnifiedAppInfraHead"><h3>SAP APP Landscape</h3><button class="sphereAppHealthAction">Health Details</button></header>
+          <div class="sphereAppHardwareReference">Per APP <strong>28 CPU</strong> · <strong>256 GB RAM</strong><small>configured</small></div>
           <div class="sphereAppWpSummary">Critical WP <strong>0</strong></div>
           <div class="rundeckAppHexMain rundeckAppThreePanels"><section class="rundeckAppMotionPanel">
           <div class="rundeckAppHexSelectors rundeckUnifiedAppCards is-honeycomb">${apps}</div>
@@ -62,7 +63,11 @@ try{
           <svg viewBox="0 0 350 96"><polyline points="34,60 120,38 240,48 342,20" fill="none" stroke="#67a9e8"/></svg>
           </section></section>
         </div>
-        <section class="rundeckTrendBandV13454 sphereMonitoringTrendBottom">Performance Trends</section>
+        <section class="rundeckTrendBandV13454 sphereMonitoringTrendBottom">
+          <h2>Performance Trends</h2>
+          <div class="rundeckTripleTrendGrid sphereTrendBootstrapRow row row-cols-1 row-cols-md-2 row-cols-xxl-4 g-2">
+            ${Array.from({length:4},(_,i)=>'<section class="rundeckServerTrendPanelV1234 rundeckConfigurableTrend col"><h3>Trend '+(i+1)+'</h3><div class="rundeckTrendPlot"><div class="rundeckTrendChart">Observed chart</div></div></section>').join('')}
+          </div></section>
         <button class="sphereMonitoringMotionToggle">Motion On</button>
         </section></main></div></div>
         <script>window.addEventListener('load',()=>{
@@ -70,6 +75,10 @@ try{
           const rect=selector=>$(selector)?.getBoundingClientRect()
           const a=rect('.sphereMonitoringApp'),b=rect('.rundeckJobsProgramsOverview'),c=rect('.sphereStorageSummary')
           const t=rect('.sphereMonitoringTrendBottom'),top=rect('.sphereMonitoringThreeUp')
+          const charts=[...document.querySelectorAll('.rundeckConfigurableTrend')].map(element=>element.getBoundingClientRect())
+          const twoByTwo=charts.length===4&&Math.abs(charts[0].top-charts[1].top)<8&&
+            Math.abs(charts[2].top-charts[3].top)<8&&charts[2].top>charts[0].bottom-3&&
+            Math.abs(charts[0].width-charts[1].width)<10
           const title=rect('.rundeckWorkloadHealthTitle'),kpi=rect('.rundeckWorkloadHealthLegend')
           const orb=rect('.rundeckWorkloadDotGrid'),top5=rect('.sphereEvaluationTop5')
           const foot=rect('.rundeckWorkloadHealthFooter'),io=rect('.sphereDiskIoTrend')
@@ -80,16 +89,19 @@ try{
             kpi.bottom<=orb.top+4&&orb.bottom<=top5.top+4&&top5.bottom<=foot.top+4
           const after=t&&top&&t.top>=top.bottom-3
           const inside=orb&&top5&&foot&&io&&foot.bottom<=b.bottom+5&&io.bottom<=c.bottom+5&&
-            orb.height>=120&&top5.height>=110&&io.height>=65
+            orb.height>=210&&top5.height>=155&&io.height>=120
           const all=document.querySelectorAll('.rundeckAppHexSelector').length===5&&
             document.querySelectorAll('.sphereStorageRow').length===5&&
             document.querySelectorAll('.sphereEvaluationTop5Row').length===5
           const selected=$('.rundeckAppHexSelector.is-active')
           const background=getComputedStyle(selected).backgroundColor
           const severity='${theme}'==='light'||background==='rgb(33, 67, 57)'
-          const valid=columns&&order&&after&&inside&&all&&severity
+          const spacious=a&&b&&c&&a.height>=600&&b.height>=600&&c.height>=600&&
+            t.height>=650&&rect('.rundeckMonitoring').height>size.h
+          const capacity=document.querySelector('.sphereAppHardwareReference')?.textContent?.includes('256 GB RAM')
+          const valid=columns&&order&&after&&inside&&all&&severity&&twoByTwo&&spacious&&capacity
           document.body.dataset.qa=valid?'PASS':'FAIL'
-          document.body.dataset.metrics=[columns,order,after,inside,all,severity,Math.round(a.width),Math.round(b.width),Math.round(c.width),Math.round(orb.height),Math.round(top5.height),Math.round(io.height),background].join(',')
+          document.body.dataset.metrics=[columns,order,after,inside,all,severity,twoByTwo,spacious,capacity,Math.round(a.width),Math.round(b.width),Math.round(c.width),Math.round(orb.height),Math.round(top5.height),Math.round(io.height),background].join(',')
         })</script></body></html>`
       const name=join(tmp,'layout-'+size.w+'-'+theme+'.html')
       writeFileSync(name,html)
