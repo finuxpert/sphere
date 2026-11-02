@@ -267,7 +267,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     {!preview && <small role="status" title={error || undefined}>{error ? 'Evaluation unavailable' : 'Checking evaluations…'}</small>}
     {preview && error && <small role="status" title={error}>Last verified evaluation · refresh failed · {data?.end ? formatWib(data.end, true) + ' WIB' : 'time unavailable'}</small>}
   </section>
-  return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : '')}
+  return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : ' is-monitoring-globe')}
     data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     {viewMode === 'by-app'
@@ -279,9 +279,6 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         : <div className="rundeckAppEvalState" role="status">{outcome}</div>
       : <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
       role="group" aria-label="Individual saved workload evaluations"
-      onPointerEnter={event => { if (globeEnabled && event.pointerType !== 'touch') setGlobeExpanded(true) }}
-      onPointerLeave={event => { if (event.pointerType !== 'touch') setGlobeExpanded(false) }}
-      onPointerDown={event => { if (globeEnabled && event.pointerType === 'touch') setGlobeExpanded(true) }}
       onFocusCapture={() => setGlobeExpanded(true)}
       onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setGlobeExpanded(false) }}
       style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
