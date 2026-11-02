@@ -26,7 +26,7 @@ test('the monitoring UI avoids duplicate labels while preserving verified states
   assert.doesNotMatch(issues, /label: `Issues \$\{activeFindings\}/)
   assert.match(issues, /SM37 readiness/)
 
-  assert.match(trends, /\{panelPeak && !clippedLoad && !clippedNetwork &&/)
+  assert.match(trends, /!panel.metric.startsWith\('fs:'\) && panelPeak && !clippedLoad && !clippedNetwork &&/)
   assert.match(trends, /\{panelPeak\.host\} · \{formatTrendPeakWib\(panelPeak\.timestamp\)\} WIB/)
   assert.doesNotMatch(trends, /'Selected ' \+ activeFocus : 'All APPs'/)
 

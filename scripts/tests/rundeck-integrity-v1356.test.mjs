@@ -142,7 +142,7 @@ test('unified APP observations stay collection-bound and incomplete metrics neve
   assert.match(app,/matchedCollection/)
   assert.match(app,/hostCollection/)
   assert.match(app,/collectionId:result.collection_id/)
-  assert.match(app,/loaded \/ \$\{workloadMeta.total\} stored/)
+  assert.match(app,/\$\{displayRows.length\} Workloads/)
   assert.match(app,/raw != null/)
   assert.match(app,/validateAppWorkloadResponse\(result, latestCollectionId, app.host\)/)
   assert.match(app,/analysis.collection_id/)
@@ -151,7 +151,7 @@ test('unified APP observations stay collection-bound and incomplete metrics neve
   // desktop layout. The tooltip and each sample timestamp must still distinguish
   // workload evidence from APP host samples and SAP job completion time.
   assert.match(app, /title="Workload sample time in WIB; not the time of the APP host snapshot">Observed/)
-  assert.match(app, /row\.collected_at \? `Saved workload observation/)
+  assert.match(app, /row\.collected_at \? 'Saved workload observation/)
   assert.doesNotMatch(app,/pids\?\.length \?\? 1/)
   assert.match(infra,/hasNumericSample\(row.value\)/)
   assert.match(infra,/No verified numeric samples/)
