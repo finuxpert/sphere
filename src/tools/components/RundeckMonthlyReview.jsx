@@ -66,20 +66,40 @@ function weekOptions() {
   })
 }
 const WEEKS = weekOptions()
+const DEFAULT_CUSTOM_START=WEEKS[1]?.value||WEEKS[0].value
+const DEFAULT_CUSTOM_END=new Date(Date.parse(DEFAULT_CUSTOM_START+'T00:00:00Z')+6*86400000).toISOString().slice(0,10)
+const TODAY_WIB=(()=>{
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date())
+  const get=part=>parts.find(item=>item.type===part)?.value
+  return get('year')+'-'+get('month')+'-'+get('day')
+})()
+function customDateError(start,end){
+  const valid=date=>/^20\d{2}-\d{2}-\d{2}$/.test(String(date||''))&&
+    !Number.isNaN(Date.parse(date+'T00:00:00Z'))&&
+    new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date
+  if(!valid(start)||!valid(end))return 'Select start and end dates'
+  const days=Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1
+  if(days<1)return 'End date must not precede start date'
+  if(days>31)return 'Maximum custom period is 31 days'
+  if(start>TODAY_WIB||end>TODAY_WIB)return 'Future dates are unavailable'
+  return ''
+}
+const customDayCount=(start,end)=>Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1
 const CHART_COLORS = ['#3dd6dc', '#839af4', '#af90e7', '#e7a364', '#7ac59c']
 const PRESSURE_FILTERS = [
   ['ALL', 'All observations'], ['CPU', 'CPU Pressure'], ['RAM', 'RAM Pressure'], ['WP', 'Critical WP'],
 ]
 
-function HostTrend({ rows = [], month, weekStart = null, metric, mode = 'peak', host = 'ALL', threshold = null, fitObserved = true }) {
+function HostTrend({ rows = [], month, weekStart = null, customStart = null, customEnd = null, metric, mode = 'peak', host = 'ALL', threshold = null, fitObserved = true }) {
   const field = (mode === 'avg' ? 'avg_' : 'peak_') + metric + '_pct'
   const [year, monthNum] = month.split('-').map(Number)
-  const days = weekStart ? 7 : new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
-  const dateAt = day => weekStart
-    ? new Date(Date.parse(weekStart+'T00:00:00Z')+(day-1)*86400000).toISOString().slice(0,10)
+  const windowStart=customStart||weekStart
+  const days = customStart?customDayCount(customStart,customEnd):weekStart?7:new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
+  const dateAt = day => windowStart
+    ? new Date(Date.parse(windowStart+'T00:00:00Z')+(day-1)*86400000).toISOString().slice(0,10)
     : month+'-'+String(day).padStart(2,'0')
-  const dayIndex = date => weekStart
-    ? Math.round((Date.parse(String(date).slice(0,10)+'T00:00:00Z')-Date.parse(weekStart+'T00:00:00Z'))/86400000)+1
+  const dayIndex = date => windowStart
+    ? Math.round((Date.parse(String(date).slice(0,10)+'T00:00:00Z')-Date.parse(windowStart+'T00:00:00Z'))/86400000)+1
     : Number(String(date).slice(-2))
   const names = [...new Set(rows.map(row => hostLabel(row.host)))].sort().filter(name => host === 'ALL' || name === host)
   const observedDays = rows
@@ -102,7 +122,7 @@ function HostTrend({ rows = [], month, weekStart = null, metric, mode = 'peak', 
         <line x1={left} x2={left + plotW} y1={yFor(level)} y2={yFor(level)} stroke="currentColor" strokeOpacity=".11" strokeDasharray="3 4"/>
         <text x="5" y={yFor(level)+3} fontSize="9" fill="currentColor" opacity=".6">{level}%</text>
       </g>)}
-      {[...new Set((weekStart?[1,2,3,4,5,6,7]:[startDay,5,10,15,20,25,days]).filter(day=>day>=startDay && day<=days))].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{weekStart
+      {[...new Set((customStart?[1,Math.max(1,Math.round(days/2)),days]:weekStart?[1,2,3,4,5,6,7]:[startDay,5,10,15,20,25,days]).filter(day=>day>=startDay && day<=days))].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{weekStart||customStart
         ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(dateAt(day)+'T00:00:00Z'))
         : day === 1 || day === days ? day + ' ' + new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1))) : day}</text>)}
       {showThreshold && <g>
@@ -355,6 +375,7 @@ const MONTHLY_STORAGE_REASON={
   MAPPING_NOT_CONFIGURED:'Host/mount mapping not configured',
   NO_MONTHLY_INFRA_HISTORY:'No Infrastructure filesystem samples in the reporting month',
   NO_WEEKLY_INFRA_HISTORY:'No Infrastructure filesystem samples in the reporting week',
+  NO_CUSTOM_INFRA_HISTORY:'No Infrastructure filesystem samples in the selected dates',
   MAPPED_MOUNT_NOT_COLLECTED:'Mapped host/mount not found in the reporting period',
   INCOMPLETE_FILESYSTEM_FIELDS:'Incomplete saved capacity fields',
 }
@@ -366,7 +387,7 @@ const monthlyStorageNote=(storage,loading,error)=>{
   if(!missing.length)return '4 of 4 filesystems collected'
   const missingMap=missing.filter(row=>row.reason==='MAPPING_NOT_CONFIGURED').length
   if(missingMap)return missingMap+' filesystem mapping'+(missingMap===1?'':'s')+' not configured'
-  if(!storage.source_rows)return 'No Infrastructure filesystem samples for this '+(storage.week_start?'week':'month')
+  if(!storage.source_rows)return 'No Infrastructure filesystem samples for this '+(storage.start_date?'custom period':storage.week_start?'week':'month')
   return (rows.length-missing.length)+' of '+rows.length+' collected · '+(MONTHLY_STORAGE_REASON[missing[0].reason]||'Historical source incomplete')
 }
 
@@ -389,25 +410,29 @@ function MonthlyRanking({ title, rows=[], metric, loading=false, error='' }) {
     </div>
   </section>
 }
-function savedPeriodPeak(pressure,metric,month,weekStart) {
+function savedPeriodPeak(pressure,metric,month,weekStart,customStart=null,customEnd=null) {
   const field='peak_'+metric+'_pct'
   const end=weekStart?new Date(Date.parse(weekStart+'T00:00:00Z')+7*86400000).toISOString().slice(0,10):null
   const rows=(pressure?.daily_hosts||[]).filter(row=>{
     const date=String(row.day||'').slice(0,10)
-    return (weekStart?date>=weekStart&&date<end:date.startsWith(month+'-')) &&
+    return (customStart?date>=customStart&&date<=customEnd:
+      weekStart?date>=weekStart&&date<end:date.startsWith(month+'-')) &&
       row[field]!==null && row[field]!==undefined && Number.isFinite(Number(row[field]))
   })
   if(!rows.length)return null
   const winner=rows.reduce((best,row)=>Number(row[field])>Number(best[field])?row:best)
   return {value:Number(winner[field]),host:hostLabel(winner.host),at:winner['peak_'+metric+'_at']||null}
 }
-function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,storageError='',loading=false,evaluationError=''}) {
+function MonthlyManagementDashboard({month,weekStart=null,customStart=null,customEnd=null,full,preview,storage,storageError='',loading=false,evaluationError=''}) {
   const data=full||preview
   const pressure=data?.monthly_pressure||{}
   const model=full && Array.isArray(full.monthly_top_wp_cpu) &&
     Array.isArray(full.monthly_top_wp_pss) && storage?.month===month &&
     (weekStart ? storage?.week_start===weekStart : !storage?.week_start) &&
-    (weekStart ? full.week_start===weekStart : !full.week_start)
+    (weekStart ? full.week_start===weekStart : !full.week_start) &&
+    (customStart ? storage?.start_date===customStart && storage?.end_date===customEnd &&
+      full.start_date===customStart && full.end_date===customEnd :
+      !storage?.start_date && !full?.start_date)
     ? monthlyEnterpriseReportModel(month,{...full,monthly_storage:storage}) : null
   const hosts=Array.from({length:5},(_,i)=>{
     const name='APP'+(i+1)
@@ -415,17 +440,17 @@ function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,s
   })
   // Host preview is independently verified and must not wait for workload SQL or storage mapping.
   const peak=metric=>{
-    const p=savedPeriodPeak(pressure,metric,month,weekStart)
+    const p=savedPeriodPeak(pressure,metric,month,weekStart,customStart,customEnd)
     return p ? 'Peak '+pct(p.value)+' · '+p.host+(p.at?' · '+when(p.at):'') : 'Not Collected'
   }
   const cpuRanking=model?.sortedCpu||full?.monthly_top_wp_cpu||[]
   const memoryRanking=model?.sortedPss||full?.monthly_top_wp_pss||[]
   const candidates=model?.candidates||full?.monthly_abap_candidates?.slice(0,10)||[]
-  return <div className="sphereMonthlyManagement" aria-label={weekStart?"SAP Weekly Performance Report":"SAP Monthly Performance Report"}>
+  return <div className="sphereMonthlyManagement" aria-label={customStart?"SAP Custom Performance Report":weekStart?"SAP Weekly Performance Report":"SAP Monthly Performance Report"}>
     <div className="sphereMonthlyManagerPair">
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
         <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><strong>{peak(metric)}</strong></div>
-        <HostTrend rows={pressure.daily_hosts||[]} month={month} weekStart={weekStart} metric={metric}
+        <HostTrend rows={pressure.daily_hosts||[]} month={month} weekStart={weekStart} customStart={customStart} customEnd={customEnd} metric={metric}
           fitObserved={false} threshold={pressure.thresholds?.[metric+'_warning_pct']}/>
       </section>)}
     </div>
@@ -467,7 +492,10 @@ function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,s
       </div>
       <table className="sphereMonthlyManagerTable"><thead><tr><th>File System</th><th>Mounted On / Host</th><th>Total Capacity</th><th>Used Capacity</th><th>Free Capacity</th><th>Usage %</th><th>Sample WIB</th></tr></thead><tbody>
         {MONTHLY_STORAGE_ROWS.map(name=>{
-          const row=storage?.month===month && (weekStart?storage?.week_start===weekStart:!storage?.week_start)?storage.items?.find(r=>r.category===name):null
+          const row=storage?.month===month &&
+            (weekStart?storage?.week_start===weekStart:!storage?.week_start) &&
+            (customStart?storage?.start_date===customStart&&storage?.end_date===customEnd:!storage?.start_date)
+            ?storage.items?.find(r=>r.category===name):null
           const present=row?.status==='COLLECTED'
           return <tr key={name} title={present ? 'Saved Infrastructure sample · '+when(row.sample_at) : MONTHLY_STORAGE_REASON[row?.reason]||'Historical sample unavailable'}><td>{name}</td>
             <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
