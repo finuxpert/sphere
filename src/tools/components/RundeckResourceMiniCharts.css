@@ -10,6 +10,9 @@
   display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0;
 }
 .sphereEvaluationTop5Head strong{font-size:10px;white-space:nowrap}
+.sphereEvaluationTop5Head strong small{
+  font-size:9px;font-weight:500;color:var(--sphere-text-secondary,#aab7c5)
+}
 .sphereEvaluationTop5Actions{display:inline-flex;gap:2px;align-items:center}
 .sphereEvaluationTop5Actions button{
   padding:2px 6px;border-radius:4px;font-size:10px;font-weight:500;line-height:1.2;
