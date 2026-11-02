@@ -123,7 +123,7 @@ test('Workload Health remains a standalone validated 1D overview and Jobs modal 
   assert.match(ui,/onClick=\{\(\) => openWorkload\(row\)\}/)
   assert.ok(workspace.indexOf('className="rundeckJobsProgramsWorkspaceBody') < workspace.indexOf('className="rundeckJobsProgramsHealthSide'))
   assert.match(core,/performanceVerified=\{props.sourceQuality\?\.performanceValid/)
-  assert.match(core,/viewMode="status"/)
+  assert.match(core,/viewMode="globe"/)
   assert.match(core,/<RundeckWorkloadHealth/)
   assert.match(ui,/API \+ '\/evaluation\/workloads\?' \+ params\.toString\(\)/)
   assert.match(ui,/workloadHealthPreview\(first\)/)
