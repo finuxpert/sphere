@@ -64,7 +64,8 @@ test('performance cockpit is a normal-flow stack; APP fleet, Trends, and Workloa
   const a = core.indexOf('<RundeckUnifiedAppInfrastructure')
   const b = core.indexOf('<RundeckServerTrend')
   const c = core.indexOf('<RundeckWorkloadHealth')
-  assert.ok(a > 0 && b > a && c > b, 'APP, trends and evaluations stay in reading order')
+  assert.ok(a > 0 && c > a && b > c, 'APP, Evaluation and Storage precede full-width Performance Trends')
+  assert.ok(core.indexOf('<RundeckStorageSummary') > c && core.indexOf('<RundeckStorageSummary') < b)
 })
 
 test('fleet and selected APP summary use compact two-row layout instead of a stretched empty card', () => {
@@ -189,7 +190,8 @@ test('Overview keeps workload and health inline while event evidence opens on de
   const workload = read('RundeckWorkloadHealth.jsx')
   const styles = read('RundeckRevitalization.css')
   assert.match(core,/sphereOverviewBottomRow/)
-  assert.match(core,/\{props\.serviceSummary\}/)
+  assert.doesNotMatch(core,/\{props\.serviceSummary\}/)
+  assert.match(core,/onOpenHealthDetails=\{props\.onOpenHealthDetails\}/)
   assert.match(core,/<RundeckStorageSummary/)
   assert.match(workload,/sphereWorkloadPriorityList/)
   assert.match(workload,/workloadHealthLevel\(row\) === 'review'/)

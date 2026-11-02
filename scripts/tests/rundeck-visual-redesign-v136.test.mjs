@@ -16,7 +16,7 @@ test('v1.36 visual layer loads last and respects existing SAP source models', ()
   assert.doesNotMatch(css, /Math\.random|fake API|hardcoded metric/)
 })
 
-test('Overview keeps live APP and three real trend charts above Job & Program Evaluation', () => {
+test('Overview keeps APP, Evaluation and Storage in a three-column top row, then four trends', () => {
   const core = read('RundeckMonitoringHistoryCore.jsx')
   const fleet = read('RundeckUnifiedAppInfrastructure.jsx')
   const workload = read('RundeckWorkloadHealth.jsx')
@@ -25,7 +25,8 @@ test('Overview keeps live APP and three real trend charts above Job & Program Ev
   assert.match(core, /ambientBraid=\{false\}/)
   assert.match(core, /<RundeckWorkloadHealth/)
   assert.ok(core.indexOf('<RundeckUnifiedAppInfrastructure') < core.indexOf('<RundeckServerTrend'))
-  assert.ok(core.indexOf('<RundeckServerTrend') < core.indexOf('<RundeckWorkloadHealth'))
+  assert.ok(core.indexOf('<RundeckWorkloadHealth') < core.indexOf('<RundeckStorageSummary'))
+  assert.ok(core.indexOf('<RundeckStorageSummary') < core.indexOf('<RundeckServerTrend'))
   assert.match(fleet, /onClick=\{\(\) => \{ openAppAnalysis\(host\); selectApp\(key\)/)
   assert.match(workload, /onSelectWorkload=|onSelectWorkload/)
   assert.match(css, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/)

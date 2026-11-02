@@ -1,91 +1,87 @@
 #!/usr/bin/env node
-/** Browser geometry guard for the actual Monitoring 50/50 globe layout.
- * Synthetic data is only used for HTML layout: it is never a monitoring result.
- * Check compiled CSS in Chrome because JS/static tests cannot detect overlap. */
+/** Real compiled CSS check for the SPHERE DEV 3-panel Monitoring viewport.
+ * Data in this synthetic fixture is not used in any production dashboard. */
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { resolve, join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const assets=resolve('dist/assets')
-const styles=readdirSync(assets).filter(file=>file.endsWith('.css'))
-if(!styles.length)throw Error('MONITOR_LAYOUT=FAIL no compiled CSS')
-// The real Monitoring route loads its CSS after the shared shell CSS.
-// Loading all independent Vite CSS chunks in filesystem order can override
-// the APP severity styles with earlier shared button defaults.
-const monitoring=styles.filter(file=>{
-  const content=readFileSync(join(assets,file),'utf8')
-  return content.includes('is-monitoring-globe') && content.includes('#214339')
-})
-if(!monitoring.length)throw Error('MONITOR_LAYOUT=FAIL Monitoring severity stylesheet absent from build')
-const orderedStyles=[...styles.filter(file=>!monitoring.includes(file)),...monitoring]
-const browsers=['google-chrome','google-chrome-stable','chromium','chromium-browser']
+const styles=readdirSync(assets).filter(name=>name.endsWith('.css'))
+if(!styles.length)throw Error('MONITOR_LAYOUT=FAIL CSS build absent')
+const priority=styles.filter(file=>readFileSync(join(assets,file),'utf8').includes('is-three-panel') &&
+  readFileSync(join(assets,file),'utf8').includes('eval-capsule'))
+if(!priority.length)throw Error('MONITOR_LAYOUT=FAIL three-panel stylesheet absent')
+const ordered=[...styles.filter(file=>!priority.includes(file)),...priority]
+const links=ordered.map(file=>'<style>'+readFileSync(join(assets,file),'utf8')+'</style>').join('')
 let browser=''
-for(const candidate of browsers){
-  try { browser=execFileSync('which',[candidate],{encoding:'utf8'}).trim();break }
-  catch { /* try next */ }
+for(const candidate of ['google-chrome','google-chrome-stable','chromium','chromium-browser']){
+  try{browser=execFileSync('which',[candidate],{encoding:'utf8'}).trim();break}catch{/* next */}
 }
 if(!browser)throw Error('MONITOR_LAYOUT=FAIL Chrome unavailable')
-const temp=mkdtempSync(join(tmpdir(),'sphere-monitor-layout-'))
-// Embed compiled CSS into the fixture, avoiding flaky file:// link loads
-// under headless Chromium. The checks still use the real build's selectors.
-const links=orderedStyles.map(file=>'<style data-css-chunk="'+file+'">'+readFileSync(join(assets,file),'utf8')+'</style>').join('')
-const levels=['Review','Watch','Limited Data','Normal']
-const categories=levels.map((name,i)=>'<button class="rundeckWorkloadCategory is-'+['review','attention','unknown','normal'][i]+'"><strong>42</strong><span>'+name+'</span></button>').join('')
-const dots=Array.from({length:42},(_,i)=>'<button class="rundeckWorkloadDot" aria-label="Mock observation '+i+'"></button>').join('')
+const tmp=mkdtempSync(join(tmpdir(),'sphere-three-panel-'))
+const kpis=['Review','Watch','Limited Data','Normal'].map(label=>'<button class="rundeckWorkloadCategory"><strong>42</strong><span>'+label+'</span></button>').join('')
+const dots=Array.from({length:60},(_,i)=>'<button class="rundeckWorkloadDot" title="Validated fixture '+i+'"></button>').join('')
+const apps=Array.from({length:5},(_,i)=>'<button class="rundeckAppHexSelector '+(i===0?'is-sap-normal is-active':'is-sap-attention')+'"><span class="rundeckAppHexShape"><strong>APP'+(i+1)+'</strong><small>Normal</small><em>WP 0</em><span class="rundeckFleetMeters"><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">CPU</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">20%</span></span></span></span></button>').join('')
+const mounts=['OS Root','INTF','INTF AOQ','SAP Archive','Archive INTF'].map(name=>'<button class="sphereStorageRow"><span class="sphereStorageLabel"><strong>'+name+'</strong><small>APP1</small></span><span class="sphereStorageTrack"><i style="width:70%"></i></span><strong class="sphereStoragePercent">70%</strong></button>').join('')
 try{
-  for(const viewport of [{w:1536,h:960},{w:1920,h:1080}]){
+  for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
     for(const theme of ['dark','light']){
       const html=`<!doctype html><html data-theme="${theme}"><head><meta charset="utf-8">${links}
-      <style>body{margin:0}.fixtureRoot{width:${viewport.w}px;min-height:${viewport.h}px}.spherePerformanceMain{min-width:0}.sphereOverviewBottomRow{min-width:0}.rundeckJobsProgramsOverview,.sphereStorageSummary{min-width:0}</style>
-      </head><body><div class="appShell isTool fixtureRoot"><div class="rundeckPanel">
-      <div class="spherePerformanceShell"><nav class="spherePerformanceSidebar" style="width:180px"></nav>
-      <main class="spherePerformanceMain"><section class="rundeckMonitoring rundeckCockpitV13491" data-viewport-fit="true" style="--sphere-overview-room:730px">
-      <section class="rundeckTopBandV13454 is-unified-app-infra" style="height:150px">
-        <div class="rundeckUnifiedAppInfra" data-layout="landscape-operations">
-          <div class="rundeckAppHexSelectors rundeckUnifiedAppCards is-honeycomb">
-            <button class="rundeckAppHexSelector is-sap-normal is-active"><span class="rundeckAppHexShape">APP1 Normal</span></button>
-          </div>
+        <style>body{margin:0}.appShell{width:${size.w}px;min-height:${size.h}px}.spherePerformanceMain{width:calc(100% - 190px);margin-left:190px;box-sizing:border-box}.rundeckMonitoring{--sphere-overview-room:735px}.rundeckTrendBandV13454{min-height:220px}</style></head>
+        <body><div class="appShell isTool"><div class="rundeckPanel"><main class="spherePerformanceMain">
+        <section class="rundeckMonitoring rundeckCockpitV13491 is-three-panel" data-viewport-fit="true" data-motion="on">
+        <div class="sphereMonitoringThreeUp sphereOverviewBottomRow row g-2">
+          <section class="sphereMonitoringApp rundeckTopBandV13454 is-unified-app-infra col-12 col-xl-4">
+          <section class="rundeckUnifiedAppInfra" data-layout="landscape-operations">
+          <header class="rundeckUnifiedAppInfraHead"><h3>SAP APP Landscape</h3><button class="sphereAppHealthAction">Health Details</button></header>
+          <div class="sphereAppWpSummary">Critical WP <strong>0</strong></div>
+          <div class="rundeckAppHexMain rundeckAppThreePanels"><section class="rundeckAppMotionPanel">
+          <div class="rundeckAppHexSelectors rundeckUnifiedAppCards is-honeycomb">${apps}</div>
+          </section></div></section></section>
+          <section class="rundeckJobsProgramsOverview col-12 col-xl-4"><div class="rundeckJobsProgramsHealthSide">
+          <section class="rundeckWorkloadHealth is-monitoring-globe">
+          <header class="rundeckWorkloadHealthTitle"><strong>Job &amp; Program Evaluation</strong><button>Open Review</button></header>
+          <div class="rundeckWorkloadHealthLegend">${kpis}</div>
+          <div class="rundeckWorkloadDotGrid" style="--workload-columns:10;--workload-dot-size:7px;--workload-dot-gap:2px">${dots}</div>
+          <footer class="rundeckWorkloadHealthFooter">60 evaluated</footer></section></div></section>
+          <section class="sphereStorageSummary col-12 col-xl-4"><header class="sphereStorageSummaryHead"><h3>Storage Summary</h3></header>
+          <div class="sphereStorageRows">${mounts}</div>
+          <div class="sphereStorageGrowth"><div class="sphereStorageGrowthHead"><strong>Filesystem Growth</strong></div>
+          <div class="sphereFilesystemTrend"><svg viewBox="0 0 400 140"><path d="M30 50 L200 40 L390 30" stroke="#67a9e8" fill="none"/></svg></div>
+          </div></section>
         </div>
-      </section>
-      <section class="rundeckTrendBandV13454" style="height:265px"></section>
-      <div class="sphereOverviewBottomRow row g-2 align-items-start">
-       <section class="rundeckJobsProgramsOverview col-12 col-xl-5"><div class="rundeckJobsProgramsHealthSide">
-        <section class="rundeckWorkloadHealth is-monitoring-globe" style="--workload-dot-size:7px;--workload-dot-gap:2px;--workload-columns:7">
-          <header class="rundeckWorkloadHealthTitle"><span><strong>Job &amp; Program Evaluation</strong></span><button>Open Review</button></header>
-          <div class="rundeckWorkloadHealthLegend">${categories}</div>
-          <div class="rundeckWorkloadDotGrid">${dots}</div>
-          <footer class="rundeckWorkloadHealthFooter"><span>Saved evaluations</span><small>Evidence source</small></footer>
-        </section>
-       </div></section>
-       <section class="sphereStorageSummary col-12 col-xl-7"><header>Storage Summary</header></section>
-      </div>
-      </section></main></div></div></div>
-      <script>window.addEventListener('load',()=>{
-       const $=s=>document.querySelector(s)
-       const rect=s=>$(s)?.getBoundingClientRect()
-       const a=rect('.rundeckWorkloadHealthTitle'),b=rect('.rundeckWorkloadHealthLegend')
-       const c=rect('.rundeckWorkloadDotGrid'),d=rect('.rundeckWorkloadHealthFooter')
-       const panel=rect('.rundeckWorkloadHealth'),left=rect('.rundeckJobsProgramsOverview'),right=rect('.sphereStorageSummary')
-       const selected=$('.rundeckAppHexSelector.is-active')
-       const background=getComputedStyle(selected).backgroundColor
-       const ordered=a&&b&&c&&d&&a.bottom<=b.top+4&&b.bottom<=c.top+4&&c.bottom<=d.top+4
-       const fit=panel&&d&&d.bottom<=panel.bottom+4&&c.height>=140&&b.height>=35
-       const ratio=left&&right?left.width/(left.width+right.width):0
-       const columns=ratio>.45&&ratio<.55&&Math.abs(left.top-right.top)<8
-       const severity='${theme}'!=='dark'||background==='rgb(33, 67, 57)'
-       const valid=Boolean(ordered&&fit&&columns&&severity)
-       document.body.dataset.check=valid?'PASS':'FAIL'
-       document.body.dataset.metrics=[ordered,fit,columns,severity,background,Math.round(c?.height||0),ratio.toFixed(3)].join(',')
-      })</script></body></html>`
-      const file=join(temp,'monitor-'+viewport.w+'-'+theme+'.html')
-      writeFileSync(file,html)
-      const run=spawnSync(browser,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--allow-file-access-from-files','--window-size='+viewport.w+','+viewport.h,'--virtual-time-budget=1000','--dump-dom',pathToFileURL(file).href],{encoding:'utf8',timeout:30000,maxBuffer:5*1024*1024})
-      const result=run.stdout?.match(/data-metrics="([^"]*)"/)?.[1]
-      if(run.status!==0||!run.stdout.includes('data-check="PASS"'))
-        throw Error('MONITOR_LAYOUT=FAIL '+viewport.w+'x'+viewport.h+' theme='+theme+' details='+result+' '+run.stderr?.slice(-300))
-      console.log('MONITOR_LAYOUT=PASS',viewport.w+'x'+viewport.h,theme,result)
+        <section class="rundeckTrendBandV13454 sphereMonitoringTrendBottom">Performance Trends</section>
+        <button class="sphereMonitoringMotionToggle">Motion On</button>
+        </section></main></div></div>
+        <script>window.addEventListener('load',()=>{
+          const $=selector=>document.querySelector(selector)
+          const rect=selector=>$(selector)?.getBoundingClientRect()
+          const a=rect('.sphereMonitoringApp'),b=rect('.rundeckJobsProgramsOverview'),c=rect('.sphereStorageSummary')
+          const t=rect('.sphereMonitoringTrendBottom'),top=rect('.sphereMonitoringThreeUp')
+          const title=rect('.rundeckWorkloadHealthTitle'),kpi=rect('.rundeckWorkloadHealthLegend')
+          const orb=rect('.rundeckWorkloadDotGrid'),foot=rect('.rundeckWorkloadHealthFooter')
+          const columns=[a,b,c].every(x=>x?.width>250)&&
+            Math.max(a.width,b.width,c.width)-Math.min(a.width,b.width,c.width)<12&&
+            Math.max(a.top,b.top,c.top)-Math.min(a.top,b.top,c.top)<9
+          const order=title&&kpi&&orb&&foot&&title.bottom<=kpi.top+4&&kpi.bottom<=orb.top+4&&orb.bottom<=foot.top+4
+          const after=t&&top&&t.top>=top.bottom-3
+          const inside=orb&&foot&&foot.bottom<=b.bottom+5&&orb.height>=165
+          const all=document.querySelectorAll('.rundeckAppHexSelector').length===5&&document.querySelectorAll('.sphereStorageRow').length===5
+          const selected=$('.rundeckAppHexSelector.is-active')
+          const background=getComputedStyle(selected).backgroundColor
+          const severity='${theme}'==='light'||background==='rgb(33, 67, 57)'
+          const valid=columns&&order&&after&&inside&&all&&severity
+          document.body.dataset.qa=valid?'PASS':'FAIL'
+          document.body.dataset.metrics=[columns,order,after,inside,all,severity,Math.round(a.width),Math.round(b.width),Math.round(c.width),Math.round(orb.height),background].join(',')
+        })</script></body></html>`
+      const name=join(tmp,'layout-'+size.w+'-'+theme+'.html')
+      writeFileSync(name,html)
+      const result=spawnSync(browser,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--allow-file-access-from-files','--window-size='+size.w+','+size.h,'--virtual-time-budget=1200','--dump-dom',pathToFileURL(name).href],{encoding:'utf8',timeout:30000,maxBuffer:5*1024*1024})
+      const metrics=result.stdout?.match(/data-metrics="([^"]+)"/)?.[1]
+      if(result.status!==0||!result.stdout.includes('data-qa="PASS"'))throw Error('MONITOR_LAYOUT=FAIL '+size.w+' '+theme+' '+metrics+' '+result.stderr?.slice(-300))
+      console.log('MONITOR_LAYOUT=PASS',size.w+'x'+size.h,theme,metrics)
     }
   }
-} finally { rmSync(temp,{recursive:true,force:true}) }
+}finally{rmSync(tmp,{recursive:true,force:true})}

@@ -52,6 +52,6 @@ test('live workload semantics and evidence population remain honest', () => {
   assert.match(current, /coverageLabel/)
   assert.match(health, /validatedWorkloadDots\(first, following, 0, completePageSize\)/)
   assert.match(health, /onClick=\{\(\) => openWorkload\(row\)\}/)
-  assert.match(health, /not SAP SM37 job status/)
+  assert.match(health, /not SAP SM37 execution status/)
   assert.match(health, /\$\{insufficient\} insufficient/)
 })

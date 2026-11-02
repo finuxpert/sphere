@@ -76,3 +76,13 @@ test('hover over the globe expands verified hexagons; leaving restores the spher
   assert.match(health, /onSelectIndex=\{index => \{ if \(rows\[index\]\) openWorkload\(rows\[index\]\) \}\}/)
   assert.match(globe, /onPointerDown=\{selectFromIdlePointer\}/)
 })
+test('capsule uses different X/Y radii and stops its idle spin when motion is disabled', () => {
+  const read = file => readFileSync(new URL('../../src/tools/components/' + file, import.meta.url), 'utf8')
+  const capsule = read('RundeckEvaluationGlobe.jsx')
+  const core = read('RundeckMonitoringHistoryCore.jsx')
+  assert.match(capsule, /radiusX = Math\.min\(width/)
+  assert.match(capsule, /radiusY = Math\.min\(height/)
+  assert.match(capsule, /motionRef\.current\) phase \+= dt \* \.35/)
+  assert.match(core, /data-motion=\{motionEnabled \? 'on' : 'off'\}/)
+  assert.match(core, /localStorage\.setItem\('sphere\.monitor\.motion'/)
+})
