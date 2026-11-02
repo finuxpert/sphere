@@ -171,8 +171,8 @@ test('monthly management website uses compact four-row layout and canonical sour
   const css=read('src/tools/components/RundeckMonthlyFinal20261030.css')
   const evaluation=read('backend/rundeck_evaluation.py')
   for(const label of ['CPU Utilization Trend','Memory Utilization Trend',
-    'Top 10 Jobs by Peak WP CPU','Top 10 Jobs by Peak WP Memory',
-    'Application Server Performance','Top 10 Jobs for Tuning Review',
+    'Top 10 Workloads by Peak WP CPU','Top 10 Workloads by Peak WP Memory',
+    'Application Server Performance','Top 10 Tuning Candidates',
     'Storage Capacity'])assert.ok(ui.includes(label),label)
   assert.match(ui,/pressure\.hosts/)
   assert.match(ui,/monthly_top_wp_cpu/)
@@ -231,8 +231,8 @@ test('management PDF uses four reporting rows rather than technical appendix', (
   const ui=read('src/tools/components/RundeckMonthlyReview.jsx')
   assert.match(pdf,/format:'a3'/)
   for(const phrase of ['CPU Utilization Trend','Memory Utilization Trend',
-    'Top 10 Jobs by Peak WP CPU','Top 10 Jobs by Peak WP Memory',
-    'Application Server Performance','Top 10 Jobs for Tuning Review','Storage Capacity'])
+    'Top 10 Workloads by Peak WP CPU','Top 10 Workloads by Peak WP Memory',
+    'Application Server Performance','Top 10 Tuning Candidates','Storage Capacity'])
     assert.ok(pdf.includes(phrase),phrase)
   assert.match(pdf,/monthly_top_wp_cpu/)
   assert.match(pdf,/monthly_storage/)
