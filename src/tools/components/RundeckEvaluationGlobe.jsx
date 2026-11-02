@@ -146,8 +146,8 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
   }, [levels, size, gap, columns, fits])
 
   React.useEffect(() => { wakeRef.current?.() }, [expanded])
-  const selectFromIdleTouch = event => {
-    if (event.pointerType !== 'touch' || expandedRef.current) return
+  const selectFromIdlePointer = event => {
+    if (expandedRef.current || !['mouse','touch','pen'].includes(event.pointerType)) return
     const box = event.currentTarget.getBoundingClientRect()
     const index = nearestEvaluationHex(hitPositionsRef.current, event.clientX - box.left, event.clientY - box.top)
     if (index !== null) {
@@ -157,5 +157,5 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
     }
   }
   return <canvas ref={canvasRef} className="rundeckEvaluationGlobeCanvas"
-    aria-hidden="true" onPointerDown={selectFromIdleTouch} />
+    aria-hidden="true" onPointerDown={selectFromIdlePointer} />
 }
