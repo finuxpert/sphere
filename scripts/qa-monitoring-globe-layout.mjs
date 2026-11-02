@@ -22,7 +22,8 @@ for(const candidate of ['google-chrome','google-chrome-stable','chromium','chrom
 if(!browser)throw Error('MONITOR_LAYOUT=FAIL Chrome unavailable')
 const tmp=mkdtempSync(join(tmpdir(),'sphere-three-panel-'))
 const kpis=['Review','Watch','Limited Data','Normal'].map(label=>'<button class="rundeckWorkloadCategory"><strong>42</strong><span>'+label+'</span></button>').join('')
-const dots=Array.from({length:60},(_,i)=>'<button class="rundeckWorkloadDot" title="Validated fixture '+i+'"></button>').join('')
+const distribution=['review','attention','unknown','normal'].map((key,index)=>
+  '<button class="sphereEvaluationStatusRow is-'+key+'"><span class="sphereEvaluationStatusLabel">'+['Review','Watch','Limited Data','Normal'][index]+'</span><span class="sphereEvaluationStatusTrack"><i style="width:'+['10','30','25','35'][index]+'%"></i></span><span class="sphereEvaluationStatusPercent">'+['10','30','25','35'][index]+'%</span></button>').join('')
 const apps=Array.from({length:5},(_,i)=>'<button class="rundeckAppHexSelector '+(i===0?'is-sap-normal is-active':'is-sap-attention')+'"><span class="rundeckAppHexShape"><strong>APP'+(i+1)+'</strong><small>Normal</small><em>WP 0</em><span class="rundeckFleetMeters"><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">CPU</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">20%</span></span></span></span></button>').join('')
 const mounts=['OS Root','INTF','INTF AOQ','SAP Archive','Archive INTF'].map(name=>'<button class="sphereStorageRow"><span class="sphereStorageLabel"><strong>'+name+'</strong><small>APP1</small></span><span class="sphereStorageTrack"><i style="width:70%"></i></span><strong class="sphereStoragePercent">70%</strong></button>').join('')
 try{
@@ -44,7 +45,7 @@ try{
           <section class="rundeckWorkloadHealth is-monitoring-globe">
           <header class="rundeckWorkloadHealthTitle"><strong>Job &amp; Program Evaluation</strong><button>Open Review</button></header>
           <div class="rundeckWorkloadHealthLegend">${kpis}</div>
-          <div class="rundeckWorkloadDotGrid" style="--workload-columns:10;--workload-dot-size:7px;--workload-dot-gap:2px">${dots}</div>
+          <div class="sphereEvaluationStatus"><div class="sphereEvaluationStatusHeading"><strong>Status Distribution</strong><span>60 evaluated</span></div><div class="sphereEvaluationStatusRows">${distribution}</div></div>
           <section class="sphereEvaluationTop5">
              <div class="sphereEvaluationTop5Head"><strong>Top 5 Resource Consumers</strong></div>
              <div class="sphereEvaluationTop5Bars">
@@ -71,7 +72,7 @@ try{
           const a=rect('.sphereMonitoringApp'),b=rect('.rundeckJobsProgramsOverview'),c=rect('.sphereStorageSummary')
           const t=rect('.sphereMonitoringTrendBottom'),top=rect('.sphereMonitoringThreeUp')
           const title=rect('.rundeckWorkloadHealthTitle'),kpi=rect('.rundeckWorkloadHealthLegend')
-          const orb=rect('.rundeckWorkloadDotGrid'),top5=rect('.sphereEvaluationTop5')
+          const orb=rect('.sphereEvaluationStatus'),top5=rect('.sphereEvaluationTop5')
           const foot=rect('.rundeckWorkloadHealthFooter'),io=rect('.sphereDiskIoTrend')
           const columns=[a,b,c].every(x=>x?.width>250)&&
             Math.max(a.width,b.width,c.width)-Math.min(a.width,b.width,c.width)<12&&
@@ -83,10 +84,11 @@ try{
             orb.height>=120&&top5.height>=110&&io.height>=65
           const all=document.querySelectorAll('.rundeckAppHexSelector').length===5&&
             document.querySelectorAll('.sphereStorageRow').length===5&&
-            document.querySelectorAll('.sphereEvaluationTop5Row').length===5
+            document.querySelectorAll('.sphereEvaluationTop5Row').length===5&&
+             document.querySelectorAll('.sphereEvaluationStatusRow').length===4
           const selected=$('.rundeckAppHexSelector.is-active')
           const background=getComputedStyle(selected).backgroundColor
-          const severity='${theme}'==='light'||background==='rgb(33, 67, 57)'
+          const severity=getComputedStyle(selected).boxShadow.includes('inset')
           const valid=columns&&order&&after&&inside&&all&&severity
           document.body.dataset.qa=valid?'PASS':'FAIL'
           document.body.dataset.metrics=[columns,order,after,inside,all,severity,Math.round(a.width),Math.round(b.width),Math.round(c.width),Math.round(orb.height),Math.round(top5.height),Math.round(io.height),background].join(',')
