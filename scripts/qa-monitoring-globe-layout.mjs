@@ -3,7 +3,7 @@
  * Synthetic data is only used for HTML layout: it is never a monitoring result.
  * Check compiled CSS in Chrome because JS/static tests cannot detect overlap. */
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -11,6 +11,15 @@ import { pathToFileURL } from 'node:url'
 const assets=resolve('dist/assets')
 const styles=readdirSync(assets).filter(file=>file.endsWith('.css'))
 if(!styles.length)throw Error('MONITOR_LAYOUT=FAIL no compiled CSS')
+// The real Monitoring route loads its CSS after the shared shell CSS.
+// Loading all independent Vite CSS chunks in filesystem order can override
+// the APP severity styles with earlier shared button defaults.
+const monitoring=styles.filter(file=>{
+  const content=readFileSync(join(assets,file),'utf8')
+  return content.includes('is-monitoring-globe') && content.includes('#214339')
+})
+if(!monitoring.length)throw Error('MONITOR_LAYOUT=FAIL Monitoring severity stylesheet absent from build')
+const orderedStyles=[...styles.filter(file=>!monitoring.includes(file)),...monitoring]
 const browsers=['google-chrome','google-chrome-stable','chromium','chromium-browser']
 let browser=''
 for(const candidate of browsers){
@@ -19,7 +28,7 @@ for(const candidate of browsers){
 }
 if(!browser)throw Error('MONITOR_LAYOUT=FAIL Chrome unavailable')
 const temp=mkdtempSync(join(tmpdir(),'sphere-monitor-layout-'))
-const links=styles.map(file=>'<link rel="stylesheet" href="'+pathToFileURL(join(assets,file)).href+'">').join('')
+const links=orderedStyles.map(file=>'<link rel="stylesheet" href="'+pathToFileURL(join(assets,file)).href+'">').join('')
 const levels=['Review','Watch','Limited Data','Normal']
 const categories=levels.map((name,i)=>'<button class="rundeckWorkloadCategory is-'+['review','attention','unknown','normal'][i]+'"><strong>42</strong><span>'+name+'</span></button>').join('')
 const dots=Array.from({length:42},(_,i)=>'<button class="rundeckWorkloadDot" aria-label="Mock observation '+i+'"></button>').join('')
