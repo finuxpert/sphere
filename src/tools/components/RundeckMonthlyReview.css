@@ -84,6 +84,17 @@
 }
 .sphereMonthlyPicker{display:grid;gap:3px;min-width:188px}
 .sphereMonthlyPicker label{font-size:10px;color:var(--mr-muted)}
+/* Compact reporting scope controls: one row on desktop, wrap on narrow screens. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker{display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px;min-width:0}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div{min-width:125px}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div:last-child{min-width:190px}
+.sphereMonthlyReview.is-v2 .sphereMonthlyPicker select{height:34px;max-width:290px;font-size:12px}
+@media(max-width:600px){
+  .sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div{flex:1 1 125px}
+  .sphereMonthlyReview.is-v2 .sphereMonthlyPicker>div:last-child{flex:2 1 190px}
+  .sphereMonthlyReview.is-v2 .sphereMonthlyPicker select{max-width:none;width:100%}
+}
+
 .sphereMonthlyTabs{display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--mr-border);padding-bottom:8px}
 .sphereMonthlyTabs button{flex:1 1 auto;background:transparent;border-color:transparent;font-size:12px}
 .sphereMonthlyTabs button.is-active{background:#175368;border-color:#227f97;color:#fff}
