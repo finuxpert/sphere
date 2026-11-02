@@ -773,13 +773,14 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       </button>
       {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?(requestedStart?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd+'.pdf':requestedWeek?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf'):'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
       </div>
+      {loading&&preview&&<small className="sphereMonthlyInlineStatus" role="status">Loading Jobs & Programs…</small>}
       </div>
     </div>
     {reportMode==='custom'&&customDateError(draftStart,draftEnd)&&
       <small className="sphereMonthlyWarning" role="alert">{customDateError(draftStart,draftEnd)}</small>}
     {storageError&&<p className="sphereMonthlyWarning" role="alert">{storageError}</p>}
     {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
-    {loading&&<div className="sphereMonthlyState" role="status">{preview ? 'Loading Jobs & Programs evaluations…' : 'Loading saved performance…'}</div>}
+    {loading&&!preview&&<div className="sphereMonthlyState" role="status">Loading saved performance…</div>}
     {hostPreviewError&&!data&&!preview&&<div className="sphereMonthlyState is-error" role="alert">
       {hostPreviewError}
       <button type="button" className="btn btn-sm btn-outline-light ms-2"
