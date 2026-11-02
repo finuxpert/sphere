@@ -298,7 +298,7 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
         elif not configured:
             reason = "MAPPING_NOT_CONFIGURED"
         elif not rows:
-             reason = "NO_CUSTOM_INFRA_HISTORY" if start_date else "NO_WEEKLY_INFRA_HISTORY" if week_start else "NO_MONTHLY_INFRA_HISTORY"
+            reason = "NO_CUSTOM_INFRA_HISTORY" if start_date else "NO_WEEKLY_INFRA_HISTORY" if week_start else "NO_MONTHLY_INFRA_HISTORY"
         elif not source:
             reason = "MAPPED_MOUNT_NOT_COLLECTED"
         else:
