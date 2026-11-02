@@ -52,6 +52,17 @@ export function monthlyEnterpriseReportModel(month,data) {
   }
   monthName(month)
   const weekStart=data?.week_start||null
+  const customStart=data?.start_date||null
+  const customEnd=data?.end_date||null
+  if(customStart||customEnd){
+    const validDate=date=>/^20\d{2}-\d{2}-\d{2}$/.test(String(date||'')) &&
+      !Number.isNaN(Date.parse(date+'T00:00:00Z')) &&
+      new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date
+    const duration=validDate(customStart)&&validDate(customEnd)
+      ? Math.round((Date.parse(customEnd+'T00:00:00Z')-Date.parse(customStart+'T00:00:00Z'))/86400000)+1 : 0
+    if(data.period!=='custom'||weekStart||!customStart?.startsWith(month+'-')||
+       duration<1||duration>31)throw Error('Invalid custom reporting period')
+  }
   if(weekStart){
     const start=new Date(weekStart+'T00:00:00Z')
     if(Number.isNaN(start.getTime()) || start.getUTCDay()!==1 ||
@@ -65,7 +76,10 @@ export function monthlyEnterpriseReportModel(month,data) {
   const summary=data.summary||{}
   if(data.monthly_storage?.month!==month || !Array.isArray(data.monthly_storage?.items) ||
       (weekStart ? data.monthly_storage?.week_start!==weekStart :
-        Boolean(data.monthly_storage?.week_start))) {
+        Boolean(data.monthly_storage?.week_start)) ||
+      (customStart ? data.monthly_storage?.start_date!==customStart ||
+        data.monthly_storage?.end_date!==customEnd :
+        Boolean(data.monthly_storage?.start_date||data.monthly_storage?.end_date))) {
     throw Error('Period-scoped infrastructure storage evidence is required')
   }
   if(!Array.isArray(data.monthly_top_wp_cpu) || !Array.isArray(data.monthly_top_wp_pss)){
@@ -86,9 +100,12 @@ export function monthlyEnterpriseReportModel(month,data) {
     return {...(row||{}),host:name}
   })
   const [year,mon]=month.split('-').map(Number)
-  const days=weekStart?7:new Date(Date.UTC(year,mon,0)).getUTCDate()
-  const dates=Array.from({length:days},(_,i)=>weekStart
-    ? new Date(Date.parse(weekStart+'T00:00:00Z')+i*86400000).toISOString().slice(0,10)
+  const windowStart=customStart||weekStart
+  const days=customStart
+    ? Math.round((Date.parse(customEnd+'T00:00:00Z')-Date.parse(customStart+'T00:00:00Z'))/86400000)+1
+    :weekStart?7:new Date(Date.UTC(year,mon,0)).getUTCDate()
+  const dates=Array.from({length:days},(_,i)=>windowStart
+    ? new Date(Date.parse(windowStart+'T00:00:00Z')+i*86400000).toISOString().slice(0,10)
     : month+'-'+String(i+1).padStart(2,'0'))
   const allowedDates=new Set(dates)
   // Retain one point per APP and calendar day; absent dates remain null.
@@ -131,7 +148,7 @@ export function monthlyEnterpriseReportModel(month,data) {
   const maximum=metric=>daily.map(row=>row[metric]).filter(Boolean)
     .sort((a,b)=>b.value-a.value)[0]||null
   return {
-    month,weekStart,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
+    month,weekStart,customStart,customEnd,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
     storage:data.monthly_storage.items,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
     sortedCpu:data.monthly_top_wp_cpu.slice(0,10).filter(row=>value(row.peak_cpu_pct)!==null),
@@ -195,8 +212,8 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     if(!brand.ok)throw Error('Original SPHERE logo is unavailable (HTTP '+brand.status+')')
     pdf.addImage(new Uint8Array(await brand.arrayBuffer()),'PNG',M,13,106,30)
   }
-  text(M+123,H-37,m.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report',19,'bold','navy')
-  const periodLabel=m.weekStart
+  text(M+123,H-37,m.customStart?'SAP Custom Performance Report':m.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report',19,'bold','navy')
+  const periodLabel=m.customStart||m.weekStart
     ? m.dates[0]+' to '+m.dates[m.dates.length-1]+' (WIB)'
     : monthName(month)
   text(W-M,H-37,periodLabel,10,'bold','muted','right')
@@ -219,15 +236,17 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
         wib(best.at)+' WIB',7.3,'normal','muted','right')
     }
     const px=x+43,py=panelY+49,pw=panelW-68,ph=90
-    const xFor=day=>px+(day-1)*pw/(m.days-1)
+    const xFor=day=>px+(day-1)*pw/Math.max(1,m.days-1)
     const yFor=n=>py+ph*Math.max(0,Math.min(100,n))/100
     for(const level of [0,25,50,75,100]) {
       const yy=yFor(level)
       line(px,yy,px+pw,yy,'rule',.48)
       text(px-10,yy-2,String(level)+'%',7,'normal','muted','right')
     }
-    for(const tick of new Set(m.weekStart?[1,4,m.days]:[1,10,20,m.days])) {
-      const label=m.weekStart
+    for(const tick of new Set(m.customStart
+      ? [1,Math.max(1,Math.round(m.days/2)),m.days]
+      :m.weekStart?[1,4,m.days]:[1,10,20,m.days])) {
+      const label=m.weekStart||m.customStart
         ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(m.dates[tick-1]+'T00:00:00Z'))
         :tick===m.days?String(tick).padStart(2,'0')+' '+shortMonth
           :String(tick).padStart(2,'0')
