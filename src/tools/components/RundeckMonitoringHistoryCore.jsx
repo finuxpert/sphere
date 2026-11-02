@@ -13,12 +13,6 @@ export default function RundeckMonitoringHistoryCore(props) {
   const measureViewport = React.useCallback(() => {
     const overview = overviewRef.current
     if (!overview) return
-    // Natural scrolling Monitoring: never activate legacy viewport-fit.
-    if (overview.classList.contains('is-three-panel')) {
-      overview.style.removeProperty('--sphere-overview-room')
-      delete overview.dataset.viewportFit
-      return
-    }
     // Compact summary uses a separate layout contract. Never activate the
     // legacy 5-lane fit, which allocates a tall empty evaluation grid.
     // The CSS only compresses *preview* rows; all records remain in View Details.

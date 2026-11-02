@@ -332,18 +332,15 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     </div>}
     {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label="Top five evaluated resource consumers">
       <div className="sphereEvaluationTop5Head">
-        <strong title="Source-backed average of grouped workload CPU, not an individual APP host CPU utilization. CPU totals may exceed 100% for multicore/grouped workloads.">
+        <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
           Top 5 Resource Consumers
         </strong>
         <div role="group" aria-label="Resource metric" className="sphereEvaluationTop5Actions">
           {['cpu','pss'].map(metric => <button key={metric} type="button"
             aria-pressed={resourceMetric === metric}
-            onClick={() => setResourceMetric(metric)}>{metric === 'cpu' ? 'CPU Total' : 'PSS'}</button>)}
+            onClick={() => setResourceMetric(metric)}>{metric.toUpperCase()}</button>)}
         </div>
       </div>
-      <small className="sphereEvaluationTop5Context" title="Grouped workload CPU is not normalized against the configured 28 CPU capacity. For host utilization, use APP Landscape and Performance Trends.">
-        {resourceMetric === 'cpu' ? 'Grouped CPU % · may exceed 100% · not host utilization' : 'Grouped resident proportional memory · GB as reported by source'}
-      </small>
       {resourceTop5.length && !error ? <div className="sphereEvaluationTop5Bars">
         {resourceTop5.map(row => {
           const amount = workloadMetric(row, resourceMetric)

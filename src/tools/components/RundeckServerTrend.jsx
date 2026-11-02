@@ -1269,7 +1269,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             <h3 className="sphereScreenReaderOnly">Chart {panel.index}</h3>
             <select className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect form-select form-select-sm" value={panel.metric}
               aria-label={'Chart ' + panel.index + ' metric'}
-              title={isLoad ? 'Linux load average, not CPU usage percent. APP configured reference: 28 CPUs per host; verify online CPUs and quotas with OS data.' : isNetwork
+              title={isLoad ? 'Linux load average, not CPU usage percent' : isNetwork
                 ? 'Infrastructure Network throughput; highest observed single interface' : 'Select the metric for this chart'}
               onChange={event => panel.setMetric(event.target.value)}>
               {METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}

@@ -239,16 +239,12 @@ export default function RundeckUnifiedAppInfrastructure({
         {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
       </div>
     </header>
-    {fleetMode && <div className="sphereAppHardwareReference"
-      title="Operator-confirmed configured capacity for each APP. Not a runtime measurement of online logical CPUs, CPU quotas or physical memory.">
-      Per APP <strong>28 CPU</strong><span>·</span><strong>256 GB RAM</strong>
-      <small>configured</small>
-    </div>}
     {fleetMode && <div className="sphereAppWpSummary" title={verifiedApps.length === hosts.length
       ? impactedApps.map(host => shortHost(host.host) + ': ' + Number(host.wp_critical)).join(' · ') || 'No Critical WP recorded'
       : 'Some APP samples are unverified; subtotal uses verified APPs only'}>
       Critical WP <strong>{verifiedApps.length ? totalCriticalWp : '—'}</strong>
       <span>· {verifiedApps.length ? impactedApps.length : '—'} APPs{verifiedApps.length !== hosts.length ? ' · partial' : ''}</span>
+      <span title="Configured reference per APP, not a measured OS CPU or RAM reading">· 28 CPU / 256 GB</span>
     </div>}
     <div className="rundeckAppHexMain rundeckAppThreePanels">
       <section className="rundeckAppMotionPanel" aria-label="APP server selection">
@@ -289,10 +285,9 @@ export default function RundeckUnifiedAppInfrastructure({
           const hostWp = verified ? host.wp_critical : null
           return <button key={host.host} type="button"
             className={'rundeckAppHexSelector is-sap-' + state.toLowerCase() + (appKey === key ? ' is-active' : '')}
-            aria-label={key + ' SAP ' + state + ' · Host CPU ' + metric(hostCpu, '%') + ' · Host RAM ' + metric(hostRam, '%') + ' · Configured 28 CPU and 256 GB RAM · Critical WP ' + metric(hostWp) + ' · Open APP analysis'}
+            aria-label={key + ' SAP ' + state + ' · CPU ' + metric(hostCpu, '%') + ' · RAM ' + metric(hostRam, '%') + ' · Critical WP ' + metric(hostWp) + ' · Open APP analysis'}
             title={key + ' · SAP ' + state + ' · ' + (verified ? appSignalReason(host, verified) : 'Host sample ' + appSampleFreshness(host, performanceVerified, nowMs)) + (host.collected_at ? ' · ' + formatWib(host.collected_at, true) + ' WIB' : ' · time unavailable') + ' · open APP analysis'}
             aria-pressed={appKey === key}
-            data-capacity-cpu="28" data-capacity-ram-gb="256"
             onClick={() => { openAppAnalysis(host); selectApp(key); onSelectApp?.(host.host) }}>
             <span className="rundeckAppHexShape" aria-hidden="true">
               <strong>{key}</strong>

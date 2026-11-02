@@ -52,19 +52,3 @@
   .sphereEvaluationTop5Track i{transition:none}
 }
 .rundeckMonitoring[data-motion="off"] .sphereEvaluationTop5Track i{transition:none!important}
-
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5{gap:7px!important;padding-top:12px!important;overflow:visible!important}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Head strong{font-size:13px!important}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Actions button{font-size:11px!important;padding:4px 9px!important}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Bars{gap:6px!important}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row{
-  grid-template-columns:minmax(100px,1fr) minmax(70px,1fr) minmax(55px,auto)!important;
-  min-height:25px!important;gap:9px!important;
-}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Name,
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Value {font-size:12px!important}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Track{height:8px!important}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Context{
-  color:var(--sphere-text-secondary,#aab7c5);
-  font-size:11px!important;line-height:1.4;white-space:normal;
-}

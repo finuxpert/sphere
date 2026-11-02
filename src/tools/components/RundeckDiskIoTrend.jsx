@@ -4,7 +4,7 @@ import { observedNumber, storageDevices, storageDevicePoints, splitObservedPoint
 import './RundeckDiskIoTrend.css'
 
 const API = import.meta.env.BASE_URL + 'api/infra'
-const W=500,H=180,L=43,R=12,T=12,B=28
+const W=350,H=96,L=34,R=8,T=8,B=23
 async function load(url,signal){
   const result=await fetch(url,{cache:'no-store',signal})
   if(!result.ok)throw new Error('Device I/O history unavailable ('+result.status+')')
