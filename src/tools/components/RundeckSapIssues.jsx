@@ -36,7 +36,7 @@ function Status({ value }) {
   return <span className={`rundeckIssueStatus ${statusClass(value)}`}><i aria-hidden="true" />{value}</span>
 }
 
-export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, inlineSummary = false, onOpen = null, hideDetailsAction = false, paired = false, readinessRoot = null, historyRoot = null }) {
+export default function RundeckSapIssues({ refreshToken = '', onInspectApp, compact = false, inlineSummary = false, toolbarSummary = false, onOpen = null, hideDetailsAction = false, paired = false, readinessRoot = null, historyRoot = null }) {
   const [snapshot, setSnapshot] = React.useState({ ...EMPTY_SNAPSHOT, requestKey: refreshToken })
   const data = snapshot.requestKey === refreshToken ? snapshot : EMPTY_SNAPSHOT
   const failedSources = data.failedSources
@@ -142,6 +142,11 @@ export default function RundeckSapIssues({ refreshToken = '', onInspectApp, comp
   const showWpThreshold=displayedIndicators.some(row=>row.indicator==='APP Critical WP')
   const appOptions=[...new Set(hosts.map(row=>shortHost(row.host)).filter(value=>/^APP[1-9][0-9]*$/i.test(value)))].sort((a,b)=>Number(a.slice(3))-Number(b.slice(3)))
 
+  if (inlineSummary && toolbarSummary) return <div className="sphereServiceToolbarIssues"
+    aria-label="Recorded SAP issues" title="Source-backed SAP issue counts; inspect details using Health details">
+    <strong>{loading ? 'Checking issues…' : `${activeFindings} Issues`}</strong>
+    {!loading && unknownCount > 0 && <small>{unknownCount} No Data</small>}
+  </div>
   if(inlineSummary){
     const priority = reviewIndicators.filter(row => ['CRITICAL','WARNING','ATTENTION'].includes(row.status)
       && !['CPU','RAM'].includes(row.indicator)).slice(0,2)
