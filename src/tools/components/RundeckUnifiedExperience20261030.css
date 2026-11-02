@@ -279,3 +279,135 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
   outline-offset:-1px!important;
   box-shadow:none!important;
 }
+
+/* DEV 2026-11-02: shared enterprise-dark tokens for the existing monitoring UI.
+   Do not overwrite SAP severity classes, plotted samples, or light-mode colors. */
+html[data-theme="dark"] .appShell:has(.rundeckPanel),
+html[data-theme="dark"] .logV2Inner:has(.rundeckPanel),
+html[data-theme="dark"] .rundeckWorkspacePortal {
+  --sphere-page:#0f151b;
+  --sphere-surface-1:#131c25;
+  --sphere-surface-2:#1b2835;
+  --sphere-text:#e7edf4;
+  --sphere-text-secondary:#aab7c5;
+  --sphere-text-muted:#98a7b6;
+  --sphere-border-subtle:#304150;
+  --sphere-chart-grid:#344555;
+  --sphere-accent:#67a9e8;
+  --sphere-accent-soft:rgba(103,169,232,.12);
+  --sphere-positive:#67c8a0;
+  --sphere-warning:#e7b65d;
+  --sphere-danger:#e87984;
+  --v36-panel:#1b2835;
+  --v36-subpanel:#1b2835;
+  --v36-muted:#aab7c5;
+  --v36-blue:#67a9e8;
+  --op-accent:#67a9e8;
+  --op-border:#304150;
+  --op-muted:#aab7c5;
+  --op-surface:#1b2835;
+}
+html[data-theme="dark"] .appShell:has(.rundeckPanel)
+.spherePerformanceMain .rundeckMonitoring {
+  --cockpit-surface:#1b2835;
+  --cockpit-surface-alt:#1b2835;
+  --cockpit-outline:#304150;
+  --cockpit-muted:#aab7c5;
+  --cockpit-focus:#67a9e8;
+}
+html[data-theme="dark"] .appShell:has(.rundeckPanel) .sphereSystemHealthCompact {
+  --health-panel:#1b2835;
+  --health-header:#243342;
+  --health-border:#304150;
+  --health-text:#e7edf4;
+  --health-muted:#aab7c5;
+  --health-selected:#67a9e8;
+  --health-normal:#67c8a0;
+  --health-attention:#e7b65d;
+  --health-critical:#e87984;
+}
+
+/* Jobs/Programs: loading and failures are one explicit state, not empty KPIs. */
+.appShell:has(.rundeckPanel) .sphereWorkloadUnavailable {
+  display:flex;
+  flex-wrap:wrap;
+  align-content:center;
+  align-items:center;
+  gap:8px 12px;
+  min-height:82px;
+  padding:12px;
+  border:1px solid var(--sphere-border-subtle,#304150);
+  border-radius:6px;
+  background:var(--sphere-surface-2,#f2f5f9);
+  color:var(--sphere-text,inherit);
+}
+.appShell:has(.rundeckPanel) .sphereWorkloadUnavailable > strong {
+  font-size:13px;
+  font-weight:650;
+}
+.appShell:has(.rundeckPanel) .sphereWorkloadUnavailable > small {
+  color:var(--sphere-text-secondary,#66788a);
+  font-size:11px;
+  overflow-wrap:anywhere;
+}
+.appShell:has(.rundeckPanel) .sphereWorkloadRetry {
+  margin-left:auto;
+  padding:5px 10px;
+  min-height:30px;
+  border:1px solid var(--sphere-accent,#3c83b6);
+  border-radius:5px;
+  background:transparent;
+  color:var(--sphere-accent,#3c83b6);
+  font-size:12px;
+  font-weight:650;
+  cursor:pointer;
+}
+.appShell:has(.rundeckPanel) .sphereWorkloadRetry:hover,
+.appShell:has(.rundeckPanel) .sphereWorkloadRetry:focus-visible {
+  outline:2px solid var(--sphere-accent,#3c83b6);
+  outline-offset:2px;
+}
+.appShell:has(.rundeckPanel) .sphereWorkloadRetry:disabled {
+  opacity:.55;
+  cursor:wait;
+}
+
+/* One panel treatment for Jobs/Programs and System Health, independent of data. */
+html[data-theme="dark"] .appShell:has(.rundeckPanel)
+.sphereOverviewBottomRow > :is(.rundeckJobsProgramsOverview,.sphereOverviewDetails) {
+  background:#1b2835 !important;
+  border:1px solid #304150 !important;
+  border-radius:8px !important;
+  box-shadow:none !important;
+}
+
+/* Legibility: enlarge operational labels, not all SVG/chart elements.
+   Preserve chart space, four panels, filters and source-derived metric values. */
+.appShell:has(.rundeckPanel) .rundeckMonitoring
+:is(.sphereWorkloadSummaryHead h3,.sphereHealthSummaryHeader h3,
+.rundeckUnifiedAppInfraHead h3,.rundeckTrendEditorial h3) {
+  font-size:13px !important;
+  line-height:1.35;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring
+:is(.sphereWorkloadSummaryMetrics span,.sphereWorkloadPriorityTitle small,
+.sphereWorkloadPriorityEmpty,.sphereWorkloadSummary > small,
+.rundeckAppSampleMeta,.rundeckTrendSharedControls label) {
+  font-size:11px !important;
+  line-height:1.35;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring
+:is(.sphereWorkloadSummaryMetrics strong,.sphereWorkloadPriorityTitle strong) {
+  font-size:12px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring
+:is(.sphereWorkloadPriorityName,.sphereWorkloadPriorityHost) {
+  font-size:11px !important;
+}
+.appShell:has(.rundeckPanel) .rundeckMonitoring
+:is(.sphereWorkloadSummaryHead a,.sphereUnifiedHealthOpen) {
+  font-size:11px !important;
+}
+@media (max-width:1279px) {
+  .appShell:has(.rundeckPanel) .sphereWorkloadUnavailable { min-height:64px; }
+}
