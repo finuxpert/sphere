@@ -841,7 +841,7 @@ def calendar_custom_bounds(start_date: str, end_date: str, now: datetime | None 
     start_local = first.replace(tzinfo=wib)
     end_local = (last + timedelta(days=1)).replace(tzinfo=wib)
     now_local = (now or datetime.now(timezone.utc)).astimezone(wib)
-    if start_local > now_local:
+    if start_local > now_local or last.replace(tzinfo=wib) > now_local:
         raise ValueError("Future reporting dates are unavailable")
     return (
         start_local.astimezone(timezone.utc),
