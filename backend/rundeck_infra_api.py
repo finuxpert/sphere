@@ -125,7 +125,7 @@ def trend(
     metric: str = Query("filesystem", pattern="^(filesystem|network|storage)$"),
     host: str | None = Query(None, max_length=120),
     mount: str | None = Query(None, max_length=240),
-    resolution: str = Query("raw", pattern="^(raw|hourly_peak)$"),
+    resolution: str = Query("raw", pattern="^(raw|hourly_peak|quarter_hour_peak)$"),
 ):
     since = datetime.now(timezone.utc) - timedelta(hours=RANGE_HOURS[range_key])
     engine = _engine()
@@ -178,29 +178,59 @@ def trend(
               ORDER BY collected_at,host,sample_key
             """), params)
         else:
-            rows = conn.execute(text(f"""
-              SELECT host,collected_at,
-                     COALESCE(NULLIF(metrics->>'mount',''),sample_key) AS series_key,
-                     NULLIF(metrics->>'util_pct','')::double precision AS value,
-                     NULLIF(metrics->>'write_iops','')::double precision AS value2,
-                     NULLIF(metrics->>'write_mbps','')::double precision AS write_mbps,
-                     NULLIF(metrics->>'read_iops','')::double precision AS read_iops,
-                     NULLIF(metrics->>'read_mbps','')::double precision AS read_mbps,
-                     CASE
-                       WHEN NULLIF(metrics->>'util_pct','')::double precision > 100 THEN 'SOURCE_OVER_100'
-                       ELSE 'OK'
-                     END AS quality_flag
-              FROM rundeck_infra_samples
-              WHERE collected_at>=:since AND kind='storage' {host_clause}
-              ORDER BY collected_at,host,series_key
-            """), params)
+            # Mini Read/Write uses real paired device samples. A quarter-hour
+            # bucket retains ONE observed row (max Read+Write throughput), so
+            # Read and Write never come from unrelated timestamps.
+            if resolution == "quarter_hour_peak":
+                rows = conn.execute(text(f"""
+                  SELECT DISTINCT ON (
+                    host,COALESCE(NULLIF(metrics->>'mount',''),sample_key),
+                    date_trunc('hour',collected_at),
+                    floor(extract(minute from collected_at)/15))
+                    host,collected_at,
+                    COALESCE(NULLIF(metrics->>'mount',''),sample_key) AS series_key,
+                    NULLIF(metrics->>'util_pct','')::double precision AS value,
+                    NULLIF(metrics->>'write_iops','')::double precision AS value2,
+                    NULLIF(metrics->>'write_mbps','')::double precision AS write_mbps,
+                    NULLIF(metrics->>'read_iops','')::double precision AS read_iops,
+                    NULLIF(metrics->>'read_mbps','')::double precision AS read_mbps,
+                    CASE WHEN NULLIF(metrics->>'util_pct','')::double precision > 100
+                      THEN 'SOURCE_OVER_100' ELSE 'OK' END AS quality_flag
+                  FROM rundeck_infra_samples
+                  WHERE collected_at>=:since AND kind='storage' {host_clause}
+                    AND (NULLIF(metrics->>'read_mbps','') IS NOT NULL
+                      OR NULLIF(metrics->>'write_mbps','') IS NOT NULL)
+                  ORDER BY host,COALESCE(NULLIF(metrics->>'mount',''),sample_key),
+                    date_trunc('hour',collected_at),
+                    floor(extract(minute from collected_at)/15),
+                    (COALESCE(NULLIF(metrics->>'read_mbps','')::double precision,0)
+                     + COALESCE(NULLIF(metrics->>'write_mbps','')::double precision,0)) DESC,
+                    collected_at DESC
+                """), params)
+            else:
+                rows = conn.execute(text(f"""
+                  SELECT host,collected_at,
+                         COALESCE(NULLIF(metrics->>'mount',''),sample_key) AS series_key,
+                         NULLIF(metrics->>'util_pct','')::double precision AS value,
+                         NULLIF(metrics->>'write_iops','')::double precision AS value2,
+                         NULLIF(metrics->>'write_mbps','')::double precision AS write_mbps,
+                         NULLIF(metrics->>'read_iops','')::double precision AS read_iops,
+                         NULLIF(metrics->>'read_mbps','')::double precision AS read_mbps,
+                         CASE
+                           WHEN NULLIF(metrics->>'util_pct','')::double precision > 100 THEN 'SOURCE_OVER_100'
+                           ELSE 'OK'
+                         END AS quality_flag
+                  FROM rundeck_infra_samples
+                  WHERE collected_at>=:since AND kind='storage' {host_clause}
+                  ORDER BY collected_at,host,series_key
+                """), params)
         items = [dict(row._mapping) for row in rows]
     first_observed_at = min((item.get("collected_at") for item in items if item.get("collected_at")), default=None)
     last_observed_at = max((item.get("collected_at") for item in items if item.get("collected_at")), default=None)
     return {
         "range": range_key,
         "metric": metric,
-        "resolution": resolution if metric == "filesystem" else "raw",
+        "resolution": resolution if metric in ("filesystem", "storage") else "raw",
         "since": since,
         "first_observed_at": first_observed_at,
         "last_observed_at": last_observed_at,

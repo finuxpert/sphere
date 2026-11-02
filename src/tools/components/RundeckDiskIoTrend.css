@@ -1,0 +1,30 @@
+/* Read/Write are per saved device sample, never a filesystem total. */
+.rundeckMonitoring.is-three-panel .sphereDiskIoTrend{
+  flex:0 1 auto;display:flex;flex-direction:column;gap:3px;
+  min-height:0;padding-top:4px;border-top:1px solid var(--cockpit-outline,#304150);
+}
+.sphereDiskIoHead,.sphereDiskIoActions,.sphereDiskIoMeta,.sphereDiskIoLegend{
+  display:flex;align-items:center;gap:5px;min-width:0;
+}
+.sphereDiskIoHead{justify-content:space-between}
+.sphereDiskIoHead strong{font-size:10px;white-space:nowrap}
+.sphereDiskIoActions{margin-left:auto}
+.sphereDiskIoActions [role="group"]{display:flex;gap:2px}
+.sphereDiskIoActions button,.sphereDiskIoActions select,.sphereDiskIoMeta select{
+  background:transparent;color:var(--sphere-text-secondary,#aab7c5);
+  border:1px solid var(--cockpit-outline,#304150);border-radius:4px;
+  font-size:9px;padding:2px 3px;min-width:0;
+}
+.sphereDiskIoActions button{cursor:pointer}
+.sphereDiskIoActions button[aria-pressed="true"]{
+  border-color:var(--sphere-accent,#67a9e8);color:var(--sphere-accent,#67a9e8);
+}
+.sphereDiskIoMeta{font-size:9px;color:var(--sphere-text-secondary,#aab7c5);justify-content:space-between}
+.sphereDiskIoMeta select{max-width:90px;min-width:48px}
+.sphereDiskIoLegend{white-space:nowrap;gap:3px}
+.sphereDiskIoLegend i{width:7px;height:7px;display:inline-block;border-radius:50%}
+.sphereDiskIoLegend .is-read{background:#67a9e8}
+.sphereDiskIoLegend .is-write{background:#67c8a0}
+.sphereDiskIoTrend svg{width:100%;height:auto;max-height:92px;min-height:66px;display:block}
+.sphereDiskIoFooter{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--sphere-text-secondary,#aab7c5)}
+.sphereDiskIoEmpty{font-size:10px;color:var(--sphere-text-secondary,#aab7c5);min-height:58px;display:grid;place-items:center;text-align:center}

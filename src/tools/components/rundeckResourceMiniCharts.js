@@ -35,7 +35,12 @@ export function storageDevicePoints(rows, device) {
 export function splitObservedPoints(points, metric, maxGapMs = 45 * 60_000) {
   const segments = []
   for (const point of Array.isArray(points) ? points : []) {
-    if (observedNumber(point?.[metric]) === null) continue
+    if (observedNumber(point?.[metric]) === null) {
+      // An observed row missing this metric breaks continuity; do not draw a
+      // bridge between the surrounding real points.
+      if (segments.at(-1)?.length) segments.push([])
+      continue
+    }
     const previous = segments[segments.length - 1]?.at(-1)
     const elapsed = previous ? Date.parse(point.collected_at) - Date.parse(previous.collected_at) : 0
     if (!previous || elapsed > maxGapMs || elapsed < 0) segments.push([point])

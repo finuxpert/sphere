@@ -641,7 +641,7 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
 .rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-monitoring-globe{
   display:grid!important;grid-template-columns:minmax(0,1fr)!important;
   grid-template-areas:"eval-title" "eval-counts" "eval-capsule" "eval-top5" "eval-footer"!important;
-  grid-template-rows:auto auto minmax(125px,1fr) minmax(125px,auto) auto!important;gap:5px!important;
+  grid-template-rows:auto auto minmax(130px,1fr) minmax(125px,auto) auto!important;gap:5px!important;
   align-items:stretch!important;align-content:stretch!important;
   width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;
   max-height:none!important;padding:0!important;margin:0!important;overflow:hidden!important;
