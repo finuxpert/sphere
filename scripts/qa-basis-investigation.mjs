@@ -273,7 +273,7 @@ const checks = [
   ['Run History shares evidence drawer without separate nested modal', files.wrapper.includes('size="evidence"') && files.wrapper.includes('rundeckOperatorPairedWorkspace is-events') && files.wrapper.includes('RundeckObservationHistory')],
   ['APP analysis uses explicit workload type badges', files.appServerAnalysis.includes('rundeckAppTypeBadge') && files.appServerAnalysisCss.includes('.rundeckAppTypeBadge.is-job')],
   ['APP analysis labels host-level Critical WP and observation duration without implying workload causation', files.appServerAnalysis.includes('Recorded incident · Critical WP') && files.appServerAnalysis.includes('Duration:')],
-  ['APP workload list states observation scope and avoids active or captured claims', files.appServerAnalysis.includes('loaded / ${workloadMeta.total} stored') && files.appServerAnalysis.includes('Coverage:') && !files.appServerAnalysis.includes(' captured</small>')],
+  ['APP workload list states observation scope and avoids active or captured claims', files.appServerAnalysis.includes('${displayRows.length} Workloads') && files.appServerAnalysis.includes('Coverage:') && !files.appServerAnalysis.includes(' captured</small>')],
   ['Current workload API prefers all observed JOB and PROGRAM rows with legacy Top Consumers fallback', read('backend/rundeck_job_history.py').includes('rundeck_workload_observations') && read('backend/rundeck_job_history.py').includes('ALL_OBSERVED_ACTIVE_WORKLOADS') && read('backend/rundeck_job_history.py').includes("tc.consumer_type IN ('JOB', 'PROGRAM')")],
   ['APP analysis scopes workload retrieval to the selected host before applying the result limit', files.appServerAnalysis.includes('&host=${encodeURIComponent(app.host)}&limit=100') && files.apiCore.includes('host: str | None = Query(None')],
   ['Observed workload classification keeps RCA-WP identity provenance separate from SM37 authority', read('backend/rundeck_consumers.py').includes('identity_source') && read('backend/rundeck_consumers.py').includes('identity_authority') && files.appServerAnalysis.includes('not SM37 execution status')],
@@ -387,10 +387,10 @@ const checks = [
     files.workspaceDrawer.includes('event.key !== \'Tab\'') &&
     files.workspaceDrawer.includes('document.body.style.overflow = previousOverflow') &&
     read('src/tools/components/RundeckUnifiedModalPolish.css').includes('.is-unified-app,.is-wide') &&
-    files.unifiedAnalysis.includes('<strong>SAP Performance</strong>') &&
+    files.unifiedAnalysis.includes('<strong>SAP</strong>') &&
     files.unifiedAnalysis.includes('<strong>Infrastructure</strong>') &&
     files.unifiedAnalysis.includes('app.infraHostVerified === true') &&
-    files.unifiedAnalysis.includes('UNVERIFIED · no confirmed host mapping') &&
+    files.unifiedAnalysis.includes('No verified Infrastructure host mapping') &&
     files.unifiedAnalysis.includes('lockedHost')],
   ['Performance Review pages the full evaluated population, not first 100 rows', files.performanceReview.includes('FULL_EVALUATED_POPULATION') && files.performanceReview.includes('const visibleRows = loadedKey !== requestKey ? [] : forceSearch') && files.performanceReview.includes('rundeckReviewPager') && !files.performanceReview.includes("is-top4")],
   ['Performance Review keeps previous data visible while filters update', files.performanceReview.includes('loading && hasLoaded') && files.performanceReview.includes('Showing previous result until the new review is ready.') && files.performanceReview.includes("' is-updating'")],
@@ -504,7 +504,7 @@ const checks = [
     files.wrapper.includes('size="unified-app"') &&
     files.unifiedAnalysis.includes('aria-label="SAP performance evidence"') &&
     files.unifiedAnalysis.includes('aria-label="Infrastructure evidence"') &&
-    files.appServerAnalysis.includes('Job / Program observations') &&
+    files.appServerAnalysis.includes('Jobs &amp; Programs · {hostLabel}') &&
     files.investigationContext.includes('SELECTED JOB / PROGRAM · LIVE')],
   ['Observation History defaults to eight rows with explicit expansion', files.observationHistory.includes('rows.slice(0, 8)') && files.observationHistory.includes('View all ${rows.length}')],
   ['Observation History summary exposes compact CPU memory and Critical WP range', files.observationHistory.includes('historySummary') && files.observationHistory.includes('CPU ${numberText') && files.observationHistory.includes('Critical WP ${Math.min(...criticalValues)}')],

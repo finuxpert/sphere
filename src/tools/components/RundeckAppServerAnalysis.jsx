@@ -164,7 +164,7 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
                   title={[identity.full, relatedName && relatedName !== workloadName ? 'Program: ' + relatedName : '',
                     'Observed identity: '+(row.details?.identity_source || 'unverified'), 'Authority: '+(row.details?.identity_authority || 'unverified')].filter(Boolean).join(' · ')}>
                   <strong>{workloadName}</strong>
-                  <small>{type}</small>
+                  <small className={'rundeckAppTypeBadge is-' + String(type).toLowerCase()}>{type}</small>
                 </button>
               </th>
               <td>{metric(row.cpu_pct,'%')}</td>
