@@ -16,7 +16,7 @@ export default function RundeckUnifiedAppAnalysis({
   const allowedHost = Boolean(host) && shortHost(host) === label
   return <section className="rundeckUnifiedAnalysis" aria-label={`${label} SAP and Infrastructure analysis`}>
     <div className="rundeckUnifiedAnalysisProvenance">
-      <span title="Latest verified APP performance sample"><strong>SAP</strong> · {performanceVerified ? (app.collected_at ? formatWib(app.collected_at,true)+' WIB' : 'Time unverified') : 'Unverified'}</span>
+      <span title={"Latest APP sample; collection completed " + (performanceCollectedAt ? formatWib(performanceCollectedAt,true) + " WIB" : "at an unverified time")}><strong>SAP</strong> · {performanceVerified ? (app.collected_at ? formatWib(app.collected_at,true)+' WIB' : 'Time unverified') : 'Unverified'}</span>
       <span title="Infrastructure is collected independently from SAP performance"><strong>Infrastructure</strong> · {allowedHost ? host : 'Host unverified'}</span>
     </div>
     <div className="rundeckUnifiedAnalysisGrid">

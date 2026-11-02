@@ -14,7 +14,7 @@ const W=400,H=140,L=30,R=10,T=9,B=25
 const colors=['#67a9e8','#67c8a0','#e7b65d','#dba4b6','#9c9ce3']
 export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshToken='',focusedHost='' }){
   const isRoot=mount==='/'
-  const [hostChoice,setHostChoice]=React.useState('ALL')
+  const [hostChoice,setHostChoice]=React.useState(()=>/^APP[1-5]$/.test(shortHost(focusedHost))?shortHost(focusedHost):'ALL')
   const [state,setState]=React.useState({data:[],error:'',loading:true,scope:''})
   const accepted=VALID_RANGES.has(range)
   React.useEffect(()=>{
@@ -37,7 +37,6 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
   const records=state.data.filter(item=>validNumber(item.value)&&Number.isFinite(Date.parse(item.collected_at||'')))
   const values=records.map(item=>Number(item.value))
   const max=values.length?Math.max(...values):null
-  const min=values.length?Math.min(...values):null
   const minTs=Math.min(...records.map(item=>Date.parse(item.collected_at)))
   const maxTs=Math.max(...records.map(item=>Date.parse(item.collected_at)))
   const chartX=at=>L+(at-minTs)/Math.max(1,maxTs-minTs)*(W-L-R)
