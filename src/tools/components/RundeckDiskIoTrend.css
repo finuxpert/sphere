@@ -28,3 +28,7 @@
 .sphereDiskIoTrend svg{width:100%;height:auto;max-height:92px;min-height:66px;display:block}
 .sphereDiskIoFooter{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--sphere-text-secondary,#aab7c5)}
 .sphereDiskIoEmpty{font-size:10px;color:var(--sphere-text-secondary,#aab7c5);min-height:58px;display:grid;place-items:center;text-align:center}
+.rundeckMonitoring.is-three-panel .sphereDiskIoHead strong{font-size:11px}
+.rundeckMonitoring.is-three-panel .sphereDiskIoMeta{font-size:9.5px}
+.rundeckMonitoring.is-three-panel .sphereDiskIoFooter{font-size:9.5px}
+.rundeckMonitoring.is-three-panel .sphereDiskIoTrend svg text{font-size:9.5px!important}

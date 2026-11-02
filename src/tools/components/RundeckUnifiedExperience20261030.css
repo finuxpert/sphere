@@ -764,3 +764,63 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
   .rundeckMonitoring.is-three-panel .sphereMonitoringApp
   .rundeckAppHexSelector.is-sap-critical::after{animation:none!important}
 }
+
+/* SPHERE DEV compact Monitoring finishing — preserve single viewport and 3+4 layout.
+   Reuse free vertical space; never add a scroll region within these panels. */
+@media(min-width:1280px) and (min-height:760px){
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.is-three-panel .sphereMonitoringApp
+  .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+    grid-template-rows:repeat(5,minmax(0,1fr))!important;
+    gap:8px!important;align-items:stretch!important;align-content:stretch!important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.is-three-panel .sphereMonitoringApp
+  .rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector{
+    height:100%!important;min-height:48px!important;max-height:none!important;
+    align-self:stretch!important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview .rundeckJobsProgramsHealthSide{
+    height:100%!important;align-self:stretch!important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview
+  .rundeckWorkloadHealth.is-monitoring-globe{
+    height:100%!important;min-height:100%!important;align-self:stretch!important;
+    grid-template-rows:auto auto minmax(145px,1fr) minmax(128px,auto) auto!important;
+  }
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexShape :is(small,em){font-size:10.5px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexShape strong{font-size:12.5px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckFleetMeter{font-size:10px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckFleetMeterTrack{height:5px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadHealthTitle{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:start!important;justify-content:stretch!important;
+  gap:4px 8px!important;text-align:left!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadHealthTitle > span{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  min-width:0!important;text-align:left!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe .rundeckWorkloadHealthBrand strong{
+  font-size:12px!important;line-height:1.25!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe .rundeckWorkloadHealthTitle small{
+  font-size:10px!important;line-height:1.25!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe .rundeckWorkloadHealthReview{
+  position:static!important;grid-column:2!important;grid-row:1!important;
+  justify-self:end!important;align-self:start!important;
+  min-width:0!important;white-space:nowrap!important;font-size:10.5px!important;
+}

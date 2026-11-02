@@ -52,3 +52,10 @@
   .sphereEvaluationTop5Track i{transition:none}
 }
 .rundeckMonitoring[data-motion="off"] .sphereEvaluationTop5Track i{transition:none!important}
+/* Source-backed Top 5: keep all five rows readable inside the existing panel. */
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Head strong{font-size:11px}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Bars{gap:4px}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row{min-height:20px;gap:6px}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Name{font-size:10.5px}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Value{font-size:10px}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Track{height:6px}

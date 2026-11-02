@@ -77,3 +77,10 @@
 .rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{
   gap:3px!important;font-size:9px!important;
 }
+/* Typography refinement only: preserve five mount rows and 2 existing mini charts. */
+.rundeckMonitoring.is-three-panel .sphereStorageLabel strong{font-size:10.5px}
+.rundeckMonitoring.is-three-panel .sphereStorageLabel small{font-size:9.5px}
+.rundeckMonitoring.is-three-panel .sphereStoragePercent{font-size:10.5px}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowthHead strong{font-size:11px}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{font-size:9.5px!important}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrend svg text{font-size:10px!important}

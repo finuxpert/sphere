@@ -104,7 +104,10 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
     {!!records.length && <div className="sphereFilesystemTrendFooter">
       <span>Last peak {Number(newest.value).toFixed(1)}%</span>
       <span>Peak {max.toFixed(1)}%</span>
-      <span>{delta===null ? 'Change — (select APP)' : 'Peak change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}</span>
+      <span title={delta===null ? 'Select one APP to compare its first and last observed hourly peak' :
+        'Difference between first and last recorded hourly-peak samples; not the difference from the highest peak'}>
+        {delta===null ? 'Change — (select APP)' : 'Observed change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}
+      </span>
       <span title="Latest observed filesystem sample">{formatWib(newest.collected_at,true)} WIB</span>
     </div>}
   </div>
