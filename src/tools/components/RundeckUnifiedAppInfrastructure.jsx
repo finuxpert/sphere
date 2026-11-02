@@ -18,7 +18,9 @@ async function readJson(path, signal) {
 
 export default function RundeckUnifiedAppInfrastructure({
   hosts = [], sourceQuality = null, refreshToken = '', selectedJob = null,
-  focusRequest = null, onInspectApp = null, onSelectApp = null, onOpenHealthDetails = null, operationalChecks = null, fleetMode = false,
+  focusRequest = null, onInspectApp = null, onSelectApp = null,
+  onOpenHealthDetails = null, onToggleMotion = null, motionEnabled = true,
+  operationalChecks = null, fleetMode = false,
 }) {
   const [preferredHost, setPreferredHost] = React.useState(() => {
     try { return window.localStorage.getItem(KEY) || '' } catch { return '' }
@@ -221,7 +223,13 @@ export default function RundeckUnifiedAppInfrastructure({
   return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure" data-layout="landscape-operations">
     <header className="rundeckUnifiedAppInfraHead">
       <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> SAP APP Landscape</h3>
-      {fleetMode && <button type="button" className="sphereAppHealthAction" onClick={onOpenHealthDetails}>Health Details</button>}
+      {fleetMode && <div className="sphereAppHeaderActions">
+        <button type="button" className="sphereAppHealthAction" onClick={onOpenHealthDetails}>Health Details</button>
+        <button type="button" className="sphereAppMotionAction" aria-pressed={motionEnabled}
+          aria-label={motionEnabled ? 'Disable decorative motion' : 'Enable decorative motion'}
+          title="Animation setting does not affect saved monitoring data"
+          onClick={onToggleMotion}>Motion {motionEnabled ? 'On' : 'Off'}</button>
+      </div>}
       <div className="rundeckAppSampleMeta">
         <span className="rundeckAppSampleTime" aria-label={'Selected APP ' + appKey + ' sample time'} title={selectedVerified
           ? `Selected ${appKey} sample: ${selectedHost?.collected_at ? formatWib(selectedHost.collected_at,true) + ' WIB' : 'time unverified'} · Verified APP snapshot · ${hosts.length} APP · Attention ${attentionCount} · Warning ${warningCount} · Critical ${criticalCount} · Unknown ${unknownCount} · highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`

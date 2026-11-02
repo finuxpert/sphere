@@ -101,6 +101,8 @@ export default function RundeckMonitoringHistoryCore(props) {
           onSelectApp={props.onFocusAppHost}
           onOpenMetric={props.onOpenInfrastructureMetric}
           onOpenHealthDetails={props.onOpenHealthDetails}
+          onToggleMotion={toggleMotion}
+          motionEnabled={motionEnabled}
           fleetMode
         />
       </section>
@@ -133,10 +135,5 @@ export default function RundeckMonitoringHistoryCore(props) {
         onOpenEvidence={props.onOpenTrendEvidence}
       />
     </section>
-    <button type="button" className="sphereMonitoringMotionToggle"
-      onClick={toggleMotion} aria-label={motionEnabled ? 'Disable decorative monitoring motion' : 'Enable decorative monitoring motion'}
-      aria-pressed={motionEnabled} title="Turn decorative motion on or off; monitoring data remains unchanged">
-      Motion {motionEnabled ? 'On' : 'Off'}
-    </button>
   </section>
 }

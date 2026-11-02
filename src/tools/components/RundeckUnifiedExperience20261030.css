@@ -736,3 +736,31 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
     animation:none!important;transition:none!important;
   }
 }
+/* Compact operator controls and motion; no floating controls above the page. */
+.rundeckMonitoring.is-three-panel .sphereAppHeaderActions{
+  display:inline-flex;align-items:center;justify-content:flex-end;gap:4px;
+  margin-left:auto;white-space:nowrap;
+}
+.rundeckMonitoring.is-three-panel .sphereAppMotionAction{
+  border:1px solid var(--cockpit-outline,#304150);border-radius:4px;
+  background:transparent;color:var(--sphere-text-secondary,#aab7c5);
+  padding:4px 6px;font:inherit;font-size:10px;white-space:nowrap;cursor:pointer;
+}
+.rundeckMonitoring.is-three-panel[data-motion="on"] .sphereMonitoringApp
+.rundeckAppHexSelector:hover:not(:focus-visible){
+  transform:translateY(-2px)!important;
+}
+.rundeckMonitoring.is-three-panel .sphereMonitoringApp .rundeckAppHexSelector.is-sap-critical{
+  animation:none!important;
+}
+@keyframes sphereWpDotPulse{0%,100%{opacity:.65}50%{opacity:1}}
+.rundeckMonitoring.is-three-panel[data-motion="on"] .sphereMonitoringApp
+.rundeckAppHexSelector.is-sap-critical::after{
+  animation:sphereWpDotPulse 2s ease-in-out infinite;
+}
+.rundeckMonitoring.is-three-panel[data-motion="off"] .sphereMonitoringApp
+.rundeckAppHexSelector.is-sap-critical::after{animation:none!important}
+@media(prefers-reduced-motion:reduce){
+  .rundeckMonitoring.is-three-panel .sphereMonitoringApp
+  .rundeckAppHexSelector.is-sap-critical::after{animation:none!important}
+}
