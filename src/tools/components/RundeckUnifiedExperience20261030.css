@@ -842,6 +842,13 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-three-panel .sphereMonitoringApp
+ .rundeckAppHexSelector.is-sap-critical {
+  background:var(--cockpit-surface-alt,#1d2933)!important;
+  border-color:var(--cockpit-outline,rgba(116,159,178,.21))!important;
+  box-shadow:inset 3px 0 0 var(--sphere-danger,#e87984)!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .sphereMonitoringApp
 .rundeckAppHexSelector.is-active {
   outline:1px solid var(--cockpit-focus,#67a9e7)!important;
   outline-offset:-1px;
