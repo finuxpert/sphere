@@ -14,7 +14,7 @@ const W=400,H=140,L=30,R=10,T=9,B=25
 const colors=['#67a9e8','#67c8a0','#e7b65d','#dba4b6','#9c9ce3']
 export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshToken='',focusedHost='' }){
   const isRoot=mount==='/'
-  const [hostChoice,setHostChoice]=React.useState(()=>/^APP[1-5]$/.test(shortHost(focusedHost))?shortHost(focusedHost):'ALL')
+  const [hostChoice,setHostChoice]=React.useState(()=>/^APP[1-5]$/.test(shortHost(focusedHost))?shortHost(focusedHost):'APP1')
   const [state,setState]=React.useState({data:[],error:'',loading:true,scope:''})
   const accepted=VALID_RANGES.has(range)
   React.useEffect(()=>{
@@ -25,7 +25,7 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
       const hosts=(available.items||[]).filter(x=>/^APP[1-5]$/i.test(shortHost(x.host)))
       const selected=isRoot ? (hostChoice==='ALL'?hosts:hosts.filter(x=>shortHost(x.host)===hostChoice))
         : hosts.filter(x=>shortHost(x.host)==='APP1')
-      const result=await Promise.allSettled(selected.map(row=>get(API+'/trend?range='+encodeURIComponent(range)+'&metric=filesystem&host='+encodeURIComponent(row.host)+'&mount='+encodeURIComponent(mount),controller.signal)))
+      const result=await Promise.allSettled(selected.map(row=>get(API+'/trend?range='+encodeURIComponent(range)+'&metric=filesystem&host='+encodeURIComponent(row.host)+'&mount='+encodeURIComponent(mount)+'&resolution=hourly_peak',controller.signal)))
       if(controller.signal.aborted)return
       const rows=result.flatMap((item,i)=>item.status==='fulfilled'
         ? (item.value.items||[]).filter(point=>String(point.series_key||'').toUpperCase()===mount.toUpperCase()&&validNumber(point.value))
@@ -69,7 +69,7 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
   return <div className="sphereFilesystemTrend" aria-label={'Filesystem usage history '+mount}>
     <div className="sphereFilesystemTrendTop">
       <span title={isRoot?'Root is measured independently on each APP':'APP1 is the selected representative; verify shared mount mapping separately'}>
-        {mount} · {isRoot ? 'APP root' : 'APP1'}
+        {mount} · {isRoot ? 'APP root' : 'APP1'} · hourly peak
       </span>
       {isRoot && <select value={hostChoice} onChange={e=>setHostChoice(e.target.value)}
         aria-label="Root filesystem APP selection">
@@ -101,9 +101,9 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
       <text x={W-R} y={H-5} textAnchor="end" fontSize="9" fill="currentColor">{formatWib(newest.collected_at,false)}</text>
     </svg>}
     {!!records.length && <div className="sphereFilesystemTrendFooter">
-      <span>Latest {Number(newest.value).toFixed(1)}%</span>
+      <span>Last peak {Number(newest.value).toFixed(1)}%</span>
       <span>Peak {max.toFixed(1)}%</span>
-      <span>{delta===null ? 'Change — (select APP)' : 'Change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}</span>
+      <span>{delta===null ? 'Change — (select APP)' : 'Peak change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}</span>
       <span title="Latest observed filesystem sample">{formatWib(newest.collected_at,true)} WIB</span>
     </div>}
   </div>
