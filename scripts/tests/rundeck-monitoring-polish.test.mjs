@@ -40,3 +40,28 @@ test('compact review keeps evidence-backed counts and drilldowns', () => {
   assert.match(source, /onReview\?\.\(level\.health\)/)
   assert.match(source, /onClick=\{\(\) => openWorkload\(row\)\}/)
 })
+
+test('unverified evaluation has one actionable state before KPI rendering', () => {
+  const component = read('RundeckWorkloadHealth.jsx')
+  const guard = component.indexOf('if (compactSummary && !preview) return')
+  const verified = component.indexOf('if (compactSummary) return', guard)
+  assert.ok(guard > 0 && verified > guard)
+  const fallback = component.slice(guard, verified)
+  assert.match(fallback, /Evaluation unavailable/)
+  assert.match(fallback, /Loading evaluations/)
+  assert.match(fallback, /No verified evaluation/)
+  assert.match(fallback, /setRetryToken\(token => token \+ 1\)/)
+  assert.doesNotMatch(fallback, /sphereWorkloadSummaryMetrics/)
+})
+
+test('enterprise dark theme uses common surface and preserves severity markers', () => {
+  const css = read('RundeckUnifiedExperience20261030.css')
+  assert.match(css, /--cockpit-surface:#1b2835/)
+  assert.match(css, /--cockpit-outline:#304150/)
+  assert.match(css, /--sphere-accent:#67a9e8/)
+  assert.match(css, /\.sphereOverviewBottomRow > :is\(\.rundeckJobsProgramsOverview,\.sphereOverviewDetails\)/)
+  for (const level of ['normal', 'warning', 'critical']) {
+    assert.match(css, new RegExp('is-sap-' + level))
+  }
+  assert.doesNotMatch(css, /\.sphereWorkloadUnavailable[^}]*display:\s*none/s)
+})
