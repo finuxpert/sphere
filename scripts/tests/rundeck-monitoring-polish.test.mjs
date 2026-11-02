@@ -71,11 +71,12 @@ test('enterprise dark theme uses common surface and preserves severity markers',
   assert.doesNotMatch(css, /\.sphereWorkloadUnavailable[^}]*display:\s*none/s)
 })
 
-test('Monitoring Capsule reserves five nonoverlapping areas for Top 5 resources', () => {
+test('Monitoring keeps legacy five-area grid while status view gives resource chart a dedicated four-area layout', () => {
   const source = read('RundeckWorkloadHealth.jsx')
   const css = read('RundeckUnifiedExperience20261030.css')
   assert.match(source, /is-monitoring-globe/)
   assert.match(css, /grid-template-areas:"eval-title" "eval-counts" "eval-capsule" "eval-top5" "eval-footer"/)
+  assert.match(css, /grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-footer"/)
   for (const key of ['eval-title','eval-counts','eval-capsule','eval-footer']) assert.match(css, new RegExp('grid-area:'+key))
   assert.match(read('RundeckResourceMiniCharts.css'), /grid-area:eval-top5/)
   assert.match(css, /is-sap-normal/)
@@ -138,15 +139,22 @@ test('compact Monitoring finish keeps cards, Evaluation header and tiny charts r
   assert.match(resources, /\.sphereEvaluationTop5Name\{font-size:10\.5px\}/)
   assert.match(storage, /\.sphereFilesystemTrend svg text\{font-size:10px!important\}/)
   assert.match(disk, /\.sphereDiskIoTrend svg text\{font-size:9\.5px!important\}/)
-  assert.match(fs, /Observed change/)
+  assert.match(fs, /Net change/)
+  assert.match(fs, /Window max/)
   assert.doesNotMatch(layout, /min-height:640px!important/)
 })
-test('Monitoring uses source-backed evaluation distribution instead of decorative globe',()=>{
+test('Monitoring shows ten saved resource consumers instead of duplicating severity tiles',()=>{
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const evaluation=read('RundeckWorkloadHealth.jsx')
   assert.match(core,/viewMode="status"/)
+  const trends=read('RundeckServerTrend.jsx')
+  assert.match(trends,/All APPs.*peak/i)
+  assert.match(trends,/28-core reference/)
+  assert.match(trends,/Percent Axis/)
   assert.doesNotMatch(core,/viewMode="globe"/)
-  assert.match(evaluation,/sphereEvaluationStatusRows/)
+  assert.match(evaluation,/resourceLimit = viewMode === 'status' \? 10 : 5/)
+  assert.doesNotMatch(evaluation,/sphereEvaluationStatusRows/)
+  assert.match(read('RundeckUnifiedExperience20261030.css'),/data-view-mode="status"/)
   assert.match(evaluation,/onReview\?\.\(level\.health\)/)
 })
 test('Storage chart tabs mount exactly one source-backed analysis without overlapping plots',()=>{

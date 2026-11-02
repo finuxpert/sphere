@@ -867,3 +867,31 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
 .rundeckWorkloadHealth.is-monitoring-globe > .sphereEvaluationTop5{
   grid-area:eval-top5!important;
 }
+
+/* Monitoring status view: category tiles already show verified severity counts.
+   Give the central chart area to ten saved resource observations rather than
+   repeating those counts in a second distribution view. Other modes unchanged. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"] {
+  grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-footer"!important;
+  grid-template-rows:auto auto minmax(230px,1fr) auto!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"] > .sphereEvaluationTop5 {
+  min-height:0!important;gap:5px!important;padding-top:8px!important;
+  justify-content:flex-start!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"] .sphereEvaluationTop5Bars {
+  flex:1 1 auto;min-height:0;grid-auto-rows:minmax(17px,1fr);gap:2px!important;
+  align-content:stretch;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"] .sphereEvaluationTop5Row {
+  min-height:17px!important;max-height:none!important;
+  padding:0!important;
+}

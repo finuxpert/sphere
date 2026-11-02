@@ -63,46 +63,6 @@
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Value{font-size:10px}
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Track{height:6px}
 
-/* SPHERE DEV 2026-11-02 — source-backed evaluation distribution.
-   The old hexagon remains available only for explicit legacy globe mode. */
-.rundeckMonitoring.is-three-panel .is-monitoring-globe > .sphereEvaluationStatus {
-  grid-area:eval-capsule!important;min-height:0;min-width:0;
-  display:flex;flex-direction:column;justify-content:center;gap:9px;
-  padding:8px 6px;box-sizing:border-box;
-}
-.sphereEvaluationStatusHeading {
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  font-size:11px;color:var(--sphere-text-secondary,#aab7c5);
-}
-.sphereEvaluationStatusHeading strong{color:var(--sphere-text,#e7edf4);font-weight:650}
-.sphereEvaluationStatusRows{display:grid;gap:8px;min-height:0}
-.sphereEvaluationStatusRow {
-  width:100%;display:grid;grid-template-columns:82px minmax(0,1fr) 44px;
-  align-items:center;gap:9px;padding:3px 2px;border:0;border-radius:4px;
-  text-align:left;background:transparent;color:var(--sphere-text,#e7edf4);
-  font:inherit;cursor:pointer;
-}
-.sphereEvaluationStatusRow:not(:disabled):hover,
-.sphereEvaluationStatusRow:focus-visible {
-  background:var(--sphere-surface-2,#243342);
-  outline:1px solid var(--cockpit-outline,#304150);
-}
-.sphereEvaluationStatusRow:disabled{cursor:default}
-.sphereEvaluationStatusLabel{font-size:11px}
-.sphereEvaluationStatusTrack {
-  display:block;height:9px;overflow:hidden;border-radius:3px;
-  background:var(--sphere-chart-grid,#344555);
-}
-.sphereEvaluationStatusTrack i{display:block;height:100%;min-width:0;border-radius:3px}
-.sphereEvaluationStatusRow.is-review i{background:#c77983}
-.sphereEvaluationStatusRow.is-attention i{background:#bd9f69}
-.sphereEvaluationStatusRow.is-unknown i{background:#7d8d9b}
-.sphereEvaluationStatusRow.is-normal i{background:#79a990}
-.sphereEvaluationStatusPercent{text-align:right;font-size:10.5px;font-variant-numeric:tabular-nums}
-.sphereEvaluationStatusEmpty{font-size:11px;color:var(--sphere-text-secondary,#aab7c5)}
-@media(max-width:480px){
-  .sphereEvaluationStatusRow{grid-template-columns:68px minmax(0,1fr) 38px;gap:5px}
-}
 /* Keep 5 observed workload rows readable and preserve the full title on hover. */
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row {
   grid-template-columns:minmax(0,1.5fr) minmax(40px,.85fr) minmax(48px,auto);

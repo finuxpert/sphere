@@ -108,7 +108,8 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
                     onClick={() => setGrowthRange(value)}>{label}</button>)}
               </div>
             </div>
-            <RundeckFilesystemTrend mount={selectedMount} range={growthRange} refreshToken={refreshToken} />
+            <RundeckFilesystemTrend mount={selectedMount} range={growthRange} refreshToken={refreshToken}
+              focusedHost={values.find(item=>item.mount===selectedMount)?.highest?.host || ''} />
           </div> :
           <RundeckDiskIoTrend refreshToken={refreshToken} />}
       </div>

@@ -15,6 +15,12 @@ const colors=['#67a9e8','#67c8a0','#e7b65d','#dba4b6','#9c9ce3']
 export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshToken='',focusedHost='' }){
   const isRoot=mount==='/'
   const [hostChoice,setHostChoice]=React.useState(()=>/^APP[1-5]$/.test(shortHost(focusedHost))?shortHost(focusedHost):'APP1')
+  React.useEffect(()=>{
+    // Root summary represents the highest fresh APP. Follow that host when
+    // its source changes; non-root mounts remain explicitly sourced from APP1.
+    const host=shortHost(focusedHost)
+    if(isRoot && /^APP[1-5]$/.test(host))setHostChoice(host)
+  },[isRoot,focusedHost])
   const [state,setState]=React.useState({data:[],error:'',loading:true,scope:''})
   const accepted=VALID_RANGES.has(range)
   React.useEffect(()=>{
@@ -117,8 +123,8 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
       <span title="Latest historical hourly peak sample, not current filesystem usage">Latest hourly peak {Number(newest.value).toFixed(1)}%</span>
       <span title="Highest hourly peak within the selected history window">Window max {max.toFixed(1)}%</span>
       <span title={delta===null ? 'Select a single APP with at least two different observation times' :
-        'Difference between first and last recorded hourly-peak samples; not the difference from the highest peak'}>
-        {delta===null ? 'Observed change —' : 'Observed change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}
+        'Net difference between first and last hourly-peak samples. Intermediate spikes remain visible as Window max.'}>
+        {delta===null ? 'Observed change —' : 'Net change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}
       </span>
       <span title="Latest observed filesystem sample">{formatWib(newest.collected_at,true)} WIB</span>
     </div>}

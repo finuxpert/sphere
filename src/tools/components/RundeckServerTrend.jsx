@@ -272,7 +272,12 @@ function TrendChart({ trend, mode, range, onSelect, selectedHost = '', scaleMode
     const threshold = []
     if (!availabilityMode && trend?.warning !== null && trend?.warning !== undefined) threshold.push({ yAxis: Number(trend.warning), lineStyle: { color: colors.warning, type: 'dashed', opacity: .45 }, label: { formatter: `Warn ${trend.warning}${trend?.unit === '%' ? '%' : ''}`, color: colors.warning, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
     if (!availabilityMode && trend?.critical !== null && trend?.critical !== undefined) threshold.push({ yAxis: Number(trend.critical), lineStyle: { color: colors.danger, type: 'dashed', opacity: .48 }, label: { formatter: `Crit ${trend.critical}${trend?.unit === '%' ? '%' : ''}`, color: colors.danger, fontSize: 9.2, fontWeight: 600, position: 'insideEndTop' } })
-    const visibleThresholds = scaleMode === 'focus' && percentTrend ? threshold.filter(line => line.yAxis <= focusAxisMax) : threshold
+    // Linux load average is a runnable-task pressure indicator. The 28-core line
+    // is a host-capacity reference, not an alert or CPU-utilization threshold.
+    if (trend?.metric === 'load') threshold.push({ yAxis: 28, lineStyle: { color: colors.secondary, type: 'dotted', opacity: .5 }, label: { formatter: '28 cores', color: colors.secondary, fontSize: 9, position: 'insideEndTop' } })
+    const visibleThresholds = threshold.filter(line =>
+      !(scaleMode === 'focus' && percentTrend && line.yAxis > focusAxisMax) &&
+      !(trend?.metric === 'load' && Number.isFinite(technicalAxisMax) && line.yAxis > technicalAxisMax))
     return {
       // Reveal observed history once; avoid perpetual "live" motion.
       // Reduced-motion preference is respected by the chart renderer itself.
@@ -1141,7 +1146,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <button type="button" className="rundeckTrendYAxisToggle"
         aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
         title="Focus rescales percent-based APP charts to observed samples. SAP Warning/Critical thresholds do not change; markers above the zoomed axis are not plotted. Full restores 0–100%."
-      >APP % Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
+      >Percent Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
     </div>
     <div className="rundeckTrendSharedControls" role="toolbar" aria-label="Performance trend controls">
       <div className="rundeckTrendSharedGroup rundeckTrendControlRange" role="group" aria-label="Time range">
@@ -1261,6 +1266,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         const clippedLoad = isLoad && panel.loadAxis === 'typical' && loadInfo.axisMax != null
         const clippedNetwork = isNetwork && panel.networkAxis === 'typical' && networkInfo.axisMax != null
         const panelPeak = !panel.loading && !panel.error ? savedTrendPeak(panel.trend, mode, activeFocus) : null
+        const allAppPeak = !panel.loading && !panel.error ? savedTrendPeak(panel.trend, mode) : null
         const peakKind = mode === 'avg' ? 'Highest Avg' : panelPeak?.exact ? 'Peak' : 'Peak bucket'
         const peakUnit = panel.trend?.unit === '%' ? '%' : panel.trend?.unit ? ' ' + panel.trend.unit : ''
         return <section key={panel.index} className={'rundeckServerTrendPanelV1234 rundeckConfigurableTrend col ' + panel.className}
@@ -1269,7 +1275,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             <h3 className="sphereScreenReaderOnly">Chart {panel.index}</h3>
             <select className="rundeckTrendMetricSelect rundeckConfigurableMetricSelect form-select form-select-sm" value={panel.metric}
               aria-label={'Chart ' + panel.index + ' metric'}
-              title={isLoad ? 'Linux load average, not CPU usage percent' : isNetwork
+              title={isLoad ? 'Linux load average, not CPU usage percent. Reference: 28 logical CPU cores per APP; load is not CPU utilization.' : isNetwork
                 ? 'Infrastructure Network throughput; highest observed single interface' : 'Select the metric for this chart'}
               onChange={event => panel.setMetric(event.target.value)}>
               {METRICS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
@@ -1322,9 +1328,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             : renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
                 technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
           {!panel.metric.startsWith('fs:') && panelPeak && !clippedLoad && !clippedNetwork && <div className="rundeckTrendPeakSummary" role="status"
-            title={peakKind + ' from saved observations; source timestamp shown when available'}>
-            <strong>{peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
-            <span>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB</span>
+            title={(activeFocus ? activeFocus + ' selection' : 'All APPs') + ' · saved observations; ' + (allAppPeak ? 'all APPs peak ' + numberText(allAppPeak.value, 1) + peakUnit + ' on ' + allAppPeak.host + '. ' : '') + 'Source timestamp shown when available'}>
+            <strong>{activeFocus || 'All APPs'} {peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
+            <span>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB{isLoad ? ' · 28-core reference' : ''}</span>
           </div>}
         </section>
       })}

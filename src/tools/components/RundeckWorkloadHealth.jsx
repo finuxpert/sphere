@@ -204,7 +204,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     setActiveDotIndex(next)
     buttons[next]?.focus({ preventScroll: true })
   }
-  const resourceTop5 = React.useMemo(() => topResourceConsumers(rows, resourceMetric), [rows, resourceMetric])
+  const resourceLimit = viewMode === 'status' ? 10 : 5
+  const resourceTop5 = React.useMemo(() => topResourceConsumers(rows, resourceMetric, resourceLimit), [rows, resourceMetric, resourceLimit])
   const resourcePeak = resourceTop5.length ? workloadMetric(resourceTop5[0], resourceMetric) : null
   const statusNote = rows.length && dotLayout.fits
     ? viewMode === 'by-app'
@@ -276,7 +277,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     {preview && error && <small role="status" title={error}>Last verified evaluation · refresh failed · {data?.end ? formatWib(data.end, true) + ' WIB' : 'time unavailable'}</small>}
   </section>
   return <section className={'rundeckWorkloadHealth' + (viewMode === 'by-app' ? ' is-by-app' : ' is-monitoring-globe')}
-    data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
+    data-view-mode={viewMode} data-state={state} data-coverage={preview && Number(preview.health.unknown) > 0 ? 'limited' : 'complete'} data-density={rows.length > 500 ? 'dense' : 'normal'}
     aria-label="Workload Health evaluated jobs and programs" aria-busy={loading}>
     {viewMode === 'by-app'
       ? <div className="rundeckWorkloadOverviewHead">{evaluationTitle}{evaluationCategories}</div>
@@ -329,30 +330,11 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       {(!rows.length || !dotLayout.fits) && <span className="rundeckWorkloadDotEmpty" role="status">
         {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
       </span>}
-    </div> : <div className="sphereEvaluationStatus" role="group" aria-label="Saved evaluation status distribution">
-      <div className="sphereEvaluationStatusHeading">
-        <strong>Status Distribution</strong>
-        <span>{preview ? preview.total.toLocaleString('en-US') + ' evaluated' : outcome}</span>
-      </div>
-      {preview && preview.total > 0 ? <div className="sphereEvaluationStatusRows">
-        {LEVELS.map(level => {
-          const count = Number(preview.health[level.key] || 0)
-          const percent = 100 * count / preview.total
-          return <button type="button" key={level.key} className={'sphereEvaluationStatusRow is-' + level.key}
-            disabled={!onReview} onClick={() => onReview?.(level.health)}
-            aria-label={level.label + ': ' + count + ' of ' + preview.total + ' evaluations; open Review'}
-            title={level.label + ' · ' + count + ' evaluations · ' + percent.toFixed(1) + '%'}>
-            <span className="sphereEvaluationStatusLabel">{level.label}</span>
-            <span className="sphereEvaluationStatusTrack"><i style={{width: percent + '%'}} /></span>
-            <span className="sphereEvaluationStatusPercent">{percent.toFixed(1)}%</span>
-          </button>
-        })}
-      </div> : <span className="sphereEvaluationStatusEmpty" role="status">{outcome}</span>}
-    </div>}
-    {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label="Top five evaluated resource consumers">
+    </div> : null}
+    {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label={'Top ' + resourceLimit + ' evaluated resource consumers'}>
       <div className="sphereEvaluationTop5Head">
         <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
-          Top 5 Resource Consumers {resourceMetric === 'cpu' && <small title="Core-equivalent grouped CPU: 100% corresponds to one fully utilized CPU core; multicore totals can exceed 100%.">(core %)</small>}
+          Top {resourceLimit} Resource Consumers {resourceMetric === 'cpu' && <small title="Core-equivalent grouped CPU: 100% corresponds to one fully utilized CPU core; multicore totals can exceed 100%.">(core %)</small>}
         </strong>
         <div role="group" aria-label="Resource metric" className="sphereEvaluationTop5Actions">
           {['cpu','pss'].map(metric => <button key={metric} type="button"
