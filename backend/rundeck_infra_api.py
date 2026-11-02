@@ -231,7 +231,7 @@ def _storage_used_bytes(row):
     return None
 
 
-def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | None = None):
+def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | None = None, start_date: str | None = None, end_date: str | None = None):
     """Report only independently verified, month-scoped infrastructure samples.
 
     Preserve the difference between absent mapping, no historical samples, a
@@ -245,7 +245,14 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
     wib = ZoneInfo("Asia/Jakarta")
     start = datetime(year, mon, 1, tzinfo=wib).astimezone(timezone.utc)
     end = datetime(year + (mon == 12), mon % 12 + 1, 1, tzinfo=wib).astimezone(timezone.utc)
-    if week_start:
+    if bool(start_date) != bool(end_date) or (week_start and start_date):
+        raise ValueError("Custom dates must be paired and cannot be combined with week_start")
+    if start_date:
+        from backend.rundeck_evaluation import calendar_custom_bounds
+        if not start_date.startswith(month + "-"):
+            raise ValueError("Selected month must match custom range start")
+        start, end, _previous_start = calendar_custom_bounds(start_date, end_date)
+    elif week_start:
         from backend.rundeck_evaluation import calendar_week_bounds
         if not week_start.startswith(month + "-"):
             raise ValueError("Week start must belong to selected month")
@@ -291,7 +298,7 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
         elif not configured:
             reason = "MAPPING_NOT_CONFIGURED"
         elif not rows:
-            reason = "NO_WEEKLY_INFRA_HISTORY" if week_start else "NO_MONTHLY_INFRA_HISTORY"
+             reason = "NO_CUSTOM_INFRA_HISTORY" if start_date else "NO_WEEKLY_INFRA_HISTORY" if week_start else "NO_MONTHLY_INFRA_HISTORY"
         elif not source:
             reason = "MAPPED_MOUNT_NOT_COLLECTED"
         else:
@@ -311,7 +318,8 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
     return {
         "month": month,
         "week_start": week_start,
-        "period": "week" if week_start else "month",
+        "start_date": start_date, "end_date": end_date,
+        "period": "custom" if start_date else "week" if week_start else "month",
         "timezone": "Asia/Jakarta",
         "source": "rundeck_infra_filesystems",
         "source_rows": len(rows),
@@ -324,10 +332,12 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
 @router.get("/monthly-storage")
 def monthly_storage(month: str = Query(..., pattern=r"^20\d{2}-(0[1-9]|1[0-2])$"),
     week_start: str | None = Query(None, pattern=r"^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"),
+    start_date: str | None = Query(None, pattern=r"^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"),
+    end_date: str | None = Query(None, pattern=r"^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"),
 ):
     engine = _engine()
     try:
         with engine.connect() as conn:
-            return monthly_storage_evidence(month, conn, _monthly_storage_mapping(), week_start=week_start)
+            return monthly_storage_evidence(month, conn, _monthly_storage_mapping(), week_start=week_start, start_date=start_date, end_date=end_date)
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
