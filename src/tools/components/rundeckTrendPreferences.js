@@ -2,6 +2,7 @@
 export const SERVER_TREND_METRICS = [
   'cpu', 'ram', 'iowait', 'wp', 'availability',
   'load', 'swap', 'network', 'hana', 'replication', 'ssh', 'web',
+  'fs:/', 'fs:/INTF', 'fs:/INTF_AOQ', 'fs:/SAP_ARCH', 'fs:/ArchiveINTF',
 ]
 
 /** Legacy independent chart preferences. Preserve exact old contract for callers. */

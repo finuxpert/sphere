@@ -4,6 +4,7 @@ import { technicalLoadScale } from './rundeckTechnicalLoadScale.js'
 import { networkTrendScale } from './rundeckNetworkScale.js'
 import './RundeckNetworkTrendFinishing.css'
 import React from 'react'
+import RundeckFilesystemTrend from './RundeckFilesystemTrend.jsx'
 import { createPortal } from 'react-dom'
 import * as echarts from './logEcharts.js'
 import SphereIcon from './SphereIcon.jsx'
@@ -37,6 +38,10 @@ const METRICS = [
   ['availability', 'SAP Availability'], ['load', 'Host Load'], ['swap', 'Swap I/O'],
   ['network', 'Network'], ['hana', 'HANA'], ['replication', 'Replication'],
   ['ssh', 'SSH'], ['web', 'Web Dispatcher'],
+  ['fs:/', 'Filesystem · OS Root'], ['fs:/INTF', 'Filesystem · INTF'],
+  ['fs:/INTF_AOQ', 'Filesystem · INTF AOQ'],
+  ['fs:/SAP_ARCH', 'Filesystem · SAP Archive'],
+  ['fs:/ArchiveINTF', 'Filesystem · Archive INTF'],
 ]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
 const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
@@ -48,7 +53,7 @@ const BUCKET_INTERVAL_MS = {
   '1d': 24 * 60 * 60 * 1000,
 }
 
-const metricLabel = (value) => ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability', network: 'Network', network_rx: 'Network RX', network_tx: 'Network TX' })[value] || 'Metric'
+const metricLabel = (value) => value.startsWith('fs:') ? 'Filesystem ' + value.slice(3) : ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability', network: 'Network', network_rx: 'Network RX', network_tx: 'Network TX' })[value] || 'Metric'
 const rangeLabel = value => ALL_RANGES.find(([key]) => key === value)?.[1] || String(value || '').toUpperCase()
 const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.querySelector('.spherePerformanceShell') || document.documentElement).getPropertyValue(name).trim() || fallback
 
@@ -824,6 +829,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   }, [customStart, customEnd])
 
   const loadTrend = React.useCallback((metric, setter, setLoading, setError, signal, direction = 'rx') => {
+    if (metric.startsWith('fs:')) {
+      setter(null)
+      setLoading(false)
+      setError('')
+      return Promise.resolve()
+    }
     if (range === 'custom' && !customWindow) return Promise.resolve()
     const category = AVAILABILITY_CATEGORIES[metric]
     if (category && LONG_RANGES.has(range)) {
@@ -1305,9 +1316,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             {' · ' + networkInfo.outliers + ' outside typical view'}
             <button type="button" onClick={() => panel.setNetworkAxis('full')}>Full Range</button>
           </div>}
-          {renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
-            technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
-          {panelPeak && !clippedLoad && !clippedNetwork && <div className="rundeckTrendPeakSummary" role="status"
+          {panel.metric.startsWith('fs:')
+            ? <RundeckFilesystemTrend key={panel.metric} mount={panel.metric.slice(3)}
+                range={range} refreshToken={refreshToken} focusedHost={activeFocus} />
+            : renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
+                technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
+          {!panel.metric.startsWith('fs:') && panelPeak && !clippedLoad && !clippedNetwork && <div className="rundeckTrendPeakSummary" role="status"
             title={peakKind + ' from saved observations; source timestamp shown when available'}>
             <strong>{peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
             <span>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB</span>

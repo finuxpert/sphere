@@ -1,0 +1,7 @@
+.sphereFilesystemTrend{display:flex;flex:1;flex-direction:column;gap:5px;min-width:0;color:var(--sphere-text,#e7edf4);font-size:11px}
+.sphereFilesystemTrendTop{display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--sphere-text-secondary,#aab7c5)}
+.sphereFilesystemTrendTop select{max-width:90px;min-height:24px;background:var(--sphere-surface-2,#1b2835);border:1px solid var(--sphere-border-subtle,#304150);color:inherit;border-radius:4px}
+.sphereFilesystemTrend svg{display:block;width:100%;height:auto;max-height:190px;flex:1;min-height:115px}
+.sphereFilesystemTrendFooter{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;font-size:10px}
+.sphereFilesystemTrend p{font-size:11px;margin:10px 0}
+.sphereFilesystemWarn{color:var(--sphere-warning,#e7b65d)}

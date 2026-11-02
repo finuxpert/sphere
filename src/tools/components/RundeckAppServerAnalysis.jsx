@@ -130,17 +130,17 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
 
     <section className="rundeckAppServerWorkloads">
       <header>
-        <div><span>Performance Collection</span><h4>Job / Program observations · {hostLabel}</h4></div>
-        <small>{matchedCollection ? `${displayRows.length} loaded / ${workloadMeta.total} stored` : 'Collection not verified'}</small>
+        <div><h4>Jobs &amp; Programs · {hostLabel}</h4></div>
+        <small title={'Source collection: ' + latestCollectionId}>{matchedCollection ? `${displayRows.length} Workloads` : 'Not Verified'}</small>
       </header>
       {!latestCollectionId && <div className="rundeckAppServerState">Performance collection identity unavailable; workload observations not verified.</div>}
       {loading && <div className="rundeckAppServerState">Loading jobs and programs…</div>}
       {error && <div className="rundeckAppServerState is-error">{error}</div>}
-      {!loading && !error && matchedCollection && <><div className="rundeckAppServerSource">Coverage: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'All observed workloads' :
-  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample. Job / Program names are RCA-WP observed identities, not SM37 execution status; verify job execution in SM37.</div>
+      {!loading && !error && matchedCollection && <><details className="rundeckAppServerSource"><summary>Source details</summary><div>Coverage: {workloadMeta.coverage_scope === 'ALL_OBSERVED_ACTIVE_WORKLOADS' ? 'All observed workloads' :
+  workloadMeta.coverage_scope === 'TOP_CONSUMERS_ONLY' ? 'Top consumers only' : 'Coverage unverified'} | Collection: {latestCollectionId} | APP: {hostLabel} · Workload CPU is grouped; timestamps are per workload, separate from APP host sample. Job / Program names are RCA-WP observed identities, not SM37 execution status; verify job execution in SM37.</div></details>
       <div className="rundeckAppServerFilters">
         <label><span>Find job / program</span><input type="search" value={search} onChange={event => { setSearch(event.target.value); setPage(0) }} placeholder="Program, job or PID" /></label>
-        <small>{query ? `${filteredRows.length} matches in loaded data` : 'Search loaded observations'}</small>
+        <small>{query ? `${filteredRows.length} matches` : ''}</small>
       </div>
       <div className="rundeckAppServerTableWrap"><table>
         <thead><tr>
@@ -154,29 +154,27 @@ export default function RundeckAppServerAnalysis({ app, latestCollectionId = '',
           const relatedName=observedWorkloadName(row.details?.program || row.details?.job_name || '', row.details)
           const type=String(row.consumer_type||'—').toUpperCase()
           const openWorkload=()=>onSelectJob?.({key:row.consumer_key,host:row.host,consumerType:row.consumer_type,source:'app-server-analysis'})
+          const wpCount = Array.isArray(row.details?.wps) ? row.details.wps.length : row.details?.wp != null ? 1 : 0
+          const pidCount = Array.isArray(row.details?.pids) ? row.details.pids.length : row.details?.pid != null ? 1 : 0
           return <tbody key={`${row.collection_id}-${row.host}-${row.consumer_type}-${row.consumer_key}`} className="rundeckAppObservationGroup">
-            <tr className="rundeckAppWorkloadIdentityRow">
-              <th scope="rowgroup" colSpan={6}>
+            <tr className="rundeckAppWorkloadMetricsRow">
+              <th scope="row">
                 <button type="button" className="rundeckAppFullIdentity" onClick={openWorkload}
                   aria-label={`Analyze ${type} ${workloadName}`}
-                  title={`Observed identity: ${row.details?.identity_source || 'unverified'} · Authority: ${row.details?.identity_authority || 'unverified'} · not SM37 execution status`}>
-                  <strong title={row.consumer_key}>{workloadName}</strong>
-                  {relatedName && relatedName !== workloadName && <small title={`Related SAP name: ${relatedName}`}>Program: {relatedName}</small>}
+                  title={[identity.full, relatedName && relatedName !== workloadName ? 'Program: ' + relatedName : '',
+                    'Observed identity: '+(row.details?.identity_source || 'unverified')].filter(Boolean).join(' · ')}>
+                  <strong>{workloadName}</strong>
+                  <small>{type}</small>
                 </button>
               </th>
-            </tr>
-            <tr className="rundeckAppWorkloadMetricsRow" role="button" tabIndex={0}
-              aria-label={`Analyze observation metrics for ${workloadName}`}
-              onClick={openWorkload}
-              onKeyDown={event=>{if(event.key!=='Enter'&&event.key!==' ')return;event.preventDefault();openWorkload()}}>
-              <td><span className={`rundeckAppTypeBadge is-${String(row.consumer_type||'unknown').toLowerCase()}`}>{type}</span></td>
               <td>{metric(row.cpu_pct,'%')}</td>
               <td>{pssText(row)}</td>
               <td>{processText(row)}</td>
-              <td title={identity.full}><span className="rundeckAppWpIdentity">{identity.full}</span></td>
-              <td title={row.collected_at ? `Saved workload observation ${formatWib(row.collected_at,true)} WIB; not job completion or APP host sample time` : 'Sample time unverified'}>{row.collected_at
-                ? <time dateTime={row.collected_at} className="rundeckAppObservedAt"><span>{formatWib(row.collected_at,true).split(', ')[0]}</span><span>{formatWib(row.collected_at)} WIB</span></time>
-                : '—'}</td>
+              <td title={identity.full}><button type="button" onClick={openWorkload} className="rundeckAppIdentityDetail"
+                aria-label={`Open WP and PID details for ${workloadName}`}>{wpCount} WP · {pidCount} PID</button></td>
+              <td title={row.collected_at ? 'Saved workload observation, not job completion' : 'Sample time unverified'}>
+                {row.collected_at ? <time dateTime={row.collected_at}>{formatWib(row.collected_at,true)} WIB</time> : '—'}
+              </td>
             </tr>
           </tbody>
         })}

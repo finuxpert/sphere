@@ -147,14 +147,15 @@ test('V1.43 sidebar is collapsible, keyboard labeled and retains all SAP workspa
   assert.doesNotMatch(css,/\.rundeckAppEvalLane\s*\{[^}]*\bdisplay:\s*none\b/)
 })
 
-test('three main sections preserve older monitoring deep links and collection utilities', () => {
+test('two primary sections preserve old monitoring deep links and collection utilities', () => {
   const state=read('RundeckPerformanceNavigationState.js')
   const nav=read('RundeckPerformanceNavigation.jsx')
   const wrapper=read('RundeckMonitoringHistory.jsx')
   const jobs=read('RundeckJobsProgramsWorkspace.jsx')
   const review=read('RundeckPerformanceReview.jsx')
   assert.match(state,/PRIMARY_PERFORMANCE_VIEWS/)
-  for(const label of ['Monitoring','Jobs & Programs','Reports'])assert.ok(state.includes("label:'"+label+"'"))
+  for(const label of ['Monitoring','Reports'])assert.ok(state.includes("label:'"+label+"'"))
+  assert.doesNotMatch(state.split('export const PRIMARY_PERFORMANCE_VIEWS = [')[1], /label:'Jobs & Programs'/)
   for(const id of ['performance','jobs','events','sap-checks','infrastructure','system-data','monthly-review'])assert.ok(state.includes("id: '"+id+"'"))
   assert.match(nav,/React\.useState\(false\)/)
   assert.match(nav,/SPHERE/)
@@ -188,7 +189,8 @@ test('Overview keeps workload and health inline while event evidence opens on de
   const workload = read('RundeckWorkloadHealth.jsx')
   const styles = read('RundeckRevitalization.css')
   assert.match(core,/sphereOverviewBottomRow/)
-  assert.match(core,/\{props\.healthSummary\}/)
+  assert.match(core,/\{props\.serviceSummary\}/)
+  assert.match(core,/<RundeckStorageSummary/)
   assert.match(workload,/sphereWorkloadPriorityList/)
   assert.match(workload,/workloadHealthLevel\(row\) === 'review'/)
   assert.match(workload,/onClick=\{\(\) => openWorkload\(row\)\}/)
@@ -207,7 +209,8 @@ test('Overview keeps current workloads while collection history opens on demand'
   const wrapper = read('RundeckMonitoringHistory.jsx')
   const styles = read('RundeckRevitalization.css')
   const data = read('RundeckDataCollection.jsx')
-  assert.match(core,/React\.cloneElement\(props\.currentWorkloadContent, \{ summaryOnly: true \}\)/)
+  assert.match(core,/viewMode="globe"/)
+  assert.match(core,/onReview=/)
   assert.match(work,/if \(summaryOnly\)/)
   assert.match(work,/sphereCurrentWorkloadRow/)
   assert.match(work,/Number\.isFinite\(Number\(row\.cpu_pct\)\)/)
@@ -222,7 +225,7 @@ test('Overview keeps current workloads while collection history opens on demand'
 test('DEV navigation and collector history stay available without duplicate top tabs', () => {
  const view=read('RundeckMonitoringHistory.jsx'),s=read('RundeckPerformanceNavigationState.js'),d=read('RundeckDataCollection.jsx')
  const primary=s.split('export const PRIMARY_PERFORMANCE_VIEWS = [')[1].split(']')[0]
- assert.equal((primary.match(/id:'/g)||[]).length,3)
+ assert.equal((primary.match(/id:'/g)||[]).length,2)
  assert.doesNotMatch(view,/className="sphereMonitoringTabs"/)
  assert.match(view,/activeOverlay\?\.type === 'collection-history'/)
  assert.match(view,/collectionHistory\.slice\(0,80\)/)

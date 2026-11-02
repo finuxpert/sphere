@@ -310,3 +310,43 @@
 .rundeckAppServerTableWrap .rundeckAppObservationGroup .rundeckAppWorkloadMetricsRow > td {
   border-bottom:1px solid rgba(126,147,158,.16)!important;
 }
+
+/* Condensed APP investigation: keep diagnostics retrievable, not overprinted. */
+.rundeckUnifiedAnalysisProvenance{gap:5px 18px;padding:4px 7px;font-size:11px}
+.rundeckUnifiedAnalysisPane>h4{font-size:12px;line-height:1.3;margin:0 0 6px}
+.rundeckUnifiedAnalysis .rundeckAppServerWorkloads header{padding:5px 0}
+.rundeckUnifiedAnalysis .rundeckAppServerSource{font-size:10px;line-height:1.35;margin:3px 0}
+.rundeckUnifiedAnalysis .rundeckAppServerSource summary{cursor:pointer;color:var(--sphere-text-secondary,#aab7c5)}
+.rundeckUnifiedAnalysis .rundeckAppServerSource>div{padding:6px 0}
+.rundeckUnifiedAnalysis .rundeckAppObservationGroup .rundeckAppWorkloadMetricsRow{
+  min-height:42px;vertical-align:middle;
+}
+.rundeckUnifiedAnalysis .rundeckAppWorkloadMetricsRow th{
+  max-width:220px;text-align:left;
+}
+.rundeckUnifiedAnalysis .rundeckAppFullIdentity{
+  max-width:100%;min-width:0;text-align:left;
+}
+.rundeckUnifiedAnalysis .rundeckAppFullIdentity strong{
+  display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.rundeckUnifiedAnalysis .rundeckAppFullIdentity small{
+  font-size:10px;line-height:1.2;color:var(--sphere-text-secondary,#aab7c5);
+}
+.rundeckUnifiedAnalysis .rundeckAppIdentityDetail{
+  border:0;background:transparent;padding:3px 0;
+  font:inherit;font-size:10.5px;color:var(--sphere-accent,#67a9e8);
+  cursor:pointer;white-space:nowrap;
+}
+.rundeckUnifiedAnalysis .rundeckAppWorkloadMetricsRow td time{
+  font-size:10px;white-space:nowrap;
+}
+.rundeckUnifiedAnalysis .rundeckAppWorkloadMetricsRow td{font-size:11px}
+.rundeckUnifiedAnalysis .rundeckInfraCurrentLabel{font-size:11px}
+.rundeckUnifiedAnalysis .rundeckInfraTrendSummary b{font-size:10px}
+@media(min-width:1400px) and (min-height:790px){
+  .rundeckUnifiedAnalysis .rundeckAppObservationGroup .rundeckAppWorkloadMetricsRow td,
+  .rundeckUnifiedAnalysis .rundeckAppObservationGroup .rundeckAppWorkloadMetricsRow th {
+    padding-top:5px;padding-bottom:5px;
+  }
+}
