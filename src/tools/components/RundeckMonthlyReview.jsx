@@ -45,20 +45,47 @@ function monthOptions() {
   })
 }
 const MONTHS = monthOptions()
+function weekOptions() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit',
+  }).formatToParts(new Date())
+  const part = type => Number(parts.find(row => row.type===type)?.value)
+  const today = new Date(Date.UTC(part('year'),part('month')-1,part('day')))
+  const weekday = (today.getUTCDay()+6)%7
+  const monday = today.getTime()-weekday*86400000
+  const label = date => new Intl.DateTimeFormat('en-GB',{
+    timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',
+  }).format(date)
+  return Array.from({length:16},(_,index)=>{
+    const start=new Date(monday-index*7*86400000)
+    const end=new Date(start.getTime()+6*86400000)
+    return {
+      value:start.toISOString().slice(0,10),
+      label:label(start)+' – '+label(end)+(index===0?' · ongoing':''),
+    }
+  })
+}
+const WEEKS = weekOptions()
 const CHART_COLORS = ['#3dd6dc', '#839af4', '#af90e7', '#e7a364', '#7ac59c']
 const PRESSURE_FILTERS = [
   ['ALL', 'All observations'], ['CPU', 'CPU Pressure'], ['RAM', 'RAM Pressure'], ['WP', 'Critical WP'],
 ]
 
-function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', threshold = null, fitObserved = true }) {
+function HostTrend({ rows = [], month, weekStart = null, metric, mode = 'peak', host = 'ALL', threshold = null, fitObserved = true }) {
   const field = (mode === 'avg' ? 'avg_' : 'peak_') + metric + '_pct'
   const [year, monthNum] = month.split('-').map(Number)
-  const days = new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
+  const days = weekStart ? 7 : new Date(Date.UTC(year, monthNum, 0)).getUTCDate()
+  const dateAt = day => weekStart
+    ? new Date(Date.parse(weekStart+'T00:00:00Z')+(day-1)*86400000).toISOString().slice(0,10)
+    : month+'-'+String(day).padStart(2,'0')
+  const dayIndex = date => weekStart
+    ? Math.round((Date.parse(String(date).slice(0,10)+'T00:00:00Z')-Date.parse(weekStart+'T00:00:00Z'))/86400000)+1
+    : Number(String(date).slice(-2))
   const names = [...new Set(rows.map(row => hostLabel(row.host)))].sort().filter(name => host === 'ALL' || name === host)
   const observedDays = rows
     .filter(row => (host === 'ALL' || hostLabel(row.host) === host) &&
       row[field] !== null && row[field] !== undefined && Number.isFinite(Number(row[field])))
-    .map(row => Number(String(row.day).slice(-2)))
+    .map(row => dayIndex(row.day))
     .filter(day => Number.isInteger(day) && day >= 1 && day <= days)
   const firstObservedDay = observedDays.length ? Math.min(...observedDays) : 1
   // Display-only focus. Days before the first retained sample remain unavailable,
@@ -75,7 +102,9 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
         <line x1={left} x2={left + plotW} y1={yFor(level)} y2={yFor(level)} stroke="currentColor" strokeOpacity=".11" strokeDasharray="3 4"/>
         <text x="5" y={yFor(level)+3} fontSize="9" fill="currentColor" opacity=".6">{level}%</text>
       </g>)}
-      {[...new Set([startDay,5,10,15,20,25,days].filter(day=>day>=startDay && day<=days))].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{day === 1 || day === days ? day + ' ' + new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1))) : day}</text>)}
+      {[...new Set((weekStart?[1,2,3,4,5,6,7]:[startDay,5,10,15,20,25,days]).filter(day=>day>=startDay && day<=days))].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{weekStart
+        ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(dateAt(day)+'T00:00:00Z'))
+        : day === 1 || day === days ? day + ' ' + new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1))) : day}</text>)}
       {showThreshold && <g>
         <line x1={left} x2={left + plotW} y1={yFor(threshold)} y2={yFor(threshold)} stroke="#e2b56a" strokeWidth="1.5" strokeDasharray="6 4"/>
         <rect x={left + plotW - 115} y={yFor(threshold) - 15} width="114" height="13" rx="2" fill="#253642"/>
@@ -83,7 +112,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
       </g>}
       {names.map((name,i) => {
         const points = rows.filter(row => hostLabel(row.host) === name && row[field] !== null && row[field] !== undefined)
-          .map(row => ({day:Number(String(row.day).slice(-2)),value:row[field],
+          .map(row => ({day:dayIndex(row.day),value:row[field],
             warningChecks:Number(row[metric+'_warning_checks']||0), peakAt:row['peak_'+metric+'_at']||null})).sort((a,b)=>a.day-b.day)
         return <g key={name}>
           {points.map((point,k) => <g key={point.day}>
@@ -98,7 +127,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
             {mode==='peak' && point.warningChecks>0 && <circle cx={xFor(point.day)} cy={yFor(point.value)}
               r="5.5" fill="none" stroke="#e6ad67" strokeWidth="1.3" aria-hidden="true"/>}
             <circle cx={xFor(point.day)} cy={yFor(point.value)} r="2.9" fill={CHART_COLORS[i%CHART_COLORS.length]}>
-              <title>{name} · {month}-{String(point.day).padStart(2,'0')} · {pct(point.value)} {mode} {metric.toUpperCase()} · {fmt(point.warningChecks,0)} warning host-checks{mode==='peak' && point.peakAt ? ' · Peak time '+when(point.peakAt) : ''}</title>
+              <title>{name} · {dateAt(point.day)} · {pct(point.value)} {mode} {metric.toUpperCase()} · {fmt(point.warningChecks,0)} warning host-checks{mode==='peak' && point.peakAt ? ' · Peak time '+when(point.peakAt) : ''}</title>
             </circle>
           </g>)}
         </g>
@@ -109,7 +138,7 @@ function HostTrend({ rows = [], month, metric, mode = 'peak', host = 'ALL', thre
     </div>
     <small>Daily peak is the highest saved APP sample per day; gold rings indicate warning readings. Missing dates are not zero.</small>
     {firstObservedDay>1 && <small className="sphereMonthlyObservedNote">
-      Data starts {String(firstObservedDay).padStart(2,'0')} {new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1)))}.
+      Data starts {dateAt(firstObservedDay)}.
       {fitObserved ? ' Earlier dates are outside this display, not missing-value zeros.' : ' Earlier dates have no retained observations.'}
     </small>}
   </div>
@@ -325,6 +354,7 @@ const MONTHLY_STORAGE_ROWS=['File System OS','FS SAP Archive','Archive INTF','IN
 const MONTHLY_STORAGE_REASON={
   MAPPING_NOT_CONFIGURED:'Host/mount mapping not configured',
   NO_MONTHLY_INFRA_HISTORY:'No Infrastructure filesystem samples in the reporting month',
+  NO_WEEKLY_INFRA_HISTORY:'No Infrastructure filesystem samples in the reporting week',
   MAPPED_MOUNT_NOT_COLLECTED:'Mapped host/mount not found in the reporting month',
   INCOMPLETE_FILESYSTEM_FIELDS:'Incomplete saved capacity fields',
 }
@@ -336,7 +366,7 @@ const monthlyStorageNote=(storage,loading,error)=>{
   if(!missing.length)return '4 of 4 filesystems collected'
   const missingMap=missing.filter(row=>row.reason==='MAPPING_NOT_CONFIGURED').length
   if(missingMap)return missingMap+' filesystem mapping'+(missingMap===1?'':'s')+' not configured'
-  if(!storage.source_rows)return 'No Infrastructure filesystem samples for this month'
+  if(!storage.source_rows)return 'No Infrastructure filesystem samples for this '+(storage.week_start?'week':'month')
   return (rows.length-missing.length)+' of '+rows.length+' collected · '+(MONTHLY_STORAGE_REASON[missing[0].reason]||'Historical source incomplete')
 }
 
@@ -359,11 +389,13 @@ function MonthlyRanking({ title, rows=[], metric }) {
     </div>
   </section>
 }
-function MonthlyManagementDashboard({month,full,preview,storage,storageError=''}) {
+function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,storageError=''}) {
   const data=full||preview
   const pressure=data?.monthly_pressure||{}
   const model=full && Array.isArray(full.monthly_top_wp_cpu) &&
-    Array.isArray(full.monthly_top_wp_pss) && storage?.month===month
+    Array.isArray(full.monthly_top_wp_pss) && storage?.month===month &&
+    (weekStart ? storage?.week_start===weekStart : !storage?.week_start) &&
+    (weekStart ? full.week_start===weekStart : !full.week_start)
     ? monthlyEnterpriseReportModel(month,{...full,monthly_storage:storage}) : null
   const hosts=Array.from({length:5},(_,i)=>{
     const name='APP'+(i+1)
@@ -373,11 +405,11 @@ function MonthlyManagementDashboard({month,full,preview,storage,storageError=''}
     const p=model?.[metric==='cpu'?'cpuPeak':'ramPeak']
     return p ? 'Peak '+pct(p.value)+' · '+p.host+' · '+when(p.at) : 'Not Collected'
   }
-  return <div className="sphereMonthlyManagement" aria-label="SAP Monthly Performance Report">
+  return <div className="sphereMonthlyManagement" aria-label={weekStart?"SAP Weekly Performance Report":"SAP Monthly Performance Report"}>
     <div className="sphereMonthlyManagerPair">
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
         <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><strong>{peak(metric)}</strong></div>
-        <HostTrend rows={pressure.daily_hosts||[]} month={month} metric={metric}
+        <HostTrend rows={pressure.daily_hosts||[]} month={month} weekStart={weekStart} metric={metric}
           fitObserved={false} threshold={pressure.thresholds?.[metric+'_warning_pct']}/>
       </section>)}
     </div>
@@ -408,7 +440,7 @@ function MonthlyManagementDashboard({month,full,preview,storage,storageError=''}
             <td>{row.signals?.high_memory?'Review memory use':row.signals?.sustained_high_cpu||row.signals?.cpu_spike?'Review processing':row.signals?.baseline_anomaly?'Check workload change':'Review in SAP'}</td>
           </tr>)}
           {!model&&<tr><td colSpan="9">Loading saved evaluation…</td></tr>}
-          {model&&!model.candidates.length&&<tr><td colSpan="9">No candidates observed for this month</td></tr>}
+          {model&&!model.candidates.length&&<tr><td colSpan="9">No candidates observed for this period</td></tr>}
           </tbody>
         </table>
       </section>
@@ -419,7 +451,7 @@ function MonthlyManagementDashboard({month,full,preview,storage,storageError=''}
       </div>
       <table className="sphereMonthlyManagerTable"><thead><tr><th>File System</th><th>Mounted On / Host</th><th>Total Capacity</th><th>Used Capacity</th><th>Free Capacity</th><th>Usage %</th><th>Sample WIB</th></tr></thead><tbody>
         {MONTHLY_STORAGE_ROWS.map(name=>{
-          const row=storage?.month===month?storage.items?.find(r=>r.category===name):null
+          const row=storage?.month===month && (weekStart?storage?.week_start===weekStart:!storage?.week_start)?storage.items?.find(r=>r.category===name):null
           const present=row?.status==='COLLECTED'
           return <tr key={name} title={present ? 'Saved Infrastructure sample · '+when(row.sample_at) : MONTHLY_STORAGE_REASON[row?.reason]||'Historical sample unavailable'}><td>{name}</td>
             <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
@@ -433,7 +465,14 @@ function MonthlyManagementDashboard({month,full,preview,storage,storageError=''}
 }
 
 export default function RundeckMonthlyReview({ showTitle = true }) {
-  const [month,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
+  const [reportMode,setReportMode]=React.useState('month')
+  const [selectedMonth,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
+  const [weekStart,setWeekStart]=React.useState(WEEKS[1]?.value || WEEKS[0].value)
+  const month=reportMode==='week'?weekStart.slice(0,7):selectedMonth
+  const requestedWeek=reportMode==='week'?weekStart:null
+  const reportParams=()=>new URLSearchParams({month,...(requestedWeek?{week_start:requestedWeek}:{})})
+  const matchesScope=payload=>payload?.month===month && payload?.period===reportMode &&
+    (requestedWeek?payload.week_start===requestedWeek:!payload.week_start)
   const [evidenceOpen,setEvidenceOpen]=React.useState(false)
   const [pressureMetric,setPressureMetric]=React.useState('cpu')
   const [kind,setKind]=React.useState('ALL')
@@ -466,21 +505,21 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   React.useEffect(()=>{
     const controller=new AbortController()
     setStorage(null);setStorageError('')
-    fetch(API+'/infra/monthly-storage?'+new URLSearchParams({month}),{
+    fetch(API+'/infra/monthly-storage?'+reportParams(),{
       cache:'no-store',signal:controller.signal,
     }).then(async response=>{
       if(!response.ok)throw Error('Monthly storage history unavailable (HTTP '+response.status+')')
       return response.json()
     }).then(payload=>{
       if(!controller.signal.aborted){
-        if(payload.month!==month || !Array.isArray(payload.items))throw Error('Invalid monthly storage evidence')
+        if(!matchesScope(payload) || !Array.isArray(payload.items))throw Error('Invalid scoped storage evidence')
         setStorage(payload)
       }
     }).catch(failure=>{
       if(!controller.signal.aborted)setStorageError(failure.message||'Monthly storage unavailable')
     })
     return ()=>controller.abort()
-  },[month])
+  },[month,reportMode,weekStart])
   // Render retained monthly CPU/RAM/APP observations independently of the slower
   // full workload classification, correlation and WP error analysis.
   React.useEffect(()=>{
@@ -488,7 +527,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     setHostPreview(null)
     setHostPreviewError('')
     const previewDeadline=AbortSignal.timeout(20_000)
-    fetch(API+'/evaluation/workloads/monthly/hosts?'+new URLSearchParams({month}), {
+    fetch(API+'/evaluation/workloads/monthly/hosts?'+reportParams(), {
       cache:'no-store', signal:AbortSignal.any([controller.signal,previewDeadline]),
     })
       .then(async response=>{
@@ -497,7 +536,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       })
       .then(payload=>{
         if(controller.signal.aborted)return
-        if(payload.month!==month||payload.preview_only!==true||
+        if(!matchesScope(payload)||payload.preview_only!==true||
             !payload.monthly_pressure||!payload.quality)
           throw Error('Monthly host summary is not verified')
         setHostPreview(payload)
@@ -508,10 +547,10 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           : failure.message||'Monthly host summary unavailable')
       })
     return ()=>controller.abort()
-  },[month,hostPreviewRetry])
+  },[month,reportMode,weekStart,hostPreviewRetry])
   // A boolean dependency avoids re-requesting expensive evidence just because
   // the user switches between Summary, Detailed Evidence and PDF Report.
-  const fullEvaluationReady = hostPreview?.month===month
+  const fullEvaluationReady = hostPreview?.month===month && matchesScope(hostPreview)
   React.useEffect(()=>{
     // Prioritize the host-only request on Summary. A failed host preview must
     // not trigger an even heavier fallback request or leave a permanent spinner.
@@ -521,7 +560,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     }
     const controller=new AbortController()
     const params=new URLSearchParams({
-      month,type:kind,health,pressure:pressureFilter,flag:signalFilter,q:appliedSearch,
+      month,...(requestedWeek?{week_start:requestedWeek}:{}),type:kind,health,pressure:pressureFilter,flag:signalFilter,q:appliedSearch,
       limit:String(PAGE_SIZE),offset:String(page*PAGE_SIZE),
     })
     pdfGenerationRef.current += 1
@@ -538,7 +577,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       })
       .then(payload=>{
         if(controller.signal.aborted)return
-        if(payload.month!==month||payload.period!=='month'||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid monthly evidence contract')
+        if(!matchesScope(payload)||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid monthly evidence contract')
         if(!payload.monthly_pressure||!payload.monthly_errors)throw Error('Monthly pressure or error evidence is unavailable on this backend')
         setData(payload)
       })
@@ -547,17 +586,19 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         : failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
-  },[month,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError])
-  const changeMonth=value=>{
+  },[month,reportMode,weekStart,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError])
+  const changePeriod=(mode,value)=>{
     pdfGenerationRef.current += 1
-    setMonth(value);setEvidenceOpen(false);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
+    if(mode==='month')setMonth(value)
+    if(mode==='week')setWeekStart(value)
+    setReportMode(mode);setEvidenceOpen(false);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
     setSearch('');setAppliedSearch('');setPdfError('')
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
   }
   const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
-  const preview=hostPreview?.month===month ? hostPreview : null
-  const completedData=data?.month===month ? data : null
+  const preview=matchesScope(hostPreview) ? hostPreview : null
+  const completedData=matchesScope(data) ? data : null
   const items=completedData?.items||[]
   const evidence=(completedData||preview)?.monthly_pressure||{}
   const errors=completedData?.monthly_errors||{}
@@ -573,23 +614,24 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       // Fetch a canonical month-scoped population before building either PDF.
       const params = new URLSearchParams({
         month, type:'ALL', health:'ALL', pressure:'ALL', flag:'ALL',
+        ...(requestedWeek?{week_start:requestedWeek}:{}),
         q:'', limit:String(PAGE_SIZE), offset:'0',
       })
       const response = await fetch(API+'/evaluation/workloads/monthly?'+params.toString(), {cache:'no-store'})
       if(!response.ok) throw Error('Monthly PDF evidence unavailable (HTTP '+response.status+')')
       const reportData = await response.json()
       if(generation!==pdfGenerationRef.current) return
-      if(reportData.month!==month || reportData.period!=='month' ||
+      if(reportData.month!==month || !matchesScope(reportData) ||
           reportData.page?.scope!=='FULL_EVALUATED_POPULATION' ||
           !reportData.monthly_pressure || !reportData.monthly_errors || !reportData.quality) {
         throw Error('PDF evidence does not match the selected reporting month')
       }
       let exportData=reportData
       if(reportType==='management') {
-        const storageResponse=await fetch(API+'/infra/monthly-storage?'+new URLSearchParams({month}),{cache:'no-store'})
+        const storageResponse=await fetch(API+'/infra/monthly-storage?'+reportParams(),{cache:'no-store'})
         if(!storageResponse.ok)throw Error('Monthly storage evidence unavailable (HTTP '+storageResponse.status+')')
         const monthlyStorage=await storageResponse.json()
-        if(monthlyStorage.month!==month || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected month')
+        if(monthlyStorage.month!==month || !matchesScope(monthlyStorage) || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected month')
         exportData={...reportData,monthly_storage:monthlyStorage}
       }
       const blob=await (reportType==='management'
@@ -603,15 +645,25 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       setPdfUrl(url)
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{pdfInFlightRef.current=false;setPdfBusy(false)}
-  },[data,loading,pdfBusy,month])
-  return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="Monthly SAP Performance and Job Impact">
+  },[data,loading,pdfBusy,month,reportMode,weekStart])
+  return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="SAP Performance Report and Job Impact">
     <div className="sphereMonthlyHead">
-      {showTitle && <div><strong>SAP Monthly Performance Report</strong></div>}
-      <div className="sphereMonthlyPicker">
-        <label htmlFor="sphere-month-choice">Reporting month</label>
-        <select className="form-select form-select-sm" id="sphere-month-choice" value={month} onChange={event=>changeMonth(event.target.value)}>
-          {MONTHS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
-        </select>
+      {showTitle && <div><strong>SAP {reportMode==='week'?'Weekly':'Monthly'} Performance Report</strong></div>}
+      <div className="sphereMonthlyPicker d-flex align-items-end gap-2">
+        <div><label htmlFor="sphere-period-mode">Report period</label>
+          <select className="form-select form-select-sm" id="sphere-period-mode" value={reportMode}
+            onChange={event=>changePeriod(event.target.value,event.target.value==='week'?weekStart:selectedMonth)}>
+            <option value="month">Monthly</option><option value="week">Weekly</option>
+          </select></div>
+        {reportMode==='week' ? <div><label htmlFor="sphere-week-choice">Reporting week (WIB)</label>
+          <select className="form-select form-select-sm" id="sphere-week-choice" value={weekStart}
+            onChange={event=>changePeriod('week',event.target.value)}>
+            {WEEKS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+          </select></div> : <div><label htmlFor="sphere-month-choice">Reporting month</label>
+          <select className="form-select form-select-sm" id="sphere-month-choice" value={selectedMonth}
+            onChange={event=>changePeriod('month',event.target.value)}>
+            {MONTHS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+          </select></div>}
       </div>
     </div>
     <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Monthly report actions">
@@ -619,7 +671,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
         {pdfBusy?'Generating…':'Generate PDF Management'}
       </button>
-      {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf':'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
+      {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?(requestedWeek?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf'):'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
     </div>
     {storageError&&<p className="sphereMonthlyWarning" role="alert">{storageError}</p>}
     {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
@@ -631,11 +683,11 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     </div>}
     {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
     {(completedData || preview)&&<>
-      <MonthlyManagementDashboard month={month} full={completedData} preview={preview} storage={storage} storageError={storageError}/>
-      {evidenceOpen && <RundeckWorkspaceDrawer title="Monthly Evidence" subtitle={month+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
+      <MonthlyManagementDashboard month={month} weekStart={requestedWeek} full={completedData} preview={preview} storage={storage} storageError={storageError}/>
+      {evidenceOpen && <RundeckWorkspaceDrawer title={reportMode==='week'?'Weekly Evidence':'Monthly Evidence'} subtitle={(requestedWeek||month)+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
       <div className="sphereMonthlyReview is-v2 is-evidence-modal">
-      <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData}
-        onClick={()=>previewPdf('technical')}>Generate Technical PDF</button></div>
+      {reportMode==='month' && <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData}
+        onClick={()=>previewPdf('technical')}>Generate Technical PDF</button></div>}
       {completedData ? <div id="sphere-month-panel-evidence" className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">
         <div className="sphereMonthlyTableHead">
@@ -706,7 +758,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         <PressureObservations metric="cpu" pressure={evidence}/>
         <PressureObservations metric="ram" pressure={evidence}/>
         <PressureRows label="Jobs & Programs During Resource Pressure" evidence={evidence} metric={pressureMetric} onMetricChange={setPressureMetric}/>
-        <MonthlyErrorAnalysis key={month} evidence={errors}/>
+        <MonthlyErrorAnalysis key={requestedWeek||month} evidence={errors}/>
       </div></section></div> : <div className="sphereMonthlyState" role="status">Loading verified monthly evidence…</div>}
       </div>
       </RundeckWorkspaceDrawer>}
