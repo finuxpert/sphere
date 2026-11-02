@@ -512,11 +512,23 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [reportMode,setReportMode]=React.useState('month')
   const [selectedMonth,setMonth]=React.useState(MONTHS[1]?.value || MONTHS[0].value)
   const [weekStart,setWeekStart]=React.useState(WEEKS[1]?.value || WEEKS[0].value)
-  const month=reportMode==='week'?weekStart.slice(0,7):selectedMonth
+  const [customStart,setCustomStart]=React.useState(DEFAULT_CUSTOM_START)
+  const [customEnd,setCustomEnd]=React.useState(DEFAULT_CUSTOM_END)
+  const [draftStart,setDraftStart]=React.useState(DEFAULT_CUSTOM_START)
+  const [draftEnd,setDraftEnd]=React.useState(DEFAULT_CUSTOM_END)
+  const month=reportMode==='week'?weekStart.slice(0,7):reportMode==='custom'?customStart.slice(0,7):selectedMonth
   const requestedWeek=reportMode==='week'?weekStart:null
-  const reportParams=React.useCallback(()=>new URLSearchParams({month,...(requestedWeek?{week_start:requestedWeek}:{})}),[month,requestedWeek])
+  const requestedStart=reportMode==='custom'?customStart:null
+  const requestedEnd=reportMode==='custom'?customEnd:null
+  const reportParams=React.useCallback(()=>new URLSearchParams({month,
+    ...(requestedWeek?{week_start:requestedWeek}:{}),
+    ...(requestedStart?{start_date:requestedStart,end_date:requestedEnd}:{})}),
+    [month,requestedWeek,requestedStart,requestedEnd])
   const matchesScope=React.useCallback(payload=>payload?.month===month && payload?.period===reportMode &&
-    (requestedWeek?payload.week_start===requestedWeek:!payload.week_start),[month,reportMode,requestedWeek])
+    (requestedWeek?payload.week_start===requestedWeek:!payload.week_start) &&
+    (requestedStart?payload.start_date===requestedStart&&payload.end_date===requestedEnd:
+      !payload.start_date&&!payload.end_date),
+    [month,reportMode,requestedWeek,requestedStart,requestedEnd])
   const [evidenceOpen,setEvidenceOpen]=React.useState(false)
   const [pressureMetric,setPressureMetric]=React.useState('cpu')
   const [kind,setKind]=React.useState('ALL')
@@ -605,7 +617,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     }
     const controller=new AbortController()
     const params=new URLSearchParams({
-      month,...(requestedWeek?{week_start:requestedWeek}:{}),type:kind,health,pressure:pressureFilter,flag:signalFilter,q:appliedSearch,
+      month,...(requestedWeek?{week_start:requestedWeek}:{}),
+      ...(requestedStart?{start_date:requestedStart,end_date:requestedEnd}:{}),
+      type:kind,health,pressure:pressureFilter,flag:signalFilter,q:appliedSearch,
       limit:String(PAGE_SIZE),offset:String(page*PAGE_SIZE),
     })
     pdfGenerationRef.current += 1
@@ -652,15 +666,24 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     }
     load().finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>{controller.abort();if(retryTimer!==null)window.clearTimeout(retryTimer)}
-  },[month,requestedWeek,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError,matchesScope,evaluationRetry])
+  },[month,requestedWeek,requestedStart,requestedEnd,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError,matchesScope,evaluationRetry])
   const changePeriod=(mode,value)=>{
     pdfGenerationRef.current += 1
     if(mode==='month')setMonth(value)
     if(mode==='week')setWeekStart(value)
+    if(mode==='custom'){setDraftStart(customStart);setDraftEnd(customEnd)}
     setReportMode(mode);setEvidenceOpen(false);setPage(0);setKind('ALL');setHealth('REVIEW');setPressureFilter('ALL');setSignalFilter('ALL')
     setSearch('');setAppliedSearch('');setPdfError('')
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
+  }
+  const applyCustom=()=>{
+    if(customDateError(draftStart,draftEnd))return
+    if(draftStart===customStart&&draftEnd===customEnd)return
+    pdfGenerationRef.current+=1
+    if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
+    pdfRef.current='';setPdfUrl('');setPdfError('')
+    setEvidenceOpen(false);setPage(0);setCustomStart(draftStart);setCustomEnd(draftEnd)
   }
   const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
   const preview=matchesScope(hostPreview) ? hostPreview : null
@@ -681,6 +704,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       const params = new URLSearchParams({
         month, type:'ALL', health:'ALL', pressure:'ALL', flag:'ALL',
         ...(requestedWeek?{week_start:requestedWeek}:{}),
+        ...(requestedStart?{start_date:requestedStart,end_date:requestedEnd}:{}),
         q:'', limit:String(PAGE_SIZE), offset:'0',
       })
       const response = await fetch(API+'/evaluation/workloads/monthly?'+params.toString(), {cache:'no-store'})
@@ -711,17 +735,27 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       setPdfUrl(url)
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{pdfInFlightRef.current=false;setPdfBusy(false)}
-  },[data,loading,pdfBusy,month,requestedWeek,reportParams,matchesScope])
+  },[data,loading,pdfBusy,month,requestedWeek,requestedStart,requestedEnd,reportParams,matchesScope])
   return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="SAP Performance Report and Job Impact">
     <div className="sphereMonthlyHead">
-      {showTitle && <div><strong>SAP {reportMode==='week'?'Weekly':'Monthly'} Performance Report</strong></div>}
+      {showTitle && <div><strong>SAP {reportMode==='custom'?'Custom':reportMode==='week'?'Weekly':'Monthly'} Performance Report</strong></div>}
       <div className="sphereMonthlyPicker d-flex align-items-end gap-2">
         <div><label htmlFor="sphere-period-mode">Report period</label>
           <select className="form-select form-select-sm" id="sphere-period-mode" value={reportMode}
             onChange={event=>changePeriod(event.target.value,event.target.value==='week'?weekStart:selectedMonth)}>
-            <option value="month">Monthly</option><option value="week">Weekly</option>
+            <option value="month">Monthly</option><option value="week">Weekly</option><option value="custom">Custom</option>
           </select></div>
-        {reportMode==='week' ? <div><label htmlFor="sphere-week-choice">Reporting week (WIB)</label>
+        {reportMode==='custom' ? <>
+          <div><label htmlFor="sphere-custom-start">Start date (WIB)</label>
+            <input className="form-control form-control-sm" type="date" id="sphere-custom-start"
+              max={TODAY_WIB} value={draftStart} onChange={event=>setDraftStart(event.target.value)}/></div>
+          <div><label htmlFor="sphere-custom-end">End date (WIB)</label>
+            <input className="form-control form-control-sm" type="date" id="sphere-custom-end"
+              min={draftStart} max={TODAY_WIB} value={draftEnd} onChange={event=>setDraftEnd(event.target.value)}/></div>
+          <button type="button" className="btn btn-sm btn-outline-info"
+            disabled={Boolean(customDateError(draftStart,draftEnd))}
+            onClick={applyCustom}>Apply</button>
+        </> : reportMode==='week' ? <div><label htmlFor="sphere-week-choice">Reporting week (WIB)</label>
           <select className="form-select form-select-sm" id="sphere-week-choice" value={weekStart}
             onChange={event=>changePeriod('week',event.target.value)}>
             {WEEKS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
@@ -732,12 +766,14 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           </select></div>}
       </div>
     </div>
+    {reportMode==='custom'&&customDateError(draftStart,draftEnd)&&
+      <small className="sphereMonthlyWarning" role="alert">{customDateError(draftStart,draftEnd)}</small>}
     <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
         {pdfBusy?'Generating…':'Generate PDF Management'}
       </button>
-      {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?(requestedWeek?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf'):'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
+      {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?(requestedStart?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd+'.pdf':requestedWeek?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf'):'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
     </div>
     {storageError&&<p className="sphereMonthlyWarning" role="alert">{storageError}</p>}
     {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
@@ -752,8 +788,8 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         onClick={()=>{setError('');setEvaluationRetry(value=>value+1)}}>Retry evaluation</button>
     </div>}
     {(completedData || preview)&&<>
-      <MonthlyManagementDashboard month={month} weekStart={requestedWeek} full={completedData} preview={preview} storage={storage} storageError={storageError} loading={loading} evaluationError={error}/>
-      {evidenceOpen && <RundeckWorkspaceDrawer title={reportMode==='week'?'Weekly Evidence':'Monthly Evidence'} subtitle={(requestedWeek||month)+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
+      <MonthlyManagementDashboard month={month} weekStart={requestedWeek} customStart={requestedStart} customEnd={requestedEnd} full={completedData} preview={preview} storage={storage} storageError={storageError} loading={loading} evaluationError={error}/>
+      {evidenceOpen && <RundeckWorkspaceDrawer title={reportMode==='custom'?'Custom Evidence':reportMode==='week'?'Weekly Evidence':'Monthly Evidence'} subtitle={(requestedStart?requestedStart+' to '+requestedEnd:requestedWeek||month)+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
       <div className="sphereMonthlyReview is-v2 is-evidence-modal">
       {reportMode==='month' && <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData}
         onClick={()=>previewPdf('technical')}>Generate Technical PDF</button></div>}
