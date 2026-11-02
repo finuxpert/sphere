@@ -71,8 +71,8 @@ assert.ok(Math.abs(executive.internal.pageSize.getWidth()-1190.55)<.25)
 assert.ok(Math.abs(executive.internal.pageSize.getHeight()-841.89)<.25)
 const executivePage=executive.internal.pages[1].join('\n')
 for(const label of ['SAP Monthly Performance Report','CPU Utilization Trend',
-  'Memory Utilization Trend','Top 10 Jobs by Peak WP CPU','Top 10 Jobs by Peak WP Memory',
-  'Application Server Performance','Top 10 Jobs for Tuning Review','Storage Capacity',
+  'Memory Utilization Trend','Top 10 Workloads by Peak WP CPU','Top 10 Workloads by Peak WP Memory',
+  'Application Server Performance','Top 10 Tuning Candidates','Storage Capacity',
   'File System OS','Not Collected','ZLAST_CANDIDATE_10']) {
   assert.ok(executivePage.includes(label),'Missing A3 management content: '+label)
 }
