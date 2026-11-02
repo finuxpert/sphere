@@ -141,13 +141,13 @@ test('compact Monitoring finish keeps cards, Evaluation header and tiny charts r
   assert.match(fs, /Observed change/)
   assert.doesNotMatch(layout, /min-height:640px!important/)
 })
-test('Monitoring restores one saved evaluation capsule instead of duplicate status summary',()=>{
+test('Monitoring uses source-backed evaluation distribution instead of decorative globe',()=>{
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const evaluation=read('RundeckWorkloadHealth.jsx')
-  assert.match(core,/viewMode="globe"/)
-  assert.doesNotMatch(core,/viewMode="status"/)
-  assert.match(evaluation,/onPointerEnter=\{event => \{/)
-  assert.match(evaluation,/onPointerLeave=\{event => \{/)
+  assert.match(core,/viewMode="status"/)
+  assert.doesNotMatch(core,/viewMode="globe"/)
+  assert.match(evaluation,/sphereEvaluationStatusRows/)
+  assert.match(evaluation,/onReview\?\.\(level\.health\)/)
 })
 test('Storage chart tabs mount exactly one source-backed analysis without overlapping plots',()=>{
   const storage=read('RundeckStorageSummary.jsx')
