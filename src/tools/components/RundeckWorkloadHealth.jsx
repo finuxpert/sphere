@@ -73,7 +73,7 @@ async function readVerifiedPopulation(signal, compactSummary = false) {
 }
 
 /** One saved 1D evaluation = one selectable hexagon, without 400+1 pagination. */
-export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe', compactSummary = false, motionEnabled = true, showResourceTop5 = false }) {
+export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'status', compactSummary = false, motionEnabled = true, showResourceTop5 = false }) {
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
@@ -285,7 +285,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       ? rows.length > 0
         ? <RundeckWorkloadAppLanes rows={rows} onSelectWorkload={openWorkload} onOpenApp={onOpenApp} period={period} />
         : <div className="rundeckAppEvalState" role="status">{outcome}</div>
-      : <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
+      : viewMode === 'globe' ? <div ref={dotGridRef} className={'rundeckWorkloadDotGrid' + (globeEnabled && dotLayout.fits && rows.length ? ' is-sphere-globe' + (globeExpanded ? ' is-expanded' : '') : '')}
       role="group" aria-label="Individual saved workload evaluations"
       title={globeEnabled && dotLayout.fits && rows.length ? 'Hover to expand evaluations; move away to return to globe' : undefined}
       onPointerEnter={event => {
@@ -329,6 +329,25 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       {(!rows.length || !dotLayout.fits) && <span className="rundeckWorkloadDotEmpty" role="status">
         {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
       </span>}
+    </div> : <div className="sphereEvaluationStatus" role="group" aria-label="Saved evaluation status distribution">
+      <div className="sphereEvaluationStatusHeading">
+        <strong>Status Distribution</strong>
+        <span>{preview ? preview.total.toLocaleString('en-US') + ' evaluated' : outcome}</span>
+      </div>
+      {preview && preview.total > 0 ? <div className="sphereEvaluationStatusRows">
+        {LEVELS.map(level => {
+          const count = Number(preview.health[level.key] || 0)
+          const percent = 100 * count / preview.total
+          return <button type="button" key={level.key} className={'sphereEvaluationStatusRow is-' + level.key}
+            disabled={!onReview} onClick={() => onReview?.(level.health)}
+            aria-label={level.label + ': ' + count + ' of ' + preview.total + ' evaluations; open Review'}
+            title={level.label + ' · ' + count + ' evaluations · ' + percent.toFixed(1) + '%'}>
+            <span className="sphereEvaluationStatusLabel">{level.label}</span>
+            <span className="sphereEvaluationStatusTrack"><i style={{width: percent + '%'}} /></span>
+            <span className="sphereEvaluationStatusPercent">{percent.toFixed(1)}%</span>
+          </button>
+        })}
+      </div> : <span className="sphereEvaluationStatusEmpty" role="status">{outcome}</span>}
     </div>}
     {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label="Top five evaluated resource consumers">
       <div className="sphereEvaluationTop5Head">
@@ -363,7 +382,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     </section>}
     {(viewMode !== 'by-app' || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
       {viewMode !== 'by-app' && <span className={'is-' + state} title={statusNote + ' · Evaluation priority uses saved observations, not SAP SM37 execution status.'}>{preview ? preview.total.toLocaleString('en-US') + ' evaluated · saved 24h' : outcome}</span>}
-      {viewMode !== 'by-app' && preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
+      {viewMode !== 'by-app' && preview && Number(preview.health.unknown) > 0 && otherUnknown !== null && (otherUnknown > 0 || insufficient !== Number(preview.health.unknown)) &&
         <small title={unknownDescription}>Evidence gap · {insufficient} insufficient{otherUnknown > 0 ? ` · ${otherUnknown} other` : ''}</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
     </footer>}
