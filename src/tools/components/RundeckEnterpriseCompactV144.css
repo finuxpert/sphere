@@ -378,3 +378,22 @@
   .appShell:has(.rundeckPanel) .rundeckDataFreshnessInline,
   .appShell:has(.rundeckPanel) .rundeckCollectorHealthV131.is-fixed > small {font-size:9px}
 }
+
+/* SPHERE DEV 2026-11-02 — neutral APP cards, status retained as a narrow accent. */
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexSelector.is-sap-normal {
+  background:var(--cockpit-surface-alt,#1d2933)!important;
+  border-color:var(--cockpit-outline,rgba(116,159,178,.21))!important;
+  box-shadow:inset 3px 0 0 var(--sphere-positive,#67c8a0)!important;
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexSelector:is(.is-sap-warning,.is-sap-attention) {
+  background:var(--cockpit-surface-alt,#1d2933)!important;
+  border-color:var(--cockpit-outline,rgba(116,159,178,.21))!important;
+  box-shadow:inset 3px 0 0 var(--sphere-warning,#e7b65d)!important;
+}
+.appShell.isTool:has(.rundeckPanel) .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexSelector.is-active {
+  outline:1px solid var(--cockpit-focus,#67a9e7)!important;
+  outline-offset:-1px;
+}
