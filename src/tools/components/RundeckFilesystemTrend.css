@@ -9,3 +9,5 @@
 .rundeckMonitoring.is-three-panel .sphereFilesystemTrend svg{height:auto;max-height:132px;min-height:95px;flex:1 1 auto}
 .rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{font-size:9px;gap:3px}
 .rundeckMonitoring.is-three-panel .sphereFilesystemTrendTop{font-size:10px}
+/* Storage chart tab owns the available plot height and footer separately. */
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereFilesystemTrend svg text{font-size:9px}

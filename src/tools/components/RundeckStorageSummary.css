@@ -84,3 +84,98 @@
 .rundeckMonitoring.is-three-panel .sphereStorageGrowthHead strong{font-size:11px}
 .rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{font-size:9.5px!important}
 .rundeckMonitoring.is-three-panel .sphereFilesystemTrend svg text{font-size:10px!important}
+
+/* Monitoring Storage: only one real chart is mounted at a time.
+   Source-backed Growth and Disk I/O remain accessible through tabs. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .sphereStorageSummary{
+  display:flex!important;flex-direction:column!important;
+  min-width:0!important;min-height:0!important;gap:5px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .sphereStorageRows{
+  flex:0 0 auto!important;display:grid!important;align-content:start!important;
+  gap:2px!important;min-height:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .sphereStorageRow{
+  min-height:25px!important;padding:2px 4px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageAnalysis{
+  flex:1 1 auto;display:flex;flex-direction:column;
+  gap:5px;min-height:0;min-width:0;
+  border-top:1px solid var(--sphere-border-subtle,#304150);
+  padding-top:6px;box-sizing:border-box;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartTabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;flex:0 0 auto;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartTabs button{
+  border:1px solid var(--sphere-border-subtle,#304150);border-radius:4px;
+  background:transparent;color:var(--sphere-text-secondary,#aab7c5);
+  font:inherit;font-size:11px;font-weight:600;line-height:1.2;
+  padding:5px 6px;min-height:28px;cursor:pointer;white-space:nowrap;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartTabs button[aria-selected="true"]{
+  border-color:var(--sphere-accent,#67a9e8);
+  color:var(--sphere-text,#e7edf4);
+  background:var(--sphere-surface-2,#243342);
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel{
+  display:flex;flex-direction:column;flex:1 1 auto;min-height:0;min-width:0;
+  overflow:hidden;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel > :is(.sphereStorageGrowth,.sphereDiskIoTrend){
+  width:100%;min-height:0;min-width:0;flex:1 1 auto!important;
+  border-top:none!important;padding:0!important;margin:0!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowth{
+  display:flex;flex-direction:column;gap:4px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowthHead{
+  min-height:24px;gap:6px;flex:0 0 auto;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartContext{
+  font-size:10px;color:var(--sphere-text-secondary,#aab7c5);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereFilesystemTrend{
+  display:flex;flex-direction:column;gap:4px;min-height:0!important;flex:1 1 auto;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereFilesystemTrendTop{
+  display:flex;align-items:center;justify-content:space-between;gap:4px;
+  min-height:22px;flex:0 0 auto;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereFilesystemTrendTop span{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereFilesystemTrend svg{
+  flex:1 1 auto;min-height:75px!important;max-height:150px!important;
+  height:100%!important;width:100%;display:block;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereFilesystemTrendFooter{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:3px 8px!important;align-items:center;
+  min-height:32px;flex:0 0 auto;margin:0!important;padding:0!important;
+  font-size:10px!important;line-height:1.3!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereFilesystemTrendFooter span{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereDiskIoTrend{
+  display:flex;flex-direction:column;gap:5px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereDiskIoTrend svg{
+  min-height:90px!important;max-height:180px!important;
+  height:100%!important;flex:1 1 auto;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereDiskIoFooter{
+  font-size:10px;flex:0 0 auto;min-height:14px;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereDiskIoHead,
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereDiskIoMeta{
+  flex:0 0 auto;min-height:25px;
+}
+@media(max-width:900px){
+  .rundeckMonitoring.is-three-panel .sphereStorageChartPanel{min-height:190px}
+}

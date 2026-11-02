@@ -100,3 +100,11 @@
 @media(max-width:480px){
   .sphereEvaluationStatusRow{grid-template-columns:68px minmax(0,1fr) 38px;gap:5px}
 }
+/* Keep 5 observed workload rows readable and preserve the full title on hover. */
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row {
+  grid-template-columns:minmax(0,1.5fr) minmax(40px,.85fr) minmax(48px,auto);
+  gap:6px;
+}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Name {
+  font-size:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
+}

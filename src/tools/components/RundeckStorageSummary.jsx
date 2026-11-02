@@ -26,6 +26,7 @@ async function read(url, signal) {
 export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails }) {
   const [selectedMount, setSelectedMount] = React.useState('/')
   const [growthRange, setGrowthRange] = React.useState('7d')
+  const [storageView, setStorageView] = React.useState('growth')
   const [snapshot, setSnapshot] = React.useState({ hosts: [], rows: [], error: '', loading: true })
   React.useEffect(() => {
     const controller = new AbortController()
@@ -85,18 +86,33 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
         <strong className={'sphereStoragePercent is-'+item.status.toLowerCase()}>{item.highest ? item.highest.value.toFixed(1)+'%' : '—'}</strong>
       </button>)}
     </div>
-    <div className="sphereStorageGrowth">
-      <div className="sphereStorageGrowthHead">
-        <strong>Filesystem Growth</strong>
-        <div role="group" aria-label="Filesystem growth range" className="sphereStorageGrowthRanges">
-          {[['7d','7D'],['30d','30D']].map(([value,label]) =>
-            <button key={value} type="button" aria-pressed={growthRange === value}
-              onClick={() => setGrowthRange(value)}>{label}</button>)}
-        </div>
+    <div className="sphereStorageAnalysis" aria-label="Storage activity details">
+      <div role="tablist" aria-label="Storage history chart" className="sphereStorageChartTabs">
+        <button id="sphereStorageGrowthTab" type="button" role="tab"
+          aria-selected={storageView === 'growth'} aria-controls="sphereStorageChartPanel"
+          onClick={() => setStorageView('growth')}>Filesystem Growth</button>
+        <button id="sphereStorageIoTab" type="button" role="tab"
+          aria-selected={storageView === 'io'} aria-controls="sphereStorageChartPanel"
+          onClick={() => setStorageView('io')}>Disk I/O</button>
       </div>
-      <RundeckFilesystemTrend mount={selectedMount} range={growthRange} refreshToken={refreshToken} />
+      <div id="sphereStorageChartPanel" role="tabpanel"
+        aria-labelledby={storageView === 'growth' ? 'sphereStorageGrowthTab' : 'sphereStorageIoTab'}
+        className="sphereStorageChartPanel">
+        {storageView === 'growth' ?
+          <div className="sphereStorageGrowth">
+            <div className="sphereStorageGrowthHead">
+              <span className="sphereStorageChartContext">Selected filesystem · capacity history</span>
+              <div role="group" aria-label="Filesystem growth range" className="sphereStorageGrowthRanges">
+                {[['7d','7D'],['30d','30D']].map(([value,label]) =>
+                  <button key={value} type="button" aria-pressed={growthRange === value}
+                    onClick={() => setGrowthRange(value)}>{label}</button>)}
+              </div>
+            </div>
+            <RundeckFilesystemTrend mount={selectedMount} range={growthRange} refreshToken={refreshToken} />
+          </div> :
+          <RundeckDiskIoTrend refreshToken={refreshToken} />}
+      </div>
     </div>
-    <RundeckDiskIoTrend refreshToken={refreshToken} />
     {snapshot.error && <small className="sphereStorageError" role="status">{snapshot.error}</small>}
     {snapshot.loading && <small className="sphereStorageError" role="status">Checking storage…</small>}
   </section>

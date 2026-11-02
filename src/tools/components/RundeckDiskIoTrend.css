@@ -35,3 +35,4 @@
 
 /* Keep both authentic read/write series visible at operator zoom. */
 .rundeckMonitoring.is-three-panel .sphereDiskIoTrend svg{width:100%;min-height:78px;max-height:106px}
+.rundeckMonitoring.is-three-panel .sphereStorageChartPanel .sphereDiskIoTrend svg text{font-size:9px}

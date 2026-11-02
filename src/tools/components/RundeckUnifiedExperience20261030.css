@@ -846,3 +846,17 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
   outline:1px solid var(--cockpit-focus,#67a9e7)!important;
   outline-offset:-1px;
 }
+
+/* Correct the grid and capsule ownership on Monitoring: the single-screen
+   Evaluation is restored, with the top summary as its only severity totals. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth.is-monitoring-globe > .rundeckWorkloadDotGrid {
+  grid-area:eval-capsule!important;
+  min-height:145px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth.is-monitoring-globe > .sphereEvaluationTop5{
+  grid-area:eval-top5!important;
+}
