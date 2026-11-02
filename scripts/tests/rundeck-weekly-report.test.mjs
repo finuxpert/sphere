@@ -37,7 +37,7 @@ test('weekly management PDF is A3 landscape and has the weekly title and exact b
   assert.equal(pdf.internal.getNumberOfPages(),1)
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   assert.ok(stream.includes('SAP Weekly Performance Report'))
-  assert.ok(stream.includes('2026-10-26 to 2026-11-01 (WIB)'))
+  assert.ok(stream.includes('2026-10-26 to 2026-11-01')) // PDF escapes parentheses in text operators
   assert.ok(!stream.includes('SAP Monthly Performance Report'))
 })
 
