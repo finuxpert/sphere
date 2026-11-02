@@ -38,6 +38,8 @@ jobs:
         run: bash scripts/qa-browser-boot.sh
       - name: Verify full-width APP evaluation geometry in Chromium
         run: node scripts/qa-evaluation-layout.mjs
+      - name: Verify Monitoring globe and APP status geometry in Chromium
+        run: node scripts/qa-monitoring-globe-layout.mjs
       - name: Render and validate monthly SAP ABAP PDF (long programs, errors and page breaks)
         run: |
           node scripts/qa-monthly-pdf.mjs
