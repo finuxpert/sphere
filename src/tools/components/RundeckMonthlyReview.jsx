@@ -370,7 +370,7 @@ const monthlyStorageNote=(storage,loading,error)=>{
   return (rows.length-missing.length)+' of '+rows.length+' collected · '+(MONTHLY_STORAGE_REASON[missing[0].reason]||'Historical source incomplete')
 }
 
-function MonthlyRanking({ title, rows=[], metric }) {
+function MonthlyRanking({ title, rows=[], metric, loading=false, error='' }) {
   const values=rows.map(row=>metric==='cpu'?wpCpuCoreEquivalent(row.peak_cpu_pct):Number(row.peak_pss_gb))
   const top=Math.max(0,...values.filter(v=>v!==null && Number.isFinite(v)))
   return <section className="sphereMonthlyManagerPanel" aria-label={title}>
@@ -385,11 +385,23 @@ function MonthlyRanking({ title, rows=[], metric }) {
           <b>{usable?fmt(val,2)+(metric==='cpu'?' cores':' GB'):'—'}</b>
         </div>
       })}
-      {!rows.length&&<span className="sphereMonthlyManagerMissing">Not Collected</span>}
+      {!rows.length&&<span className="sphereMonthlyManagerMissing">{loading?'Loading saved evaluation…':error?'Evaluation unavailable':'No workloads recorded'}</span>}
     </div>
   </section>
 }
-function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,storageError=''}) {
+function savedPeriodPeak(pressure,metric,month,weekStart) {
+  const field='peak_'+metric+'_pct'
+  const end=weekStart?new Date(Date.parse(weekStart+'T00:00:00Z')+7*86400000).toISOString().slice(0,10):null
+  const rows=(pressure?.daily_hosts||[]).filter(row=>{
+    const date=String(row.day||'').slice(0,10)
+    return (weekStart?date>=weekStart&&date<end:date.startsWith(month+'-')) &&
+      row[field]!==null && row[field]!==undefined && Number.isFinite(Number(row[field]))
+  })
+  if(!rows.length)return null
+  const winner=rows.reduce((best,row)=>Number(row[field])>Number(best[field])?row:best)
+  return {value:Number(winner[field]),host:hostLabel(winner.host),at:winner['peak_'+metric+'_at']||null}
+}
+function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,storageError='',loading=false,evaluationError=''}) {
   const data=full||preview
   const pressure=data?.monthly_pressure||{}
   const model=full && Array.isArray(full.monthly_top_wp_cpu) &&
@@ -401,10 +413,14 @@ function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,s
     const name='APP'+(i+1)
     return (pressure.hosts||[]).find(row=>hostLabel(row.host)===name)||{host:name}
   })
+  // Host preview is independently verified and must not wait for workload SQL or storage mapping.
   const peak=metric=>{
-    const p=model?.[metric==='cpu'?'cpuPeak':'ramPeak']
-    return p ? 'Peak '+pct(p.value)+' · '+p.host+' · '+when(p.at) : 'Not Collected'
+    const p=savedPeriodPeak(pressure,metric,month,weekStart)
+    return p ? 'Peak '+pct(p.value)+' · '+p.host+(p.at?' · '+when(p.at):'') : 'Not Collected'
   }
+  const cpuRanking=model?.sortedCpu||full?.monthly_top_wp_cpu||[]
+  const memoryRanking=model?.sortedPss||full?.monthly_top_wp_pss||[]
+  const candidates=model?.candidates||full?.monthly_abap_candidates?.slice(0,10)||[]
   return <div className="sphereMonthlyManagement" aria-label={weekStart?"SAP Weekly Performance Report":"SAP Monthly Performance Report"}>
     <div className="sphereMonthlyManagerPair">
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
@@ -414,8 +430,8 @@ function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,s
       </section>)}
     </div>
     <div className="sphereMonthlyManagerPair">
-      <MonthlyRanking title="Top 10 Jobs by Peak WP CPU" metric="cpu" rows={model?.sortedCpu||[]}/>
-      <MonthlyRanking title="Top 10 Jobs by Peak WP Memory" metric="ram" rows={model?.sortedPss||[]}/>
+      <MonthlyRanking title="Top 10 Jobs by Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 10 Jobs by Peak WP Memory" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
     </div>
     <div className="sphereMonthlyManagerPair is-tables">
       <section className="sphereMonthlyManagerPanel">
@@ -431,7 +447,7 @@ function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,s
       <section className="sphereMonthlyManagerPanel">
         <h4>Top 10 Jobs for Tuning Review</h4>
         <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Evidence WIB</th><th>Review finding</th><th>Tuning action</th></tr></thead>
-          <tbody>{(model?.candidates||[]).map((row,index)=><tr key={id(row)}>
+          <tbody>{candidates.map((row,index)=><tr key={id(row)}>
             <td>{index+1}</td><td className="is-job">{row.consumer_key}</td>
             <td>{hostsFor(row)||'—'}</td><td>{fmt(row.observations,0)}</td>
             <td>{wpCoreEq(row.peak_cpu_pct)}</td><td>{fmt(row.peak_pss_gb,2)}</td>
@@ -439,8 +455,8 @@ function MonthlyManagementDashboard({month,weekStart=null,full,preview,storage,s
             <td>{row.signals?.high_memory?'High WP memory':row.signals?.sustained_high_cpu?'High WP CPU':row.signals?.cpu_spike?'WP CPU spike':row.signals?.baseline_anomaly?'Above baseline':'Performance review'}</td>
             <td>{row.signals?.high_memory?'Review memory use':row.signals?.sustained_high_cpu||row.signals?.cpu_spike?'Review processing':row.signals?.baseline_anomaly?'Check workload change':'Review in SAP'}</td>
           </tr>)}
-          {!model&&<tr><td colSpan="9">Loading saved evaluation…</td></tr>}
-          {model&&!model.candidates.length&&<tr><td colSpan="9">No candidates observed for this period</td></tr>}
+          {!full&&<tr><td colSpan="9">{loading?'Loading saved evaluation…':evaluationError?'Evaluation unavailable. Retry to load tuning candidates.':'Waiting for evaluated workloads…'}</td></tr>}
+          {full&&!candidates.length&&<tr><td colSpan="9">No candidates observed for this period</td></tr>}
           </tbody>
         </table>
       </section>
@@ -486,6 +502,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [hostPreview,setHostPreview]=React.useState(null)
   const [hostPreviewError,setHostPreviewError]=React.useState('')
   const [hostPreviewRetry,setHostPreviewRetry]=React.useState(0)
+  const [evaluationRetry,setEvaluationRetry]=React.useState(0)
   const [storage,setStorage]=React.useState(null)
   const [storageError,setStorageError]=React.useState('')
   const [loading,setLoading]=React.useState(true)
@@ -567,26 +584,47 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
     pdfRef.current='';setPdfUrl('')
     setLoading(true);setError('');setData(null)
-    const evaluationDeadline=AbortSignal.timeout(35_000)
-    fetch(API+'/evaluation/workloads/monthly?'+params.toString(),{
-      cache:'no-store',signal:AbortSignal.any([controller.signal,evaluationDeadline]),
+    // A cold evaluation can outlive the browser's first 35-second request and
+    // populate the server-side cache. Retry once so the UI can consume that
+    // verified result without demanding a manual refresh.
+    let retryTimer=null
+    const waitForCache=()=>new Promise(resolve=>{
+      retryTimer=window.setTimeout(()=>{retryTimer=null;resolve()},1500)
+      controller.signal.addEventListener('abort',()=>resolve(),{once:true})
     })
-      .then(async response=>{
-        if(!response.ok){const body=await response.json().catch(()=>({}));throw Error(body.detail||'Reporting period evidence unavailable (HTTP '+response.status+')')}
-        return response.json()
-      })
-      .then(payload=>{
-        if(controller.signal.aborted)return
-        if(!matchesScope(payload)||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid reporting period evidence contract')
-        if(!payload.monthly_pressure||!payload.monthly_errors)throw Error('Resource pressure or error evidence is unavailable on this backend')
-        setData(payload)
-      })
-      .catch(failure=>{if(!controller.signal.aborted)setError(evaluationDeadline.aborted
-        ? 'Evaluation exceeded 35 seconds; inspect backend SQL timings'
-        : failure.message||'Historical evidence unavailable')})
-      .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
-    return ()=>controller.abort()
-  },[month,requestedWeek,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError,matchesScope])
+    const load=async()=>{
+      for(let attempt=0;attempt<2&&!controller.signal.aborted;attempt++){
+        const evaluationDeadline=AbortSignal.timeout(35_000)
+        try{
+          const response=await fetch(API+'/evaluation/workloads/monthly?'+params.toString(),{
+            cache:'no-store',signal:AbortSignal.any([controller.signal,evaluationDeadline]),
+          })
+          if(!response.ok){
+            const body=await response.json().catch(()=>({}))
+            throw Error(body.detail||'Reporting period evidence unavailable (HTTP '+response.status+')')
+          }
+          const payload=await response.json()
+          if(controller.signal.aborted)return
+          if(!matchesScope(payload)||payload.page?.scope!=='FULL_EVALUATED_POPULATION')throw Error('Invalid reporting period evidence contract')
+          if(!payload.monthly_pressure||!payload.monthly_errors)throw Error('Resource pressure or error evidence is unavailable on this backend')
+          setData(payload)
+          return
+        }catch(failure){
+          if(controller.signal.aborted)return
+          if(evaluationDeadline.aborted && attempt===0){
+            await waitForCache()
+            continue
+          }
+          setError(evaluationDeadline.aborted
+            ? 'Evaluation exceeded 35 seconds; inspect backend SQL timings'
+            : failure.message||'Historical evidence unavailable')
+          return
+        }
+      }
+    }
+    load().finally(()=>{if(!controller.signal.aborted)setLoading(false)})
+    return ()=>{controller.abort();if(retryTimer!==null)window.clearTimeout(retryTimer)}
+  },[month,requestedWeek,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError,matchesScope,evaluationRetry])
   const changePeriod=(mode,value)=>{
     pdfGenerationRef.current += 1
     if(mode==='month')setMonth(value)
@@ -681,9 +719,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       <button type="button" className="btn btn-sm btn-outline-light ms-2"
         onClick={()=>{setHostPreviewError('');setHostPreviewRetry(count=>count+1)}}>Retry server data</button>
     </div>}
-    {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.</div>}
+    {error&&<div className="sphereMonthlyState is-error" role="alert">{error}. No simulated values are substituted.
+      <button type="button" className="btn btn-sm btn-outline-light ms-2"
+        onClick={()=>{setError('');setEvaluationRetry(value=>value+1)}}>Retry evaluation</button>
+    </div>}
     {(completedData || preview)&&<>
-      <MonthlyManagementDashboard month={month} weekStart={requestedWeek} full={completedData} preview={preview} storage={storage} storageError={storageError}/>
+      <MonthlyManagementDashboard month={month} weekStart={requestedWeek} full={completedData} preview={preview} storage={storage} storageError={storageError} loading={loading} evaluationError={error}/>
       {evidenceOpen && <RundeckWorkspaceDrawer title={reportMode==='week'?'Weekly Evidence':'Monthly Evidence'} subtitle={(requestedWeek||month)+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
       <div className="sphereMonthlyReview is-v2 is-evidence-modal">
       {reportMode==='month' && <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData}
