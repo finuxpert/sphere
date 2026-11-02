@@ -33,7 +33,7 @@ export default function RundeckDiskIoTrend({refreshToken=''}) {
         // Scope strictly to the recorded host; never merge other APP devices.
         const rows=(result.items||[]).filter(item=>
           String(item.host||'').toUpperCase()===String(host.host).toUpperCase())
-        setData({scope,rows,error:'',loading:false})
+        setData({scope,host:host.host,rows,error:'',loading:false})
       }catch(error){
         if(!controller.signal.aborted)
           setData({scope,rows:[],error:error?.message||'Device I/O unavailable',loading:false})
@@ -45,7 +45,7 @@ export default function RundeckDiskIoTrend({refreshToken=''}) {
   const ready=data.scope===scope&&!data.loading&&!data.error
   const devices=ready?storageDevices(data.rows):[]
   const device=devices.includes(selectedDevice)?selectedDevice:devices[0]||''
-  const points=ready&&device?storageDevicePoints(data.rows,device):[]
+  const points=ready&&device?storageDevicePoints(data.rows,device,data.host):[]
   const maxValue=Math.max(1,...points.flatMap(item=>[observedNumber(item.read_mbps),observedNumber(item.write_mbps)]
     .filter(value=>value!==null)))
   const newest=points.at(-1)
@@ -75,7 +75,7 @@ export default function RundeckDiskIoTrend({refreshToken=''}) {
       </div>
     </div>
     <div className="sphereDiskIoMeta">
-      <span>Device · MB/s</span>
+      <span title="Series identity from storage collector; may refer to a device or mapped mount">Device / mount · MB/s</span>
       {devices.length>0 && <select value={device}
         onChange={event=>setSelectedDevice(event.target.value)}
         aria-label="Disk I/O device">

@@ -23,9 +23,10 @@ export function storageDevices(rows) {
     .map(row => String(row.series_key || '').trim()).filter(Boolean))].sort()
 }
 
-export function storageDevicePoints(rows, device) {
+export function storageDevicePoints(rows, device, host = '') {
   return (Array.isArray(rows) ? rows : [])
     .filter(row => String(row.series_key || '').trim() === device &&
+      (!host || String(row.host || '').toUpperCase() === String(host).toUpperCase()) &&
       Number.isFinite(Date.parse(row.collected_at || '')) &&
       (observedNumber(row.read_mbps) !== null || observedNumber(row.write_mbps) !== null))
     .sort((a, b) => Date.parse(a.collected_at) - Date.parse(b.collected_at))

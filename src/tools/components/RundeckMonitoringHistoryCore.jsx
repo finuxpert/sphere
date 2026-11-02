@@ -114,6 +114,7 @@ export default function RundeckMonitoringHistoryCore(props) {
             onSelectWorkload={props.onOpenEvaluatedWorkload}
             viewMode="globe"
             motionEnabled={motionEnabled}
+            showResourceTop5
             onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
           />
         </div>

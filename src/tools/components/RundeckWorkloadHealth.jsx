@@ -73,7 +73,7 @@ async function readVerifiedPopulation(signal, compactSummary = false) {
 }
 
 /** One saved 1D evaluation = one selectable hexagon, without 400+1 pagination. */
-export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe', compactSummary = false, motionEnabled = true }) {
+export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe', compactSummary = false, motionEnabled = true, showResourceTop5 = false }) {
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
@@ -330,7 +330,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
       </span>}
     </div>}
-    {viewMode !== 'by-app' && <section className="sphereEvaluationTop5" aria-label="Top five evaluated resource consumers">
+    {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label="Top five evaluated resource consumers">
       <div className="sphereEvaluationTop5Head">
         <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
           Top 5 Resource Consumers

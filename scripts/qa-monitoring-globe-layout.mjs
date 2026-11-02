@@ -45,12 +45,22 @@ try{
           <header class="rundeckWorkloadHealthTitle"><strong>Job &amp; Program Evaluation</strong><button>Open Review</button></header>
           <div class="rundeckWorkloadHealthLegend">${kpis}</div>
           <div class="rundeckWorkloadDotGrid" style="--workload-columns:10;--workload-dot-size:7px;--workload-dot-gap:2px">${dots}</div>
+          <section class="sphereEvaluationTop5">
+             <div class="sphereEvaluationTop5Head"><strong>Top 5 Resource Consumers</strong></div>
+             <div class="sphereEvaluationTop5Bars">
+               ${Array.from({length:5},(_,i)=>'<button class="sphereEvaluationTop5Row"><span class="sphereEvaluationTop5Name">Observed workload '+i+'</span><span class="sphereEvaluationTop5Track"><i style="width:60%"></i></span><span class="sphereEvaluationTop5Value">20%</span></button>').join('')}
+             </div>
+           </section>
           <footer class="rundeckWorkloadHealthFooter">60 evaluated</footer></section></div></section>
           <section class="sphereStorageSummary col-12 col-xl-4"><header class="sphereStorageSummaryHead"><h3>Storage Summary</h3></header>
           <div class="sphereStorageRows">${mounts}</div>
           <div class="sphereStorageGrowth"><div class="sphereStorageGrowthHead"><strong>Filesystem Growth</strong></div>
           <div class="sphereFilesystemTrend"><svg viewBox="0 0 400 140"><path d="M30 50 L200 40 L390 30" stroke="#67a9e8" fill="none"/></svg></div>
-          </div></section>
+          </div>
+          <section class="sphereDiskIoTrend"><div class="sphereDiskIoHead"><strong>Disk I/O Activity</strong></div>
+          <div class="sphereDiskIoMeta">Device / mount · Read / Write MB/s</div>
+          <svg viewBox="0 0 350 96"><polyline points="34,60 120,38 240,48 342,20" fill="none" stroke="#67a9e8"/></svg>
+          </section></section>
         </div>
         <section class="rundeckTrendBandV13454 sphereMonitoringTrendBottom">Performance Trends</section>
         <button class="sphereMonitoringMotionToggle">Motion On</button>
@@ -61,20 +71,25 @@ try{
           const a=rect('.sphereMonitoringApp'),b=rect('.rundeckJobsProgramsOverview'),c=rect('.sphereStorageSummary')
           const t=rect('.sphereMonitoringTrendBottom'),top=rect('.sphereMonitoringThreeUp')
           const title=rect('.rundeckWorkloadHealthTitle'),kpi=rect('.rundeckWorkloadHealthLegend')
-          const orb=rect('.rundeckWorkloadDotGrid'),foot=rect('.rundeckWorkloadHealthFooter')
+          const orb=rect('.rundeckWorkloadDotGrid'),top5=rect('.sphereEvaluationTop5')
+          const foot=rect('.rundeckWorkloadHealthFooter'),io=rect('.sphereDiskIoTrend')
           const columns=[a,b,c].every(x=>x?.width>250)&&
             Math.max(a.width,b.width,c.width)-Math.min(a.width,b.width,c.width)<12&&
             Math.max(a.top,b.top,c.top)-Math.min(a.top,b.top,c.top)<9
-          const order=title&&kpi&&orb&&foot&&title.bottom<=kpi.top+4&&kpi.bottom<=orb.top+4&&orb.bottom<=foot.top+4
+          const order=title&&kpi&&orb&&top5&&foot&&title.bottom<=kpi.top+4&&
+            kpi.bottom<=orb.top+4&&orb.bottom<=top5.top+4&&top5.bottom<=foot.top+4
           const after=t&&top&&t.top>=top.bottom-3
-          const inside=orb&&foot&&foot.bottom<=b.bottom+5&&orb.height>=165
-          const all=document.querySelectorAll('.rundeckAppHexSelector').length===5&&document.querySelectorAll('.sphereStorageRow').length===5
+          const inside=orb&&top5&&foot&&io&&foot.bottom<=b.bottom+5&&io.bottom<=c.bottom+5&&
+            orb.height>=120&&top5.height>=110&&io.height>=65
+          const all=document.querySelectorAll('.rundeckAppHexSelector').length===5&&
+            document.querySelectorAll('.sphereStorageRow').length===5&&
+            document.querySelectorAll('.sphereEvaluationTop5Row').length===5
           const selected=$('.rundeckAppHexSelector.is-active')
           const background=getComputedStyle(selected).backgroundColor
           const severity='${theme}'==='light'||background==='rgb(33, 67, 57)'
           const valid=columns&&order&&after&&inside&&all&&severity
           document.body.dataset.qa=valid?'PASS':'FAIL'
-          document.body.dataset.metrics=[columns,order,after,inside,all,severity,Math.round(a.width),Math.round(b.width),Math.round(c.width),Math.round(orb.height),background].join(',')
+          document.body.dataset.metrics=[columns,order,after,inside,all,severity,Math.round(a.width),Math.round(b.width),Math.round(c.width),Math.round(orb.height),Math.round(top5.height),Math.round(io.height),background].join(',')
         })</script></body></html>`
       const name=join(tmp,'layout-'+size.w+'-'+theme+'.html')
       writeFileSync(name,html)
