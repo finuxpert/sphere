@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from '../../src/tools/components/rundeckMonthlyEnterprisePdf.js'
 
 const fixture={
@@ -112,6 +113,17 @@ test('monthly enterprise PDF refuses unverified evidence and bad dates',async()=
   await assert.rejects(buildManagementMonthlyPdf({month:'2026-09',data:{}}),/Saved monthly/)
 })
 
+
+test('original SPHERE logo retains native ratio and report date sits under title',()=>{
+  const pdfSource=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
+  assert.match(pdfSource,/pdf\.getImageProperties\(logoBytes\)/)
+  assert.match(pdfSource,/Math\.min\(138\/dimensions\.width,32\/dimensions\.height\)/)
+  assert.match(pdfSource,/dimensions\.width\*scale,dimensions\.height\*scale/)
+  assert.doesNotMatch(pdfSource,/106,30/)
+  assert.match(pdfSource,/text\(M\+158,H-28,reportTitle,16/)
+  assert.match(pdfSource,/text\(M\+158,H-46,periodLabel,9\.4/)
+  assert.match(pdfSource,/const seriesColors=\['app1','app2','app3','app4','app5'\]/)
+})
 
 test('management export rejects wrong-month infrastructure and missing full rankings',()=>{
   assert.throws(()=>monthlyEnterpriseReportModel('2026-10',fixture),/Period-scoped/)
