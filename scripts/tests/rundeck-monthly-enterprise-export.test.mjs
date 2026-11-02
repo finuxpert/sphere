@@ -114,7 +114,7 @@ test('monthly enterprise PDF refuses unverified evidence and bad dates',async()=
 
 
 test('management export rejects wrong-month infrastructure and missing full rankings',()=>{
-  assert.throws(()=>monthlyEnterpriseReportModel('2026-10',fixture),/Month-scoped/)
+  assert.throws(()=>monthlyEnterpriseReportModel('2026-10',fixture),/Period-scoped/)
   assert.throws(()=>monthlyEnterpriseReportModel('2026-09',{...fixture,monthly_top_wp_cpu:null}),/Full-population/)
 })
 test('top WP rankings are independent of tuning candidate order',()=>{
