@@ -470,9 +470,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [weekStart,setWeekStart]=React.useState(WEEKS[1]?.value || WEEKS[0].value)
   const month=reportMode==='week'?weekStart.slice(0,7):selectedMonth
   const requestedWeek=reportMode==='week'?weekStart:null
-  const reportParams=()=>new URLSearchParams({month,...(requestedWeek?{week_start:requestedWeek}:{})})
-  const matchesScope=payload=>payload?.month===month && payload?.period===reportMode &&
-    (requestedWeek?payload.week_start===requestedWeek:!payload.week_start)
+  const reportParams=React.useCallback(()=>new URLSearchParams({month,...(requestedWeek?{week_start:requestedWeek}:{})}),[month,requestedWeek])
+  const matchesScope=React.useCallback(payload=>payload?.month===month && payload?.period===reportMode &&
+    (requestedWeek?payload.week_start===requestedWeek:!payload.week_start),[month,reportMode,requestedWeek])
   const [evidenceOpen,setEvidenceOpen]=React.useState(false)
   const [pressureMetric,setPressureMetric]=React.useState('cpu')
   const [kind,setKind]=React.useState('ALL')
@@ -519,7 +519,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       if(!controller.signal.aborted)setStorageError(failure.message||'Reporting period storage unavailable')
     })
     return ()=>controller.abort()
-  },[month,reportMode,weekStart])
+  },[reportParams,matchesScope])
   // Render retained monthly CPU/RAM/APP observations independently of the slower
   // full workload classification, correlation and WP error analysis.
   React.useEffect(()=>{
@@ -547,7 +547,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           : failure.message||'Reporting period host summary unavailable')
       })
     return ()=>controller.abort()
-  },[month,reportMode,weekStart,hostPreviewRetry])
+  },[reportParams,matchesScope,hostPreviewRetry])
   // A boolean dependency avoids re-requesting expensive evidence just because
   // the user switches between Summary, Detailed Evidence and PDF Report.
   const fullEvaluationReady = hostPreview?.month===month && matchesScope(hostPreview)
@@ -586,7 +586,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         : failure.message||'Historical evidence unavailable')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
-  },[month,reportMode,weekStart,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError])
+  },[month,requestedWeek,kind,health,pressureFilter,signalFilter,appliedSearch,page,fullEvaluationReady,hostPreviewError,matchesScope])
   const changePeriod=(mode,value)=>{
     pdfGenerationRef.current += 1
     if(mode==='month')setMonth(value)
@@ -645,7 +645,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       setPdfUrl(url)
     }catch(failure){if(generation===pdfGenerationRef.current)setPdfError(failure.message||'PDF could not be generated')}
     finally{pdfInFlightRef.current=false;setPdfBusy(false)}
-  },[data,loading,pdfBusy,month,reportMode,weekStart])
+  },[data,loading,pdfBusy,month,requestedWeek,reportParams,matchesScope])
   return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="SAP Performance Report and Job Impact">
     <div className="sphereMonthlyHead">
       {showTitle && <div><strong>SAP {reportMode==='week'?'Weekly':'Monthly'} Performance Report</strong></div>}
