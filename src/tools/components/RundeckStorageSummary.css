@@ -77,3 +77,19 @@
 .rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{
   gap:3px!important;font-size:9px!important;
 }
+
+.rundeckMonitoring.is-three-panel .sphereStorageSummary{gap:10px!important}
+.rundeckMonitoring.is-three-panel .sphereStorageRows{gap:6px!important}
+.rundeckMonitoring.is-three-panel .sphereStorageRow{
+  min-height:38px!important;padding:5px 6px!important;
+  grid-template-columns:minmax(105px,1.1fr) minmax(60px,1.3fr) 48px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageLabel strong{font-size:12px!important}
+.rundeckMonitoring.is-three-panel .sphereStorageLabel small{font-size:11px!important}
+.rundeckMonitoring.is-three-panel .sphereStoragePercent{font-size:12px!important}
+.rundeckMonitoring.is-three-panel .sphereStorageTrack{height:9px!important}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowth{gap:7px!important;padding-top:9px!important;flex:0 0 auto!important}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowthHead strong{font-size:13px!important}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowthRanges button{font-size:11px!important;min-height:29px}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrend svg{min-height:145px!important;max-height:185px!important}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{font-size:11px!important;gap:9px!important;line-height:1.4}

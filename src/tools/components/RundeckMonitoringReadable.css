@@ -1,0 +1,122 @@
+
+/* Readable operator dashboard. Only Monitoring; Reports and full Review remain unchanged.
+   Use natural vertical page scroll rather than shrinking source-backed charts. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel {
+  display:flex!important;flex-direction:column!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  overflow:visible!important;gap:14px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .sphereMonitoringThreeUp.sphereOverviewBottomRow.row {
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  height:auto!important;min-height:0!important;align-items:stretch!important;
+  gap:12px!important;overflow:visible!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringThreeUp > :is(.sphereMonitoringApp,.rundeckJobsProgramsOverview,.sphereStorageSummary) {
+  min-height:640px!important;height:auto!important;max-height:none!important;
+  overflow:visible!important;padding:14px!important;gap:9px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+  grid-template-rows:repeat(5,minmax(70px,1fr))!important;
+  min-height:390px!important;gap:8px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector {
+  min-height:70px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexShape {
+  grid-template-columns:58px minmax(87px,.75fr) minmax(0,1.3fr)!important;
+  gap:3px 10px!important;padding:8px 12px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexShape strong {font-size:14px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckAppHexShape :is(small,em){font-size:12px!important;line-height:1.35!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckFleetMeter{font-size:12px!important;gap:5px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckFleetMeterTrack{height:7px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringApp .rundeckFleetMeterValue{min-width:42px!important}
+.rundeckMonitoring.is-three-panel .sphereAppHardwareReference {
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  color:var(--sphere-text-secondary,#aab7c5);font-size:12px;line-height:1.4;
+}
+.rundeckMonitoring.is-three-panel .sphereAppHardwareReference strong {
+  color:var(--sphere-text,#e7edf4);font-size:12px;
+}
+.rundeckMonitoring.is-three-panel .sphereAppHardwareReference small {
+  font-size:11px;color:var(--sphere-text-secondary,#aab7c5);
+}
+.rundeckMonitoring.is-three-panel .sphereAppWpSummary,
+.rundeckMonitoring.is-three-panel .rundeckAppSampleMeta{font-size:12px!important}
+.rundeckMonitoring.is-three-panel .sphereMonitoringApp .rundeckUnifiedAppInfraHead h3,
+.rundeckMonitoring.is-three-panel .sphereStorageSummaryHead h3 {font-size:14px!important}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .rundeckWorkloadHealth.is-monitoring-globe {
+  min-height:605px!important;height:auto!important;max-height:none!important;
+  overflow:visible!important;
+  grid-template-rows:auto auto minmax(220px,1fr) minmax(186px,auto) auto!important;
+  gap:9px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadDotGrid {
+  min-height:220px!important;overflow:hidden!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadHealthLegend {
+  min-height:55px!important;gap:8px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.rundeckJobsProgramsOverview .is-monitoring-globe > .rundeckWorkloadHealthTitle {
+  min-height:34px!important;font-size:14px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringTrendBottom {
+  min-height:680px!important;height:auto!important;max-height:none!important;
+  overflow:visible!important;padding:16px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringTrendBottom .rundeckTripleTrendGrid.sphereTrendBootstrapRow {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;width:100%!important;height:auto!important;max-height:none!important;
+  margin:0!important;align-items:stretch!important;overflow:visible!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringTrendBottom .rundeckTripleTrendGrid.sphereTrendBootstrapRow > .rundeckConfigurableTrend {
+  grid-column:auto!important;flex:none!important;width:100%!important;
+  max-width:none!important;min-width:0!important;min-height:325px!important;
+  height:auto!important;padding:10px!important;
+  overflow:visible!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringTrendBottom .rundeckTrendPlot{
+  height:255px!important;min-height:255px!important;max-height:none!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringTrendBottom .rundeckTrendChart{
+  height:100%!important;min-height:245px!important;max-height:none!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+.sphereMonitoringTrendBottom .rundeckTrendPeakSummary{font-size:12px!important;line-height:1.45!important}
+@media (max-width:1279px){
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+  .sphereMonitoringThreeUp > :is(.sphereMonitoringApp,.rundeckJobsProgramsOverview,.sphereStorageSummary) {
+    min-height:600px!important;
+  }
+}
+@media (max-width:899px){
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+  .sphereMonitoringThreeUp.sphereOverviewBottomRow.row {grid-template-columns:minmax(0,1fr)!important}
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+  .sphereMonitoringTrendBottom .rundeckTripleTrendGrid.sphereTrendBootstrapRow {grid-template-columns:minmax(0,1fr)!important}
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel
+  .sphereMonitoringThreeUp > :is(.sphereMonitoringApp,.rundeckJobsProgramsOverview,.sphereStorageSummary) {min-height:0!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .rundeckMonitoring.is-three-panel .sphereMonitoringThreeUp :is(.rundeckAppHexSelector,.sphereStorageTrack i),
+  .rundeckMonitoring.is-three-panel .sphereMonitoringTrendBottom * {scroll-behavior:auto!important}
+}

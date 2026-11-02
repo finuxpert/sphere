@@ -28,3 +28,14 @@
 .sphereDiskIoTrend svg{width:100%;height:auto;max-height:92px;min-height:66px;display:block}
 .sphereDiskIoFooter{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--sphere-text-secondary,#aab7c5)}
 .sphereDiskIoEmpty{font-size:10px;color:var(--sphere-text-secondary,#aab7c5);min-height:58px;display:grid;place-items:center;text-align:center}
+.rundeckMonitoring.is-three-panel .sphereDiskIoTrend{gap:7px!important;padding-top:10px!important}
+.rundeckMonitoring.is-three-panel .sphereDiskIoHead strong{font-size:13px!important}
+.rundeckMonitoring.is-three-panel .sphereDiskIoActions button,
+.rundeckMonitoring.is-three-panel .sphereDiskIoActions select,
+.rundeckMonitoring.is-three-panel .sphereDiskIoMeta select{
+  font-size:11px!important;padding:4px 6px!important;min-height:28px;
+}
+.rundeckMonitoring.is-three-panel .sphereDiskIoMeta{font-size:11px!important}
+.rundeckMonitoring.is-three-panel .sphereDiskIoTrend svg{min-height:140px!important;max-height:180px!important}
+.rundeckMonitoring.is-three-panel .sphereDiskIoFooter{font-size:11px!important}
+.rundeckMonitoring.is-three-panel .sphereDiskIoLegend i{width:9px;height:9px}
