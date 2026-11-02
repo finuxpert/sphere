@@ -352,7 +352,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label="Top five evaluated resource consumers">
       <div className="sphereEvaluationTop5Head">
         <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
-          Top 5 Resource Consumers
+          Top 5 Resource Consumers {resourceMetric === 'cpu' && <small title="Core-equivalent grouped CPU: 100% corresponds to one fully utilized CPU core; multicore totals can exceed 100%.">(core %)</small>}
         </strong>
         <div role="group" aria-label="Resource metric" className="sphereEvaluationTop5Actions">
           {['cpu','pss'].map(metric => <button key={metric} type="button"
@@ -366,7 +366,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
           return <button type="button" key={row.consumer_type + ':' + row.consumer_key}
             className="sphereEvaluationTop5Row"
             title={String(row.consumer_key) + ' · ' + String(row.consumer_type || 'Workload') +
-              ' · 24h avg grouped ' + (resourceMetric === 'cpu' ? 'CPU ' + amount + '%' : 'PSS ' + amount + ' GB') +
+              ' · 24h avg grouped ' + (resourceMetric === 'cpu' ? 'CPU ' + amount + '% (core-equivalent; 100% = one CPU core)' : 'PSS ' + amount + ' GB') +
               ' · click for saved evaluation details'}
             onClick={() => openWorkload(row)}>
             <span className="sphereEvaluationTop5Name">{row.consumer_key}</span>
