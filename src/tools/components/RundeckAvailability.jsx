@@ -42,7 +42,7 @@ function ageMinutes(value) {
   return Math.max(0, Math.floor((Date.now() - timestamp) / 60000))
 }
 
-export default function RundeckAvailability({ refreshToken = '', compact = false, inlineSummary = false, onOpen = null, hideDetailsAction = false, paired = false, summaryRoot = null }) {
+export default function RundeckAvailability({ refreshToken = '', compact = false, inlineSummary = false, toolbarSummary = false, onOpen = null, hideDetailsAction = false, paired = false, summaryRoot = null }) {
   const [data, setData] = React.useState(null)
   const [error, setError] = React.useState('')
   const [bundle, setBundle] = React.useState(null)
@@ -183,6 +183,15 @@ export default function RundeckAvailability({ refreshToken = '', compact = false
     <span title="SSH and HANA replication only. PASS counts reported positive checks; missing or failed checks do not count. SM37 is separate."><b>SSH / REPL</b><strong>{technicalCheckCount ? `${lastSnapshot ? '' : ''}${technicalPassCount}/${technicalCheckCount} PASS` : '—'}</strong></span>
   </div>
 
+  if (inlineSummary && toolbarSummary) return <div className="sphereServiceToolbarAvailability"
+    aria-label="Last recorded SAP service check" title={stale ? 'Current service state is unverified' : 'SAP service check'}>
+    <div className="sphereServiceToolbarCounts">
+      <span>APP <strong>{apps.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${appsUp}/${apps.length}` : '—'}</strong></span>
+      <span>HANA <strong>{hanaRows.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${hanaUp}/${hanaRows.length}` : '—'}</strong></span>
+      <span>Web <strong>{webRows.length && !unverified ? `${lastSnapshot ? 'Last ' : ''}${webUp}/${webRows.length}` : '—'}</strong></span>
+    </div>
+    <small>{data?.collected_at ? 'Last check ' + formatWib(data.collected_at, true) + ' WIB' : 'Check unavailable'}{stale ? ' · Unverified' : ''}</small>
+  </div>
   if (inlineSummary) return <section className="sphereHealthInlineBlock" aria-label="SAP Availability overview">
     <div className="sphereHealthInlineHead"><h4>{lastSnapshot || stale ? "SAP Availability · Last Known" : "SAP Availability"}</h4>{!hideDetailsAction && <button type="button" onClick={onOpen}>Details</button>}</div>
     <div className="sphereHealthInlineValues">
