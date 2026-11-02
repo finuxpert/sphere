@@ -28,7 +28,9 @@ for(const candidate of browsers){
 }
 if(!browser)throw Error('MONITOR_LAYOUT=FAIL Chrome unavailable')
 const temp=mkdtempSync(join(tmpdir(),'sphere-monitor-layout-'))
-const links=orderedStyles.map(file=>'<link rel="stylesheet" href="'+pathToFileURL(join(assets,file)).href+'">').join('')
+// Embed compiled CSS into the fixture, avoiding flaky file:// link loads
+// under headless Chromium. The checks still use the real build's selectors.
+const links=orderedStyles.map(file=>'<style data-css-chunk="'+file+'">'+readFileSync(join(assets,file),'utf8')+'</style>').join('')
 const levels=['Review','Watch','Limited Data','Normal']
 const categories=levels.map((name,i)=>'<button class="rundeckWorkloadCategory is-'+['review','attention','unknown','normal'][i]+'"><strong>42</strong><span>'+name+'</span></button>').join('')
 const dots=Array.from({length:42},(_,i)=>'<button class="rundeckWorkloadDot" aria-label="Mock observation '+i+'"></button>').join('')
