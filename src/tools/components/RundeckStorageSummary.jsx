@@ -2,6 +2,7 @@ import React from 'react'
 import { shortHost, formatWib } from './sapUiFormat.js'
 import { filesystemResourceState } from './rundeckStatusSemantics.js'
 import { infrastructureTelemetryFreshness } from './infrastructureFreshness.js'
+import RundeckFilesystemTrend from './RundeckFilesystemTrend.jsx'
 import './RundeckStorageSummary.css'
 
 const API = import.meta.env.BASE_URL + 'api/infra'
@@ -22,6 +23,8 @@ async function read(url, signal) {
   return response.json()
 }
 export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails }) {
+  const [selectedMount, setSelectedMount] = React.useState('/')
+  const [growthRange, setGrowthRange] = React.useState('7d')
   const [snapshot, setSnapshot] = React.useState({ hosts: [], rows: [], error: '', loading: true })
   React.useEffect(() => {
     const controller = new AbortController()
@@ -57,13 +60,16 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
     const highest=readings[0]||null
     return {...item, highest, status:highest ? filesystemResourceState(highest.value) : 'UNKNOWN'}
   })
-  return <section className="sphereStorageSummary col-12 col-xl-7" aria-label="Storage Summary">
+  return <section className="sphereStorageSummary col-12 col-xl-4" aria-label="Storage Summary">
     <header className="sphereStorageSummaryHead">
       <h3>Storage Summary</h3>
       <button type="button" onClick={onOpenDetails} className="btn btn-sm sphereStorageDetails">View details</button>
     </header>
     <div className="sphereStorageRows">
-      {values.map(item=><div key={item.mount} className="sphereStorageRow"
+      {values.map(item=><button type="button" key={item.mount}
+        onClick={() => setSelectedMount(item.mount)}
+        aria-pressed={selectedMount === item.mount}
+        className={'sphereStorageRow' + (selectedMount === item.mount ? ' is-selected' : '')}
         title={item.highest
           ? item.highest.host+' · '+item.highest.mount+' · '+item.highest.value+'% · '+formatWib(item.highest.sample,true)+' WIB'
           : 'No fresh, matching filesystem collection'}>
@@ -76,7 +82,18 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
           {item.highest && <i className={'is-'+item.status.toLowerCase()} style={{width:Math.max(0,Math.min(100,item.highest.value))+'%'}}/>}
         </div>
         <strong className={'sphereStoragePercent is-'+item.status.toLowerCase()}>{item.highest ? item.highest.value.toFixed(1)+'%' : '—'}</strong>
-      </div>)}
+      </button>)}
+    </div>
+    <div className="sphereStorageGrowth">
+      <div className="sphereStorageGrowthHead">
+        <strong>Filesystem Growth</strong>
+        <div role="group" aria-label="Filesystem growth range" className="sphereStorageGrowthRanges">
+          {[['7d','7D'],['30d','30D']].map(([value,label]) =>
+            <button key={value} type="button" aria-pressed={growthRange === value}
+              onClick={() => setGrowthRange(value)}>{label}</button>)}
+        </div>
+      </div>
+      <RundeckFilesystemTrend mount={selectedMount} range={growthRange} refreshToken={refreshToken} />
     </div>
     {snapshot.error && <small className="sphereStorageError" role="status">{snapshot.error}</small>}
     {snapshot.loading && <small className="sphereStorageError" role="status">Checking storage…</small>}

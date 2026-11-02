@@ -5,3 +5,7 @@
 .sphereFilesystemTrendFooter{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;font-size:10px}
 .sphereFilesystemTrend p{font-size:11px;margin:10px 0}
 .sphereFilesystemWarn{color:var(--sphere-warning,#e7b65d)}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrend{gap:3px;font-size:10px;min-height:0}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrend svg{height:auto;max-height:132px;min-height:95px;flex:1 1 auto}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{font-size:9px;gap:3px}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendTop{font-size:10px}

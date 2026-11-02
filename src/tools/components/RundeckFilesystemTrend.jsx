@@ -49,7 +49,23 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
   }
   const newest=[...records].sort((a,b)=>Date.parse(b.collected_at)-Date.parse(a.collected_at))[0]
   const oldest=[...records].sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at))[0]
-  const delta=newest&&oldest?Number(newest.value)-Number(oldest.value):null
+  // A selected root 'All APPs' plot contains independent hosts; subtracting
+  // samples from different hosts would fabricate a growth figure.
+  const delta=isRoot && hostChoice==='ALL' ? null :
+    newest&&oldest ? Number(newest.value)-Number(oldest.value) : null
+  const splitGaps=points=>{
+    const sorted=[...points].sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at))
+    const intervals=sorted.slice(1).map((point,index)=>Date.parse(point.collected_at)-Date.parse(sorted[index].collected_at)).filter(ms=>ms>0)
+    const sample=intervals.length?[...intervals].sort((a,b)=>a-b)[Math.floor(intervals.length/2)]:0
+    const threshold=Math.max(sample*2.6, range==='30d'?3600000:range==='7d'?1800000:300000)
+    const segments=[]
+    for(const point of sorted){
+      const segment=segments[segments.length-1]
+      if(!segment || Date.parse(point.collected_at)-Date.parse(segment[segment.length-1].collected_at)>threshold) segments.push([point])
+      else segment.push(point)
+    }
+    return segments
+  }
   return <div className="sphereFilesystemTrend" aria-label={'Filesystem usage history '+mount}>
     <div className="sphereFilesystemTrendTop">
       <span title={isRoot?'Root is measured independently on each APP':'APP1 is the selected representative; verify shared mount mapping separately'}>
@@ -72,8 +88,9 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
         points.sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at))
         const color=colors[i%colors.length]
         return <g key={name}>
-          <polyline fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round"
-            points={points.map(point=>chartX(Date.parse(point.collected_at))+','+chartY(Number(point.value))).join(' ')}/>
+          {splitGaps(points).map((segment,j)=>segment.length>1 && <polyline key={j}
+            fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round"
+            points={segment.map(point=>chartX(Date.parse(point.collected_at))+','+chartY(Number(point.value))).join(' ')}/>)}
           {points.map((point,index)=><circle key={index} cx={chartX(Date.parse(point.collected_at))}
             cy={chartY(Number(point.value))} r="1.6" fill={color}>
             <title>{name} · {mount} · {Number(point.value).toFixed(1)}% · {formatWib(point.collected_at,true)} WIB</title>
@@ -86,7 +103,7 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
     {!!records.length && <div className="sphereFilesystemTrendFooter">
       <span>Latest {Number(newest.value).toFixed(1)}%</span>
       <span>Peak {max.toFixed(1)}%</span>
-      <span>Change {delta>=0?'+':''}{delta.toFixed(1)} pp</span>
+      <span>{delta===null ? 'Change — (select APP)' : 'Change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}</span>
       <span title="Latest observed filesystem sample">{formatWib(newest.collected_at,true)} WIB</span>
     </div>}
   </div>

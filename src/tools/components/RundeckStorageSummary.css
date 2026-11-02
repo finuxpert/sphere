@@ -21,3 +21,42 @@
 .sphereStoragePercent.is-critical{color:var(--sphere-danger,#e87984)}
 .sphereStorageError{font-size:10px;color:var(--sphere-text-secondary,#aab7c5)}
 @media(max-width:570px){.sphereStorageRow{grid-template-columns:85px minmax(35px,1fr) 42px;gap:5px}}
+
+.sphereStorageRow{
+  width:100%;box-sizing:border-box;font:inherit;color:inherit;
+  text-align:left;border:1px solid transparent;border-radius:5px;
+  background:transparent;cursor:pointer;padding:3px 4px;
+  transition:background-color .18s ease,border-color .18s ease;
+}
+.sphereStorageRow:hover,.sphereStorageRow:focus-visible{
+  border-color:var(--sphere-border-subtle,#304150);
+  background:var(--sphere-surface-2,#243342);
+}
+.sphereStorageRow.is-selected{
+  outline:1px solid var(--sphere-accent,#67a9e8);outline-offset:-1px;
+}
+.sphereStorageTrack i{transition:width .35s ease}
+.sphereStorageGrowth{
+  display:flex;flex-direction:column;min-height:0;gap:4px;
+  padding-top:6px;border-top:1px solid var(--sphere-border-subtle,#304150);
+}
+.sphereStorageGrowthHead{display:flex;align-items:center;justify-content:space-between}
+.sphereStorageGrowthHead strong{font-size:11px;font-weight:650}
+.sphereStorageGrowthRanges{display:flex;gap:3px}
+.sphereStorageGrowthRanges button{
+  color:var(--sphere-text-secondary,#aab7c5);border:1px solid var(--sphere-border-subtle,#304150);
+  padding:3px 7px;background:transparent;border-radius:4px;font:inherit;font-size:10px;cursor:pointer;
+}
+.sphereStorageGrowthRanges button[aria-pressed="true"]{
+  color:var(--sphere-text,#e7edf4);background:var(--sphere-surface-2,#243342);
+  border-color:var(--sphere-accent,#67a9e8)
+}
+.rundeckMonitoring.is-three-panel .sphereStorageRows{
+  flex:0 0 auto;display:grid;gap:3px;align-content:start;
+}
+.rundeckMonitoring.is-three-panel .sphereStorageSummary{gap:5px}
+.rundeckMonitoring.is-three-panel .sphereStorageRow{grid-template-columns:minmax(95px,1.1fr) minmax(45px,1.3fr) 44px;gap:5px}
+.rundeckMonitoring.is-three-panel .sphereStorageLabel strong{font-size:10px}
+.rundeckMonitoring.is-three-panel .sphereStorageLabel small{font-size:9px}
+.rundeckMonitoring.is-three-panel .sphereStorageGrowth{flex:1 1 auto}
+@media(prefers-reduced-motion:reduce){.sphereStorageTrack i{transition:none}}

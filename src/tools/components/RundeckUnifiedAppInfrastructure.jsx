@@ -18,7 +18,7 @@ async function readJson(path, signal) {
 
 export default function RundeckUnifiedAppInfrastructure({
   hosts = [], sourceQuality = null, refreshToken = '', selectedJob = null,
-  focusRequest = null, onInspectApp = null, onSelectApp = null, operationalChecks = null, fleetMode = false,
+  focusRequest = null, onInspectApp = null, onSelectApp = null, onOpenHealthDetails = null, operationalChecks = null, fleetMode = false,
 }) {
   const [preferredHost, setPreferredHost] = React.useState(() => {
     try { return window.localStorage.getItem(KEY) || '' } catch { return '' }
@@ -166,6 +166,9 @@ export default function RundeckUnifiedAppInfrastructure({
   const highRam = highest('ram_pct')
   const highWp = highest('wp_critical')
   const highWpHosts = highWp ? hosts.filter(row => hostVerified(row) && Number(row.wp_critical) === Number(highWp.wp_critical)).map(row => shortHost(row.host)).join('/') : '—'
+  const verifiedApps = hosts.filter(host => hostVerified(host))
+  const impactedApps = verifiedApps.filter(host => Number(host.wp_critical) > 0)
+  const totalCriticalWp = impactedApps.reduce((total, host) => total + Number(host.wp_critical), 0)
   const selectApp = key => {
     setManualSelection({ host: key, contextToken })
     const sapTarget = hosts.find(host => shortHost(host.host) === key)
@@ -218,6 +221,7 @@ export default function RundeckUnifiedAppInfrastructure({
   return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure" data-layout="landscape-operations">
     <header className="rundeckUnifiedAppInfraHead">
       <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> SAP APP Landscape</h3>
+      {fleetMode && <button type="button" className="sphereAppHealthAction" onClick={onOpenHealthDetails}>Health Details</button>}
       <div className="rundeckAppSampleMeta">
         <span className="rundeckAppSampleTime" aria-label={'Selected APP ' + appKey + ' sample time'} title={selectedVerified
           ? `Selected ${appKey} sample: ${selectedHost?.collected_at ? formatWib(selectedHost.collected_at,true) + ' WIB' : 'time unverified'} · Verified APP snapshot · ${hosts.length} APP · Attention ${attentionCount} · Warning ${warningCount} · Critical ${criticalCount} · Unknown ${unknownCount} · highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`
@@ -227,6 +231,12 @@ export default function RundeckUnifiedAppInfrastructure({
         {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
       </div>
     </header>
+    {fleetMode && <div className="sphereAppWpSummary" title={verifiedApps.length === hosts.length
+      ? impactedApps.map(host => shortHost(host.host) + ': ' + Number(host.wp_critical)).join(' · ') || 'No Critical WP recorded'
+      : 'Some APP samples are unverified; subtotal uses verified APPs only'}>
+      Critical WP <strong>{verifiedApps.length ? totalCriticalWp : '—'}</strong>
+      <span>· {verifiedApps.length ? impactedApps.length : '—'} APPs{verifiedApps.length !== hosts.length ? ' · partial' : ''}</span>
+    </div>}
     <div className="rundeckAppHexMain rundeckAppThreePanels">
       <section className="rundeckAppMotionPanel" aria-label="APP server selection">
         {!fleetMode && <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Fleet <small>Select server</small></h4>}

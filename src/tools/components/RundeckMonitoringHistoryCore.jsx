@@ -76,23 +76,49 @@ export default function RundeckMonitoringHistoryCore(props) {
     }
   }, [measureViewport])
 
-  return <section ref={overviewRef} className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491">
-    <section className="rundeckTopBandV13454 is-unified-app-infra">
-      <RundeckUnifiedAppInfrastructure
-        hosts={props.sourceHosts || []}
-        sourceQuality={props.sourceQuality}
-        refreshToken={props.refreshToken}
-        selectedJob={props.selectedJob}
-        focusRequest={props.focusedAppHost ? { host: props.focusedAppHost, token: 'shared-app-' + props.focusedAppHost, highlightOnly: true } : (props.selectedJob?.host ? { host: props.selectedJob.host, token: props.selectedJob.key || props.selectedJob.at || 'selected-workload', highlightOnly: true } : props.appFocusRequest || null)}
-        onInspectApp={props.onInspectApp}
-        onSelectApp={props.onFocusAppHost}
-        onOpenMetric={props.onOpenInfrastructureMetric}
-        fleetMode
-      />
-      {props.serviceSummary}
-    </section>
+  const [motionEnabled, setMotionEnabled] = React.useState(() => {
+    try { return window.localStorage.getItem('sphere.monitor.motion') !== 'off' }
+    catch { return true }
+  })
+  const toggleMotion = () => setMotionEnabled(previous => {
+    try { window.localStorage.setItem('sphere.monitor.motion', previous ? 'off' : 'on') }
+    catch { /* optional browser preference */ }
+    return !previous
+  })
 
-    <section className="rundeckTrendBandV13454">
+  return <section ref={overviewRef}
+    className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491 is-three-panel"
+    data-motion={motionEnabled ? 'on' : 'off'}>
+    <div className="sphereMonitoringThreeUp sphereOverviewBottomRow row g-2" aria-label="SAP monitoring overview">
+      <section className="sphereMonitoringApp rundeckTopBandV13454 is-unified-app-infra col-12 col-xl-4" aria-label="SAP APP Landscape">
+        <RundeckUnifiedAppInfrastructure
+          hosts={props.sourceHosts || []}
+          sourceQuality={props.sourceQuality}
+          refreshToken={props.refreshToken}
+          selectedJob={props.selectedJob}
+          focusRequest={props.focusedAppHost ? { host: props.focusedAppHost, token: 'shared-app-' + props.focusedAppHost, highlightOnly: true } : (props.selectedJob?.host ? { host: props.selectedJob.host, token: props.selectedJob.key || props.selectedJob.at || 'selected-workload', highlightOnly: true } : props.appFocusRequest || null)}
+          onInspectApp={props.onInspectApp}
+          onSelectApp={props.onFocusAppHost}
+          onOpenMetric={props.onOpenInfrastructureMetric}
+          onOpenHealthDetails={props.onOpenHealthDetails}
+          fleetMode
+        />
+      </section>
+      <section className="rundeckJobsProgramsOverview col-12 col-xl-4" aria-label="Job & Program Evaluation">
+        <div className="rundeckJobsProgramsHealthSide">
+          <RundeckWorkloadHealth
+            refreshToken={props.refreshToken}
+            performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
+            onSelectWorkload={props.onOpenEvaluatedWorkload}
+            viewMode="globe"
+            motionEnabled={motionEnabled}
+            onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
+          />
+        </div>
+      </section>
+      <RundeckStorageSummary refreshToken={props.refreshToken} onOpenDetails={props.onOpenHealthDetails} />
+    </div>
+    <section className="rundeckTrendBandV13454 sphereMonitoringTrendBottom">
       <RundeckServerTrend
         ambientBraid={false}
         refreshToken={props.refreshToken}
@@ -107,20 +133,10 @@ export default function RundeckMonitoringHistoryCore(props) {
         onOpenEvidence={props.onOpenTrendEvidence}
       />
     </section>
-
-    <div className="sphereOverviewBottomRow row g-2 align-items-start">
-      <section className="rundeckJobsProgramsOverview col-12 col-xl-5" aria-label="Job & Program Evaluation">
-        <div className="rundeckJobsProgramsHealthSide">
-          <RundeckWorkloadHealth
-            refreshToken={props.refreshToken}
-            performanceVerified={props.sourceQuality?.performanceValid === true && !props.sourceQuality?.collectorBad}
-            onSelectWorkload={props.onOpenEvaluatedWorkload}
-            viewMode="globe"
-            onReview={(category = 'REVIEW') => props.onOpenJobsPrograms?.('review', category)}
-          />
-        </div>
-      </section>
-      <RundeckStorageSummary refreshToken={props.refreshToken} onOpenDetails={props.onOpenHealthDetails} />
-    </div>
+    <button type="button" className="sphereMonitoringMotionToggle"
+      onClick={toggleMotion} aria-label={motionEnabled ? 'Disable decorative monitoring motion' : 'Enable decorative monitoring motion'}
+      aria-pressed={motionEnabled} title="Turn decorative motion on or off; monitoring data remains unchanged">
+      Motion {motionEnabled ? 'On' : 'Off'}
+    </button>
   </section>
 }

@@ -71,7 +71,7 @@ async function readVerifiedPopulation(signal, compactSummary = false) {
 }
 
 /** One saved 1D evaluation = one selectable hexagon, without 400+1 pagination. */
-export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe', compactSummary = false }) {
+export default function RundeckWorkloadHealth({ refreshToken = '', performanceVerified = false, onReview, onSelectWorkload, onOpenApp, viewMode = 'globe', compactSummary = false, motionEnabled = true }) {
   const [data, setData] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState('')
@@ -299,7 +299,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       }}
       style={{ '--workload-dot-size': `${dotLayout.size}px`, '--workload-dot-gap': `${dotLayout.gap}px`, '--workload-columns': dotLayout.columns }}>
       {globeEnabled && dotLayout.fits && rows.length > 0 &&
-        <RundeckEvaluationGlobe rows={rows} layout={dotLayout} expanded={globeExpanded}
+        <RundeckEvaluationGlobe rows={rows} layout={dotLayout} expanded={globeExpanded} motionEnabled={motionEnabled}
           onSelectIndex={index => { if (rows[index]) openWorkload(rows[index]) }} />}
       {(dotLayout.fits ? rows : []).map((row, index) => {
         const level = workloadHealthLevel(row)
@@ -326,7 +326,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
       </span>}
     </div>}
     {(viewMode !== 'by-app' || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
-      {viewMode !== 'by-app' && <span className={'is-' + state} title="Evaluation priority is based on saved evidence, not SAP SM37 execution status.">{statusNote} · not SAP SM37 job status</span>}
+      {viewMode !== 'by-app' && <span className={'is-' + state} title={statusNote + ' · Evaluation priority uses saved observations, not SAP SM37 execution status.'}>{preview ? preview.total.toLocaleString('en-US') + ' evaluated · saved 24h' : outcome}</span>}
       {viewMode !== 'by-app' && preview && Number(preview.health.unknown) > 0 && otherUnknown !== null &&
         <small title={unknownDescription}>Evidence gap · {insufficient} insufficient{otherUnknown > 0 ? ` · ${otherUnknown} other` : ''}</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}

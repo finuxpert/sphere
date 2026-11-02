@@ -9,12 +9,14 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
 
 // This canvas only animates the source-verified button population underneath it.
 // Counts, category, actions and accessibility remain owned by RundeckWorkloadHealth.
-export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelectIndex }) {
+export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelectIndex, motionEnabled = true }) {
   const canvasRef = React.useRef(null)
   const wakeRef = React.useRef(null)
   const hitPositionsRef = React.useRef([])
   const expandedRef = React.useRef(expanded)
   expandedRef.current = expanded
+  const motionRef = React.useRef(motionEnabled)
+  motionRef.current = motionEnabled
   const levels = React.useMemo(() => rows.map(row => workloadHealthLevel(row)), [rows])
   const { columns, size, gap, fits } = layout
 
@@ -68,14 +70,15 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
       if (last && time - last < 40) { raf = requestAnimationFrame(paint); return }
       last = time
       const target = expandedRef.current ? 1 : 0
-      morph += (target - morph) * (1 - Math.exp(-dt * (target ? 6.2 : 3.8)))
+      morph = motionRef.current ? morph + (target - morph) * (1 - Math.exp(-dt * (target ? 8.5 : 5.1))) : target
       if (Math.abs(morph - target) < .002) morph = target
       // A subtle saved-evaluation rotation runs only while idle and visible.
-      if (!expandedRef.current) phase += dt * .17
+      if (!expandedRef.current && motionRef.current) phase += dt * .35
       const blend = morph * morph * morph * (morph * (morph * 6 - 15) + 10)
       const cx = width / 2
       const cy = height / 2
-      const radius = Math.min(width * .28, height * .485, 112)
+      const radiusX = Math.min(width * .3, 97)
+      const radiusY = Math.min(height * .47, 134)
       const columnCount = Math.max(1, columns)
       const rowCount = Math.ceil(points.length / columnCount)
       const pitch = size + gap
@@ -90,8 +93,8 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
         const x = point.x * ca + point.z * sa
         const depth = -point.x * sa + point.z * ca
         const projection = 1 + depth * .13
-        const orbX = cx + x * radius * projection
-        const orbY = cy - point.y * radius * projection
+        const orbX = cx + x * radiusX * projection
+        const orbY = cy - point.y * radiusY * projection
         const row = Math.floor(point.index / columnCount)
         const col = point.index % columnCount
         const gridX = left + col * pitch + size / 2 + (row % 2 ? pitch / 2 : 0)
@@ -110,7 +113,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
       plotted.sort((a, b) => a.depth - b.depth)
       for (const point of plotted) drawHex(point.x, point.y, point.size, point.color, point.alpha)
       ctx.globalAlpha = 1
-      if (!expandedRef.current || morph !== target) raf = requestAnimationFrame(paint)
+      if ((motionRef.current && !expandedRef.current) || morph !== target) raf = requestAnimationFrame(paint)
     }
     const wake = () => {
       if (!raf && !document.hidden && visible) {
@@ -145,7 +148,7 @@ export default function RundeckEvaluationGlobe({ rows, layout, expanded, onSelec
     }
   }, [levels, size, gap, columns, fits])
 
-  React.useEffect(() => { wakeRef.current?.() }, [expanded])
+  React.useEffect(() => { wakeRef.current?.() }, [expanded, motionEnabled])
   const selectFromIdlePointer = event => {
     if (expandedRef.current || !['mouse','touch','pen'].includes(event.pointerType)) return
     const box = event.currentTarget.getBoundingClientRect()
