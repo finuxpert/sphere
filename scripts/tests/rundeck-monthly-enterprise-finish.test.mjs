@@ -102,7 +102,7 @@ test('weekly and monthly report show verified host peaks independently of storag
   assert.match(ui,/model\?\.candidates\|\|full\?\.monthly_abap_candidates\?\.slice\(0,10\)\|\|\[\]/)
   assert.match(ui,/attempt<2&&!controller\.signal\.aborted/)
   assert.match(ui,/setEvaluationRetry\(value=>value\+1\)/)
-  assert.match(ui,/evaluationError\?\'Evaluation unavailable\'/)
+  assert.match(ui,/error\?'Evaluation unavailable'/)
 })
 
 test('System Health combines five APPs and matching Infrastructure without redundant drilldown',()=>{
