@@ -30,7 +30,13 @@ from backend.rundeck_job_intelligence import (
 )
 from backend.rundeck_workload_explorer import workload_search, workload_summary, workload_trend
 
+# Add missing read-only routes without replacing legacy PROD API handlers.
+from backend.rundeck_prod_compat_api import router as compat_router
+from backend.rundeck_prod_monthly_storage import router as monthly_storage_router
+
 app = _core.app
+app.include_router(compat_router)
+app.include_router(monthly_storage_router)
 
 # Static QA compatibility markers. The executable definitions remain in
 # rundeck_api_core.py; these markers keep the v1.20.3 contract checker stable.
