@@ -55,6 +55,7 @@ const files = {
   sm37Css: read('src/tools/components/RundeckSm37Verification.css'),
   explorer: read('src/tools/components/RundeckWorkloadExplorer.jsx'),
   serverTrend: read('src/tools/components/RundeckServerTrend.jsx'),
+  trendFormatting: read('src/tools/components/rundeckTrendFormatting.js'),
   systemHealth: read('src/tools/components/RundeckSystemHealth.jsx'),
   systemHealthState: read('src/tools/components/rundeckSystemHealth.js'),
   jobHistory: read('src/tools/components/RundeckJobHistory.jsx'),
@@ -722,16 +723,16 @@ const checks = [
   ['Selected workload still hides zero-value I/O noise in multi-series profile', files.jobHistory.includes('some((value) => Math.abs(value) > 0)')],
   ['Job Intelligence smoke covers readiness source monitor and review queue', files.smoke.includes('/platform/readiness') && files.smoke.includes('/jobs/source') && files.smoke.includes('/jobs/monitor') && files.smoke.includes('/review/queue')],
   ['Server Trend pins selected range and exposes a dedicated collection-gap band', files.serverTrend.includes('CollectionGapBand') && files.serverTrend.includes('COLLECTION GAP') && files.serverTrend.includes('gapDurationText') && files.serverTrend.includes('min: displayWindow?.from ?? (Number.isFinite(rangeStart) ? rangeStart : undefined)') && files.serverTrend.includes('max: displayWindow?.to ?? rangeEnd') && files.serverTrend.includes('aria-pressed={Boolean(displayWindow)}') && files.serverTrend.includes('CollectionGapBand')],
-  ['Collection gap detection follows resolved bucket interval', files.serverTrend.includes('resolvedGapIntervalMs') && files.serverTrend.includes('bucket_interval_seconds') && files.serverTrend.includes("'30m': 30 * 60 * 1000") && files.serverTrend.includes("'6h': 6 * 60 * 60 * 1000")],
+  ['Collection gap detection follows resolved bucket interval', files.serverTrend.includes('resolvedGapIntervalMs') && files.trendFormatting.includes('bucket_interval_seconds') && files.trendFormatting.includes("'30m': 30 * 60 * 1000") && files.trendFormatting.includes("'6h': 6 * 60 * 60 * 1000")],
   ['Availability gaps come from backend observation metadata', files.serverTrend.includes('observation_gaps') && files.serverTrend.includes('No Observation') && files.availabilityBackend.includes('availability_observation_profile') && files.availabilityBackend.includes('OBSERVED_AVAILABILITY')],
   ['Availability missing observations are never inferred as DOWN', files.availabilityBackend.includes('Missing observations are UNKNOWN/NO OBSERVATION and are never inferred as DOWN.')],
   ['Availability cadence uses retained execution timing with drift tolerance', files.availabilityBackend.includes('from statistics import median') && files.availabilityBackend.includes('SPHERE_AVAILABILITY_GAP_FACTOR') && files.availabilityBackend.includes('cadence_snapshots')],
   ['Availability exposes coverage start and observed uptime', files.serverTrend.includes('AvailabilityCoverageBand') && files.serverTrend.includes('AvailabilityObservationSummary') && files.availabilityBackend.includes('coverage_limited') && files.availabilityBackend.includes('"uptime": uptime')],
   ['Long range trend axes use WIB date labels',
     files.serverTrend.includes('formatTrendAxis') &&
-    files.serverTrend.includes("['7d', '30d', 'last_month', '90d', '180d'].includes(range)") &&
-    files.serverTrend.includes("range === '24h'") &&
-    files.serverTrend.includes("timeZone: 'Asia/Jakarta'") &&
+    files.trendFormatting.includes("['7d', '30d', 'last_month', '90d', '180d'].includes(range)") &&
+    files.trendFormatting.includes("range === '24h'") &&
+    files.trendFormatting.includes("timeZone: 'Asia/Jakarta'") &&
     files.serverTrend.includes("showMinLabel: true") &&
     files.serverTrend.includes("showMaxLabel: !['7d', '30d'].includes(range)")],
   ['HANA and technical availability preserve category-specific labels', files.availabilityBackend.includes('HANA System DB Availability') && files.availabilityBackend.includes('HANA Replication Availability') && files.availabilityBackend.includes('Web Dispatcher Availability')],
