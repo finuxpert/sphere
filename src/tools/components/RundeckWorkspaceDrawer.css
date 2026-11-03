@@ -41,7 +41,7 @@
 .rundeckWorkspaceDrawer>footer{
   display:flex;justify-content:flex-end;gap:8px;padding:9px 16px;border-top:1px solid rgba(126,147,158,.10);background:#11191f
 }
-@media(max-width:1180px){.rundeckWorkspaceDrawer{top:0;width:100%}}
+@media(max-width:1180px){.rundeckWorkspaceDrawer{top:0;}}
 
 /* SPHERE v1.34.4 — drawer density and duplicate-header cleanup. */
 .rundeckWorkspaceDrawerBody>.rundeckJobHistory .rundeckJobHistoryHead{
@@ -387,7 +387,6 @@
 .rundeckWorkspaceDrawer>header{
   padding:11px 14px 9px!important;
   border-bottom:1px solid rgba(126,147,158,.065)!important;
-  background:var(--sphere-page,#0f151a)!important;
 }
 .rundeckWorkspaceDrawer>header h3{
   margin:2px 0 1px!important;
