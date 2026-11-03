@@ -1329,7 +1329,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             title={(activeFocus ? activeFocus + ' selection' : 'All APPs') + ' · saved observations; ' + (allAppPeak ? 'all APPs peak ' + numberText(allAppPeak.value, 1) + peakUnit + ' on ' + allAppPeak.host + '. ' : '') + 'APP selection changes contrast, not history; source timestamp shown when available'}>
             <strong>{activeFocus || 'All APPs'} {peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
             <span title={panelPeak.exact ? 'Source-verified peak observation' : 'Peak bucket start; exact source time unavailable'}>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB{isLoad ? ' · 28-core reference' : ''}</span>
-             {activeFocus && allAppPeak && <small className="rundeckTrendAllAppPeak"
+             {activeFocus && allAppPeak && (panelPeak.host !== allAppPeak.host || Number(panelPeak.value) !== Number(allAppPeak.value)) && <small className="rundeckTrendAllAppPeak"
                title={'All APPs ' + peakKind + ': ' + numberText(allAppPeak.value, 1) + peakUnit + ' · ' + allAppPeak.host + ' · ' + formatTrendPeakWib(allAppPeak.timestamp) + ' WIB'}>
                All APPs: {numberText(allAppPeak.value, 1)}{peakUnit} · {allAppPeak.host}
              </small>}
