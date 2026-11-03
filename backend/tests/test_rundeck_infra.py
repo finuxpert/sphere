@@ -198,14 +198,19 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
             def mappings(self): return self
             def all(self): return [record(26,600)]
         class Conn:
-            def execute(self, sql, params): return Result()
-        res=monthly_storage_evidence("2026-09",Conn(),{
+            def execute(self, sql, params):
+                self.query = str(sql)
+                return Result()
+        conn = Conn()
+        res=monthly_storage_evidence("2026-09",conn,{
             "File System OS":{"host":"AOPH1PAPPDC","mount":"/"}})
         self.assertEqual(res["items"][0]["used_bytes"],600*1024)
         self.assertEqual(res["items"][0]["status"],"COLLECTED")
         self.assertIsNone(res["items"][0]["reason"])
         self.assertEqual(res["source_rows"],2)
         self.assertEqual(res["distinct_mounts"],1)
+        self.assertIn("DISTINCT ON (f.host, f.mount_point)", conn.query)
+        self.assertIn("COUNT(*) OVER () AS source_rows", conn.query)
         # Even though SQL returns only the newest row, the total source
         # samples still reflect all records before DISTINCT ON.
         self.assertEqual(res["source_rows"], 2)
