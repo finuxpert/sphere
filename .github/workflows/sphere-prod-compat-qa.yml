@@ -33,12 +33,41 @@ jobs:
         run: |
           python -m unittest -v \
             backend.tests.test_rundeck_prod_compat_api \
+            backend.tests.test_rundeck_prod_release_readiness \
             backend.tests.test_rundeck_workload_activity \
             backend.tests.test_rundeck_top_consumers \
             backend.tests.test_rundeck_evaluation_paging_prod \
             backend.tests.test_rundeck_network_prod_contract \
             backend.tests.test_rundeck_custom_window \
             backend.tests.test_rundeck_infra
+      - name: Test real Uvicorn HTTP binding for PROD entrypoint
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python -m uvicorn backend.rundeck_api:app --host 127.0.0.1 --port 18092 > "$RUNNER_TEMP/prod-uvicorn.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 40); do
+            if curl --noproxy '*' -fsS --max-time 2 -o "$RUNNER_TEMP/prod-openapi.json" http://127.0.0.1:18092/openapi.json 2>/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$ready" != 1 ]]; then
+            cat "$RUNNER_TEMP/prod-uvicorn.log"
+            exit 1
+          fi
+          python - <<'PY'
+          import json,os
+          data=json.load(open(os.environ['RUNNER_TEMP']+'/prod-openapi.json'))
+          needed={'/history/workload/activity','/evaluation/top-consumers','/history/window',
+                  '/evaluation/workloads/monthly','/evaluation/workloads/monthly/hosts',
+                  '/history/trends','/infra/monthly-storage'}
+          assert needed.issubset(data['paths']), needed-set(data['paths'])
+          print('PROD_UVICORN_BIND=PASS ROUTES=7')
+          PY
       - name: Verify OpenAPI route uniqueness
         run: |
           python - <<'PY'
