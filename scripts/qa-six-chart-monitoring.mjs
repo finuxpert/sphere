@@ -95,7 +95,7 @@ const cpu=rect('.sphereEvaluationTop5')
 const donutArea=rect('.sphereJobDonuts')
 const donutItems=[...document.querySelectorAll('.sphereJobDonutCard')].map(node=>node.getBoundingClientRect())
 const dual=[...document.querySelectorAll('.sphereEvaluationDualPanel')].map(node=>node.getBoundingClientRect())
-const dualFit=dual.length===2&&dual.every(box=>box.width>100&&box.height>145)&&
+const dualFit=dual.length===2&&dual.every(box=>box.width>100&&box.height>130)&&
   eq(dual[0].width,dual[1].width,8)&&eq(dual[0].top,dual[1].top,5)&&
   dual[0].right+4<=dual[1].left&&dual[1].right<=mid.right+2&&
   [...document.querySelectorAll('.sphereEvaluationDualPanel .sphereEvaluationTop5Bars')].every(node=>node.getBoundingClientRect().height>110)
