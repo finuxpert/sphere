@@ -23,8 +23,9 @@ def _point(collection_id, at, *, jobs=7, programs=5, wp=None, sources=12):
 
 
 class _Results:
-    def __init__(self, rows):
+    def __init__(self, rows, count=None):
         self.rows = rows
+        self.count = count
 
     def mappings(self):
         return self
