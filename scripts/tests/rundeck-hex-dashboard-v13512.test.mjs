@@ -27,11 +27,12 @@ test('Operational Checks use sidebar pages; APP overview retains trends and eval
   const navigation=read('RundeckPerformanceNavigationState.js')
   // Verify actual JSX section order, not first mentions inside viewport-fit logic.
   const fleet = core.indexOf('<section className="sphereMonitoringApp')
-  const evaluation = core.indexOf('<section className="rundeckJobsProgramsOverview')
   const storage = core.indexOf('<RundeckStorageSummary')
+  const evaluation = core.indexOf('<section className="rundeckJobsProgramsOverview')
+  const infrastructure = core.indexOf('className="sphereMonitoringRightStack"')
   const trends = core.indexOf('<section className="rundeckTrendBandV13454 sphereMonitoringTrendBottom')
-  assert.ok(fleet >= 0 && evaluation > fleet && storage > evaluation && trends > storage,
-    'Overview must render APP, Evaluation, Storage and full-width Trends in that order')
+  assert.ok(fleet >= 0 && storage > fleet && evaluation > storage && infrastructure > evaluation && trends > infrastructure,
+    'APP and Storage stack at left, Evaluation stays central, Network/Disk are right, Trends remain full-width')
   assert.doesNotMatch(core,/operationalChecks=\{props\.operationalEvidenceContent\}/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
   assert.match(core,/<RundeckWorkloadHealth/)

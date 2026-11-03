@@ -4,13 +4,14 @@ import { readFileSync } from 'node:fs'
 
 const component = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
-test('compact monitoring keeps four charts, live data and navigation with Bootstrap layout', () => {
+test('compact monitoring keeps six charts, live data and navigation with Bootstrap layout', () => {
   const core = component('RundeckMonitoringHistoryCore.jsx')
   const wrapper = component('RundeckMonitoringHistory.jsx')
   const trends = component('RundeckServerTrend.jsx')
   const css = component('RundeckBootstrapTrend.css')
   assert.match(core, /sphereOverviewBottomRow row g-2/)
-  assert.match(core, /rundeckJobsProgramsOverview col-12 col-xl-4/)
+  assert.match(core, /rundeckJobsProgramsOverview col-12/)
+  assert.match(core, /sphereMonitoringRightStack/)
   assert.match(core, /sphereMonitoringThreeUp/)
   assert.match(core, /sphereMonitoringTrendBottom/)
   assert.ok(core.indexOf('<RundeckStorageSummary') < core.indexOf('<RundeckServerTrend'))

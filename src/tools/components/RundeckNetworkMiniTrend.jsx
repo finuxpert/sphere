@@ -45,7 +45,7 @@ export default function RundeckNetworkMiniTrend({refreshToken='',focusedHost=''}
       }
     })()
     return()=>controller.abort()
-  },[scope,refreshToken])
+  },[scope,refreshToken,app,range])
   const ready=state.scope===scope&&!state.loading&&!state.error
   const interfaces=ready?[...new Set(state.rows.map(row=>String(row.series_key).trim()))].sort():[]
   const selectedInterface=interfaces.includes(interfaceChoice)?interfaceChoice:interfaces[0]||''
