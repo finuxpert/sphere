@@ -183,8 +183,8 @@ const checks = [
     files.source.includes("'LAST READY'") &&
     files.source.includes("title={'Performance collection '") &&
     files.source.includes('aria-label="Last saved performance collection"') &&
-    files.source.includes('className="rundeckDataQualityState"') &&
-    files.source.includes('className="rundeckDataFreshnessInline"') &&
+    read('src/tools/components/RundeckPerformanceNavigation.jsx').includes('sphereSidebarFreshness') &&
+    read('src/tools/components/RundeckSystemHealth.jsx').includes('sphereSidebarHealthSlot') &&
     !files.source.includes('className="rundeckCycleIdentityV132"') &&
     files.source.includes('reportQuality') &&
     files.source.includes('metaRefreshFailed') &&
