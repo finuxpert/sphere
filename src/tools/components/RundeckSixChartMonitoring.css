@@ -344,3 +344,73 @@
   display:block!important;white-space:nowrap!important;max-width:100%!important;
   overflow:hidden!important;text-overflow:ellipsis!important;
 }
+
+/* Relocated operator status: keep provenance and freshness visible in the sidebar,
+   while Monitoring's top header remains a single title line. */
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarInsights{
+ display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:9px 5px;
+ border-top:1px solid var(--cockpit-outline,#304150);
+ border-bottom:1px solid var(--cockpit-outline,#304150);
+ min-width:0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarHealthSlot{
+ display:flex;flex-direction:column;min-width:0;gap:8px;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .rundeckSystemHealthV1231{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ gap:8px!important;width:100%!important;min-width:0!important;padding:0!important;
+ background:none!important;border:0!important;box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar
+:is(.rundeckSystemHealthPrimary,.rundeckCollectorHealthV131){
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ gap:4px!important;width:100%!important;min-width:0!important;
+ padding:0!important;margin:0!important;white-space:normal!important;
+ background:none!important;border:0!important;box-shadow:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar
+:is(.rundeckSystemHealthPrimary,.rundeckCollectorHealthV131) > span:first-child,
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarInsightHeading{
+ font-size:10.5px!important;font-weight:700!important;line-height:1.35!important;
+ color:var(--sphere-text,#e7edf0)!important;text-transform:none!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar
+:is(.rundeckSystemHealthPrimary,.rundeckCollectorHealthV131) .rundeckStatus{
+ font-size:10px!important;line-height:1.25!important;padding:2px 5px!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .rundeckSystemHealthReasonV132{
+ display:block!important;font-size:10px!important;white-space:normal!important;
+ line-height:1.35!important;overflow-wrap:anywhere!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .rundeckCollectorHealthV131 small{
+ font-size:9.5px!important;white-space:normal!important;line-height:1.35!important;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarFreshness{
+ display:flex;flex-direction:column;gap:6px;min-width:0;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarDataLine{
+ display:flex;flex-direction:column;gap:1px;min-width:0;font-size:10px;line-height:1.3;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarDataLine span{
+ color:var(--sphere-text-secondary,#aab7c5);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarDataLine strong{
+ font-size:10px;font-weight:600;color:var(--sphere-text,#e7edf0);
+ overflow-wrap:anywhere;
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarDataLine strong.is-partial,
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarDataLine strong.is-stale{
+ color:var(--sphere-warning,#e7b65d);
+}
+.appShell:has(.rundeckPanel) .spherePerformanceSidebar.is-collapsed .sphereSidebarInsights{display:none}
+@media(max-width:1099px){
+ .appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarInsights{
+  flex:1 0 100%;flex-direction:row;gap:16px;align-items:flex-start;
+ }
+ .appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarHealthSlot{
+  flex-direction:row;gap:16px;
+ }
+ .appShell:has(.rundeckPanel) .spherePerformanceSidebar .sphereSidebarFreshness{
+  flex:1;min-width:150px;
+ }
+}

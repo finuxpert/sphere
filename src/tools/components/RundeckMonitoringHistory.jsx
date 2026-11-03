@@ -234,6 +234,7 @@ export default function RundeckMonitoringHistory(props) {
   return <>
     <div className="spherePerformanceShell">
       <RundeckPerformanceNavigation activeView={activeView} onNavigate={(view) => { setActiveView(view); setActiveOverlay(null) }}
+        sourceFreshness={props.sourceFreshness}
         onOpenCollection={() => setActiveOverlay({ type: 'system-data' })} onManualUpload={props.onManualUpload} />
       <div className="spherePerformanceMain">
         

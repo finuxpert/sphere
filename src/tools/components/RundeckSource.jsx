@@ -790,17 +790,6 @@ export default function RundeckSource({ onCollection }) {
           <SphereIcon name="activity" /><span className="rundeckDashboardTitle">{headerTitle}</span>
         </h2>
       </div>
-      <div className="rundeckActions">
-        <div className="rundeckStateCluster">
-          <div className={`rundeckDataAlignment is-fixed ${freshnessWarning ? 'is-freshness-warning' : ''}`}
-            role="status" title={dataAlignmentTitle + ' · ' + freshnessSummary}
-            aria-label={'SAP Telemetry ' + (initialSourceCheck ? 'CHECKING' : qualityDisplay) + ' · ' + freshnessShort + ' · evaluation coverage is separate'}>
-            <span className="rundeckDataQualityLink" title="Performance and availability collection alignment; separate from evaluation coverage">Telemetry</span>
-            <strong className="rundeckDataQualityState">{initialSourceCheck ? 'CHECKING' : qualityDisplay}</strong>
-            <span className="rundeckDataFreshnessInline">{initialSourceCheck ? 'Reading sources' : freshnessShort}</span>
-          </div>
-        </div>
-      </div>
     </header>
 
     {error && <div className={`rundeckMessage ${latest ? 'is-reconnecting' : ''}`} role="status">{latest ? `Refresh delayed. Showing last good run #${latest.execution_id || '—'}.` : error}</div>}
@@ -839,6 +828,9 @@ export default function RundeckSource({ onCollection }) {
       sourceQuality={quality}
       sourceLoading={initialSourceCheck}
       sourceCollector={platform?.collector || null}
+      sourceFreshness={{ status: initialSourceCheck ? 'CHECKING' : qualityDisplay,
+        performanceAgeMinutes, availabilityAgeMinutes, title: dataAlignmentTitle,
+        performanceVerified: quality.performanceValid, availabilityVerified: quality.availabilityValid }}
       sourceHosts={operationalHosts}
       sourceAvailability={availabilitySnapshot}
       onTrendContext={setTrendContext}

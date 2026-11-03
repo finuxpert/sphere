@@ -76,7 +76,7 @@ export default function RundeckSystemHealth({ sourceQuality = null, sourceLoadin
     let attempts = 0
     const findTarget = () => {
       attempts += 1
-      const node = document.querySelector('.rundeckPanel .rundeckStateCluster')
+      const node = document.querySelector('.spherePerformanceSidebar .sphereSidebarHealthSlot')
       if (node) {
         setTarget(node)
         return
@@ -110,12 +110,12 @@ export default function RundeckSystemHealth({ sourceQuality = null, sourceLoadin
   return createPortal(
     <div className="rundeckSystemHealthV1231">
       <div className="rundeckSystemHealthPrimary">
-        <span>Status</span>
+        <span>System Status</span>
         <StatusPill value={displayState} title={title} />
         {primarySignal && <span className={`rundeckSystemHealthReasonV132 is-${String(primarySignal.level || 'attention').toLowerCase()}`} title={primarySignal.detail}>{primarySignal.text}</span>}
       </div>
       <div className="rundeckCollectorHealthV131 is-fixed" title={collectorTitle(collector)}>
-        <span>Collector</span>
+        <span>Data Collection</span>
         <StatusPill value={sourceLoading ? 'CHECKING' : collector.status || 'UNKNOWN'} />
         <small>{sourceLoading ? 'Checking' :
           collector.last_successful_collection
