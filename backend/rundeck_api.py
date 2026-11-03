@@ -24,7 +24,6 @@ from backend.rundeck_job_intelligence import (
     import_job_executions,
     investigation_report,
     job_executions,
-    job_execution_overview,
     job_monitor,
     platform_readiness,
     review_queue,
@@ -235,16 +234,6 @@ def jobs_source_endpoint():
         return sm37_source_status()
     except RuntimeError as error:
         raise HTTPException(503, str(error)) from None
-
-
-@app.get("/jobs/overview")
-def jobs_overview_endpoint(days: int = Query(1, ge=1, le=30)):
-    try:
-        return job_execution_overview(days=days)
-    except RuntimeError as error:
-        raise HTTPException(503, str(error)) from None
-    except Exception as error:
-        raise HTTPException(503, f"Job execution overview unavailable: {type(error).__name__}") from None
 
 
 @app.get("/jobs/executions")
