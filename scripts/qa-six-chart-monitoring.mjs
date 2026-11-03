@@ -20,7 +20,7 @@ const temp=mkdtempSync(join(tmpdir(),'sphere-six-chart-'))
 const apps=Array.from({length:5},(_,i)=>'<button class="rundeckAppHexSelector is-sap-attention"><span class="rundeckAppHexShape"><strong>APP'+(i+1)+'</strong><small>ATTENTION</small><em>WP 1</em><span class="rundeckFleetMeters"><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">CPU</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">24%</span></span><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">RAM</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">32%</span></span></span></span></button>').join('')
 const fsRows=['OS Root','INTF','INTF AOQ','SAP Archive','Archive INTF'].map(name=>'<button class="sphereStorageRow"><span class="sphereStorageLabel"><strong>'+name+'</strong><small>APP1</small></span><span class="sphereStorageTrack"></span><strong class="sphereStoragePercent">72%</strong></button>').join('')
 const counts=['Review','Watch','Limited Data','Normal'].map(name=>'<button class="rundeckWorkloadCategory"><strong>42</strong><span>'+name+'</span></button>').join('')
-const consumers=Array.from({length:10},(_,i)=>'<button class="sphereEvaluationTop5Row"><span class="sphereEvaluationTop5Name">SAVED_WORKLOAD_'+i+'</span><span class="sphereEvaluationTop5Track"><i style="width:60%"></i></span><span class="sphereEvaluationTop5Value">1.20 cores</span></button>').join('')
+const consumers=(metric)=>Array.from({length:10},(_,i)=>'<div class="sphereEvaluationTop5Row"><span class="sphereEvaluationTop5Name">SAVED_WORKLOAD_'+i+'</span><span class="sphereEvaluationTop5Track"><i style="width:60%"></i></span><span class="sphereEvaluationTop5Value">'+(metric==='CPU'?'1.20 cores':'2.25 GB')+'</span></div>').join('')
 const donuts=['Workload Mix','Recurring Workloads','High Memory','WP Signal Overlap'].map((name,index)=>
   '<article class="sphereJobDonutCard"><div class="sphereJobDonutRing" style="--sphere-job-ring-pct:25%"><span>'+[60,23,9,7][index]+'</span></div>'+
   '<div class="sphereJobDonutCopy"><strong>'+name+'</strong><span class="sphereJobDonutDetail">Source-backed signal</span><small>24h</small></div></article>').join('')
@@ -53,7 +53,9 @@ html,body{margin:0!important;padding:0!important}
 <section class="rundeckWorkloadHealth is-monitoring-globe" data-view-mode="status">
 <header class="rundeckWorkloadHealthTitle"><strong>Job &amp; Program Evaluation</strong><button>Open Review</button></header>
 <div class="rundeckWorkloadHealthLegend">__COUNTS__</div>
-<section class="sphereEvaluationTop5"><div class="sphereEvaluationTop5Head"><strong>Top 10 CPU Consumers</strong></div><div class="sphereEvaluationTop5Bars">__CONSUMERS__</div></section>
+<section class="sphereEvaluationTop5 sphereEvaluationDual"><div class="sphereEvaluationTop5Head sphereEvaluationDualHead"><strong>Top Consumers <small>· 24h</small></strong><div class="sphereConsumerRange"><button>30M</button><button>1H</button><button>6H</button><button aria-pressed="true">24H</button><button>Custom</button></div></div>
+<div class="sphereEvaluationDualGrid"><div class="sphereEvaluationDualPanel is-cpu"><div class="sphereEvaluationDualPanelTitle"><strong>Top 10 CPU · Avg Cores</strong></div><div class="sphereEvaluationTop5Bars">__CPU_CONSUMERS__</div></div>
+<div class="sphereEvaluationDualPanel is-memory"><div class="sphereEvaluationDualPanelTitle"><strong>Top 10 Memory · Avg PSS</strong></div><div class="sphereEvaluationTop5Bars">__MEM_CONSUMERS__</div></div></div></section>
 <section class="sphereJobDonuts">__DONUTS__</section>
 <footer class="rundeckWorkloadHealthFooter"></footer>
 </section></div></section>
@@ -86,12 +88,17 @@ const chartCount=document.querySelectorAll('.sphereMonitoringRightStack svg').le
 document.querySelectorAll('.fixtureTrendCards > div').length===4&&
 document.querySelectorAll('.sphereStorageRow').length===5&&
 document.querySelectorAll('.rundeckAppHexSelector').length===5&&
-document.querySelectorAll('.sphereEvaluationTop5Row').length===10
+document.querySelectorAll('.sphereEvaluationTop5Row').length===20
 const head=rect('.rundeckWorkloadHealthTitle')
 const kpis=rect('.rundeckWorkloadHealthLegend')
 const cpu=rect('.sphereEvaluationTop5')
 const donutArea=rect('.sphereJobDonuts')
 const donutItems=[...document.querySelectorAll('.sphereJobDonutCard')].map(node=>node.getBoundingClientRect())
+const dual=[...document.querySelectorAll('.sphereEvaluationDualPanel')].map(node=>node.getBoundingClientRect())
+const dualFit=dual.length===2&&dual.every(box=>box.width>100&&box.height>145)&&
+  eq(dual[0].width,dual[1].width,8)&&eq(dual[0].top,dual[1].top,5)&&
+  dual[0].right+4<=dual[1].left&&dual[1].right<=mid.right+2&&
+  [...document.querySelectorAll('.sphereEvaluationDualPanel .sphereEvaluationTop5Bars')].every(node=>node.getBoundingClientRect().height>110)
 const centralFlow=head&&kpis&&cpu&&donutArea&&
   [head,kpis,cpu,donutArea].every(box=>box.width>=mid.width*.86)&&
   head.bottom<=kpis.top+6&&kpis.bottom<=cpu.top+6&&cpu.bottom<=donutArea.top+6&&
@@ -103,7 +110,7 @@ const singleSelector=document.querySelectorAll('.sphereFleetMiniHost').length===
 const ordered=bottom&&top&&bottom.top>=top.bottom-4
 const chartsFit=[...document.querySelectorAll('.sphereFleetMiniTrend svg')].length===2&&
   [...document.querySelectorAll('.sphereFleetMiniTrend svg')].every(el=>el.getBoundingClientRect().height>=70)
-const pass=columns&&stacks&&chartCount&&ordered&&chartsFit&&centralFlow&&singleSelector
+const pass=columns&&stacks&&chartCount&&ordered&&chartsFit&&centralFlow&&singleSelector&&dualFit
 document.body.dataset.qa=pass?'PASS':'FAIL'
 const detailChecks=[
   [head,kpis,cpu,donutArea].every(box=>box&&box.width>=mid.width*.86),
@@ -118,14 +125,14 @@ const detailChecks=[
   Math.round(mid?.height||0),Math.round(donutArea?.height||0),
   Math.round(cpu?.bottom||0),Math.round(donutArea?.top||0),Math.round(donutArea?.bottom||0),Math.round(mid?.bottom||0)
 ]
-document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,centralFlow,singleSelector,...detailChecks,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
+document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,centralFlow,singleSelector,dualFit,...dual.map(b=>Math.round(b.width)),...dual.map(b=>Math.round(b.height)),...detailChecks,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
 })</script></body></html>`;
 try{
  for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
   for(const theme of ['dark','light']){
    const html=template.replaceAll('__THEME__',theme).replaceAll('__WIDTH__',String(size.w))
      .replaceAll('__CSS__',styles).replaceAll('__APPS__',apps).replaceAll('__FSROWS__',fsRows)
-     .replaceAll('__COUNTS__',counts).replaceAll('__CONSUMERS__',consumers).replaceAll('__DONUTS__',donuts).replaceAll('__CHART__',chart)
+     .replaceAll('__COUNTS__',counts).replaceAll('__CPU_CONSUMERS__',consumers('CPU')).replaceAll('__MEM_CONSUMERS__',consumers('PSS')).replaceAll('__DONUTS__',donuts).replaceAll('__CHART__',chart)
    const file=join(temp,'monitor-'+size.w+'-'+theme+'.html')
    writeFileSync(file,html)
    const result=spawnSync(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
