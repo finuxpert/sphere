@@ -105,7 +105,20 @@ const chartsFit=[...document.querySelectorAll('.sphereFleetMiniTrend svg')].leng
   [...document.querySelectorAll('.sphereFleetMiniTrend svg')].every(el=>el.getBoundingClientRect().height>=70)
 const pass=columns&&stacks&&chartCount&&ordered&&chartsFit&&centralFlow&&singleSelector
 document.body.dataset.qa=pass?'PASS':'FAIL'
-document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,centralFlow,singleSelector,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
+const detailChecks=[
+  [head,kpis,cpu,donutArea].every(box=>box&&box.width>=mid.width*.86),
+  !!(head&&kpis&&head.bottom<=kpis.top+6),
+  !!(kpis&&cpu&&kpis.bottom<=cpu.top+6),
+  !!(cpu&&donutArea&&cpu.bottom<=donutArea.top+6),
+  !!(donutArea&&donutArea.bottom<=mid.bottom+8),
+  donutItems.length===4&&donutItems.every(box=>box.width>100&&box.height>42),
+  donutItems.length===4&&eq(donutItems[0].top,donutItems[1].top,5)&&eq(donutItems[2].top,donutItems[3].top,5),
+  donutItems.length===4&&donutItems[0].right<donutItems[1].left&&donutItems[2].right<donutItems[3].left,
+  Math.round(head?.width||0),Math.round(kpis?.width||0),Math.round(cpu?.width||0),Math.round(donutArea?.width||0),
+  Math.round(mid?.height||0),Math.round(donutArea?.height||0),
+  Math.round(cpu?.bottom||0),Math.round(donutArea?.top||0),Math.round(donutArea?.bottom||0),Math.round(mid?.bottom||0)
+]
+document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,centralFlow,singleSelector,...detailChecks,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
 })</script></body></html>`;
 try{
  for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
