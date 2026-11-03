@@ -438,7 +438,7 @@
  display:flex;align-items:center;gap:3px;flex:0 0 auto;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout :is(.sphereFleetMiniActions button,.sphereFleetMiniHost){
+.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniActions button{
  background:transparent!important;color:var(--sphere-text-secondary,#aab7c5)!important;
  font-size:10.5px!important;line-height:1.25!important;cursor:pointer;
  border-radius:4px!important;padding:2px 4px!important;
@@ -448,26 +448,9 @@
  border:1px solid var(--cockpit-outline,#304150)!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniActions button[aria-pressed="true"],
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniHost[aria-pressed="true"]{
+.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniActions button[aria-pressed="true"]{
  border-color:var(--sphere-accent,#67a9e8)!important;
  color:var(--sphere-text,#e7edf0)!important;
-}
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniLegend{
- display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
- align-items:center!important;gap:1px!important;min-width:0!important;flex:0 0 auto!important;
-}
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniHost{
- display:inline-flex!important;align-items:center!important;justify-content:center!important;
- gap:3px!important;min-width:0!important;padding:2px 1px!important;
- border:1px solid transparent!important;white-space:nowrap!important;
-}
-.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniHost i{
- display:inline-block;flex:0 0 5px;width:5px;height:5px;border-radius:50%;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniMeta{
