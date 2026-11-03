@@ -139,7 +139,6 @@ html[data-theme="light"] .rundeckSapIssuesSummaryStrip span{
 html[data-theme="light"] .rundeckJobHistoricalRangeChart,
 html[data-theme="light"] .rundeckJobPerformanceChart{background:#fff!important}
 html[data-theme="light"] .sphereThemeControl select{
-  background:#fff!important;
   color:#26363e!important;
   border-color:rgba(45,63,72,.18)!important;
 }
@@ -364,8 +363,7 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckOperationalSummary
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCardTitle{
   font-weight:780!important
 }
-html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>strong{
-  color:#40545e!important;font-weight:700!important
+html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>strong{font-weight:700!important
 }
 html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>em{
   color:#0f6a71!important;font-weight:700!important
@@ -585,8 +583,6 @@ html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckIssueNowV1231
 }
 html[data-theme="light"] .rundeckTrendPointModalBackdrop{background:rgba(27,45,54,.12)}
 html[data-theme="light"] .rundeckTrendPointModal{
-  background:#fff!important;
-  border-color:rgba(45,63,72,.20)!important;
   box-shadow:0 18px 42px rgba(33,49,57,.22)!important;
 }
 html[data-theme="light"] .rundeckTrendPointModalHeader h4{color:#172229!important}
@@ -771,7 +767,7 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckEvidenceCard>small
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip b{color:#596b74!important;opacity:1!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesSummaryStrip strong{color:#203038!important;opacity:1!important}
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckSapIssuesV1231 td strong{color:#31464f!important;opacity:1!important}
-html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckIssueNowV1231 strong{color:#73580e!important;opacity:1!important}
+html[data-theme="light"] .rundeckWorkspaceDrawer.is-issues .rundeckIssueNowV1231 strong{opacity:1!important}
 
 /* System Data primary states and links. */
 html[data-theme="light"] .rundeckWorkspaceDrawer.is-system-data .rundeckSystemDataState.is-ready{color:#287a55!important;font-weight:800!important}
