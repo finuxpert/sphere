@@ -673,7 +673,6 @@
 /* SPHERE v1.34.2 — compact cockpit with detail-on-demand drawers. */
 .rundeckSelectedCompact {
   display:flex;
-  align-items:center;
   justify-content:space-between;
   gap:14px;
   margin-top:8px;
@@ -1000,7 +999,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMet
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:8px!important;
   margin-top:0!important;
   padding-top:10px!important;
   border-top:1px solid rgba(126,147,158,.08)!important;
@@ -1010,7 +1008,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMet
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
   min-height:72px!important;
-  padding:8px 9px!important;
 }
 @media(max-width:1180px){
   .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,
@@ -1022,12 +1019,10 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMet
 /* SPHERE v1.34.23 — final selected-context card proportions. */
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
   grid-template-columns:minmax(0,40fr) minmax(0,28fr) minmax(0,32fr)!important;
-  align-items:stretch!important;
   gap:8px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
   height:100%!important;
-  min-height:74px!important;
   box-sizing:border-box!important;
 }
 @media(max-width:1180px){
@@ -1050,9 +1045,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMet
   height:auto!important;
   min-height:0!important;
 }
-.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence{
-  margin-top:6px!important;
-}
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{
   gap:6px!important;
   padding-top:6px!important;
@@ -1061,9 +1053,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMet
   min-height:60px!important;
   padding:6px 8px!important;
   gap:2px!important;
-}
-.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard>em{
-  margin-top:3px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckPerformanceReviewBand{
   margin-top:8px!important;
@@ -1144,12 +1133,12 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedCompactMet
 
 
 /* SPHERE RC — softer selected-workload workspace. */
-.appShell:has(.rundeckPanel) .rundeckSelectedCompact{border-color:rgba(126,147,158,.065)!important;border-radius:4px!important;background:transparent!important}
+.appShell:has(.rundeckPanel) .rundeckSelectedCompact{border-color:rgba(126,147,158,.065)!important;border-radius:4px!important;}
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{gap:0!important;border-top:1px solid rgba(126,147,158,.075)!important;border-bottom:1px solid rgba(126,147,158,.055)!important}
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards{grid-auto-rows:70px!important;padding-top:0!important}
 .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{grid-auto-rows:58px!important}
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{min-height:70px!important;height:70px!important;padding:8px 9px!important;border:0!important;border-right:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
-.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{min-height:58px!important;height:58px!important;border:0!important;border-right:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{min-height:58px!important;height:58px!important;border:0!important;border-right:1px solid rgba(126,147,158,.07)!important;border-radius:0!important;box-shadow:none!important}
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard:last-child,.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button:nth-child(3n){border-right:0!important}
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard:hover,.appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard:focus-visible,.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button:hover,.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button:focus-visible{background:rgba(79,198,200,.035)!important;outline:2px solid rgba(79,198,200,.20)!important;outline-offset:-2px!important}
 .appShell:has(.rundeckPanel) .rundeckEvidenceCard>small,.appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button small{color:var(--sphere-text-muted,#8d9aa3)!important;font-size:9px!important}
@@ -1209,7 +1198,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckInvestigationConte
 /* SPHERE RC final — one aligned 3-column investigation workspace. */
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence{
   --selected-investigation-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.95fr);
-  margin-top:6px!important;
   padding-bottom:6px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckOperationalSummaryCards,
@@ -1225,7 +1213,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckInvestigationConte
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis{
   min-height:58px!important;
-  margin-top:0!important;
   border-top:0!important;
   border-bottom:1px solid rgba(126,147,158,.075)!important;
 }
@@ -1239,7 +1226,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckInvestigationConte
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard>small{
   min-width:0!important;
-  line-height:1.25!important;
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedOperationalEvidence .rundeckEvidenceCard>em{
   min-height:12px!important;
@@ -1295,7 +1281,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   margin-top:5px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
-  min-height:48px!important;
   padding:5px 8px!important;
   background:rgba(126,147,158,.012)!important;
 }
@@ -1938,7 +1923,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 .appShell:has(.rundeckPanel) .rundeckTrendModeNote{
   color:var(--sphere-text-muted,#718089);
   font-size:8px;
-  white-space:nowrap;
 }
 .appShell:has(.rundeckPanel) .rundeckDualTrendV13456>.rundeckRcaHint{
   margin-top:3px!important;
@@ -2029,8 +2013,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   column-gap:7px!important;
   row-gap:1px!important;
   min-width:0!important;
-  min-height:46px!important;
-  height:46px!important;
   margin:0!important;
   padding:5px 8px!important;
   border:0!important;

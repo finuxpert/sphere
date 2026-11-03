@@ -116,3 +116,12 @@ This is a **sampled dependency slice**, not a whole-repository proof of unused c
 - **One safe CSS consolidation:** In `src/app/accessibility-theme-v13412.css`, two immediately adjacent, identical eight-selector rule lists were merged in place. All six property declarations retain their original order, importance and values; this removes one redundant selector prelude without moving a rule across any cascade boundary. Broader stylesheet deletion and override consolidation still require route-specific browser screenshot comparisons. No CSS file paths, Vite config, backend, database or deployment state changed.
 
 Review the generated audit in GitHub Actions job `Full frontend QA and Vite build`. Run `npm run qa:css-cascade -- --json` for machine-readable evidence.
+
+## Monitoring stylesheet deduplication — phase 3 (source-only)
+
+- Target: `src/tools/components/RundeckMonitoringHistory.css` (no import-path changes).
+- Removed **16 earlier declarations** for which a **later identical property and value** exists under the exact same selector text and the same `@media`/at-rule context. Removed the **two empty rules** that resulted. CSS order of all retained declarations remains unchanged.
+- Before: 89,742 Git blob bytes, 671 occurrences of `!important`, 512 parsed qualified rules. After: 89,138 Git blob bytes, 657 `!important`, 510 parsed qualified rules. Savings: **604 bytes**, **14 `!important`** and **2 empty rules**.
+- Independent in-memory static comparison before GitHub commit: the final normalized value for all **1,335 selector/context/property keys** was identical before and after. This is static declaration parity, **not an exhaustive browser pixel-comparison**.
+- Extended CSS regression checks to retain important Monitoring evidence styles and reject the two emptied rules.
+- CSS import order, APIs, backend, PDF generation, dependencies, database, deployments and PROD stay unchanged. Full frontend/build, Chromium Monitoring, PDF and backend CI are required before DEV merge.

@@ -34,3 +34,14 @@ test('QA trend focus schedules each test file once', () => {
     .map(match => match[0])
   assert.equal(files.length, new Set(files).size, 'duplicate test execution wastes CI time')
 })
+
+test('Monitoring CSS keeps final evidence styles after redundant declarations are removed', () => {
+  const css = readFileSync(new URL('../../src/tools/components/RundeckMonitoringHistory.css', import.meta.url), 'utf8')
+  // These source-backed styles are still required. Only earlier, identical
+  // selector/context declarations were removed from the stylesheet.
+  assert.match(css, /\.rundeckSelectedOperationalEvidence\s*\{\s*margin-top:6px!important;/)
+  assert.match(css, /\.rundeckSelectedOperationalEvidence \.rundeckEvidenceCard>em\s*\{\s*margin-top:3px!important;/)
+  assert.match(css, /\.rundeckTrendModeNote\s*\{[^}]*white-space:nowrap;/)
+  assert.doesNotMatch(css, /\.rundeckSelectedOperationalEvidence\s*\{\s*\}/)
+  assert.doesNotMatch(css, /\.rundeckSelectedOperationalEvidence \.rundeckEvidenceCard>em\s*\{\s*\}/)
+})
