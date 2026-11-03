@@ -6,6 +6,7 @@ import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
 import { topResourceConsumers, workloadMetric } from './rundeckResourceMiniCharts.js'
 import RundeckJobSummaryDonuts from './RundeckJobSummaryDonuts.jsx'
+import RundeckTopConsumersDual from './RundeckTopConsumersDual.jsx'
 import './RundeckResourceMiniCharts.css'
 import RundeckWorkloadAppLanes from './RundeckWorkloadAppLanes.jsx'
 import { validatedAppEvaluationMemberships } from './rundeckWorkloadAppLanes.js'
@@ -332,7 +333,8 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         {!dotLayout.fits && rows.length ? `${rows.length} evaluated · hexagons do not fit · open Review` : outcome}
       </span>}
     </div> : null}
-    {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label={'Top ' + resourceLimit + ' evaluated resource consumers'}>
+    {viewMode === 'status' && showResourceTop5 && <RundeckTopConsumersDual refreshToken={refreshToken} />}
+    {viewMode !== 'status' && viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label={'Top ' + resourceLimit + ' evaluated resource consumers'}>
       <div className="sphereEvaluationTop5Head">
         <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
           Top {resourceLimit} {resourceMetric === 'cpu' ? 'CPU Consumers · Avg 24h' : 'PSS Consumers · Avg 24h'}
