@@ -15,6 +15,7 @@
 
 ## Technical references
 
+| [Repository audit — 3 November 2026](architecture/REPOSITORY-AUDIT-20261103.md) | Measured Git tree inventory, dependency slices, retention and phased refactor decisions |
 | Reference | Purpose |
 |---|---|
 | [Rundeck Integration](operations/RUNDECK_INTEGRATION_RUNBOOK.md) | Collection/readiness, REST API access and role boundaries |
