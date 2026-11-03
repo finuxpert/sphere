@@ -120,10 +120,10 @@ export default function RundeckMonitoringHistoryCore(props) {
       </section>
       <div className="sphereMonitoringRightStack" aria-label="I/O Wait and Disk I/O comparison across APP1–APP5">
         <section className="sphereMonitoringMiniChart" aria-label="I/O Wait Trend">
-          <RundeckIoWaitMiniTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
+          <RundeckIoWaitMiniTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
         </section>
         <section className="sphereMonitoringMiniChart" aria-label="Disk I/O Activity">
-          <RundeckDiskIoTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
+          <RundeckDiskIoTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
         </section>
       </div>
     </div>
