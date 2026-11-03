@@ -87,7 +87,7 @@ function TimeSelector({ range, onRange, name }) {
   </div>
 }
 
-function TrendPanel({ kind, range, onRange, data, loading, error }) {
+function TrendPanel({ kind, range, onRange, data, loading, error, onRetry }) {
   const isWP = kind === 'wp'
   const name = isWP ? 'Work Process by Type' : 'SAP Workload Activity'
   const observed = isWP ? data?.wp_checks : data?.activity_checks
@@ -108,7 +108,10 @@ function TrendPanel({ kind, range, onRange, data, loading, error }) {
       </div>
       {loading
         ? <p className="sphereFleetMiniEmpty" role="status">Checking saved observations…</p>
-        : error ? <p className="sphereFleetMiniEmpty" role="status" title={error}>Data unavailable</p>
+        : error ? <div className="sphereWorkloadActivityError" role="alert">
+          <span title={error}>{error.includes('timed out') ? 'History timed out' : 'Data unavailable'}</span>
+          <button type="button" onClick={onRetry}>Retry</button>
+        </div>
         : !observed ? <p className="sphereFleetMiniEmpty" role="status">Not Collected · no verified {isWP?'WP types':'workloads'}</p>
         : <ObservedChart data={data} metric={kind}/>}
       <div className="sphereWorkloadActivityLegend" aria-label={isWP?'Observed WP categories':'Observed workload categories'}>
@@ -130,8 +133,14 @@ function TrendPanel({ kind, range, onRange, data, loading, error }) {
 
 export default function RundeckSapWorkloadMiniCharts({range='24h',onRange,refreshToken=''}) {
   const [state,setState] = React.useState({range:'',loading:true,data:null,error:''})
+  const [retry,setRetry] = React.useState(0)
   React.useEffect(() => {
     const controller = new AbortController()
+    let timedOut = false
+    const timeout = window.setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, 16000)
     setState({range,loading:true,data:null,error:''})
     const params = new URLSearchParams({range})
     fetch(API+'?'+params.toString(),{cache:'no-store',signal:controller.signal})
@@ -146,15 +155,21 @@ export default function RundeckSapWorkloadMiniCharts({range='24h',onRange,refres
         setState({range,loading:false,data:verified,error:''})
       })
       .catch(error => {
-        if (!controller.signal.aborted) setState({range,loading:false,data:null,error:error.message})
+        if (!controller.signal.aborted || timedOut) setState({
+          range, loading:false, data:null,
+          error:timedOut ? 'History request timed out (16s)' : error.message,
+        })
       })
-    return () => controller.abort()
-  },[range,refreshToken])
+      .finally(() => window.clearTimeout(timeout))
+    return () => { window.clearTimeout(timeout); controller.abort() }
+  },[range,refreshToken,retry])
   const valid = state.range === range
   return <>
     <TrendPanel kind="workload" range={range} onRange={onRange}
-      data={valid?state.data:null} loading={!valid||state.loading} error={valid?state.error:''}/>
+      data={valid?state.data:null} loading={!valid||state.loading} error={valid?state.error:''}
+      onRetry={() => setRetry(n => n + 1)}/>
     <TrendPanel kind="wp" range={range} onRange={onRange}
-      data={valid?state.data:null} loading={!valid||state.loading} error={valid?state.error:''}/>
+      data={valid?state.data:null} loading={!valid||state.loading} error={valid?state.error:''}
+      onRetry={() => setRetry(n => n + 1)}/>
   </>
 }
