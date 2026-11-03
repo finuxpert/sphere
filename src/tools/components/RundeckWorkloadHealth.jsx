@@ -5,6 +5,7 @@ import { evaluationEvidenceGapReasons, validatedWorkloadDots, workloadHealthLeve
 import { workloadDotLayout } from './rundeckWorkloadGrid.js'
 import RundeckEvaluationGlobe from './RundeckEvaluationGlobe.jsx'
 import { topResourceConsumers, workloadMetric } from './rundeckResourceMiniCharts.js'
+import RundeckJobSummaryDonuts from './RundeckJobSummaryDonuts.jsx'
 import './RundeckResourceMiniCharts.css'
 import RundeckWorkloadAppLanes from './RundeckWorkloadAppLanes.jsx'
 import { validatedAppEvaluationMemberships } from './rundeckWorkloadAppLanes.js'
@@ -363,6 +364,9 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
           {error ? 'Evaluation refresh failed' : loading ? 'Checking evaluations…' : 'No verified ' + resourceMetric.toUpperCase() + ' values'}
         </span>}
     </section>}
+    {viewMode === 'status' && showResourceTop5 && <RundeckJobSummaryDonuts
+      refreshToken={refreshToken} evaluation={preview?.health}
+      evaluationVerified={Boolean(preview && !error)} />}
     {(viewMode !== 'by-app' || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
       {viewMode !== 'by-app' && viewMode !== 'status' && <span className={'is-' + state} title={statusNote + ' · Evaluation priority uses saved observations, not SAP SM37 execution status.'}>{preview ? preview.total.toLocaleString('en-US') + ' evaluated · saved 24h' : outcome}</span>}
       {viewMode !== 'by-app' && preview && Number(preview.health.unknown) > 0 && otherUnknown !== null && (otherUnknown > 0 || insufficient !== Number(preview.health.unknown)) &&
