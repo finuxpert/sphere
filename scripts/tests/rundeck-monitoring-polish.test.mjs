@@ -229,7 +229,7 @@ test('one shared APP focus drives APP Landscape, Network, Disk I/O and all Perfo
   assert.doesNotMatch(source,/className="rundeckLastCollected"/)
   assert.doesNotMatch(trends,/rundeckTrendFocusIdentity/)
   assert.match(trends,/Scale: Full/)
-  assert.match(trends,/CPU\/RAM Axis/)
+  assert.match(trends,/Percent Axis/)
   assert.match(trends,/onFocusHost\?\.\(label\)/)
   assert.doesNotMatch(trends,/onFocusHost\?\.\(activeFocus === label \? '' : label\)/)
 })
