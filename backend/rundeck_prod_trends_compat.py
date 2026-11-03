@@ -1,0 +1,479 @@
+"""Bounded historical trend aggregation for SPHERE Rundeck /dev."""
+from __future__ import annotations
+
+import os
+import time
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+from sqlalchemy import text
+
+from backend.db.session import get_engine
+
+# Keep short incident windows at collection resolution. Longer windows are bucketed
+# progressively so operators can zoom from the last 30 minutes to long-term context
+# without losing the newest collection-level spikes.
+RANGES = {
+    "custom": {"hours": None, "auto_bucket": "raw"},
+    "30m": {"hours": 0.5, "auto_bucket": "raw"},
+    "1h": {"hours": 1, "auto_bucket": "raw"},
+    "3h": {"hours": 3, "auto_bucket": "raw"},
+    "6h": {"hours": 6, "auto_bucket": "10m"},
+    "24h": {"hours": 24, "auto_bucket": "30m"},
+    "7d": {"hours": 24 * 7, "auto_bucket": "1h"},
+    "30d": {"hours": 24 * 30, "auto_bucket": "6h"},
+    "90d": {"hours": 24 * 90, "auto_bucket": "1d"},
+    "180d": {"hours": 24 * 180, "auto_bucket": "1d"},
+    "last_month": {"hours": None, "auto_bucket": "1d"},
+}
+
+BUCKETS = {
+    "raw": "raw",
+    "10m": "10 minutes",
+    "30m": "30 minutes",
+    "1h": "1 hour",
+    "6h": "6 hours",
+    "1d": "1 day",
+}
+
+BUCKET_SECONDS = {
+    "10m": 10 * 60,
+    "30m": 30 * 60,
+    "1h": 60 * 60,
+    "6h": 6 * 60 * 60,
+    "1d": 24 * 60 * 60,
+}
+
+METRICS = {
+    "cpu": {
+        "column": "cpu_pct",
+        "label": "CPU",
+        "unit": "%",
+        "warning": float(os.getenv("SPHERE_CPU_WARNING_PCT", "75")),
+        "critical": float(os.getenv("SPHERE_CPU_CRITICAL_PCT", "90")),
+    },
+    "ram": {
+        "column": "ram_pct",
+        "label": "RAM",
+        "unit": "%",
+        "warning": float(os.getenv("SPHERE_RAM_WARNING_PCT", "80")),
+        "critical": float(os.getenv("SPHERE_RAM_CRITICAL_PCT", "90")),
+    },
+    "load": {
+        "column": "load_1",
+        "label": "Load 1M",
+        "unit": "",
+        "warning": None,
+        "critical": None,
+    },
+    "iowait": {
+        "column": "io_wait_pct",
+        "label": "I/O Wait",
+        "unit": "%",
+        "warning": float(os.getenv("SPHERE_IOWAIT_WARNING_PCT", "10")),
+        "critical": float(os.getenv("SPHERE_IOWAIT_CRITICAL_PCT", "20")),
+    },
+    "swap": {
+        "column": "swap_pct",
+        "label": "Swap I/O",
+        "unit": "p/s",
+        "warning": None,
+        "critical": None,
+    },
+    "wp": {
+        "column": "wp_critical",
+        "label": "WP Critical",
+        "unit": "",
+        "warning": float(os.getenv("SPHERE_WP_WARNING", "1")),
+        "critical": float(os.getenv("SPHERE_WP_CRITICAL", "3")),
+    },
+}
+
+
+def validate_custom_window(start: datetime, end: datetime, now: datetime | None = None) -> tuple[datetime, datetime]:
+    """Exact sample bounds [start, end). Inputs must carry a timezone offset."""
+    if start.tzinfo is None or end.tzinfo is None:
+        raise ValueError("Custom timestamps require timezone offsets")
+    now = now or datetime.now(timezone.utc)
+    start, end, now = (value.astimezone(timezone.utc) for value in (start, end, now))
+    duration = end - start
+    if not timedelta(minutes=1) <= duration <= timedelta(hours=24):
+        raise ValueError("Custom window must span between 1 minute and 24 hours")
+    if start < now - timedelta(days=90):
+        raise ValueError("Custom range exceeds 90-day retention")
+    if end > now + timedelta(minutes=1):
+        raise ValueError("Custom range cannot extend into the future")
+    return start, end
+
+
+def previous_calendar_month(now: datetime | None = None) -> tuple[datetime, datetime]:
+    """Last completed calendar month in WIB, returned as UTC [start, end)."""
+    instant = now or datetime.now(timezone.utc)
+    if instant.tzinfo is None:
+        raise ValueError("Calendar month reference requires a timezone")
+    local = instant.astimezone(ZoneInfo("Asia/Jakarta"))
+    current_month = local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month_end = current_month
+    last_month_start = (current_month - timedelta(days=1)).replace(day=1)
+    return last_month_start.astimezone(timezone.utc), last_month_end.astimezone(timezone.utc)
+
+
+def resolve_range(range_key: str) -> dict:
+    try:
+        return RANGES[range_key]
+    except KeyError as error:
+        raise ValueError(f"Unsupported range: {range_key}") from error
+
+
+def resolve_bucket(range_key: str, bucket_key: str) -> tuple[str, str]:
+    range_config = resolve_range(range_key)
+    resolved = range_config["auto_bucket"] if bucket_key == "auto" else bucket_key
+    if range_key in {"90d", "180d", "last_month"} and resolved != "1d":
+        raise ValueError("Historical ranges 3M, 6M and Last Month require daily buckets")
+    try:
+        return resolved, BUCKETS[resolved]
+    except KeyError as error:
+        raise ValueError(f"Unsupported bucket: {bucket_key}") from error
+
+
+def resolve_interval_seconds(range_key: str, bucket_key: str, cadence_seconds: int = 600) -> int:
+    """Return the expected spacing between points for gap detection.
+
+    Raw ranges follow the collector cadence. Aggregated ranges follow the resolved
+    date_bin stride so normal 30m/1h/6h buckets are never misclassified as gaps.
+    """
+    resolved, _ = resolve_bucket(range_key, bucket_key)
+    if resolved == "raw":
+        return max(60, int(cadence_seconds))
+    return BUCKET_SECONDS[resolved]
+
+
+def resolve_metric(metric_key: str) -> dict:
+    try:
+        return METRICS[metric_key]
+    except KeyError as error:
+        raise ValueError(f"Unsupported metric: {metric_key}") from error
+
+
+def trend_series(
+    since: datetime,
+    range_key: str,
+    bucket_key: str,
+    metric_key: str,
+    until: datetime | None = None,
+) -> dict:
+    """Return host metric trend data aligned to logical Rundeck collection time.
+
+    APP1 -> APP5 are collected sequentially. Short windows use one point per logical
+    collection so recent spikes remain visible. Longer windows use date_bin while
+    retaining peak timestamp and collection id for drill-down to exact evidence.
+    """
+    engine = get_engine()
+    if engine is None:
+        raise RuntimeError("Database history is not enabled")
+
+    metric = resolve_metric(metric_key)
+    resolved_bucket, stride = resolve_bucket(range_key, bucket_key)
+    if range_key == "custom" and (resolved_bucket != "raw" or until is None):
+        raise ValueError("Custom range requires raw samples and an end time")
+    column = metric["column"]
+    sample_time = "h.collected_at" if range_key == "custom" else "COALESCE(c.started_at, c.finished_at, h.collected_at)"
+    end_clause = f"AND {sample_time} < :until" if until is not None else ""
+
+    if resolved_bucket == "raw":
+        query = text(f"""
+            WITH base AS (
+                SELECT
+                    h.collection_id,
+                    {sample_time} AS bucket,
+                    h.collected_at,
+                    h.host,
+                    h.{column}::double precision AS value
+                FROM rundeck_host_metrics h
+                LEFT JOIN rundeck_collections c
+                  ON c.collection_id = h.collection_id
+                WHERE {sample_time} >= :since
+                  {end_clause}
+            ),
+            ranked AS (
+                SELECT
+                    *,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY collection_id, host
+                        ORDER BY collected_at DESC
+                    ) AS sample_rank
+                FROM base
+            )
+            SELECT
+                bucket,
+                host,
+                value AS avg_value,
+                value AS max_value,
+                value AS min_value,
+                CASE WHEN value IS NULL THEN 0 ELSE 1 END AS samples,
+                CASE
+                    WHEN value IS NOT NULL
+                     AND (
+                        (CAST(:warning AS double precision) IS NOT NULL AND value >= CAST(:warning AS double precision))
+                        OR (CAST(:warning AS double precision) IS NULL AND value > 0)
+                     ) THEN 1 ELSE 0
+                END AS affected_samples,
+                collected_at AS peak_at,
+                collection_id AS peak_collection_id
+            FROM ranked
+            WHERE sample_rank = 1
+            ORDER BY bucket ASC, host ASC
+        """)
+        params = {"since": since, "warning": metric["warning"]}
+        if until is not None:
+            params["until"] = until
+    else:
+        query = text(f"""
+            WITH base AS (
+                SELECT
+                    date_bin(
+                        CAST(:stride AS interval),
+                        COALESCE(c.started_at, c.finished_at, h.collected_at),
+                        CAST(:origin AS timestamptz)
+                    ) AS bucket,
+                    h.collection_id,
+                    COALESCE(c.started_at, c.finished_at, h.collected_at) AS collection_at,
+                    h.collected_at,
+                    h.host,
+                    h.{column}::double precision AS value
+                FROM rundeck_host_metrics h
+                LEFT JOIN rundeck_collections c
+                  ON c.collection_id = h.collection_id
+                WHERE {sample_time} >= :since
+                  {end_clause}
+            ),
+            ranked AS (
+                SELECT
+                    *,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY bucket, host
+                        ORDER BY value DESC NULLS LAST, collected_at DESC
+                    ) AS peak_rank
+                FROM base
+            )
+            SELECT
+                bucket,
+                host,
+                AVG(value) FILTER (WHERE value IS NOT NULL) AS avg_value,
+                MAX(value) FILTER (WHERE value IS NOT NULL) AS max_value,
+                MIN(value) FILTER (WHERE value IS NOT NULL) AS min_value,
+                COUNT(value) AS samples,
+                COUNT(*) FILTER (
+                    WHERE value IS NOT NULL
+                      AND (
+                        (CAST(:warning AS double precision) IS NOT NULL AND value >= CAST(:warning AS double precision))
+                        OR (CAST(:warning AS double precision) IS NULL AND value > 0)
+                      )
+                ) AS affected_samples,
+                MAX(CASE WHEN peak_rank = 1 AND value IS NOT NULL THEN collected_at END) AS peak_at,
+                MAX(CASE WHEN peak_rank = 1 AND value IS NOT NULL THEN collection_id END) AS peak_collection_id
+            FROM ranked
+            GROUP BY bucket, host
+            ORDER BY bucket ASC, host ASC
+        """)
+        params = {"since": since, "stride": stride, "warning": metric["warning"],
+                  "origin": "2000-01-01 17:00:00+00" if resolved_bucket == "1d" else "2000-01-01 00:00:00+00"}
+        if until is not None:
+            params["until"] = until
+
+    query_started = time.perf_counter()
+    with engine.connect() as conn:
+        result = conn.execute(query, params)
+        items = [dict(row._mapping) for row in result]
+    sql_ms = round((time.perf_counter() - query_started) * 1000, 1)
+
+    return {
+        "runtime": {"sql_ms": sql_ms},
+        "since": since,
+        "window_end": until,
+        "observation_time_basis": "host_sample" if range_key == "custom" else "collection",
+        "range": range_key,
+        "bucket": resolved_bucket,
+        "requested_bucket": bucket_key,
+        "bucket_interval_seconds": (
+            max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600")))
+            if resolved_bucket == "raw"
+            else BUCKET_SECONDS[resolved_bucket]
+        ),
+        "metric": metric_key,
+        "metric_label": metric["label"],
+        "unit": metric["unit"],
+        "warning": metric["warning"],
+        "critical": metric["critical"],
+        "items": items,
+    }
+
+
+def trend_series_bundle(
+    since: datetime,
+    range_key: str,
+    bucket_key: str,
+    metric_keys: list[str],
+    until: datetime | None = None,
+) -> dict[str, dict]:
+    """Compute up to four host metrics in a single indexed-source scan.
+
+    The lateral metric projection preserves each metric's native NULL samples,
+    collection alignment, warning thresholds, peak time, and host identity.
+    """
+    metrics = list(dict.fromkeys(metric_keys))
+    if not 1 <= len(metrics) <= 4 or any(metric not in METRICS for metric in metrics):
+        raise ValueError("Bundle requires 1-4 valid, distinct host metrics")
+    engine = get_engine()
+    if engine is None:
+        raise RuntimeError("Database history is not enabled")
+    resolved_bucket, stride = resolve_bucket(range_key, bucket_key)
+    if range_key == "custom" and (resolved_bucket != "raw" or until is None):
+        raise ValueError("Custom range requires raw samples and an end time")
+    sample_time = "h.collected_at" if range_key == "custom" else "COALESCE(c.started_at, c.finished_at, h.collected_at)"
+    end_clause = f"AND {sample_time} < :until" if until is not None else ""
+    values = ", ".join(
+        f"('{name}', h.{METRICS[name]['column']}::double precision, CAST(:warning_{name} AS double precision))"
+        for name in metrics
+    )
+    params = {"since": since, **{f"warning_{name}": METRICS[name]["warning"] for name in metrics}}
+    if until is not None:
+        params["until"] = until
+    if resolved_bucket == "raw":
+        sql = text(f"""
+            WITH expanded AS (
+                SELECT h.collection_id, {sample_time} AS bucket,
+                       h.collected_at, h.host, m.metric, m.value, m.warning
+                  FROM rundeck_host_metrics h
+                  LEFT JOIN rundeck_collections c ON c.collection_id = h.collection_id
+                  CROSS JOIN LATERAL (VALUES {values}) AS m(metric, value, warning)
+                 WHERE {sample_time} >= :since
+                   {end_clause}
+            ),
+            ranked AS (
+                SELECT *,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY collection_id, host, metric
+                           ORDER BY collected_at DESC
+                       ) AS sample_rank
+                  FROM expanded
+            )
+            SELECT metric, bucket, host,
+                   value AS avg_value, value AS max_value, value AS min_value,
+                   CASE WHEN value IS NULL THEN 0 ELSE 1 END AS samples,
+                   CASE WHEN value IS NOT NULL AND
+                     ((warning IS NOT NULL AND value >= warning) OR
+                      (warning IS NULL AND value > 0))
+                     THEN 1 ELSE 0 END AS affected_samples,
+                   collected_at AS peak_at, collection_id AS peak_collection_id
+              FROM ranked WHERE sample_rank = 1
+             ORDER BY metric, bucket ASC, host ASC
+        """)
+    else:
+        params["stride"] = stride
+        params["origin"] = (
+            "2000-01-01 17:00:00+00" if resolved_bucket == "1d"
+            else "2000-01-01 00:00:00+00"
+        )
+        sql = text(f"""
+            WITH expanded AS (
+                SELECT date_bin(CAST(:stride AS interval),
+                           COALESCE(c.started_at, c.finished_at, h.collected_at),
+                           CAST(:origin AS timestamptz)) AS bucket,
+                       h.collection_id, h.collected_at, h.host,
+                       m.metric, m.value, m.warning
+                  FROM rundeck_host_metrics h
+                  LEFT JOIN rundeck_collections c ON c.collection_id = h.collection_id
+                  CROSS JOIN LATERAL (VALUES {values}) AS m(metric, value, warning)
+                 WHERE {sample_time} >= :since
+                   {end_clause}
+            ),
+            ranked AS (
+                SELECT *,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY bucket, host, metric
+                           ORDER BY value DESC NULLS LAST, collected_at DESC
+                       ) AS peak_rank
+                  FROM expanded
+            )
+            SELECT metric, bucket, host,
+                   AVG(value) FILTER (WHERE value IS NOT NULL) AS avg_value,
+                   MAX(value) FILTER (WHERE value IS NOT NULL) AS max_value,
+                   MIN(value) FILTER (WHERE value IS NOT NULL) AS min_value,
+                   COUNT(value) AS samples,
+                   COUNT(*) FILTER (
+                       WHERE value IS NOT NULL AND
+                         ((warning IS NOT NULL AND value >= warning) OR
+                          (warning IS NULL AND value > 0))
+                   ) AS affected_samples,
+                   MAX(CASE WHEN peak_rank = 1 AND value IS NOT NULL THEN collected_at END) AS peak_at,
+                   MAX(CASE WHEN peak_rank = 1 AND value IS NOT NULL THEN collection_id END) AS peak_collection_id
+              FROM ranked
+             GROUP BY metric, bucket, host
+             ORDER BY metric, bucket ASC, host ASC
+        """)
+    sql_started = time.perf_counter()
+    with engine.connect() as conn:
+        rows = [dict(row._mapping) for row in conn.execute(sql, params)]
+    sql_ms = round((time.perf_counter() - sql_started) * 1000, 1)
+    by_metric: dict[str, list[dict]] = {name: [] for name in metrics}
+    for row in rows:
+        name = row.pop("metric")
+        by_metric[name].append(row)
+    return {
+        name: {
+            "runtime": {"sql_ms": sql_ms, "bundled_metrics": len(metrics)},
+            "since": since, "window_end": until,
+            "observation_time_basis": "host_sample" if range_key == "custom" else "collection",
+            "range": range_key, "bucket": resolved_bucket, "requested_bucket": bucket_key,
+            "bucket_interval_seconds": (
+                max(60, int(os.getenv("SPHERE_COLLECTION_CADENCE_SECONDS", "600")))
+                if resolved_bucket == "raw" else BUCKET_SECONDS[resolved_bucket]
+            ),
+            "metric": name, "metric_label": METRICS[name]["label"],
+            "unit": METRICS[name]["unit"], "warning": METRICS[name]["warning"],
+            "critical": METRICS[name]["critical"], "items": by_metric[name],
+        }
+        for name in metrics
+    }
+
+
+def collection_timeline(collection_id: str) -> list[dict]:
+    """Return the exact APP1-APP5 snapshot rows for one Rundeck collection."""
+    engine = get_engine()
+    if engine is None:
+        raise RuntimeError("Database history is not enabled")
+    with engine.connect() as conn:
+        result = conn.execute(text("""
+            SELECT collection_id, collected_at, host, cpu_pct, ram_pct, load_1,
+                   io_wait_pct, swap_pct, wp_critical, health
+              FROM rundeck_host_metrics
+             WHERE collection_id = :collection_id
+             ORDER BY host, collected_at DESC
+        """), {"collection_id": collection_id})
+        rows = [dict(row._mapping) for row in result]
+
+    by_host: dict[str, dict] = {}
+    for row in rows:
+        by_host.setdefault(row["host"], row)
+    return [by_host[host] for host in sorted(by_host)]
+
+
+def collection_timeline_at(at: datetime, window_minutes: int = 5) -> tuple[str | None, list[dict]]:
+    """Resolve a chart peak timestamp to its logical collection, then return all hosts."""
+    engine = get_engine()
+    if engine is None:
+        raise RuntimeError("Database history is not enabled")
+    start = at - timedelta(minutes=window_minutes)
+    end = at + timedelta(minutes=window_minutes)
+    with engine.connect() as conn:
+        collection_id = conn.execute(text("""
+            SELECT collection_id
+              FROM rundeck_host_metrics
+             WHERE collected_at BETWEEN :start AND :end
+             ORDER BY ABS(EXTRACT(EPOCH FROM (collected_at - :at))), collected_at DESC
+             LIMIT 1
+        """), {"at": at, "start": start, "end": end}).scalar()
+    if not collection_id:
+        return None, []
+    return str(collection_id), collection_timeline(str(collection_id))
