@@ -11,7 +11,7 @@ const WIDTH=360,HEIGHT=108,LEFT=37,RIGHT=8,TOP=9,BOTTOM=24
  * No interpolation, estimated data, or cross-host rollups. */
 export default function RundeckFleetMiniChart({
   title,unit='%',context='',range='24h',onRange,rows=[],error='',
-  loading=false,focusedHost='',onFocusHost,sourceLabel='',thresholds=[],
+  loading=false,focusedHost='',sourceLabel='',thresholds=[],
 }) {
   const spanMs=(range==='24h'?24:6)*3600_000
   const end=Date.now(),start=end-spanMs
@@ -34,19 +34,11 @@ export default function RundeckFleetMiniChart({
   const any=points.length>0
   return <div className="sphereFleetMiniTrend" aria-label={title+' APP1 to APP5'}>
     <div className="sphereFleetMiniHead">
-      <strong title={sourceLabel}>{title} <small className="sphereFleetMiniScope">· Recent</small></strong>
+      <strong title={sourceLabel}>{title}</strong>
       <div className="sphereFleetMiniActions" role="group" aria-label={title+' time range, shared with both I/O charts, separate from Performance Trends'}>
         {['6h','24h'].map(item=><button type="button" key={item} aria-pressed={range===item}
           onClick={()=>onRange?.(item)}>{item.toUpperCase()}</button>)}
       </div>
-    </div>
-    <div className="sphereFleetMiniLegend" role="group" aria-label={title+' APP selection'}>
-      {APPS.map(app=><button type="button" key={app}
-        className={'sphereFleetMiniHost'+(active===app?' is-focused':'')}
-        aria-pressed={active===app} title={app+' · highlight this APP in all Monitoring charts'}
-        onClick={()=>onFocusHost?.(app)}>
-        <i style={{background:COLORS[app]}}/>{app}
-      </button>)}
     </div>
     <div className="sphereFleetMiniMeta">{context} · {unit}</div>
     {loading ? <p className="sphereFleetMiniEmpty" role="status">Checking observations…</p> :
