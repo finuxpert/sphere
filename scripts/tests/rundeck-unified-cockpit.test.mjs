@@ -120,7 +120,7 @@ test('Workload Health remains a standalone validated 1D overview and Jobs modal 
   assert.match(ui,/rundeckWorkloadDotGrid/)
   assert.match(ui,/resourceLimit = viewMode === 'status' \? 10 : 5/)
   assert.doesNotMatch(ui,/sphereEvaluationStatusRows/)
-  assert.match(ui,/Top \{resourceLimit\} \{resourceMetric === 'cpu' \? 'CPU Consumers' : 'PSS Consumers'\}/)
+  assert.match(ui,/Top \{resourceLimit\} \{resourceMetric === 'cpu' \? 'CPU Consumers · Avg 24h' : 'PSS Consumers · Avg 24h'\}/)
   assert.match(ui,/onReview\?\.\(level\.health\)/)
   assert.match(ui,/onClick=\{\(\) => openWorkload\(row\)\}/)
   assert.ok(workspace.indexOf('className="rundeckJobsProgramsWorkspaceBody') < workspace.indexOf('className="rundeckJobsProgramsHealthSide'))
