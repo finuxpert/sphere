@@ -14,7 +14,7 @@
 }
 .rundeckMonitoring.is-six-chart-layout .sphereJobDonutCard{
   display:grid;
-  grid-template-columns:clamp(46px,5.6vw,64px) minmax(0,1fr);
+  grid-template-columns:clamp(42px,4.2vw,58px) minmax(0,1fr);
   align-items:center;
   gap:8px;
   padding:4px 8px;
@@ -87,7 +87,7 @@
 .rundeckWorkloadHealth[data-view-mode="status"]{
   display:grid!important;
   grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-donuts" "eval-footer"!important;
-  grid-template-rows:auto auto minmax(138px,1fr) minmax(150px,1.02fr) auto!important;
+  grid-template-rows:auto auto minmax(155px,1fr) minmax(145px,1.02fr) auto!important;
   min-height:0!important;
   height:100%;
   overflow:hidden;
