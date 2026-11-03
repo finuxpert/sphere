@@ -21,8 +21,10 @@ const apps=Array.from({length:5},(_,i)=>'<button class="rundeckAppHexSelector is
 const fsRows=['OS Root','INTF','INTF AOQ','SAP Archive','Archive INTF'].map(name=>'<button class="sphereStorageRow"><span class="sphereStorageLabel"><strong>'+name+'</strong><small>APP1</small></span><span class="sphereStorageTrack"></span><strong class="sphereStoragePercent">72%</strong></button>').join('')
 const counts=['Review','Watch','Limited Data','Normal'].map(name=>'<button class="rundeckWorkloadCategory"><strong>42</strong><span>'+name+'</span></button>').join('')
 const consumers=Array.from({length:10},(_,i)=>'<button class="sphereEvaluationTop5Row"><span class="sphereEvaluationTop5Name">SAVED_WORKLOAD_'+i+'</span><span class="sphereEvaluationTop5Track"><i style="width:60%"></i></span><span class="sphereEvaluationTop5Value">1.20 cores</span></button>').join('')
+const donuts=['Workload Mix','Recurring Workloads','High Memory','WP Signal Overlap'].map((name,index)=>
+  '<article class="sphereJobDonutCard"><div class="sphereJobDonutRing" style="--sphere-job-ring-pct:25%"><span>'+[60,23,9,7][index]+'</span></div>'+
+  '<div class="sphereJobDonutCopy"><strong>'+name+'</strong><span class="sphereJobDonutDetail">Source-backed signal</span><small>24h</small></div></article>').join('')
 const chart='<svg viewBox="0 0 360 108"><polyline points="37,80 110,65 170,45 250,61 352,25" fill="none" stroke="#67a9e8"/></svg>'
-const legend=['APP1','APP2','APP3','APP4','APP5'].map(app=>'<button class="sphereFleetMiniHost"><i></i>'+app+'</button>').join('')
 const template=`<!doctype html><html data-theme="__THEME__"><head><meta charset="utf-8">__CSS__
 <style>
 html,body{margin:0!important;padding:0!important}
@@ -52,17 +54,16 @@ html,body{margin:0!important;padding:0!important}
 <header class="rundeckWorkloadHealthTitle"><strong>Job &amp; Program Evaluation</strong><button>Open Review</button></header>
 <div class="rundeckWorkloadHealthLegend">__COUNTS__</div>
 <section class="sphereEvaluationTop5"><div class="sphereEvaluationTop5Head"><strong>Top 10 CPU Consumers</strong></div><div class="sphereEvaluationTop5Bars">__CONSUMERS__</div></section>
+<section class="sphereJobDonuts">__DONUTS__</section>
 <footer class="rundeckWorkloadHealthFooter"></footer>
 </section></div></section>
 <div class="sphereMonitoringRightStack">
 <section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend">
 <div class="sphereFleetMiniHead"><strong>I/O Wait Trend</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
-<div class="sphereFleetMiniLegend">__FLEET_LEGEND__</div>
 <div class="sphereFleetMiniMeta">Host I/O Wait · %</div>
 __CHART__<small class="sphereFleetMiniFooter">Peak 8.2% · APP3</small></div></section>
 <section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend">
 <div class="sphereFleetMiniHead"><strong>Disk I/O Activity</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
-<div class="sphereFleetMiniLegend">__FLEET_LEGEND__</div>
 <div class="sphereFleetMiniMeta">OS Root Read + Write · MB/s</div>
 __CHART__<small class="sphereFleetMiniFooter">Peak 2.5 MB/s · APP2</small></div></section>
 </div></div>
@@ -86,19 +87,32 @@ document.querySelectorAll('.fixtureTrendCards > div').length===4&&
 document.querySelectorAll('.sphereStorageRow').length===5&&
 document.querySelectorAll('.rundeckAppHexSelector').length===5&&
 document.querySelectorAll('.sphereEvaluationTop5Row').length===10
+const head=rect('.rundeckWorkloadHealthTitle')
+const kpis=rect('.rundeckWorkloadHealthLegend')
+const cpu=rect('.sphereEvaluationTop5')
+const donutArea=rect('.sphereJobDonuts')
+const donutItems=[...document.querySelectorAll('.sphereJobDonutCard')].map(node=>node.getBoundingClientRect())
+const centralFlow=head&&kpis&&cpu&&donutArea&&
+  [head,kpis,cpu,donutArea].every(box=>box.width>=mid.width*.86)&&
+  head.bottom<=kpis.top+6&&kpis.bottom<=cpu.top+6&&cpu.bottom<=donutArea.top+6&&
+  donutArea.bottom<=mid.bottom+8&&donutItems.length===4&&
+  donutItems.every(box=>box.width>100&&box.height>42)&&
+  eq(donutItems[0].top,donutItems[1].top,5)&&eq(donutItems[2].top,donutItems[3].top,5)&&
+  donutItems[0].right<donutItems[1].left&&donutItems[2].right<donutItems[3].left
+const singleSelector=document.querySelectorAll('.sphereFleetMiniHost').length===0
 const ordered=bottom&&top&&bottom.top>=top.bottom-4
 const chartsFit=[...document.querySelectorAll('.sphereFleetMiniTrend svg')].length===2&&
   [...document.querySelectorAll('.sphereFleetMiniTrend svg')].every(el=>el.getBoundingClientRect().height>=70)
-const pass=columns&&stacks&&chartCount&&ordered&&chartsFit
+const pass=columns&&stacks&&chartCount&&ordered&&chartsFit&&centralFlow&&singleSelector
 document.body.dataset.qa=pass?'PASS':'FAIL'
-document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
+document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,centralFlow,singleSelector,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
 })</script></body></html>`;
 try{
  for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
   for(const theme of ['dark','light']){
    const html=template.replaceAll('__THEME__',theme).replaceAll('__WIDTH__',String(size.w))
      .replaceAll('__CSS__',styles).replaceAll('__APPS__',apps).replaceAll('__FSROWS__',fsRows)
-     .replaceAll('__COUNTS__',counts).replaceAll('__CONSUMERS__',consumers).replaceAll('__CHART__',chart).replaceAll('__FLEET_LEGEND__',legend)
+     .replaceAll('__COUNTS__',counts).replaceAll('__CONSUMERS__',consumers).replaceAll('__DONUTS__',donuts).replaceAll('__CHART__',chart)
    const file=join(temp,'monitor-'+size.w+'-'+theme+'.html')
    writeFileSync(file,html)
    const result=spawnSync(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
