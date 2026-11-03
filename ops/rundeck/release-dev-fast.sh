@@ -11,7 +11,14 @@ report_failure() {
   local code="$1"
   echo "FINAL=FAIL STAGE=$STAGE SHA=$(git rev-parse --short HEAD 2>/dev/null || echo unknown) EXIT=$code"
   if [[ -f "$LOG" ]]; then
-    grep -E '^FAIL |^not ok |BLOCKED|QA FAILED|DEPLOY FAILED|error:' "$LOG" | head -n 25 || true
+    if [[ "$STAGE" == BACKEND_UNIT_TESTS ]]; then
+      echo "=== BACKEND UNIT TEST FAILURE ==="
+      # Python unittest failures are indented and do not match the generic
+      # 'FAIL ' filter. Include the traceback and assertion context.
+      tail -n 100 "$LOG" || true
+    else
+      grep -E '^FAIL |^not ok |BLOCKED|QA FAILED|DEPLOY FAILED|error:' "$LOG" | head -n 25 || true
+    fi
   fi
   echo "LOG=$LOG"
 }
