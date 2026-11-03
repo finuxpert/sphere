@@ -101,7 +101,7 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
         {storageView === 'growth' ?
           <div className="sphereStorageGrowth">
             <div className="sphereStorageGrowthHead">
-              <span className="sphereStorageChartContext">Selected filesystem · capacity history</span>
+              <span className="sphereStorageChartContext">Filesystem Usage History</span>
               <div role="group" aria-label="Filesystem growth range" className="sphereStorageGrowthRanges">
                 {[['7d','7D'],['30d','30D']].map(([value,label]) =>
                   <button key={value} type="button" aria-pressed={growthRange === value}

@@ -140,7 +140,9 @@ test('compact Monitoring finish keeps cards, Evaluation header and tiny charts r
   assert.match(storage, /\.sphereFilesystemTrend svg text\{font-size:10px!important\}/)
   assert.match(disk, /\.sphereDiskIoTrend svg text\{font-size:9\.5px!important\}/)
   assert.match(fs, /Net change/)
-  assert.match(fs, /Window max/)
+  assert.match(fs, /Highest in Range/)
+  assert.match(fs, /peakRecord/)
+  assert.match(fs, /peakSource/)
   assert.doesNotMatch(layout, /min-height:640px!important/)
 })
 test('Monitoring shows ten saved resource consumers instead of duplicating severity tiles',()=>{

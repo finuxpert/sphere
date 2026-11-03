@@ -179,3 +179,20 @@
 @media(max-width:900px){
   .rundeckMonitoring.is-three-panel .sphereStorageChartPanel{min-height:190px}
 }
+
+/* Peak provenance: keep latest, historical peak and net difference separate. */
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:2px 6px!important;
+}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter span{
+ min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9.5px;
+}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter span small{
+ display:block;font-size:9px;color:var(--sphere-text-secondary,#aab7c5);
+}
+.rundeckMonitoring.is-three-panel .sphereFilesystemTrendFooter strong{font-weight:650}
+@media(min-width:1280px) and (min-height:760px){
+ .rundeckMonitoring.is-three-panel[data-viewport-fit="true"] .sphereFilesystemTrend svg{
+  min-height:76px!important;max-height:125px!important;
+ }
+}
