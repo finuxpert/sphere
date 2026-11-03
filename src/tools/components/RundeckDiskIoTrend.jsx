@@ -6,7 +6,7 @@ const API=import.meta.env.BASE_URL+'api/infra/trend'
 const APPS=new Set(['APP1','APP2','APP3','APP4','APP5'])
 // Always compare the same recorded mount on all APPs; never substitute another device.
 const MOUNT='/'
-export default function RundeckDiskIoTrend({refreshToken='',focusedHost='',onFocusHost,range='24h',onRange}) {
+export default function RundeckDiskIoTrend({refreshToken='',focusedHost='',range='24h',onRange}) {
   const [data,setData]=React.useState({range:'',items:[],loading:true,error:''})
   React.useEffect(()=>{
     const controller=new AbortController()
@@ -36,6 +36,6 @@ export default function RundeckDiskIoTrend({refreshToken='',focusedHost='',onFoc
   },[range,refreshToken])
   return <RundeckFleetMiniChart title="Disk I/O Activity" unit="MB/s" context="OS Root Read + Write"
     sourceLabel="OS Root '/' recorded read + write MB/s, same mount across APP1–APP5; incomplete channels remain unknown"
-    range={range} onRange={onRange} focusedHost={shortHost(focusedHost)} onFocusHost={onFocusHost}
+    range={range} onRange={onRange} focusedHost={shortHost(focusedHost)}
     rows={data.range===range?data.items:[]} loading={data.loading||data.range!==range} error={data.error}/>
 }
