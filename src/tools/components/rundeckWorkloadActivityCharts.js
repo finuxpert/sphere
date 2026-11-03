@@ -27,7 +27,11 @@ export function validateActivityTrend(payload, range) {
       seen.has(point.collection_id) || !Number.isFinite(Date.parse(point.collected_at || ''))) return null
     seen.add(point.collection_id)
     const at = Date.parse(point.collected_at)
-    if (at < previous || at < Date.parse(payload.start) || at >= Date.parse(payload.end)) return null
+    // The backend uses a half-open upper bound (anchor + 1 microsecond).
+    // JavaScript Date.parse truncates microseconds to milliseconds, so a valid
+    // sample at the anchor may compare equal to that upper bound in JS.
+    // Accept equal millisecond timestamps; reject only samples strictly later.
+    if (at < previous || at < Date.parse(payload.start) || at > Date.parse(payload.end)) return null
     previous = at
     if (!countOrNull(point.jobs) || !countOrNull(point.programs) ||
       (point.jobs === null) !== (point.programs === null) ||
