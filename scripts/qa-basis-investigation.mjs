@@ -757,11 +757,12 @@ const checks = [
     files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
   ['Global data status shows fixed performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataQualityState') && files.source.includes('initialSourceCheck')],
-  ['Unified APP summary retains CPU RAM Critical WP and infrastructure without obsolete duplicate table',
+  ['Unified APP overview retains observed host CPU/RAM, Critical WP and full infrastructure drilldown without redundant counters',
     files.unifiedApp.includes('SAP APP Landscape') &&
-    files.unifiedApp.includes('highest CPU') &&
-    files.unifiedApp.includes('highest RAM') &&
+    files.unifiedApp.includes('const hostCpu = verified ? host.cpu_pct : null') &&
+    files.unifiedApp.includes('const hostRam = verified ? host.ram_pct : null') &&
     files.unifiedApp.includes('Critical WP') &&
+    !files.unifiedApp.includes('WP Issues <strong>') &&
     files.unifiedApp.includes('<small>Host CPU</small>') &&
     files.unifiedApp.includes('<small>Host RAM</small>') &&
     files.unifiedApp.includes('<small>Highest FS</small>') &&
