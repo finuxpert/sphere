@@ -316,7 +316,8 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
     # count, but return only the newest row for each host/mount. Previously the
     # API transferred every historical filesystem sample to Python (180k+
     # rows in observed months) solely to keep the first host/mount record.
-    # Normalize host case in SQL, matching the original Python grouping keys.\n    # COUNT(*) OVER() is evaluated before DISTINCT ON, preserving source_rows.
+    # Normalize host case in SQL, matching the original Python grouping keys.
+    # COUNT(*) OVER() is evaluated before DISTINCT ON, preserving source_rows.
     rows = conn.execute(text("""
        SELECT DISTINCT ON (UPPER(f.host), f.mount_point)
               f.host, f.mount_point, f.collected_at, f.device, f.fstype,
