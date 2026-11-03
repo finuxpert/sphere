@@ -491,3 +491,182 @@
 .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniHead .sphereFleetMiniScope{
  font-size:10px;font-weight:500;color:var(--sphere-text-secondary,#aab7c5);
 }
+
+/* SPHERE DEV — full-surface SAP APP severity tiles (V4) */
+/* Presentation-only: preserve existing source validation, WP thresholds and APP drilldown.
+   Status is colored only when a verified host snapshot supplies a severity. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  grid-auto-rows:auto!important;
+  gap:4px!important;
+  min-height:0!important;
+  height:100%!important;
+  align-items:stretch!important;
+  align-content:stretch!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
+  --app-tile:#293b4a;
+  --app-ink:#e8f0f5;
+  --app-sub:#a7bbca;
+  display:block!important;
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-width:none!important;
+  padding:0!important;
+  background:var(--app-tile)!important;
+  border:1px solid transparent!important;
+  border-left:1px solid transparent!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+  filter:none!important;
+  transform:none!important;
+  color:var(--app-ink)!important;
+  text-align:center!important;
+  overflow:hidden!important;
+  transition:background-color .3s ease,color .3s ease!important;
+}
+/* Normal is neutral so actionable states stand out across all five APPs. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector.is-sap-normal {
+  --app-tile:#293b4a;
+  --app-ink:#eef4f8;
+  --app-sub:#adc1cf;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector:is(.is-sap-attention,.is-sap-warning) {
+  --app-tile:#e5ad55;
+  --app-ink:#19242d;
+  --app-sub:#374451;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector.is-sap-critical {
+  --app-tile:#d86570;
+  --app-ink:#231b22;
+  --app-sub:#432b32;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector:is(.is-sap-unknown,.is-sap-stale) {
+  --app-tile:#718394;
+  --app-ink:#15222d;
+  --app-sub:#263743;
+}
+/* Selection and keyboard focus are separate from operational severity. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector.is-active {
+  outline:2px solid #80c2e5!important;
+  outline-offset:-2px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector:focus-visible {
+  outline:2px solid #f3f6f8!important;
+  outline-offset:-2px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector:hover {
+  filter:brightness(1.045)!important;
+  transform:none!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector::before,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector::after,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector .rundeckAppHexShape::before,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector .rundeckAppHexShape::after {
+  display:none!important;
+  animation:none!important;
+  content:none!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelector .rundeckAppHexShape {
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  padding:10px 2px 9px!important;
+  border:0!important;
+  border-radius:0!important;
+  clip-path:none!important;
+  background:transparent!important;
+  text-align:center!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > strong {
+  color:var(--app-ink)!important;
+  font-size:11px!important;
+  line-height:1.15!important;
+  font-weight:750!important;
+  white-space:nowrap!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > small {
+  color:var(--app-ink)!important;
+  display:block!important;
+  font-size:8px!important;
+  line-height:1.2!important;
+  font-weight:750!important;
+  letter-spacing:-.1px!important;
+  white-space:nowrap!important;
+  margin-top:5px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > em {
+  color:var(--app-ink)!important;
+  display:block!important;
+  font-size:14px!important;
+  line-height:1.1!important;
+  font-style:normal!important;
+  font-weight:750!important;
+  white-space:nowrap!important;
+  margin-top:18px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexShape > .rundeckFleetMeters {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:repeat(2,minmax(0,auto))!important;
+  gap:8px!important;
+  width:100%!important;
+  min-width:0!important;
+  margin-top:auto!important;
+  padding-top:9px!important;
+  border-top:1px solid color-mix(in srgb,var(--app-ink) 24%,transparent)!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeters > .rundeckFleetMeter {
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:2px!important;
+  min-width:0!important;
+  width:100%!important;
+  padding:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterName {
+  color:var(--app-sub)!important;
+  font-size:8px!important;
+  font-weight:650!important;
+  line-height:1.1!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterValue {
+  color:var(--app-ink)!important;
+  font-size:10px!important;
+  font-weight:750!important;
+  line-height:1.15!important;
+  text-align:center!important;
+  font-variant-numeric:tabular-nums;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckFleetMeterTrack { display:none!important; }
+@media(max-width:620px) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb {
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-rows:auto!important;
+    grid-auto-rows:minmax(140px,auto)!important;
+    height:auto!important;
+  }
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
+    min-height:140px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector {
+    transition:none!important;
+    animation:none!important;
+  }
+}
