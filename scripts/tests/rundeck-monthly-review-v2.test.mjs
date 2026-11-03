@@ -257,7 +257,7 @@ test('management PDF has no generic findings and retains technical source separa
 test('monthly fixed evidence keeps error provenance and repairs donut navigation', () => {
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
   const css = read('src/tools/components/RundeckEnterpriseCompactV144.css')
-  const trend = read('src/tools/components/RundeckServerTrend.jsx')
+  const trend = read('src/tools/components/RundeckServerTrendChart.jsx')
   assert.match(ui, /setEvidenceOpen\(true\)/)
   assert.doesNotMatch(ui, /setTab\('jobs'\)/)
   assert.doesNotMatch(ui, /<details|<summary|setExpanded/)
