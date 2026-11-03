@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolveOverviewTrendMetrics, resolveServerTrendMetrics } from '../../src/tools/components/rundeckTrendPreferences.js'
@@ -40,7 +41,7 @@ test('last-loaded layout owns lower two columns and preserves natural overflow',
 })
 
 test('peak scope, four dropdowns and reset remain source-preserving', () => {
-  const trend = component('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(component)
   assert.match(trend, /Reset charts/)
   assert.match(trend, /All APPs peak/)
   assert.match(trend, /\{panelPeak\.host\} · \{formatTrendPeakWib\(panelPeak\.timestamp\)\} WIB/)
