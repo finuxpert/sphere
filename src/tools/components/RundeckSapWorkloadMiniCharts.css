@@ -29,3 +29,14 @@
   .rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityLegend{gap:5px}
   .rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityLegend span{font-size:9px}
 }
+
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityError{
+  display:flex;flex:1 1 auto;min-height:50px;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+  font-size:11px;color:var(--sphere-text-secondary,#aab7c5);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityError button{
+  border:1px solid var(--sphere-accent,#68a9de);border-radius:4px;
+  padding:3px 12px;background:transparent;color:var(--sphere-accent,#68a9de);
+  font-size:11px;cursor:pointer;
+}
