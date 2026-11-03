@@ -31,7 +31,9 @@ export default function RundeckMonitoringHistoryCore(props) {
     const available = Math.floor(window.innerHeight - overview.getBoundingClientRect().top - 36)
     // Fit only when all visible source-backed overview sections have room.
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
-    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= 700
+    // Three-panel Monitoring can fit a shorter viewport than legacy five-lane screens.
+    const requiredRoom = overview.classList.contains('is-three-panel') ? 600 : 700
+    const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= requiredRoom
     // A sixth UNKNOWN/UNVERIFIED membership lane must never be squeezed into
     // the five-row desktop allocation. Use natural page flow instead.
     const additionalLane = overview.querySelectorAll('.rundeckAppEvalLane').length > 5

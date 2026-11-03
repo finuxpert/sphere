@@ -71,3 +71,9 @@
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Name {
   font-size:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
 }
+
+/* CPU core-equivalent values need sufficient width at two decimals. */
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row{
+ grid-template-columns:minmax(0,1.45fr) minmax(35px,.7fr) minmax(68px,auto);
+}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Value{font-size:10px;font-variant-numeric:tabular-nums}

@@ -242,9 +242,8 @@ export default function RundeckUnifiedAppInfrastructure({
     {fleetMode && <div className="sphereAppWpSummary" title={verifiedApps.length === hosts.length
       ? impactedApps.map(host => shortHost(host.host) + ': ' + Number(host.wp_critical)).join(' · ') || 'No Critical WP recorded'
       : 'Some APP samples are unverified; subtotal uses verified APPs only'}>
-      Critical WP <strong>{verifiedApps.length ? totalCriticalWp : '—'}</strong>
-      <span>· {verifiedApps.length ? impactedApps.length : '—'} APPs{verifiedApps.length !== hosts.length ? ' · partial' : ''}</span>
-      <span title="Configured reference per APP, not a measured OS CPU or RAM reading">· 28 CPU / 256 GB</span>
+      WP Issues <strong>{verifiedApps.length ? totalCriticalWp : '—'}</strong>
+      <span>· {verifiedApps.length ? impactedApps.length : '—'} APPs affected{verifiedApps.length !== hosts.length ? ' · partial' : ''}</span>
     </div>}
     <div className="rundeckAppHexMain rundeckAppThreePanels">
       <section className="rundeckAppMotionPanel" aria-label="APP server selection">

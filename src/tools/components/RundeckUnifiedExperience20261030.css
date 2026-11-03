@@ -895,3 +895,60 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
   min-height:17px!important;max-height:none!important;
   padding:0!important;
 }
+
+/* DEV Monitoring: status severity is independent of APP selection. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector{
+ background:var(--cockpit-surface-alt,#1d2933)!important;
+ border-color:var(--cockpit-outline,#304150)!important;
+ border-left-width:3px!important;box-shadow:none!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector.is-sap-normal{
+ border-left-color:var(--sphere-positive,#67c8a0)!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector:is(.is-sap-warning,.is-sap-attention){
+ border-left-color:var(--sphere-warning,#e7b65d)!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector.is-sap-critical{
+ border-left-color:var(--sphere-danger,#e87984)!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .rundeckUnifiedAppInfra[data-layout="landscape-operations"]
+.rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector.is-active{
+ outline:1px solid var(--sphere-accent,#67a9e8)!important;
+ outline-offset:-1px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel .sphereMonitoringApp
+.rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{gap:5px!important}
+/* APP peak and global peak: both visible in the same compact footer. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckTrendPeakSummary{
+ display:grid!important;grid-template-columns:minmax(0,1fr) auto;
+ grid-template-rows:auto auto;column-gap:5px;row-gap:0;min-width:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckTrendPeakSummary > strong{
+ grid-column:1;grid-row:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckTrendPeakSummary > span{
+ grid-column:1;grid-row:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+.rundeckTrendPeakSummary > .rundeckTrendAllAppPeak{
+ grid-column:2;grid-row:1/3;align-self:center;text-align:right;
+ max-width:134px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ color:var(--sphere-text-secondary,#aab7c5);font-size:9.5px;font-weight:600;
+}
+@media(max-width:1399px){
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring
+ .rundeckTrendPeakSummary > .rundeckTrendAllAppPeak{max-width:95px}
+}

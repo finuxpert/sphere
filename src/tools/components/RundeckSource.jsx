@@ -797,8 +797,8 @@ export default function RundeckSource({ onCollection }) {
         <div className="rundeckStateCluster">
           <div className={`rundeckDataAlignment is-fixed ${freshnessWarning ? 'is-freshness-warning' : ''}`}
             role="status" title={dataAlignmentTitle + ' · ' + freshnessSummary}
-            aria-label={'SAP Data Quality ' + (initialSourceCheck ? 'CHECKING' : qualityDisplay) + ' · ' + freshnessShort}>
-            <span className="rundeckDataQualityLink">Data Quality</span>
+            aria-label={'SAP Telemetry ' + (initialSourceCheck ? 'CHECKING' : qualityDisplay) + ' · ' + freshnessShort + ' · evaluation coverage is separate'}>
+            <span className="rundeckDataQualityLink" title="Performance and availability collection alignment; separate from evaluation coverage">Telemetry</span>
             <strong className="rundeckDataQualityState">{initialSourceCheck ? 'CHECKING' : qualityDisplay}</strong>
             <span className="rundeckDataFreshnessInline">{initialSourceCheck ? 'Reading sources' : freshnessShort}</span>
           </div>
