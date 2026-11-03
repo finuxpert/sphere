@@ -171,58 +171,6 @@ def import_job_executions(records: Iterable[dict], source: str = "SM37") -> dict
 
 
 
-def job_execution_overview(days: int = 1) -> dict:
-    """Aggregate complete imported job identities without the paginated SM37 row cap.
-
-    Duration means end-to-end recorded execution wall time, not summed SAP
-    work-process runtime. One execution may have multiple imported steps.
-    """
-    safe_days = max(1, min(30, int(days)))
-    engine = _engine()
-    with engine.connect() as conn:
-        if not _table_exists(conn, "sap_job_executions"):
-            return {"source": sm37_source_status(), "days": safe_days, "complete": False,
-                    "metrics": None}
-        row = conn.execute(text("""
-            WITH execution_groups AS (
-                SELECT source, client, job_name, job_count,
-                       MIN(started_at) AS started,
-                       MAX(ended_at) AS finished,
-                       BOOL_OR(status IN ('CANCELED','CANCELLED','ABORTED','FAILED','ERROR')) AS failed,
-                       BOOL_AND(status IN ('FINISHED','COMPLETED','SUCCESS')) AS completed,
-                       BOOL_AND(ended_at IS NOT NULL) AS has_end,
-                       COUNT(*) AS step_count
-                  FROM sap_job_executions
-                 WHERE started_at >= now() - (:days * INTERVAL '1 day')
-                 GROUP BY source, client, job_name, job_count
-            )
-            SELECT COUNT(*)::bigint AS executions,
-                   COUNT(DISTINCT (source, client, job_name))::bigint AS unique_jobs,
-                   COUNT(*) FILTER (WHERE failed)::bigint AS failed,
-                   COUNT(*) FILTER (WHERE completed)::bigint AS completed,
-                   COUNT(*) FILTER (WHERE completed AND has_end AND finished >= started)::bigint AS durations,
-                   AVG(EXTRACT(EPOCH FROM (finished - started))) FILTER (
-                       WHERE completed AND has_end AND finished >= started
-                   ) AS avg_runtime_seconds
-              FROM execution_groups
-        """), {"days": safe_days}).mappings().one()
-    numeric = lambda name: int(row.get(name) or 0)
-    return {
-        "source": sm37_source_status(),
-        "days": safe_days,
-        "complete": True,
-        "definition": "One imported execution identity per source/client/job name/job count; 24h start window.",
-        "metrics": {
-            "executions": numeric("executions"),
-            "unique_jobs": numeric("unique_jobs"),
-            "failed": numeric("failed"),
-            "completed": numeric("completed"),
-            "durations": numeric("durations"),
-            "avg_runtime_seconds": round(float(row["avg_runtime_seconds"]), 1)
-            if row.get("avg_runtime_seconds") is not None else None,
-        },
-    }
-
 
 def job_executions(
     query: str | None = None,
