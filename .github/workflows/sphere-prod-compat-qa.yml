@@ -1,0 +1,51 @@
+name: SPHERE PROD compatibility preflight
+
+on:
+  push:
+    branches:
+      - prod-compat-seven-routes-20261103
+  pull_request:
+    branches:
+      - rundeck-sphere-prod
+
+permissions:
+  contents: read
+
+jobs:
+  api-compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install production backend dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Compile backend sources
+        run: python -m compileall -q backend
+      - name: Validate new read-only routes and legacy production contracts
+        run: |
+          python -m unittest -v \
+            backend.tests.test_rundeck_prod_compat_api \
+            backend.tests.test_rundeck_workload_activity \
+            backend.tests.test_rundeck_top_consumers \
+            backend.tests.test_rundeck_evaluation_paging_prod \
+            backend.tests.test_rundeck_network_prod_contract \
+            backend.tests.test_rundeck_custom_window \
+            backend.tests.test_rundeck_infra
+      - name: Verify OpenAPI route uniqueness
+        run: |
+          python - <<'PY'
+          from collections import Counter
+          from fastapi.routing import APIRoute
+          from backend.rundeck_api import app
+          p = Counter(route.path for route in app.routes if isinstance(route, APIRoute) and 'GET' in route.methods)
+          needed = ['/history/workload/activity','/evaluation/top-consumers',
+                    '/history/window','/evaluation/workloads/monthly',
+                    '/evaluation/workloads/monthly/hosts','/history/trends',
+                    '/infra/monthly-storage']
+          assert all(p[name] == 1 for name in needed), {name:p[name] for name in needed}
+          print("PROD_COMPAT_ROUTES=PASS count=7")
+          PY
