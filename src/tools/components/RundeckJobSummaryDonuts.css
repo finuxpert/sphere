@@ -146,6 +146,8 @@
 .rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
 .rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"]{
   grid-template-columns:minmax(0,1fr)!important;
+  grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-donuts" "eval-footer"!important;
+  grid-template-rows:auto auto minmax(165px,1fr) minmax(142px,.9fr) auto!important;
   grid-auto-flow:row!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
