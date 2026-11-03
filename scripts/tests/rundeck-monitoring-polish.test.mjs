@@ -39,14 +39,15 @@ test('Monitoring 25/50/25 and stacked panels preserve the separate Health Detail
 
 test('four selectable trends retain source timestamps and 24h dates', () => {
   const source = read('RundeckServerTrend.jsx')
+  const formatting = read('rundeckTrendFormatting.js')
   assert.match(source, /row-cols-1 row-cols-md-2 row-cols-xxl-4 g-2/)
-  assert.match(source, /const dateLabel = new Intl\.DateTimeFormat/)
-  assert.ok(source.includes("return dateLabel + '\\n' + clockLabel"))
-  assert.ok(source.includes("if (range === '24h') return 4"))
+  assert.match(source, /from '\.\/rundeckTrendFormatting\.js'/)
+  assert.match(formatting, /const dateLabel = new Intl\.DateTimeFormat/)
+  assert.ok(formatting.includes("return dateLabel + '\\n' + clockLabel"))
+  assert.ok(formatting.includes("if (range === '24h') return 4"))
   assert.match(source, /formatTrendPeakWib\(panelPeak\.timestamp\)/)
   assert.match(source, /No matching saved observation/)
 })
-
 test('compact review keeps evidence-backed counts and drilldowns', () => {
   const source = read('RundeckWorkloadHealth.jsx')
   assert.match(source, /Programs for Review/)
