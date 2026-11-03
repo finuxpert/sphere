@@ -750,8 +750,8 @@
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadCategory span{font-size:9px}
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalTrendHeading{
-  display:flex!important;align-items:center;justify-content:space-between;
-  gap:6px;min-width:0;
+  display:flex!important;justify-content:space-between;
+  gap:6px;
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckTechnicalScaleToggle{
   flex:0 0 auto;border:1px solid var(--sphere-design-edge,rgba(126,147,158,.28));
