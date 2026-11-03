@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolveServerTrendMetrics } from '../../src/tools/components/rundeckTrendPreferences.js'
@@ -55,7 +56,7 @@ test('System Data shares centered modal with scrim, keyboard trap, Escape and sc
 
 test('motion is short, non-looping and honors reduced-motion preferences', () => {
   const css = source('RundeckCockpitPolish.css')
-  const chart = source('RundeckServerTrend.jsx')
+  const chart = trendFeatureSource(source)
   assert.match(css, /prefers-reduced-motion: reduce/)
   assert.doesNotMatch(css, /animation-iteration-count:\s*infinite|animation:[^;]*infinite/)
   assert.match(chart, /animationDuration: reduceMotion \? 0 : 300/)
@@ -63,7 +64,7 @@ test('motion is short, non-looping and honors reduced-motion preferences', () =>
 })
 
 test('v1.34.80 chart updates reuse the same ECharts instance and preserve null gaps', () => {
-  const chart = source('RundeckServerTrend.jsx')
+  const chart = trendFeatureSource(source)
   assert.match(chart, /chartRef\.current = chart/)
   assert.match(chart, /replaceMerge: schemaChanged \? undefined : \['series'\]/)
   assert.match(chart, /connectNulls: false/)
@@ -104,7 +105,7 @@ test('v1.34.85 light operator palette corrects shadowed vars and preserves data 
   const light = source('RundeckCloudflareLight.css')
   const jsx = source('RundeckMonitoringHistory.jsx')
   const app = source('RundeckUnifiedAppInfrastructure.jsx')
-  const chart = source('RundeckServerTrend.jsx')
+  const chart = trendFeatureSource(source)
   assert.match(jsx, /import '\.\/RundeckCloudflareLight\.css'/)
   assert.match(light, /html\[data-theme="light"\] \.logV2Inner:has\(\.rundeckPanel\)/)
   assert.match(light, /--sphere-page:#f8fafc/)
@@ -192,15 +193,15 @@ test('DEV idle braid reveals full verified ECharts on hover/focus and keeps inci
   // Saved-data Braid appears only with a complete verified three-channel chart.
   // Hover/focus returns the untouched ECharts, controls and exact point clicks.
   assert.match(source('RundeckMonitoringHistoryCore.jsx'), /<RundeckServerTrend\s+ambientBraid/)
-  assert.match(source('RundeckServerTrend.jsx'), /ambientBraid && databaseEnabled/)
+  assert.match(trendFeatureSource(source), /ambientBraid && databaseEnabled/)
   assert.match(trendStyle, /:not\(\.is-expanded\)::before \{\s*opacity:1;/)
   assert.match(trendStyle, /data-vortex-ready="true"\]\.is-expanded::before\{opacity:0/)
   assert.match(trendStyle, />\.rundeckUnifiedVortexCanvas \{\s*opacity:1;\s*pointer-events:none!important/)
   assert.match(trendStyle, /\.is-expanded>\.rundeckUnifiedVortexCanvas \{\s*opacity:0;/)
   assert.match(trendStyle, /@media\(max-width:1280px\),\(prefers-reduced-motion:reduce\),\(hover:none\),\(pointer:coarse\)/)
-  assert.match(source('RundeckServerTrend.jsx'), /onFocusCapture=\{\(\) => setUnifiedHovered\(true\)\}/)
-  assert.match(source('RundeckServerTrend.jsx'), /connectNulls: false/)
-  assert.match(source('RundeckServerTrend.jsx'), /\{ value: \[at, null\], gap: true \}/)
+  assert.match(trendFeatureSource(source), /onFocusCapture=\{\(\) => setUnifiedHovered\(true\)\}/)
+  assert.match(trendFeatureSource(source), /connectNulls: false/)
+  assert.match(trendFeatureSource(source), /\{ value: \[at, null\], gap: true \}/)
 
   // In the compact paired dialog, incidents remain accessible but collapsed by default.
   assert.match(issue, /open=\{!paired\}/)
