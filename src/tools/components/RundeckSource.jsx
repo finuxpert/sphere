@@ -754,8 +754,6 @@ export default function RundeckSource({ onCollection }) {
     : 'PARTIAL'
   const recentGap = retainedReadyCollectionGaps(history)[0] || null
   const qualityDisplay = quality.state === 'FRESH' ? (historyRefreshFailed ? 'PARTIAL' : dataAlignment) : quality.state
-  const freshnessSummary = `Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}`
-  const freshnessShort = `Perf ${ageLabel(performanceAgeMinutes)} · Avail ${ageLabel(availabilityAgeMinutes)}${availabilityStale ? ' (unverified)' : ''}`
   const freshnessMessage = monitoringFreshnessMessage(quality, { availabilityFetchFailed: availabilityRefreshFailed })
 
   const freshnessWarning = historyRefreshFailed || quality.state !== 'FRESH' || performanceStale || availabilityStale || (sourceSkewMinutes !== null && sourceSkewMinutes > 15)
