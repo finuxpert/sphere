@@ -157,20 +157,6 @@ export default function RundeckUnifiedAppInfrastructure({
   const appKey = chooseUnifiedApp(hosts, focusHost, manualSelection, contextToken, preferredHost)
   const performanceVerified = sourceQuality?.performanceValid === true && !sourceQuality?.collectorBad
   const hostVerified = host => currentAppSample(host, performanceVerified, nowMs)
-  const visibleStates = hosts.map(host => appSignalState(host, hostVerified(host)))
-  const attentionCount = visibleStates.filter(value => value === 'ATTENTION').length
-  const warningCount = visibleStates.filter(value => value === 'WARNING').length
-  const unknownCount = visibleStates.filter(value => value === 'UNKNOWN').length
-  const criticalCount = visibleStates.filter(value => value === 'CRITICAL').length
-  const highest = field => [...hosts].filter(host => hostVerified(host) && host[field] != null && Number.isFinite(Number(host[field])))
-    .sort((a, b) => Number(b[field]) - Number(a[field]))[0] || null
-  const highCpu = highest('cpu_pct')
-  const highRam = highest('ram_pct')
-  const highWp = highest('wp_critical')
-  const highWpHosts = highWp ? hosts.filter(row => hostVerified(row) && Number(row.wp_critical) === Number(highWp.wp_critical)).map(row => shortHost(row.host)).join('/') : '—'
-  const verifiedApps = hosts.filter(host => hostVerified(host))
-  const impactedApps = verifiedApps.filter(host => Number(host.wp_critical) > 0)
-  const totalCriticalWp = impactedApps.reduce((total, host) => total + Number(host.wp_critical), 0)
   const selectApp = key => {
     setManualSelection({ host: key, contextToken })
     const sapTarget = hosts.find(host => shortHost(host.host) === key)

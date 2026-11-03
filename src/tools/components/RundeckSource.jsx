@@ -6,7 +6,7 @@ import RundeckPerformanceIncident from './RundeckPerformanceIncident.jsx'
 import RundeckSystemData from './RundeckSystemData.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
-import { formatWib, numberText, shortHost } from './sapUiFormat.js'
+import { numberText, shortHost } from './sapUiFormat.js'
 import { coalesceAsyncRefresh } from './rundeckRefreshCoordinator.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
 import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage } from './rundeckDataQuality.js'
@@ -732,7 +732,6 @@ export default function RundeckSource({ onCollection }) {
     serviceNotConfiguredCount ? `${serviceNotConfiguredCount} not configured` : '',
     serviceProblemCount ? `${serviceProblemCount} needs attention` : '',
   ].filter(Boolean).join(' · ')
-  const appCount = latest?.received_hosts?.length || operationalHosts.length || 0
   const incidentStart = incidentSummary?.signal_active_since || incidentSummary?.detected_since || ''
   const latestCollectionAt = latest?.finished_at || latest?.collection_time_wib || ''
   const quality = assessRundeckDataQuality({
