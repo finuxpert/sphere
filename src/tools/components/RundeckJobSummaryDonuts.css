@@ -143,7 +143,7 @@
 /* Explicitly span the single Monitoring column. Older two-lane cockpit rules
    must not put KPI/CPU on the left while four donuts sit at bottom-right. */
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckMonitoring.is-three-panel.is-six-chart-layout .rundeckJobsProgramsOverview
 .rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"]{
   grid-template-columns:minmax(0,1fr)!important;
   grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-donuts" "eval-footer"!important;
@@ -151,7 +151,7 @@
   grid-auto-flow:row!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckMonitoring.is-three-panel.is-six-chart-layout .rundeckJobsProgramsOverview
 .rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"]
 > :is(.rundeckWorkloadHealthTitle,.rundeckWorkloadHealthLegend,.sphereEvaluationTop5,.sphereJobDonuts,.rundeckWorkloadHealthFooter){
   grid-column:1!important;
@@ -160,7 +160,7 @@
   justify-self:stretch!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
-.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckMonitoring.is-three-panel.is-six-chart-layout .rundeckJobsProgramsOverview
 .rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"] > .sphereJobDonuts{
   grid-area:eval-donuts!important;
   grid-column:1!important;
