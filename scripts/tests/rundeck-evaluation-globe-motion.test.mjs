@@ -84,5 +84,6 @@ test('capsule uses different X/Y radii and stops its idle spin when motion is di
   assert.match(capsule, /radiusY = Math\.min\(height/)
   assert.match(capsule, /motionRef\.current\) phase \+= dt \* \.35/)
   assert.match(core, /data-motion=\{motionEnabled \? 'on' : 'off'\}/)
-  assert.match(core, /localStorage\.setItem\('sphere\.monitor\.motion'/)
+  assert.match(core, /const motionEnabled = false/)
+  assert.doesNotMatch(core, /localStorage\.setItem\('sphere\.monitor\.motion'/)
 })

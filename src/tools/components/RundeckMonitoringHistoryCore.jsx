@@ -127,8 +127,8 @@ export default function RundeckMonitoringHistoryCore(props) {
     </div>
     <section className="rundeckTrendBandV13454 sphereMonitoringTrendBottom">
       <RundeckServerTrend
-        compactMonitoring
         ambientBraid={false}
+        compactMonitoring
         refreshToken={props.refreshToken}
         databaseEnabled={props.databaseEnabled}
         selectedJob={props.selectedJob}

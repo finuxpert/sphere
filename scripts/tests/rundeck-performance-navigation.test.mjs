@@ -192,7 +192,7 @@ test('Overview keeps workload and health inline while event evidence opens on de
   const styles = read('RundeckRevitalization.css')
   assert.match(core,/sphereOverviewBottomRow/)
   assert.doesNotMatch(core,/\{props\.serviceSummary\}/)
-  assert.match(core,/onOpenHealthDetails=\{props\.onOpenHealthDetails\}/)
+  assert.match(core,/onOpenDetails=\{props\.onOpenHealthDetails\}/)
   assert.match(core,/<RundeckStorageSummary/)
   assert.match(workload,/sphereWorkloadPriorityList/)
   assert.match(workload,/workloadHealthLevel\(row\) === 'review'/)
