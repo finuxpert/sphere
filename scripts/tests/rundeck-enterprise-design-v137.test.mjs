@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { groupEvaluationsByApp, validatedAppEvaluationMemberships } from '../../src/tools/components/rundeckWorkloadAppLanes.js'
@@ -44,7 +45,7 @@ test('workload APP status distribution is source-backed and only details render 
 
 test('existing SAP evidence semantics remain unchanged in presentation updates', () => {
   const core = read('RundeckMonitoringHistoryCore.jsx')
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const evidence = read('RundeckEvidenceTimeline.jsx')
   assert.match(core, /<RundeckUnifiedAppInfrastructure/)
   assert.match(core, /<RundeckServerTrend/)
@@ -55,7 +56,7 @@ test('existing SAP evidence semantics remain unchanged in presentation updates',
 })
 
 test('dashboard ECharts preserve data and thresholds while filling the available plot', () => {
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const css = read('RundeckEnterpriseMonitoringV137.css')
   const grid = trend.match(/grid: \{ left: (\d+), right: (\d+), top: (\d+), bottom: compactPoints \? (\d+) : (\d+) \}/)
   assert.ok(grid, 'ECharts plot grid must remain explicit and measurable')
@@ -83,7 +84,7 @@ test('status charts remain linked to actual APP evaluation totals and drilldowns
 })
 
 test('visual finishing keeps focus visible and APP memberships unambiguous', () => {
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const bars = read('RundeckWorkloadAppLanes.jsx')
   const styles = read('RundeckEnterpriseMonitoringV137.css')
   assert.match(trend, /type: 'line', z: focused \? 6 : 2/)
@@ -96,7 +97,7 @@ test('visual finishing keeps focus visible and APP memberships unambiguous', () 
 })
 
 test('enterprise chart tokens are consistent with the selected shell and preserve severity meaning', () => {
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const css = read('RundeckEnterpriseMonitoringV137.css')
   assert.match(trend, /document\.querySelector\('\.spherePerformanceShell'\)/)
   for (let index = 1; index <= 5; index++) {
@@ -108,7 +109,7 @@ test('enterprise chart tokens are consistent with the selected shell and preserv
 })
 
 test('inactive temporal decoration does not execute its reduction or load canvas until requested', () => {
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const pure = read('rundeckTrendAmbientData.js')
   const ambient = read('rundeckTrendAmbient.js')
   assert.match(trend, /temporalReady \? savedVortexPeak\(/)
@@ -120,7 +121,7 @@ test('inactive temporal decoration does not execute its reduction or load canvas
 })
 
 test('chart and APP details use only one active resize notification source', () => {
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const details = read('RundeckWorkloadAppLanes.jsx')
   for (const [source, callback] of [[trend, 'resize'], [details, 'measure']]) {
     assert.ok(source.includes('if (observer) observer.observe('))
