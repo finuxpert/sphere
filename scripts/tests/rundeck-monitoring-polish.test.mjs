@@ -163,7 +163,7 @@ test('Monitoring shows ten saved resource consumers instead of duplicating sever
   assert.doesNotMatch(core,/viewMode="globe"/)
   assert.match(evaluation,/resourceLimit = viewMode === 'status' \? 10 : 5/)
   assert.match(evaluation,/amount \/ 100/)
-  assert.match(evaluation,/Top \{resourceLimit\} \{resourceMetric === 'cpu' \? 'CPU Consumers' : 'PSS Consumers'\}/)
+  assert.match(evaluation,/Top \{resourceLimit\} \{resourceMetric === 'cpu' \? 'CPU Consumers · Avg 24h' : 'PSS Consumers · Avg 24h'\}/)
   assert.match(trends,/rundeckTrendAllAppPeak/)
   assert.match(trends,/minInterval: range === '24h'/)
   assert.doesNotMatch(evaluation,/sphereEvaluationStatusRows/)
