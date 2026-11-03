@@ -87,15 +87,15 @@
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckAppHexShape strong{
- font-size:10.5px!important;
+ font-size:11.5px!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckAppHexShape :is(small,em){
- font-size:9.2px!important;
+ font-size:10.5px!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckFleetMeter{
- font-size:9px!important;gap:2px!important;
+ font-size:10px!important;gap:2px!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckFleetMeterValue{
@@ -122,11 +122,11 @@
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageLabel strong{
- font-size:9.5px!important;
+ font-size:11px!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageLabel small{
- font-size:8.7px!important;
+ font-size:10px!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageDetails{
@@ -305,16 +305,16 @@
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .rundeckTrendPeakSummary > strong{
- font-size:10.5px!important;line-height:1.2!important;
+ font-size:11px!important;line-height:1.2!important;
  font-variant-numeric:tabular-nums;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .rundeckTrendPeakSummary > span{
- font-size:9.3px!important;line-height:1.2!important;
+ font-size:10px!important;line-height:1.2!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .rundeckTrendPeakSummary > .rundeckTrendAllAppPeak{
- font-size:9.3px!important;line-height:1.2!important;
+ font-size:10px!important;line-height:1.2!important;
  font-variant-numeric:tabular-nums;max-width:130px!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
@@ -440,7 +440,7 @@
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout :is(.sphereFleetMiniActions button,.sphereFleetMiniHost){
  background:transparent!important;color:var(--sphere-text-secondary,#aab7c5)!important;
- font-size:9.5px!important;line-height:1.25!important;cursor:pointer;
+ font-size:10.5px!important;line-height:1.25!important;cursor:pointer;
  border-radius:4px!important;padding:2px 4px!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
@@ -472,7 +472,7 @@
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniMeta{
  min-height:16px!important;flex:0 0 auto!important;
- font-size:9.5px!important;color:var(--sphere-text-secondary,#aab7c5)!important;
+ font-size:10.5px!important;color:var(--sphere-text-secondary,#aab7c5)!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniTrend svg{
@@ -482,12 +482,12 @@
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniTrend svg text{
- font-size:9px!important;fill:var(--sphere-text-secondary,#aab7c5)!important;
+ font-size:10px!important;fill:var(--sphere-text-secondary,#aab7c5)!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
 .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniFooter{
  min-height:14px!important;flex:0 0 auto!important;
- font-size:9.6px!important;line-height:1.3!important;
+ font-size:10.5px!important;line-height:1.3!important;
  font-variant-numeric:tabular-nums;white-space:nowrap;
  overflow:hidden;text-overflow:ellipsis;color:var(--sphere-text-secondary,#aab7c5)!important;
 }
@@ -495,11 +495,16 @@
 .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniEmpty{
  display:grid!important;place-items:center!important;
  flex:1 1 auto!important;min-height:50px!important;
- font-size:10px!important;text-align:center!important;
+ font-size:11px!important;text-align:center!important;
  color:var(--sphere-text-secondary,#aab7c5)!important;
 }
 @media(prefers-reduced-motion:reduce){
  .rundeckMonitoring.is-six-chart-layout .sphereFleetMiniTrend svg *{
   transition:none!important;animation:none!important;
  }
+}
+
+/* The recent-window label is secondary to each I/O chart title. */
+.rundeckMonitoring.is-six-chart-layout .sphereFleetMiniHead .sphereFleetMiniScope{
+ font-size:10px;font-weight:500;color:var(--sphere-text-secondary,#aab7c5);
 }
