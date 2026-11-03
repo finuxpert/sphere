@@ -17,8 +17,8 @@ test('operator APP focus overrides the selected workload without changing source
 })
 
 test('focused trace is readable and other traces remain available', () => {
-  assert.deepEqual(trendFocusStyle('APP2', 'APP2'), { width: 2.8, opacity: 1, itemOpacity: 1 })
-  assert.deepEqual(trendFocusStyle('APP1', 'APP2'), { width: 1.8, opacity: 0.26, itemOpacity: 0.36 })
+  assert.deepEqual(trendFocusStyle('APP2', 'APP2'), { width: 3.1, opacity: 1, itemOpacity: 1 })
+  assert.deepEqual(trendFocusStyle('APP1', 'APP2'), { width: 1.8, opacity: 0.18, itemOpacity: 0.22 })
   assert.deepEqual(trendFocusStyle('APP1', ''), { width: 1.8, opacity: 1, itemOpacity: 1 })
 })
 
@@ -26,9 +26,9 @@ test('availability trace uses lower default opacity with unchanged high-contrast
   assert.deepEqual(trendFocusStyle('APP1', '', true),
     { width: 1.5, opacity: 0.72, itemOpacity: 1 })
   assert.deepEqual(trendFocusStyle('APP1', 'APP1', true),
-    { width: 2.8, opacity: 1, itemOpacity: 1 })
+    { width: 3.1, opacity: 1, itemOpacity: 1 })
   assert.deepEqual(trendFocusStyle('APP1', 'APP2', true),
-    { width: 1.5, opacity: 0.26, itemOpacity: 0.36 })
+    { width: 1.5, opacity: 0.18, itemOpacity: 0.22 })
 })
 
 test('focus rules do not mutate retained samples, observation gaps or operator host list', () => {
@@ -36,7 +36,7 @@ test('focus rules do not mutate retained samples, observation gaps or operator h
   const frozenHosts = Object.freeze([...hosts])
   const before = JSON.stringify(data)
   assert.equal(resolveTrendFocus('APP3', '', frozenHosts), 'APP3')
-  assert.equal(trendFocusStyle('APP3', 'APP3').width, 2.8)
+  assert.equal(trendFocusStyle('APP3', 'APP3').width, 3.1)
   assert.equal(JSON.stringify(data), before)
   assert.deepEqual(data[1], { bucket: '2026-10-11T10:10:00+07:00', max_value: null })
 })

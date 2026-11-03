@@ -1145,7 +1145,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         }}>Reset charts</button>
       <button type="button" className="rundeckTrendYAxisToggle"
         aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
-        title="Focus rescales percent-based APP charts to observed samples. SAP Warning/Critical thresholds do not change; markers above the zoomed axis are not plotted. Full restores 0–100%."
+        title="Applies only to percentage-based charts such as CPU and RAM, not Host Load or Critical WP. Focus changes the percent axis, not samples or SAP thresholds."
       >Percent Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
     </div>
     <div className="rundeckTrendSharedControls" role="toolbar" aria-label="Performance trend controls">
@@ -1328,9 +1328,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
             : renderTrendState(panel.trend, panel.loading, panel.error, selectPoint, { showGap: false,
                 technicalAxisMax: clippedLoad ? loadInfo.axisMax : clippedNetwork ? networkInfo.axisMax : null })}
           {!panel.metric.startsWith('fs:') && panelPeak && !clippedLoad && !clippedNetwork && <div className="rundeckTrendPeakSummary" role="status"
-            title={(activeFocus ? activeFocus + ' selection' : 'All APPs') + ' · saved observations; ' + (allAppPeak ? 'all APPs peak ' + numberText(allAppPeak.value, 1) + peakUnit + ' on ' + allAppPeak.host + '. ' : '') + 'Source timestamp shown when available'}>
+            title={(activeFocus ? activeFocus + ' selection' : 'All APPs') + ' · saved observations; ' + (allAppPeak ? 'all APPs peak ' + numberText(allAppPeak.value, 1) + peakUnit + ' on ' + allAppPeak.host + '. ' : '') + 'APP selection changes contrast, not history; source timestamp shown when available'}>
             <strong>{activeFocus || 'All APPs'} {peakKind}: {numberText(panelPeak.value, 1)}{peakUnit}</strong>
-            <span>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB{isLoad ? ' · 28-core reference' : ''}</span>
+            <span title={panelPeak.exact ? 'Source-verified peak observation' : 'Peak bucket start; exact source time unavailable'}>{panelPeak.host} · {formatTrendPeakWib(panelPeak.timestamp)} WIB{isLoad ? ' · 28-core reference' : ''}</span>
+             {activeFocus && allAppPeak && <small className="rundeckTrendAllAppPeak"
+               title={'All APPs ' + peakKind + ': ' + numberText(allAppPeak.value, 1) + peakUnit + ' · ' + allAppPeak.host + ' · ' + formatTrendPeakWib(allAppPeak.timestamp) + ' WIB'}>
+               All APPs: {numberText(allAppPeak.value, 1)}{peakUnit} · {allAppPeak.host}
+             </small>
           </div>}
         </section>
       })}

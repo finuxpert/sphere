@@ -17,10 +17,10 @@ const API_PAGE_SIZE = 100
 const MAX_VISIBLE_DOTS = 800
 const SEVERITY_ORDER = { review: 0, attention: 1, unknown: 2, normal: 3 }
 const LEVELS = [
-  { key: 'review', label: 'Review', health: 'REVIEW' },
-  { key: 'attention', label: 'Watch', health: 'ATTENTION' },
-  { key: 'unknown', label: 'Limited Data', health: 'UNKNOWN' },
-  { key: 'normal', label: 'Normal', health: 'NORMAL' },
+  { key: 'review', label: 'Review', health: 'REVIEW', meaning: 'Saved backend evaluation requires review; inspect its assessment before tuning.' },
+  { key: 'attention', label: 'Watch', health: 'ATTENTION', meaning: 'Backend ATTENTION evaluation; not proof of an SM37 job failure. Check review reason.' },
+  { key: 'unknown', label: 'Limited Data', health: 'UNKNOWN', meaning: 'Incomplete evaluation evidence; not a confirmed failure or normal run.' },
+  { key: 'normal', label: 'Normal', health: 'NORMAL', meaning: 'Saved evaluation categorized as normal; not a current execution-status guarantee.' },
 ]
 
 async function readPage(offset, signal) {
@@ -226,7 +226,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   const evaluationCategories = <div className="rundeckWorkloadHealthLegend" aria-label="Filter saved evaluations by review category">
       {LEVELS.map(level => <button type="button" key={level.key} className={'rundeckWorkloadCategory is-' + level.key}
         onClick={() => onReview?.(level.health)} disabled={!preview}
-        title={level.key === 'unknown' ? unknownDescription + ' Click to review full saved evaluations.' : 'Click to open 1D saved evaluations filtered to ' + level.label}
+        title={level.meaning + (level.key === 'unknown' ? ' ' + unknownDescription : '') + ' Click for saved 1D evidence.'}
         aria-label={`Open ${preview ? preview.health[level.key] : 'unverified'} ${level.label} evaluations in Review`}>
         <i className={'is-' + level.key} aria-hidden="true" />
         <strong>{preview ? preview.health[level.key] : '—'}</strong>
@@ -334,7 +334,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label={'Top ' + resourceLimit + ' evaluated resource consumers'}>
       <div className="sphereEvaluationTop5Head">
         <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
-          Top {resourceLimit} Resource Consumers {resourceMetric === 'cpu' && <small title="Core-equivalent grouped CPU: 100% corresponds to one fully utilized CPU core; multicore totals can exceed 100%.">(core %)</small>}
+          Top {resourceLimit} {resourceMetric === 'cpu' ? 'CPU Consumers' : 'PSS Consumers'}
         </strong>
         <div role="group" aria-label="Resource metric" className="sphereEvaluationTop5Actions">
           {['cpu','pss'].map(metric => <button key={metric} type="button"
@@ -348,14 +348,15 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
           return <button type="button" key={row.consumer_type + ':' + row.consumer_key}
             className="sphereEvaluationTop5Row"
             title={String(row.consumer_key) + ' · ' + String(row.consumer_type || 'Workload') +
-              ' · 24h avg grouped ' + (resourceMetric === 'cpu' ? 'CPU ' + amount + '% (core-equivalent; 100% = one CPU core)' : 'PSS ' + amount + ' GB') +
-              ' · click for saved evaluation details'}
+              ' · saved status ' + (row.status || 'UNKNOWN') + ' · 24h average ' +
+              (resourceMetric === 'cpu' ? 'CPU ' + (amount / 100).toFixed(2) + ' cores (' + amount.toFixed(1) + ' core-%)' : 'PSS ' + amount.toFixed(1) + ' GB') +
+              ' · bar relative to highest candidate (not host utilization); click for assessment'}
             onClick={() => openWorkload(row)}>
-            <span className="sphereEvaluationTop5Name">{row.consumer_key}</span>
+            <span className="sphereEvaluationTop5Name" title={(row.consumer_type || 'Workload') + ' · ' + row.consumer_key + ' · ' + (row.assessment_reason || row.status || 'Saved evaluation')}>{row.consumer_key}</span>
             <span className="sphereEvaluationTop5Track" aria-hidden="true">
               <i style={{ width: resourcePeak > 0 ? Math.max(0,Math.min(100,amount / resourcePeak * 100)) + '%' : '0%' }} />
             </span>
-            <span className="sphereEvaluationTop5Value">{amount.toFixed(1)}{resourceMetric === 'cpu' ? '%' : ' GB'}</span>
+            <span className="sphereEvaluationTop5Value">{resourceMetric === 'cpu' ? (amount / 100).toFixed(2) + ' cores' : amount.toFixed(1) + ' GB'}</span>
           </button>
         })}</div> :
         <span className="sphereEvaluationTop5Unavailable" role="status">
@@ -363,7 +364,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
         </span>}
     </section>}
     {(viewMode !== 'by-app' || !performanceVerified) && <footer className="rundeckWorkloadHealthFooter">
-      {viewMode !== 'by-app' && <span className={'is-' + state} title={statusNote + ' · Evaluation priority uses saved observations, not SAP SM37 execution status.'}>{preview ? preview.total.toLocaleString('en-US') + ' evaluated · saved 24h' : outcome}</span>}
+      {viewMode !== 'by-app' && viewMode !== 'status' && <span className={'is-' + state} title={statusNote + ' · Evaluation priority uses saved observations, not SAP SM37 execution status.'}>{preview ? preview.total.toLocaleString('en-US') + ' evaluated · saved 24h' : outcome}</span>}
       {viewMode !== 'by-app' && preview && Number(preview.health.unknown) > 0 && otherUnknown !== null && (otherUnknown > 0 || insufficient !== Number(preview.health.unknown)) &&
         <small title={unknownDescription}>Evidence gap · {insufficient} insufficient{otherUnknown > 0 ? ` · ${otherUnknown} other` : ''}</small>}
       {!performanceVerified && <small title="Current host performance freshness is unverified; this panel contains saved 1D evaluations">Host data unverified</small>}
