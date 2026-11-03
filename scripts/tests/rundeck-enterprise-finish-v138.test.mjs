@@ -49,7 +49,8 @@ test('Monthly PDF remains observational and explains candidate review status', (
 test('New visual layer does not hide evidence, timestamps, alerts, or error rows', () => {
   assert.doesNotMatch(css, /(?:\.rundeckEvidenceEvent|\.sphereMonthlyErrors|\.rundeckInfraChartWrap)[^{}]*\{[^{}]*display:\s*none/i)
   assert.match(read('RundeckEvidenceTimeline.jsx'), /Cause not established/)
-  assert.match(read('RundeckInfrastructure.jsx'), /OPERATOR_THRESHOLDS\.filesystem\.critical/)
+  assert.match(read('RundeckInfrastructure.jsx'), /import SparkChart from/)
+  assert.match(read('RundeckInfrastructureTrend.jsx'), /OPERATOR_THRESHOLDS\.filesystem\.critical/)
   assert.match(read('RundeckMonthlyReview.jsx'), /monthly_errors|sphereMonthlyErrors/)
 })
 
