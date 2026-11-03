@@ -60,14 +60,14 @@ html,body{margin:0!important;padding:0!important}
 <footer class="rundeckWorkloadHealthFooter"></footer>
 </section></div></section>
 <div class="sphereMonitoringRightStack">
-<section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend">
-<div class="sphereFleetMiniHead"><strong>I/O Wait Trend</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
-<div class="sphereFleetMiniMeta">Host I/O Wait · %</div>
-__CHART__<small class="sphereFleetMiniFooter">Peak 8.2% · APP3</small></div></section>
-<section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend">
-<div class="sphereFleetMiniHead"><strong>Disk I/O Activity</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
-<div class="sphereFleetMiniMeta">OS Root Read + Write · MB/s</div>
-__CHART__<small class="sphereFleetMiniFooter">Peak 2.5 MB/s · APP2</small></div></section>
+<section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend sphereWorkloadActivityMini">
+<div class="sphereFleetMiniHead"><strong>SAP Workload Activity</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
+<div class="sphereFleetMiniMeta">Observed Job / Program names · All APPs</div>
+__CHART__<div class="sphereWorkloadActivityLegend"><span>Jobs</span><span>Programs</span></div><small class="sphereFleetMiniFooter">Peak 112 observed workloads</small></div></section>
+<section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend sphereWorkloadActivityMini">
+<div class="sphereFleetMiniHead"><strong>Work Process by Type</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
+<div class="sphereFleetMiniMeta">Observed WP snapshots · All APPs</div>
+__CHART__<div class="sphereWorkloadActivityLegend"><span>DIA</span><span>BTC</span><span>UPD</span><span>ENQ</span><span>Other</span></div><small class="sphereFleetMiniFooter">Peak 42 observed WP</small></div></section>
 </div></div>
 <section class="rundeckTrendBandV13454 sphereMonitoringTrendBottom"><div class="fixtureBottom">
 <strong>Performance Trends</strong><div class="fixtureTrendCards"><div>CPU</div><div>RAM</div><div>Host Load</div><div>Critical WP</div></div>
@@ -110,7 +110,9 @@ const singleSelector=document.querySelectorAll('.sphereFleetMiniHost').length===
 const ordered=bottom&&top&&bottom.top>=top.bottom-4
 const chartsFit=[...document.querySelectorAll('.sphereFleetMiniTrend svg')].length===2&&
   [...document.querySelectorAll('.sphereFleetMiniTrend svg')].every(el=>el.getBoundingClientRect().height>=70)
-const pass=columns&&stacks&&chartCount&&ordered&&chartsFit&&centralFlow&&singleSelector&&dualFit
+const labels=[...document.querySelectorAll('.sphereMonitoringRightStack .sphereFleetMiniHead strong')].map(el=>el.textContent)
+const correctCharts=labels.length===2&&labels[0]==='SAP Workload Activity'&&labels[1]==='Work Process by Type'&&document.querySelectorAll('.sphereWorkloadActivityLegend').length===2
+const pass=columns&&stacks&&chartCount&&correctCharts&&ordered&&chartsFit&&centralFlow&&singleSelector&&dualFit
 document.body.dataset.qa=pass?'PASS':'FAIL'
 const detailChecks=[
   [head,kpis,cpu,donutArea].every(box=>box&&box.width>=mid.width*.86),
@@ -125,7 +127,7 @@ const detailChecks=[
   Math.round(mid?.height||0),Math.round(donutArea?.height||0),
   Math.round(cpu?.bottom||0),Math.round(donutArea?.top||0),Math.round(donutArea?.bottom||0),Math.round(mid?.bottom||0)
 ]
-document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,centralFlow,singleSelector,dualFit,...dual.map(b=>Math.round(b.width)),...dual.map(b=>Math.round(b.height)),...detailChecks,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
+document.body.dataset.metrics=[columns,stacks,chartCount,correctCharts,ordered,chartsFit,centralFlow,singleSelector,dualFit,...dual.map(b=>Math.round(b.width)),...dual.map(b=>Math.round(b.height)),...detailChecks,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
 })</script></body></html>`;
 try{
  for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
