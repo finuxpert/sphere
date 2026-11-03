@@ -56,9 +56,9 @@
 }
 .rundeckMonitoring[data-motion="off"] .sphereEvaluationTop5Track i{transition:none!important}
 /* Source-backed Top 5: keep all five rows readable inside the existing panel. */
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Head strong{font-size:11px}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Head strong{font-size:12px}
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Bars{gap:4px}
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row{min-height:20px;gap:6px}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row{min-height:22px;gap:6px}
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Name{font-size:10.5px}
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Value{font-size:10px}
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Track{height:6px}
@@ -69,11 +69,11 @@
   gap:6px;
 }
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Name {
-  font-size:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
+  font-size:11px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
 }
 
 /* CPU core-equivalent values need sufficient width at two decimals. */
 .rundeckMonitoring.is-three-panel .sphereEvaluationTop5Row{
  grid-template-columns:minmax(0,1.45fr) minmax(35px,.7fr) minmax(68px,auto);
 }
-.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Value{font-size:10px;font-variant-numeric:tabular-nums}
+.rundeckMonitoring.is-three-panel .sphereEvaluationTop5Value{font-size:11px;font-variant-numeric:tabular-nums}
