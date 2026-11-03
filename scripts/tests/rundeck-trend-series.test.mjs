@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import { buildHostTrendSeries } from '../../src/tools/components/rundeckTrendSeries.js'
+import { gapTimeRangeText, gapDurationText, gapLabel, resolvedGapIntervalMs, numericTrendSample, formatSavedBucketWindow, trendAxisSplitNumber, formatTrendAxis } from '../../src/tools/components/rundeckTrendFormatting.js'
 
 const stamp = minutes => new Date(Date.UTC(2026,9,13,0,minutes)).toISOString()
 const point = (minutes, value) => ({ value: [stamp(minutes), value] })
@@ -26,8 +26,33 @@ test('retained null and overall collection gap remain null', () => {
   assert.ok(result.some(p=>p.gap && p.value[1]===null))
   assert.equal(result.filter(p=>p.value[1]===0).length,0)
 })
-test('gap labels must carry calendar dates even for a same-day interval', () => {
-  const source=readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx',import.meta.url),'utf8')
-  assert.match(source,/return \`\$\{startDate\} \$\{startTime\} - \$\{endDate\} \$\{endTime\} WIB\`/)
-  assert.match(source,/buildHostTrendSeries\(/)
+test('gap labels carry start and end dates with WIB, including same-day intervals', () => {
+  const from = Date.parse('2026-10-13T00:00:00Z')
+  const to = Date.parse('2026-10-13T00:30:00Z')
+  const label = gapTimeRangeText(from, to)
+  assert.match(label, /^\\d{2} \\S+ \\d{2}:\\d{2} - \\d{2} \\S+ \\d{2}:\\d{2} WIB$/)
+  assert.match(gapLabel(from, to), /^COLLECTION GAP - /)
+  assert.ok(gapLabel(from, to).includes(label))
+  assert.equal(gapDurationText(from, to), '30m')
+  assert.equal(gapDurationText(from, from + 90 * 60_000), '1h 30m')
+  assert.equal(gapTimeRangeText(Number.NaN, to), '—')
+})
+
+test('bucket interval precedence and numeric null semantics stay unchanged', () => {
+  assert.equal(resolvedGapIntervalMs({bucket_interval_seconds: 120, bucket: '1h'}), 120_000)
+  assert.equal(resolvedGapIntervalMs({bucket: '30m'}), 1_800_000)
+  assert.equal(resolvedGapIntervalMs({bucket: 'unknown', collection_cadence_seconds: 900}), 900_000)
+  assert.equal(resolvedGapIntervalMs({bucket: 'unknown', collection_cadence_seconds: 'invalid'}), 600_000)
+  assert.equal(numericTrendSample(null), null)
+  assert.equal(numericTrendSample(''), null)
+  assert.equal(numericTrendSample('invalid'), null)
+  assert.equal(numericTrendSample('0'), 0)
+})
+
+test('display formatting leaves missing and invalid timestamps explicit', () => {
+  assert.equal(formatSavedBucketWindow({}, 'invalid'), 'Bucket unavailable')
+  assert.match(formatSavedBucketWindow({ bucket: '30m' }, '2026-10-13T00:00:00Z'), /^Bucket .+ WIB$/)
+  assert.equal(formatTrendAxis('invalid', '24h'), '')
+  assert.equal(trendAxisSplitNumber('24h'), 4)
+  assert.equal(trendAxisSplitNumber('30d'), 6)
 })
