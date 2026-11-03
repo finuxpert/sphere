@@ -3,13 +3,12 @@ import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.j
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 import RundeckStorageSummary from './RundeckStorageSummary.jsx'
-import RundeckDiskIoTrend from './RundeckDiskIoTrend.jsx'
-import RundeckIoWaitMiniTrend from './RundeckIoWaitMiniTrend.jsx'
+import RundeckSapWorkloadMiniCharts from './RundeckSapWorkloadMiniCharts.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   const overviewRef = React.useRef(null)
-  // Right-side I/O charts share a recent window; main historical trends remain independent.
-  const [ioRange, setIoRange] = React.useState('24h')
+  // Both collector-backed SAP activity charts share a recent range, separate from Performance Trends.
+  const [workloadRange, setWorkloadRange] = React.useState('24h')
 
   // Fit the read-only overview into the real available browser viewport.
   // The fit is opt-in for spacious desktop windows; smaller screens and expanded
@@ -118,13 +117,9 @@ export default function RundeckMonitoringHistoryCore(props) {
           />
         </div>
       </section>
-      <div className="sphereMonitoringRightStack" aria-label="I/O Wait and Disk I/O comparison across APP1–APP5">
-        <section className="sphereMonitoringMiniChart" aria-label="I/O Wait Trend">
-          <RundeckIoWaitMiniTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
-        </section>
-        <section className="sphereMonitoringMiniChart" aria-label="Disk I/O Activity">
-          <RundeckDiskIoTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
-        </section>
+      <div className="sphereMonitoringRightStack" aria-label="Observed SAP workloads and WP types across APP1–APP5">
+        <RundeckSapWorkloadMiniCharts range={workloadRange} onRange={setWorkloadRange}
+          refreshToken={props.refreshToken}/>
       </div>
     </div>
     <section className="rundeckTrendBandV13454 sphereMonitoringTrendBottom">
