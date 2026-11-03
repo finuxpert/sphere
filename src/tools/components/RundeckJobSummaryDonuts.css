@@ -86,8 +86,10 @@
 .rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
 .rundeckWorkloadHealth[data-view-mode="status"]{
   display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-columns:minmax(0,1fr)!important;
   grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-donuts" "eval-footer"!important;
-  grid-template-rows:auto auto minmax(155px,1fr) minmax(145px,1.02fr) auto!important;
+  grid-template-rows:auto auto minmax(170px,1fr) minmax(142px,.9fr) auto!important;
   min-height:0!important;
   height:100%;
   overflow:hidden;
@@ -136,4 +138,34 @@
   .rundeckMonitoring.is-six-chart-layout .sphereJobDonutCard{
     grid-template-columns:60px minmax(0,1fr);
   }
+}
+
+/* Explicitly span the single Monitoring column. Older two-lane cockpit rules
+   must not put KPI/CPU on the left while four donuts sit at bottom-right. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"]{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-flow:row!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"]
+> :is(.rundeckWorkloadHealthTitle,.rundeckWorkloadHealthLegend,.sphereEvaluationTop5,.sphereJobDonuts,.rundeckWorkloadHealthFooter){
+  grid-column:1!important;
+  width:100%!important;
+  min-width:0!important;
+  justify-self:stretch!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth.is-monitoring-globe[data-view-mode="status"] > .sphereJobDonuts{
+  grid-area:eval-donuts!important;
+  grid-column:1!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonuts.is-unavailable{
+  display:grid!important;place-items:center;
+  color:var(--sphere-text-secondary,#aab7c5);
+  font-size:11px;
 }
