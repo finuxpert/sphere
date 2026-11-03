@@ -1,0 +1,139 @@
+/* DEV Monitoring only. Keep historical Review and Reports layouts unchanged. */
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"] > .sphereJobDonuts {
+  grid-area:eval-donuts;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:6px;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  padding-top:5px;
+  border-top:1px solid var(--cockpit-outline,#304150);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutCard{
+  display:grid;
+  grid-template-columns:clamp(46px,5.6vw,64px) minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  padding:4px 8px;
+  min-width:0;
+  min-height:0;
+  background:var(--cockpit-surface-alt,#1e2b37);
+  border:1px solid var(--cockpit-outline,#304150);
+  border-radius:7px;
+  overflow:hidden;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutRing{
+  width:100%;
+  aspect-ratio:1;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  position:relative;
+  background:conic-gradient(var(--sphere-accent,#67a9e8) var(--sphere-job-ring-pct,0%),var(--sphere-chart-grid,#344555) 0);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutRing::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:50%;
+  background:var(--cockpit-surface-alt,#1e2b37);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutRing span{
+  position:relative;
+  z-index:1;
+  color:var(--sphere-text,#e7edf0);
+  font-size:clamp(10px,.85vw,13px);
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutCopy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  justify-content:center;
+  line-height:1.2;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutCopy strong{
+  font-size:11px;
+  font-weight:650;
+  color:var(--sphere-text,#e7edf0);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutCopy :is(span,small){
+  font-size:10px;
+  color:var(--sphere-text-secondary,#aab7c5);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutCard.is-unavailable .sphereJobDonutRing{
+  background:var(--sphere-chart-grid,#344555);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereJobDonutCard.is-unavailable .sphereJobDonutCopy small{
+  color:var(--sphere-warning,#e7b65d);
+}
+
+/* The top KPI strip, ten source-backed workload rows, and four donuts share
+   one bounded column. No body scrollbars or hidden metrics for desktop fit. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"]{
+  display:grid!important;
+  grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-donuts" "eval-footer"!important;
+  grid-template-rows:auto auto minmax(138px,1fr) minmax(150px,1.02fr) auto!important;
+  min-height:0!important;
+  height:100%;
+  overflow:hidden;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"] > .sphereEvaluationTop5{
+  min-height:0!important;
+  padding-top:5px!important;
+  gap:3px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"] .sphereEvaluationTop5Bars{
+  grid-auto-rows:minmax(12px,1fr)!important;
+  gap:1px!important;
+  min-height:0;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+.rundeckWorkloadHealth[data-view-mode="status"] .sphereEvaluationTop5Row{
+  min-height:0!important;
+  height:100%;
+  padding:0!important;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationTop5Name,
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationTop5Value{
+  font-size:10.5px;
+  line-height:1.2;
+}
+@media(max-width:1279px){
+  .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+  .rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview
+  .rundeckWorkloadHealth[data-view-mode="status"]{
+    height:auto;
+    grid-template-rows:auto auto minmax(180px,auto) minmax(175px,auto) auto!important;
+    overflow:visible;
+  }
+}
+@media(max-width:700px){
+  .rundeckMonitoring.is-six-chart-layout .rundeckJobsProgramsOverview .sphereJobDonuts{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:repeat(4,minmax(70px,auto));
+    overflow:visible;
+  }
+  .rundeckMonitoring.is-six-chart-layout .sphereJobDonutCard{
+    grid-template-columns:60px minmax(0,1fr);
+  }
+}
