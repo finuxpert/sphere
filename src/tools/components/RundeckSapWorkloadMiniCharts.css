@@ -1,0 +1,31 @@
+/* Monitoring-only 6H/24H observed SAP activity; two compact right-column charts. */
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityMini{
+  display:flex!important;flex-direction:column!important;min-width:0!important;
+  min-height:0!important;height:100%!important;gap:3px!important;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityMini > svg{
+  display:block!important;flex:1 1 auto!important;min-height:70px!important;
+  width:100%!important;height:100%!important;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityMini .sphereFleetMiniMeta{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityLegend{
+  display:flex;flex:0 0 auto;align-items:center;justify-content:center;
+  flex-wrap:nowrap;gap:7px;min-height:13px;max-width:100%;
+  overflow:hidden;white-space:nowrap;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityLegend span{
+  display:inline-flex;align-items:center;gap:3px;min-width:0;
+  font-size:9.5px;line-height:1.2;color:var(--sphere-text-secondary,#aab7c5);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityLegend i{
+  width:6px;height:6px;flex:0 0 6px;border-radius:50%;display:inline-block;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityMini .sphereFleetMiniFooter{
+  font-variant-numeric:tabular-nums;min-width:0;
+}
+@media(max-width:1365px){
+  .rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityLegend{gap:5px}
+  .rundeckMonitoring.is-six-chart-layout .sphereWorkloadActivityLegend span{font-size:9px}
+}
