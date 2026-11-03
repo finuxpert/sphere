@@ -334,7 +334,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
     {viewMode !== 'by-app' && showResourceTop5 && <section className="sphereEvaluationTop5" aria-label={'Top ' + resourceLimit + ' evaluated resource consumers'}>
       <div className="sphereEvaluationTop5Head">
         <strong title="Average grouped resource readings from saved 24h evaluations. Not cumulative host utilization.">
-          Top {resourceLimit} {resourceMetric === 'cpu' ? 'CPU Consumers' : 'PSS Consumers'}
+          Top {resourceLimit} {resourceMetric === 'cpu' ? 'CPU Consumers · Avg 24h' : 'PSS Consumers · Avg 24h'}
         </strong>
         <div role="group" aria-label="Resource metric" className="sphereEvaluationTop5Actions">
           {['cpu','pss'].map(metric => <button key={metric} type="button"
