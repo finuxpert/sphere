@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+/** Chromium geometry regression for the source-backed 25/50/25 Monitoring layout. */
+import {execFileSync,spawnSync} from 'node:child_process'
+import {mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from 'node:fs'
+import {tmpdir} from 'node:os'
+import {resolve,join} from 'node:path'
+import {pathToFileURL} from 'node:url'
+const assets=resolve('dist/assets')
+const files=readdirSync(assets).filter(file=>file.endsWith('.css'))
+const priority=files.filter(file=>readFileSync(join(assets,file),'utf8').includes('is-six-chart-layout'))
+if(!files.length||!priority.length)throw Error('SIX_CHART_QA=FAIL compiled layout CSS unavailable')
+const ordered=[...files.filter(file=>!priority.includes(file)),...priority]
+const styles=ordered.map(file=>'<style>'+readFileSync(join(assets,file),'utf8')+'</style>').join('')
+let chrome=''
+for(const cmd of ['google-chrome','google-chrome-stable','chromium','chromium-browser']){
+ try{chrome=execFileSync('which',[cmd],{encoding:'utf8'}).trim();break}catch{/* try next */}
+}
+if(!chrome)throw Error('SIX_CHART_QA=FAIL browser unavailable')
+const temp=mkdtempSync(join(tmpdir(),'sphere-six-chart-'))
+const apps=Array.from({length:5},(_,i)=>'<button class="rundeckAppHexSelector is-sap-attention"><span class="rundeckAppHexShape"><strong>APP'+(i+1)+'</strong><small>ATTENTION</small><em>WP 1</em><span class="rundeckFleetMeters"><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">CPU</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">24%</span></span><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">RAM</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">32%</span></span></span></span></button>').join('')
+const fsRows=['OS Root','INTF','INTF AOQ','SAP Archive','Archive INTF'].map(name=>'<button class="sphereStorageRow"><span class="sphereStorageLabel"><strong>'+name+'</strong><small>APP1</small></span><span class="sphereStorageTrack"></span><strong class="sphereStoragePercent">72%</strong></button>').join('')
+const counts=['Review','Watch','Limited Data','Normal'].map(name=>'<button class="rundeckWorkloadCategory"><strong>42</strong><span>'+name+'</span></button>').join('')
+const consumers=Array.from({length:10},(_,i)=>'<button class="sphereEvaluationTop5Row"><span class="sphereEvaluationTop5Name">SAVED_WORKLOAD_'+i+'</span><span class="sphereEvaluationTop5Track"><i style="width:60%"></i></span><span class="sphereEvaluationTop5Value">1.20 cores</span></button>').join('')
+const chart='<svg viewBox="0 0 360 108"><polyline points="37,80 110,65 170,45 250,61 352,25" fill="none" stroke="#67a9e8"/></svg>'
+const template=`<!doctype html><html data-theme="__THEME__"><head><meta charset="utf-8">__CSS__
+<style>
+html,body{margin:0!important;padding:0!important}
+.appShell{width:__WIDTH__px}
+.spherePerformanceMain{width:calc(100% - 190px);margin-left:190px;box-sizing:border-box}
+.rundeckPanel{padding-top:145px}
+.rundeckMonitoring{--sphere-overview-room:calc(100vh - 182px)}
+.sphereMonitoringTrendBottom{background:var(--cockpit-surface,#1b2835);border:1px solid #304150}
+.fixtureBottom{display:grid;grid-template-rows:30px minmax(0,1fr);height:100%;padding:7px;box-sizing:border-box}
+.fixtureTrendCards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;min-height:0}
+.fixtureTrendCards>div{border:1px solid #304150;min-height:110px}
+</style></head><body><div class="appShell isTool"><div class="rundeckPanel"><main class="spherePerformanceMain">
+<section class="rundeckMonitoring rundeckCockpitV13491 is-three-panel is-six-chart-layout" data-viewport-fit="true" data-motion="off">
+<div class="sphereMonitoringThreeUp sphereOverviewBottomRow row g-2">
+<div class="sphereMonitoringLeftStack">
+<section class="sphereMonitoringApp rundeckTopBandV13454 is-unified-app-infra col-12 col-xl-4">
+<section class="rundeckUnifiedAppInfra" data-layout="landscape-operations">
+<header class="rundeckUnifiedAppInfraHead"><h3>SAP APP Landscape</h3><button>Health Details</button></header>
+<div class="sphereAppWpSummary">WP Issues <strong>9</strong></div>
+<div class="rundeckAppHexMain rundeckAppThreePanels"><section class="rundeckAppMotionPanel">
+<div class="rundeckAppHexSelectors rundeckUnifiedAppCards is-honeycomb">__APPS__</div>
+</section></div></section></section>
+<section class="sphereStorageSummary col-12 is-compact-summary">
+<header class="sphereStorageSummaryHead"><h3>Storage Summary</h3><button class="sphereStorageDetails">View details</button></header>
+<div class="sphereStorageRows">__FSROWS__</div></section></div>
+<section class="rundeckJobsProgramsOverview col-12"><div class="rundeckJobsProgramsHealthSide">
+<section class="rundeckWorkloadHealth is-monitoring-globe" data-view-mode="status">
+<header class="rundeckWorkloadHealthTitle"><strong>Job &amp; Program Evaluation</strong><button>Open Review</button></header>
+<div class="rundeckWorkloadHealthLegend">__COUNTS__</div>
+<section class="sphereEvaluationTop5"><div class="sphereEvaluationTop5Head"><strong>Top 10 CPU Consumers</strong></div><div class="sphereEvaluationTop5Bars">__CONSUMERS__</div></section>
+<footer class="rundeckWorkloadHealthFooter"></footer>
+</section></div></section>
+<div class="sphereMonitoringRightStack">
+<section class="sphereMonitoringMiniChart"><div class="sphereNetworkMiniTrend">
+<div class="sphereNetworkMiniHead"><strong>Network Throughput</strong><div class="sphereNetworkMiniActions"><button>6H</button><select><option>APP1</option></select></div></div>
+<div class="sphereNetworkMiniMeta"><span>Interface · Mbps</span><select><option>eth0</option></select><span class="sphereNetworkMiniLegend">RX TX</span></div>
+__CHART__<small class="sphereNetworkMiniFooter">eth0 · Last 09:30 WIB</small></div></section>
+<section class="sphereMonitoringMiniChart"><section class="sphereDiskIoTrend">
+<div class="sphereDiskIoHead"><strong>Disk I/O Activity</strong><div class="sphereDiskIoActions"><button>6H</button><select><option>APP1</option></select></div></div>
+<div class="sphereDiskIoMeta">Device / mount · MB/s</div>
+__CHART__<small class="sphereDiskIoFooter">/ · Last 09:30 WIB</small></section></section>
+</div></div>
+<section class="rundeckTrendBandV13454 sphereMonitoringTrendBottom"><div class="fixtureBottom">
+<strong>Performance Trends</strong><div class="fixtureTrendCards"><div>CPU</div><div>RAM</div><div>Host Load</div><div>Critical WP</div></div>
+</div></section>
+</section></main></div></div>
+<script>window.addEventListener('load',function(){
+const get=function(s){return document.querySelector(s)}
+const rect=function(s){const el=get(s);return el?el.getBoundingClientRect():null}
+const left=rect('.sphereMonitoringLeftStack'),mid=rect('.rundeckJobsProgramsOverview'),right=rect('.sphereMonitoringRightStack')
+const a=rect('.sphereMonitoringApp'),s=rect('.sphereStorageSummary')
+const n=rect('.sphereMonitoringRightStack .sphereMonitoringMiniChart:first-child')
+const d=rect('.sphereMonitoringRightStack .sphereMonitoringMiniChart:last-child')
+const top=rect('.sphereMonitoringThreeUp'),bottom=rect('.sphereMonitoringTrendBottom')
+const eq=function(x,y,t){return Math.abs(x-y)<=t}
+const columns=left&&mid&&right&&left.width>190&&eq(left.width,right.width,7)&&eq(mid.width,left.width*2,16)&&eq(left.top,mid.top,4)&&eq(mid.top,right.top,4)
+const stacks=a&&s&&n&&d&&eq(s.top,a.bottom+8,5)&&eq(d.top,n.bottom+8,5)&&a.height>145&&s.height>115&&n.height>140&&d.height>140
+const chartCount=document.querySelectorAll('.sphereMonitoringRightStack svg').length===2&&
+document.querySelectorAll('.fixtureTrendCards > div').length===4&&
+document.querySelectorAll('.sphereStorageRow').length===5&&
+document.querySelectorAll('.rundeckAppHexSelector').length===5&&
+document.querySelectorAll('.sphereEvaluationTop5Row').length===10
+const ordered=bottom&&top&&bottom.top>=top.bottom-4
+const chartsFit=get('.sphereNetworkMiniTrend svg').getBoundingClientRect().height>=70&&get('.sphereDiskIoTrend svg').getBoundingClientRect().height>=70
+const pass=columns&&stacks&&chartCount&&ordered&&chartsFit
+document.body.dataset.qa=pass?'PASS':'FAIL'
+document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
+})</script></body></html>`;
+try{
+ for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
+  for(const theme of ['dark','light']){
+   const html=template.replaceAll('__THEME__',theme).replaceAll('__WIDTH__',String(size.w))
+     .replaceAll('__CSS__',styles).replaceAll('__APPS__',apps).replaceAll('__FSROWS__',fsRows)
+     .replaceAll('__COUNTS__',counts).replaceAll('__CONSUMERS__',consumers).replaceAll('__CHART__',chart)
+   const file=join(temp,'monitor-'+size.w+'-'+theme+'.html')
+   writeFileSync(file,html)
+   const result=spawnSync(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
+     '--allow-file-access-from-files','--window-size='+size.w+','+size.h,
+     '--virtual-time-budget=1400','--dump-dom',pathToFileURL(file).href],
+     {encoding:'utf8',timeout:30000,maxBuffer:5*1024*1024,env:{...process.env,DBUS_SESSION_BUS_ADDRESS:''}})
+   const metrics=result.stdout?.match(/data-metrics="([^"]+)"/)?.[1]
+   if(result.status!==0||!result.stdout?.includes('data-qa="PASS"'))
+    throw Error('SIX_CHART_QA=FAIL '+size.w+' '+theme+' '+metrics+' '+result.stderr?.slice(-250))
+   console.log('SIX_CHART_QA=PASS',size.w+'x'+size.h,theme,metrics)
+  }
+ }
+}finally{rmSync(temp,{recursive:true,force:true})}

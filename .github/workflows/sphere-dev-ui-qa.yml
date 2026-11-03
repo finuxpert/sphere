@@ -40,6 +40,8 @@ jobs:
         run: node scripts/qa-evaluation-layout.mjs
       - name: Verify Monitoring globe and APP status geometry in Chromium
         run: node scripts/qa-monitoring-globe-layout.mjs
+      - name: Verify 25-50-25 six-chart Monitoring layout in Chromium
+        run: node scripts/qa-six-chart-monitoring.mjs
       - name: Render and validate monthly SAP ABAP PDF (long programs, errors and page breaks)
         run: |
           node scripts/qa-monthly-pdf.mjs
