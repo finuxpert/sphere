@@ -210,8 +210,6 @@
 }
 
 .rundeckJobPerformanceTitle {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin: var(--sphere-space-3, 8px) 0 0;
@@ -819,7 +817,6 @@
   padding:7px 9px;
   border-top:1px solid rgba(126,147,158,.07)!important;
   border-left:1px solid rgba(126,147,158,.065)!important;
-  background:transparent!important;
   color:var(--sphere-text,#e7edf0);
   font-size:10px;
 }
@@ -842,11 +839,9 @@
   margin:8px 0 0!important;
   padding:7px 9px!important;
   border-top:1px solid rgba(126,147,158,.08)!important;
-  border-right:0!important;
   border-bottom:1px solid rgba(126,147,158,.06)!important;
   border-left:2px solid rgba(216,179,95,.45)!important;
   border-radius:0!important;
-  background:transparent!important;
   box-sizing:border-box;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobTimeline>strong{margin:0!important}
@@ -880,7 +875,6 @@
   border:0!important;
   border-right:1px solid rgba(126,147,158,.055)!important;
   border-radius:0!important;
-  background:transparent!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalAnalysis{
   width:100%;
@@ -948,9 +942,7 @@
   width:100%;
   min-height:470px;
   padding:4px 0 4px 8px!important;
-  border:0!important;
   border-radius:0!important;
-  background:transparent!important;
   box-sizing:border-box;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceDisclosure,
@@ -1126,9 +1118,7 @@ html[data-theme="light"] .rundeckJobHistoricalEmpty .sphereIcon{color:#687a83!im
   font-size:9.2px;
 }
 .rundeckWpSignalTable td small{
-  display:block;
   margin-top:1px;
-  color:var(--sphere-text-muted,#718089);
   font-size:8px;
 }
 .rundeckWpSignalTable td.is-attention{
@@ -1559,7 +1549,6 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary.is-unified>span{
   min-height:33px!important;
-  padding:4px 6px 4px 0!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
   min-height:440px!important;
@@ -1602,7 +1591,6 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckWpSignalTableWrap{
   overflow-x:auto!important;
-  overflow-y:visible!important;
 }
 @media(max-width:1360px){
   .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisWorkspace{

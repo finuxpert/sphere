@@ -571,8 +571,7 @@ html[data-theme="dark"] .appShell:has(.rundeckPanel) .spherePerformanceMain .run
 .rundeckMonitoring.is-three-panel .sphereMonitoringApp .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
   position:static!important;display:grid!important;
   grid-template-columns:minmax(0,1fr)!important;
-  grid-template-rows:repeat(5,minmax(43px,1fr))!important;
-  gap:5px!important;height:100%!important;min-height:245px!important;
+  grid-template-rows:repeat(5,minmax(43px,1fr))!important;height:100%!important;min-height:245px!important;
   align-items:stretch!important;justify-content:stretch!important;
   width:100%!important;max-width:none!important;padding:0!important;margin:0!important;
 }

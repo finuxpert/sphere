@@ -767,7 +767,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
   position:static!important;
   min-height:25px!important;
   margin:0 0 3px!important;
-  padding:0!important;
   background:transparent!important;
 }
 .appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveScope select{
@@ -790,10 +789,8 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
 .appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
   min-height:82px!important;
   padding:6px 8px!important;
-  border:0!important;
   border-right:1px solid rgba(126,147,158,.065)!important;
   border-radius:0!important;
-  background:transparent!important;
 }
 .appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article:last-child{
   border-right:0!important;
@@ -1071,7 +1068,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckLiveSummaryStrip>d
   margin-bottom:2px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckLiveOverview.is-embedded .rundeckLiveCardGrid article{
-  min-height:72px!important;
   padding-top:5px!important;
   padding-bottom:5px!important;
 }

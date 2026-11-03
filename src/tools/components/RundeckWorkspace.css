@@ -611,7 +611,6 @@
   display:grid!important;
   grid-template-columns:minmax(0,44fr) minmax(0,56fr)!important;
   gap:14px!important;
-  align-items:start!important;
   width:100%!important;
   min-width:0!important;
   margin-top:8px!important;
@@ -662,14 +661,12 @@
   width:100%!important;
   min-width:0!important;
   height:auto!important;
-  min-height:0!important;
   max-height:none!important;
   margin:0!important;
   overflow:visible!important;
 }
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckCurrentWorkloadTableWrap,
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckReviewTableWrapV1231{
-  max-height:none!important;
   overflow:visible!important;
   scrollbar-gutter:auto!important;
 }
@@ -843,7 +840,6 @@
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13456>.rundeckBandPaneV1235{
   height:214px!important;
   min-height:214px!important;
-  max-height:214px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckCurrentWorkload,
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13456 .rundeckPerformanceReviewV1231{
@@ -960,7 +956,6 @@
 }
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody :is(.rundeckCurrentWorkloadTableWrap,.rundeckReviewTableWrapV1231){
   max-height:188px!important;
-  overflow-y:auto!important;
   scrollbar-gutter:stable!important;
 }
 .appShell:has(.rundeckPanel) .rundeckJobsProgramsWorkspaceBody table{

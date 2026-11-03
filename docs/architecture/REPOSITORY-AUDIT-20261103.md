@@ -125,3 +125,32 @@ Review the generated audit in GitHub Actions job `Full frontend QA and Vite buil
 - Independent in-memory static comparison before GitHub commit: the final normalized value for all **1,335 selector/context/property keys** was identical before and after. This is static declaration parity, **not an exhaustive browser pixel-comparison**.
 - Extended CSS regression checks to retain important Monitoring evidence styles and reject the two emptied rules.
 - CSS import order, APIs, backend, PDF generation, dependencies, database, deployments and PROD stay unchanged. Full frontend/build, Chromium Monitoring, PDF and backend CI are required before DEV merge.
+
+
+## Cross-stylesheet safe CSS deduplication — phase 4
+
+Scope: **GitHub DEV source only** from baseline commit 94e5226d671409709114b74e08882774b0245328. Fourteen active CSS files were updated; no CSS import paths or selector lists were renamed. The other stylesheets remain unchanged.
+
+| CSS module | Earlier identical declarations removed | Source bytes reduced |
+| --- | ---: | ---: |
+| RundeckInfrastructure.css | 24 | 733 |
+| RundeckJobHistory.css | 12 | 360 |
+| RundeckLiveOverview.css | 4 | 110 |
+| RundeckWorkspace.css | 5 | 145 |
+| accessibility-theme-v13412.css | 5 | 154 |
+| RundeckCockpitHexV13512.css | 2 | 31 |
+| RundeckMockupParity.css | 3 | 80 |
+| RundeckOperatorFlatV1354.css | 8 | 201 |
+| RundeckVisualRedesignV136.css | 2 | 51 |
+| RundeckUnifiedExperience20261030.css | 1 | 21 |
+| RundeckEvidenceTimeline.css | 4 | 97 |
+| RundeckWorkspaceDrawer.css | 2 | 61 |
+| RundeckSource.css | 2 | 72 |
+| RundeckMonitoringHistory.css | 6 | 252 |
+| **Total** | **80** | **2,368** |
+
+Removal criteria: a declaration was eligible only when a later declaration with the **same property name and exact trimmed value** appeared in a rule with the **same normalized selector text** and the **same at-rule context**. String-containing values, ambiguous declarations and candidate removals that would empty an existing CSS block were skipped. All retained declaration ordering stayed intact; no selector list, CSS import, variable, or stylesheet file was deleted.
+
+Source comparison independently confirmed identical final normalized values for **10,079 selector/context/property keys** across all 14 files. Source !important occurrences decreased by **66**. Fourteen fixed-fingerprint tests in scripts/tests/css-cascade-scan.test.mjs enforce the approved winning-value map. This is **static parity**, not full computed-style or pixel-by-pixel proof; the Chromium/layout/browser and PDF QA gates are still required before merging.
+
+**Excluded from this pass:** merging different selector lists, reorganizing media-query blocks, renaming versioned CSS imports, removing used CSS files, changing backend/SQL/API behavior, database maintenance, PROD deployment, or DEV deployment. Remaining repeated rules often encode intentional cascade changes; defer them until route-specific computed-style and visual snapshots can establish safety.

@@ -93,7 +93,6 @@
 .rundeckActions {
   flex: 0 0 auto;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: var(--sphere-space-2) 10px;
 }
 
@@ -835,7 +834,6 @@
 }
 @media(max-width:1180px){
   .rundeckSupportingDataDisclosure > .rundeckSupportingDataBody {
-    grid-template-columns: 1fr !important;
     max-width: none;
   }
   .rundeckDataAlignment {

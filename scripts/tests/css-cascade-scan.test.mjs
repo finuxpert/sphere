@@ -45,3 +45,92 @@ test('Monitoring CSS keeps final evidence styles after redundant declarations ar
   assert.doesNotMatch(css, /\.rundeckSelectedOperationalEvidence\s*\{\s*\}/)
   assert.doesNotMatch(css, /\.rundeckSelectedOperationalEvidence \.rundeckEvidenceCard>em\s*\{\s*\}/)
 })
+
+
+/**
+ * Static declaration-level regression checkpoints for the approved DEV CSS.
+ * These snapshots intentionally ignore declarations shadowed by a later exact
+ * selector/context/property. They are not a rendered-pixel equivalence proof.
+ */
+function effectiveCssFingerprint(source) {
+  const values = new Map()
+  const stack = []
+  let cursor = 0
+  let quote = ''
+  let escaped = false
+  let comment = false
+  const normalize = (value) => value.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim()
+
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i]
+    const next = source[i + 1]
+    if (comment) {
+      if (char === '*' && next === '/') { comment = false; i++ }
+      continue
+    }
+    if (quote) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === quote) quote = ''
+      continue
+    }
+    if (char === '/' && next === '*') { comment = true; i++; continue }
+    if (char === '"' || char === "'") { quote = char; continue }
+
+    if (char === '{') {
+      const label = normalize(source.slice(cursor, i))
+      stack.push({
+        label,
+        open: i,
+        scope: stack.filter((item) => item.label.startsWith('@')).map((item) => item.label).join(' > '),
+        nested: false,
+      })
+      if (stack.length > 1) stack.at(-2).nested = true
+      cursor = i + 1
+    } else if (char === '}') {
+      const rule = stack.pop()
+      assert.ok(rule, 'unbalanced CSS closing brace')
+      if (!rule.label.startsWith('@') && !rule.nested) {
+        const declarations = source.slice(rule.open + 1, i)
+        for (const match of declarations.matchAll(/(?:^|;)\s*([-\w]+)\s*:\s*([^;]+)(?=;|$)/g)) {
+          values.set(rule.scope + '\0' + rule.label + '\0' + match[1], match[2].trim())
+        }
+      }
+      cursor = i + 1
+    } else if (char === ';') {
+      cursor = i + 1
+    }
+  }
+  assert.equal(stack.length, 0, 'unbalanced CSS opening brace')
+  const payload = [...values].sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => key + '\x1f' + value).join('\n')
+  let hash = 2166136261 >>> 0
+  for (let i = 0; i < payload.length; i++) {
+    hash = Math.imul(hash ^ payload.charCodeAt(i), 16777619) >>> 0
+  }
+  return { hash: hash.toString(16).padStart(8, '0'), keys: values.size }
+}
+
+const cssCheckpoints = [
+  ['src/tools/components/RundeckInfrastructure.css', '4c87cb53', 552],
+  ['src/tools/components/RundeckJobHistory.css', 'a2ae7193', 992],
+  ['src/tools/components/RundeckLiveOverview.css', 'dd4fd6bf', 715],
+  ['src/tools/components/RundeckWorkspace.css', '1af192cc', 503],
+  ['src/app/accessibility-theme-v13412.css', '5431e63e', 917],
+  ['src/tools/components/RundeckCockpitHexV13512.css', '0d6e103c', 872],
+  ['src/tools/components/RundeckMockupParity.css', 'a2252958', 856],
+  ['src/tools/components/RundeckOperatorFlatV1354.css', 'ede2074a', 701],
+  ['src/tools/components/RundeckVisualRedesignV136.css', '2b3fdb11', 708],
+  ['src/tools/components/RundeckUnifiedExperience20261030.css', '99e84fdc', 767],
+  ['src/tools/components/RundeckEvidenceTimeline.css', '1eca1f36', 233],
+  ['src/tools/components/RundeckWorkspaceDrawer.css', 'ff5683da', 275],
+  ['src/tools/components/RundeckSource.css', 'd113646d', 653],
+  ['src/tools/components/RundeckMonitoringHistory.css', '9002c91b', 1335],
+]
+
+for (const [path, hash, keys] of cssCheckpoints) {
+  test('approved effective CSS declarations: ' + path, () => {
+    const css = readFileSync(new URL('../../' + path, import.meta.url), 'utf8')
+    assert.deepEqual(effectiveCssFingerprint(css), { hash, keys })
+  })
+}
