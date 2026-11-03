@@ -42,6 +42,15 @@ export function workloadHealthPreview(report) {
   const quality = report.quality || {}
   return {
     total, reviewRequired, health,
+    // Signal counts are part of the same verified 1D evaluation summary.
+    // An absent field stays unknown; never fabricate a zero measurement.
+    insights: {
+      jobs: positive(report.summary.jobs),
+      programs: positive(report.summary.programs),
+      recurring: positive(report.summary.recurring),
+      highMemory: positive(report.summary.high_memory),
+      wpOverlap: positive(report.summary.wp_signal_overlap),
+    },
     classified: total - Number(health.unknown),
     unknownSharePct: total ? Math.round(Number(health.unknown) / total * 100) : 0,
     limited: String(quality.confidence || '').toUpperCase() === 'LOW' ||
