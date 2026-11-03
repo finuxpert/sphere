@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
@@ -7,7 +8,7 @@ const component = name => readFileSync(new URL('../../src/tools/components/' + n
 test('compact monitoring keeps six charts, live data and navigation with Bootstrap layout', () => {
   const core = component('RundeckMonitoringHistoryCore.jsx')
   const wrapper = component('RundeckMonitoringHistory.jsx')
-  const trends = component('RundeckServerTrend.jsx')
+  const trends = trendFeatureSource(component)
   const css = component('RundeckBootstrapTrend.css')
   assert.match(core, /sphereOverviewBottomRow row g-2/)
   assert.match(core, /rundeckJobsProgramsOverview col-12/)
