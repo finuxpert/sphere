@@ -1,6 +1,6 @@
 import React from 'react'
 import { formatWib } from './sapUiFormat.js'
-import { splitObservedPoints } from './rundeckResourceMiniCharts.js'
+import { splitObservedPoints, miniChartAxisUpper } from './rundeckResourceMiniCharts.js'
 
 const APPS=['APP1','APP2','APP3','APP4','APP5']
 const COLORS={APP1:'#72a9e8',APP2:'#8cc985',APP3:'#aaa0df',APP4:'#e1a16c',APP5:'#5dcbd1'}
@@ -10,7 +10,7 @@ const WIDTH=360,HEIGHT=108,LEFT=37,RIGHT=8,TOP=9,BOTTOM=24
  * Rows: {app, collected_at, value, description, observed_at}.
  * No interpolation, estimated data, or cross-host rollups. */
 export default function RundeckFleetMiniChart({
-  title,unit='%',context='',range='6h',onRange,rows=[],error='',
+  title,unit='%',context='',range='24h',onRange,rows=[],error='',
   loading=false,focusedHost='',onFocusHost,sourceLabel='',thresholds=[],
 }) {
   const spanMs=(range==='24h'?24:6)*3600_000
@@ -22,20 +22,20 @@ export default function RundeckFleetMiniChart({
     Date.parse(row.collected_at)>=start-10*60_000 &&
     Date.parse(row.collected_at)<=end+10*60_000)
   const highest=points.reduce((best,row)=>!best||Number(row.value)>Number(best.value)?row:best,null)
-  const upper=Math.max(unit==='%'?5:0.5,
-    Math.ceil(((highest?.value||0)*1.12)/ (unit==='%'?5:0.5))*(unit==='%'?5:0.5))
+  const upper=miniChartAxisUpper(highest?.value,unit)
   const x=t=>LEFT+Math.max(0,Math.min(1,(Date.parse(t)-start)/spanMs))*(WIDTH-LEFT-RIGHT)
   const y=v=>TOP+(1-Math.max(0,Math.min(1,Number(v)/upper)))*(HEIGHT-TOP-BOTTOM)
   const active=/^APP[1-5]$/.test(focusedHost)?focusedHost:''
   const gaps=range==='24h'?75*60_000:45*60_000
-  const fmt=value=>Number(value).toFixed(unit==='%'?1:2)
+  const fmt=value=>Number(value).toFixed(unit==='%'?(upper<0.5?2:1):2)
+  const axisFmt=value=>Number(value).toFixed(unit==='%'&&upper<2?2:unit==='%'?1:2)
   const viewEnd=formatWib(end,true)
   const viewStart=formatWib(start,true)
   const any=points.length>0
   return <div className="sphereFleetMiniTrend" aria-label={title+' APP1 to APP5'}>
     <div className="sphereFleetMiniHead">
-      <strong title={sourceLabel}>{title}</strong>
-      <div className="sphereFleetMiniActions" role="group" aria-label={title+' time range'}>
+      <strong title={sourceLabel}>{title} <small className="sphereFleetMiniScope">· Recent</small></strong>
+      <div className="sphereFleetMiniActions" role="group" aria-label={title+' time range, shared with both I/O charts, separate from Performance Trends'}>
         {['6h','24h'].map(item=><button type="button" key={item} aria-pressed={range===item}
           onClick={()=>onRange?.(item)}>{item.toUpperCase()}</button>)}
       </div>
@@ -57,7 +57,7 @@ export default function RundeckFleetMiniChart({
           <line x1={LEFT} y1={y(upper*fraction)} x2={WIDTH-RIGHT} y2={y(upper*fraction)}
             stroke="currentColor" opacity=".14"/>
           <text x={LEFT-5} y={y(upper*fraction)+3} fill="currentColor" textAnchor="end" fontSize="9">
-            {fmt(upper*fraction)}
+            {axisFmt(upper*fraction)}
           </text>
         </g>)}
         {thresholds.filter(row=>Number(row.value)>0 && Number(row.value)<=upper).map(row=>
