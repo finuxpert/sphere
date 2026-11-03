@@ -84,7 +84,7 @@ export default function RundeckJobSummaryDonuts({ refreshToken = '', evaluation 
     <Donut title="Execution Frequency" amount={number(executions)}
       available={sourceAvailable}
       ratio={sourceAvailable ? share(Math.max(0, executions - uniqueJobs), executions) : null}
-      detail={number(uniqueJobs) + ' distinct job names'}
+      detail={number(uniqueJobs) + ' distinct jobs/clients'}
       footer={sourceAvailable ? 'Ring: repeat executions' : sourceNote}
       ariaSource="SM37 24h count of unique imported execution identities, not sampled collection frequency." />
     <Donut title="Review Candidates" amount={number(candidates)}
