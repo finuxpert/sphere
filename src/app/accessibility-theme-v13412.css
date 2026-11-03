@@ -1153,15 +1153,6 @@ html[data-theme="light"] .rundeckTrendInvestigationActions button:first-child{co
   border-radius:0!important;
   background:transparent!important;
   box-shadow:none!important;
-}
-.rundeckTrendSpikeSummary,
-.rundeckTrendInvestigationSnapshot,
-.rundeckTrendAppComparison,
-.rundeckTrendTopWorkload,
-.rundeckTrendComparison,
-.rundeckTrendMiniContext,
-.rundeckTrendEvidenceStrip,
-.rundeckTrendWorkloadPanel{
   padding:7px 0!important;
   border-bottom:1px solid rgba(126,147,158,.085)!important;
 }
