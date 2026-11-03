@@ -106,3 +106,13 @@ This is a **sampled dependency slice**, not a whole-repository proof of unused c
 5. Next batches: CSS import/cascade graph, smaller feature-module extractions, then backend route/service/repository slicing without changing calculations. Profile Monthly Evaluation/Storage only with read-safe controlled measurements.
 
 **No PROD branch, service or PostgreSQL mutation is part of this audit.**
+
+## CSS cascade safety — phase 2 (GitHub source only)
+
+- Added `scripts/qa-css-cascade.mjs`, a **read-only**, context-aware inventory of repeated selectors in each CSS file, with `@media`/other at-rule contexts kept separate. This is a *review list*, not proof that rules are redundant or safe to remove.
+- Captures Monitoring's direct stylesheet-import order from `RundeckMonitoringHistory.jsx` and ranks stylesheet override pressure alongside `!important` counts and tracked source bytes.
+- Added five Node regression checks for selector context, comment/quote/keyframe handling, stable import order and duplicate QA test scheduling. Registered the audit with `npm run qa`.
+- Removed the duplicate `rundeck-trend-series.test.mjs` invocation from `qa:trend-focus` (test coverage is retained).
+- **No stylesheet rules, CSS file paths, Vite config, backend, database or deployment state changed in this phase.** Stylesheet deletion and override consolidation require route-specific browser screenshot comparisons and a verified rule-level cascade analysis; `!important` is not deleted by count alone.
+
+Review the generated audit in GitHub Actions job `Full frontend QA and Vite build`. Run `npm run qa:css-cascade -- --json` for machine-readable evidence.
