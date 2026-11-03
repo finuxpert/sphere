@@ -173,3 +173,11 @@ Scope: **DEV repository refactoring only**, starting from SHA 944da649fd33ab6c7b
 - Original function bodies were copied unchanged except adding module exports and substituting the explicit `todayWib` parameter for the prior closed-over `TODAY_WIB` variable. Verified by a programmatic reconstruction of `RundeckMonthlyReview.jsx` that is **byte-identical to baseline** after undoing the extraction.
 - Added dedicated validation/period-selection tests to the existing integrity QA suite. No CSS, backend, SQL, API, schema, dependency version, visual markup, report calculations or deployment scripts changed.
 - No claims of latency, bundle-size or computed-style improvement until benchmark and Chromium evidence. PR parity CI must pass before squash merge.
+
+## Infrastructure chart separation — phase 7 (GitHub maintenance PR)
+
+- Base DEV SHA: `6b2e3384b881817864f2c298bfbc94098db2c4ee`, untouched PROD `sphere-prod` SHA: `e8d515d0d1400031dc76ad7f266128e9013c67a8`.
+- Separated the original `SparkChart` SVG React component from `RundeckInfrastructure.jsx` into `RundeckInfrastructureTrend.jsx`. Shared existing metric, sample validity, and WIB/time-axis formatters now live in `rundeckInfrastructureFormatting.js` to avoid code duplication.
+- Chart's series ranking, drop-gap segmentation, thresholds, geometry, class names, labels, and React hooks were transferred unchanged; no API, data contract, CSS, SAP signal state, storage logic, database or PDF change.
+- Verified source was mechanically reconstructible **byte-identically** by reversing the extraction and import changes. Added numeric/timezone and chart invariants to `qa:integrity`; Chromium/Monitoring regression and backend parity CI are still mandatory before merge.
+- Source sizes and bundling must be measured from GitHub/Vite results. Extraction is not proof of runtime speedup or pixel-identical rendering.

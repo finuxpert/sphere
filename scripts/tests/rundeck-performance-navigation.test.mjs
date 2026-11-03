@@ -105,9 +105,11 @@ test('Infrastructure workspace is stacked with independent readable telemetry ca
   assert.match(css, /\.is-infrastructure \.rundeckInfraWorkspace\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/)
   assert.match(css, /\.is-infrastructure \.rundeckInfraGrid\s*\{[\s\S]*?grid-template-columns:\s*minmax\(235px/)
   assert.match(css, /\.is-infrastructure \.rundeckInfraGrid :is\(th, td\)/)
-  for (const feature of ['rundeckInfraHostCards', 'rundeckInfraTrendWorkspace', 'rundeckInfraFreshness', 'rundeckInfraChartWrap']) {
+  for (const feature of ['rundeckInfraHostCards', 'rundeckInfraTrendWorkspace', 'rundeckInfraFreshness']) {
     assert.ok(component.includes(feature), feature + ' remains data-backed and selectable')
   }
+  assert.match(component, /import SparkChart from/)
+  assert.match(read('RundeckInfrastructureTrend.jsx'), /rundeckInfraChartWrap/)
 })
 
 test('SAP Checks and Related Events keep their evidence, with responsive full-page layout', () => {

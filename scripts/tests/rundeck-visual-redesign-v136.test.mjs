@@ -57,7 +57,8 @@ test('SAP Checks preserve verified availability and UNKNOWN data source states',
 test('Infrastructure keeps measured host selectors, thresholds, and historical series', () => {
   const infra = read('RundeckInfrastructure.jsx')
   assert.match(infra, /rundeckInfraHostCards/)
-  assert.match(infra, /OPERATOR_THRESHOLDS\.filesystem\.critical/)
+  assert.match(infra, /import SparkChart from/)
+  assert.match(read('RundeckInfrastructureTrend.jsx'), /OPERATOR_THRESHOLDS\.filesystem\.critical/)
   assert.match(infra, /setTrendMetric\(v\)/)
   assert.match(infra, /setSelectedSeries/)
   assert.match(css, /is-infrastructure \.rundeckInfraGrid/)
