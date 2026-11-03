@@ -4,7 +4,7 @@ import { shortHost } from './sapUiFormat.js'
 const API=import.meta.env.BASE_URL+'api/history/trend'
 const APPS=new Set(['APP1','APP2','APP3','APP4','APP5'])
 const observed=value=>value===null||value===undefined||value===''||!Number.isFinite(Number(value))||Number(value)<0?null:Number(value)
-export default function RundeckIoWaitMiniTrend({refreshToken='',focusedHost='',onFocusHost,range='24h',onRange}) {
+export default function RundeckIoWaitMiniTrend({refreshToken='',focusedHost='',range='24h',onRange}) {
   const [data,setData]=React.useState({range:'',items:[],loading:true,error:'',warning:null,critical:null})
   React.useEffect(()=>{
     const controller=new AbortController()
@@ -27,7 +27,7 @@ export default function RundeckIoWaitMiniTrend({refreshToken='',focusedHost='',o
   },[refreshToken,range])
   return <RundeckFleetMiniChart title="I/O Wait Trend" unit="%" context="Host I/O Wait"
     sourceLabel="SAP host CPU I/O Wait from saved collection buckets; maximum observed percent for each APP"
-    range={range} onRange={onRange} focusedHost={shortHost(focusedHost)} onFocusHost={onFocusHost}
+    range={range} onRange={onRange} focusedHost={shortHost(focusedHost)}
     rows={data.range===range?data.items:[]} loading={data.loading||data.range!==range} error={data.error}
     thresholds={[
       {label:'Warning',value:data.warning,color:'#d7b368'},
