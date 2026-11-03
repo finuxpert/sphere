@@ -1,8 +1,9 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
-const source = readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx', import.meta.url), 'utf8')
+const source = trendFeatureSource(name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8'))
 
 test('RundeckServerTrend defines memo dependencies before React invokes callbacks during render', () => {
   const declaration = source.indexOf('const temporalReady = Boolean(')
