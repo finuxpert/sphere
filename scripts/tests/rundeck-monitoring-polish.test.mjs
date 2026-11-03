@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { miniChartAxisUpper } from '../../src/tools/components/rundeckResourceMiniCharts.js'
 import { evaluationDonutMetrics } from '../../src/tools/components/rundeckEvaluationDonutMetrics.js'
+import { niceCountMax, validateActivityTrend, splitActivitySeries, peakActivity } from '../../src/tools/components/rundeckWorkloadActivityCharts.js'
 import { toWibInputValue, validateCustomWib, verifiedTopConsumers } from '../../src/tools/components/rundeckTopConsumerWindow.js'
 
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
@@ -187,50 +188,42 @@ test('Storage chart tabs mount exactly one source-backed analysis without overla
   assert.doesNotMatch(storage,/<RundeckDiskIoDetailTrend refreshToken=\{refreshToken\} \/>\s*\{snapshot\.error/)
 })
 
-test('25/50/25 Monitoring mounts two multi-APP charts and keeps device-specific Storage drilldown',()=>{
+test('25/50/25 Monitoring mounts two saved SAP activity charts and retains Storage I/O drilldown',()=>{
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const storage=read('RundeckStorageSummary.jsx')
-  const iowait=read('RundeckIoWaitMiniTrend.jsx')
-  const disk=read('RundeckDiskIoTrend.jsx')
-  const fleet=read('RundeckFleetMiniChart.jsx')
+  const charts=read('RundeckSapWorkloadMiniCharts.jsx')
   const layout=read('RundeckSixChartMonitoring.css')
   const wrapper=read('RundeckMonitoringHistory.jsx')
-  assert.equal((core.match(/<RundeckIoWaitMiniTrend/g)||[]).length,1)
-  assert.equal((core.match(/<RundeckDiskIoTrend/g)||[]).length,1)
-  assert.doesNotMatch(core,/<RundeckNetworkMiniTrend/)
+  assert.equal((core.match(/<RundeckSapWorkloadMiniCharts/g)||[]).length,1)
+  assert.doesNotMatch(core,/<RundeckIoWaitMiniTrend|<RundeckDiskIoTrend|<RundeckNetworkMiniTrend/)
   assert.match(core,/<RundeckStorageSummary compactOnly/)
   assert.match(storage,/<RundeckDiskIoDetailTrend/)
   assert.match(storage,/!compactOnly && <div className="sphereStorageAnalysis"/)
-  assert.match(iowait,/metric:'iowait',range,bucket:'auto'/)
-  assert.match(iowait,/result\.metric!=='iowait'/)
-  assert.match(iowait,/value:observed\(row\.max_value\)/)
-  assert.match(disk,/metric:'storage',range,resolution:'quarter_hour_peak'/)
-  assert.match(disk,/const MOUNT='\/'/)
-  assert.match(disk,/if\(read===null\|\|write===null/)
-  assert.match(fleet,/splitObservedPoints\(series,'value',gaps\)/)
-  assert.match(fleet,/const APPS=\['APP1','APP2','APP3','APP4','APP5'\]/)
-  assert.doesNotMatch(fleet,/onFocusHost\?\.\(app\)|sphereFleetMiniLegend/)
+  assert.match(charts,/api\/history\/workload\/activity/)
+  assert.match(charts,/kind="workload"/)
+  assert.match(charts,/kind="wp"/)
+  assert.match(charts,/SAP Workload Activity/)
+  assert.match(charts,/Work Process by Type/)
+  assert.match(charts,/Not Collected/)
+  assert.match(charts,/validateActivityTrend\(result,range\)/)
   assert.match(layout,/grid-template-columns:minmax\(0,1fr\) minmax\(0,2fr\) minmax\(0,1fr\)!important/)
-  assert.doesNotMatch(layout,/\.sphereFleetMiniLegend/)
   assert.match(wrapper,/import '\.\/RundeckSixChartMonitoring\.css'/)
 })
-test('APP selection belongs to Performance Trends, while mini charts preserve its focus',()=>{
+test('APP selection stays only in Performance Trends while SAP activity covers all APPs',()=>{
   const history=read('RundeckMonitoringHistory.jsx')
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
-  const iowait=read('RundeckIoWaitMiniTrend.jsx')
-  const disk=read('RundeckDiskIoTrend.jsx')
-  const fleet=read('RundeckFleetMiniChart.jsx')
+  const charts=read('RundeckSapWorkloadMiniCharts.jsx')
   const trend=read('RundeckServerTrend.jsx')
   assert.match(history,/const trendFocusedHost = manualAppFocus\.contextHost === selectedHostKey/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
   assert.equal((core.match(/onFocusHost=\{props\.onFocusAppHost\}/g)||[]).length,1)
-  assert.doesNotMatch(iowait,/onFocusHost=\{onFocusHost\}/)
-  assert.doesNotMatch(disk,/onFocusHost=\{onFocusHost\}/)
-  assert.doesNotMatch(fleet,/onFocusHost\?\.\(app\)|sphereFleetMiniHost/)
+  assert.match(core,/\[workloadRange, setWorkloadRange\] = React\.useState\('24h'\)/)
+  assert.match(charts,/Observed WP snapshots · All APPs/)
+  assert.match(charts,/Observed Job \/ Program names · All APPs/)
+  assert.doesNotMatch(charts,/onFocusHost|sphereFleetMiniHost/)
   assert.match(app,/onSelectApp\?\.\(host\.host\)/)
   assert.match(trend,/onFocusHost\?\.\(label\)/)
-  assert.doesNotMatch(core,/Network Throughput/)
 })
 test('operator status stays in sidebar with original health and collection semantics',()=>{
   const source=read('RundeckSource.jsx')
@@ -271,26 +264,28 @@ test('Monitoring heading, KPI and trend controls follow the final compact operat
   assert.match(css,/font-size:12px!important;font-weight:700!important/)
 })
 
-test('shared I/O window and adaptive axis keep real low-percent peaks readable', () => {
-  const core = read('RundeckMonitoringHistoryCore.jsx')
-  const fleet = read('RundeckFleetMiniChart.jsx')
-  const iowait = read('RundeckIoWaitMiniTrend.jsx')
-  const disk = read('RundeckDiskIoTrend.jsx')
-  const health = read('RundeckWorkloadHealth.jsx')
-  assert.match(core, /\[ioRange, setIoRange\] = React\.useState\('24h'\)/)
-  assert.equal((core.match(/range=\{ioRange\} onRange=\{setIoRange\}/g) || []).length, 2)
-  assert.doesNotMatch(iowait, /const \[range,setRange\]/)
-  assert.doesNotMatch(disk, /const \[range,setRange\]/)
-  assert.match(fleet, /miniChartAxisUpper\(highest\?\.value,unit\)/)
-  assert.match(health, /CPU Consumers · Avg 24h/)
-  assert.equal(miniChartAxisUpper(0.4, '%'), 0.5)
-  assert.equal(miniChartAxisUpper(0.08, '%'), 0.1)
-  assert.equal(miniChartAxisUpper(0, '%'), 0.1)
-  assert.equal(miniChartAxisUpper(12.5, '%'), 20)
-  assert.equal(miniChartAxisUpper(5.2, 'MB\/s'), 6)
-  assert.equal(miniChartAxisUpper(null, 'MB\/s'), 0.5)
+test('6H/24H SAP panels share exactly one request and use real collection samples',()=>{
+  const core=read('RundeckMonitoringHistoryCore.jsx')
+  const charts=read('RundeckSapWorkloadMiniCharts.jsx')
+  const health=read('RundeckWorkloadHealth.jsx')
+  assert.match(core,/\[workloadRange, setWorkloadRange\] = React\.useState\('24h'\)/)
+  assert.equal((core.match(/<RundeckSapWorkloadMiniCharts/g)||[]).length,1)
+  assert.equal((charts.match(/fetch\(API\+/g)||[]).length,1)
+  assert.match(charts,/\['6h','24h'\]/)
+  assert.match(charts,/WP_TYPES\.map/)
+  assert.match(charts,/splitActivitySeries\(points/)
+  assert.match(charts,/not total work process capacity or utilization/)
+  assert.match(health,/CPU Consumers · Avg 24h/)
+  assert.equal(niceCountMax(142),200)
+  assert.equal(niceCountMax(0),1)
+  const points=[
+    {collection_id:'a',collected_at:'2026-11-03T06:00:00Z',jobs:20,programs:7},
+    {collection_id:'b',collected_at:'2026-11-03T06:10:00Z',jobs:null,programs:null},
+    {collection_id:'c',collected_at:'2026-11-03T06:20:00Z',jobs:17,programs:8},
+  ]
+  assert.deepEqual(splitActivitySeries(points,p=>p.jobs!==null).map(s=>s.length),[1,1])
+  assert.deepEqual(peakActivity(points,p=>p.jobs),{value:20,at:'2026-11-03T06:00:00Z'})
 })
-
 test('status Monitoring presents four source-backed donut summaries without changing Review',()=>{
   const health=read('RundeckWorkloadHealth.jsx')
   const donuts=read('RundeckJobSummaryDonuts.jsx')
@@ -373,4 +368,24 @@ test('saved CPU and PSS rankings reject inconsistent payloads instead of fabrica
   assert.equal(verifiedTopConsumers({...payload,cpu:[{...item,value:null}]},'30m'),null)
   assert.equal(verifiedTopConsumers({...payload,memory:[{...item,collection_checks:6}]},'30m'),null)
   assert.equal(verifiedTopConsumers({...payload,coverage_scope:'unknown'},'30m'),null)
+})
+
+test('workload and WP type frontend rejects bad ratios, fabricated zeros and missing evidence',()=>{
+  const rows=[{
+    collection_id:'c1',collected_at:'2026-11-03T07:50:00Z',
+    jobs:12,programs:4,source_rows:16,
+    wp:{DIA:3,BTC:2,UPD:1,ENQ:0,OTHER:0},observed_wp:6,
+  },{
+    collection_id:'c2',collected_at:'2026-11-03T08:00:00Z',
+    jobs:null,programs:null,source_rows:0,wp:null,observed_wp:null,
+  }]
+  const response={range:'24h',start:'2026-11-02T08:00:00Z',end:'2026-11-03T08:02:00Z',
+    coverage_scope:'ALL_OBSERVED_ACTIVE_WORKLOADS',complete_checks:2,
+    activity_checks:1,wp_checks:1,items:rows}
+  assert.equal(validateActivityTrend(response,'24h'),response)
+  assert.equal(validateActivityTrend(response,'6h'),null)
+  assert.equal(validateActivityTrend({...response,activity_checks:2},'24h'),null)
+  assert.equal(validateActivityTrend({...response,items:[rows[0],{...rows[0]}]},'24h'),null)
+  assert.equal(validateActivityTrend({...response,items:[{...rows[0],wp:{...rows[0].wp,DIA:9}},rows[1]]},'24h'),null)
+  assert.equal(validateActivityTrend({...response,items:[{...rows[0],jobs:0,programs:null},rows[1]]},'24h'),null)
 })
