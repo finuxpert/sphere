@@ -4,7 +4,7 @@ import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 import RundeckStorageSummary from './RundeckStorageSummary.jsx'
 import RundeckDiskIoTrend from './RundeckDiskIoTrend.jsx'
-import RundeckNetworkMiniTrend from './RundeckNetworkMiniTrend.jsx'
+import RundeckIoWaitMiniTrend from './RundeckIoWaitMiniTrend.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   const overviewRef = React.useRef(null)
@@ -116,9 +116,9 @@ export default function RundeckMonitoringHistoryCore(props) {
           />
         </div>
       </section>
-      <div className="sphereMonitoringRightStack" aria-label="Infrastructure network and disk activity">
-        <section className="sphereMonitoringMiniChart" aria-label="Network Throughput">
-          <RundeckNetworkMiniTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
+      <div className="sphereMonitoringRightStack" aria-label="I/O Wait and Disk I/O comparison across APP1–APP5">
+        <section className="sphereMonitoringMiniChart" aria-label="I/O Wait Trend">
+          <RundeckIoWaitMiniTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
         </section>
         <section className="sphereMonitoringMiniChart" aria-label="Disk I/O Activity">
           <RundeckDiskIoTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
