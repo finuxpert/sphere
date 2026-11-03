@@ -59,6 +59,13 @@ export default function RundeckNetworkMiniTrend({refreshToken='',focusedHost='',
     .sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at)):[]
   const maxValue=Math.max(1,...points.flatMap(row=>[row.rx_mbps,row.tx_mbps].filter(value=>value!==null)))
   const newest=points.at(-1)
+  const peak=points.reduce((best,row)=>{
+    for(const [key,label] of [['rx_mbps','RX'],['tx_mbps','TX']]){
+      const value=row[key]
+      if(value!==null && (!best || value>best.value))best={value,label,at:row.collected_at}
+    }
+    return best
+  },null)
   const spanMs=range==='24h'?86400_000:6*3600_000
   const end=Date.now(),start=end-spanMs
   const x=at=>LEFT+Math.max(0,Math.min(1,(Date.parse(at)-start)/spanMs))*(WIDTH-LEFT-RIGHT)
@@ -116,8 +123,9 @@ export default function RundeckNetworkMiniTrend({refreshToken='',focusedHost='',
       <text x={LEFT} y={HEIGHT-4} fontSize="9" fill="currentColor">{formatWib(start,true)} WIB</text>
       <text x={WIDTH-RIGHT} y={HEIGHT-4} fontSize="9" textAnchor="end" fill="currentColor">{formatWib(end,true)} WIB</text>
     </svg>}
-    {newest&&<small className="sphereNetworkMiniFooter" title={app+' · NIC '+selectedInterface+' · '+formatWib(newest.collected_at,true)+' WIB'}>
-      {selectedInterface+' · Last '+formatWib(newest.collected_at,true)+' WIB'}
+    {peak&&<small className="sphereNetworkMiniFooter"
+      title={app+' · '+selectedInterface+' · '+peak.label+' '+peak.value.toFixed(2)+' Mbps at '+formatWib(peak.at,true)+' WIB · latest saved observation '+(newest?formatWib(newest.collected_at,true)+' WIB':'unknown')}>
+      {peak.label} Peak {peak.value.toFixed(1)} Mbps · {formatWib(peak.at,true)} WIB
     </small>}
   </div>
 }

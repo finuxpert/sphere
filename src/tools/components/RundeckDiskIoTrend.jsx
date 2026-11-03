@@ -4,7 +4,7 @@ import { observedNumber, storageDevices, storageDevicePoints, splitObservedPoint
 import './RundeckDiskIoTrend.css'
 
 const API = import.meta.env.BASE_URL + 'api/infra'
-const W=350,H=96,L=34,R=8,T=8,B=23
+const W=360,H=108,L=37,R=8,T=9,B=24
 async function load(url,signal){
   const result=await fetch(url,{cache:'no-store',signal})
   if(!result.ok)throw new Error('Device I/O history unavailable ('+result.status+')')
@@ -53,6 +53,13 @@ export default function RundeckDiskIoTrend({refreshToken='',focusedHost='',onFoc
   const maxValue=Math.max(1,...points.flatMap(item=>[observedNumber(item.read_mbps),observedNumber(item.write_mbps)]
     .filter(value=>value!==null)))
   const newest=points.at(-1)
+  const peak=points.reduce((best,row)=>{
+    for(const [key,label] of [['read_mbps','Read'],['write_mbps','Write']]){
+      const value=observedNumber(row[key])
+      if(value!==null && (!best || value>best.value))best={value,label,at:row.collected_at}
+    }
+    return best
+  },null)
   const spanMs=range==='24h'?86400_000:6*3600_000
   const maxTs=Date.now()
   const minTs=maxTs-spanMs
@@ -96,8 +103,8 @@ export default function RundeckDiskIoTrend({refreshToken='',focusedHost='',onFoc
     <svg viewBox={'0 0 '+W+' '+H} role="img" aria-label={app+' '+device+' disk Read and Write throughput MB/s'}>
       {[0,.5,1].map(fraction=><g key={fraction}>
         <line x1={L} x2={W-R} y1={y(maxValue*fraction)} y2={y(maxValue*fraction)}
-          stroke="currentColor" opacity=".15"/>
-        <text x={L-4} y={y(maxValue*fraction)+3} textAnchor="end" fill="currentColor" fontSize="8">
+          stroke="currentColor" opacity=".14"/>
+        <text x={L-4} y={y(maxValue*fraction)+3} textAnchor="end" fill="currentColor" fontSize="9">
           {(maxValue*fraction).toFixed(maxValue<10?1:0)}
         </text>
       </g>)}
@@ -112,11 +119,12 @@ export default function RundeckDiskIoTrend({refreshToken='',focusedHost='',onFoc
             <title>{app} · {device} · {item.name} {Number(point[item.key]).toFixed(2)} MB/s · {formatWib(point.collected_at,true)} WIB</title>
           </circle>)}
       </g>)}
-      <text x={L} y={H-4} fontSize="8" fill="currentColor">{formatWib(minTs,true)} WIB</text>
-      <text x={W-R} y={H-4} textAnchor="end" fontSize="8" fill="currentColor">{formatWib(maxTs,true)} WIB</text>
+      <text x={L} y={H-4} fontSize="9" fill="currentColor">{formatWib(minTs,true)} WIB</text>
+      <text x={W-R} y={H-4} textAnchor="end" fontSize="9" fill="currentColor">{formatWib(maxTs,true)} WIB</text>
     </svg>}
-    {newest && <small className="sphereDiskIoFooter" title={app+' · '+device+' · observation '+formatWib(newest.collected_at,true)+' WIB'}>
-      {device} · Last {formatWib(newest.collected_at,true)} WIB
+    {peak && <small className="sphereDiskIoFooter"
+      title={app+' · '+device+' · '+peak.label+' '+peak.value.toFixed(2)+' MB/s at '+formatWib(peak.at,true)+' WIB · latest saved observation '+(newest?formatWib(newest.collected_at,true)+' WIB':'unknown')}>
+      {peak.label} Peak {peak.value.toFixed(2)} MB/s · {formatWib(peak.at,true)} WIB
     </small>}
   </section>
 }
