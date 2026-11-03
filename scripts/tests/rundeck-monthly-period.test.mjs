@@ -9,7 +9,7 @@ test('month selector retains seven reverse-chronological UTC month values and WI
   assert.match(rows[0].label, / · ongoing$/)
   assert.equal(rows.filter(row => row.label.includes(' · ongoing')).length, 1)
   for (const [index, row] of rows.entries()) {
-    assert.match(row.value, /^20\\d{2}-\\d{2}$/)
+    assert.match(row.value, /^20\d{2}-\d{2}$/)
     if (index) {
       const [year, month] = rows[index - 1].value.split('-').map(Number)
       assert.equal(row.value, new Date(Date.UTC(year, month - 2, 1)).toISOString().slice(0, 7))
@@ -45,10 +45,10 @@ test('custom date validation preserves WIB future gate, 31-day limit and date or
 
 test('monthly UI keeps the existing closed-over WIB date and all period inputs', () => {
   const ui = readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx', import.meta.url), 'utf8')
-  assert.match(ui, /const MONTHS = monthOptions\\(\\)/)
-  assert.match(ui, /const WEEKS = weekOptions\\(\\)/)
-  assert.match(ui, /validateCustomDate\\(start,end,TODAY_WIB\\)/)
-  assert.match(ui, /customDateError\\(draftStart,draftEnd\\)/)
-  assert.match(ui, /customDayCount\\(customStart,customEnd\\)/)
-  assert.match(ui, /max=\\{TODAY_WIB\\}/)
+  assert.match(ui, /const MONTHS = monthOptions\(\)/)
+  assert.match(ui, /const WEEKS = weekOptions\(\)/)
+  assert.match(ui, /validateCustomDate\(start,end,TODAY_WIB\)/)
+  assert.match(ui, /customDateError\(draftStart,draftEnd\)/)
+  assert.match(ui, /customDayCount\(customStart,customEnd\)/)
+  assert.match(ui, /max=\{TODAY_WIB\}/)
 })
