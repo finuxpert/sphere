@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { miniChartAxisUpper } from '../../src/tools/components/rundeckResourceMiniCharts.js'
 import { evaluationDonutMetrics } from '../../src/tools/components/rundeckEvaluationDonutMetrics.js'
+import { toWibInputValue, validateCustomWib, verifiedTopConsumers } from '../../src/tools/components/rundeckTopConsumerWindow.js'
 
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
@@ -323,4 +324,53 @@ test('evaluation donuts keep missing signal counts unknown, without inferred zer
   const invalid = evaluationDonutMetrics({total:2,insights:{jobs:2,programs:2,recurring:3}})
   assert.equal(invalid[0].available,false)
   assert.equal(invalid[1].available,false)
+})
+
+test('Top Consumers Monitoring splits CPU and PSS into two independent ranked columns',()=>{
+  const health=read('RundeckWorkloadHealth.jsx')
+  const top=read('RundeckTopConsumersDual.jsx')
+  const css=read('RundeckTopConsumersDual.css')
+  assert.match(health,/viewMode === 'status' && showResourceTop5 && <RundeckTopConsumersDual/)
+  assert.match(health,/viewMode !== 'status' && viewMode !== 'by-app' && showResourceTop5 && <section/)
+  assert.match(top,/api\/evaluation\/top-consumers/)
+  assert.match(top,/const PRESETS = \['30m', '1h', '6h', '24h'\]/)
+  assert.match(top,/metric="cpu"/)
+  assert.match(top,/metric="memory"/)
+  assert.match(top,/Top 10 CPU · Avg Cores/)
+  assert.match(top,/Top 10 Memory · Avg PSS/)
+  assert.match(top,/Custom range · WIB/)
+  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/)
+  assert.match(css,/grid-template-rows:repeat\(10,minmax\(0,1fr\)\)/)
+})
+
+test('WIB-only custom collection window respects exact time boundaries',()=>{
+  const now=Date.parse('2026-11-03T08:04:00Z')
+  assert.equal(toWibInputValue(Date.parse('2026-11-03T07:30:00Z')),'2026-11-03T14:30')
+  assert.deepEqual(
+    validateCustomWib('2026-11-03T14:30','2026-11-03T15:00',now),
+    {ok:true,from_at:'2026-11-03T07:30:00.000Z',to_at:'2026-11-03T08:00:00.000Z'}
+  )
+  const invalid=[
+    ['2026-11-03T15:00','2026-11-03T14:30'],
+    ['2026-11-03T14:30','2026-11-03T14:31'],
+    ['2026-11-02T12:00','2026-11-03T15:00'],
+    ['2026-11-03T14:30','2026-11-03T17:00'],
+    ['2026-02-30T10:00','2026-03-01T10:00'],
+  ]
+  for(const [start,end] of invalid){
+    assert.equal(validateCustomWib(start,end,now).ok,false,start+' / '+end)
+  }
+})
+
+test('saved CPU and PSS rankings reject inconsistent payloads instead of fabricating zeros',()=>{
+  const item={consumer_type:'JOB',consumer_key:'ZTEST',value:1.22,observations:5,collection_checks:3,
+    aggregate_observations:5,last_seen:'2026-11-03T08:02:17+00:00'}
+  const payload={range:'30m',start:'2026-11-03T07:32:17+00:00',end:'2026-11-03T08:02:17+00:00',
+    complete_checks:3,observed_workloads:1,coverage_scope:'ALL_OBSERVED_ACTIVE_WORKLOADS',
+    cpu:[item],memory:[{...item,value:2.45}]}
+  assert.equal(verifiedTopConsumers(payload,'30m'),payload)
+  assert.equal(verifiedTopConsumers(payload,'24h'),null)
+  assert.equal(verifiedTopConsumers({...payload,cpu:[{...item,value:null}]},'30m'),null)
+  assert.equal(verifiedTopConsumers({...payload,memory:[{...item,collection_checks:6}]},'30m'),null)
+  assert.equal(verifiedTopConsumers({...payload,coverage_scope:'unknown'},'30m'),null)
 })
