@@ -507,9 +507,6 @@
   align-content:stretch!important;
 }
 .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain .rundeckMonitoring.is-three-panel.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra[data-layout="landscape-operations"] .rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb > .rundeckAppHexSelector {
-  --app-tile:#293b4a;
-  --app-ink:#e8f0f5;
-  --app-sub:#a7bbca;
   display:block!important;
   position:relative!important;
   inset:auto!important;
@@ -518,7 +515,7 @@
   min-height:0!important;
   max-width:none!important;
   padding:0!important;
-  background:var(--app-tile)!important;
+  background:var(--app-tile,#293b4a)!important;
   border:1px solid transparent!important;
   border-left:1px solid transparent!important;
   border-radius:4px!important;
@@ -526,7 +523,7 @@
   clip-path:none!important;
   filter:none!important;
   transform:none!important;
-  color:var(--app-ink)!important;
+  color:var(--app-ink,#e8f0f5)!important;
   text-align:center!important;
   overflow:hidden!important;
   transition:background-color .3s ease,color .3s ease!important;
