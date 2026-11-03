@@ -576,9 +576,6 @@
   line-height:1.1;
 }
 .appShell:has(.rundeckPanel) .rundeckWorkloadHealthFooter span{
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
   color:var(--sphere-text-secondary,#a4b2bc);
 }
 .appShell:has(.rundeckPanel) .rundeckWorkloadHealthFooter .is-review{color:#d66973}
@@ -802,10 +799,9 @@
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHexRow{height:8px;min-height:8px}
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHexRow i{flex-basis:12px;height:12px}
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px 7px;width:100%;
-  color:var(--sphere-text-secondary,#a4b2bc);font-size:8.8px;line-height:10px
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px 7px;width:100%;font-size:8.8px;line-height:10px
 }
-.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend span{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden}
+.appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend span{display:flex;gap:4px;white-space:nowrap;overflow:hidden}
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckWorkloadHealthLegend i{display:inline-block;flex:0 0 6px;width:6px;height:6px;border-radius:50%}
 .appShell:has(.rundeckPanel) .rundeckWorkloadHealthLegend .is-review{background:#d66973}
 .appShell:has(.rundeckPanel) .rundeckWorkloadHealthLegend .is-attention{background:#d5ad55}
@@ -842,7 +838,7 @@
   min-width:0!important;align-items:stretch!important
 }
 .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
-  width:100%!important;height:218px!important;min-height:0!important;
+  width:100%!important;height:218px!important;
   display:flex!important;flex-direction:column!important;justify-content:flex-start!important;
   gap:7px!important;padding:10px 12px!important;cursor:default!important;
   border:1px solid var(--sphere-border-subtle,rgba(126,147,158,.24))!important;
@@ -922,8 +918,7 @@
 }
 @media screen and (min-width:900px) and (max-height:800px){
   .appShell:has(.rundeckPanel) .rundeckCockpitV13491 .rundeckJobsProgramsHealthSide .rundeckWorkloadHealth{
-    height:180px!important;gap:4px!important;padding:7px 9px!important
-  }
+    height:180px!important;}
   .appShell:has(.rundeckPanel) .rundeckWorkloadDot{flex-basis:9px;width:9px;height:9px;min-width:9px;min-height:9px}
   .appShell:has(.rundeckPanel) .rundeckWorkloadDotGrid{gap:2px!important}
 }
