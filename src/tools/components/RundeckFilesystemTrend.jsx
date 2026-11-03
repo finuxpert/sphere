@@ -53,6 +53,7 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
   })
   const values=records.map(item=>Number(item.value))
   const max=values.length?Math.max(...values):null
+  const peakRecord=records.reduce((best,item)=>!best||Number(item.value)>Number(best.value)?item:best,null)
   // The full 0–100% axis can flatten 7D/30D filesystem changes into a single
   // unreadable line. Keep the axis explicitly labelled; never modify samples.
   const axisMin=values.length?Math.max(0,Math.floor((Math.min(...values)-5)/10)*10):0
@@ -67,6 +68,8 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
     grouped.get(key).push(point)
   }
   const newest=[...records].sort((a,b)=>Date.parse(b.collected_at)-Date.parse(a.collected_at))[0]
+  const peakSource=peakRecord ? (peakRecord.displayHost||'APP1')+' · '+mount+' · '+formatWib(peakRecord.collected_at,true)+' WIB' : 'Not observed'
+  const peakVsLatest=peakRecord&&newest?Number(peakRecord.value)-Number(newest.value):null
   const oldest=[...records].sort((a,b)=>Date.parse(a.collected_at)-Date.parse(b.collected_at))[0]
   // A selected root 'All APPs' plot contains independent hosts; subtracting
   // samples from different hosts would fabricate a growth figure.
@@ -120,13 +123,13 @@ export default function RundeckFilesystemTrend({ mount='/',range='6h',refreshTok
       <text x={W-R} y={H-5} textAnchor="end" fontSize="9" fill="currentColor">{formatWib(maxTs,true)} WIB</text>
     </svg>}
     {!!records.length && <div className="sphereFilesystemTrendFooter">
-      <span title="Latest historical hourly peak sample, not current filesystem usage">Latest hourly peak {Number(newest.value).toFixed(1)}%</span>
-      <span title="Highest hourly peak within the selected history window">Window max {max.toFixed(1)}%</span>
+      <span title="Latest saved hourly-peak sample (not current filesystem utilization)">Latest Observed <strong>{Number(newest.value).toFixed(1)}%</strong></span>
+      <span title={'Highest saved hourly peak · '+peakSource+(peakVsLatest===null?'':' · '+peakVsLatest.toFixed(1)+' pp above latest')}>Highest in Range <strong>{max.toFixed(1)}%</strong><small>{formatWib(peakRecord.collected_at,true)} WIB</small></span>
       <span title={delta===null ? 'Select a single APP with at least two different observation times' :
         'Net difference between first and last hourly-peak samples. Intermediate spikes remain visible as Window max.'}>
-        {delta===null ? 'Observed change —' : 'Net change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}
+        {delta===null ? 'Observed change —' : 'Net Change '+(delta>=0?'+':'')+delta.toFixed(1)+' pp'}
       </span>
-      <span title="Latest observed filesystem sample">{formatWib(newest.collected_at,true)} WIB</span>
+      <span title={'Latest saved sample '+(newest.displayHost||'APP1')+' '+mount}>Last Sample {formatWib(newest.collected_at,true)} WIB</span>
     </div>}
   </div>
 }
