@@ -756,7 +756,7 @@ const checks = [
     files.systemHealthState.includes('This does not mean SAP DOWN.') &&
     files.systemHealthState.includes("observedAvailability = availabilityEvidenceStale ? 'UNKNOWN'") &&
     files.systemHealthState.includes('observedImpact = !availabilityEvidenceStale &&')],
-  ['Global data status shows fixed performance and availability freshness', files.source.includes('freshnessSummary') && files.source.includes('Performance ${ageLabel(performanceAgeMinutes)} · Availability ${ageLabel(availabilityAgeMinutes)}') && files.source.includes('rundeckDataQualityState') && files.source.includes('initialSourceCheck')],
+  ['Monitoring source alignment and freshness remain verified after moving into sidebar', files.source.includes('sourceFreshness={{ status: initialSourceCheck') && files.source.includes('performanceAgeMinutes, availabilityAgeMinutes') && read('src/tools/components/RundeckPerformanceNavigation.jsx').includes('sphereSidebarFreshness') && read('src/tools/components/RundeckSystemHealth.jsx').includes('deriveSystemHealthEvidence')],
   ['Unified APP overview retains observed host CPU/RAM, Critical WP and full infrastructure drilldown without redundant counters',
     files.unifiedApp.includes('SAP APP Landscape') &&
     files.unifiedApp.includes('const hostCpu = verified ? host.cpu_pct : null') &&

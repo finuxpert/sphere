@@ -66,7 +66,8 @@ test('performance cockpit is a normal-flow stack; APP fleet, Trends, and Workloa
   const c = core.indexOf('<RundeckWorkloadHealth')
   assert.ok(a > 0 && c > a && b > c, 'APP, Evaluation and Storage precede full-width Performance Trends')
   assert.ok(core.indexOf('<RundeckStorageSummary') > a && core.indexOf('<RundeckStorageSummary') < c)
-  assert.ok(core.indexOf('<RundeckNetworkMiniTrend') > c && core.indexOf('<RundeckNetworkMiniTrend') < b)
+  assert.ok(core.indexOf('<RundeckIoWaitMiniTrend') > c && core.indexOf('<RundeckIoWaitMiniTrend') < b)
+  assert.ok(core.indexOf('<RundeckDiskIoTrend') > c && core.indexOf('<RundeckDiskIoTrend') < b)
 })
 
 test('fleet and selected APP summary use compact two-row layout instead of a stretched empty card', () => {

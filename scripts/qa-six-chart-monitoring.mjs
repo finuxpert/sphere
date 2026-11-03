@@ -22,6 +22,7 @@ const fsRows=['OS Root','INTF','INTF AOQ','SAP Archive','Archive INTF'].map(name
 const counts=['Review','Watch','Limited Data','Normal'].map(name=>'<button class="rundeckWorkloadCategory"><strong>42</strong><span>'+name+'</span></button>').join('')
 const consumers=Array.from({length:10},(_,i)=>'<button class="sphereEvaluationTop5Row"><span class="sphereEvaluationTop5Name">SAVED_WORKLOAD_'+i+'</span><span class="sphereEvaluationTop5Track"><i style="width:60%"></i></span><span class="sphereEvaluationTop5Value">1.20 cores</span></button>').join('')
 const chart='<svg viewBox="0 0 360 108"><polyline points="37,80 110,65 170,45 250,61 352,25" fill="none" stroke="#67a9e8"/></svg>'
+const legend=['APP1','APP2','APP3','APP4','APP5'].map(app=>'<button class="sphereFleetMiniHost"><i></i>'+app+'</button>').join('')
 const template=`<!doctype html><html data-theme="__THEME__"><head><meta charset="utf-8">__CSS__
 <style>
 html,body{margin:0!important;padding:0!important}
@@ -39,8 +40,7 @@ html,body{margin:0!important;padding:0!important}
 <div class="sphereMonitoringLeftStack">
 <section class="sphereMonitoringApp rundeckTopBandV13454 is-unified-app-infra col-12 col-xl-4">
 <section class="rundeckUnifiedAppInfra" data-layout="landscape-operations">
-<header class="rundeckUnifiedAppInfraHead"><h3>SAP APP Landscape</h3><button>Health Details</button></header>
-<div class="sphereAppWpSummary">WP Issues <strong>9</strong></div>
+<header class="rundeckUnifiedAppInfraHead"><h3>SAP APP Landscape</h3></header>
 <div class="rundeckAppHexMain rundeckAppThreePanels"><section class="rundeckAppMotionPanel">
 <div class="rundeckAppHexSelectors rundeckUnifiedAppCards is-honeycomb">__APPS__</div>
 </section></div></section></section>
@@ -55,14 +55,16 @@ html,body{margin:0!important;padding:0!important}
 <footer class="rundeckWorkloadHealthFooter"></footer>
 </section></div></section>
 <div class="sphereMonitoringRightStack">
-<section class="sphereMonitoringMiniChart"><div class="sphereNetworkMiniTrend">
-<div class="sphereNetworkMiniHead"><strong>Network Throughput</strong><div class="sphereNetworkMiniActions"><button>6H</button><select><option>APP1</option></select></div></div>
-<div class="sphereNetworkMiniMeta"><span>Interface · Mbps</span><select><option>eth0</option></select><span class="sphereNetworkMiniLegend">RX TX</span></div>
-__CHART__<small class="sphereNetworkMiniFooter">eth0 · Last 09:30 WIB</small></div></section>
-<section class="sphereMonitoringMiniChart"><section class="sphereDiskIoTrend">
-<div class="sphereDiskIoHead"><strong>Disk I/O Activity</strong><div class="sphereDiskIoActions"><button>6H</button><select><option>APP1</option></select></div></div>
-<div class="sphereDiskIoMeta">Device / mount · MB/s</div>
-__CHART__<small class="sphereDiskIoFooter">/ · Last 09:30 WIB</small></section></section>
+<section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend">
+<div class="sphereFleetMiniHead"><strong>I/O Wait Trend</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
+<div class="sphereFleetMiniLegend">__FLEET_LEGEND__</div>
+<div class="sphereFleetMiniMeta">Host I/O Wait · %</div>
+__CHART__<small class="sphereFleetMiniFooter">Peak 8.2% · APP3</small></div></section>
+<section class="sphereMonitoringMiniChart"><div class="sphereFleetMiniTrend">
+<div class="sphereFleetMiniHead"><strong>Disk I/O Activity</strong><div class="sphereFleetMiniActions"><button>6H</button><button>24H</button></div></div>
+<div class="sphereFleetMiniLegend">__FLEET_LEGEND__</div>
+<div class="sphereFleetMiniMeta">OS Root Read + Write · MB/s</div>
+__CHART__<small class="sphereFleetMiniFooter">Peak 2.5 MB/s · APP2</small></div></section>
 </div></div>
 <section class="rundeckTrendBandV13454 sphereMonitoringTrendBottom"><div class="fixtureBottom">
 <strong>Performance Trends</strong><div class="fixtureTrendCards"><div>CPU</div><div>RAM</div><div>Host Load</div><div>Critical WP</div></div>
@@ -85,7 +87,8 @@ document.querySelectorAll('.sphereStorageRow').length===5&&
 document.querySelectorAll('.rundeckAppHexSelector').length===5&&
 document.querySelectorAll('.sphereEvaluationTop5Row').length===10
 const ordered=bottom&&top&&bottom.top>=top.bottom-4
-const chartsFit=get('.sphereNetworkMiniTrend svg').getBoundingClientRect().height>=70&&get('.sphereDiskIoTrend svg').getBoundingClientRect().height>=70
+const chartsFit=[...document.querySelectorAll('.sphereFleetMiniTrend svg')].length===2&&
+  [...document.querySelectorAll('.sphereFleetMiniTrend svg')].every(el=>el.getBoundingClientRect().height>=70)
 const pass=columns&&stacks&&chartCount&&ordered&&chartsFit
 document.body.dataset.qa=pass?'PASS':'FAIL'
 document.body.dataset.metrics=[columns,stacks,chartCount,ordered,chartsFit,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
@@ -95,7 +98,7 @@ try{
   for(const theme of ['dark','light']){
    const html=template.replaceAll('__THEME__',theme).replaceAll('__WIDTH__',String(size.w))
      .replaceAll('__CSS__',styles).replaceAll('__APPS__',apps).replaceAll('__FSROWS__',fsRows)
-     .replaceAll('__COUNTS__',counts).replaceAll('__CONSUMERS__',consumers).replaceAll('__CHART__',chart)
+     .replaceAll('__COUNTS__',counts).replaceAll('__CONSUMERS__',consumers).replaceAll('__CHART__',chart).replaceAll('__FLEET_LEGEND__',legend)
    const file=join(temp,'monitor-'+size.w+'-'+theme+'.html')
    writeFileSync(file,html)
    const result=spawnSync(chrome,['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
