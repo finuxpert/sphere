@@ -316,9 +316,9 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
     # count, but return only the newest row for each host/mount. Previously the
     # API transferred every historical filesystem sample to Python (180k+
     # rows in observed months) solely to keep the first host/mount record.
-    # COUNT(*) OVER() is evaluated before DISTINCT ON, preserving source_rows.
+    # Normalize host case in SQL, matching the original Python grouping keys.\n    # COUNT(*) OVER() is evaluated before DISTINCT ON, preserving source_rows.
     rows = conn.execute(text("""
-       SELECT DISTINCT ON (f.host, f.mount_point)
+       SELECT DISTINCT ON (UPPER(f.host), f.mount_point)
               f.host, f.mount_point, f.collected_at, f.device, f.fstype,
               f.total_bytes, f.avail_bytes, f.used_pct, f.details,
               COUNT(*) OVER () AS source_rows
@@ -326,7 +326,7 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
        JOIN rundeck_infra_collections c ON c.collection_id=f.collection_id
        WHERE c.status='READY' AND f.collected_at>=:start AND f.collected_at<:end
          AND c.snapshot_ts>=:start AND c.snapshot_ts<:end
-       ORDER BY f.host, f.mount_point, f.collected_at DESC, f.collection_id DESC
+       ORDER BY UPPER(f.host), f.mount_point, f.collected_at DESC, f.collection_id DESC
     """), {"start": start, "end": end}).mappings().all()
     source_rows = int(rows[0]["source_rows"]) if rows else 0
     observed = {
