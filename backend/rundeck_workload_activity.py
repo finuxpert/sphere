@@ -6,6 +6,8 @@ full instance WP capacity, response-time, or Busy/Free utilization.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from threading import Lock
+from time import monotonic
 
 from sqlalchemy import text
 
@@ -13,10 +15,12 @@ from backend.db.session import get_engine
 from backend.rundeck_evaluation import (
     _anchor_collection,
     _complete_collection_clause,
-    _workload_source_relation,
 )
 
 RANGES = {"6h": timedelta(hours=6), "24h": timedelta(hours=24)}
+_CACHE_TTL_SECONDS = 90
+_ACTIVITY_CACHE: dict[tuple[str, str, str], tuple[float, dict]] = {}
+_CACHE_LOCK = Lock()
 WP_TYPES = ("DIA", "BTC", "UPD", "ENQ", "OTHER")
 
 
@@ -56,7 +60,23 @@ def workload_activity_trends(range_key: str = "24h", *,
         anchor, anchor_id = _anchor_collection(conn)
         end = min(anchor.astimezone(timezone.utc), current) + timedelta(microseconds=1)
         start = end - RANGES[range_key]
-        relation, coverage = _workload_source_relation(conn)
+        # A full retained projection is available for current DEV snapshots.
+        # Avoid the evaluation UNION+NOT EXISTS source: it forces a historical
+        # anti-join for every chart refresh and makes JSON expansion expensive.
+        has_observations = bool(conn.execute(text(
+            "SELECT to_regclass('public.rundeck_workload_observations') IS NOT NULL"
+        )).scalar())
+        relation = ("rundeck_workload_observations" if has_observations
+                    else "rundeck_top_consumers")
+        coverage = ("ALL_OBSERVED_ACTIVE_WORKLOADS" if has_observations
+                    else "TOP_CONSUMERS_ONLY")
+        # Repeat identical chart requests for one collector anchor from cache.
+        cache_key = (range_key, anchor_id, relation)
+        cached = _ACTIVITY_CACHE.get(cache_key)
+        if cached and monotonic() - cached[0] < _CACHE_TTL_SECONDS:
+            return cached[1]
+        # Cap database work; never leave the UI spinning on a blocked query.
+        conn.execute(text("SET LOCAL statement_timeout = '12000ms'"))
         rows = conn.execute(text(f"""
             WITH sampled AS (
                 SELECT c.collection_id,
@@ -137,7 +157,7 @@ def workload_activity_trends(range_key: str = "24h", *,
             ORDER BY c.sampled_at, c.collection_id
         """), {"start": start, "end": end}).mappings().all()
     points = [normalize_activity_row(dict(row)) for row in rows]
-    return {
+    result = {
         "range": range_key,
         "start": start.isoformat(),
         "end": end.isoformat(),
@@ -154,3 +174,9 @@ def workload_activity_trends(range_key: str = "24h", *,
         "wp_checks": sum(p["wp"] is not None for p in points),
         "items": points,
     }
+    with _CACHE_LOCK:
+        # Cache only verified completed results; retain at most eight anchors/ranges.
+        _ACTIVITY_CACHE[cache_key] = (monotonic(), result)
+        while len(_ACTIVITY_CACHE) > 8:
+            _ACTIVITY_CACHE.pop(next(iter(_ACTIVITY_CACHE)))
+    return result
