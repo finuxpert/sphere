@@ -1,0 +1,225 @@
+/* Monitoring-only source-backed dual ranking. The outer panel remains one screen. */
+.rundeckMonitoring.is-three-panel.is-six-chart-layout
+.rundeckJobsProgramsOverview .sphereEvaluationDual{
+  position:relative;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:3px!important;
+  min-height:0!important;
+  min-width:0!important;
+  width:100%!important;
+  padding-top:4px!important;
+  overflow:hidden!important;
+  z-index:1;
+}
+.rundeckMonitoring.is-three-panel.is-six-chart-layout
+.rundeckJobsProgramsOverview .sphereEvaluationDual.is-editing-window{
+  overflow:visible!important;
+  z-index:20;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualHead{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  flex:0 0 auto;
+  min-width:0;
+  min-height:22px;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualHead > strong{
+  display:block;
+  flex:0 1 auto;
+  font-size:11.5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  min-width:0;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualHead > strong small{
+  color:var(--sphere-text-secondary,#aab7c5);
+  font-size:10px;
+  font-weight:500;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereConsumerRange{
+  flex:0 0 auto;
+  display:flex;
+  gap:3px;
+  justify-content:flex-end;
+  min-width:0;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereConsumerRange button{
+  background:transparent;
+  color:var(--sphere-text-secondary,#aab7c5);
+  border:1px solid var(--cockpit-outline,#304150);
+  padding:2px 5px;
+  font-size:10px;
+  line-height:1.25;
+  border-radius:4px;
+  cursor:pointer;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereConsumerRange button[aria-pressed="true"]{
+  border-color:var(--sphere-accent,#67a9e8);
+  color:var(--sphere-accent,#67a9e8);
+  background:var(--sphere-surface-2,#243342);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualGrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  flex:1 1 auto;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanel{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  padding:3px 6px;
+  min-width:0;
+  min-height:0;
+  border:1px solid var(--cockpit-outline,#304150);
+  border-radius:5px;
+  overflow:hidden;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanelTitle{
+  flex:0 0 auto;
+  min-width:0;
+  font-size:10.5px;
+  line-height:1.2;
+  color:var(--sphere-text,#e7edf0);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanelTitle strong{
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:10.5px;
+  font-weight:600;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel.is-six-chart-layout .rundeckJobsProgramsOverview
+.sphereEvaluationDualPanel .sphereEvaluationTop5Bars{
+  flex:1 1 auto!important;
+  display:grid!important;
+  grid-template-rows:repeat(10,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(0,1fr)!important;
+  gap:1px!important;
+  min-height:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-three-panel.is-six-chart-layout .rundeckJobsProgramsOverview
+.sphereEvaluationDualPanel .sphereEvaluationTop5Row{
+  cursor:default!important;
+  min-height:0!important;
+  height:100%!important;
+  padding:0!important;
+  align-items:center;
+  gap:4px!important;
+  grid-template-columns:minmax(0,1.1fr) minmax(22px,.65fr) minmax(47px,auto)!important;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanel .sphereEvaluationTop5Name{
+  font-size:10px!important;
+  line-height:1.12;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanel .sphereEvaluationTop5Value{
+  font-size:10px!important;
+  line-height:1.12;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanel .sphereEvaluationTop5Track{
+  height:5px!important;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanel.is-memory .sphereEvaluationTop5Track i{
+  background:var(--sphere-memory-accent,#6dc4b5);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereConsumerScopeWarning{
+  color:var(--sphere-warning,#e7b65d);
+  font-size:9px;
+  min-height:10px;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereConsumerRetry{
+  background:transparent;
+  border:1px solid var(--cockpit-outline,#304150);
+  border-radius:4px;
+  color:var(--sphere-accent,#67a9e8);
+  font-size:10px;
+  cursor:pointer;
+  align-self:flex-start;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangePopover{
+  position:absolute;
+  top:27px;
+  right:0;
+  z-index:60;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  padding:10px;
+  width:min(285px,95%);
+  background:var(--cockpit-surface,#1b2835);
+  border:1px solid var(--sphere-accent,#67a9e8);
+  box-shadow:0 8px 20px rgba(0,0,0,.25);
+  border-radius:7px;
+  color:var(--sphere-text,#e7edf0);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangePopover > strong{
+  font-size:11px;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangePopover label{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:7px;
+  font-size:10px;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangePopover input{
+  flex:1 1 auto;
+  min-width:0;
+  color:var(--sphere-text,#e7edf0);
+  color-scheme:dark;
+  background:var(--cockpit-surface-alt,#1e2b37);
+  border:1px solid var(--cockpit-outline,#304150);
+  border-radius:4px;
+  padding:3px 5px;
+  font-size:11px;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangePopover [role="alert"]{
+  font-size:10px;color:var(--sphere-warning,#e7b65d);
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangeActions{
+  display:flex;justify-content:flex-end;gap:6px;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangeActions button{
+  border:1px solid var(--cockpit-outline,#304150);
+  padding:3px 9px;
+  border-radius:4px;
+  color:var(--sphere-text,#e7edf0);
+  background:var(--cockpit-surface-alt,#1e2b37);
+  font-size:10px;
+  cursor:pointer;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereResourceRangeActions button[type="submit"]{
+  border-color:var(--sphere-accent,#67a9e8);
+  color:var(--sphere-accent,#67a9e8);
+}
+@media(max-width:1365px){
+  .rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualHead{
+    flex-wrap:wrap;
+  }
+  .rundeckMonitoring.is-six-chart-layout .sphereConsumerRange button{
+    padding:2px 4px;
+  }
+}
+@media(max-width:700px){
+  .rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualGrid{
+    grid-template-columns:1fr;
+    overflow:visible;
+  }
+  .rundeckMonitoring.is-six-chart-layout .sphereEvaluationDualPanel{
+    min-height:165px;
+  }
+  .rundeckMonitoring.is-six-chart-layout .sphereEvaluationDual{
+    overflow:visible!important;
+  }
+}
