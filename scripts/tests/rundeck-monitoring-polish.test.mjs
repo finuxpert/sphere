@@ -389,3 +389,27 @@ test('workload and WP type frontend rejects bad ratios, fabricated zeros and mis
   assert.equal(validateActivityTrend({...response,items:[{...rows[0],wp:{...rows[0].wp,DIA:9}},rows[1]]},'24h'),null)
   assert.equal(validateActivityTrend({...response,items:[{...rows[0],jobs:0,programs:null},rows[1]]},'24h'),null)
 })
+
+test('valid complete snapshot at microsecond end boundary is retained in browser',()=>{
+  // PostgreSQL returns the last collection at 09:12:15.000000 but the half-open
+  // backend window ends at 09:12:15.000001. JS Date.parse sees the same ms.
+  const last='2026-11-03T09:12:15.000000+00:00'
+  const end='2026-11-03T09:12:15.000001+00:00'
+  assert.equal(Date.parse(last), Date.parse(end))
+  const point={
+    collection_id:'final-collection', collected_at:last,
+    jobs:111,programs:28,source_rows:139,
+    wp:{DIA:134,BTC:217,UPD:22,ENQ:0,OTHER:3},observed_wp:376,
+  }
+  const response={
+    range:'24h',
+    start:'2026-11-02T09:12:15.000001+00:00',
+    end,
+    coverage_scope:'ALL_OBSERVED_ACTIVE_WORKLOADS',
+    complete_checks:1,activity_checks:1,wp_checks:1,
+    items:[point],
+  }
+  assert.equal(validateActivityTrend(response,'24h'),response)
+  assert.equal(validateActivityTrend({...response,
+    items:[{...point,collected_at:'2026-11-03T09:12:15.001+00:00'}]},'24h'),null)
+})
