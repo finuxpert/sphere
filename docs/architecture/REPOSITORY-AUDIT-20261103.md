@@ -165,3 +165,11 @@ Scope: **DEV repository refactoring only**, starting from SHA 944da649fd33ab6c7b
 - The component source decreases from 65,011 to 57,340 text characters (7,671 fewer). This is **separation of responsibilities, not an overall repository byte/file-count reduction**; one helper module and one dedicated regression-test file were added.
 - Six new behavior tests in scripts/tests/rundeck-job-history-data.test.mjs cover nullable CPU/PSS/WP metrics, 25-minute episode boundaries, selected episode, peak/average statistics, explicit chart gap separators, WIB labels, and profile selection.
 - The existing integrity suite runs these tests. Full frontend QA, Chromium Monitoring geometry, management PDF and backend tests remain merge gates. No DB, API, SQL, collector, deployment or PROD changes occurred.
+
+## Monthly period helper extraction — phase 6 (GitHub maintenance PR)
+
+- Baseline: `d018f9838c7671403407364f59ba2e6084255b8f`; `sphere-prod` baseline: `e8d515d0d1400031dc76ad7f266128e9013c67a8`. GitHub tree contains 568 blobs; `src/` 264, backend 106, scripts 77, docs 28. Byte totals represent tracked Git blobs, not deploy artifacts.
+- Extracted `monthOptions`, `weekOptions`, `customDayCount`, and custom date validation into the pure `rundeckMonthlyPeriod.js` module. The rendering component retains its existing `MONTHS`/`WEEKS` initialization, `TODAY_WIB` constant, form controls, fetching, chart and PDF logic. The validator receives exactly the existing frozen WIB date through its wrapper.
+- Original function bodies were copied unchanged except adding module exports and substituting the explicit `todayWib` parameter for the prior closed-over `TODAY_WIB` variable. Verified by a programmatic reconstruction of `RundeckMonthlyReview.jsx` that is **byte-identical to baseline** after undoing the extraction.
+- Added dedicated validation/period-selection tests to the existing integrity QA suite. No CSS, backend, SQL, API, schema, dependency version, visual markup, report calculations or deployment scripts changed.
+- No claims of latency, bundle-size or computed-style improvement until benchmark and Chromium evidence. PR parity CI must pass before squash merge.
