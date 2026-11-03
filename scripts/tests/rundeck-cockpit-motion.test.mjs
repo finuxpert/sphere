@@ -175,7 +175,8 @@ test('DEV motion restoration keeps source data correct and animation interactive
   assert.match(health, /tabIndex=\{index === activeDotIndex \? 0 : -1\}/)
   assert.match(health, /onKeyDown=\{event => handleDotNavigation\(event, index\)\}/)
   assert.match(health, /Saved 24h/)
-  assert.match(status, /<span>Status<\/span>/)
+  assert.match(status, /<span>System Status<\/span>/)
+  assert.match(status, /<span>Data Collection<\/span>/)
   assert.match(css, /\.rundeckWorkloadDot:focus-visible/)
 })
 
