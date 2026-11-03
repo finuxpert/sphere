@@ -23,6 +23,10 @@ jobs:
           cache: pip
       - name: Install production backend dependencies
         run: python -m pip install -r backend/requirements.txt
+      - name: Validate guarded production release shell
+        run: |
+          bash -n ops/rundeck/release-prod-compat.sh
+          ! grep -E 'alembic upgrade|systemctl restart sphere-rundeck-api|git push' ops/rundeck/release-prod-compat.sh
       - name: Compile backend sources
         run: python -m compileall -q backend
       - name: Validate new read-only routes and legacy production contracts
