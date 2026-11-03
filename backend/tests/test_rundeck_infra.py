@@ -209,7 +209,7 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
         self.assertIsNone(res["items"][0]["reason"])
         self.assertEqual(res["source_rows"],2)
         self.assertEqual(res["distinct_mounts"],1)
-        self.assertIn("DISTINCT ON (f.host, f.mount_point)", conn.query)
+        self.assertIn("DISTINCT ON (UPPER(f.host), f.mount_point)", conn.query)
         self.assertIn("COUNT(*) OVER () AS source_rows", conn.query)
         # Even though SQL returns only the newest row, the total source
         # samples still reflect all records before DISTINCT ON.
