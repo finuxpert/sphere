@@ -219,7 +219,7 @@ export default function RundeckWorkloadHealth({ refreshToken = '', performanceVe
   // the screen. This also fixes the PARTIAL-data / non-viewport-fit case.
   const evaluationTitle = <header className="rundeckWorkloadHealthTitle">
       <span><span className="rundeckWorkloadHealthBrand"><SphereIcon name="hexagon" /><strong>Job &amp; Program Evaluation</strong></span>
-        {viewMode !== 'by-app' && <small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Saved 24h · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small>}</span>
+        {viewMode !== 'by-app' && viewMode !== 'status' && <small title={`Saved evaluation window: ${period}. A 1D evaluated population is different from Current collection workloads; neither is SAP SM37 job status.`}>Saved 24h · {preview ? preview.total.toLocaleString('en-US') + ' evaluated' : 'unverified'} · {preview && data?.end ? formatWib(data.end, true) + ' WIB' : 'time unverified'}</small>}</span>
       {viewMode !== 'by-app' && <button type="button" className="rundeckWorkloadHealthReview" onClick={() => onReview?.('REVIEW')}
         aria-label="Open Jobs & Programs Review">Open Review</button>}
     </header>

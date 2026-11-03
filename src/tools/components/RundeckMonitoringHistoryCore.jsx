@@ -80,15 +80,8 @@ export default function RundeckMonitoringHistoryCore(props) {
     }
   }, [measureViewport])
 
-  const [motionEnabled, setMotionEnabled] = React.useState(() => {
-    try { return window.localStorage.getItem('sphere.monitor.motion') !== 'off' }
-    catch { return true }
-  })
-  const toggleMotion = () => setMotionEnabled(previous => {
-    try { window.localStorage.setItem('sphere.monitor.motion', previous ? 'off' : 'on') }
-    catch { /* optional browser preference */ }
-    return !previous
-  })
+  // One-screen operator Monitoring uses a stable, non-animated layout.
+  const motionEnabled = false
 
   return <section ref={overviewRef}
     className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491 is-three-panel is-six-chart-layout"
@@ -105,9 +98,6 @@ export default function RundeckMonitoringHistoryCore(props) {
           onInspectApp={props.onInspectApp}
           onSelectApp={props.onFocusAppHost}
           onOpenMetric={props.onOpenInfrastructureMetric}
-          onOpenHealthDetails={props.onOpenHealthDetails}
-          onToggleMotion={toggleMotion}
-          motionEnabled={motionEnabled}
           fleetMode
         />
       </section>
@@ -137,6 +127,7 @@ export default function RundeckMonitoringHistoryCore(props) {
     </div>
     <section className="rundeckTrendBandV13454 sphereMonitoringTrendBottom">
       <RundeckServerTrend
+        compactMonitoring
         ambientBraid={false}
         refreshToken={props.refreshToken}
         databaseEnabled={props.databaseEnabled}

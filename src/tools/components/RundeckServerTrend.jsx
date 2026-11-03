@@ -759,7 +759,7 @@ function SelectedTime({ selected, timeline, loading, error, onSelectJob, onOpenI
   </section>
 }
 
-export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, focusedHost = '', onFocusHost, sourceHosts = [], onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence, ambientBraid = false }) {
+export default function RundeckServerTrend({ refreshToken = '', databaseEnabled = false, compactMonitoring = false, focusedHost = '', onFocusHost, sourceHosts = [], onSelectJob, onTrendContext, onOpenInfrastructure, onOpenEvidence, ambientBraid = false }) {
   const saved = React.useMemo(() => {
     try { return JSON.parse(window.localStorage.getItem(TREND_STORAGE_KEY) || '{}') } catch { return {} }
   }, [])
@@ -1129,7 +1129,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         {[serverTrend1,serverTrend2].filter(trend => trend?.unit === '%').map((trend,index) =>
           <span key={trend.metric || index}>{metricLabel(trend.metric)} warn {trend.warning ?? '—'}% / crit {trend.critical ?? '—'}%</span>)} · thresholds unchanged
       </small>}
-      <button type="button" className="rundeckTrendReset"
+      {!compactMonitoring && <button type="button" className="rundeckTrendReset"
         title="Restore CPU, Memory, Network and Critical WP. Keep the selected time range and source observations."
         onClick={() => {
           setServerMetric1('cpu')
@@ -1142,11 +1142,11 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           setNetworkScaleMode1('full')
           setNetworkScaleMode2('full')
           setFourthNetworkScaleMode('full')
-        }}>Reset charts</button>
-      <button type="button" className="rundeckTrendYAxisToggle"
+        }}>Reset charts</button>}
+      {!compactMonitoring && <button type="button" className="rundeckTrendYAxisToggle"
         aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
         title="Applies only to percentage-based charts such as CPU and RAM, not Host Load or Critical WP. Focus changes the percent axis, not samples or SAP thresholds."
-      >Percent Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
+      >Percent Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>}
     </div>
     <div className="rundeckTrendSharedControls" role="toolbar" aria-label="Performance trend controls">
       <div className="rundeckTrendSharedGroup rundeckTrendControlRange" role="group" aria-label="Time range">
@@ -1260,8 +1260,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
         const isAvailability = Boolean(AVAILABILITY_CATEGORIES[panel.metric])
         const loadInfo = panel.index === 3 ? loadScale : technicalLoadScale(panel.trend?.items, mode)
         const networkInfo = panel.index === 3 ? networkScale : networkTrendScale(panel.trend?.items, mode)
-        const clippedLoad = isLoad && panel.loadAxis === 'typical' && loadInfo.axisMax != null
-        const clippedNetwork = isNetwork && panel.networkAxis === 'typical' && networkInfo.axisMax != null
+        // On Monitoring the full observed range is mandatory; only non-monitoring views can clip to Typical.
+        const clippedLoad = !compactMonitoring && isLoad && panel.loadAxis === 'typical' && loadInfo.axisMax != null
+        const clippedNetwork = !compactMonitoring && isNetwork && panel.networkAxis === 'typical' && networkInfo.axisMax != null
         const panelPeak = !panel.loading && !panel.error ? savedTrendPeak(panel.trend, mode, activeFocus) : null
         const allAppPeak = !panel.loading && !panel.error ? savedTrendPeak(panel.trend, mode) : null
         const peakKind = mode === 'avg' ? 'Highest Avg' : panelPeak?.exact ? 'Peak' : 'Peak bucket'
@@ -1282,7 +1283,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
                 <button type="button" aria-pressed={panel.direction === 'rx'} className={panel.direction === 'rx' ? 'is-active' : ''} onClick={() => panel.setDirection('rx')}>RX</button>
                 <button type="button" aria-pressed={panel.direction === 'tx'} className={panel.direction === 'tx' ? 'is-active' : ''} onClick={() => panel.setDirection('tx')}>TX</button>
               </div>}
-              {(isLoad || isNetwork) && <select className="rundeckTrendAxisSelect form-select form-select-sm"
+              {!compactMonitoring && (isLoad || isNetwork) && <select className="rundeckTrendAxisSelect form-select form-select-sm"
                 aria-label={'Chart ' + panel.index + ' Y axis scale'}
                 title="Typical changes the display axis only. Full restores the complete saved peak."
                 value={isNetwork ? panel.networkAxis : panel.loadAxis}

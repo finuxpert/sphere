@@ -19,7 +19,6 @@ async function readJson(path, signal) {
 export default function RundeckUnifiedAppInfrastructure({
   hosts = [], sourceQuality = null, refreshToken = '', selectedJob = null,
   focusRequest = null, onInspectApp = null, onSelectApp = null,
-  onOpenHealthDetails = null, onToggleMotion = null, motionEnabled = true,
   operationalChecks = null, fleetMode = false,
 }) {
   const [preferredHost, setPreferredHost] = React.useState(() => {
@@ -211,14 +210,8 @@ export default function RundeckUnifiedAppInfrastructure({
       <h3 title={'SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry. ' +
         (selectedVerified ? 'Verified APP snapshot · ' : 'APP sample ' + selectedFreshness + ' · ') +
         (selectedHost?.collected_at ? formatWib(selectedHost.collected_at, true) + ' WIB' : 'time unverified')}>
-        <SphereIcon name="server" /> SAP APP Landscape</h3>
-      {fleetMode && <div className="sphereAppHeaderActions">
-        <button type="button" className="sphereAppHealthAction" onClick={onOpenHealthDetails}>Health Details</button>
-        <button type="button" className="sphereAppMotionAction" aria-pressed={motionEnabled}
-          aria-label={motionEnabled ? 'Disable decorative motion' : 'Enable decorative motion'}
-          title="Animation setting does not affect saved monitoring data"
-          onClick={onToggleMotion}>Motion {motionEnabled ? 'On' : 'Off'}</button>
-      </div>}
+        {!fleetMode && <SphereIcon name="server" />} SAP APP Landscape</h3>
+
     </header>
     <div className="rundeckAppHexMain rundeckAppThreePanels">
       <section className="rundeckAppMotionPanel" aria-label="APP server selection">
