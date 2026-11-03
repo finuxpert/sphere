@@ -1146,7 +1146,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <button type="button" className="rundeckTrendYAxisToggle"
         aria-pressed={scaleMode === 'focus'} onClick={() => setScaleMode(value => value === 'full' ? 'focus' : 'full')}
         title="Applies only to percentage-based charts such as CPU and RAM, not Host Load or Critical WP. Focus changes the percent axis, not samples or SAP thresholds."
-      >CPU/RAM Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
+      >Percent Axis · {scaleMode === 'focus' ? 'Focus' : '0–100%'}</button>
     </div>
     <div className="rundeckTrendSharedControls" role="toolbar" aria-label="Performance trend controls">
       <div className="rundeckTrendSharedGroup rundeckTrendControlRange" role="group" aria-label="Time range">

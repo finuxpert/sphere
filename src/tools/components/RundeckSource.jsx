@@ -6,7 +6,7 @@ import RundeckPerformanceIncident from './RundeckPerformanceIncident.jsx'
 import RundeckSystemData from './RundeckSystemData.jsx'
 import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
-import { numberText, shortHost } from './sapUiFormat.js'
+import { formatWib, numberText, shortHost } from './sapUiFormat.js'
 import { coalesceAsyncRefresh } from './rundeckRefreshCoordinator.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
 import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage } from './rundeckDataQuality.js'
@@ -734,6 +734,7 @@ export default function RundeckSource({ onCollection }) {
   ].filter(Boolean).join(' · ')
   const incidentStart = incidentSummary?.signal_active_since || incidentSummary?.detected_since || ''
   const latestCollectionAt = latest?.finished_at || latest?.collection_time_wib || ''
+  const appCount = latest?.received_hosts?.length || operationalHosts.length || 0
   const quality = assessRundeckDataQuality({
     latest, health, platform, availability: availabilitySnapshot,
     refreshFailed: Boolean(error) || metaRefreshFailed || !collectionAligned,
@@ -782,7 +783,12 @@ export default function RundeckSource({ onCollection }) {
   return <section ref={panelRef} className="rundeckPanel" aria-label="SAP performance monitoring" aria-live="polite">
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
-        <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">{headerTitle}</span></h2>
+        <h2 aria-label="Last saved performance collection"
+          title={'Performance collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') +
+            ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') +
+            ' APP · ' + (latestCollectionAt ? formatWib(latestCollectionAt, true) + ' WIB' : 'time unknown')}>
+          <SphereIcon name="activity" /><span className="rundeckDashboardTitle">{headerTitle}</span>
+        </h2>
       </div>
       <div className="rundeckActions">
         <div className="rundeckStateCluster">

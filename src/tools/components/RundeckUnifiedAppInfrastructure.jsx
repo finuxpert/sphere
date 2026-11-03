@@ -208,7 +208,10 @@ export default function RundeckUnifiedAppInfrastructure({
 
   return <section className="rundeckUnifiedAppInfra rundeckAppHexWorkspace" aria-label="SAP App Servers and Infrastructure" data-layout="landscape-operations">
     <header className="rundeckUnifiedAppInfraHead">
-      <h3 title="SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry."><SphereIcon name="server" /> SAP APP Landscape</h3>
+      <h3 title={'SAP uses CPU, RAM, I/O Wait and APP Critical WP; filesystem is separate Infrastructure telemetry. ' +
+        (selectedVerified ? 'Verified APP snapshot · ' : 'APP sample ' + selectedFreshness + ' · ') +
+        (selectedHost?.collected_at ? formatWib(selectedHost.collected_at, true) + ' WIB' : 'time unverified')}>
+        <SphereIcon name="server" /> SAP APP Landscape</h3>
       {fleetMode && <div className="sphereAppHeaderActions">
         <button type="button" className="sphereAppHealthAction" onClick={onOpenHealthDetails}>Health Details</button>
         <button type="button" className="sphereAppMotionAction" aria-pressed={motionEnabled}
