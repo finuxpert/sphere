@@ -181,3 +181,11 @@ Scope: **DEV repository refactoring only**, starting from SHA 944da649fd33ab6c7b
 - Chart's series ranking, drop-gap segmentation, thresholds, geometry, class names, labels, and React hooks were transferred unchanged; no API, data contract, CSS, SAP signal state, storage logic, database or PDF change.
 - Verified source was mechanically reconstructible **byte-identically** by reversing the extraction and import changes. Added numeric/timezone and chart invariants to `qa:integrity`; Chromium/Monitoring regression and backend parity CI are still mandatory before merge.
 - Source sizes and bundling must be measured from GitHub/Vite results. Extraction is not proof of runtime speedup or pixel-identical rendering.
+
+## Server trend chart isolation — phase 8 (GitHub maintenance PR)
+
+- DEV baseline: `c52ef60244fd07a158c09a3ef3384913c6f666b9`; protected production branch `sphere-prod` untouched. Repository-only refactor, never a deployment or DB operation.
+- Moved the complete `TrendChart` ECharts component into `RundeckServerTrendChart.jsx`, preserving all React hooks, option-building, tooltip escaping, null-gap segmentation, click drilldown, resizing, focus, saved peak annotation and time-axis behavior by exact source transfer.
+- Shared labels, bucket list and CSS token palette in `rundeckServerTrendShared.js`; missing observation rules in `rundeckServerTrendGaps.js`. Parent retains saved trend requests, monitoring controls, modal and optional canvas effects. No CSS, API/SQL, backend, monthly PDF or schema changes.
+- Dedicated tests check synthetic collection gaps vs explicit availability gaps, retention boundaries, interval precedence, and chart source wiring. Existing source-assertion tests point to the new owning modules, not back to the former parent file.
+- A smaller component file does **not** itself prove faster runtime or smaller bundle; keep CI gate and compare baseline before performance claims.
