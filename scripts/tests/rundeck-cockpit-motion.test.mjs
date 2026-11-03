@@ -157,8 +157,9 @@ test('DEV motion restoration keeps source data correct and animation interactive
   const status = source('RundeckSystemHealth.jsx')
   const css = source('RundeckSphereMotion.css')
 
-  assert.match(app, /const attentionCount = visibleStates\.filter\(value => value === 'ATTENTION'\)/)
-  assert.match(app, /const warningCount = visibleStates\.filter\(value => value === 'WARNING'\)/)
+  assert.match(app, /const state = appSignalState\(host, verified\)/)
+  assert.match(app, /className=\{'rundeckAppHexSelector is-sap-' \+ state\.toLowerCase\(\)/)
+  assert.doesNotMatch(app, /WP Issues <strong>/)
   assert.match(app, /Verified APP snapshot ·/)
   assert.match(app, /if \(!expanded\) phase \+= delta \* \.22/)
   assert.match(app, /if \(!expanded \|\| moving\) raf = window\.requestAnimationFrame\(tick\)/)
