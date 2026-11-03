@@ -3,6 +3,8 @@ import RundeckUnifiedAppInfrastructure from './RundeckUnifiedAppInfrastructure.j
 import RundeckServerTrend from './RundeckServerTrend.jsx'
 import RundeckWorkloadHealth from './RundeckWorkloadHealth.jsx'
 import RundeckStorageSummary from './RundeckStorageSummary.jsx'
+import RundeckDiskIoTrend from './RundeckDiskIoTrend.jsx'
+import RundeckNetworkMiniTrend from './RundeckNetworkMiniTrend.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   const overviewRef = React.useRef(null)
@@ -32,7 +34,7 @@ export default function RundeckMonitoringHistoryCore(props) {
     // Fit only when all visible source-backed overview sections have room.
     const detailsExpanded = Boolean(overview.querySelector('.rundeckAppEvalDots'))
     // Three-panel Monitoring can fit a shorter viewport than legacy five-lane screens.
-    const requiredRoom = overview.classList.contains('is-three-panel') ? 600 : 700
+    const requiredRoom = overview.classList.contains('is-six-chart-layout') ? 660 : overview.classList.contains('is-three-panel') ? 600 : 700
     const fit = !detailsExpanded && window.innerWidth >= 1280 && window.innerHeight >= 760 && available >= requiredRoom
     // A sixth UNKNOWN/UNVERIFIED membership lane must never be squeezed into
     // the five-row desktop allocation. Use natural page flow instead.
@@ -89,9 +91,10 @@ export default function RundeckMonitoringHistoryCore(props) {
   })
 
   return <section ref={overviewRef}
-    className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491 is-three-panel"
+    className="rundeckMonitoring rundeckMonitoringV1234 rundeckMonitoringV1235 rundeckCockpitV13456 rundeckCockpitV13490 rundeckCockpitV13491 is-three-panel is-six-chart-layout"
     data-motion={motionEnabled ? 'on' : 'off'}>
     <div className="sphereMonitoringThreeUp sphereOverviewBottomRow row g-2" aria-label="SAP monitoring overview">
+      <div className="sphereMonitoringLeftStack" aria-label="APP and storage overview">
       <section className="sphereMonitoringApp rundeckTopBandV13454 is-unified-app-infra col-12 col-xl-4" aria-label="SAP APP Landscape">
         <RundeckUnifiedAppInfrastructure
           hosts={props.sourceHosts || []}
@@ -108,7 +111,9 @@ export default function RundeckMonitoringHistoryCore(props) {
           fleetMode
         />
       </section>
-      <section className="rundeckJobsProgramsOverview col-12 col-xl-4" aria-label="Job & Program Evaluation">
+      <RundeckStorageSummary compactOnly refreshToken={props.refreshToken} onOpenDetails={props.onOpenHealthDetails} />
+      </div>
+      <section className="rundeckJobsProgramsOverview col-12" aria-label="Job & Program Evaluation">
         <div className="rundeckJobsProgramsHealthSide">
           <RundeckWorkloadHealth
             refreshToken={props.refreshToken}
@@ -121,7 +126,14 @@ export default function RundeckMonitoringHistoryCore(props) {
           />
         </div>
       </section>
-      <RundeckStorageSummary refreshToken={props.refreshToken} onOpenDetails={props.onOpenHealthDetails} />
+      <div className="sphereMonitoringRightStack" aria-label="Infrastructure network and disk activity">
+        <section className="sphereMonitoringMiniChart" aria-label="Network Throughput">
+          <RundeckNetworkMiniTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
+        </section>
+        <section className="sphereMonitoringMiniChart" aria-label="Disk I/O Activity">
+          <RundeckDiskIoTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
+        </section>
+      </div>
     </div>
     <section className="rundeckTrendBandV13454 sphereMonitoringTrendBottom">
       <RundeckServerTrend

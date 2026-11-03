@@ -1,0 +1,252 @@
+/* SPHERE DEV 2026-11-03 — six observed charts, 25 / 50 / 25 workspace.
+   Scope all overrides to this layout so legacy report and analysis modes remain unchanged. */
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp.sphereOverviewBottomRow.row {
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1fr)!important;
+ gap:8px!important;align-items:stretch!important;
+ height:auto!important;min-height:415px!important;margin:0!important;
+ width:100%!important;padding:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > :is(.sphereMonitoringLeftStack,.rundeckJobsProgramsOverview,.sphereMonitoringRightStack) {
+ min-width:0!important;width:100%!important;max-width:100%!important;
+ min-height:0!important;height:100%!important;
+ align-self:stretch!important;margin:0!important;box-sizing:border-box!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .sphereMonitoringLeftStack {
+ grid-column:1!important;grid-row:1!important;display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1.25fr) minmax(0,1fr)!important;
+ gap:8px!important;overflow:hidden!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .rundeckJobsProgramsOverview {
+ grid-column:2!important;grid-row:1!important;
+ display:flex!important;flex-direction:column!important;
+ min-height:0!important;padding:10px!important;
+ background:var(--cockpit-surface,#1b2835)!important;
+ border:1px solid var(--cockpit-outline,#304150)!important;
+ border-radius:8px!important;overflow:hidden!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .sphereMonitoringRightStack{
+ grid-column:3!important;grid-row:1!important;display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+ gap:8px!important;overflow:hidden!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack > :is(.sphereMonitoringApp,.sphereStorageSummary),
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringRightStack > .sphereMonitoringMiniChart {
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ min-width:0!important;min-height:0!important;height:100%!important;
+ width:100%!important;max-width:100%!important;
+ margin:0!important;padding:8px!important;
+ background:var(--cockpit-surface,#1b2835)!important;
+ border:1px solid var(--cockpit-outline,#304150)!important;
+ border-radius:8px!important;overflow:hidden!important;
+ box-sizing:border-box!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfra {
+ height:100%!important;min-height:0!important;min-width:0!important;
+ display:flex!important;flex-direction:column!important;gap:3px!important;
+ padding:0!important;margin:0!important;background:transparent!important;border:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckUnifiedAppInfraHead{
+ min-height:24px!important;gap:3px!important;margin:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckAppHexMain{
+ flex:1 1 auto!important;min-height:0!important;height:auto!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckAppMotionPanel{
+ height:100%!important;min-height:0!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack
+.rundeckAppHexSelectors.rundeckUnifiedAppCards.is-honeycomb{
+ height:100%!important;min-height:0!important;gap:3px!important;
+ grid-template-rows:repeat(5,minmax(0,1fr))!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack
+.rundeckAppHexSelectors.rundeckUnifiedAppCards > .rundeckAppHexSelector{
+ min-height:0!important;height:100%!important;max-height:none!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckAppHexShape{
+ grid-template-columns:34px minmax(62px,.75fr) minmax(0,1.45fr)!important;
+ gap:0 4px!important;padding:2px 4px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckAppHexShape strong{
+ font-size:10.5px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckAppHexShape :is(small,em){
+ font-size:9.2px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckFleetMeter{
+ font-size:9px!important;gap:2px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .rundeckFleetMeterValue{
+ min-width:32px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageSummary{
+ gap:3px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageSummaryHead{
+ flex:0 0 auto!important;min-height:25px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageRows{
+ flex:1 1 auto!important;display:grid!important;
+ grid-template-rows:repeat(5,minmax(0,1fr))!important;
+ gap:2px!important;min-height:0!important;align-content:stretch!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageRow{
+ min-height:0!important;height:100%!important;padding:1px 3px!important;
+ grid-template-columns:minmax(66px,1.25fr) minmax(25px,1fr) 42px!important;gap:3px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageLabel strong{
+ font-size:9.5px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageLabel small{
+ font-size:8.7px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringLeftStack .sphereStorageDetails{
+ min-height:24px!important;padding:2px 7px!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringRightStack .sphereMonitoringMiniChart
+:is(.sphereNetworkMiniTrend,.sphereDiskIoTrend){
+ display:flex!important;flex:1 1 auto!important;flex-direction:column!important;
+ min-height:0!important;min-width:0!important;height:100%!important;
+ gap:4px!important;padding:0!important;margin:0!important;border:0!important;
+}
+.sphereNetworkMiniHead,.sphereNetworkMiniActions,.sphereNetworkMiniMeta,.sphereNetworkMiniLegend{
+ display:flex;align-items:center;gap:4px;min-width:0;
+}
+.sphereNetworkMiniHead{justify-content:space-between;flex:0 0 auto;min-height:24px}
+.sphereNetworkMiniHead strong{font-size:11px;font-weight:650;white-space:nowrap}
+.sphereNetworkMiniActions{margin-left:auto}
+.sphereNetworkMiniActions [role="group"]{display:flex;gap:2px}
+.sphereNetworkMiniActions button,.sphereNetworkMiniActions select,.sphereNetworkMiniMeta select{
+ background:transparent;color:var(--sphere-text-secondary,#aab7c5);
+ border:1px solid var(--cockpit-outline,#304150);border-radius:4px;
+ font-size:9px;padding:2px 3px;min-width:0;cursor:pointer;
+}
+.sphereNetworkMiniActions button[aria-pressed="true"]{
+ border-color:var(--sphere-accent,#67a9e8);color:var(--sphere-accent,#67a9e8);
+}
+.sphereNetworkMiniMeta{
+ justify-content:space-between;flex:0 0 auto;min-height:20px;
+ font-size:9px;color:var(--sphere-text-secondary,#aab7c5);
+}
+.sphereNetworkMiniMeta select{max-width:84px}
+.sphereNetworkMiniLegend,.sphereDiskIoLegend{white-space:nowrap;gap:3px}
+.sphereNetworkMiniLegend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.sphereNetworkMiniLegend i.rx{background:#67a9e8}
+.sphereNetworkMiniLegend i.tx{background:#67c8a0}
+.sphereNetworkMiniTrend svg{
+ display:block;width:100%;height:100%;min-height:72px;max-height:none;flex:1 1 auto;
+}
+.sphereNetworkMiniTrend svg text{font-size:9px}
+.sphereNetworkMiniFooter,.sphereDiskIoFooter{
+ display:block;flex:0 0 auto;font-size:9px!important;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ color:var(--sphere-text-secondary,#aab7c5);
+}
+.sphereNetworkMiniEmpty{
+ display:grid;place-items:center;flex:1 1 auto;min-height:45px;
+ font-size:10px;text-align:center;color:var(--sphere-text-secondary,#aab7c5);
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringRightStack .sphereDiskIoHead,
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringRightStack .sphereDiskIoMeta{
+ min-height:20px!important;flex:0 0 auto!important;
+}
+.appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+.rundeckMonitoring.is-six-chart-layout .sphereMonitoringRightStack .sphereDiskIoTrend svg{
+ flex:1 1 auto!important;width:100%!important;height:100%!important;
+ min-height:72px!important;max-height:none!important;
+}
+@media(min-width:1280px) and (min-height:760px){
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout[data-viewport-fit="true"]{
+  grid-template-rows:minmax(355px,1.4fr) minmax(225px,.9fr)!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout[data-viewport-fit="true"] .sphereMonitoringThreeUp{
+  height:100%!important;min-height:0!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout[data-viewport-fit="true"] .sphereMonitoringThreeUp > :is(.sphereMonitoringLeftStack,.rundeckJobsProgramsOverview,.sphereMonitoringRightStack){
+  height:100%!important;min-height:0!important;
+ }
+}
+@media(max-width:1279px){
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp.sphereOverviewBottomRow.row{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:auto auto!important;min-height:0!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .sphereMonitoringLeftStack{
+  grid-column:1!important;grid-row:1!important;min-height:410px!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .rundeckJobsProgramsOverview{
+  grid-column:2!important;grid-row:1!important;min-height:410px!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .sphereMonitoringRightStack{
+  grid-column:1/-1!important;grid-row:2!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:minmax(190px,auto)!important;min-height:190px!important;
+ }
+}
+@media(max-width:899px){
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp.sphereOverviewBottomRow.row{
+  grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > :is(.sphereMonitoringLeftStack,.rundeckJobsProgramsOverview,.sphereMonitoringRightStack){
+  grid-column:1!important;grid-row:auto!important;
+  min-height:0!important;height:auto!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .sphereMonitoringLeftStack{
+  grid-template-rows:minmax(245px,auto) minmax(170px,auto)!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .sphereMonitoringRightStack{
+  grid-template-columns:minmax(0,1fr)!important;grid-template-rows:repeat(2,minmax(185px,auto))!important;
+ }
+ .appShell.isTool:has(.rundeckPanel) .spherePerformanceMain
+ .rundeckMonitoring.is-six-chart-layout .sphereMonitoringThreeUp > .rundeckJobsProgramsOverview{
+  min-height:390px!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .rundeckMonitoring.is-six-chart-layout .sphereNetworkMiniTrend svg *{
+  transition:none!important;animation:none!important;
+ }
+}

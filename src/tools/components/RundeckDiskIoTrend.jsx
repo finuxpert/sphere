@@ -11,8 +11,12 @@ async function load(url,signal){
   return result.json()
 }
 
-export default function RundeckDiskIoTrend({refreshToken=''}) {
+export default function RundeckDiskIoTrend({refreshToken='',focusedHost=''}) {
   const [app,setApp]=React.useState('APP1')
+  React.useEffect(()=>{
+    const label=shortHost(focusedHost)
+    if(/^APP[1-5]$/.test(label))setApp(label)
+  },[focusedHost])
   const [range,setRange]=React.useState('6h')
   const [selectedDevice,setSelectedDevice]=React.useState('')
   const [data,setData]=React.useState({scope:'',rows:[],error:'',loading:true})

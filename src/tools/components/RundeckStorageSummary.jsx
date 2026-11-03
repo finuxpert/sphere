@@ -23,7 +23,7 @@ async function read(url, signal) {
   if (!response.ok) throw new Error('Storage source unavailable (' + response.status + ')')
   return response.json()
 }
-export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails }) {
+export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails, compactOnly = false }) {
   const [selectedMount, setSelectedMount] = React.useState('/')
   const [growthRange, setGrowthRange] = React.useState('7d')
   const [storageView, setStorageView] = React.useState('growth')
@@ -62,16 +62,16 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
     const highest=readings[0]||null
     return {...item, highest, status:highest ? filesystemResourceState(highest.value) : 'UNKNOWN'}
   })
-  return <section className="sphereStorageSummary col-12 col-xl-4" aria-label="Storage Summary">
+  return <section className={"sphereStorageSummary col-12" + (compactOnly ? " is-compact-summary" : " col-xl-4")} aria-label="Storage Summary">
     <header className="sphereStorageSummaryHead">
       <h3>Storage Summary</h3>
       <button type="button" onClick={onOpenDetails} className="btn btn-sm sphereStorageDetails">View details</button>
     </header>
     <div className="sphereStorageRows">
       {values.map(item=><button type="button" key={item.mount}
-        onClick={() => setSelectedMount(item.mount)}
-        aria-pressed={selectedMount === item.mount}
-        className={'sphereStorageRow' + (selectedMount === item.mount ? ' is-selected' : '')}
+        onClick={() => { setSelectedMount(item.mount); if (compactOnly) onOpenDetails?.() }}
+        aria-pressed={compactOnly ? undefined : selectedMount === item.mount}
+        className={'sphereStorageRow' + (!compactOnly && selectedMount === item.mount ? ' is-selected' : '')}
         title={item.highest
           ? item.highest.host+' · '+item.highest.mount+' · '+item.highest.value+'% · '+formatWib(item.highest.sample,true)+' WIB'
           : 'No fresh, matching filesystem collection'}>
@@ -86,7 +86,7 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
         <strong className={'sphereStoragePercent is-'+item.status.toLowerCase()}>{item.highest ? item.highest.value.toFixed(1)+'%' : '—'}</strong>
       </button>)}
     </div>
-    <div className="sphereStorageAnalysis" aria-label="Storage activity details">
+    {!compactOnly && <div className="sphereStorageAnalysis" aria-label="Storage activity details">
       <div role="tablist" aria-label="Storage history chart" className="sphereStorageChartTabs">
         <button id="sphereStorageGrowthTab" type="button" role="tab"
           aria-selected={storageView === 'growth'} aria-controls="sphereStorageChartPanel"
@@ -113,7 +113,7 @@ export default function RundeckStorageSummary({ refreshToken = '', onOpenDetails
           </div> :
           <RundeckDiskIoTrend refreshToken={refreshToken} />}
       </div>
-    </div>
+    </div>}
     {snapshot.error && <small className="sphereStorageError" role="status">{snapshot.error}</small>}
     {snapshot.loading && <small className="sphereStorageError" role="status">Checking storage…</small>}
   </section>
