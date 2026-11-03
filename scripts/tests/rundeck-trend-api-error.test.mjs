@@ -30,7 +30,7 @@ test('Network selection and RX/TX controls belong to each independent chart head
   assert.ok(chart >= 0 && chart < metric && metric < direction)
   assert.match(component, /onChange=\{event => panel.setMetric\(event.target.value\)\}/)
   assert.match(component, /onClick=\{\(\) => panel.setDirection\('tx'\)\}/)
-  assert.match(component, /<option value="typical">Y: Typical<\/option>/)
+  assert.match(component, /<option value="typical">Scale: Typical<\/option>/)
   assert.match(styles, /\.rundeckNetworkDirection button/)
 })
 test('Custom picker uses modal with focus trap and applied-range semantics', () => {

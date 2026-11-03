@@ -27,7 +27,7 @@ test('Network scale, freshness and independent gap keep original collection evid
   const src = read('RundeckServerTrend.jsx')
   assert.match(src, /networkTrendScale\(technicalTrend\?\.items, mode\)/)
   assert.match(src, /networkScaleMode === 'typical' \? 'typical' : 'full'/)
-  assert.match(src, /<option value="typical">Y: Typical<\/option>/)
+  assert.match(src, /<option value="typical">Scale: Typical<\/option>/)
   assert.match(src, /Last stored AOP Infrastructure Network observation/)
   assert.doesNotMatch(src, /InfrastructureGapBand/)
   assert.match(src, /gapPoints.map/)
