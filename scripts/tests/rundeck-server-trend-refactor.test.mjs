@@ -7,7 +7,7 @@ import { BUCKETS, metricLabel, palette } from '../../src/tools/components/rundec
 const stamp = minutes => new Date(Date.UTC(2026, 9, 13, 0, minutes)).toISOString()
 
 test('APP performance gaps preserve interval, missing buckets and no fabricated zero', () => {
-  const trend = { metric: 'cpu', bucket: '10m', since: stamp(0), window_end: stamp(61),
+  const trend = { metric: 'cpu', bucket: '10m', since: stamp(0), window_end: stamp(60),
     items: [{ bucket: stamp(0), avg_value: 0 }, { bucket: stamp(10), avg_value: null }, { bucket: stamp(40), avg_value: 12 }] }
   const before = structuredClone(trend)
   const value = trendGaps(trend)
