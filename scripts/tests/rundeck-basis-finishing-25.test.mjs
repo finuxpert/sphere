@@ -89,11 +89,13 @@ test('SAP Checks separates active findings from Unknown, freshness and retained 
 
 test('Job Performance preserves host WP and current/retained trace distinctions, raw missingness and focus', () => {
   const job = source('RundeckJobHistory.jsx')
+  const jobData = source('rundeckJobHistoryData.js')
   const style = source('RundeckInvestigationFinishingV135.css')
   assert.match(job, /Selected Period · Saved Observations/)
   assert.match(job, /Workload Performance Summary/)
   assert.match(job, /I\/O not captured/)
-  assert.match(job, /details\.wp \? 1 : null/)
+  assert.match(job, /from '\.\/rundeckJobHistoryData\.js'/)
+  assert.match(jobData, /details\.wp \? 1 : null/)
   assert.match(job, /max: Math\.max\(100, Math\.ceil/)
   assert.match(job, /connectNulls: false/)
   assert.match(job, /snapshotErrorCount/)
