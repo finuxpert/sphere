@@ -53,12 +53,13 @@ test('short observation windows keep a bounded minimum visible duration', () => 
 
 test('historical axis fitting is explicit, accessible and leaves source checks intact', () => {
   const s = source()
+  const chart = readFileSync(new URL('../../src/tools/components/RundeckServerTrendChart.jsx', import.meta.url), 'utf8')
   assert.match(s, /const \[fitObserved, setFitObserved\] = React\.useState\(false\)/)
   assert.match(s, /aria-label="Historical display window"/)
   assert.match(s, /aria-pressed=\{Boolean\(displayWindow\)\}/)
-  assert.match(s, /displayWindow\?\.from \?\? \(Number\.isFinite\(rangeStart\)/)
-  assert.match(s, /displayWindow\?\.to \?\? rangeEnd/)
+  assert.match(chart, /displayWindow\?\.from \?\? \(Number\.isFinite\(rangeStart\)/)
+  assert.match(chart, /displayWindow\?\.to \?\? rangeEnd/)
   assert.match(s, /earlier intervals remain unknown/)
-  assert.match(s, /markLine: index === 0 && visibleThresholds\.length/)
-  assert.match(s, /markArea: index === 0 && gaps\.length/)
+  assert.match(chart, /markLine: index === 0 && visibleThresholds\.length/)
+  assert.match(chart, /markArea: index === 0 && gaps\.length/)
 })
