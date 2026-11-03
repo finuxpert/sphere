@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
@@ -83,7 +84,7 @@ test('Operational Checks connects five investigation destinations with paired hi
 })
 
 test('historical Trend details are not mislabeled as current server state',()=>{
-  const trend=read('RundeckServerTrend.jsx')
+  const trend=trendFeatureSource(read)
   assert.match(trend,/HISTORICAL OBSERVATION/)
   assert.match(trend,/APP Snapshot/)
   assert.match(trend,/Peak observed/)
@@ -182,7 +183,7 @@ test('operational shortcuts disclose exact evidence and bounded collector scope'
 
 test('tab switching retains Current/Review state and labels technical scope',()=>{
   const workspace=read('RundeckJobsProgramsWorkspace.jsx')
-  const trend=read('RundeckServerTrend.jsx')
+  const trend=trendFeatureSource(read)
   const wrapper=read('RundeckMonitoringHistory.jsx')
   assert.doesNotMatch(workspace,/key=\{mode\}/)
   assert.match(workspace,/rundeckCurrentPersistentPane/)
@@ -237,7 +238,7 @@ test('minimal four-area overview removes duplicate cards and preserves investiga
   const core = read('RundeckMonitoringHistoryCore.jsx')
   const app = read('RundeckUnifiedAppInfrastructure.jsx')
   const health = read('RundeckWorkloadHealth.jsx')
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const source = read('RundeckSource.jsx')
   const css = read('RundeckLandscapeOperations.css')
   assert.doesNotMatch(core, /RundeckOperationsSummary|onSummaryChange=/)
@@ -267,7 +268,7 @@ test('final four-area finishing uses content-height APP rail and keeps all SAP i
   const css = read('RundeckLandscapeOperations.css')
   const core = read('RundeckMonitoringHistoryCore.jsx')
   const app = read('RundeckUnifiedAppInfrastructure.jsx')
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   const health = read('RundeckWorkloadHealth.jsx')
   const final = css.slice(css.indexOf('v1.40.1 — layout finishing'))
   assert.ok(final.length > 1000)
@@ -292,7 +293,7 @@ test('final four-area finishing uses content-height APP rail and keeps all SAP i
 
 test('concise overview preserves data provenance, network outliers and RCA actions', () => {
   const nav = read('RundeckPerformanceNavigation.jsx')
-  const trends = read('RundeckServerTrend.jsx')
+  const trends = trendFeatureSource(read)
   const rows = read('RundeckWorkloadAppLanes.jsx')
   const app = read('RundeckUnifiedAppInfrastructure.jsx')
   const css = read('RundeckLandscapeOperations.css')
@@ -355,7 +356,7 @@ test('LaMa and OpManager-inspired cockpit fills measured desktop viewport withou
   const core = read('RundeckMonitoringHistoryCore.jsx')
   const shell = read('RundeckMonitoringHistory.jsx')
   const app = read('RundeckUnifiedAppInfrastructure.jsx')
-  const trends = read('RundeckServerTrend.jsx')
+  const trends = trendFeatureSource(read)
   const health = read('RundeckWorkloadHealth.jsx')
   const layout = read('RundeckProfessionalCockpitV141.css')
   assert.match(shell, /import '.\/RundeckProfessionalCockpitV141\.css'/)
