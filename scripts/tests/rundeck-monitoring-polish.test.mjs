@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { miniChartAxisUpper } from '../../src/tools/components/rundeckResourceMiniCharts.js'
 
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
@@ -266,4 +267,24 @@ test('Monitoring heading, KPI and trend controls follow the final compact operat
   assert.match(trends,/const clippedNetwork = !compactMonitoring/)
   assert.match(css,/\.rundeckUnifiedAppInfraHead h3,\.sphereStorageSummaryHead h3/)
   assert.match(css,/font-size:12px!important;font-weight:700!important/)
+})
+
+test('shared I/O window and adaptive axis keep real low-percent peaks readable', () => {
+  const core = read('RundeckMonitoringHistoryCore.jsx')
+  const fleet = read('RundeckFleetMiniChart.jsx')
+  const iowait = read('RundeckIoWaitMiniTrend.jsx')
+  const disk = read('RundeckDiskIoTrend.jsx')
+  const health = read('RundeckWorkloadHealth.jsx')
+  assert.match(core, /\[ioRange, setIoRange\] = React\.useState\('24h'\)/)
+  assert.equal((core.match(/range=\{ioRange\} onRange=\{setIoRange\}/g) || []).length, 2)
+  assert.doesNotMatch(iowait, /const \[range,setRange\]/)
+  assert.doesNotMatch(disk, /const \[range,setRange\]/)
+  assert.match(fleet, /miniChartAxisUpper\(highest\?\.value,unit\)/)
+  assert.match(health, /CPU Consumers · Avg 24h/)
+  assert.equal(miniChartAxisUpper(0.4, '%'), 0.5)
+  assert.equal(miniChartAxisUpper(0.08, '%'), 0.1)
+  assert.equal(miniChartAxisUpper(0, '%'), 0.1)
+  assert.equal(miniChartAxisUpper(12.5, '%'), 20)
+  assert.equal(miniChartAxisUpper(5.2, 'MB\/s'), 6)
+  assert.equal(miniChartAxisUpper(null, 'MB\/s'), 0.5)
 })
