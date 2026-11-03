@@ -109,7 +109,13 @@ try{
             document.querySelectorAll('.rundeckWorkloadDot').length===60
           const selected=$('.rundeckAppHexSelector.is-active')
           const background=getComputedStyle(selected).backgroundColor
-          const severity=getComputedStyle(selected).boxShadow.includes('inset')
+          const selectedStyle=getComputedStyle(selected)
+          const attentionStyle=getComputedStyle($('.rundeckAppHexSelector.is-sap-attention'))
+          // A neutral selected card keeps its real severity border, while the
+          // selection is indicated independently by an outline.
+          const severity=selectedStyle.borderLeftWidth!=='0px'&&
+            selectedStyle.borderLeftColor!==attentionStyle.borderLeftColor&&
+            selectedStyle.outlineStyle!=='none'
           const valid=columns&&order&&after&&inside&&all&&severity&&exclusive
           document.body.dataset.qa=valid?'PASS':'FAIL'
           document.body.dataset.metrics=[columns,order,after,inside,all,severity,exclusive,Math.round(a.width),Math.round(b.width),Math.round(c.width),Math.round(orb.height),Math.round(top5.height),Math.round(plot?.height||0),background].join(',')
