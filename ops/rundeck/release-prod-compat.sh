@@ -46,10 +46,21 @@ rollback() {
     echo 'ROLLBACK=START'
     ln -s "$PREVIOUS" "$API/.rollback-$$" && mv -Tf "$API/.rollback-$$" "$CURRENT"
     systemctl restart "$SERVICE"
-    if [[ "$(readlink -f "$CURRENT")" == "$PREVIOUS" ]] && systemctl is-active --quiet "$SERVICE"; then
-      echo 'ROLLBACK=RESTORED_PREVIOUS_PROD_API'
+    ROLLBACK_READY=0
+    for attempt in $(seq 1 30); do
+      if systemctl is-active --quiet "$SERVICE" &&
+         curl --noproxy '*' -fsS --connect-timeout 1 --max-time 2 \
+           -o /dev/null http://127.0.0.1:8092/openapi.json 2>/dev/null; then
+        ROLLBACK_READY=1
+        break
+      fi
+      sleep 1
+    done
+    if [[ "$(readlink -f "$CURRENT")" == "$PREVIOUS" && "$ROLLBACK_READY" == 1 ]]; then
+      echo 'ROLLBACK=RESTORED_PREVIOUS_PROD_API HTTP_READY=PASS'
     else
       echo 'ROLLBACK=FAILED_MANUAL_INTERVENTION_REQUIRED' >&2
+      systemctl status "$SERVICE" --no-pager -l || true
     fi
   fi
   [[ -z "$STAGE" || ! -d "$STAGE" ]] || rm -rf -- "$STAGE"
@@ -68,8 +79,29 @@ STAGE=''
 ln -s "$RELEASE" "$API/.next-$$"
 mv -Tf "$API/.next-$$" "$CURRENT"
 CUTOVER=1
+STARTED_AT="$(date -u '+%Y-%m-%d %H:%M:%S')"
 systemctl restart "$SERVICE"
-systemctl is-active --quiet "$SERVICE"
+
+# systemd Type=simple may report active before Uvicorn binds its HTTP socket.
+# Retry the actual listener; distinguish slow startup from a Python import crash.
+echo '=== WAIT PROD API HTTP READINESS ==='
+API_READY=0
+for attempt in $(seq 1 45); do
+  if systemctl is-active --quiet "$SERVICE" &&
+     curl --noproxy '*' -fsS --connect-timeout 1 --max-time 2 \
+       -o /dev/null http://127.0.0.1:8092/openapi.json 2>/dev/null; then
+    API_READY=1
+    echo "API_HTTP_READY=PASS ATTEMPT=$attempt"
+    break
+  fi
+  sleep 1
+done
+if [[ "$API_READY" != 1 ]]; then
+  echo 'API_HTTP_READY=FAIL; showing startup diagnostics before rollback'
+  systemctl show "$SERVICE" -p ActiveState -p SubState -p MainPID -p NRestarts || true
+  journalctl --unit "$SERVICE" --since "$STARTED_AT" --no-pager -n 70 --output short-iso || true
+  exit 1
+fi
 
 "$PY" - <<'PY'
 from datetime import datetime,timedelta,timezone
