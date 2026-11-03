@@ -6,7 +6,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from backend.rundeck_workload_activity import (
-    WP_TYPES, normalize_activity_row, workload_activity_trends,
+    WP_TYPES, _ACTIVITY_CACHE, normalize_activity_row, workload_activity_trends,
 )
 
 ANCHOR = datetime(2026, 11, 3, 8, 2, 17, tzinfo=timezone.utc)
@@ -32,6 +32,9 @@ class _Results:
     def all(self):
         return self.rows
 
+    def scalar(self):
+        return self.count
+
 
 class _Connection:
     def __init__(self, rows):
@@ -47,9 +50,13 @@ class _Connection:
     def execute(self, statement, params=None):
         sql = str(statement)
         self.queries.append((sql, params))
-        if "WITH sampled AS" not in sql:
-            raise AssertionError("Unexpected query")
-        return _Results(self.rows)
+        if "to_regclass" in sql:
+            return _Results([],count=True)
+        if "SET LOCAL statement_timeout" in sql:
+            return _Results([])
+        if "WITH sampled AS" in sql:
+            return _Results(self.rows)
+        raise AssertionError("Unexpected query: "+sql[:100])
 
 
 class _Engine:
@@ -61,6 +68,9 @@ class _Engine:
 
 
 class WorkloadActivityTests(TestCase):
+    def setUp(self):
+        _ACTIVITY_CACHE.clear()
+
     def test_two_chart_series_share_only_complete_collection_history(self):
         conn = _Connection([
             _point("a", ANCHOR - timedelta(minutes=10)),
@@ -71,8 +81,7 @@ class WorkloadActivityTests(TestCase):
         with patch("backend.rundeck_workload_activity.get_engine", return_value=_Engine(conn)), \
              patch("backend.rundeck_workload_activity._anchor_collection",
                    return_value=(ANCHOR, "b")), \
-             patch("backend.rundeck_workload_activity._workload_source_relation",
-                   return_value=("rundeck_workload_observations", "ALL_OBSERVED_ACTIVE_WORKLOADS")):
+             patch("backend.rundeck_workload_activity._CACHE_TTL_SECONDS", 90):
             result = workload_activity_trends("6h", now=NOW)
         self.assertEqual(result["range"], "6h")
         self.assertEqual(result["complete_checks"], 2)
@@ -82,7 +91,10 @@ class WorkloadActivityTests(TestCase):
         self.assertEqual(result["items"][1]["programs"], 4)
         self.assertEqual(result["items"][1]["wp"]["ENQ"], 1)
         self.assertEqual(result["items"][1]["observed_wp"], 6)
-        sql, params = conn.queries[0]
+        sql, params = conn.queries[-1]
+        self.assertTrue(any('SET LOCAL statement_timeout' in q for q,_ in conn.queries))
+        self.assertIn('FROM rundeck_workload_observations o', sql)
+        self.assertNotIn('UNION ALL', sql)
         self.assertEqual(params["end"] - params["start"], timedelta(hours=6))
         self.assertIn("c.status = 'READY'", sql)
         self.assertIn("COUNT(DISTINCT (consumer_type, consumer_key))", sql)
