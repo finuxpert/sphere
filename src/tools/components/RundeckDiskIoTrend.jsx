@@ -11,7 +11,7 @@ async function load(url,signal){
   return result.json()
 }
 
-export default function RundeckDiskIoTrend({refreshToken='',focusedHost=''}) {
+export default function RundeckDiskIoTrend({refreshToken='',focusedHost='',onFocusHost}) {
   const [app,setApp]=React.useState('APP1')
   React.useEffect(()=>{
     const label=shortHost(focusedHost)
@@ -72,7 +72,7 @@ export default function RundeckDiskIoTrend({refreshToken='',focusedHost=''}) {
           {['6h','24h'].map(value=><button type="button" key={value}
             onClick={()=>setRange(value)} aria-pressed={range===value}>{value.toUpperCase()}</button>)}
         </div>
-        <select value={app} onChange={event=>setApp(event.target.value)}
+        <select value={app} onChange={event=>{setApp(event.target.value);onFocusHost?.(event.target.value)}}
           aria-label="Disk I/O APP host">
           {['APP1','APP2','APP3','APP4','APP5'].map(value=><option value={value} key={value}>{value}</option>)}
         </select>

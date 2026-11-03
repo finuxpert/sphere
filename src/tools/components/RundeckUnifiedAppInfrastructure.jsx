@@ -230,21 +230,7 @@ export default function RundeckUnifiedAppInfrastructure({
           title="Animation setting does not affect saved monitoring data"
           onClick={onToggleMotion}>Motion {motionEnabled ? 'On' : 'Off'}</button>
       </div>}
-      <div className="rundeckAppSampleMeta">
-        <span className="rundeckAppSampleTime" aria-label={'Selected APP ' + appKey + ' sample time'} title={selectedVerified
-          ? `Selected ${appKey} sample: ${selectedHost?.collected_at ? formatWib(selectedHost.collected_at,true) + ' WIB' : 'time unverified'} · Verified APP snapshot · ${hosts.length} APP · Attention ${attentionCount} · Warning ${warningCount} · Critical ${criticalCount} · Unknown ${unknownCount} · highest CPU ${shortHost(highCpu?.host)} ${metric(highCpu?.cpu_pct, '%')} · highest RAM ${shortHost(highRam?.host)} ${metric(highRam?.ram_pct, '%')} · Critical WP ${highWpHosts} ${metric(highWp?.wp_critical)}`
-          : 'Selected APP source ' + selectedFreshness + (selectedHost?.collected_at ? ' · last observed ' + formatWib(selectedHost.collected_at,true) + ' WIB' : '')}>
-          {selectedVerified && selectedHost?.collected_at ? `${formatWib(selectedHost.collected_at, true)} WIB` : selectedFreshness}
-        </span>
-        {infraUnverified && <span role="status" className="is-error">Infrastructure data unverified</span>}
-      </div>
     </header>
-    {fleetMode && <div className="sphereAppWpSummary" title={verifiedApps.length === hosts.length
-      ? impactedApps.map(host => shortHost(host.host) + ': ' + Number(host.wp_critical)).join(' · ') || 'No Critical WP recorded'
-      : 'Some APP samples are unverified; subtotal uses verified APPs only'}>
-      WP Issues <strong>{verifiedApps.length ? totalCriticalWp : '—'}</strong>
-      <span>· {verifiedApps.length ? impactedApps.length : '—'} APPs affected{verifiedApps.length !== hosts.length ? ' · partial' : ''}</span>
-    </div>}
     <div className="rundeckAppHexMain rundeckAppThreePanels">
       <section className="rundeckAppMotionPanel" aria-label="APP server selection">
         {!fleetMode && <h4 className="rundeckAppPanelHeading"><SphereIcon name="server" /> APP Fleet <small>Select server</small></h4>}

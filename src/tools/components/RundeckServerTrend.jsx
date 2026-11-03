@@ -1196,15 +1196,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       </div>
       <div className="rundeckTrendSharedGroup rundeckTrendSharedHosts" role="group" aria-label="Highlight APP">
         <span>APP</span>
-        {selectedJob?.host && shortHost(selectedJob.host) !== (shortHost(focusedHost) || '') &&
-          <small className="rundeckTrendFocusIdentity">Job {shortHost(selectedJob.host)} · Focus {shortHost(focusedHost) || 'All'}</small>}
         <div className="rundeckTrendHostLegend" role="group" aria-label="Highlight APP trace">
-          <button type="button" aria-pressed={!activeFocus} className={!activeFocus ? 'is-focused' : ''} onClick={() => onFocusHost?.('')}>All</button>
           {focusOptions.map((label, index) => <button key={label} type="button"
             aria-pressed={activeFocus === label}
             className={activeFocus === label ? 'is-focused' : ''}
             style={{ '--trend-host-color': trendSwatches[trendHostColorIndex(label, index, trendSwatches.length)] }}
-            onClick={() => onFocusHost?.(activeFocus === label ? '' : label)}>
+            onClick={() => onFocusHost?.(label)}>
             <span className="rundeckTrendHostSwatch" aria-hidden="true" />{label}
           </button>)}
         </div>
@@ -1290,8 +1287,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
                 title="Typical changes the display axis only. Full restores the complete saved peak."
                 value={isNetwork ? panel.networkAxis : panel.loadAxis}
                 onChange={event => isNetwork ? panel.setNetworkAxis(event.target.value) : panel.setLoadAxis(event.target.value)}>
-                <option value="typical">Y: Typical</option>
-                <option value="full">Y: Full</option>
+                <option value="typical">Scale: Typical</option>
+                <option value="full">Scale: Full</option>
               </select>}
             </div>
           </div>

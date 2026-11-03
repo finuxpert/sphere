@@ -128,10 +128,10 @@ export default function RundeckMonitoringHistoryCore(props) {
       </section>
       <div className="sphereMonitoringRightStack" aria-label="Infrastructure network and disk activity">
         <section className="sphereMonitoringMiniChart" aria-label="Network Throughput">
-          <RundeckNetworkMiniTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
+          <RundeckNetworkMiniTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
         </section>
         <section className="sphereMonitoringMiniChart" aria-label="Disk I/O Activity">
-          <RundeckDiskIoTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} />
+          <RundeckDiskIoTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
         </section>
       </div>
     </div>

@@ -12,7 +12,7 @@ async function read(url, signal) {
 
 /** Source-backed, single-host / single-interface RX-TX trend.
  * No NIC summing, zero-filling or cross-host synthetic throughput. */
-export default function RundeckNetworkMiniTrend({refreshToken='',focusedHost=''}) {
+export default function RundeckNetworkMiniTrend({refreshToken='',focusedHost='',onFocusHost}) {
   const [app,setApp]=React.useState('APP1')
   const [range,setRange]=React.useState('6h')
   const [interfaceChoice,setInterfaceChoice]=React.useState('')
@@ -75,7 +75,7 @@ export default function RundeckNetworkMiniTrend({refreshToken='',focusedHost=''}
           {['6h','24h'].map(value=><button key={value} type="button"
             aria-pressed={range===value} onClick={()=>setRange(value)}>{value.toUpperCase()}</button>)}
         </div>
-        <select aria-label="Network APP host" value={app} onChange={event=>setApp(event.target.value)}>
+        <select aria-label="Network APP host" value={app} onChange={event=>{setApp(event.target.value);onFocusHost?.(event.target.value)}}>
           {['APP1','APP2','APP3','APP4','APP5'].map(value=><option key={value} value={value}>{value}</option>)}
         </select>
       </div>

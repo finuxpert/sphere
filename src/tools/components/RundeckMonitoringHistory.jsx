@@ -90,11 +90,14 @@ export default function RundeckMonitoringHistory(props) {
   const [readinessSummaryRoot, setReadinessSummaryRoot] = React.useState(null)
   const [incidentHistoryRoot, setIncidentHistoryRoot] = React.useState(null)
   const [manualAppFocus, setManualAppFocus] = React.useState({ contextHost: '', host: null })
-  const selectedHostKey = selectedJob?.host || ''
+  const selectedHostKey = shortHost(selectedJob?.host || '')
   const trendFocusedHost = manualAppFocus.contextHost === selectedHostKey && manualAppFocus.host !== null
-    ? manualAppFocus.host : selectedHostKey
+    ? manualAppFocus.host : /^APP[1-5]$/.test(selectedHostKey) ? selectedHostKey : 'APP1'
+  // Single APP focus shared by Landscape, Network, Disk I/O and all four trends.
+  // The top incident-status APP remains independently derived from worst severity.
   const chooseAppFocus = React.useCallback((host) => {
-    setManualAppFocus({ contextHost: selectedHostKey, host })
+    const selected = shortHost(host || '')
+    setManualAppFocus({ contextHost: selectedHostKey, host: /^APP[1-5]$/.test(selected) ? selected : 'APP1' })
   }, [selectedHostKey])
 
   const returnFromOverlay = React.useCallback((target) => {

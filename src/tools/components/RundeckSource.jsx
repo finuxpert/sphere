@@ -784,14 +784,6 @@ export default function RundeckSource({ onCollection }) {
     <header className="rundeckLandscapeHeader">
       <div className="rundeckTitleBlock">
         <h2><SphereIcon name="activity" /><span className="rundeckDashboardTitle">{headerTitle}</span></h2>
-        <div key={latest?.collection_id || 'waiting'} className="rundeckLandscapeMeta is-fresh" aria-label="Last saved performance collection">
-          <span className="rundeckLastCollected"
-            title={'Performance collection ' + (quality.performanceValid ? 'READY' : 'LAST READY') +
-              ' · Run #' + (latest?.execution_id || '—') + ' · ' + (appCount || '—') +
-              ' APP · ' + (latestCollectionAt ? formatWib(latestCollectionAt, true) + ' WIB' : 'time unknown')}>
-            {latestCollectionAt ? formatWib(latestCollectionAt) + ' WIB' : initialSourceCheck ? 'Checking sources' : 'No timestamp'}
-          </span>
-        </div>
       </div>
       <div className="rundeckActions">
         <div className="rundeckStateCluster">
