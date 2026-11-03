@@ -708,3 +708,13 @@ label {
     transition-duration: .01ms !important;
   }
 }
+
+.mobileVersionBadge {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .mobileVersionBadge {
+    display: inline-flex;
+  }
+}

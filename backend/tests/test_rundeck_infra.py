@@ -192,19 +192,28 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
             return {"host":"AOPH1PAPPDC","mount_point":"/",
               "collected_at":datetime(2026,9,day,tzinfo=timezone.utc),
               "details":{"_positional":["filesystem","/dev/root","xfs","1000",str(used),"60","/"]},
-              "total_bytes":1000*1024,"avail_bytes":(1000-used)*1024,"used_pct":60}
+              "total_bytes":1000*1024,"avail_bytes":(1000-used)*1024,"used_pct":60,
+              "source_rows":2}
         class Result:
             def mappings(self): return self
-            def all(self): return [record(26,600),record(22,500)]
+            def all(self): return [record(26,600)]
         class Conn:
-            def execute(self, sql, params): return Result()
-        res=monthly_storage_evidence("2026-09",Conn(),{
+            def execute(self, sql, params):
+                self.query = str(sql)
+                return Result()
+        conn = Conn()
+        res=monthly_storage_evidence("2026-09",conn,{
             "File System OS":{"host":"AOPH1PAPPDC","mount":"/"}})
         self.assertEqual(res["items"][0]["used_bytes"],600*1024)
         self.assertEqual(res["items"][0]["status"],"COLLECTED")
         self.assertIsNone(res["items"][0]["reason"])
         self.assertEqual(res["source_rows"],2)
         self.assertEqual(res["distinct_mounts"],1)
+        self.assertIn("DISTINCT ON (UPPER(f.host), f.mount_point)", conn.query)
+        self.assertIn("COUNT(*) OVER () AS source_rows", conn.query)
+        # Even though SQL returns only the newest row, the total source
+        # samples still reflect all records before DISTINCT ON.
+        self.assertEqual(res["source_rows"], 2)
 
 
     def test_missing_mapping_does_not_fall_back_to_any_mount(self):
@@ -215,7 +224,8 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
                 return [{"host":"AOPH1PAPPDC","mount_point":"/",
                     "collected_at":datetime(2026,10,20,tzinfo=timezone.utc),
                     "details":{"_positional":["filesystem","/dev/root","xfs","1000","600","60","/"]},
-                    "total_bytes":1000*1024,"avail_bytes":400*1024,"used_pct":60}]
+                    "total_bytes":1000*1024,"avail_bytes":400*1024,"used_pct":60,
+                    "source_rows":1}]
         class Conn:
             def execute(self, sql, params):return Result()
         result=monthly_storage_evidence("2026-10",Conn(),{})

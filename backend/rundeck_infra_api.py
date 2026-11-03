@@ -312,21 +312,28 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
         start, end, _previous_start = calendar_week_bounds(week_start)
     if start > datetime.now(timezone.utc):
         raise ValueError("Future reporting period is unavailable")
-    # Only READY collection records in the same exact WIB month.
+    # Keep the exact READY/WIB month filter and the original full source-row
+    # count, but return only the newest row for each host/mount. Previously the
+    # API transferred every historical filesystem sample to Python (180k+
+    # rows in observed months) solely to keep the first host/mount record.
+    # Normalize host case in SQL, matching the original Python grouping keys.
+    # COUNT(*) OVER() is evaluated before DISTINCT ON, preserving source_rows.
     rows = conn.execute(text("""
-       SELECT f.host, f.mount_point, f.collected_at, f.device, f.fstype,
-              f.total_bytes, f.avail_bytes, f.used_pct, f.details
+       SELECT DISTINCT ON (UPPER(f.host), f.mount_point)
+              f.host, f.mount_point, f.collected_at, f.device, f.fstype,
+              f.total_bytes, f.avail_bytes, f.used_pct, f.details,
+              COUNT(*) OVER () AS source_rows
        FROM rundeck_infra_filesystems f
        JOIN rundeck_infra_collections c ON c.collection_id=f.collection_id
        WHERE c.status='READY' AND f.collected_at>=:start AND f.collected_at<:end
          AND c.snapshot_ts>=:start AND c.snapshot_ts<:end
-       ORDER BY f.collected_at DESC, f.host, f.mount_point
+       ORDER BY UPPER(f.host), f.mount_point, f.collected_at DESC, f.collection_id DESC
     """), {"start": start, "end": end}).mappings().all()
-    observed = {}
-    for row in rows:
-        key = (str(row["host"]).upper(), str(row["mount_point"]))
-        if key not in observed:
-            observed[key] = dict(row)
+    source_rows = int(rows[0]["source_rows"]) if rows else 0
+    observed = {
+        (str(row["host"]).upper(), str(row["mount_point"])): dict(row)
+        for row in rows
+    }
 
     result = []
     mapped_count = 0
@@ -375,7 +382,7 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
         "period": "custom" if start_date else "week" if week_start else "month",
         "timezone": "Asia/Jakarta",
         "source": "rundeck_infra_filesystems",
-        "source_rows": len(rows),
+        "source_rows": source_rows,
         "distinct_mounts": len(observed),
         "configured_categories": mapped_count,
         "items": result,
