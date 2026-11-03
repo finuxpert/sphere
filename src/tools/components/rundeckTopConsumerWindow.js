@@ -39,7 +39,10 @@ function validRankRow(row) {
     typeof row.consumer_key === 'string' && row.consumer_key.trim() &&
     Number.isFinite(row.value) && row.value >= 0 &&
     Number.isSafeInteger(row.observations) && row.observations > 0 &&
-    Number.isSafeInteger(row.collection_checks) && row.collection_checks > 0
+    Number.isSafeInteger(row.collection_checks) && row.collection_checks > 0 &&
+    row.collection_checks <= row.observations &&
+    Number.isSafeInteger(row.aggregate_observations) && row.aggregate_observations >= 0 &&
+    row.aggregate_observations <= row.observations
 }
 
 export function verifiedTopConsumers(payload, expectedRange) {
@@ -49,12 +52,11 @@ export function verifiedTopConsumers(payload, expectedRange) {
     Date.parse(payload.end) <= Date.parse(payload.start) ||
     !Number.isSafeInteger(payload.complete_checks) || payload.complete_checks < 0 ||
     !Number.isSafeInteger(payload.observed_workloads) || payload.observed_workloads < 0 ||
-    !['ALL_OBSERVED_ACTIVE_WORKLOADS', 'RETAINED_TOP_CONSUMERS'].includes(payload.coverage_scope) &&
-       typeof payload.coverage_scope !== 'string') return null
+    !['ALL_OBSERVED_ACTIVE_WORKLOADS', 'TOP_CONSUMERS_ONLY'].includes(payload.coverage_scope)) return null
   for (const key of ['cpu', 'memory']) {
     const records = payload[key]
     if (!Array.isArray(records) || records.length > 10 ||
-      records.some(row => !validRankRow(row) || row.collection_checks > payload.complete_checks)) return null
+      records.some(row => !validRankRow(row))) return null
     if (records.some((row, i) => i > 0 && row.value > records[i - 1].value)) return null
   }
   return payload
