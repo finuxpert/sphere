@@ -33,6 +33,7 @@ from backend.rundeck_job_intelligence import (
     workload_execution_analytics,
 )
 from backend.rundeck_workload_explorer import workload_search, workload_summary, workload_trend
+from backend.rundeck_top_consumers import top_consumers_window
 
 app = _core.app
 
@@ -129,6 +130,22 @@ def evidence_timeline_endpoint(
         raise HTTPException(503, str(error)) from None
     except Exception as error:
         raise HTTPException(503, f"Evidence correlation unavailable: {type(error).__name__}") from None
+
+
+@app.get("/evaluation/top-consumers")
+def evaluation_top_consumers_endpoint(
+    range_key: str = Query("24h", alias="range", pattern="^(30m|1h|6h|24h|custom)$"),
+    from_at: str | None = Query(None, max_length=64),
+    to_at: str | None = Query(None, max_length=64),
+):
+    try:
+        return top_consumers_window(range_key, from_at=from_at, to_at=to_at)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from None
+    except Exception as error:
+        raise HTTPException(503, f"Top consumers unavailable: {type(error).__name__}") from None
 
 
 @app.get("/history/workload/search")
