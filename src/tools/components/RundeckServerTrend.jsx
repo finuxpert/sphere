@@ -1334,7 +1334,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
              {activeFocus && allAppPeak && <small className="rundeckTrendAllAppPeak"
                title={'All APPs ' + peakKind + ': ' + numberText(allAppPeak.value, 1) + peakUnit + ' · ' + allAppPeak.host + ' · ' + formatTrendPeakWib(allAppPeak.timestamp) + ' WIB'}>
                All APPs: {numberText(allAppPeak.value, 1)}{peakUnit} · {allAppPeak.host}
-             </small>
+             </small}
           </div>}
         </section>
       })}
