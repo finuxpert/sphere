@@ -15,7 +15,7 @@ test('performance history has distinct rolling and calendar presets', () => {
   assert.match(trend, /aria-label="Short performance ranges"/)
   assert.match(trend, /\['180d', '6M'\]/)
   assert.match(trend, /<h3>Performance Trends<\/h3>/)
-  assert.match(trend, /connectNulls: false/)
+  assert.match(read('src/tools/components/RundeckServerTrendChart.jsx'), /connectNulls: false/)
   assert.match(trend, /serverTrend1\?\.items\?\.length > 0/)
   assert.match(trend, /const longHistoricalRange = LONG_RANGES\.has\(range\)/)
   assert.match(trend, /longHistoricalRange \? 'auto' : bucket/)

@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
@@ -6,7 +7,7 @@ const load = file => readFileSync(new URL('../../src/tools/components/' + file, 
 
 test('idle source braid remains non-intercepting and exposes original ECharts on interaction', () => {
   const css = load('RundeckTrendAmbient.css')
-  const chart = load('RundeckServerTrend.jsx')
+  const chart = trendFeatureSource(load)
   const core = load('RundeckMonitoringHistoryCore.jsx')
   assert.match(core, /<RundeckServerTrend\s+ambientBraid/)
   assert.match(chart, /ambientBraid && databaseEnabled/)
@@ -55,7 +56,7 @@ test('APP label scopes only Current observations; review/search stay global', ()
 })
 
 test('one time-range overflow menu and honest retained historical coverage', () => {
-  const chart = load('RundeckServerTrend.jsx')
+  const chart = trendFeatureSource(load)
   const menu = load('RundeckAppThreePanel.css')
   assert.match(chart, /aria-label="Short performance ranges"/)
   assert.match(chart, /\['90d', '3M'\]/)

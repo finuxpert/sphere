@@ -55,7 +55,13 @@ const files = {
   sm37Portal: read('src/tools/components/RundeckSm37LivePortal.jsx'),
   sm37Css: read('src/tools/components/RundeckSm37Verification.css'),
   explorer: read('src/tools/components/RundeckWorkloadExplorer.jsx'),
-  serverTrend: read('src/tools/components/RundeckServerTrend.jsx'),
+  // Source-level Basis evidence spans the parent, chart, theme and gap modules.
+  serverTrend: [
+    read('src/tools/components/RundeckServerTrend.jsx'),
+    read('src/tools/components/RundeckServerTrendChart.jsx'),
+    read('src/tools/components/rundeckServerTrendShared.js'),
+    read('src/tools/components/rundeckServerTrendGaps.js'),
+  ].join('\n'),
   trendFormatting: read('src/tools/components/rundeckTrendFormatting.js'),
   systemHealth: read('src/tools/components/RundeckSystemHealth.jsx'),
   systemHealthState: read('src/tools/components/rundeckSystemHealth.js'),

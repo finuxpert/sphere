@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { workloadDotLayout } from '../../src/tools/components/rundeckWorkloadGrid.js'
@@ -107,7 +108,7 @@ test('v1.35.17 Workload Health uses available vertical room without changing one
 })
 
 test('v1.35.17 chart Focus is explicit, reversible, and preserves threshold references', () => {
-  const trend=read('RundeckServerTrend.jsx')
+  const trend=trendFeatureSource(read)
   const css=read('RundeckCockpitHexV13512.css')
   assert.match(trend,/useState\('full'\)/)
   assert.match(trend,/trendPercentAxisMax\(rows, valueKey, scaleMode\)/)
@@ -135,7 +136,7 @@ test('v1.35.18 saved evaluation categories are backend Review shortcuts, not loc
   assert.ok(review.includes("setPeriod('1d')"))
   assert.ok(review.includes("health:healthGroup"))
   assert.ok(review.includes("result.page.scope !== 'FULL_EVALUATED_POPULATION'"))
-  const trend=read('RundeckServerTrend.jsx')
+  const trend=trendFeatureSource(read)
   assert.ok(trend.includes("technicalAxisMax ?? 'auto'"),'chart schema resets when switching axis scale')
 })
 
@@ -172,7 +173,7 @@ test('v1.35.19 Workload Health has bounded header, categories, measured grid and
 
 
 test('DEV grouped Performance Trends toolbar preserves range, bucket, server values and APP focus', () => {
-  const trend=read('RundeckServerTrend.jsx')
+  const trend=trendFeatureSource(read)
   const css=read('RundeckCockpitHexV13512.css')
   assert.match(trend, /role="toolbar" aria-label="Performance trend controls"/)
   assert.match(trend, /rundeckTrendControlRange/)

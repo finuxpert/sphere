@@ -166,7 +166,7 @@ test('unified APP observations stay collection-bound and incomplete metrics neve
 test('only active APP layout is retained and chart tooltip does not persist after drilldown',()=>{
   const orphan = new URL('../../src/tools/components/RundeckAppServers.jsx',import.meta.url)
   assert.equal(existsSync(orphan),false)
-  const trend=readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx',import.meta.url),'utf8')
+  const trend=readFileSync(new URL('../../src/tools/components/RundeckServerTrendChart.jsx',import.meta.url),'utf8')
   const events=readFileSync(new URL('../../src/tools/components/RundeckEvidenceTimeline.jsx',import.meta.url),'utf8')
   assert.match(trend,/chart\.dispatchAction\(\{ type: 'hideTip' \}\)/)
   assert.match(trend,/const visible = focused/)

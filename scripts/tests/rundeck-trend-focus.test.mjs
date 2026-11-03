@@ -76,7 +76,7 @@ test('Technical Trend uses saved availability observation timestamp, not perform
 })
 
 test('v1.35.7 trend tooltip includes all retained APP samples, exact peak and resolved interval', () => {
-  const source = readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx',import.meta.url),'utf8')
+  const source = readFileSync(new URL('../../src/tools/components/RundeckServerTrendChart.jsx',import.meta.url),'utf8')
   assert.match(source,/focused \? \[focused, \.\.\.ranked\.filter\(point => point !== focused\)\] : ranked/)
   assert.match(source,/const intervalMs = resolvedGapIntervalMs\(trend\)/)
   assert.match(source,/formatWib\(intervalEnd, true\)/)
@@ -86,7 +86,7 @@ test('v1.35.7 trend tooltip includes all retained APP samples, exact peak and re
 })
 
 test('Availability gaps use observation evidence and never generic performance fallback', () => {
-  const source = readFileSync(new URL('../../src/tools/components/RundeckServerTrend.jsx', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../../src/tools/components/rundeckServerTrendGaps.js', import.meta.url), 'utf8')
   const gapRules = source.match(/function trendGaps\(trend\) \{([\s\S]*?)\n\}/)?.[1] || ''
   assert.match(gapRules, /trend\?\.metric === 'availability' && Array\.isArray\(trend\?\.observation_gaps\)/)
   assert.match(gapRules, /if \(trend\?\.metric === 'availability'\) \{\s*return \{ gaps: \[\], rangeStart, rangeEnd, intervalMs, historyStartedAt: null \}/)

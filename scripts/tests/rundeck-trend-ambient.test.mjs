@@ -69,10 +69,11 @@ test('idle braid uses three interlaced ribbons within one horizontal field',()=>
 test('single shared grid motion keeps original ECharts tools, statuses and source provenance',()=>{
   const read=file=>readFileSync(new URL('../../src/tools/components/'+file,import.meta.url),'utf8')
   const trend=read('RundeckServerTrend.jsx')
+  const chart=read('RundeckServerTrendChart.jsx')
   const layer=read('rundeckTrendAmbient.js')
   const css=read('RundeckTrendAmbient.css')
-  assert.match(trend,/chart\.on\('click', exactClick\)/)
-  assert.match(trend,/chart\.getZr\(\)\.on\('click', fallbackClick\)/)
+  assert.match(chart,/chart\.on\('click', exactClick\)/)
+  assert.match(chart,/chart\.getZr\(\)\.on\('click', fallbackClick\)/)
   assert.match(trend,/attachUnifiedVortex\(/)
   assert.match(trend,/className="rundeckUnifiedVortexCanvas"/)
   assert.doesNotMatch(trend,/attachTrendAmbient\(/)
