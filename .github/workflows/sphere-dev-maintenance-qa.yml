@@ -30,6 +30,13 @@ jobs:
         run: |
           bash scripts/qa-browser-boot.sh
           node scripts/qa-six-chart-monitoring.mjs
+      - name: Monthly Management PDF regression
+        run: |
+          node scripts/qa-monthly-pdf.mjs
+          if command -v pdfinfo >/dev/null; then
+            pdfinfo "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" | grep -q 'Pages:[[:space:]]*1'
+            pdfinfo "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" | grep -q 'Page size:[[:space:]]*1190.55 x 841.89 pts'
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

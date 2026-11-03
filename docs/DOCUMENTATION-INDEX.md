@@ -6,6 +6,7 @@
 
 | Reference | Purpose |
 |---|---|
+| [Repository audit — 3 November 2026](architecture/REPOSITORY-AUDIT-20261103.md) | Measured Git tree inventory, dependency slices, retention and phased refactor decisions |
 | [Project README](../README.md) | Architecture, environment boundaries and quick start |
 | [Current Features & Flow](CURRENT-FLOW-AND-FEATURES.md) | Current operator workflow and evidence semantics |
 | [Rundeck Development](operations/rundeck-development.md) | **Primary DEV full-stack release procedure** and migration guard |

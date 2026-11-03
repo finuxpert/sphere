@@ -1,4 +1,5 @@
 import { buildHostTrendSeries } from './rundeckTrendSeries.js'
+import { formatTrendAxis, numericTrendSample, formatSavedBucketWindow, trendAxisSplitNumber, gapDurationText, gapTimeRangeText, gapLabel, resolvedGapIntervalMs } from './rundeckTrendFormatting.js'
 import { trendPercentAxisMax } from './rundeckTrendAxis.js'
 import { technicalLoadScale } from './rundeckTechnicalLoadScale.js'
 import { networkTrendScale } from './rundeckNetworkScale.js'
@@ -44,58 +45,18 @@ const METRICS = [
   ['fs:/ArchiveINTF', 'Filesystem · Archive INTF'],
 ]
 const AVAILABILITY_CATEGORIES = { availability: 'SAP_APP', hana: 'HANA_SYSTEM_DB', replication: 'HANA_REPLICATION', ssh: 'SSH', web: 'WEB_DISPATCHER' }
-const DEFAULT_COLLECTION_CADENCE_MS = 10 * 60 * 1000
-const BUCKET_INTERVAL_MS = {
-  '10m': 10 * 60 * 1000,
-  '30m': 30 * 60 * 1000,
-  '1h': 60 * 60 * 1000,
-  '6h': 6 * 60 * 60 * 1000,
-  '1d': 24 * 60 * 60 * 1000,
-}
+
 
 const metricLabel = (value) => value.startsWith('fs:') ? 'Filesystem ' + value.slice(3) : ({ cpu: 'CPU', ram: 'RAM', iowait: 'I/O Wait', wp: 'Critical WP', availability: 'Availability', swap: 'Swap I/O', load: 'Load', hana: 'HANA Availability', replication: 'Replication Availability', ssh: 'SSH Reachability', web: 'Web Dispatcher Availability', network: 'Network', network_rx: 'Network RX', network_tx: 'Network TX' })[value] || 'Metric'
 const rangeLabel = value => ALL_RANGES.find(([key]) => key === value)?.[1] || String(value || '').toUpperCase()
 const token = (name, fallback) => typeof window === 'undefined' ? fallback : window.getComputedStyle(document.querySelector('.spherePerformanceShell') || document.documentElement).getPropertyValue(name).trim() || fallback
 
-function formatTrendAxis(value, range) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  const base = { timeZone: 'Asia/Jakarta', hour12: false }
-  if (['7d', '30d', 'last_month', '90d', '180d'].includes(range)) {
-    return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
-  }
-  if (range === '24h') {
-    const dateLabel = new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
-    const clockLabel = new Intl.DateTimeFormat('id-ID', { ...base, hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
-    return dateLabel + '\n' + clockLabel
-  }
-  return formatWib(value, false)
-}
 
-function numericTrendSample(value) {
-  if (value === null || value === undefined || String(value).trim() === '') return null
-  const sample = Number(value)
-  return Number.isFinite(sample) ? sample : null
-}
 
-function formatSavedBucketWindow(trend, bucket) {
-  const at = Date.parse(bucket || '')
-  if (!Number.isFinite(at)) return 'Bucket unavailable'
-  const duration = BUCKET_INTERVAL_MS[String(trend?.bucket || '').toLowerCase()] || null
-  if (!duration) return `Bucket ${formatWib(at, true)} WIB`
-  const end = at + duration
-  const fromLabel = formatWib(at, true)
-  const endLabel = formatWib(end, true)
-  const sameDate = fromLabel.split(',')[0] === endLabel.split(',')[0]
-  return `Bucket ${fromLabel}–${sameDate ? formatWib(end) : endLabel} WIB`
-}
-function trendAxisSplitNumber(range) {
-  if (['30d', 'last_month', '90d', '180d'].includes(range)) return 6
-  if (range === '7d') return 6
-  if (range === '24h') return 4
-  if (range === '6h') return 6
-  return 5
-}
+
+
+
+
 
 const palette = () => ({ text: token('--v36-ink', token('--sphere-text', '#e7edf0')), secondary: token('--v36-muted', token('--sphere-text-secondary', '#a9b5bb')), muted: token('--v36-muted', token('--sphere-text-muted', '#718089')), grid: token('--v36-rule', token('--sphere-chart-grid', 'rgba(126,147,158,.08)')), panel: token('--v36-panel', token('--sphere-surface-1', '#141d23')), attention: token('--sphere-attention', '#6aa2d8'), warning: token('--v36-amber', token('--sphere-warning', '#d8b35f')), danger: token('--v36-red', token('--sphere-danger', '#db7d86')), series: [token('--v36-series-1', token('--sphere-chart-1', '#72a9e8')), token('--v36-series-2', token('--sphere-chart-2', '#8cc985')), token('--v36-series-3', token('--sphere-chart-3', '#aaa0df')), token('--v36-series-4', token('--sphere-chart-4', '#e1a16c')), token('--v36-series-5', token('--sphere-chart-5', '#5dcbd1'))] })
 
@@ -112,41 +73,13 @@ function Segmented({ options, value, onChange, ariaLabel }) {
   return <div className="rundeckSegmented" role="group" aria-label={ariaLabel}>{options.map(([key, label]) => <button key={key} type="button" className={value === key ? 'is-active' : ''} aria-pressed={value === key} onClick={() => onChange(key)}>{label}</button>)}</div>
 }
 
-function gapDurationText(from, to) {
-  const minutes = Math.max(0, Math.round((to - from) / 60000))
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  const remain = minutes % 60
-  return remain ? `${hours}h ${remain}m` : `${hours}h`
-}
 
-function gapTimeRangeText(from, to) {
-  const start = new Date(from)
-  const end = new Date(to)
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—'
-  const dateFmt = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short' })
-  const timeFmt = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false })
-  const startDate = dateFmt.format(start)
-  const endDate = dateFmt.format(end)
-  const startTime = timeFmt.format(start).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
-  const endTime = timeFmt.format(end).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
-  return `${startDate} ${startTime} - ${endDate} ${endTime} WIB`
-}
 
-function gapLabel(from, to) {
-  return `COLLECTION GAP - ${gapTimeRangeText(from, to)} - ${gapDurationText(from, to)}`
-}
 
-function resolvedGapIntervalMs(trend) {
-  const explicitSeconds = Number(trend?.bucket_interval_seconds)
-  if (Number.isFinite(explicitSeconds) && explicitSeconds >= 60) return explicitSeconds * 1000
 
-  const resolvedBucket = String(trend?.bucket || '').toLowerCase()
-  if (BUCKET_INTERVAL_MS[resolvedBucket]) return BUCKET_INTERVAL_MS[resolvedBucket]
 
-  const cadenceMs = Number(trend?.collection_cadence_seconds || 600) * 1000
-  return Number.isFinite(cadenceMs) && cadenceMs >= 60_000 ? cadenceMs : DEFAULT_COLLECTION_CADENCE_MS
-}
+
+
 
 function trendGaps(trend) {
   const rows = trend?.items || []
