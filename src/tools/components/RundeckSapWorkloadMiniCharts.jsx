@@ -12,7 +12,7 @@ const GAP_MS = 26 * 60_000
 const countFormat = n => Number(n).toLocaleString('en-US', { maximumFractionDigits: 1 })
 const formatPoint = value => formatWib(value, true) + ' WIB'
 
-function Axes({ max, x, y, start, end }) {
+function Axes({ max, y, start, end }) {
   return <>
     {[0, .5, 1].map(fraction =>
       <g key={fraction}>
@@ -44,7 +44,7 @@ function ObservedChart({ data, metric }) {
     aria-label={isWP
       ? 'Stacked observed work processes by type; not total work process capacity or utilization'
       : 'Distinct observed SAP Job and Program identities per complete collection'}>
-    <Axes max={max} x={x} y={y} start={data.start} end={data.end}/>
+    <Axes max={max} y={y} start={data.start} end={data.end}/>
     {!isWP ? <>
       {(['jobs', 'programs']).map(key =>
         <g key={key} fill="none" stroke={WORKLOAD_COLORS[key]} strokeWidth="1.9" strokeLinejoin="round"
