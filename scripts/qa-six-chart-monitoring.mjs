@@ -17,7 +17,8 @@ for(const cmd of ['google-chrome','google-chrome-stable','chromium','chromium-br
 }
 if(!chrome)throw Error('SIX_CHART_QA=FAIL browser unavailable')
 const temp=mkdtempSync(join(tmpdir(),'sphere-six-chart-'))
-const apps=Array.from({length:5},(_,i)=>'<button class="rundeckAppHexSelector is-sap-attention"><span class="rundeckAppHexShape"><strong>APP'+(i+1)+'</strong><small>ATTENTION</small><em>WP 1</em><span class="rundeckFleetMeters"><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">CPU</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">24%</span></span><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">RAM</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">32%</span></span></span></span></button>').join('')
+const appStates=['normal','attention','critical','unknown','warning']
+const apps=appStates.map((state,i)=>'<button class="rundeckAppHexSelector is-sap-'+state+'"><span class="rundeckAppHexShape"><strong>APP'+(i+1)+'</strong><small>'+state.toUpperCase()+'</small><em>WP 1</em><span class="rundeckFleetMeters"><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">CPU</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">24%</span></span><span class="rundeckFleetMeter"><span class="rundeckFleetMeterName">RAM</span><span class="rundeckFleetMeterTrack"></span><span class="rundeckFleetMeterValue">32%</span></span></span></span></button>').join('')
 const fsRows=['OS Root','INTF','INTF AOQ','SAP Archive','Archive INTF'].map(name=>'<button class="sphereStorageRow"><span class="sphereStorageLabel"><strong>'+name+'</strong><small>APP1</small></span><span class="sphereStorageTrack"></span><strong class="sphereStoragePercent">72%</strong></button>').join('')
 const counts=['Review','Watch','Limited Data','Normal'].map(name=>'<button class="rundeckWorkloadCategory"><strong>42</strong><span>'+name+'</span></button>').join('')
 const consumers=(metric)=>Array.from({length:10},(_,i)=>'<div class="sphereEvaluationTop5Row"><span class="sphereEvaluationTop5Name">SAVED_WORKLOAD_'+i+'</span><span class="sphereEvaluationTop5Track"><i style="width:60%"></i></span><span class="sphereEvaluationTop5Value">'+(metric==='CPU'?'1.20 cores':'2.25 GB')+'</span></div>').join('')
@@ -106,13 +107,24 @@ const centralFlow=head&&kpis&&cpu&&donutArea&&
   donutItems.every(box=>box.width>100&&box.height>42)&&
   eq(donutItems[0].top,donutItems[1].top,5)&&eq(donutItems[2].top,donutItems[3].top,5)&&
   donutItems[0].right<donutItems[1].left&&donutItems[2].right<donutItems[3].left
+const fleetTiles=[...document.querySelectorAll('.sphereMonitoringApp .rundeckAppHexSelector')]
+const fleetBoxes=fleetTiles.map(tile=>tile.getBoundingClientRect())
+const fleetColors=fleetTiles.map(tile=>getComputedStyle(tile).backgroundColor)
+const fleetFullColor=fleetTiles.length===5&&
+  fleetBoxes.every(box=>box.width>35&&box.height>120)&&
+  fleetBoxes.every(box=>eq(box.top,fleetBoxes[0].top,4))&&
+  fleetColors[0]==='rgb(41, 59, 74)'&&
+  fleetColors[1]==='rgb(229, 173, 85)'&&
+  fleetColors[2]==='rgb(216, 101, 112)'&&
+  fleetColors[3]==='rgb(113, 131, 148)'&&
+  fleetColors[4]===fleetColors[1]
 const singleSelector=document.querySelectorAll('.sphereFleetMiniHost').length===0
 const ordered=bottom&&top&&bottom.top>=top.bottom-4
 const chartsFit=[...document.querySelectorAll('.sphereFleetMiniTrend svg')].length===2&&
   [...document.querySelectorAll('.sphereFleetMiniTrend svg')].every(el=>el.getBoundingClientRect().height>=70)
 const labels=[...document.querySelectorAll('.sphereMonitoringRightStack .sphereFleetMiniHead strong')].map(el=>el.textContent)
 const correctCharts=labels.length===2&&labels[0]==='SAP Workload Activity'&&labels[1]==='Work Process by Type'&&document.querySelectorAll('.sphereWorkloadActivityLegend').length===2
-const pass=columns&&stacks&&chartCount&&correctCharts&&ordered&&chartsFit&&centralFlow&&singleSelector&&dualFit
+const pass=columns&&stacks&&chartCount&&correctCharts&&ordered&&chartsFit&&centralFlow&&singleSelector&&dualFit&&fleetFullColor
 document.body.dataset.qa=pass?'PASS':'FAIL'
 const detailChecks=[
   [head,kpis,cpu,donutArea].every(box=>box&&box.width>=mid.width*.86),
@@ -127,7 +139,7 @@ const detailChecks=[
   Math.round(mid?.height||0),Math.round(donutArea?.height||0),
   Math.round(cpu?.bottom||0),Math.round(donutArea?.top||0),Math.round(donutArea?.bottom||0),Math.round(mid?.bottom||0)
 ]
-document.body.dataset.metrics=[columns,stacks,chartCount,correctCharts,ordered,chartsFit,centralFlow,singleSelector,dualFit,...dual.map(b=>Math.round(b.width)),...dual.map(b=>Math.round(b.height)),...detailChecks,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
+document.body.dataset.metrics=[columns,stacks,chartCount,correctCharts,ordered,chartsFit,centralFlow,singleSelector,dualFit,fleetFullColor,...fleetColors,...fleetBoxes.map(b=>Math.round(b.width)),...dual.map(b=>Math.round(b.width)),...dual.map(b=>Math.round(b.height)),...detailChecks,Math.round(left?.width||0),Math.round(mid?.width||0),Math.round(right?.width||0),Math.round(a?.height||0),Math.round(s?.height||0),Math.round(n?.height||0),Math.round(d?.height||0)].join(',')
 })</script></body></html>`;
 try{
  for(const size of [{w:1536,h:960},{w:1920,h:1080}]){
