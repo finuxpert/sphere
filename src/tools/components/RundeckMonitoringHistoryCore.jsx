@@ -8,6 +8,8 @@ import RundeckIoWaitMiniTrend from './RundeckIoWaitMiniTrend.jsx'
 
 export default function RundeckMonitoringHistoryCore(props) {
   const overviewRef = React.useRef(null)
+  // Right-side I/O charts share a recent window; main historical trends remain independent.
+  const [ioRange, setIoRange] = React.useState('24h')
 
   // Fit the read-only overview into the real available browser viewport.
   // The fit is opt-in for spacious desktop windows; smaller screens and expanded
@@ -118,10 +120,10 @@ export default function RundeckMonitoringHistoryCore(props) {
       </section>
       <div className="sphereMonitoringRightStack" aria-label="I/O Wait and Disk I/O comparison across APP1–APP5">
         <section className="sphereMonitoringMiniChart" aria-label="I/O Wait Trend">
-          <RundeckIoWaitMiniTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
+          <RundeckIoWaitMiniTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
         </section>
         <section className="sphereMonitoringMiniChart" aria-label="Disk I/O Activity">
-          <RundeckDiskIoTrend refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
+          <RundeckDiskIoTrend range={ioRange} onRange={setIoRange} refreshToken={props.refreshToken} focusedHost={props.focusedAppHost} onFocusHost={props.onFocusAppHost} />
         </section>
       </div>
     </div>
