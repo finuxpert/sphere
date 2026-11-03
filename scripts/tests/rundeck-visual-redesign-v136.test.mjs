@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
@@ -77,7 +78,7 @@ test('desktop finishing restores full fleet width despite retired honeycomb max-
 
 test('Technical Trend keeps observed network evidence and selected chart visible, not cropped', () => {
   const finishing = css.slice(css.indexOf('v1.36.1 finishing'))
-  const trend = read('RundeckServerTrend.jsx')
+  const trend = trendFeatureSource(read)
   assert.match(finishing, /\.rundeckTripleTrendGrid > \.rundeckServerTrendPanelV1234\s*\{[\s\S]*?height:auto!important;[\s\S]*?overflow:visible!important/)
   assert.match(finishing, /\.rundeckTripleTrendGrid \.is-technical-trend \.rundeckTrendToolbar\s*\{[\s\S]*?flex-wrap:wrap!important/)
   assert.doesNotMatch(trend, /InfrastructureGapBand/)
