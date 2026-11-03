@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { trendFeatureSource } from './trend-feature-source.mjs'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { miniChartAxisUpper } from '../../src/tools/components/rundeckResourceMiniCharts.js'
@@ -38,7 +39,7 @@ test('Monitoring 25/50/25 and stacked panels preserve the separate Health Detail
 })
 
 test('four selectable trends retain source timestamps and 24h dates', () => {
-  const source = read('RundeckServerTrend.jsx')
+  const source = trendFeatureSource(read)
   const formatting = read('rundeckTrendFormatting.js')
   assert.match(source, /row-cols-1 row-cols-md-2 row-cols-xxl-4 g-2/)
   assert.match(source, /from '\.\/rundeckTrendFormatting\.js'/)
@@ -160,7 +161,7 @@ test('Monitoring shows ten saved resource consumers instead of duplicating sever
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const evaluation=read('RundeckWorkloadHealth.jsx')
   assert.match(core,/viewMode="status"/)
-  const trends=read('RundeckServerTrend.jsx')
+  const trends=trendFeatureSource(read)
   assert.match(trends,/All APPs.*peak/i)
   assert.match(trends,/28-core reference/)
   assert.match(trends,/Percent Axis/)
@@ -215,7 +216,7 @@ test('APP selection stays only in Performance Trends while SAP activity covers a
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const charts=read('RundeckSapWorkloadMiniCharts.jsx')
-  const trend=read('RundeckServerTrend.jsx')
+  const trend=trendFeatureSource(read)
   assert.match(history,/const trendFocusedHost = manualAppFocus\.contextHost === selectedHostKey/)
   assert.match(core,/onSelectApp=\{props\.onFocusAppHost\}/)
   assert.equal((core.match(/onFocusHost=\{props\.onFocusAppHost\}/g)||[]).length,1)
@@ -248,7 +249,7 @@ test('Monitoring heading, KPI and trend controls follow the final compact operat
   const app=read('RundeckUnifiedAppInfrastructure.jsx')
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const workloads=read('RundeckWorkloadHealth.jsx')
-  const trends=read('RundeckServerTrend.jsx')
+  const trends=trendFeatureSource(read)
   const css=read('RundeckSixChartMonitoring.css')
   assert.match(app,/\{!fleetMode && <SphereIcon name="server" \/>\} SAP APP Landscape/)
   assert.doesNotMatch(app,/sphereAppHealthAction|sphereAppMotionAction/)
