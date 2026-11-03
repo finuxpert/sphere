@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { miniChartAxisUpper } from '../../src/tools/components/rundeckResourceMiniCharts.js'
+import { evaluationDonutMetrics } from '../../src/tools/components/rundeckEvaluationDonutMetrics.js'
 
 const read = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
 
@@ -294,12 +295,32 @@ test('status Monitoring presents four source-backed donut summaries without chan
   const donuts=read('RundeckJobSummaryDonuts.jsx')
   const css=read('RundeckJobSummaryDonuts.css')
   assert.match(health, /viewMode === 'status' && showResourceTop5 && <RundeckJobSummaryDonuts/)
-  assert.match(donuts,/\/jobs\/overview\?days=1/)
-  for(const label of ['Avg Runtime','Error Count','Execution Frequency','Review Candidates']){
-    assert.ok(donuts.includes('title="'+label+'"'),label)
-  }
-  assert.match(donuts,/SM37 not configured/)
-  assert.match(donuts,/evaluationVerified && evaluation/)
+  assert.doesNotMatch(donuts,/\/jobs\/overview|SM37 not configured|fetch\(/)
+  assert.match(donuts,/evaluationDonutMetrics\(evaluation\)/)
+  assert.match(donuts,/evaluationVerified \? evaluationDonutMetrics/)
   assert.match(css,/grid-template-areas:"eval-title" "eval-counts" "eval-top5" "eval-donuts" "eval-footer"/)
-  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/)
+  assert.match(css,/grid-template-columns:minmax\(0,1fr\)!important/)
+  const sample = evaluationDonutMetrics({
+    total: 100, insights: { jobs: 60, programs: 40, recurring: 23, highMemory: 9, wpOverlap: 7 }
+  })
+  assert.deepEqual(sample.map(metric => metric.title), ['Workload Mix','Recurring Workloads','High Memory','WP Signal Overlap'])
+  assert.deepEqual(sample.map(metric => metric.amount), ['60','23','9','7'])
+  assert.deepEqual(sample.map(metric => metric.ratio), [60,23,9,7])
+})
+
+test('evaluation donuts keep missing signal counts unknown, without inferred zeros',()=>{
+  const sample = evaluationDonutMetrics({
+    total: 5, insights: { jobs: 5, programs: 0, recurring: null, highMemory: 1, wpOverlap: undefined }
+  })
+  assert.equal(sample[0].available,true)
+  assert.equal(sample[0].ratio,100)
+  assert.equal(sample[1].available,false)
+  assert.equal(sample[1].amount,'—')
+  assert.equal(sample[2].amount,'1')
+  assert.equal(sample[2].ratio,20)
+  assert.equal(sample[3].available,false)
+  assert.deepEqual(evaluationDonutMetrics(null),[])
+  const invalid = evaluationDonutMetrics({total:2,insights:{jobs:2,programs:2,recurring:3}})
+  assert.equal(invalid[0].available,false)
+  assert.equal(invalid[1].available,false)
 })
