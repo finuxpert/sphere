@@ -186,7 +186,6 @@
 }
 .appShell:has(.rundeckPanel) .rundeckTrendSharedControls{
   min-height:40px!important;margin:0 0 7px!important;gap:8px 16px!important;
-  align-items:center!important;
 }
 .appShell:has(.rundeckPanel) .rundeckTrendSharedGroup{gap:5px!important}
 .appShell:has(.rundeckPanel) .rundeckTrendSharedGroup>span{
@@ -758,7 +757,7 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
    gap:4px!important;margin:3px 0!important;overflow:visible!important;
  }
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalSummary span{
-   min-height:30px!important;padding:3px 5px!important;min-width:0!important;
+   min-height:30px!important;
  }
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance .rundeckJobAnalysisCanvas{
    padding:0!important;min-height:0!important;
