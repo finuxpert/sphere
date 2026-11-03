@@ -7,6 +7,16 @@ export const observedNumber = value =>
 export const workloadMetric = (row, metric) =>
   observedNumber(metric === 'pss' ? row?.avg_pss_gb : row?.avg_cpu_pct)
 
+// Decimal-scaled mini charts preserve low I/O Wait observations without clipping.
+export function miniChartAxisUpper(value, unit = '%') {
+  const peak = observedNumber(value) ?? 0
+  if (unit !== '%') return Math.max(0.5, Math.ceil(peak * 1.12 / 0.5) * 0.5)
+  const padded = Math.max(0.1, peak * 1.12)
+  const magnitude = 10 ** Math.floor(Math.log10(padded))
+  const nice = [1, 2, 2.5, 5, 10].find(step => step * magnitude >= padded) ?? 10
+  return Number((nice * magnitude).toPrecision(10))
+}
+
 export function topResourceConsumers(rows, metric = 'cpu', limit = 5) {
   if (!['cpu', 'pss'].includes(metric)) return []
   return (Array.isArray(rows) ? rows : [])
