@@ -71,6 +71,7 @@ STAGE=BACKEND_UNIT_TESTS
   backend.tests.test_rundeck_network_trends \
   backend.tests.test_rundeck_monthly_review \
   backend.tests.test_rundeck_weekly_report \
+  backend.tests.test_rundeck_top_consumers \
   backend.tests.test_rundeck_infra >> "$LOG" 2>&1
 echo "BACKEND_TESTS=PASS"
 
