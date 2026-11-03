@@ -154,3 +154,14 @@ Removal criteria: a declaration was eligible only when a later declaration with 
 Source comparison independently confirmed identical final normalized values for **10,079 selector/context/property keys** across all 14 files. Source !important occurrences decreased by **66**. Fourteen fixed-fingerprint tests in scripts/tests/css-cascade-scan.test.mjs enforce the approved winning-value map. This is **static parity**, not full computed-style or pixel-by-pixel proof; the Chromium/layout/browser and PDF QA gates are still required before merging.
 
 **Excluded from this pass:** merging different selector lists, reorganizing media-query blocks, renaming versioned CSS imports, removing used CSS files, changing backend/SQL/API behavior, database maintenance, PROD deployment, or DEV deployment. Remaining repeated rules often encode intentional cascade changes; defer them until route-specific computed-style and visual snapshots can establish safety.
+
+
+## Job History data-module extraction — phase 5
+
+Scope: **DEV repository refactoring only**, starting from SHA 944da649fd33ab6c7b8b40ef15b954a018fe0359. The large React component src/tools/components/RundeckJobHistory.jsx delegates pure episode/metric/formatting functions to src/tools/components/rundeckJobHistoryData.js. The module reuses the existing sapUiFormat.js formatWib function.
+
+- Ten pure helpers are imported by the React component: rowMetric, selectObservationEpisode, episodeStats, durationText, chartAxisText, chartAxisSplitNumber, temporalText, nearestRow, metricSeriesData and chartProfile. Their internal helper dependencies (numeric, observationEpisodes, average and peakObservation) move with them.
+- All three moved source regions were confirmed **byte-identical** to the previous JSX implementation. Reconstructing the previous component by reversing the extraction and import yielded a **byte-identical remainder**. In particular, API fetches, chart component JSX, issue marker placement and React hooks were not changed.
+- The component source decreases from 65,011 to 57,340 text characters (7,671 fewer). This is **separation of responsibilities, not an overall repository byte/file-count reduction**; one helper module and one dedicated regression-test file were added.
+- Six new behavior tests in scripts/tests/rundeck-job-history-data.test.mjs cover nullable CPU/PSS/WP metrics, 25-minute episode boundaries, selected episode, peak/average statistics, explicit chart gap separators, WIB labels, and profile selection.
+- The existing integrity suite runs these tests. Full frontend QA, Chromium Monitoring geometry, management PDF and backend tests remain merge gates. No DB, API, SQL, collector, deployment or PROD changes occurred.
