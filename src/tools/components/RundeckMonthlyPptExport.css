@@ -30,7 +30,7 @@
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagement{
   margin:0!important;width:100%!important;flex:1;min-height:0;
-  display:grid!important;grid-template-rows:168px 112px 172px 156px!important;
+  display:grid!important;grid-template-rows:158px 139px 168px 141px!important;
   gap:7px!important;align-content:start!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPair{
@@ -51,25 +51,27 @@
   font-size:11px!important;color:#52697b!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyTrend svg{
-  width:100%!important;height:108px!important;min-height:0!important;
+  width:100%!important;height:100px!important;min-height:0!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyTrendLegend{
   gap:15px!important;margin:0!important;font-size:11px!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerBars{
-  min-height:0!important;grid-template-rows:repeat(5,14px)!important;gap:2px!important;
+  min-height:0!important;grid-template-rows:repeat(5,minmax(0,1fr))!important;gap:2px!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerBar{
-  line-height:1!important;font-size:10.5px!important;gap:8px!important;
+  grid-template-columns:minmax(0,2.4fr) minmax(42px,1fr) 84px!important;
+  line-height:1.05!important;font-size:10.5px!important;gap:8px!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerJob{
-  overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;
+  overflow-wrap:anywhere!important;white-space:normal!important;
+  word-break:normal!important;text-overflow:clip!important;line-height:1.06!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerTable{
-  font-size:10.5px!important;line-height:1.1!important;
+  font-size:11px!important;line-height:1.15!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerTable :is(th,td){
-  padding:3px 4px!important;color:#21394e!important;border-color:#e0e6eb!important;
+  padding:5px 4px!important;color:#21394e!important;border-color:#e0e6eb!important;
   overflow-wrap:anywhere!important;
 }
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerTable th{
@@ -78,4 +80,4 @@
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPanel.is-storage
  .sphereMonthlyStorageNote{font-size:10px!important;white-space:nowrap!important;}
 .sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPanel.is-storage
- .sphereMonthlyManagerTable :is(th,td){font-size:11px!important;padding:4px 6px!important;}
+ .sphereMonthlyManagerTable :is(th,td){font-size:11.4px!important;padding:4px 6px!important;}
