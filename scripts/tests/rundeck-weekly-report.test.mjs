@@ -32,12 +32,15 @@ test('weekly model uses seven calendar days in WIB even when the week crosses tw
   assert.equal(report.daily.length,7)
 })
 
-test('weekly management PDF is A3 landscape and has the weekly title and exact bounds',async()=>{
+test('weekly management PDF defaults to one 16:9 landscape slide with exact bounds',async()=>{
   const pdf=await buildManagementMonthlyPdf({month,data:example,returnInstance:true})
   assert.equal(pdf.internal.getNumberOfPages(),1)
+  assert.ok(Math.abs(pdf.internal.pageSize.getWidth()-960)<.25)
+  assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-540)<.25)
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   assert.ok(stream.includes('SAP Weekly Performance Report'))
-  assert.ok(stream.includes('26 Oct 2026 - 01 Nov 2026'))
+  assert.ok(stream.includes('Period: 26 Oct 2026 - 01 Nov 2026'))
+  assert.ok(stream.includes('Observed days 3/7'))
   assert.ok(!stream.includes('SAP Monthly Performance Report'))
 })
 
@@ -68,7 +71,7 @@ test('custom report keeps only dates in an inclusive cross-month window',()=>{
   assert.equal(m.series[0].days[2].cpu,95)
 })
 
-test('one-day custom report remains one landscape A3 PDF',async()=>{
+test('one-day custom report is 16:9, with A3 only when explicitly selected',async()=>{
   const data={...example,period:'custom',week_start:null,
     start_date:'2026-10-31',end_date:'2026-10-31',
     monthly_storage:{month,period:'custom',week_start:null,
@@ -76,9 +79,15 @@ test('one-day custom report remains one landscape A3 PDF',async()=>{
   }
   const pdf=await buildManagementMonthlyPdf({month,data,returnInstance:true})
   assert.equal(pdf.internal.getNumberOfPages(),1)
+  assert.ok(Math.abs(pdf.internal.pageSize.getWidth()-960)<.25)
+  assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-540)<.25)
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   assert.ok(stream.includes('SAP Custom Performance Report'))
-  assert.ok(stream.includes('31 Oct 2026 - 31 Oct 2026'))
+  assert.ok(stream.includes('Period: 31 Oct 2026 - 31 Oct 2026'))
+  const print=await buildManagementMonthlyPdf({month,data,returnInstance:true,format:'a3'})
+  assert.equal(print.internal.getNumberOfPages(),1)
+  assert.ok(Math.abs(print.internal.pageSize.getWidth()-1190.55)<.25)
+  assert.ok(Math.abs(print.internal.pageSize.getHeight()-841.89)<.25)
 })
 
 test('custom export refuses wrong date scopes, reversed dates and over 31 days',()=>{
@@ -100,4 +109,25 @@ test('custom export refuses wrong date scopes, reversed dates and over 31 days',
   assert.throws(()=>monthlyEnterpriseReportModel(month,{
     ...data,week_start:'2026-10-26',
   }),/Invalid custom/)
+})
+
+test('weekly A3 print is opt-in and slide remains 16:9',async()=>{
+  const slide=await buildManagementMonthlyPdf({month,data:example,returnInstance:true})
+  const print=await buildManagementMonthlyPdf({month,data:example,format:'a3',returnInstance:true})
+  assert.equal(slide.internal.getNumberOfPages(),1)
+  assert.equal(print.internal.getNumberOfPages(),1)
+  assert.ok(Math.abs(slide.internal.pageSize.getWidth()-960)<.25)
+  assert.ok(Math.abs(print.internal.pageSize.getWidth()-1190.55)<.25)
+})
+test('weekly window ends before 2 Nov and accepts 1 Nov evidence',()=>{
+  const scoped={...example,monthly_storage:{...example.monthly_storage,items:[
+    {category:'File System OS',status:'COLLECTED',host:'AOPH1PAPPDC',
+      mount_point:'/',total_bytes:100e9,used_bytes:50e9,free_bytes:50e9,
+      sample_at:'2026-11-01T16:59:59Z'},
+  ]}}
+  const model=monthlyEnterpriseReportModel(month,scoped)
+  assert.equal(model.period.startUtc,'2026-10-25T17:00:00.000Z')
+  assert.equal(model.period.exclusiveEndUtc,'2026-11-01T17:00:00.000Z')
+  assert.equal(model.storage[0].category,'File System OS')
+  assert.equal(model.observedDays,3)
 })
