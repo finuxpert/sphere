@@ -284,6 +284,29 @@ def _storage_used_bytes(row):
     return None
 
 
+def _storage_explicit_available_bytes(row):
+    """Only a source-reported available value may be labelled available.
+
+    The positional filesystem contract contains size, used, Use% and mount,
+    but NOT actual available blocks. Older rows stored total-minus-used in
+    avail_bytes: that derived value must not be presented as df Avail.
+    """
+    details = row.get("details") or {}
+    if not isinstance(details, dict):
+        return None
+    for key, factor in (("avail_bytes", 1), ("available_bytes", 1),
+                        ("avail_kb", 1024), ("available_kb", 1024)):
+        raw = details.get(key)
+        if raw is None:
+            continue
+        try:
+            n = int(raw)
+        except (ValueError, TypeError):
+            return None
+        return n * factor if n >= 0 else None
+    return None
+
+
 def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | None = None, start_date: str | None = None, end_date: str | None = None):
     """Report only independently verified, month-scoped infrastructure samples.
 
@@ -346,13 +369,18 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
             mapped_count += 1
         source = observed.get((host, mount)) if configured else None
         total = source.get("total_bytes") if source else None
-        free = source.get("avail_bytes") if source else None
+        # Leave available unknown when only positional size/used/Use% exists.
+        # Keep the original df Use%; it can differ from used/total because of
+        # filesystem reserved blocks and is not safe to recompute.
+        available = _storage_explicit_available_bytes(source) if source else None
         used = _storage_used_bytes(source) if source else None
         pct = source.get("used_pct") if source else None
         complete = (source is not None and
                     all(isinstance(n, (int, float)) and n >= 0
-                        for n in (total, free, used, pct)) and
-                    total > 0 and used <= total and free <= total and pct <= 100)
+                        for n in (total, used, pct)) and
+                    total > 0 and used <= total and 0 <= pct <= 100)
+        observed_available = (isinstance(available, (int, float)) and
+                              0 <= available <= total) if complete else False
         if complete:
             reason = None
         elif not configured:
@@ -370,7 +398,8 @@ def monthly_storage_evidence(month: str, conn, mapping: dict, week_start: str | 
             "host": host or None, "mount_point": mount or None,
             "total_bytes": total if complete else None,
             "used_bytes": used if complete else None,
-            "free_bytes": free if complete else None,
+            "free_bytes": available if observed_available else None,
+            "availability_source": "EXPLICIT" if observed_available else "NOT_RETAINED",
             "used_pct": pct if complete else None,
             "sample_at": source.get("collected_at") if source and complete else None,
             "source": "rundeck_infra_filesystems",
