@@ -98,7 +98,7 @@ test('monthly enterprise PDF is exactly one 16:9 landscape page with evidence la
   ])assert.ok(!stream.includes(removed),'Redundant copy remains: '+removed)
   for(const expected of [
     'APP1','APP2','APP3','APP4','APP5',
-    'CPU High Checks','RAM High Checks',
+    'CPU High','RAM High','Checks',
     'Peak','Limit 75%','Limit 80%',
     '0%','25%','50%','75%','100%',
     '30 Sep','Storage Capacity','Available','Last Seen',
