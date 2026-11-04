@@ -41,7 +41,7 @@ jobs:
             pdftoppm -f 1 -l 1 -singlefile -r 144 -png \
               "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" \
               "$RUNNER_TEMP/sphere-monthly-16x9-preview"
-            python -c 'import struct,sys; raw=open(sys.argv[1],"rb").read(24); assert raw[:8]==b"\\x89PNG\\r\\n\\x1a\\n"; assert struct.unpack(">II",raw[16:24])==(1920,1080)' \
+            python -c 'import struct,sys; raw=open(sys.argv[1],"rb").read(24); assert raw[:8]==bytes([137,80,78,71,13,10,26,10]); assert struct.unpack(">II",raw[16:24])==(1920,1080)' \
               "$RUNNER_TEMP/sphere-monthly-16x9-preview.png"
           fi
       - name: Upload 16:9 management visual QA artifacts
