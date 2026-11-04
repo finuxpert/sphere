@@ -394,7 +394,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     pct(row.avg_ram_pct),pct(row.peak_ram_pct),
     number(row.cpu_warning_host_checks,0),number(row.ram_warning_host_checks,0),
   ])
-  const srvSpec=isSlide?[[32,'left'],[43,'right'],[43,'right'],[45,'right'],[45,'right'],[55,'right'],[55,'right']]:[[43,'left'],[50,'right'],[50,'right'],[52,'right'],[52,'right'],[60,'right'],[62,'right']]
+  const srvSpec=isSlide?[[30,'left'],[40,'right'],[40,'right'],[40,'right'],[40,'right'],[64,'right'],[64,'right']]:[[40,'left'],[45,'right'],[45,'right'],[45,'right'],[45,'right'],[68,'right'],[68,'right']]
   table(M+10,lowY+lowH-(isSlide?29:36),serverW-20,srvSpec,
     ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU High Checks','RAM High Checks'],
     srvRows,isSlide?20:25,isSlide?14.5:32,isSlide?7.3:8)
