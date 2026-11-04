@@ -163,7 +163,7 @@ export function monthlyEnterpriseReportModel(month,data) {
 }
 
 export async function buildManagementMonthlyPdf({month,data,returnInstance=false,format=null}) {
-  const outputFormat=format||(data?.week_start||data?.start_date?'a3':'16:9')
+  const outputFormat=format||'16:9'
   if(!['16:9','a3'].includes(outputFormat))throw Error('Unsupported management PDF format')
   const m=monthlyEnterpriseReportModel(month,data)
   const {jsPDF}=await import('jspdf')
@@ -199,7 +199,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     if(radius)pdf.roundedRect(x,H-y-h,w,h,radius,radius,'F')
     else pdf.rect(x,H-y-h,w,h,'F')
   }
-  function section(x,y,title) {text(x,y,title,isSlide?9.6:12,'bold','navy')}
+  function section(x,y,title) {text(x,y,title,isSlide?10.1:12,'bold','navy')}
   function fitText(x,y,s,width,align='left',base=8.0,color='ink',weight='normal') {
     const label=String(s??'N/A')
     let sz=base
@@ -253,7 +253,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',
   }).format(new Date(date+'T00:00:00Z'))
   const periodLabel=m.customStart||m.weekStart
-    ? readableDate(m.dates[0])+' - '+readableDate(m.dates[m.dates.length-1])+' (WIB)'
+    ? 'Period: '+readableDate(m.dates[0])+' - '+readableDate(m.dates[m.dates.length-1])+' (WIB)'
     : m.period.label
   // Period bounds are calendar dates in Asia/Jakarta (exclusive UTC end in the model).
   text(M+(isSlide?129:158),H-(isSlide?22:28),reportTitle,isSlide?14:16,'bold','navy')
@@ -353,11 +353,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     const max=Math.max(0,...values.filter(n=>n!==null))
     rows.slice(0,5).forEach((row,i)=>{
       const yy=start-i*dy
-      fitText(x+(isSlide?11:16),yy,row.consumer_key,isSlide?223:259,'left',isSlide?6.8:7.25)
+      fitText(x+(isSlide?11:16),yy,row.consumer_key,isSlide?223:259,'left',isSlide?7.3:7.25)
       fillRect(bx,yy-2,bw,7.2,'header',2)
       const n=metric(row)
       if(n!==null && max>0)fillRect(bx,yy-2,bw*n/max,7.2,i===0?'red':'blue',2)
-      text(x+panelW-10,yy,n===null?'N/A':number(n,2)+labelSuffix,isSlide?7.1:7.7,'normal','ink','right')
+      text(x+panelW-10,yy,n===null?'N/A':number(n,2)+labelSuffix,isSlide?7.6:7.7,'normal','ink','right')
     })
     if(!rows.length)text(x+panelW/2,barY+barH/2,'No workloads recorded',9,'normal','muted','center')
   }
@@ -405,7 +405,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   const srvSpec=isSlide?[[32,'left'],[43,'right'],[43,'right'],[45,'right'],[45,'right'],[55,'right'],[55,'right']]:[[43,'left'],[50,'right'],[50,'right'],[52,'right'],[52,'right'],[60,'right'],[62,'right']]
   table(M+10,lowY+lowH-(isSlide?29:36),serverW-20,srvSpec,
     ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU High Reads','RAM High Reads'],
-    srvRows,isSlide?20:25,isSlide?14.5:32,isSlide?6.9:8)
+    srvRows,isSlide?20:25,isSlide?14.5:32,isSlide?7.3:8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
     return [
@@ -426,7 +426,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   jobSpec[jobSpec.length-1][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
   table(jobX+10,lowY+lowH-(isSlide?29:36),jobW-20,jobSpec,
     ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Evidence (WIB)','Tuning action'],
-    jobRows,isSlide?20:25,isSlide?14.5:17.8,isSlide?6.5:7.5)
+    jobRows,isSlide?20:25,isSlide?14.5:17.8,isSlide?7.0:7.5)
 
   // Four verified mount-category rows. Absence of a correctly mapped READY
   // historical filesystem sample remains "Not Collected", never zero/NORMAL.
@@ -456,7 +456,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   table(M+10,fsY+fsH-(isSlide?28:32),CW-20,fsSpec,
     ['File System','Mounted On / Host','Total Capacity','Used Capacity',
      'Free Capacity','Usage %','Sample WIB'],
-    fsRows,isSlide?16:23,isSlide?13:17.4,isSlide?6.9:7.8)
+    fsRows,isSlide?16:23,isSlide?13:17.4,isSlide?7.5:7.8)
   // All report content stays on this single page.
   if(pdf.internal.getNumberOfPages()!==1)throw Error('Enterprise report must fit one landscape page')
   return returnInstance?pdf:pdf.output('blob')
