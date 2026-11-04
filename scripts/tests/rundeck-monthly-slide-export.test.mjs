@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from '../../src/tools/components/rundeckMonthlyEnterprisePdf.js'
@@ -61,4 +62,19 @@ test('16:9 PDF is single page, has five-ranked workloads and excludes out-of-win
     'Top 5 Tuning Candidates','Observed days 1/31','Not Collected'])assert.ok(stream.includes(label),label)
   assert.ok(!stream.includes('Top 10 Tuning Candidates'))
   await assert.rejects(buildManagementMonthlyPdf({month:'2026-10',data,format:'letter'}),/Unsupported/)
+})
+
+test('PowerPoint PNG export uses the exact report model with enforced 1920x1080 dimensions',()=>{
+  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  const css=readFileSync(new URL('../../src/tools/components/RundeckMonthlyPptExport.css',import.meta.url),'utf8')
+  assert.match(ui,/async function buildManagementMonthlyPng/)
+  assert.match(ui,/monthlyEnterpriseReportModel\(month,data\)/)
+  assert.match(ui,/await import\('\.\/RundeckMonthlyPptExport\.css'\)/)
+  assert.match(ui,/width:1280,height:720,scale:1\.5,backgroundColor:'#ffffff'/)
+  assert.match(ui,/canvas\.width!==1920\|\|canvas\.height!==1080/)
+  assert.match(ui,/scrollHeight>panel\.clientHeight\+2/)
+  assert.match(ui,/reportType==='png'/)
+  assert.match(ui,/\.png'/)
+  assert.match(css,/width:1280px;height:720px/)
+  assert.match(css,/grid-template-rows:168px 112px 172px 156px/)
 })

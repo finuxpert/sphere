@@ -708,7 +708,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
-        {pdfBusy?'Generating…':'Export PDF 16:9'}
+        {pdfBusy?'Generating…':reportMode==='month'?'Export PDF 16:9':'Export PDF A3'}
       </button>
       {reportMode==='month'&&<button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('png')}>Export PNG 16:9</button>}
       {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
