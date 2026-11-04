@@ -351,7 +351,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
     <div className="sphereMonthlyManagerPair is-tables">
       <section className="sphereMonthlyManagerPanel">
         <h4>Application Server Performance</h4>
-        <table className="sphereMonthlyManagerTable"><thead><tr><th>APP</th><th>CPU Avg</th><th>CPU Max</th><th>RAM Avg</th><th>RAM Max</th><th>CPU High Reads</th><th>RAM High Reads</th></tr></thead>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>APP</th><th>CPU Avg</th><th>CPU Max</th><th>RAM Avg</th><th>RAM Max</th><th>CPU High Checks</th><th>RAM High Checks</th></tr></thead>
           <tbody>{hosts.map(row=><tr key={row.host}>
             <td>{hostLabel(row.host)}</td><td>{pct(row.avg_cpu_pct)}</td><td>{pct(row.peak_cpu_pct)}</td>
             <td>{pct(row.avg_ram_pct)}</td><td>{pct(row.peak_ram_pct)}</td>
@@ -361,7 +361,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>
       <section className="sphereMonthlyManagerPanel">
         <h4>Top 5 Tuning Candidates</h4>
-        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Evidence WIB</th><th>Tuning action</th></tr></thead>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Last Seen (WIB)</th><th>Tuning action</th></tr></thead>
           <tbody>{candidates.map((row,index)=><tr key={id(row)}>
             <td>{index+1}</td><td className="is-job">{row.consumer_key}</td>
             <td>{hostsFor(row)||'—'}</td><td>{fmt(row.observations,0)}</td>
@@ -376,10 +376,14 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>
     </div>
     <section className="sphereMonthlyManagerPanel is-storage">
-      <div className="sphereMonthlyManagerHeading"><h4>Storage Capacity</h4>
+      <div className="sphereMonthlyManagerHeading"><h4>{'Storage Capacity'+(()=>{
+        const known=[...new Set((storage?.items||[]).map(row=>hostLabel(row.host))
+          .filter(label=>/^APP[1-5]$/.test(label)))]
+        return known.length===1?' · '+known[0]:''
+      })()}</h4>
         <small className="sphereMonthlyStorageNote" role="status">{monthlyStorageNote(storage, !storage && !storageError, storageError)}</small>
       </div>
-      <table className="sphereMonthlyManagerTable"><thead><tr><th>File System</th><th>Mounted On / Host</th><th>Total Capacity</th><th>Used Capacity</th><th>Free Capacity</th><th>Usage %</th><th>Sample WIB</th></tr></thead><tbody>
+      <table className="sphereMonthlyManagerTable"><thead><tr><th>File System</th><th>Mounted On / Host</th><th>Total Capacity</th><th>Used Capacity</th><th title="Source-reported df available blocks only">Available (df)</th><th>Usage %</th><th>Sample WIB</th></tr></thead><tbody>
         {MONTHLY_STORAGE_ROWS.map(name=>{
           const row=storage?.month===month &&
             (weekStart?storage?.week_start===weekStart:!storage?.week_start) &&
@@ -392,7 +396,8 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
           return <tr key={name} title={present ? 'Saved Infrastructure sample · '+when(row.sample_at) : MONTHLY_STORAGE_REASON[row?.reason]||'Historical sample unavailable'}><td>{name}</td>
             <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
             <td>{present?monthlySize(row.total_bytes):'—'}</td><td>{present?monthlySize(row.used_bytes):'—'}</td>
-            <td>{present?monthlySize(row.free_bytes):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
+            <td>{present&&row.availability_source==='EXPLICIT'&&Number.isFinite(Number(row.free_bytes))
+              &&row.free_bytes!==null?monthlySize(row.free_bytes):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
             <td>{present?when(row.sample_at):'—'}</td></tr>
         })}
       </tbody></table>
