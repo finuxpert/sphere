@@ -413,14 +413,15 @@ async function buildManagementMonthlyPng({month,data}) {
     flushSync(()=>root.render(<div className="sphereMonthlyPptFrame">
       <header className="sphereMonthlyPptHeader">
         <img src={logo} alt="SPHERE"/>
-        <div className="sphereMonthlyPptTitle"><strong>SAP Monthly Performance Report</strong>
+        <div className="sphereMonthlyPptTitle"><strong>{model.customStart?'SAP Custom Performance Report':model.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report'}</strong>
           <span>{model.period.label}</span></div>
         <small>Observed days {model.observedDays}/{model.days}
           {Number.isFinite(Number(model.quality?.coverage_pct))
             ? ' · Checks '+Number(model.quality.coverage_pct).toFixed(1)+'%':''}</small>
       </header>
-      <MonthlyManagementDashboard month={month} full={data} preview={null}
-        storage={data.monthly_storage} loading={false}/>
+      <MonthlyManagementDashboard month={month} weekStart={model.weekStart}
+        customStart={model.customStart} customEnd={model.customEnd}
+        full={data} preview={null} storage={data.monthly_storage} loading={false}/>
     </div>))
     const brand=mount.querySelector('.sphereMonthlyPptHeader img')
     if(brand)await brand.decode()
@@ -457,6 +458,11 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const requestedWeek=reportMode==='week'?weekStart:null
   const requestedStart=reportMode==='custom'?customStart:null
   const requestedEnd=reportMode==='custom'?customEnd:null
+  const exportStem=requestedStart
+    ?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd
+    :requestedWeek
+      ?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek
+      :'SPHERE-Monthly-SAP-Performance-Report-'+month
   const reportParams=React.useCallback(()=>new URLSearchParams({month,
     ...(requestedWeek?{week_start:requestedWeek}:{}),
     ...(requestedStart?{start_date:requestedStart,end_date:requestedEnd}:{})}),
@@ -654,7 +660,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         throw Error('PDF evidence does not match the selected reporting period')
       }
       let exportData=reportData
-      if(reportType==='management' || reportType==='png') {
+      if(reportType==='management' || reportType==='png' || reportType==='print-a3') {
         const storageResponse=await fetch(API+'/infra/monthly-storage?'+reportParams(),{cache:'no-store'})
         if(!storageResponse.ok)throw Error('Reporting period storage evidence unavailable (HTTP '+storageResponse.status+')')
         const monthlyStorage=await storageResponse.json()
@@ -665,7 +671,9 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         ? buildManagementMonthlyPng({month,data:exportData})
         : reportType==='management'
           ? buildManagementMonthlyPdf({month,data:exportData})
-          : buildMonthlyPdf({month,data:exportData}))
+          : reportType==='print-a3'
+            ? buildManagementMonthlyPdf({month,data:exportData,format:'a3'})
+            : buildMonthlyPdf({month,data:exportData}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
@@ -708,14 +716,14 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
-        {pdfBusy?'Generating…':reportMode==='month'?'Export PDF 16:9':'Export PDF A3'}
+        {pdfBusy?'Generating…':'Export PDF 16:9'}
       </button>
-      {reportMode==='month'&&<button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('png')}>Export PNG 16:9</button>}
+      <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('png')}>Export PNG 16:9</button>
+       <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('print-a3')}>PDF A3 (Print)</button>
       {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
-        download={pdfMode==='png'?'SPHERE-Monthly-SAP-Performance-Report-'+month+'-16x9.png':pdfMode==='management'
-          ?(requestedStart?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd+'.pdf':requestedWeek
-            ?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'-16x9.pdf')
-          :'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download {pdfMode==='png'?'PNG':'PDF'}</a>}
+         download={pdfMode==='technical'?'SPHERE-Monthly-Technical-Review-'+month+'.pdf'
+           :exportStem+(pdfMode==='png'?'-16x9.png':pdfMode==='print-a3'?'-A3.pdf':'-16x9.pdf')}>
+         Download {pdfMode==='png'?'PNG':'PDF'}</a>}
       </div>
       {loading&&preview&&<small className="sphereMonthlyInlineStatus" role="status">Loading Jobs & Programs…</small>}
       </div>
