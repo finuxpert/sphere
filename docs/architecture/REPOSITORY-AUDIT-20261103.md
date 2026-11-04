@@ -196,3 +196,10 @@ Scope: **DEV repository refactoring only**, starting from SHA 944da649fd33ab6c7b
 - `rundeckSourcePresentation.js` holds pure time, metric, age, clipping and availability state helpers. Also moved `shortSignal` and `issueSignalText` with their unchanged normalization logic; PDF Monitoring still calls `issueSignalText` for incident evidence.
 - Request/AbortController, 20-second preview and 35-second evaluation retry, scope verification, EventSource, report and PDF generation, React state and all markup remain with their original components. Existing regression checks relocated to the owning helper; dedicated Node tests verify provenance and missing-data semantics.
 - No CSS, backend, SQL, schema, collector, UI, deployment, database mutations, or PROD changes; no performance claim until runtime benchmark.
+
+## Guarded DEV frontend-only release path (2026-11-04)
+
+- Former `release-ui-dev.sh` was locked to obsolete UI v1.35.6 and an old browser spec; current source is v1.35.20. It now accepts the exact clean `rundeck-sphere-dev` revision and current dynamic app version.
+- Uses the existing exact-SHA QA/build followed by atomic replacement of **only** `/var/www/sphere-dev/current`. No backend restarts, collector starts, credentials, DB migrations, SQL writes or PROD updates.
+- Records DEV backend and PROD pointers and PROD web SHA; validates local HTTPS/Nginx DEV web, DEV and PROD read-only JSON endpoints, and DEV API health. Rollback restores previous DEV web immediately on any failing post-cutover check.
+- GitHub Actions supplies Chromium/browser, monthly PDF, and backend QA proof for the merged SHA; server-side UI script does not require a browser installed. It does not automatically deploy: the operator runs on JAHSVR-SPHERE with the exact GitHub DEV SHA.
