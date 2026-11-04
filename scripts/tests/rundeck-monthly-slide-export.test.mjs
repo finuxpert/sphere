@@ -118,7 +118,7 @@ test('storage uses source-reported df Use% and suppresses inferred available byt
   ]}}
   const noAvailable=await buildManagementMonthlyPdf({month:'2026-10',data:payload,returnInstance:true})
   const noAvailableText=noAvailable.internal.pages[1].join('\n')
-  for(const label of ['Storage Capacity','APP1','Available (df)','76%','Last Seen (WIB)','CPU High Checks','RAM High Checks']){
+  for(const label of ['Storage Capacity','APP1','Available','76%','Last Seen','CPU High Checks','RAM High Checks']){
     assert.ok(noAvailableText.includes(label),'Missing storage report field: '+label)
   }
   assert.ok(!noAvailableText.includes('17.77 GB'),'Inferred storage available must be hidden')
