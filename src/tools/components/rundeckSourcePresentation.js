@@ -24,6 +24,18 @@ export const ageLabel = (minutes) => {
   return rest ? `${hours}h ${rest}m` : `${hours}h`
 }
 
+export const shortSignal = (label = '') => String(label || 'Performance issue')
+  .replace(/Critical Work Process/gi, 'Critical WP')
+  .replace(/Work Process/gi, 'WP')
+
+export const issueSignalText = (label, value) => {
+  const normalized = shortSignal(label)
+  if (/^Critical WP\b/i.test(normalized)) return `Critical WP ${value}`
+  return [normalized, value].filter(Boolean).join(' ')
+}
+
+
+
 export function clipped(value, length = 44) {
   const text = String(value || '—')
   return text.length > length ? `${text.slice(0, length - 1)}…` : text

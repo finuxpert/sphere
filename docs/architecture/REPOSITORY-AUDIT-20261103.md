@@ -193,6 +193,6 @@ Scope: **DEV repository refactoring only**, starting from SHA 944da649fd33ab6c7b
 ## Monthly Evidence and Monitoring Source helper separation — Batch 9
 
 - Baseline `20b3a0520c789088cf373c43a8edb2401537d5ed`, GitHub branch DEV only. `rundeckMonthlyEvidence.js` holds the pre-existing pure number, WIB, host, ABAP error attribution, saved storage and monthly/weekly/custom peak functions (function bodies transferred unchanged).
-- `rundeckSourcePresentation.js` holds pure time, metric, age, clipping and availability state helpers. Removed local dead `shortSignal` and `issueSignalText` definitions, which have no callers.
+- `rundeckSourcePresentation.js` holds pure time, metric, age, clipping and availability state helpers. Also moved `shortSignal` and `issueSignalText` with their unchanged normalization logic; PDF Monitoring still calls `issueSignalText` for incident evidence.
 - Request/AbortController, 20-second preview and 35-second evaluation retry, scope verification, EventSource, report and PDF generation, React state and all markup remain with their original components. Existing regression checks relocated to the owning helper; dedicated Node tests verify provenance and missing-data semantics.
 - No CSS, backend, SQL, schema, collector, UI, deployment, database mutations, or PROD changes; no performance claim until runtime benchmark.
