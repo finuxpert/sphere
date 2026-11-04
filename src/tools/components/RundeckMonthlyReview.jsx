@@ -1,11 +1,14 @@
 import React from 'react'
-import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount } from './rundeckMonthlyPeriod.js'
+import { createRoot } from 'react-dom/client'
+import { flushSync } from 'react-dom'
+import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod } from './rundeckMonthlyPeriod.js'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
+import './RundeckMonthlyPptExport.css'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import './RundeckUnifiedExperience20261030.css'
 
@@ -311,6 +314,7 @@ function MonthlyRanking({ title, rows=[], metric, loading=false, error='' }) {
 function MonthlyManagementDashboard({month,weekStart=null,customStart=null,customEnd=null,full,preview,storage,storageError='',loading=false,evaluationError=''}) {
   const data=full||preview
   const pressure=data?.monthly_pressure||{}
+  const reportWindow=monthlyReportPeriod(month,{weekStart,customStart,customEnd})
   const model=full && Array.isArray(full.monthly_top_wp_cpu) &&
     Array.isArray(full.monthly_top_wp_pss) && storage?.month===month &&
     (weekStart ? storage?.week_start===weekStart : !storage?.week_start) &&
@@ -381,7 +385,10 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
             (weekStart?storage?.week_start===weekStart:!storage?.week_start) &&
             (customStart?storage?.start_date===customStart&&storage?.end_date===customEnd:!storage?.start_date)
             ?storage.items?.find(r=>r.category===name):null
-          const present=row?.status==='COLLECTED'
+          const snapshot=Date.parse(row?.sample_at||'')
+          const present=row?.status==='COLLECTED' && Number.isFinite(snapshot) &&
+            snapshot>=Date.parse(reportWindow.startUtc) &&
+            snapshot<Date.parse(reportWindow.exclusiveEndUtc)
           return <tr key={name} title={present ? 'Saved Infrastructure sample · '+when(row.sample_at) : MONTHLY_STORAGE_REASON[row?.reason]||'Historical sample unavailable'}><td>{name}</td>
             <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
             <td>{present?monthlySize(row.total_bytes):'—'}</td><td>{present?monthlySize(row.used_bytes):'—'}</td>
@@ -391,6 +398,52 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </tbody></table>
     </section>
   </div>
+}
+
+
+async function buildManagementMonthlyPng({month,data}) {
+  if(typeof document==='undefined')throw Error('PNG export requires a browser')
+  const model=monthlyEnterpriseReportModel(month,data)
+  const mount=document.createElement('section')
+  mount.className='sphereMonthlyReview is-v2 sphereMonthlyPptExport'
+  document.body.appendChild(mount)
+  const root=createRoot(mount)
+  try {
+    const base=import.meta.env.BASE_URL||'/'
+    const logo=new URL(base+'branding/logo/sphere-logo-horizontal-light.png',window.location.origin).href
+    flushSync(()=>root.render(<div className="sphereMonthlyPptFrame">
+      <header className="sphereMonthlyPptHeader">
+        <img src={logo} alt="SPHERE"/>
+        <div className="sphereMonthlyPptTitle"><strong>SAP Monthly Performance Report</strong>
+          <span>{model.period.label}</span></div>
+        <small>Observed days {model.observedDays}/{model.days}
+          {Number.isFinite(Number(model.quality?.coverage_pct))
+            ? ' · Checks '+Number(model.quality.coverage_pct).toFixed(1)+'%':''}</small>
+      </header>
+      <MonthlyManagementDashboard month={month} full={data} preview={null}
+        storage={data.monthly_storage} loading={false}/>
+    </div>))
+    const brand=mount.querySelector('.sphereMonthlyPptHeader img')
+    if(brand)await brand.decode()
+    await document.fonts.ready
+    // Detect clipped content; refuse a misleading image rather than hiding rows.
+    for(const panel of mount.querySelectorAll('.sphereMonthlyManagerPanel')) {
+      if(panel.scrollHeight>panel.clientHeight+2 || panel.scrollWidth>panel.clientWidth+2) {
+        throw Error('PNG slide panel overflows: '+(panel.querySelector('h4')?.textContent||'unknown'))
+      }
+    }
+    const {default:html2canvas}=await import('html2canvas')
+    const canvas=await html2canvas(mount,{
+      width:1280,height:720,scale:1.5,backgroundColor:'#ffffff',
+      useCORS:true,logging:false,
+    })
+    if(canvas.width!==1920||canvas.height!==1080)throw Error('Invalid 16:9 PNG dimensions')
+    return await new Promise((resolve,reject)=>canvas.toBlob(blob=>
+      blob?resolve(blob):reject(Error('PNG encoding failed')),'image/png'))
+  } finally {
+    root.unmount()
+    mount.remove()
+  }
 }
 
 export default function RundeckMonthlyReview({ showTitle = true }) {
@@ -602,16 +655,18 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         throw Error('PDF evidence does not match the selected reporting period')
       }
       let exportData=reportData
-      if(reportType==='management') {
+      if(reportType==='management' || reportType==='png') {
         const storageResponse=await fetch(API+'/infra/monthly-storage?'+reportParams(),{cache:'no-store'})
         if(!storageResponse.ok)throw Error('Reporting period storage evidence unavailable (HTTP '+storageResponse.status+')')
         const monthlyStorage=await storageResponse.json()
         if(monthlyStorage.month!==month || !matchesScope(monthlyStorage) || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected reporting period')
         exportData={...reportData,monthly_storage:monthlyStorage}
       }
-      const blob=await (reportType==='management'
-        ? buildManagementMonthlyPdf({month,data:exportData})
-        : buildMonthlyPdf({month,data:exportData}))
+      const blob=await (reportType==='png'
+        ? buildManagementMonthlyPng({month,data:exportData})
+        : reportType==='management'
+          ? buildManagementMonthlyPdf({month,data:exportData})
+          : buildMonthlyPdf({month,data:exportData}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
@@ -623,7 +678,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   },[data,loading,pdfBusy,month,requestedWeek,requestedStart,requestedEnd,reportParams,matchesScope])
   return <section className="sphereMonthlyReview is-v2 is-single-page container-fluid px-0" aria-label="SAP Performance Report and Job Impact">
     <div className="sphereMonthlyHead">
-      {showTitle && <div className="sphereMonthlyReportTitle"><strong>SAP Performance Report</strong></div>}
+      {showTitle && <div className="sphereMonthlyReportTitle"><strong>SAP Performance Report</strong><small>{monthlyReportPeriod(month,{weekStart:requestedWeek,customStart:requestedStart,customEnd:requestedEnd}).label}</small></div>}
       <div className="sphereMonthlyHeaderControls">
       <div className="sphereMonthlyPicker d-flex align-items-end gap-2">
         <div><label htmlFor="sphere-period-mode">Report period</label>
@@ -654,9 +709,14 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
-        {pdfBusy?'Generating…':'Generate PDF Management'}
+        {pdfBusy?'Generating…':'Export PDF 16:9'}
       </button>
-      {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl} download={pdfMode==='management'?(requestedStart?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd+'.pdf':requestedWeek?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'.pdf'):'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download PDF</a>}
+      {reportMode==='month'&&<button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('png')}>Export PNG 16:9</button>}
+      {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
+        download={pdfMode==='png'?'SPHERE-Monthly-SAP-Performance-Report-'+month+'-16x9.png':pdfMode==='management'
+          ?(requestedStart?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd+'.pdf':requestedWeek
+            ?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'.pdf':'SPHERE-Monthly-SAP-Performance-Report-'+month+'-16x9.pdf')
+          :'SPHERE-Monthly-Technical-Review-'+month+'.pdf'}>Download {pdfMode==='png'?'PNG':'PDF'}</a>}
       </div>
       {loading&&preview&&<small className="sphereMonthlyInlineStatus" role="status">Loading Jobs & Programs…</small>}
       </div>
