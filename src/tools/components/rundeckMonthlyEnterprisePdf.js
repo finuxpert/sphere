@@ -3,7 +3,7 @@
  * Missing dates are gaps; absent values are never replaced with simulated data.
  */
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
-import { monthlyReportPeriod } from './rundeckMonthlyPeriod.js'
+import { monthlyReportPeriod, reportPeakEvidenceWib } from './rundeckMonthlyPeriod.js'
 
 const COLOR = {
   navy: [16,42,67], ink: [28,51,71], muted: [98,118,137],
@@ -258,27 +258,19 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   // Period bounds are calendar dates in Asia/Jakarta (exclusive UTC end in the model).
   text(M+(isSlide?129:158),H-(isSlide?22:28),reportTitle,isSlide?14:16,'bold','navy')
   text(M+(isSlide?129:158),H-(isSlide?40:46),periodLabel,isSlide?9.1:9.4,'normal','muted')
-  const coverage=m.quality?.coverage_pct
-  const available=Number.isFinite(Number(coverage))
-    ? ' · Checks '+number(coverage)+'%' : ''
-  text(W-M,H-(isSlide?40:46),
-    'Observed days '+m.observedDays+'/'+m.days+available,7.4,'normal','muted','right')
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
   const panelY=isSlide?342:H-247,panelH=isSlide?140:180,gap=isSlide?10:12,panelW=(CW-gap)/2
   const seriesColors=['app1','app2','app3','app4','app5']
-  const shortMonth=new Intl.DateTimeFormat('en-GB',{
-    month:'short',timeZone:'UTC',
-  }).format(new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7))-1,1)))
   function trend(x,title,metric,threshold) {
     rect(x,panelY,panelW,panelH,'white',7)
     section(x+(isSlide?11:16),panelY+panelH-(isSlide?18:23),title)
     const best=metric==='cpu'?m.cpuPeak:m.ramPeak
     if(best){
       text(x+panelW-10,panelY+panelH-(isSlide?18:22),
-        'Peak '+pct(best.value)+'  '+best.host,isSlide?7.9:9,'bold','red','right')
-      text(x+panelW-10,panelY+panelH-(isSlide?31:37),
-        wib(best.at)+' WIB',isSlide?6.9:7.3,'normal','muted','right')
+        'Peak '+pct(best.value)+'  '+best.host,isSlide?8.8:9.5,'bold','red','right')
+      text(x+panelW-10,panelY+panelH-(isSlide?32:37),
+        reportPeakEvidenceWib(best.at),isSlide?8.1:8.6,'bold','ink','right')
     }
     const px=x+(isSlide?34:43),py=panelY+(isSlide?32:49),pw=panelW-(isSlide?54:68),ph=isSlide?65:90
     const xFor=day=>px+(day-1)*pw/Math.max(1,m.days-1)
@@ -291,11 +283,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     for(const tick of new Set(m.customStart
       ? [1,Math.max(1,Math.round(m.days/2)),m.days]
       :m.weekStart?[1,4,m.days]:[1,10,20,m.days])) {
-      const label=m.weekStart||m.customStart
-        ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(m.dates[tick-1]+'T00:00:00Z'))
-        :tick===m.days?String(tick).padStart(2,'0')+' '+shortMonth
-          :String(tick).padStart(2,'0')
-      text(xFor(tick),py-15,label,7.3,'normal','muted','center')
+      // X-axis labels are daily buckets. Only the recorded peak carries a clock time.
+      const label=new Intl.DateTimeFormat('en-GB',{
+        timeZone:'UTC',day:'2-digit',month:'short',
+      }).format(new Date(m.dates[tick-1]+'T00:00:00Z'))
+      text(xFor(tick),py-15,label,isSlide?8.0:8.4,'bold','ink','center')
     }
     if(value(threshold)!==null){
       const ty=yFor(value(threshold))
