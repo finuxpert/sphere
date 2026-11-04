@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { buildMonthlyPdf } from '../src/tools/components/rundeckMonthlyPdf.js'
-import { buildManagementMonthlyPdf } from '../src/tools/components/rundeckMonthlyEnterprisePdf.js'
+import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from '../src/tools/components/rundeckMonthlyEnterprisePdf.js'
 
 // Actual jsPDF generation, not a mock of the layout or a regex-only test.
 // Contains long ABAP identifiers and both explicitly dated / snapshot errors.
@@ -76,7 +76,11 @@ for(const label of ['SAP Monthly Performance Report','CPU Utilization Trend',
   'File System OS','Not Collected']) {
   assert.ok(executivePage.includes(label),'Missing A3 management content: '+label)
 }
-assert.ok(!executivePage.includes('ZLAST_CANDIDATE_10'),'Top 5 must not print candidate #10')
+const ranked=monthlyEnterpriseReportModel('2026-09',data)
+assert.equal(ranked.candidates.length,5,'Only five tuning candidates')
+assert.equal(ranked.sortedCpu.length,5,'Only five CPU ranking entries')
+assert.equal(ranked.sortedPss.length,5,'Only five Memory ranking entries')
+assert.equal(ranked.sortedCpu[0].consumer_key,'ZLAST_CANDIDATE_10','Full-population rank must include the highest CPU candidate')
 for(const removed of ['Operational Findings','MONITORING COVERAGE','AOP Production',
   'JOBS & PROGRAMS EVALUATED','System: AOP Production']) {
   assert.ok(!executivePage.includes(removed),'Removed management copy is still present: '+removed)
