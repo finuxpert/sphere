@@ -72,17 +72,17 @@ test('monthly enterprise model uses retained data and does not fill missing cale
   assert.equal(model.candidates[2].peak_pss_gb,null)
 })
 
-test('monthly enterprise PDF is exactly one A3 landscape page with evidence labels',async()=>{
+test('monthly enterprise PDF is exactly one 16:9 landscape page with evidence labels',async()=>{
   const pdf=await buildManagementMonthlyPdf({month:'2026-09',data:fixture,returnInstance:true})
   assert.equal(pdf.internal.getNumberOfPages(),1)
   const w=pdf.internal.pageSize.getWidth(),h=pdf.internal.pageSize.getHeight()
-  assert.ok(Math.abs(w-1190.55)<.25,'A3 landscape width: '+w)
-  assert.ok(Math.abs(h-841.89)<.25,'A3 landscape height: '+h)
+  assert.ok(Math.abs(w-960)<.25,'16:9 landscape width: '+w)
+  assert.ok(Math.abs(h-540)<.25,'16:9 landscape height: '+h)
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   for(const token of [
     'SAP Monthly Performance Report','Application Server Performance',
-    'Top 10 Tuning Candidates','Top 10 Workloads by Peak WP CPU',
-    'Top 10 Workloads by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
+    'Top 5 Tuning Candidates','Top 5 Workloads by Peak WP CPU',
+    'Top 5 Workloads by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
     'Storage Capacity','File System OS','Not Collected',
   ])assert.ok(stream.includes(token),'Missing PDF label: '+token)
   assert.ok(!stream.includes('PROTOTYPE DATA'),'Live export must not claim simulation')
@@ -117,11 +117,11 @@ test('monthly enterprise PDF refuses unverified evidence and bad dates',async()=
 test('original SPHERE logo retains native ratio and report date sits under title',()=>{
   const pdfSource=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
   assert.match(pdfSource,/pdf\.getImageProperties\(logoBytes\)/)
-  assert.match(pdfSource,/Math\.min\(138\/dimensions\.width,32\/dimensions\.height\)/)
+  assert.match(pdfSource,/isSlide\?115:138/)
   assert.match(pdfSource,/dimensions\.width\*scale,dimensions\.height\*scale/)
   assert.doesNotMatch(pdfSource,/106,30/)
-  assert.match(pdfSource,/text\(M\+158,H-28,reportTitle,16/)
-  assert.match(pdfSource,/text\(M\+158,H-46,periodLabel,9\.4/)
+  assert.match(pdfSource,/text\(M\+\(isSlide\?129:158\)/)
+  assert.match(pdfSource,/text\(M\+\(isSlide\?129:158\).*periodLabel/)
   assert.match(pdfSource,/const seriesColors=\['app1','app2','app3','app4','app5'\]/)
 })
 
@@ -135,4 +135,11 @@ test('top WP rankings are independent of tuning candidate order',()=>{
   const model=monthlyEnterpriseReportModel('2026-09',data)
   assert.equal(model.sortedCpu[0].consumer_key,'ZMEMORY_INTENSIVE')
   assert.equal(model.sortedPss[0].consumer_key,'ZCPU_INTENSIVE')
+})
+
+test('A3 remains an explicit optional export format',async()=>{
+  const pdf=await buildManagementMonthlyPdf({month:'2026-09',data:fixture,format:'a3',returnInstance:true})
+  assert.equal(pdf.internal.getNumberOfPages(),1)
+  assert.ok(Math.abs(pdf.internal.pageSize.getWidth()-1190.55)<.25)
+  assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-841.89)<.25)
 })

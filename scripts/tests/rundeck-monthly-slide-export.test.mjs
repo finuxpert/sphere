@@ -1,0 +1,64 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from '../../src/tools/components/rundeckMonthlyEnterprisePdf.js'
+import { monthlyReportPeriod } from '../../src/tools/components/rundeckMonthlyPeriod.js'
+
+const window=monthlyReportPeriod('2026-10')
+test('October calendar window is exact WIB midnight to exclusive next-month midnight',()=>{
+  assert.equal(window.start,'2026-10-01')
+  assert.equal(window.end,'2026-10-31')
+  assert.equal(window.startUtc,'2026-09-30T17:00:00.000Z')
+  assert.equal(window.exclusiveEndUtc,'2026-10-31T17:00:00.000Z')
+  assert.equal(window.label,'Period: 01–31 October 2026 (WIB)')
+  assert.equal(window.days,31)
+  assert.equal(monthlyReportPeriod('2028-02').days,29)
+  assert.throws(()=>monthlyReportPeriod('2026-13'),/Invalid/)
+})
+
+const rows=Array.from({length:10},(_,i)=>({
+  consumer_type:'PROGRAM',consumer_key:'ZWORK_'+String(i+1).padStart(2,'0'),
+  peak_cpu_pct:(i+1)*100,peak_pss_gb:11-i,
+  observations:5,hosts:['AOPH1PAPPDC'],last_seen:'2026-10-09T08:00:00Z',
+  signals:{sustained_high_cpu:true}
+}))
+const data={
+  month:'2026-10',period:'month',
+  quality:{coverage_pct:61.2},summary:{},
+  monthly_errors:{status:'ERROR_SOURCE_NOT_RETAINED'},
+  monthly_pressure:{hosts:[{host:'AOPH1PAPPDC',avg_cpu_pct:20,peak_cpu_pct:88}],
+    daily_hosts:[{day:'2026-10-09',host:'AOPH1PAPPDC',peak_cpu_pct:88,
+      peak_cpu_at:'2026-10-09T07:00:00Z',peak_ram_pct:44,
+      peak_ram_at:'2026-10-09T07:00:00Z'}],
+    thresholds:{cpu_warning_pct:75,ram_warning_pct:80}},
+  monthly_top_wp_cpu:[...rows],
+  monthly_top_wp_pss:[...rows],
+  monthly_abap_candidates:[...rows],
+  monthly_storage:{month:'2026-10',period:'month',items:[
+    {category:'File System OS',status:'COLLECTED',host:'AOPH1PAPPDC',
+      mount_point:'/',total_bytes:100e9,used_bytes:70e9,free_bytes:30e9,used_pct:70,
+      sample_at:'2026-09-30T16:59:59Z'},
+    ...['FS SAP Archive','Archive INTF','INTF'].map(category=>({category,status:'NOT_COLLECTED'}))
+  ]},
+}
+test('ranking is independently sorted, limited to five and never pads missing days',()=>{
+  const m=monthlyEnterpriseReportModel('2026-10',data)
+  assert.deepEqual(m.sortedCpu.map(r=>r.consumer_key),['ZWORK_10','ZWORK_09','ZWORK_08','ZWORK_07','ZWORK_06'])
+  assert.deepEqual(m.sortedPss.map(r=>r.consumer_key),['ZWORK_01','ZWORK_02','ZWORK_03','ZWORK_04','ZWORK_05'])
+  assert.equal(m.candidates.length,5)
+  assert.equal(m.observedDays,1)
+  assert.equal(m.daily[0].cpu,null)
+  assert.equal(m.daily[8].cpu.value,88)
+  assert.equal(m.daily[9].cpu,null)
+  assert.equal(m.period.label,'Period: 01–31 October 2026 (WIB)')
+})
+test('16:9 PDF is single page, has five-ranked workloads and excludes out-of-window storage',async()=>{
+  const pdf=await buildManagementMonthlyPdf({month:'2026-10',data,returnInstance:true})
+  assert.equal(pdf.internal.getNumberOfPages(),1)
+  assert.ok(Math.abs(pdf.internal.pageSize.getWidth()-960)<.25)
+  assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-540)<.25)
+  const stream=pdf.internal.pages[1].join('\n')
+  for(const label of ['Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
+    'Top 5 Tuning Candidates','Observed days 1/31','Not Collected'])assert.ok(stream.includes(label),label)
+  assert.ok(!stream.includes('Top 10 Tuning Candidates'))
+  await assert.rejects(buildManagementMonthlyPdf({month:'2026-10',data,format:'letter'}),/Unsupported/)
+})

@@ -66,16 +66,17 @@ writeFileSync(out,bytes)
 console.log('MONTHLY_PDF=PASS pages='+pageCount+' bytes='+bytes.length+' fixture='+out)
 
 const executive=await buildManagementMonthlyPdf({month:'2026-09',data,returnInstance:true})
-assert.equal(executive.internal.getNumberOfPages(),1,'Management PDF must be exactly one A3 landscape page')
-assert.ok(Math.abs(executive.internal.pageSize.getWidth()-1190.55)<.25)
-assert.ok(Math.abs(executive.internal.pageSize.getHeight()-841.89)<.25)
+assert.equal(executive.internal.getNumberOfPages(),1,'Management PDF must be one 16:9 landscape page')
+assert.ok(Math.abs(executive.internal.pageSize.getWidth()-960)<.25)
+assert.ok(Math.abs(executive.internal.pageSize.getHeight()-540)<.25)
 const executivePage=executive.internal.pages[1].join('\n')
 for(const label of ['SAP Monthly Performance Report','CPU Utilization Trend',
-  'Memory Utilization Trend','Top 10 Workloads by Peak WP CPU','Top 10 Workloads by Peak WP Memory',
-  'Application Server Performance','Top 10 Tuning Candidates','Storage Capacity',
-  'File System OS','Not Collected','ZLAST_CANDIDATE_10']) {
+  'Memory Utilization Trend','Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
+  'Application Server Performance','Top 5 Tuning Candidates','Storage Capacity',
+  'File System OS','Not Collected']) {
   assert.ok(executivePage.includes(label),'Missing A3 management content: '+label)
 }
+assert.ok(!executivePage.includes('ZLAST_CANDIDATE_10'),'Top 5 must not print candidate #10')
 for(const removed of ['Operational Findings','MONITORING COVERAGE','AOP Production',
   'JOBS & PROGRAMS EVALUATED','System: AOP Production']) {
   assert.ok(!executivePage.includes(removed),'Removed management copy is still present: '+removed)
@@ -84,4 +85,8 @@ const executiveBytes=new Uint8Array(executive.output('arraybuffer'))
 assert.equal(String.fromCharCode(...executiveBytes.slice(0,5)),'%PDF-')
 const managementPath=join(process.env.RUNNER_TEMP||tmpdir(),'sphere-monthly-management-qa.pdf')
 writeFileSync(managementPath,executiveBytes)
-console.log('MANAGEMENT_A3=PASS pages=1 bytes='+executiveBytes.length+' fixture='+managementPath)
+console.log('MANAGEMENT_16X9=PASS pages=1 bytes='+executiveBytes.length+' fixture='+managementPath)
+const a3=await buildManagementMonthlyPdf({month:'2026-09',data,format:'a3',returnInstance:true})
+assert.ok(Math.abs(a3.internal.pageSize.getWidth()-1190.55)<.25)
+assert.ok(Math.abs(a3.internal.pageSize.getHeight()-841.89)<.25)
+console.log('MANAGEMENT_A3_OPTION=PASS pages='+a3.internal.getNumberOfPages())
