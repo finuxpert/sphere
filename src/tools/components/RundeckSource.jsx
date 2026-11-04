@@ -8,6 +8,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { formatWib, numberText, shortHost } from './sapUiFormat.js'
 import { coalesceAsyncRefresh } from './rundeckRefreshCoordinator.js'
+import { formatTime, metric, ageLabel, clipped, availabilityStatus, availabilityServiceImpact } from './rundeckSourcePresentation.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
 import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage } from './rundeckDataQuality.js'
 import './RundeckSource.css'
@@ -16,43 +17,6 @@ import './RundeckPlatformHealth.css'
 const API = `${import.meta.env.BASE_URL}api`
 const BRAND_LOGO = `${import.meta.env.BASE_URL}branding/logo/sphere-logo-navbar-dark.png`
 const REPORT_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}#/tool/logs`
-
-const formatTime = (value, compact = false) => {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return String(value)
-  return new Intl.DateTimeFormat('id-ID', compact
-    ? { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false }
-    : { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }
-  ).format(date)
-}
-
-const metric = (value, suffix = '') => (
-  value === null || value === undefined || value === ''
-    ? '—'
-    : `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 1 })}${suffix}`
-)
-
-const ageLabel = (minutes) => {
-  if (!Number.isFinite(minutes)) return 'age unknown'
-  if (minutes < 1) return '<1m'
-  if (minutes < 60) return `${minutes}m`
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-  return rest ? `${hours}h ${rest}m` : `${hours}h`
-}
-
-const shortSignal = (label = '') => String(label || 'Performance issue')
-  .replace(/Critical Work Process/gi, 'Critical WP')
-  .replace(/Work Process/gi, 'WP')
-
-const issueSignalText = (label, value) => {
-  const normalized = shortSignal(label)
-  if (/^Critical WP\b/i.test(normalized)) return `Critical WP ${value}`
-  return [normalized, value].filter(Boolean).join(' ')
-}
-
-
 
 function switchParentSource(value) {
   const select = document.querySelector('.logV2Header select')
@@ -87,27 +51,6 @@ function pdfStatusColor(status) {
   if (status === 'ATTENTION') return [88, 132, 184]
   if (status === 'UNKNOWN' || status === 'WAITING') return [108, 122, 132]
   return [41, 131, 91]
-}
-
-function clipped(value, length = 44) {
-  const text = String(value || '—')
-  return text.length > length ? `${text.slice(0, length - 1)}…` : text
-}
-
-function availabilityStatus(rows = [], name = '') {
-  const key = String(name || '').toUpperCase()
-  const row = rows.find((item) => String(item?.name || '').toUpperCase() === key)
-  return String(row?.status || 'UNKNOWN').toUpperCase()
-}
-
-function availabilityServiceImpact(payload = {}) {
-  const apps = payload?.sap_app || []
-  const hana = payload?.hana_system_db || []
-  const web = payload?.web_dispatcher || []
-  const appDown = apps.some((row) => String(row?.status || '').toUpperCase() === 'DOWN')
-  const hanaPrimaryDown = hana.some((row) => String(row?.name || '').toUpperCase() === 'PRIMARY' && String(row?.status || '').toUpperCase() === 'DOWN')
-  const webDown = web.length > 0 && web.every((row) => String(row?.status || '').toUpperCase() === 'DOWN')
-  return appDown || hanaPrimaryDown || webDown
 }
 
 export default function RundeckSource({ onCollection }) {
