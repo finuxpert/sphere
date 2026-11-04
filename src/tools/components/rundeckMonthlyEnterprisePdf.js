@@ -260,7 +260,9 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   text(M+(isSlide?129:158),H-(isSlide?40:46),periodLabel,isSlide?9.1:9.4,'normal','muted')
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
-  const panelY=isSlide?342:H-247,panelH=isSlide?140:180,gap=isSlide?10:12,panelW=(CW-gap)/2
+  // 16:9 panel bands (PDF bottom-up): storage [8,112], APP/tuning [120,264],
+  // rankings [272,358], trends [366,490]. Each adjacent gap is 8 pt.
+  const panelY=isSlide?366:H-247,panelH=isSlide?124:180,gap=isSlide?10:12,panelW=(CW-gap)/2
   const seriesColors=['app1','app2','app3','app4','app5']
   function trend(x,title,metric,threshold) {
     rect(x,panelY,panelW,panelH,'white',7)
@@ -272,7 +274,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       text(x+panelW-10,panelY+panelH-(isSlide?32:37),
         reportPeakEvidenceWib(best.at),isSlide?8.1:8.6,'bold','ink','right')
     }
-    const px=x+(isSlide?34:43),py=panelY+(isSlide?32:49),pw=panelW-(isSlide?54:68),ph=isSlide?65:90
+    const px=x+(isSlide?34:43),py=panelY+(isSlide?31:49),pw=panelW-(isSlide?54:68),ph=isSlide?54:90
     const xFor=day=>px+(day-1)*pw/Math.max(1,m.days-1)
     const yFor=n=>py+ph*Math.max(0,Math.min(100,n))/100
     for(const level of [0,25,50,75,100]) {
@@ -335,11 +337,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   trend(M,'CPU Utilization Trend','cpu',m.pressure.thresholds?.cpu_warning_pct)
   trend(M+panelW+gap,'Memory Utilization Trend','ram',m.pressure.thresholds?.ram_warning_pct)
   // Independent five-entry rankings from the full evaluated population.
-  const barY=isSlide?247:H-413,barH=isSlide?87:154
+  const barY=isSlide?272:H-413,barH=isSlide?86:154
   function bars(x,title,rows,metric,labelSuffix) {
     rect(x,barY,panelW,barH,'white',7)
     section(x+(isSlide?11:16),barY+barH-(isSlide?18:22),title)
-    const start=barY+barH-(isSlide?35:43),dy=isSlide?11:11.1
+    const start=barY+barH-(isSlide?33:43),dy=isSlide?10.6:11.1
     const bx=x+(isSlide?245:279),bw=panelW-(isSlide?245:279)-(isSlide?58:68)
     const values=rows.map(metric)
     const max=Math.max(0,...values.filter(n=>n!==null))
@@ -358,13 +360,13 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   bars(M+panelW+gap,'Top 5 Workloads by Peak WP Memory',m.sortedPss,
     row=>value(row.peak_pss_gb),' GB')
   // Bottom server + program evaluation tables.
-  const lowY=isSlide?113:172,lowH=isSlide?126:H-427-lowY
+  const lowY=isSlide?120:172,lowH=isSlide?144:H-427-lowY
   const serverW=isSlide?338:376,jobX=M+serverW+(isSlide?10:12)
   const jobW=CW-serverW-(isSlide?10:12)
   rect(M,lowY,serverW,lowH,'white',7)
   rect(jobX,lowY,jobW,lowH,'white',7)
-  section(M+15,lowY+lowH-23,'Application Server Performance')
-  section(jobX+15,lowY+lowH-23,'Top 5 Tuning Candidates')
+  section(M+15,lowY+lowH-(isSlide?20:23),'Application Server Performance')
+  section(jobX+15,lowY+lowH-(isSlide?20:23),'Top 5 Tuning Candidates')
   function table(x,top,width,spec,head,rows,headH,rowH,size) {
     fillRect(x,top-headH,width,headH,'header',3)
     rows.forEach((_,i)=>{
@@ -375,7 +377,12 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     let offset=x
     spec.forEach(([cw,align],i)=>{
       const xx=align==='left'?offset+5:align==='right'?offset+cw-5:offset+cw/2
-      fitText(xx,top-16,head[i],cw,align,7.1,'muted','bold')
+      const parts=Array.isArray(head[i])?head[i]:[head[i]]
+      if(parts.length>2)throw Error('Report table header exceeds two lines')
+      parts.forEach((label,index)=>{
+        const yy=parts.length===2?top-(index===0?11:20):top-(headH>=22?15:13)
+        fitText(xx,yy,label,cw,align,isSlide?7.7:7.1,'muted','bold')
+      })
       offset+=cw
     })
     rows.forEach((row,i)=>{
@@ -395,9 +402,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     number(row.cpu_warning_host_checks,0),number(row.ram_warning_host_checks,0),
   ])
   const srvSpec=isSlide?[[30,'left'],[40,'right'],[40,'right'],[40,'right'],[40,'right'],[64,'right'],[64,'right']]:[[40,'left'],[45,'right'],[45,'right'],[45,'right'],[45,'right'],[68,'right'],[68,'right']]
-  table(M+10,lowY+lowH-(isSlide?29:36),serverW-20,srvSpec,
-    ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU High Checks','RAM High Checks'],
-    srvRows,isSlide?20:25,isSlide?14.5:32,isSlide?7.3:8)
+  table(M+10,lowY+lowH-(isSlide?30:36),serverW-20,srvSpec,
+    ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max',
+      isSlide?['CPU High','Checks']:'CPU High Checks',
+      isSlide?['RAM High','Checks']:'RAM High Checks'],
+    srvRows,isSlide?23:25,isSlide?17.4:32,isSlide?8.0:8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
     return [
@@ -412,24 +421,27 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ]
   })
   const jobSpec=isSlide
-    ?[[20,'center'],[205,'left'],[34,'center'],[42,'right'],[58,'right'],[50,'right'],[69,'center'],[74,'left']]
+    ?[[18,'center'],[212,'left'],[32,'center'],[35,'right'],[48,'right'],[45,'right'],[85,'center'],[77,'left']]
     :[[24,'center'],[252,'left'],[40,'center'],[48,'right'],[70,'right'],[58,'right'],[92,'center'],[134,'left']]
   const fixedWidth=jobW-20
   jobSpec[jobSpec.length-1][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
-  table(jobX+10,lowY+lowH-(isSlide?29:36),jobW-20,jobSpec,
-    ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Last Seen (WIB)','Tuning action'],
-    jobRows,isSlide?20:25,isSlide?14.5:17.8,isSlide?7.0:7.5)
+  table(jobX+10,lowY+lowH-(isSlide?30:36),jobW-20,jobSpec,
+    ['No','Program / Job','APP','Samples',
+      isSlide?['CPU','cores']:'CPU cores',isSlide?['PSS','GB']:'PSS GB',
+      isSlide?['Last Seen','(WIB)']:'Last Seen (WIB)',
+      isSlide?['Tuning','action']:'Tuning action'],
+    jobRows,isSlide?23:25,isSlide?17.4:17.8,isSlide?7.6:7.5)
 
   // Four verified mount-category rows. Absence of a correctly mapped READY
   // historical filesystem sample remains "Not Collected", never zero/NORMAL.
-  const fsY=isSlide?8:25,fsH=isSlide?97:132
+  const fsY=isSlide?8:25,fsH=isSlide?104:132
   rect(M,fsY,CW,fsH,'white',7)
   const scopedStorageHosts=[...new Set(m.storage.map(row=>app(row.host))
     .filter(host=>/^APP[1-5]$/.test(host)))]
   const storageTitle='Storage Capacity'+(scopedStorageHosts.length===1
     ? ' · '+scopedStorageHosts[0] : '')
   section(M+15,fsY+fsH-(isSlide?17:22),storageTitle)
-  const fsSpec=isSlide?[[116,'left'],[182,'left'],[118,'right'],[118,'right'],[118,'right'],[79,'right'],[169,'right']]:[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
+  const fsSpec=isSlide?[[150,'left'],[205,'left'],[110,'right'],[110,'right'],[110,'right'],[70,'right'],[145,'right']]:[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
   const bytes=n=>{
     if(value(n)===null)return 'Not Collected'
     const u=Number(n)>=1e12?'TB':'GB'
@@ -451,10 +463,21 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       pct(row.used_pct),wib(row.sample_at)+' WIB',
     ]
   })
-  table(M+10,fsY+fsH-(isSlide?28:32),CW-20,fsSpec,
+  table(M+10,fsY+fsH-(isSlide?27:32),CW-20,fsSpec,
     ['File System','Mounted On / Host','Total Capacity','Used Capacity',
      'Available (df)','Usage %','Sample WIB'],
-    fsRows,isSlide?16:23,isSlide?13:17.4,isSlide?7.5:7.8)
+    fsRows,isSlide?18:23,isSlide?14.4:17.4,isSlide?8.5:7.8)
+  if(isSlide){
+    const close=(a,b)=>Math.abs(a-b)<.02
+    const columnWidth=spec=>spec.reduce((sum,[width])=>sum+width,0)
+    if(!close(columnWidth(srvSpec),serverW-20) ||
+       !close(columnWidth(jobSpec),jobW-20) ||
+       !close(columnWidth(fsSpec),CW-20) ||
+       !(fsY+fsH<lowY && lowY+lowH<barY && barY+barH<panelY &&
+         panelY+panelH<=H-48)){
+      throw Error('Slide report layout geometry is inconsistent')
+    }
+  }
   // All report content stays on this single page.
   if(pdf.internal.getNumberOfPages()!==1)throw Error('Enterprise report must fit one landscape page')
   return returnInstance?pdf:pdf.output('blob')
