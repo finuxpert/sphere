@@ -1,4 +1,4 @@
-/* SPHERE monthly enterprise PDF. One fixed A3 landscape page, backed by saved evidence.
+/* SPHERE monthly enterprise PDF. 16:9 slide or A3 print, backed by saved evidence.
  * Workload checks are not SM37 executions. WP CPU is core-equivalent, not host CPU.
  * Missing dates are gaps; absent values are never replaced with simulated data.
  */
@@ -166,14 +166,15 @@ export function monthlyEnterpriseReportModel(month,data) {
   }
 }
 
-export async function buildManagementMonthlyPdf({month,data,returnInstance=false,format='16:9'}) {
-  if(!['16:9','a3'].includes(format))throw Error('Unsupported management PDF format')
+export async function buildManagementMonthlyPdf({month,data,returnInstance=false,format=null}) {
+  const outputFormat=format||(data?.week_start||data?.start_date?'a3':'16:9')
+  if(!['16:9','a3'].includes(outputFormat))throw Error('Unsupported management PDF format')
   const m=monthlyEnterpriseReportModel(month,data)
   const {jsPDF}=await import('jspdf')
   const pdf=new jsPDF({orientation:'landscape',unit:'pt',
-    format:format==='16:9'?[960,540]:'a3',compress:true})
+    format:outputFormat==='16:9'?[960,540]:'a3',compress:true})
   const W=pdf.internal.pageSize.getWidth(),H=pdf.internal.pageSize.getHeight()
-  const isSlide=format==='16:9'
+  const isSlide=outputFormat==='16:9'
   const M=isSlide?20:32,CW=W-2*M
   const rgb=key=>COLOR[key]
   function font(weight='normal',size=8) {
@@ -231,7 +232,12 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   }
   const reportTitle=m.customStart?'SAP Custom Performance Report':
     m.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report'
-  const periodLabel=m.period.label
+  const readableDate=date=>new Intl.DateTimeFormat('en-GB',{
+    timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',
+  }).format(new Date(date+'T00:00:00Z'))
+  const periodLabel=m.customStart||m.weekStart
+    ? readableDate(m.dates[0])+' - '+readableDate(m.dates[m.dates.length-1])+' (WIB)'
+    : m.period.label
   // Period bounds are calendar dates in Asia/Jakarta (exclusive UTC end in the model).
   text(M+(isSlide?129:158),H-(isSlide?22:28),reportTitle,isSlide?14:16,'bold','navy')
   text(M+(isSlide?129:158),H-(isSlide?40:46),periodLabel,isSlide?9.1:9.4,'normal','muted')

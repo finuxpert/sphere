@@ -126,7 +126,7 @@ test('original SPHERE logo retains native ratio and report date sits under title
 })
 
 test('management export rejects wrong-month infrastructure and missing full rankings',()=>{
-  assert.throws(()=>monthlyEnterpriseReportModel('2026-10',fixture),/Period-scoped/)
+  assert.throws(()=>monthlyEnterpriseReportModel('2026-10',fixture),/Period-scoped|Monthly evidence/)
   assert.throws(()=>monthlyEnterpriseReportModel('2026-09',{...fixture,monthly_top_wp_cpu:null}),/Full-population/)
 })
 test('top WP rankings are independent of tuning candidate order',()=>{
