@@ -8,7 +8,6 @@ import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
-import './RundeckMonthlyPptExport.css'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
 import './RundeckUnifiedExperience20261030.css'
 
@@ -403,6 +402,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
 
 async function buildManagementMonthlyPng({month,data}) {
   if(typeof document==='undefined')throw Error('PNG export requires a browser')
+  await import('./RundeckMonthlyPptExport.css')
   const model=monthlyEnterpriseReportModel(month,data)
   const mount=document.createElement('section')
   mount.className='sphereMonthlyReview is-v2 sphereMonthlyPptExport'
