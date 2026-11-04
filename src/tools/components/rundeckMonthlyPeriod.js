@@ -76,3 +76,16 @@ export function monthlyReportPeriod(month, {weekStart=null,customStart=null,cust
     label:'Period: '+label+' (WIB)',days:Math.round((Date.parse(end)-Date.parse(start))/86400000)+1,
   }
 }
+
+
+/** Format an actual saved instant, not a daily bucket, in Asia/Jakarta. */
+export function reportPeakEvidenceWib(timestamp) {
+  if(!timestamp)return 'Peak time unavailable'
+  const instant=new Date(timestamp)
+  if(!Number.isFinite(instant.getTime()))return 'Peak time unavailable'
+  const displayed=new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Asia/Jakarta',day:'2-digit',month:'short',year:'numeric',
+    hour:'2-digit',minute:'2-digit',hour12:false,hourCycle:'h23',
+  }).format(instant)
+  return displayed+' WIB'
+}
