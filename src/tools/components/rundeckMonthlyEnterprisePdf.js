@@ -3,6 +3,7 @@
  * Missing dates are gaps; absent values are never replaced with simulated data.
  */
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
+import { monthlyReportPeriod } from './rundeckMonthlyPeriod.js'
 
 const COLOR = {
   navy: [16,42,67], ink: [28,51,71], muted: [98,118,137],
@@ -54,6 +55,7 @@ export function monthlyEnterpriseReportModel(month,data) {
     throw Error('Saved monthly pressure, coverage and error evidence is required')
   }
   monthName(month)
+  if(data.month && data.month!==month)throw Error('Monthly evidence does not match selected month')
   const weekStart=data?.week_start||null
   const customStart=data?.start_date||null
   const customEnd=data?.end_date||null
@@ -74,6 +76,7 @@ export function monthlyEnterpriseReportModel(month,data) {
       throw Error('Invalid weekly reporting period')
     }
   }
+  const period=monthlyReportPeriod(month,{weekStart,customStart,customEnd})
   const pressure=data.monthly_pressure
   const quality=data.quality
   const summary=data.summary||{}
@@ -96,14 +99,14 @@ export function monthlyEnterpriseReportModel(month,data) {
     if(!name||seen.has(key))return false
     seen.add(key)
     return true
-  }).slice(0,10)
+  }).slice(0,5)
   const hosts=Array.from({length:5},(_,i)=>{
     const name='APP'+(i+1)
     const row=(pressure.hosts||[]).find(v=>app(v.host)===name)
     return {...(row||{}),host:name}
   })
-  const [year,mon]=month.split('-').map(Number)
   const windowStart=customStart||weekStart
+  const [year,mon]=month.split('-').map(Number)
   const days=customStart
     ? Math.round((Date.parse(customEnd+'T00:00:00Z')-Date.parse(customStart+'T00:00:00Z'))/86400000)+1
     :weekStart?7:new Date(Date.UTC(year,mon,0)).getUTCDate()
@@ -150,21 +153,28 @@ export function monthlyEnterpriseReportModel(month,data) {
   })
   const maximum=metric=>daily.map(row=>row[metric]).filter(Boolean)
     .sort((a,b)=>b.value-a.value)[0]||null
+  const ranking=(rows,metric)=>rows.filter(row=>String(row?.consumer_key||'').trim() && value(row?.[metric])!==null)
+    .sort((a,b)=>value(b[metric])-value(a[metric]) ||
+      String(a.consumer_key).localeCompare(String(b.consumer_key))).slice(0,5)
+  const observedDays=dates.filter(date=>dailySource.has(date)).length
   return {
-    month,weekStart,customStart,customEnd,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
-    storage:data.monthly_storage.items,
+    month,weekStart,customStart,customEnd,period,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
+    observedDays,storage:data.monthly_storage.items,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
-    sortedCpu:data.monthly_top_wp_cpu.slice(0,10).filter(row=>value(row.peak_cpu_pct)!==null),
-    sortedPss:data.monthly_top_wp_pss.slice(0,10).filter(row=>value(row.peak_pss_gb)!==null),
+    sortedCpu:ranking(data.monthly_top_wp_cpu,'peak_cpu_pct'),
+    sortedPss:ranking(data.monthly_top_wp_pss,'peak_pss_gb'),
   }
 }
 
-export async function buildManagementMonthlyPdf({month,data,returnInstance=false}) {
+export async function buildManagementMonthlyPdf({month,data,returnInstance=false,format='16:9'}) {
+  if(!['16:9','a3'].includes(format))throw Error('Unsupported management PDF format')
   const m=monthlyEnterpriseReportModel(month,data)
   const {jsPDF}=await import('jspdf')
-  const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:'a3',compress:true})
+  const pdf=new jsPDF({orientation:'landscape',unit:'pt',
+    format:format==='16:9'?[960,540]:'a3',compress:true})
   const W=pdf.internal.pageSize.getWidth(),H=pdf.internal.pageSize.getHeight()
-  const M=32,CW=W-2*M
+  const isSlide=format==='16:9'
+  const M=isSlide?20:32,CW=W-2*M
   const rgb=key=>COLOR[key]
   function font(weight='normal',size=8) {
     pdf.setFont('helvetica',weight);pdf.setFontSize(size)
@@ -192,7 +202,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     if(radius)pdf.roundedRect(x,H-y-h,w,h,radius,radius,'F')
     else pdf.rect(x,H-y-h,w,h,'F')
   }
-  function section(x,y,title) {text(x,y,title,12,'bold','navy')}
+  function section(x,y,title) {text(x,y,title,isSlide?9.6:12,'bold','navy')}
   function fitText(x,y,s,width,align='left',base=8.0,color='ink',weight='normal') {
     const label=String(s??'N/A')
     let sz=base
@@ -204,7 +214,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     }
     // Preserve complete SAP program identities: wrap rather than truncate.
     const parts=pdf.splitTextToSize(label,width-10)
-    if(parts.length>2)throw Error('Program name exceeds two-line A3 cell: '+label)
+    if(parts.length>2)throw Error('Program name exceeds two-line report cell: '+label)
     parts.forEach((part,i)=>text(x,y+3-i*7,part,6.2,weight,color,align))
   }
   // Preserve the original logo's native aspect ratio; the previous fixed
@@ -216,38 +226,38 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     if(!brand.ok)throw Error('Original SPHERE logo is unavailable (HTTP '+brand.status+')')
     const logoBytes=new Uint8Array(await brand.arrayBuffer())
     const dimensions=pdf.getImageProperties(logoBytes)
-    const scale=Math.min(138/dimensions.width,32/dimensions.height)
-    pdf.addImage(logoBytes,'PNG',M,14,dimensions.width*scale,dimensions.height*scale)
+    const scale=Math.min((isSlide?115:138)/dimensions.width,(isSlide?25:32)/dimensions.height)
+    pdf.addImage(logoBytes,'PNG',M,isSlide?9:14,dimensions.width*scale,dimensions.height*scale)
   }
   const reportTitle=m.customStart?'SAP Custom Performance Report':
     m.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report'
-  const readableDate=date=>new Intl.DateTimeFormat('en-GB',{
-    timeZone:'UTC',day:'2-digit',month:'short',year:'numeric',
-  }).format(new Date(date+'T00:00:00Z'))
-  const periodLabel=m.customStart||m.weekStart
-    ? readableDate(m.dates[0])+' - '+readableDate(m.dates[m.dates.length-1])+' (WIB)'
-    : monthName(month)+' (WIB)'
-  // The report name and period share a clear left-aligned hierarchy.
-  text(M+158,H-28,reportTitle,16,'bold','navy')
-  text(M+158,H-46,periodLabel,9.4,'normal','muted')
+  const periodLabel=m.period.label
+  // Period bounds are calendar dates in Asia/Jakarta (exclusive UTC end in the model).
+  text(M+(isSlide?129:158),H-(isSlide?22:28),reportTitle,isSlide?14:16,'bold','navy')
+  text(M+(isSlide?129:158),H-(isSlide?40:46),periodLabel,isSlide?9.1:9.4,'normal','muted')
+  const coverage=m.quality?.coverage_pct
+  const available=Number.isFinite(Number(coverage))
+    ? ' · Checks '+number(coverage)+'%' : ''
+  text(W-M,H-(isSlide?40:46),
+    'Observed days '+m.observedDays+'/'+m.days+available,7.4,'normal','muted','right')
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
-  const panelY=H-247,panelH=180,gap=12,panelW=(CW-gap)/2
+  const panelY=isSlide?342:H-247,panelH=isSlide?140:180,gap=isSlide?10:12,panelW=(CW-gap)/2
   const seriesColors=['app1','app2','app3','app4','app5']
   const shortMonth=new Intl.DateTimeFormat('en-GB',{
     month:'short',timeZone:'UTC',
   }).format(new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7))-1,1)))
   function trend(x,title,metric,threshold) {
     rect(x,panelY,panelW,panelH,'white',7)
-    section(x+16,panelY+panelH-23,title)
+    section(x+(isSlide?11:16),panelY+panelH-(isSlide?18:23),title)
     const best=metric==='cpu'?m.cpuPeak:m.ramPeak
     if(best){
-      text(x+panelW-16,panelY+panelH-22,
-        'Peak '+pct(best.value)+'  '+best.host,9,'bold','red','right')
-      text(x+panelW-16,panelY+panelH-37,
-        wib(best.at)+' WIB',7.3,'normal','muted','right')
+      text(x+panelW-10,panelY+panelH-(isSlide?18:22),
+        'Peak '+pct(best.value)+'  '+best.host,isSlide?7.9:9,'bold','red','right')
+      text(x+panelW-10,panelY+panelH-(isSlide?31:37),
+        wib(best.at)+' WIB',isSlide?6.9:7.3,'normal','muted','right')
     }
-    const px=x+43,py=panelY+49,pw=panelW-68,ph=90
+    const px=x+(isSlide?34:43),py=panelY+(isSlide?32:49),pw=panelW-(isSlide?54:68),ph=isSlide?65:90
     const xFor=day=>px+(day-1)*pw/Math.max(1,m.days-1)
     const yFor=n=>py+ph*Math.max(0,Math.min(100,n))/100
     for(const level of [0,25,50,75,100]) {
@@ -302,41 +312,44 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     if(!observed)text(x+panelW/2,py+ph/2,'No retained readings',9,'normal','muted','center')
     // Keep the same legend colors for CPU and RAM across both charts.
     m.series.forEach((item,i)=>{
-      const lx=x+65+i*90,ly=panelY+12
+      const lx=x+(isSlide?34:65)+i*(isSlide?82:90),ly=panelY+(isSlide?9:12)
       fillRect(lx,ly,10,2.3,seriesColors[i])
       text(lx+15,ly-1,item.host,7.4,'normal','muted')
     })
   }
   trend(M,'CPU Utilization Trend','cpu',m.pressure.thresholds?.cpu_warning_pct)
   trend(M+panelW+gap,'Memory Utilization Trend','ram',m.pressure.thresholds?.ram_warning_pct)
-  // Two rankings show the same ten candidates, sorted independently.
-  const barY=H-413,barH=154
+  // Independent five-entry rankings from the full evaluated population.
+  const barY=isSlide?247:H-413,barH=isSlide?87:154
   function bars(x,title,rows,metric,labelSuffix) {
     rect(x,barY,panelW,barH,'white',7)
-    section(x+16,barY+barH-22,title)
-    const start=barY+barH-43,dy=11.1,bx=x+279,bw=panelW-279-68
+    section(x+(isSlide?11:16),barY+barH-(isSlide?18:22),title)
+    const start=barY+barH-(isSlide?35:43),dy=isSlide?11:11.1
+    const bx=x+(isSlide?245:279),bw=panelW-(isSlide?245:279)-(isSlide?58:68)
     const values=rows.map(metric)
     const max=Math.max(0,...values.filter(n=>n!==null))
-    rows.slice(0,10).forEach((row,i)=>{
+    rows.slice(0,5).forEach((row,i)=>{
       const yy=start-i*dy
-      fitText(x+16,yy,row.consumer_key,259,'left',7.25)
+      fitText(x+(isSlide?11:16),yy,row.consumer_key,isSlide?223:259,'left',isSlide?6.8:7.25)
       fillRect(bx,yy-2,bw,7.2,'header',2)
       const n=metric(row)
       if(n!==null && max>0)fillRect(bx,yy-2,bw*n/max,7.2,i===0?'red':'blue',2)
-      text(x+panelW-15,yy,n===null?'N/A':number(n,2)+labelSuffix,7.7,'normal','ink','right')
+      text(x+panelW-10,yy,n===null?'N/A':number(n,2)+labelSuffix,isSlide?7.1:7.7,'normal','ink','right')
     })
-    if(!rows.length)text(x+panelW/2,barY+75,'No tuning candidates recorded',9,'normal','muted','center')
+    if(!rows.length)text(x+panelW/2,barY+barH/2,'No workloads recorded',9,'normal','muted','center')
   }
-  bars(M,'Top 10 Workloads by Peak WP CPU',m.sortedCpu,
+  bars(M,'Top 5 Workloads by Peak WP CPU',m.sortedCpu,
     row=>value(wpCpuCoreEquivalent(row.peak_cpu_pct)),' cores')
-  bars(M+panelW+gap,'Top 10 Workloads by Peak WP Memory',m.sortedPss,
+  bars(M+panelW+gap,'Top 5 Workloads by Peak WP Memory',m.sortedPss,
     row=>value(row.peak_pss_gb),' GB')
   // Bottom server + program evaluation tables.
-  const lowY=172,lowH=H-427-lowY,serverW=376,jobX=M+serverW+12,jobW=CW-serverW-12
+  const lowY=isSlide?113:172,lowH=isSlide?126:H-427-lowY
+  const serverW=isSlide?338:376,jobX=M+serverW+(isSlide?10:12)
+  const jobW=CW-serverW-(isSlide?10:12)
   rect(M,lowY,serverW,lowH,'white',7)
   rect(jobX,lowY,jobW,lowH,'white',7)
   section(M+15,lowY+lowH-23,'Application Server Performance')
-  section(jobX+15,lowY+lowH-23,'Top 10 Tuning Candidates')
+  section(jobX+15,lowY+lowH-23,'Top 5 Tuning Candidates')
   function table(x,top,width,spec,head,rows,headH,rowH,size) {
     fillRect(x,top-headH,width,headH,'header',3)
     rows.forEach((_,i)=>{
@@ -366,10 +379,10 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     pct(row.avg_ram_pct),pct(row.peak_ram_pct),
     number(row.cpu_warning_host_checks,0),number(row.ram_warning_host_checks,0),
   ])
-  const srvSpec=[[43,'left'],[50,'right'],[50,'right'],[52,'right'],[52,'right'],[60,'right'],[62,'right']]
-  table(M+10,lowY+lowH-36,serverW-20,srvSpec,
+  const srvSpec=isSlide?[[32,'left'],[43,'right'],[43,'right'],[45,'right'],[45,'right'],[55,'right'],[55,'right']]:[[43,'left'],[50,'right'],[50,'right'],[52,'right'],[52,'right'],[60,'right'],[62,'right']]
+  table(M+10,lowY+lowH-(isSlide?29:36),serverW-20,srvSpec,
     ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU High Reads','RAM High Reads'],
-    srvRows,25,32,8)
+    srvRows,isSlide?20:25,isSlide?14.5:32,isSlide?6.9:8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
     return [
@@ -384,19 +397,19 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       candidateAction(row),
     ]
   })
-  const jobSpec=[[24,'center'],[174,'left'],[36,'center'],[43,'right'],[67,'right'],[57,'right'],[79,'center'],[109,'left'],[116.55,'left']]
+  const jobSpec=isSlide?[[20,'center'],[115,'left'],[32,'center'],[36,'right'],[50,'right'],[46,'right'],[66,'center'],[78,'left'],[100,'left']]:[[24,'center'],[174,'left'],[36,'center'],[43,'right'],[67,'right'],[57,'right'],[79,'center'],[109,'left'],[116.55,'left']]
   const fixedWidth=jobW-20
   jobSpec[8][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
-  table(jobX+10,lowY+lowH-36,jobW-20,jobSpec,
+  table(jobX+10,lowY+lowH-(isSlide?29:36),jobW-20,jobSpec,
     ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Evidence (WIB)','Review finding','Tuning action'],
-    jobRows,25,17.8,7.5)
+    jobRows,isSlide?20:25,isSlide?14.5:17.8,isSlide?6.5:7.5)
 
   // Four verified mount-category rows. Absence of a correctly mapped READY
   // historical filesystem sample remains "Not Collected", never zero/NORMAL.
-  const fsY=25,fsH=132
+  const fsY=isSlide?8:25,fsH=isSlide?97:132
   rect(M,fsY,CW,fsH,'white',7)
-  section(M+15,fsY+fsH-22,'Storage Capacity')
-  const fsSpec=[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
+  section(M+15,fsY+fsH-(isSlide?17:22),'Storage Capacity')
+  const fsSpec=isSlide?[[116,'left'],[182,'left'],[118,'right'],[118,'right'],[118,'right'],[79,'right'],[169,'right']]:[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
   const bytes=n=>{
     if(value(n)===null)return 'Not Collected'
     const u=Number(n)>=1e12?'TB':'GB'
@@ -406,18 +419,21 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   const fsOrder=['File System OS','FS SAP Archive','Archive INTF','INTF']
   const fsRows=fsOrder.map(label=>{
     const row=fsItems.find(item=>item.category===label)
-    if(!row||row.status!=='COLLECTED')return [label,'Not Collected','—','—','—','—','—']
+    if(!row||row.status!=='COLLECTED'||!row.sample_at ||
+        Number.isNaN(Date.parse(row.sample_at)) ||
+        Date.parse(row.sample_at)<Date.parse(m.period.startUtc) ||
+        Date.parse(row.sample_at)>=Date.parse(m.period.exclusiveEndUtc))return [label,'Not Collected','—','—','—','—','—']
     return [
       label,(row.mount_point||'—')+' · '+app(row.host),
       bytes(row.total_bytes),bytes(row.used_bytes),bytes(row.free_bytes),
       pct(row.used_pct),wib(row.sample_at)+' WIB',
     ]
   })
-  table(M+10,fsY+fsH-32,CW-20,fsSpec,
+  table(M+10,fsY+fsH-(isSlide?28:32),CW-20,fsSpec,
     ['File System','Mounted On / Host','Total Capacity','Used Capacity',
      'Free Capacity','Usage %','Sample WIB'],
-    fsRows,23,17.4,7.8)
+    fsRows,isSlide?16:23,isSlide?13:17.4,isSlide?6.9:7.8)
   // All report content stays on this single page.
-  if(pdf.internal.getNumberOfPages()!==1)throw Error('Enterprise report must fit one A3 landscape page')
+  if(pdf.internal.getNumberOfPages()!==1)throw Error('Enterprise report must fit one landscape page')
   return returnInstance?pdf:pdf.output('blob')
 }

@@ -295,7 +295,7 @@ function MonthlyRanking({ title, rows=[], metric, loading=false, error='' }) {
   return <section className="sphereMonthlyManagerPanel" aria-label={title}>
     <h4>{title}</h4>
     <div className="sphereMonthlyManagerBars">
-      {rows.slice(0,10).map((row,index)=>{
+      {rows.slice(0,5).map((row,index)=>{
         const val=values[index]
         const usable=val!==null&&Number.isFinite(val)
         return <div className="sphereMonthlyManagerBar" key={id(row)}>
@@ -330,7 +330,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
   }
   const cpuRanking=model?.sortedCpu||full?.monthly_top_wp_cpu||[]
   const memoryRanking=model?.sortedPss||full?.monthly_top_wp_pss||[]
-  const candidates=model?.candidates||full?.monthly_abap_candidates?.slice(0,10)||[]
+  const candidates=model?.candidates||full?.monthly_abap_candidates?.slice(0,5)||[]
   return <div className="sphereMonthlyManagement" aria-label={customStart?"SAP Custom Performance Report":weekStart?"SAP Weekly Performance Report":"SAP Monthly Performance Report"}>
     <div className="sphereMonthlyManagerPair">
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
@@ -340,8 +340,8 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>)}
     </div>
     <div className="sphereMonthlyManagerPair">
-      <MonthlyRanking title="Top 10 Workloads by Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
-      <MonthlyRanking title="Top 10 Workloads by Peak WP Memory" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 5 Workloads by Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 5 Workloads by Peak WP Memory" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
     </div>
     <div className="sphereMonthlyManagerPair is-tables">
       <section className="sphereMonthlyManagerPanel">
@@ -355,7 +355,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
         </table>
       </section>
       <section className="sphereMonthlyManagerPanel">
-        <h4>Top 10 Tuning Candidates</h4>
+        <h4>Top 5 Tuning Candidates</h4>
         <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Evidence WIB</th><th>Review finding</th><th>Tuning action</th></tr></thead>
           <tbody>{candidates.map((row,index)=><tr key={id(row)}>
             <td>{index+1}</td><td className="is-job">{row.consumer_key}</td>

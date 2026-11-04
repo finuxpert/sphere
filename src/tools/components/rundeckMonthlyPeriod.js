@@ -49,3 +49,30 @@ export function customDateError(start,end,todayWib){
 }
 export const customDayCount=(start,end)=>Math.round((Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000)+1
 
+
+/** Exact WIB calendar window. The end instant is exclusive. */
+export function monthlyReportPeriod(month, {weekStart=null,customStart=null,customEnd=null}={}) {
+  if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(String(month)))throw Error('Invalid monthly reporting period')
+  const [year,mon]=month.split('-').map(Number)
+  const validDay=day=>/^20\d{2}-\d{2}-\d{2}$/.test(String(day||'')) &&
+    !Number.isNaN(Date.parse(day+'T00:00:00Z')) &&
+    new Date(day+'T00:00:00Z').toISOString().slice(0,10)===day
+  const first=month+'-01'
+  const last=new Date(Date.UTC(year,mon,0)).toISOString().slice(0,10)
+  const start=customStart||weekStart||first
+  const end=customStart?customEnd:weekStart
+    ?new Date(Date.parse(weekStart+'T00:00:00Z')+6*86400000).toISOString().slice(0,10):last
+  if(!validDay(start)||!validDay(end)||start>end)throw Error('Invalid report window')
+  const ending=new Date(Date.parse(end+'T00:00:00Z')+86400000).toISOString().slice(0,10)
+  const fmt=(day,withMonth=true)=>new Intl.DateTimeFormat('en-GB',{
+    timeZone:'UTC',day:'2-digit',...(withMonth?{month:'long'}:{}),year:'numeric',
+  }).format(new Date(day+'T00:00:00Z'))
+  const sameMonth=start.slice(0,7)===end.slice(0,7)
+  const label=sameMonth?start.slice(-2)+'–'+fmt(end):fmt(start)+' – '+fmt(end)
+  // 00:00 WIB corresponds to 17:00 UTC on the preceding date.
+  const toUTC=day=>new Date(Date.parse(day+'T00:00:00Z')-7*3600000).toISOString()
+  return {
+    start,end,exclusiveEnd:ending,startUtc:toUTC(start),exclusiveEndUtc:toUTC(ending),
+    label:'Period: '+label+' (WIB)',days:Math.round((Date.parse(end)-Date.parse(start))/86400000)+1,
+  }
+}
