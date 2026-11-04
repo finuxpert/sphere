@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from '../../src/tools/components/rundeckMonthlyEnterprisePdf.js'
-import { monthlyReportPeriod } from '../../src/tools/components/rundeckMonthlyPeriod.js'
+import { monthlyReportPeriod, reportPeakEvidenceWib } from '../../src/tools/components/rundeckMonthlyPeriod.js'
 
 const window=monthlyReportPeriod('2026-10')
 test('October calendar window is exact WIB midnight to exclusive next-month midnight',()=>{
@@ -59,7 +59,7 @@ test('16:9 PDF is single page, has five-ranked workloads and excludes out-of-win
   assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-540)<.25)
   const stream=pdf.internal.pages[1].join('\n')
   for(const label of ['Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
-    'Top 5 Tuning Candidates','Observed days 1/31','Not Collected'])assert.ok(stream.includes(label),label)
+    'Top 5 Tuning Candidates','Not Collected','09 Oct 2026, 14:00 WIB'])assert.ok(stream.includes(label),label)
   assert.ok(!stream.includes('Top 10 Tuning Candidates'))
   await assert.rejects(buildManagementMonthlyPdf({month:'2026-10',data,format:'letter'}),/Unsupported/)
 })
@@ -84,5 +84,26 @@ test('PowerPoint PNG export uses the exact report model with enforced 1920x1080 
   assert.doesNotMatch(css,/text-overflow:ellipsis!important/)
   assert.match(ui,/\.png'/)
   assert.match(css,/width:1280px;height:720px/)
-  assert.match(css,/grid-template-rows:158px 139px 168px 141px/)
+  assert.match(css,/grid-template-rows:164px 136px 168px 138px/)
+})
+
+test('report peak timestamps are exact Asia/Jakarta instants, not inferred from day buckets',()=>{
+  assert.equal(reportPeakEvidenceWib('2026-10-30T22:09:00Z'),'31 Oct 2026, 05:09 WIB')
+  assert.equal(reportPeakEvidenceWib('2026-11-01T16:49:00Z'),'01 Nov 2026, 23:49 WIB')
+  assert.equal(reportPeakEvidenceWib('2026-11-01T17:00:00Z'),'02 Nov 2026, 00:00 WIB')
+  assert.equal(reportPeakEvidenceWib(null),'Peak time unavailable')
+  assert.equal(reportPeakEvidenceWib('invalid'),'Peak time unavailable')
+})
+test('slide PDF and PNG omit coverage header but preserve coverage in the data model',()=>{
+  const pdfSource=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
+  const uiSource=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  const css=readFileSync(new URL('../../src/tools/components/RundeckMonthlyPptExport.css',import.meta.url),'utf8')
+  assert.doesNotMatch(pdfSource,/['"]Observed days /)
+  assert.doesNotMatch(uiSource,/<small>Observed days/)
+  assert.ok(uiSource.includes('reportPeakEvidenceWib(p.at)'))
+  assert.ok(pdfSource.includes('reportPeakEvidenceWib(best.at)'))
+  assert.match(css,/sphereMonthlyManagerPeak small/)
+  const m=monthlyEnterpriseReportModel('2026-10',data)
+  assert.equal(m.observedDays,1)
+  assert.equal(m.quality.coverage_pct,61.2)
 })

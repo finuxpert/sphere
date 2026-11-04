@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
-import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod } from './rundeckMonthlyPeriod.js'
+import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod, reportPeakEvidenceWib } from './rundeckMonthlyPeriod.js'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
 import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
@@ -60,9 +60,9 @@ function HostTrend({ rows = [], month, weekStart = null, customStart = null, cus
         <line x1={left} x2={left + plotW} y1={yFor(level)} y2={yFor(level)} stroke="currentColor" strokeOpacity=".11" strokeDasharray="3 4"/>
         <text x="5" y={yFor(level)+3} fontSize="9" fill="currentColor" opacity=".6">{level}%</text>
       </g>)}
-      {[...new Set((customStart?[1,Math.max(1,Math.round(days/2)),days]:weekStart?[1,2,3,4,5,6,7]:[startDay,5,10,15,20,25,days]).filter(day=>day>=startDay && day<=days))].map(day => <text key={day} x={xFor(day)} y="155" fontSize="9" fill="currentColor" opacity=".7" textAnchor="middle">{weekStart||customStart
-        ? new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(dateAt(day)+'T00:00:00Z'))
-        : day === 1 || day === days ? day + ' ' + new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(new Date(Date.UTC(year,monthNum-1,1))) : day}</text>)}
+      {[...new Set((customStart?[1,Math.max(1,Math.round(days/2)),days]:weekStart?[1,2,3,4,5,6,7]:[startDay,5,10,15,20,25,days]).filter(day=>day>=startDay && day<=days))].map(day => <text key={day} x={xFor(day)} y="155" fontSize="10.5" fontWeight="600" fill="currentColor" opacity=".92" textAnchor="middle">{new Intl.DateTimeFormat('en-GB',{
+        day:'2-digit',month:'short',timeZone:'UTC',
+      }).format(new Date(dateAt(day)+'T00:00:00Z'))}</text>)}
       {showThreshold && <g>
         <line x1={left} x2={left + plotW} y1={yFor(threshold)} y2={yFor(threshold)} stroke="#e2b56a" strokeWidth="1.5" strokeDasharray="6 4"/>
         <rect x={left + plotW - 115} y={yFor(threshold) - 15} width="114" height="13" rx="2" fill="#253642"/>
@@ -329,7 +329,9 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
   // Host preview is independently verified and must not wait for workload SQL or storage mapping.
   const peak=metric=>{
     const p=savedPeriodPeak(pressure,metric,month,weekStart,customStart,customEnd)
-    return p ? 'Peak '+pct(p.value)+' · '+p.host+(p.at?' · '+when(p.at):'') : 'Not Collected'
+    return p
+      ? <><strong>Peak {pct(p.value)} · {p.host}</strong><small>{reportPeakEvidenceWib(p.at)}</small></>
+      : <strong>Not Collected</strong>
   }
   const cpuRanking=model?.sortedCpu||full?.monthly_top_wp_cpu||[]
   const memoryRanking=model?.sortedPss||full?.monthly_top_wp_pss||[]
@@ -337,7 +339,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
   return <div className="sphereMonthlyManagement" aria-label={customStart?"SAP Custom Performance Report":weekStart?"SAP Weekly Performance Report":"SAP Monthly Performance Report"}>
     <div className="sphereMonthlyManagerPair">
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
-        <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><strong>{peak(metric)}</strong></div>
+        <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><div className="sphereMonthlyManagerPeak">{peak(metric)}</div></div>
         <HostTrend rows={pressure.daily_hosts||[]} month={month} weekStart={weekStart} customStart={customStart} customEnd={customEnd} metric={metric}
           fitObserved={false} threshold={pressure.thresholds?.[metric+'_warning_pct']}/>
       </section>)}
@@ -415,9 +417,6 @@ async function buildManagementMonthlyPng({month,data}) {
         <img src={logo} alt="SPHERE"/>
         <div className="sphereMonthlyPptTitle"><strong>{model.customStart?'SAP Custom Performance Report':model.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report'}</strong>
           <span>{model.period.label}</span></div>
-        <small>Observed days {model.observedDays}/{model.days}
-          {Number.isFinite(Number(model.quality?.coverage_pct))
-            ? ' · Checks '+Number(model.quality.coverage_pct).toFixed(1)+'%':''}</small>
       </header>
       <MonthlyManagementDashboard month={month} weekStart={model.weekStart}
         customStart={model.customStart} customEnd={model.customEnd}

@@ -636,3 +636,17 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
     justify-content:flex-start;
   }
 }
+
+/* Date and exact saved peak instant stay distinct in report chart headings. */
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPeak{
+  display:flex;flex-direction:column;align-items:flex-end;
+  gap:2px;text-align:right;min-width:0;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPeak strong{
+  font-size:11px;font-weight:700;
+  color:var(--mr-text,inherit);white-space:nowrap;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyManagerPeak small{
+  display:block;font-size:10px;font-weight:600;line-height:1.2;
+  color:var(--mr-muted,#9cafbd);white-space:nowrap;
+}
