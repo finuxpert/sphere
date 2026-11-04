@@ -471,8 +471,8 @@
 
 .rundeckWpDrilldown td:first-child button:hover,
 .rundeckWpDrilldown td:first-child button:focus-visible {
-  border-bottom-color: var(--sphere-accent);
-  color: var(--sphere-accent);
+  border-bottom-
+  color:var(--sphere-accent);
   outline: none;
 }
 
@@ -1228,7 +1228,7 @@
     flex-wrap:wrap!important;
     align-items:center!important;
     min-width:0!important;
-    max-width:100%!important;
+    max-
     width:100%!important;
     white-space:normal!important;
     gap:3px 6px!important;

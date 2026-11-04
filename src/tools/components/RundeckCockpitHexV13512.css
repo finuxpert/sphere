@@ -1028,7 +1028,7 @@
   color:inherit;font-size:12px;cursor:pointer;
 }
 .rundeckCustomRangeDialogActions button[type="submit"] {
-  border-color:var(--sphere-accent,#4fc6c8);color:var(--sphere-accent,#4fc6c8);
+  border-color:var(--sphere-accent,#4fc6c8);
 }
 .rundeckCustomRangeError {grid-column:1/-1;color:var(--sphere-danger,#db7d86);font-size:12px;margin:0}
 .rundeckCustomRangeDialog footer {

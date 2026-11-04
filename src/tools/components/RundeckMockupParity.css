@@ -375,7 +375,7 @@
   border-bottom:2px solid var(--sphere-accent,#4fc6c8)!important;
 }
 .rundeckWorkspaceDrawer.is-wide .rundeckInfraTrendWorkspace .rundeckInfraChartWrap svg{
-  min-height:235px!important;height:235px!important;
+  min-height:235px!important;
 }
 .rundeckWorkspaceDrawer.is-issues table,
 .rundeckWorkspaceDrawer.is-availability table,
@@ -708,7 +708,7 @@ html[data-theme="light"] .appShell:has(.rundeckPanel){
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-performance,
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer.is-wide{
    box-sizing:border-box!important;width:min(1360px,calc(100vw - 24px))!important;
-   max-height:calc(100dvh - 20px)!important;height:calc(100dvh - 20px)!important;
+   max-height:calc(100dvh - 20px)!important;
  }
  .rundeckWorkspacePortal .rundeckWorkspaceDrawer:is(.is-performance,.is-wide)>header{
    padding:8px 14px!important;min-height:45px!important;

@@ -449,8 +449,8 @@
 .rundeckRcaJobButton:hover,
 .rundeckRcaJobButton:focus-visible,
 .rundeckRcaJobButton.is-selected {
-  border-bottom-color: var(--sphere-accent, #4fc6c8);
-  color: var(--sphere-accent, #4fc6c8);
+  border-bottom-
+  color:var(--sphere-accent, #4fc6c8);
   outline: none;
 }
 
@@ -1555,7 +1555,7 @@ html[data-theme="light"] .rundeckWpSignalTableWrap{
   padding-left:6px!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobPerformanceChart{
-  min-height:425px!important;
+  min-
   height:425px!important;
 }
 .rundeckWorkspaceDrawer.is-performance .rundeckJobHistoricalRangeChart{
