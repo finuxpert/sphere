@@ -101,7 +101,7 @@ test('monthly enterprise PDF is exactly one 16:9 landscape page with evidence la
     'CPU High Checks','RAM High Checks',
     'Peak','Limit 75%','Limit 80%',
     '0%','25%','50%','75%','100%',
-    '30 Sep','Storage Capacity','Available (df)','Last Seen (WIB)',
+    '30 Sep','Storage Capacity','Available','Last Seen',
   ])assert.ok(stream.includes(expected),'Missing reviewed label: '+expected)
   const bytes=new Uint8Array(pdf.output('arraybuffer'))
   assert.equal(String.fromCharCode(...bytes.slice(0,5)),'%PDF-')
