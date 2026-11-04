@@ -270,7 +270,7 @@ function MonthlyErrorAnalysis({ evidence }) {
         <td>{fmt(row.snapshot_host_checks,0)}</td>
         <td>{row.program_link === 'EXPLICIT_ERROR_PROGRAM' ? 'Explicit WP trace program' : 'Workload context only'}</td>
       </tr>)}
-      {!visible.length && <tr><td colSpan="9">{unknownSource
+      {!visible.length && <tr><td colSpan="8">{unknownSource
         ? 'WP error fields were not retained in the selected workload history. Recoverable raw SPHERE archives should be checked before concluding no errors.'
         : rows.length ? 'No error evidence matches these filters.'
         : 'No error code was found in available retained observations. Check ST22 and SM37 for authoritative SAP records.'}</td></tr>}
@@ -359,17 +359,16 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>
       <section className="sphereMonthlyManagerPanel">
         <h4>Top 5 Tuning Candidates</h4>
-        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Evidence WIB</th><th>Review finding</th><th>Tuning action</th></tr></thead>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Evidence WIB</th><th>Tuning action</th></tr></thead>
           <tbody>{candidates.map((row,index)=><tr key={id(row)}>
             <td>{index+1}</td><td className="is-job">{row.consumer_key}</td>
             <td>{hostsFor(row)||'—'}</td><td>{fmt(row.observations,0)}</td>
             <td>{wpCoreEq(row.peak_cpu_pct)}</td><td>{fmt(row.peak_pss_gb,2)}</td>
             <td>{when(row.last_seen)}</td>
-            <td>{row.signals?.high_memory?'High WP memory':row.signals?.sustained_high_cpu?'High WP CPU':row.signals?.cpu_spike?'WP CPU spike':row.signals?.baseline_anomaly?'Above baseline':'Performance review'}</td>
             <td>{row.signals?.high_memory?'Review memory use':row.signals?.sustained_high_cpu||row.signals?.cpu_spike?'Review processing':row.signals?.baseline_anomaly?'Check workload change':'Review in SAP'}</td>
           </tr>)}
-          {!full&&<tr><td colSpan="9">{loading?'Loading saved evaluation…':evaluationError?'Evaluation unavailable. Retry to load tuning candidates.':'Waiting for evaluated workloads…'}</td></tr>}
-          {full&&!candidates.length&&<tr><td colSpan="9">No candidates observed for this period</td></tr>}
+          {!full&&<tr><td colSpan="8">{loading?'Loading saved evaluation…':evaluationError?'Evaluation unavailable. Retry to load tuning candidates.':'Waiting for evaluated workloads…'}</td></tr>}
+          {full&&!candidates.length&&<tr><td colSpan="8">No candidates observed for this period</td></tr>}
           </tbody>
         </table>
       </section>

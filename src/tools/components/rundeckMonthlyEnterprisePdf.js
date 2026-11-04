@@ -42,10 +42,6 @@ const wib = (input, includeYear=false) => {
     ...(includeYear?{year:'numeric'}:{}),hour:'2-digit',minute:'2-digit',hour12:false,
   }).format(d)
 }
-const candidateFinding = row => row.signals?.high_memory ? 'High WP memory'
-  : row.signals?.sustained_high_cpu ? 'High WP CPU'
-    : row.signals?.cpu_spike ? 'WP CPU spike'
-      : row.signals?.baseline_anomaly ? 'Above baseline' : 'Performance review'
 const candidateAction = row => row.signals?.high_memory ? 'Review memory use'
   : row.signals?.sustained_high_cpu || row.signals?.cpu_spike ? 'Review processing'
     : row.signals?.baseline_anomaly ? 'Check workload change' : 'Review in SAP'
@@ -399,15 +395,16 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       value(row.peak_cpu_pct)===null?'N/A':number(wpCpuCoreEquivalent(row.peak_cpu_pct),2),
       number(row.peak_pss_gb,2),
       wib(row.last_seen),
-      candidateFinding(row),
       candidateAction(row),
     ]
   })
-  const jobSpec=isSlide?[[20,'center'],[115,'left'],[32,'center'],[36,'right'],[50,'right'],[46,'right'],[66,'center'],[78,'left'],[100,'left']]:[[24,'center'],[174,'left'],[36,'center'],[43,'right'],[67,'right'],[57,'right'],[79,'center'],[109,'left'],[116.55,'left']]
+  const jobSpec=isSlide
+    ?[[20,'center'],[205,'left'],[34,'center'],[42,'right'],[58,'right'],[50,'right'],[69,'center'],[74,'left']]
+    :[[24,'center'],[252,'left'],[40,'center'],[48,'right'],[70,'right'],[58,'right'],[92,'center'],[134,'left']]
   const fixedWidth=jobW-20
-  jobSpec[8][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
+  jobSpec[jobSpec.length-1][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
   table(jobX+10,lowY+lowH-(isSlide?29:36),jobW-20,jobSpec,
-    ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Evidence (WIB)','Review finding','Tuning action'],
+    ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Evidence (WIB)','Tuning action'],
     jobRows,isSlide?20:25,isSlide?14.5:17.8,isSlide?6.5:7.5)
 
   // Four verified mount-category rows. Absence of a correctly mapped READY
