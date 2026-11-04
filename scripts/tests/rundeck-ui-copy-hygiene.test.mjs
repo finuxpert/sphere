@@ -45,7 +45,7 @@ test('embedded reports and collector tabs do not repeat panel titles', () => {
   assert.equal((monitor.match(/<RundeckMonthlyReview /g) || []).length, 2)
   assert.match(monitor, /<RundeckMonthlyReview[^>]*showTitle=\{false\}/)
   assert.match(monthly, /showTitle = true/)
-  assert.match(monthly, /showTitle && <div className="sphereMonthlyReportTitle"><strong>SAP Performance Report<\/strong><\/div>/)
+  assert.match(monthly, /showTitle && <div className="sphereMonthlyReportTitle"><strong>SAP Performance Report<\/strong><small>/)
   assert.match(monthly, /sphereMonthlyHeaderControls/)
   assert.match(monthly, /sphereMonthlyInlineStatus/)
   assert.match(monthly, /<option value="month">Monthly<\/option><option value="week">Weekly<\/option><option value="custom">Custom<\/option>/)

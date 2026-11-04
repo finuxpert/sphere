@@ -32,7 +32,7 @@ test('monthly pressure queries remain complete-collection and APP-specific', () 
 test('monthly report keeps source-backed CPU RAM WP without optional appendix', () => {
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
   assert.doesNotMatch(ui, /Basis Assessment|Not assessed|Reviewed by|Manual SAP Basis Assessment/)
-  for (const term of ['CPU Pressure', 'RAM Pressure', 'Critical WP', 'Detailed Evidence', 'Generate PDF']) assert.ok(ui.includes(term), term)
+  for (const term of ['CPU Pressure', 'RAM Pressure', 'Critical WP', 'Detailed Evidence', 'Export PDF 16:9']) assert.ok(ui.includes(term), term)
   assert.match(ui, /buildMonthlyPdf/)
   assert.match(ui, /pressure:pressureFilter/)
   assert.match(ui, /flag:signalFilter/)
@@ -171,8 +171,8 @@ test('monthly management website uses compact four-row layout and canonical sour
   const css=read('src/tools/components/RundeckMonthlyFinal20261030.css')
   const evaluation=read('backend/rundeck_evaluation.py')
   for(const label of ['CPU Utilization Trend','Memory Utilization Trend',
-    'Top 10 Workloads by Peak WP CPU','Top 10 Workloads by Peak WP Memory',
-    'Application Server Performance','Top 10 Tuning Candidates',
+    'Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
+    'Application Server Performance','Top 5 Tuning Candidates',
     'Storage Capacity'])assert.ok(ui.includes(label),label)
   assert.match(ui,/pressure\.hosts/)
   assert.match(ui,/monthly_top_wp_cpu/)
@@ -229,14 +229,14 @@ test('WP CPU report displays logical core-equivalents without inventing a 28-vCP
 test('management PDF uses four reporting rows rather than technical appendix', () => {
   const pdf=read('src/tools/components/rundeckMonthlyEnterprisePdf.js')
   const ui=read('src/tools/components/RundeckMonthlyReview.jsx')
-  assert.match(pdf,/format:'a3'/)
+  assert.match(pdf,/format:outputFormat==='16:9'\?\[960,540\]:'a3'/)
   for(const phrase of ['CPU Utilization Trend','Memory Utilization Trend',
-    'Top 10 Workloads by Peak WP CPU','Top 10 Workloads by Peak WP Memory',
-    'Application Server Performance','Top 10 Tuning Candidates','Storage Capacity'])
+    'Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
+    'Application Server Performance','Top 5 Tuning Candidates','Storage Capacity'])
     assert.ok(pdf.includes(phrase),phrase)
   assert.match(pdf,/monthly_top_wp_cpu/)
   assert.match(pdf,/monthly_storage/)
-  assert.match(ui,/Generate PDF Management/)
+  assert.match(ui,/Export PDF 16:9/)
   assert.doesNotMatch(pdf,/Operational Findings|Management Summary|MONITORING COVERAGE/)
 })
 

@@ -1,0 +1,81 @@
+/* Isolated PowerPoint 16:9 PNG screenshot, rendered at 1280x720 x 1.5. */
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport {
+  position:absolute!important;left:-16000px!important;top:0!important;
+  width:1280px!important;height:720px!important;padding:0!important;margin:0!important;
+  box-sizing:border-box!important;overflow:visible!important;background:#fff!important;color:#1d3348!important;
+  --mr-surface:#fff;--mr-surface-2:#f5f8fa;--mr-border:#dbe4eb;--mr-text:#1d3348;
+  --mr-muted:#687a89;--mr-accent:#246d9d;color-scheme:light;font-family:Arial,Helvetica,sans-serif;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptFrame {
+  width:1280px;height:720px;padding:12px 18px;box-sizing:border-box;background:#fff;
+  display:flex;flex-direction:column;gap:7px;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptHeader{
+  flex:0 0 58px;display:flex;gap:18px;align-items:center;border:0;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptHeader img{
+  width:150px;height:38px;object-fit:contain;object-position:left center;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptTitle{
+  display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptTitle strong{
+  font-size:22px;line-height:1.1;font-weight:700;color:#102a43;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptTitle span{
+  font-size:15px;line-height:1.1;color:#52697b;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptHeader small{
+  font-size:12px;color:#667987;white-space:nowrap;align-self:flex-end;margin-bottom:10px;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagement{
+  margin:0!important;width:100%!important;flex:1;min-height:0;
+  display:grid!important;grid-template-rows:168px 112px 172px 156px!important;
+  gap:7px!important;align-content:start!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPair{
+  min-height:0!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPair.is-tables{
+  grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr)!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPanel{
+  height:100%!important;min-height:0!important;overflow:hidden!important;
+  background:#fff!important;color:#1d3348!important;
+  padding:7px 9px!important;border:1px solid #dbe4eb!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPanel h4{
+  font-size:13px!important;line-height:1.15!important;margin:0 0 4px!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerHeading strong{
+  font-size:11px!important;color:#52697b!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyTrend svg{
+  width:100%!important;height:108px!important;min-height:0!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyTrendLegend{
+  gap:15px!important;margin:0!important;font-size:11px!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerBars{
+  min-height:0!important;grid-template-rows:repeat(5,14px)!important;gap:2px!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerBar{
+  line-height:1!important;font-size:10.5px!important;gap:8px!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerJob{
+  overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerTable{
+  font-size:10.5px!important;line-height:1.1!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerTable :is(th,td){
+  padding:3px 4px!important;color:#21394e!important;border-color:#e0e6eb!important;
+  overflow-wrap:anywhere!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerTable th{
+  background:#f0f4f8!important;
+}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPanel.is-storage
+ .sphereMonthlyStorageNote{font-size:10px!important;white-space:nowrap!important;}
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereMonthlyManagerPanel.is-storage
+ .sphereMonthlyManagerTable :is(th,td){font-size:11px!important;padding:4px 6px!important;}

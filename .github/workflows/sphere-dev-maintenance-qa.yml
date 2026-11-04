@@ -30,13 +30,29 @@ jobs:
         run: |
           bash scripts/qa-browser-boot.sh
           node scripts/qa-six-chart-monitoring.mjs
-      - name: Monthly Management PDF regression
+      - name: Monthly Management PDF regression and 16:9 raster check
         run: |
           node scripts/qa-monthly-pdf.mjs
           if command -v pdfinfo >/dev/null; then
             pdfinfo "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" | grep -q 'Pages:[[:space:]]*1'
-            pdfinfo "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" | grep -q 'Page size:[[:space:]]*1190.55 x 841.89 pts'
+            pdfinfo "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" | grep -q 'Page size:[[:space:]]*960 x 540 pts'
           fi
+          if command -v pdftoppm >/dev/null; then
+            pdftoppm -f 1 -l 1 -singlefile -r 144 -png \
+              "$RUNNER_TEMP/sphere-monthly-management-qa.pdf" \
+              "$RUNNER_TEMP/sphere-monthly-16x9-preview"
+            python -c 'import struct,sys; raw=open(sys.argv[1],"rb").read(24); assert raw[:8]==bytes([137,80,78,71,13,10,26,10]); assert struct.unpack(">II",raw[16:24])==(1920,1080)' \
+              "$RUNNER_TEMP/sphere-monthly-16x9-preview.png"
+          fi
+      - name: Upload 16:9 management visual QA artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphere-monthly-management-16x9-qa
+          path: |
+            ${{ runner.temp }}/sphere-monthly-management-qa.pdf
+            ${{ runner.temp }}/sphere-monthly-16x9-preview.png
+          retention-days: 3
+          if-no-files-found: error
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
