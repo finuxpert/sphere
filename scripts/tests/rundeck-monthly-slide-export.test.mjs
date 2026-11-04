@@ -84,7 +84,7 @@ test('PowerPoint PNG export uses the exact report model with enforced 1920x1080 
   assert.doesNotMatch(css,/text-overflow:ellipsis!important/)
   assert.match(ui,/\.png'/)
   assert.match(css,/width:1280px;height:720px/)
-  assert.match(css,/grid-template-rows:164px 136px 168px 138px/)
+  assert.match(css,/grid-template-rows:152px 113px 189px 156px/)
 })
 
 test('report peak timestamps are exact Asia/Jakarta instants, not inferred from day buckets',()=>{
@@ -118,7 +118,7 @@ test('storage uses source-reported df Use% and suppresses inferred available byt
   ]}}
   const noAvailable=await buildManagementMonthlyPdf({month:'2026-10',data:payload,returnInstance:true})
   const noAvailableText=noAvailable.internal.pages[1].join('\n')
-  for(const label of ['Storage Capacity','APP1','Available','76%','Last Seen','CPU High Checks','RAM High Checks']){
+  for(const label of ['Storage Capacity','APP1','Available','76%','Last Seen','CPU High','RAM High','Checks']){
     assert.ok(noAvailableText.includes(label),'Missing storage report field: '+label)
   }
   assert.ok(!noAvailableText.includes('17.77 GB'),'Inferred storage available must be hidden')
@@ -138,4 +138,30 @@ test('Report browser labels agree with slide data provenance',()=>{
   assert.ok(source.includes('Available (df)'))
   assert.ok(source.includes("row.availability_source==='EXPLICIT'"))
   assert.ok(!source.includes('<th>Free Capacity</th>'))
+})
+
+test('16:9 PDF table bands and column widths remain exact, with 8pt gaps',async()=>{
+  const pdf=await buildManagementMonthlyPdf({month:'2026-10',data,returnInstance:true})
+  assert.equal(pdf.internal.getNumberOfPages(),1)
+  assert.equal(pdf.internal.pageSize.getWidth(),960)
+  assert.equal(pdf.internal.pageSize.getHeight(),540)
+  const source=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
+  assert.ok(source.includes('panelY=isSlide?366'))
+  assert.ok(source.includes('panelH=isSlide?124'))
+  assert.ok(source.includes('barY=isSlide?272'))
+  assert.ok(source.includes('barH=isSlide?86'))
+  assert.ok(source.includes('lowY=isSlide?120'))
+  assert.ok(source.includes('lowH=isSlide?144'))
+  assert.ok(source.includes('fsY=isSlide?8'))
+  assert.ok(source.includes('fsH=isSlide?104'))
+  assert.ok(source.includes('columnWidth(srvSpec)'))
+  assert.ok(source.includes('columnWidth(jobSpec)'))
+  assert.ok(source.includes('columnWidth(fsSpec)'))
+  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyPptExport.css',import.meta.url),'utf8')
+  const dims=ui.match(/grid-template-rows:([\d.]+)px ([\d.]+)px ([\d.]+)px ([\d.]+)px!important;/)
+  assert.ok(dims,'Slide grid definition')
+  assert.equal(dims.slice(1).reduce((v,n)=>v+Number(n),0),610)
+  assert.ok(ui.includes('height:90px!important'))
+  assert.ok(ui.includes('table-layout:fixed!important'))
+  assert.ok(ui.includes('td.is-job{white-space:normal!important'))
 })
