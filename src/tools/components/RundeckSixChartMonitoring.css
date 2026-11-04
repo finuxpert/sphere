@@ -152,7 +152,7 @@
  font-size:9px;padding:2px 3px;min-width:0;cursor:pointer;
 }
 .sphereNetworkMiniActions button[aria-pressed="true"]{
- border-color:var(--sphere-accent,#67a9e8);color:var(--sphere-accent,#67a9e8);
+ border-color:var(--sphere-accent,#67a9e8);
 }
 .sphereNetworkMiniMeta{
  justify-content:space-between;flex:0 0 auto;min-height:20px;

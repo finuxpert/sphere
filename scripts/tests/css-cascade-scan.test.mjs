@@ -113,19 +113,19 @@ function effectiveCssFingerprint(source) {
 
 const cssCheckpoints = [
   ['src/tools/components/RundeckInfrastructure.css', '4c87cb53', 552],
-  ['src/tools/components/RundeckJobHistory.css', 'a2ae7193', 992],
+  ['src/tools/components/RundeckJobHistory.css', '00081f01', 989],
   ['src/tools/components/RundeckLiveOverview.css', 'dd4fd6bf', 715],
   ['src/tools/components/RundeckWorkspace.css', '1af192cc', 503],
   ['src/app/accessibility-theme-v13412.css', '5431e63e', 917],
-  ['src/tools/components/RundeckCockpitHexV13512.css', '0d6e103c', 872],
-  ['src/tools/components/RundeckMockupParity.css', 'a2252958', 856],
+  ['src/tools/components/RundeckCockpitHexV13512.css', 'f30e6f7b', 871],
+  ['src/tools/components/RundeckMockupParity.css', '65a1b7e5', 854],
   ['src/tools/components/RundeckOperatorFlatV1354.css', 'ede2074a', 701],
   ['src/tools/components/RundeckVisualRedesignV136.css', '2b3fdb11', 708],
   ['src/tools/components/RundeckUnifiedExperience20261030.css', '99e84fdc', 767],
   ['src/tools/components/RundeckEvidenceTimeline.css', '1eca1f36', 233],
   ['src/tools/components/RundeckWorkspaceDrawer.css', 'ff5683da', 275],
-  ['src/tools/components/RundeckSource.css', 'd113646d', 653],
-  ['src/tools/components/RundeckMonitoringHistory.css', '9002c91b', 1335],
+  ['src/tools/components/RundeckSource.css', 'f88bbb17', 649],
+  ['src/tools/components/RundeckMonitoringHistory.css', 'b49d3301', 1325],
 ]
 
 for (const [path, hash, keys] of cssCheckpoints) {
