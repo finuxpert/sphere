@@ -209,10 +209,31 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       text(x,y,label,sz,weight,color,align)
       return
     }
-    // Preserve complete SAP program identities: wrap rather than truncate.
-    const parts=pdf.splitTextToSize(label,width-10)
-    if(parts.length>2)throw Error('Program name exceeds two-line report cell: '+label)
-    parts.forEach((part,i)=>text(x,y+3-i*7,part,6.2,weight,color,align))
+    // SAP names are often unbroken ABAP identifiers (including underscores).
+    // jsPDF splitTextToSize can exceed the cell on those tokens; wrap by the
+    // actual rendered glyph width so no line enters an adjacent column.
+    const lineWidth=Math.max(10,width-17)
+    const wrap=(size)=>{
+      font(weight,size)
+      const parts=[]
+      let current=''
+      for(const glyph of label) {
+        if(current && pdf.getTextWidth(current+glyph)>lineWidth) {
+          parts.push(current)
+          current=glyph
+        } else current+=glyph
+      }
+      if(current)parts.push(current)
+      return parts
+    }
+    for(let size=6.2;size>=5.4;size-=.2) {
+      const parts=wrap(size)
+      if(parts.length<=2) {
+        parts.forEach((part,i)=>text(x,y+(parts.length===2?3:0)-i*7,part,size,weight,color,align))
+        return
+      }
+    }
+    throw Error('Program name exceeds two-line report cell: '+label)
   }
   // Preserve the original logo's native aspect ratio; the previous fixed
   // 106x30 pt box squeezed a wide 1255x266 image horizontally.
