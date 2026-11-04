@@ -7,7 +7,7 @@ from unittest.mock import patch
 from backend.rundeck_infra_parser import parse
 from backend.rundeck_infra_poller import _group_output_entries, _stored_execution_hosts
 from backend.rundeck_infra_store import identifier
-from backend.rundeck_infra_api import monthly_storage_evidence, _storage_used_bytes
+from backend.rundeck_infra_api import monthly_storage_evidence, _storage_used_bytes, _storage_explicit_available_bytes
 
 POSITIONAL_SAMPLE=b"""## SPHERE-INFRA-V1-BEGIN
 snapshot_ts=2026-09-23T18:15:37+07:00
@@ -171,6 +171,18 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
         self.assertEqual(_storage_used_bytes({"details":{"_positional":[
             "filesystem","/dev/root","xfs","1000","620","62","/"]}}),620*1024)
 
+    def test_legacy_positional_contract_never_invents_df_available(self):
+        legacy={"details":{"_positional":["filesystem","/dev/root","xfs","1000","620","64","/"]},
+                "avail_bytes":380*1024}
+        self.assertIsNone(_storage_explicit_available_bytes(legacy))
+        self.assertEqual(_storage_used_bytes(legacy),620*1024)
+        self.assertEqual(_storage_explicit_available_bytes(
+            {"details":{"avail_bytes":"250000"}}),250000)
+        self.assertEqual(_storage_explicit_available_bytes(
+            {"details":{"avail_kb":"250"}}),250*1024)
+        self.assertIsNone(_storage_explicit_available_bytes(
+            {"details":{"avail_bytes":"invalid"}}))
+
     def test_missing_month_samples_never_report_zero(self):
         class Result:
             def mappings(self): return self
@@ -207,6 +219,9 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
         self.assertEqual(res["items"][0]["used_bytes"],600*1024)
         self.assertEqual(res["items"][0]["status"],"COLLECTED")
         self.assertIsNone(res["items"][0]["reason"])
+        self.assertIsNone(res["items"][0]["free_bytes"])
+        self.assertEqual(res["items"][0]["availability_source"],"NOT_RETAINED")
+        self.assertEqual(res["items"][0]["used_pct"],60)
         self.assertEqual(res["source_rows"],2)
         self.assertEqual(res["distinct_mounts"],1)
         self.assertIn("DISTINCT ON (UPPER(f.host), f.mount_point)", conn.query)
@@ -215,6 +230,29 @@ class MonthlyStorageHistoryTests(unittest.TestCase):
         # samples still reflect all records before DISTINCT ON.
         self.assertEqual(res["source_rows"], 2)
 
+
+    def test_explicit_df_available_is_preserved_without_recomputing_use_percent(self):
+        from datetime import datetime, timezone
+        class Result:
+            def mappings(self): return self
+            def all(self):
+                return [{
+                    "host":"AOPH1PAPPDC","mount_point":"/",
+                    "collected_at":datetime(2026,10,20,tzinfo=timezone.utc),
+                    "details":{"_positional":["filesystem","/dev/root","xfs","1000","620","76","/"],
+                               "avail_bytes":"350000"},
+                    "total_bytes":1000*1024,"avail_bytes":380*1024,
+                    "used_pct":76,"source_rows":1,
+                }]
+        class Conn:
+            def execute(self,sql,params): return Result()
+        row=monthly_storage_evidence("2026-10",Conn(),{
+            "File System OS":{"host":"AOPH1PAPPDC","mount":"/"}})["items"][0]
+        self.assertEqual(row["status"],"COLLECTED")
+        self.assertEqual(row["used_bytes"],620*1024)
+        self.assertEqual(row["free_bytes"],350000)
+        self.assertEqual(row["availability_source"],"EXPLICIT")
+        self.assertEqual(row["used_pct"],76)
 
     def test_missing_mapping_does_not_fall_back_to_any_mount(self):
         from datetime import datetime, timezone

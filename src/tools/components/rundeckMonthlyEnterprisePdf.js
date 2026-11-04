@@ -394,9 +394,9 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     pct(row.avg_ram_pct),pct(row.peak_ram_pct),
     number(row.cpu_warning_host_checks,0),number(row.ram_warning_host_checks,0),
   ])
-  const srvSpec=isSlide?[[32,'left'],[43,'right'],[43,'right'],[45,'right'],[45,'right'],[55,'right'],[55,'right']]:[[43,'left'],[50,'right'],[50,'right'],[52,'right'],[52,'right'],[60,'right'],[62,'right']]
+  const srvSpec=isSlide?[[30,'left'],[40,'right'],[40,'right'],[40,'right'],[40,'right'],[64,'right'],[64,'right']]:[[40,'left'],[45,'right'],[45,'right'],[45,'right'],[45,'right'],[68,'right'],[68,'right']]
   table(M+10,lowY+lowH-(isSlide?29:36),serverW-20,srvSpec,
-    ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU High Reads','RAM High Reads'],
+    ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max','CPU High Checks','RAM High Checks'],
     srvRows,isSlide?20:25,isSlide?14.5:32,isSlide?7.3:8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
@@ -417,14 +417,18 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   const fixedWidth=jobW-20
   jobSpec[jobSpec.length-1][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
   table(jobX+10,lowY+lowH-(isSlide?29:36),jobW-20,jobSpec,
-    ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Evidence (WIB)','Tuning action'],
+    ['No','Program / Job','APP','Samples','CPU cores','PSS GB','Last Seen (WIB)','Tuning action'],
     jobRows,isSlide?20:25,isSlide?14.5:17.8,isSlide?7.0:7.5)
 
   // Four verified mount-category rows. Absence of a correctly mapped READY
   // historical filesystem sample remains "Not Collected", never zero/NORMAL.
   const fsY=isSlide?8:25,fsH=isSlide?97:132
   rect(M,fsY,CW,fsH,'white',7)
-  section(M+15,fsY+fsH-(isSlide?17:22),'Storage Capacity')
+  const scopedStorageHosts=[...new Set(m.storage.map(row=>app(row.host))
+    .filter(host=>/^APP[1-5]$/.test(host)))]
+  const storageTitle='Storage Capacity'+(scopedStorageHosts.length===1
+    ? ' · '+scopedStorageHosts[0] : '')
+  section(M+15,fsY+fsH-(isSlide?17:22),storageTitle)
   const fsSpec=isSlide?[[116,'left'],[182,'left'],[118,'right'],[118,'right'],[118,'right'],[79,'right'],[169,'right']]:[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
   const bytes=n=>{
     if(value(n)===null)return 'Not Collected'
@@ -441,13 +445,15 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
         Date.parse(row.sample_at)>=Date.parse(m.period.exclusiveEndUtc))return [label,'Not Collected','—','—','—','—','—']
     return [
       label,(row.mount_point||'—')+' · '+app(row.host),
-      bytes(row.total_bytes),bytes(row.used_bytes),bytes(row.free_bytes),
+      bytes(row.total_bytes),bytes(row.used_bytes),
+      row.availability_source==='EXPLICIT' && value(row.free_bytes)!==null
+        ?bytes(row.free_bytes):'—',
       pct(row.used_pct),wib(row.sample_at)+' WIB',
     ]
   })
   table(M+10,fsY+fsH-(isSlide?28:32),CW-20,fsSpec,
     ['File System','Mounted On / Host','Total Capacity','Used Capacity',
-     'Free Capacity','Usage %','Sample WIB'],
+     'Available (df)','Usage %','Sample WIB'],
     fsRows,isSlide?16:23,isSlide?13:17.4,isSlide?7.5:7.8)
   // All report content stays on this single page.
   if(pdf.internal.getNumberOfPages()!==1)throw Error('Enterprise report must fit one landscape page')

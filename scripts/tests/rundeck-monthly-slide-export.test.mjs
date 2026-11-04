@@ -107,3 +107,35 @@ test('slide PDF and PNG omit coverage header but preserve coverage in the data m
   assert.equal(m.observedDays,1)
   assert.equal(m.quality.coverage_pct,61.2)
 })
+
+test('storage uses source-reported df Use% and suppresses inferred available bytes',async()=>{
+  const baseRow={...data.monthly_storage.items[0],
+    sample_at:'2026-10-09T16:00:00Z',
+    total_bytes:85.90e9,used_bytes:64.09e9,free_bytes:17.77e9,used_pct:76,
+    availability_source:'NOT_RETAINED'}
+  const payload={...data,monthly_storage:{...data.monthly_storage,items:[
+    baseRow,...data.monthly_storage.items.slice(1),
+  ]}}
+  const noAvailable=await buildManagementMonthlyPdf({month:'2026-10',data:payload,returnInstance:true})
+  const noAvailableText=noAvailable.internal.pages[1].join('\n')
+  for(const label of ['Storage Capacity','APP1','Available','76%','Last Seen','CPU High Checks','RAM High Checks']){
+    assert.ok(noAvailableText.includes(label),'Missing storage report field: '+label)
+  }
+  assert.ok(!noAvailableText.includes('17.77 GB'),'Inferred storage available must be hidden')
+  assert.ok(!noAvailableText.includes('CPU High Reads'))
+  assert.ok(!noAvailableText.includes('Evidence (WIB)'))
+  const observed={...payload,monthly_storage:{...payload.monthly_storage,items:[
+    {...baseRow,availability_source:'EXPLICIT'},...data.monthly_storage.items.slice(1),
+  ]}}
+  const real=await buildManagementMonthlyPdf({month:'2026-10',data:observed,returnInstance:true})
+  assert.ok(real.internal.pages[1].join('\n').includes('17.77 GB'),'Explicit df available should be visible')
+})
+test('Report browser labels agree with slide data provenance',()=>{
+  const source=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  assert.ok(source.includes('CPU High Checks'))
+  assert.ok(source.includes('RAM High Checks'))
+  assert.ok(source.includes('Last Seen (WIB)'))
+  assert.ok(source.includes('Available (df)'))
+  assert.ok(source.includes("row.availability_source==='EXPLICIT'"))
+  assert.ok(!source.includes('<th>Free Capacity</th>'))
+})
