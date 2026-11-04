@@ -40,7 +40,9 @@ test('weekly management PDF defaults to one 16:9 landscape slide with exact boun
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   assert.ok(stream.includes('SAP Weekly Performance Report'))
   assert.ok(stream.includes('Period: 26 Oct 2026 - 01 Nov 2026'))
-  assert.ok(stream.includes('Observed days 3/7'))
+  assert.ok(stream.includes('01 Nov 2026, 18:00 WIB'))
+  assert.ok(!stream.includes('Observed days 3/7'))
+  assert.ok(!stream.includes('Checks 50%'))
   assert.ok(!stream.includes('SAP Monthly Performance Report'))
 })
 
