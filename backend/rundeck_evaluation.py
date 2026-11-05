@@ -625,9 +625,15 @@ def _aggregate_window_split_distinct(
                s.app_wp_baseline_pct, s.max_rank_seen,
                s.aggregate_resource_observations
           FROM scalar_metrics s
-          JOIN collection_counts c USING (consumer_type, consumer_key)
-          JOIN collection_host_counts ch USING (consumer_type, consumer_key)
-          JOIN host_counts h USING (consumer_type, consumer_key)
+          JOIN collection_counts c
+            ON c.consumer_type = s.consumer_type
+           AND c.consumer_key IS NOT DISTINCT FROM s.consumer_key
+          JOIN collection_host_counts ch
+            ON ch.consumer_type = s.consumer_type
+           AND ch.consumer_key IS NOT DISTINCT FROM s.consumer_key
+          JOIN host_counts h
+            ON h.consumer_type = s.consumer_type
+           AND h.consumer_key IS NOT DISTINCT FROM s.consumer_key
     """), params)
     return [dict(row._mapping) for row in rows]
 
