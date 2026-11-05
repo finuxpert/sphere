@@ -4,7 +4,7 @@ from __future__ import annotations
 import unittest
 from datetime import datetime, timezone
 
-from backend.rundeck_monthly_pressure import monthly_pressure_observations
+from backend.rundeck_monthly_pressure import monthly_pressure_observations, CORRELATION_WINDOW_SECONDS
 
 
 class FakeResult:
@@ -33,13 +33,13 @@ class TestReportPressureSargableJoin(unittest.TestCase):
         )
         self.assertEqual(len(conn.queries), 2)
         sql, params = conn.queries[1]
-        self.assertIn("tc.collection_id = hm.collection_id", sql.replace("hm.collection_id = tc.collection_id","tc.collection_id = hm.collection_id"))
+        self.assertIn("hm.collection_id = tc.collection_id", sql)
         self.assertIn("hm.host = tc.host", sql)
         self.assertIn("hm.collected_at >= tc.collected_at - (:max_skew_seconds * INTERVAL '1 second')", sql)
         self.assertIn("hm.collected_at <= tc.collected_at + (:max_skew_seconds * INTERVAL '1 second')", sql)
         self.assertNotIn("ABS(EXTRACT(EPOCH", sql)
         self.assertIn("hm.collected_at >= :start AND hm.collected_at < :end", sql)
-        self.assertEqual(params["max_skew_seconds"], 900)
+        self.assertEqual(params["max_skew_seconds"], CORRELATION_WINDOW_SECONDS)
         self.assertEqual(result["correlation"], {})
 
     def test_host_only_preview_still_skips_costly_workload_correlation(self):
