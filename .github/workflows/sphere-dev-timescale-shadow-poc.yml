@@ -1,0 +1,35 @@
+name: SPHERE DEV TimescaleDB shadow POC guard
+
+on:
+  pull_request:
+    branches:
+      - perf/dev-report-split-distinct-20261105
+      - rundeck-sphere-dev
+    paths:
+      - ops/rundeck/compare-timescaledb-shadow-dev.py
+      - ops/rundeck/TIMESCALEDB_WEEKLY_SHADOW_POC.md
+      - backend/tests/test_timescaledb_shadow_poc_dev.py
+      - .github/workflows/sphere-dev-timescale-shadow-poc.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shadow-poc-static-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install SQL client dependencies
+        run: python -m pip install 'psycopg[binary]>=3.1,<4' 'SQLAlchemy>=2,<3'
+      - name: Parse and compile isolated controller and tests
+        run: |
+          python -m py_compile ops/rundeck/compare-timescaledb-shadow-dev.py
+          python -m py_compile backend/tests/test_timescaledb_shadow_poc_dev.py
+          python -m py_compile ops/rundeck/compare-report-split-distinct-dev.py
+      - name: Run offline safety guards (no database writes)
+        run: python -m unittest -v backend.tests.test_timescaledb_shadow_poc_dev
