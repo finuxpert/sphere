@@ -6,8 +6,10 @@ ONLY the TimescaleDB extension in sphere_rundeck_dev when it is already
 installed and preloaded. It NEVER installs packages, modifies PostgreSQL
 configuration, restarts services, migrates tables, or creates hypertables.
 
-Read-only: runuser -u sphere -- /opt/sphere-rundeck-dev/venv/bin/python \
+Read-only (low privilege): runuser -u sphere -- /opt/sphere-rundeck-dev/venv/bin/python \
              ops/rundeck/timescaledb-dev-control.py
+Read-only (admin inspection): runuser -u postgres -- /opt/sphere-rundeck-dev/venv/bin/python \
+             ops/rundeck/timescaledb-dev-control.py --inspect-as-postgres
 Activation: runuser -u postgres -- /opt/sphere-rundeck-dev/venv/bin/python \
              ops/rundeck/timescaledb-dev-control.py --apply --confirm-dev
 """
@@ -46,10 +48,11 @@ def classify(available: bool, installed: bool, preloaded: bool) -> str:
     return "READY_FOR_EXTENSION_CREATION"
 
 
-def validate_identity(db: str, role: str, *, apply: bool, local_socket: bool) -> None:
+def validate_identity(db: str, role: str, *, apply: bool, local_socket: bool,
+                      admin_preflight: bool = False) -> None:
     if db != DB_NAME:
         raise RuntimeError("REFUSED: unexpected database")
-    if role != ("postgres" if apply else "sphere"):
+    if role != ("postgres" if apply or admin_preflight else "sphere"):
         raise RuntimeError("REFUSED: unexpected database role")
     if not local_socket:
         raise RuntimeError("REFUSED: remote database connection")
@@ -112,11 +115,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="Create extension only; no package install, restart or hypertable")
     parser.add_argument("--confirm-dev", action="store_true",
                         help="Mandatory when using --apply")
+    parser.add_argument("--inspect-as-postgres", action="store_true",
+                        help="Read-only diagnostics via postgres peer role; no activation")
     args = parser.parse_args(argv)
     if args.apply and not args.confirm_dev:
         parser.error("--apply requires --confirm-dev")
+    if args.apply and args.inspect_as_postgres:
+        parser.error("Choose either --apply or --inspect-as-postgres")
 
-    role = "postgres" if args.apply else "sphere"
+    role = "postgres" if args.apply or args.inspect_as_postgres else "sphere"
     if pwd.getpwuid(os.geteuid()).pw_name != role:
         print("REFUSED: wrong OS user", file=sys.stderr)
         return 2
@@ -134,15 +141,15 @@ def main(argv: list[str] | None = None) -> int:
                 validate_identity(
                     report["database"], report["role"], apply=args.apply,
                     local_socket=report["local_socket"],
+                    admin_preflight=args.inspect_as_postgres,
                 )
                 if args.apply:
                     if report["extension_status"] == "ENABLED":
                         result = "ALREADY_ENABLED"
                     elif report["extension_status"] != "READY_FOR_EXTENSION_CREATION":
-                        raise RuntimeError(
-                            "REFUSED: TimescaleDB package/preload not ready; "
-                            "do not restart PostgreSQL automatically"
-                        )
+                        print("TIMESCALE_DEV=BLOCKED REASON=" + report["extension_status"],
+                              file=sys.stderr)
+                        return 2
                     else:
                         cur.execute("CREATE EXTENSION IF NOT EXISTS timescaledb")
                         result = "EXTENSION_CREATED"
