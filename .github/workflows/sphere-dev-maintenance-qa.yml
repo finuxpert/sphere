@@ -90,6 +90,7 @@ jobs:
             backend.tests.test_rundeck_monthly_review \
             backend.tests.test_report_ready_source_pruning \
             backend.tests.test_report_collection_date_plan \
+            backend.tests.test_report_actual_profile_dev \
             backend.tests.test_report_workload_window_pruning \
             backend.tests.test_report_pressure_sql_plan \
             backend.tests.test_rundeck_weekly_report \
