@@ -1007,7 +1007,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         trace = EVALUATION_STAGE_TRACE and period_key in {"month", "week", "custom"}
         scope = f"{period_key}:{month or '-'}:{week_start or start_date or '-'}"
         if trace:
-            _EVAL_LOG.info("SPHERE_EVAL_STAGE_BEGIN scope=%s stage=%s", scope, name)
+            _EVAL_LOG.warning("SPHERE_EVAL_STAGE_BEGIN scope=%s stage=%s", scope, name)
         try:
             return operation()
         except Exception as error:
@@ -1020,7 +1020,7 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             elapsed_ms = round((time.perf_counter() - began) * 1000.0, 1)
             sql_timings_ms[name] = elapsed_ms
             if trace:
-                _EVAL_LOG.info(
+                _EVAL_LOG.warning(
                     "SPHERE_EVAL_STAGE_END scope=%s stage=%s duration_ms=%.1f",
                     scope, name, elapsed_ms,
                 )
