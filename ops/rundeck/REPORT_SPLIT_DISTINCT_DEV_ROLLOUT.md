@@ -52,7 +52,7 @@ CI. Does **not** check out or alter `/root/rundeck-sphere-dev`.
 
 ```bash
 set -euo pipefail
-BRANCH=perf/dev-report-split-distinct-runtime-20261106
+BRANCH=perf/dev-report-split-distinct-20261105
 git -C /root/rundeck-sphere-dev fetch --no-tags origin "$BRANCH"
 SHA="$(git -C /root/rundeck-sphere-dev rev-parse FETCH_HEAD)"
 SNAP="/opt/sphere-report-split-test/${SHA:0:12}"
