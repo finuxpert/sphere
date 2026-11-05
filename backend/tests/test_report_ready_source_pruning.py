@@ -25,24 +25,23 @@ class _Probe:
 
 
 class ReadySourcePruningTests(unittest.TestCase):
-    def test_aggregates_keep_final_ready_guard_and_prefilter_both_union_arms(self):
+    def test_runtime_aggregates_use_baseline_source_after_measured_regression(self):
+        # DEV 2026-11-05: parity passed but weekly current went 8.09s -> 25.18s.
         start = datetime(2026, 9, 30, 17, tzinfo=timezone.utc)
         end = datetime(2026, 10, 31, 17, tzinfo=timezone.utc)
-        probe = _Probe()
-        evaluation._aggregate_window(probe, start, end, "ALL")
-        sql = probe.sql[-1]
-        self.assertIn("JOIN complete_collections cc_wo ON cc_wo.collection_id = wo.collection_id", sql)
-        self.assertIn("JOIN complete_collections cc_tc ON cc_tc.collection_id = tc.collection_id", sql)
-        self.assertIn("JOIN complete_collections cc ON cc.collection_id = tc.collection_id", sql)
-        self.assertIn("NOT EXISTS", sql)
-        self.assertIn("wo.collected_at = tc.collected_at", sql)
-
-        historical = _Probe()
-        evaluation._historical_baseline(historical, end, "ALL")
-        sql = historical.sql[-1]
-        self.assertIn("JOIN complete_collections cc_wo", sql)
-        self.assertIn("JOIN complete_collections cc_tc", sql)
-        self.assertIn("JOIN complete_collections cc ON cc.collection_id = tc.collection_id", sql)
+        for aggregate, args in (
+            (evaluation._aggregate_window, (start, end, "ALL")),
+            (evaluation._historical_baseline, (end, "ALL")),
+        ):
+            with self.subTest(aggregate=aggregate.__name__):
+                probe = _Probe()
+                aggregate(probe, *args)
+                sql = probe.sql[-1]
+                self.assertNotIn("JOIN complete_collections cc_wo", sql)
+                self.assertNotIn("JOIN complete_collections cc_tc", sql)
+                self.assertIn("JOIN complete_collections cc ON cc.collection_id = tc.collection_id", sql)
+                self.assertIn("NOT EXISTS", sql)
+                self.assertIn("wo.collected_at = tc.collected_at", sql)
 
     def test_ready_prefilter_requires_explicit_window(self):
         with self.assertRaises(ValueError):
