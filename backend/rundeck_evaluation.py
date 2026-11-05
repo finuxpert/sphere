@@ -7,6 +7,7 @@ backward-compatible assessment fields used by existing clients.
 """
 from __future__ import annotations
 
+import logging
 import os
 import time
 from datetime import datetime, timedelta, timezone
@@ -49,6 +50,11 @@ _EVALUATION_CACHE: dict[tuple[str, str, str], tuple[float, dict]] = {}
 # Prevent simultaneous paginated requests from executing the same expensive cold SQL.
 # FastAPI runs this synchronous endpoint in a worker thread; lock scope is process-local.
 _EVALUATION_COMPUTE_LOCK = Lock()
+_EVAL_LOG = logging.getLogger(__name__)
+# Stage begin/end traces are opt-in. Slow stages are logged to find bottlenecks
+# even when an HTTP client times out before the SQL finishes.
+EVALUATION_STAGE_TRACE = os.getenv("SPHERE_EVAL_TRACE_STAGES", "").lower() in {"1", "true", "yes"}
+EVALUATION_SLOW_SQL_MS = max(100, int(os.getenv("SPHERE_EVAL_SLOW_SQL_MS", "2000")))
 
 
 def _cache_get(key: tuple[str, str, str]) -> dict | None:
@@ -943,6 +949,11 @@ def evaluation_report(period: str = "1d", consumer_type: str = "ALL", limit: int
         else:
             result = _evaluation_report_locked(period, consumer_type, limit, offset, query, health, month, pressure, flag, week_start, start_date, end_date)
         # Expose lock queue time separately from SQL, without changing source health.
+        if wait_ms >= EVALUATION_SLOW_SQL_MS:
+            _EVAL_LOG.warning(
+                "SPHERE_EVAL_SLOW_LOCK month=%s week_start=%s duration_ms=%.1f",
+                month or "-", week_start or "-", wait_ms,
+            )
         return {**result, "runtime": {**result.get("runtime", {}), "lock_wait_ms": wait_ms}}
 
 
@@ -991,11 +1002,33 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
     sql_timings_ms: dict[str, float] = {}
 
     def measure_sql(name: str, operation):
+        # Wall time includes SQL fetch and Python result materialization.
         began = time.perf_counter()
+        trace = EVALUATION_STAGE_TRACE and period_key in {"month", "week", "custom"}
+        scope = f"{period_key}:{month or '-'}:{week_start or start_date or '-'}"
+        if trace:
+            _EVAL_LOG.warning("SPHERE_EVAL_STAGE_BEGIN scope=%s stage=%s", scope, name)
         try:
             return operation()
+        except Exception as error:
+            _EVAL_LOG.warning(
+                "SPHERE_EVAL_STAGE_ERROR scope=%s stage=%s error_type=%s",
+                scope, name, type(error).__name__,
+            )
+            raise
         finally:
-            sql_timings_ms[name] = round((time.perf_counter() - began) * 1000.0, 1)
+            elapsed_ms = round((time.perf_counter() - began) * 1000.0, 1)
+            sql_timings_ms[name] = elapsed_ms
+            if trace:
+                _EVAL_LOG.warning(
+                    "SPHERE_EVAL_STAGE_END scope=%s stage=%s duration_ms=%.1f",
+                    scope, name, elapsed_ms,
+                )
+            if elapsed_ms >= EVALUATION_SLOW_SQL_MS:
+                _EVAL_LOG.warning(
+                    "SPHERE_EVAL_SLOW_STAGE scope=%s stage=%s duration_ms=%.1f",
+                    scope, name, elapsed_ms,
+                )
 
     with engine.connect() as conn:
         if period_key in {"month", "week", "custom"}:

@@ -279,6 +279,20 @@ def monthly_error_evidence(conn, start: datetime, end: datetime, source: str, co
            AND tc.collected_at >= :start AND tc.collected_at < :end
            AND tc.collected_at >= :slice_start AND tc.collected_at < :slice_end
            AND tc.consumer_type IN ('JOB', 'PROGRAM', 'PROCESS')
+           -- Push a lossless JSONB key gate below the lateral signal expansion.
+           -- Without this predicate, non-error workload observations also
+           -- construct JSONB arrays during every 3-day historical scan.
+           -- Keep all legacy top-level codes/counts and nested wp_signals.
+           AND (
+                tc.details ? 'wp_signals'
+                OR tc.details ? 'error_at_snapshot'
+                OR tc.details ? 'latest_trace_error'
+                OR tc.details ? 'error_code'
+                OR tc.details ? 'rabax'
+                OR tc.details ? 'rabax_tail_count'
+                OR tc.details ? 'rxmsg'
+                OR tc.details ? 'rxmsg_tail_count'
+           )
            AND (
                 NULLIF(signal.value->>'error_at_snapshot', '') IS NOT NULL
                 OR NULLIF(signal.value->>'latest_trace_error', '') IS NOT NULL
