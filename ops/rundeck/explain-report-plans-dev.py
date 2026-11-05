@@ -15,10 +15,16 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+
 # Accept only explicitly scoped DEV. Never read a PROD DB connection accidentally.
 def _validate_target() -> None:
+    from sqlalchemy.engine import make_url
     url = os.getenv("DATABASE_URL", "")
-    if not url or "sphere_rundeck_dev" not in url.split("?", 1)[0]:
+    if not url or make_url(url).database != "sphere_rundeck_dev":
         raise RuntimeError("DEV database URL not configured; expected sphere_rundeck_dev")
     if os.getenv("DB_MODE", "file").lower() not in {"db", "hybrid"}:
         raise RuntimeError("DB_MODE must enable DEV PostgreSQL")
@@ -125,6 +131,9 @@ def main() -> int:
                 print("\n=== PLAN %s ===" % name)
                 # PostgreSQL only estimates the plan. SELECT is never executed.
                 row = conn.execute(text("EXPLAIN (FORMAT JSON) " + sql), params).scalar_one()
+                if isinstance(row, str):
+                    import json
+                    row = json.loads(row)
                 _summarize_plan(row[0]["Plan"])
     print("PLAN_CAPTURE=PASS")
     return 0
