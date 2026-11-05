@@ -40,6 +40,18 @@ runuser -u sphere -- /opt/sphere-rundeck-dev/venv/bin/python \
   /opt/sphere-timescale-preflight/timescaledb-dev-control.py
 ```
 
+If the `sphere` role receives `InsufficientPrivilege` when reading PostgreSQL
+catalog/settings, do not grant it additional privileges just for diagnostics.
+Instead, inspect as the existing local `postgres` admin in **read-only mode**:
+
+```bash
+runuser -u postgres -- /opt/sphere-rundeck-dev/venv/bin/python \
+  /opt/sphere-timescale-preflight/timescaledb-dev-control.py --inspect-as-postgres
+```
+
+This is **not** `--apply` and cannot create an extension. The controller
+sets `REPEATABLE READ, READ ONLY` even for the privileged inspection.
+
 Look for `extension_status`:
 
 - `ENABLED`: extension already exists. Do not reinstall or re-enable.
