@@ -199,9 +199,8 @@ def psycopg_params(sql):
     return re.sub(r"(?<!:):(start|end|consumer_type)\b", r"%(\1)s", sql)
 
 
-def sql_for(cur, helper, baseline):
-    from backend import rundeck_evaluation as ev
-    sql, params = helper.capture(START, END, candidate=not baseline)
+def sql_for(helper, baseline, start, end):
+    sql, params = helper.capture(start, end, candidate=not baseline)
     return sql, params
 
 
@@ -211,8 +210,10 @@ def walk_plan(plan):
         yield from walk_plan(child)
 
 
-def bench(cur, conn, *, reverse=False):
+def bench(cur, conn, *, reverse=False, scope="week"):
     check_identity(cur)
+    start = START if scope == "week" else START + timedelta(days=3)
+    end = END if scope == "week" else start + timedelta(days=1)
     if existing_schemas(cur) != sorted(SCHEMAS):
         raise RuntimeError("REFUSED: create both POC schemas before benchmarking")
     cur.execute("""
@@ -226,7 +227,7 @@ def bench(cur, conn, *, reverse=False):
     helper = capture_helpers()
     experiments = []
     for baseline in (True, False):
-        original, params = sql_for(cur, helper, baseline)
+        original, params = sql_for(helper, baseline, start, end)
         for schema in SCHEMAS:
             label = ("BASELINE" if baseline else "SPLIT_DISTINCT") + (
                 "_PG" if schema == PG_SCHEMA else "_TS"
@@ -246,7 +247,8 @@ def bench(cur, conn, *, reverse=False):
         cur.execute("SET LOCAL lock_timeout = '1500ms'")
         cur.execute("SET LOCAL statement_timeout = '120000ms'")
         cur.execute("SET LOCAL work_mem = '4MB'")
-        emit(mode="BENCH", period="week:2026-10-26",
+        emit(mode="BENCH", period=("week:2026-10-26" if scope == "week"
+                                   else "day:2026-10-29"),
              read_only=True, source_rows=sample_rows, reverse=reverse,
              note="sequential shared-cache timings, not cold-cache results")
         for label, raw_sql, params in experiments:
@@ -317,6 +319,8 @@ def main(argv=None):
     parser.add_argument("--confirm-dev", action="store_true")
     parser.add_argument("--confirm-drop", action="store_true")
     parser.add_argument("--reverse", action="store_true")
+    parser.add_argument("--scope", choices=("week", "day"), default="week",
+                        help="Weekly report SQL or one-day window for chunk-pruning contrast")
     args = parser.parse_args(argv)
     if args.mode in {"create", "cleanup"} and not args.confirm_dev:
         parser.error("Writes require --confirm-dev")
@@ -339,7 +343,7 @@ def main(argv=None):
                 elif args.mode == "cleanup":
                     cleanup(cur, conn)
                 else:
-                    bench(cur, conn, reverse=args.reverse)
+                    bench(cur, conn, reverse=args.reverse, scope=args.scope)
     except Exception as exc:
         emit(final="BLOCKED", mode=args.mode, error_type=type(exc).__name__,
              note="No modifications to original tables; POC transaction rolls back on failure")
