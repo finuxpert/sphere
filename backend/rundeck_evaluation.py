@@ -356,6 +356,7 @@ def assess_workload(
 
 def _workload_source_relation(
     conn, *, window: tuple[str, str] | None = None, job_program_only: bool = False,
+    ready_collections_only: bool = False,
 ) -> tuple[str, str]:
     """Retain every current or unmatched legacy workload, pruned to the SQL window.
 
@@ -363,7 +364,11 @@ def _workload_source_relation(
     observations are not discarded because a different workload was observed
     in the same collection. Period predicates are pushed inside each arm of
     UNION ALL to avoid probing legacy rows outside the requested window.
+    Aggregate queries can prefilter READY collection IDs in both source arms
+    without altering the final eligibility join or row-identity anti-join.
     """
+    if ready_collections_only and window is None:
+        raise ValueError("READY source pruning requires an explicit reporting window")
     observed = bool(conn.execute(text(
         "SELECT to_regclass('public.rundeck_workload_observations') IS NOT NULL"
     )).scalar())
@@ -383,6 +388,12 @@ def _workload_source_relation(
             f" AND tc.collected_at >= :{start_parameter}"
             f" AND tc.collected_at < :{end_parameter}"
         )
+    # The caller defines complete_collections in its SQL CTE. Preserve the
+    # outer complete-collection join for both standard and legacy-only schemas.
+    wo_ready = ("JOIN complete_collections cc_wo ON cc_wo.collection_id = wo.collection_id"
+                if ready_collections_only else "")
+    tc_ready = ("JOIN complete_collections cc_tc ON cc_tc.collection_id = tc.collection_id"
+                if ready_collections_only else "")
     wo_type = "wo.consumer_type IN ('JOB', 'PROGRAM')" if job_program_only else "TRUE"
     tc_types = "'JOB', 'PROGRAM'" if job_program_only else "'JOB', 'PROGRAM', 'PROCESS'"
     return f"""(
@@ -390,11 +401,13 @@ def _workload_source_relation(
                NULLIF(wo.details->>'performance_rank', '')::integer AS rank,
                wo.cpu_pct, wo.ram_pct, wo.details
           FROM rundeck_workload_observations wo
+          {wo_ready}
          WHERE {wo_type}{wo_period}
         UNION ALL
         SELECT tc.collection_id, tc.collected_at, tc.host, tc.consumer_type, tc.consumer_key,
                tc.rank, tc.cpu_pct, tc.ram_pct, tc.details
           FROM rundeck_top_consumers tc
+          {tc_ready}
          WHERE tc.consumer_type IN ({tc_types}){tc_period}
            AND NOT EXISTS (
                SELECT 1
@@ -416,7 +429,9 @@ def _complete_collection_clause(alias: str = "c") -> str:
 
 
 def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) -> list[dict]:
-    source, _coverage_scope = _workload_source_relation(conn, window=("start", "end"), job_program_only=True)
+    source, _coverage_scope = _workload_source_relation(
+        conn, window=("start", "end"), job_program_only=True, ready_collections_only=True,
+    )
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
     params: dict[str, Any] = {"start": start, "end": end}
     if type_clause:
@@ -483,7 +498,9 @@ def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) 
 
 
 def _historical_baseline(conn, end: datetime, consumer_type: str) -> list[dict]:
-    source, _coverage_scope = _workload_source_relation(conn, window=("start", "end"), job_program_only=True)
+    source, _coverage_scope = _workload_source_relation(
+        conn, window=("start", "end"), job_program_only=True, ready_collections_only=True,
+    )
     start = end - timedelta(days=HISTORICAL_BASELINE_DAYS)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
     params: dict[str, Any] = {"start": start, "end": end}
