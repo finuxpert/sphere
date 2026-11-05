@@ -429,8 +429,10 @@ def _complete_collection_clause(alias: str = "c") -> str:
 
 
 def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) -> list[dict]:
+    # DEV 2026-11-05: READY semijoin candidate regressed weekly SQL by 3x-4x.
+    # Keep original source path; experiment only in read-only parity comparator.
     source, _coverage_scope = _workload_source_relation(
-        conn, window=("start", "end"), job_program_only=True, ready_collections_only=True,
+        conn, window=("start", "end"), job_program_only=True,
     )
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
     params: dict[str, Any] = {"start": start, "end": end}
@@ -499,7 +501,7 @@ def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) 
 
 def _historical_baseline(conn, end: datetime, consumer_type: str) -> list[dict]:
     source, _coverage_scope = _workload_source_relation(
-        conn, window=("start", "end"), job_program_only=True, ready_collections_only=True,
+        conn, window=("start", "end"), job_program_only=True,
     )
     start = end - timedelta(days=HISTORICAL_BASELINE_DAYS)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
