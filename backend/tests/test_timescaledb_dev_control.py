@@ -51,10 +51,31 @@ class TimescaleControllerTests(TestCase):
                         controller.validate_identity(db, role,
                                                      apply=apply, local_socket=socket)
 
+    def test_privileged_preflight_is_read_only_and_identity_gated(self):
+        with patch.object(controller.pwd, "getpwuid") as lookup, \
+             patch.object(controller.os, "geteuid", return_value=10001):
+            lookup.return_value.pw_name = "postgres"
+            controller.validate_identity(
+                "sphere_rundeck_dev", "postgres", apply=False,
+                local_socket=True, admin_preflight=True,
+            )
+            with self.assertRaises(RuntimeError):
+                controller.validate_identity(
+                    "sphere", "postgres", apply=False,
+                    local_socket=True, admin_preflight=True,
+                )
+            with self.assertRaises(RuntimeError):
+                controller.validate_identity(
+                    "sphere_rundeck_dev", "postgres", apply=False,
+                    local_socket=False, admin_preflight=True,
+                )
+
     def test_script_never_installs_packages_restarts_or_migrates_tables(self):
         source = SCRIPT.read_text()
         self.assertIn("CREATE EXTENSION IF NOT EXISTS timescaledb", source)
         self.assertIn("--apply requires --confirm-dev", source)
+        self.assertIn("--inspect-as-postgres", source)
+        self.assertIn("Choose either --apply or --inspect-as-postgres", source)
         for unsafe in (
             "create_hypertable(", "ALTER SYSTEM", "systemctl restart",
             "apt-get install", "DROP TABLE", "TRUNCATE TABLE", "migrate_data => TRUE",
