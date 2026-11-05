@@ -251,8 +251,9 @@ def bench(cur, conn, *, reverse=False):
              note="sequential shared-cache timings, not cold-cache results")
         for label, raw_sql, params in experiments:
             sql = psycopg_params(raw_sql)
-            cur.execute(sql, params)
-            results[label] = cur.fetchall()
+            with conn.cursor(row_factory=dict_row) as mapped:
+                mapped.execute(sql, params)
+                results[label] = mapped.fetchall()
             emit(parity_stage=label, workloads=len(results[label]))
         for label in ("BASELINE", "SPLIT_DISTINCT"):
             count = helper.compare_all_fields(results[label + "_PG"], results[label + "_TS"])
@@ -338,9 +339,7 @@ def main(argv=None):
                 elif args.mode == "cleanup":
                     cleanup(cur, conn)
                 else:
-                    # Separate mapping cursor for all-field result comparison.
-                    with conn.cursor(row_factory=dict_row) as mapped:
-                        bench(mapped, conn, reverse=args.reverse)
+                    bench(cur, conn, reverse=args.reverse)
     except Exception as exc:
         emit(final="BLOCKED", mode=args.mode, error_type=type(exc).__name__,
              note="No modifications to original tables; POC transaction rolls back on failure")
