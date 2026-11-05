@@ -61,11 +61,11 @@ class ReportPerformanceSafetyTest(unittest.TestCase):
              patch.object(rundeck_evaluation, "EVALUATION_SLOW_SQL_MS", 100):
             with ThreadPoolExecutor(max_workers=1) as pool:
                 future = pool.submit(rundeck_evaluation.evaluation_report, month="2026-10")
-                try:
-                    sleep(.15)
-                finally:
-                    lock.release()
                 with self.assertLogs("backend.rundeck_evaluation", level="WARNING") as log:
+                    try:
+                        sleep(.15)
+                    finally:
+                        lock.release()
                     result = future.result(timeout=5)
         self.assertEqual(result["runtime"]["cache"], "HIT")
         self.assertGreaterEqual(result["runtime"]["lock_wait_ms"], 100)
