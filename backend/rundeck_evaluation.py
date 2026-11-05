@@ -354,28 +354,48 @@ def assess_workload(
     }
 
 
-def _workload_source_relation(conn) -> tuple[str, str]:
-    """Prefer the full retained JOB/PROGRAM observation projection.
+def _workload_source_relation(
+    conn, *, window: tuple[str, str] | None = None, job_program_only: bool = False,
+) -> tuple[str, str]:
+    """Retain every current or unmatched legacy workload, pruned to the SQL window.
 
-    Legacy Top Consumer rows are used only for collections that do not yet have
-    matching workload observations, preserving older history without biasing
-    newer evaluation toward only the hottest consumers.
+    The fallback anti-join stays row-identity based: historical top-consumer
+    observations are not discarded because a different workload was observed
+    in the same collection. Period predicates are pushed inside each arm of
+    UNION ALL to avoid probing legacy rows outside the requested window.
     """
     observed = bool(conn.execute(text(
         "SELECT to_regclass('public.rundeck_workload_observations') IS NOT NULL"
     )).scalar())
     if not observed:
         return "rundeck_top_consumers", "TOP_CONSUMERS_ONLY"
-    return """(
+    wo_period = ""
+    tc_period = ""
+    if window is not None:
+        start_parameter, end_parameter = window
+        if start_parameter not in {"start", "previous_start"} or end_parameter != "end":
+            raise ValueError("Unsafe workload SQL period binding")
+        wo_period = (
+            f" AND wo.collected_at >= :{start_parameter}"
+            f" AND wo.collected_at < :{end_parameter}"
+        )
+        tc_period = (
+            f" AND tc.collected_at >= :{start_parameter}"
+            f" AND tc.collected_at < :{end_parameter}"
+        )
+    wo_type = "wo.consumer_type IN ('JOB', 'PROGRAM')" if job_program_only else "TRUE"
+    tc_types = "'JOB', 'PROGRAM'" if job_program_only else "'JOB', 'PROGRAM', 'PROCESS'"
+    return f"""(
         SELECT wo.collection_id, wo.collected_at, wo.host, wo.consumer_type, wo.consumer_key,
                NULLIF(wo.details->>'performance_rank', '')::integer AS rank,
                wo.cpu_pct, wo.ram_pct, wo.details
           FROM rundeck_workload_observations wo
+         WHERE {wo_type}{wo_period}
         UNION ALL
         SELECT tc.collection_id, tc.collected_at, tc.host, tc.consumer_type, tc.consumer_key,
                tc.rank, tc.cpu_pct, tc.ram_pct, tc.details
           FROM rundeck_top_consumers tc
-         WHERE tc.consumer_type IN ('JOB', 'PROGRAM', 'PROCESS')
+         WHERE tc.consumer_type IN ({tc_types}){tc_period}
            AND NOT EXISTS (
                SELECT 1
                  FROM rundeck_workload_observations wo
@@ -387,7 +407,6 @@ def _workload_source_relation(conn) -> tuple[str, str]:
            )
     )""", "ALL_OBSERVED_ACTIVE_WORKLOADS"
 
-
 def _complete_collection_clause(alias: str = "c") -> str:
     return (
         f"{alias}.status = 'READY' "
@@ -397,7 +416,7 @@ def _complete_collection_clause(alias: str = "c") -> str:
 
 
 def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) -> list[dict]:
-    source, _coverage_scope = _workload_source_relation(conn)
+    source, _coverage_scope = _workload_source_relation(conn, window=("start", "end"), job_program_only=True)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
     params: dict[str, Any] = {"start": start, "end": end}
     if type_clause:
@@ -464,7 +483,7 @@ def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) 
 
 
 def _historical_baseline(conn, end: datetime, consumer_type: str) -> list[dict]:
-    source, _coverage_scope = _workload_source_relation(conn)
+    source, _coverage_scope = _workload_source_relation(conn, window=("start", "end"), job_program_only=True)
     start = end - timedelta(days=HISTORICAL_BASELINE_DAYS)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
     params: dict[str, Any] = {"start": start, "end": end}
@@ -504,7 +523,7 @@ def _historical_baseline(conn, end: datetime, consumer_type: str) -> list[dict]:
 
 
 def _recent_shift_window(conn, end: datetime, consumer_type: str) -> list[dict]:
-    source, _coverage_scope = _workload_source_relation(conn)
+    source, _coverage_scope = _workload_source_relation(conn, window=("previous_start", "end"), job_program_only=True)
     recent_start = end - timedelta(hours=SHIFT_RECENT_HOURS)
     previous_start = recent_start - timedelta(hours=SHIFT_RECENT_HOURS)
     type_clause = "AND tc.consumer_type = :consumer_type" if consumer_type in {"JOB", "PROGRAM"} else ""
@@ -601,7 +620,7 @@ def _collection_quality(conn, start: datetime, end: datetime) -> dict:
 
 
 def _sampling_quality(conn, start: datetime, end: datetime) -> dict:
-    source, coverage_scope = _workload_source_relation(conn)
+    source, coverage_scope = _workload_source_relation(conn, window=("start", "end"), job_program_only=True)
     row = conn.execute(text(f"""
         SELECT MAX(tc.rank) AS observed_rank_depth,
                COUNT(*) AS observations,
@@ -1065,10 +1084,10 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         sampling = measure_sql("sampling_quality", lambda: _sampling_quality(conn, start, end))
         monthly_daily = measure_sql("monthly_daily", lambda: _monthly_daily_host_trend(conn, start, end)) if period_key in {"month", "week", "custom"} else []
         monthly_pressure = (measure_sql("monthly_pressure", lambda: monthly_pressure_observations(
-            conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
+            conn, start, end, _workload_source_relation(conn, window=("start", "end"), job_program_only=True)[0], _complete_collection_clause('c')
         )) if period_key in {"month", "week", "custom"} else None)
         monthly_errors = (measure_sql("monthly_errors", lambda: monthly_error_evidence(
-            conn, start, end, _workload_source_relation(conn)[0], _complete_collection_clause('c')
+            conn, start, end, _workload_source_relation(conn, window=("start", "end"))[0], _complete_collection_clause('c')
         )) if period_key in {"month", "week", "custom"} else None)
 
     current_checks = int(current_quality["complete_checks"])
