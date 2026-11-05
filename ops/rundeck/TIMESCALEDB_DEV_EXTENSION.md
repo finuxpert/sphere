@@ -27,8 +27,10 @@ Place the controller in a root-owned, world-readable directory outside
 
 ```bash
 install -d -m 0755 -o root -g root /opt/sphere-timescale-preflight
+git -C /root/rundeck-sphere-dev fetch --no-tags origin \
+  infra/dev-timescaledb-extension-preflight-20261106
 git -C /root/rundeck-sphere-dev show \
-  infra/dev-timescaledb-extension-preflight-20261106:ops/rundeck/timescaledb-dev-control.py \
+  FETCH_HEAD:ops/rundeck/timescaledb-dev-control.py \
   > /opt/sphere-timescale-preflight/timescaledb-dev-control.py
 chmod 0644 /opt/sphere-timescale-preflight/timescaledb-dev-control.py
 runuser -u sphere -- /opt/sphere-rundeck-dev/venv/bin/python \
