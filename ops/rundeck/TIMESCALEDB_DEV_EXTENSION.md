@@ -18,6 +18,9 @@ diagnostic executes with PostgreSQL peer authentication as OS user `sphere`.
 ```bash
 cat /etc/os-release | grep -E '^(NAME|VERSION|VERSION_CODENAME)='
 pg_lsclusters
+# List all databases in the same cluster before ANY PostgreSQL restart.
+runuser -u postgres -- psql -X -v ON_ERROR_STOP=1 -d sphere_rundeck_dev -Atc \
+  "SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate ORDER BY 1"
 runuser -u sphere -- psql -X -v ON_ERROR_STOP=1 -d sphere_rundeck_dev -Atc \
   "SELECT current_database(), current_user, current_setting('server_version'), current_setting('shared_preload_libraries')"
 ```
