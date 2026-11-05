@@ -428,6 +428,36 @@ def _complete_collection_clause(alias: str = "c") -> str:
     )
 
 
+def _dev_split_distinct_enabled(period_key: str) -> bool:
+    """Explicit DEV-only opt-in for calendar aggregation; never activate on PROD DB.
+
+    Off unless the operator sets 'true' and connects to sphere_rundeck_dev.
+    Rolling 1d/7d/30d periods remain unchanged.
+    """
+    if period_key not in {"month", "week", "custom"}:
+        return False
+    if os.getenv("SPHERE_EVAL_SPLIT_DISTINCT_DEV", "").strip().lower() != "true":
+        return False
+    if os.getenv("DB_MODE", "file").strip().lower() not in {"db", "hybrid"}:
+        return False
+    try:
+        from sqlalchemy.engine import make_url
+        return make_url(os.getenv("DATABASE_URL", "")).database == "sphere_rundeck_dev"
+    except Exception:
+        return False
+
+
+def _aggregate_window_for_report(
+    conn, start: datetime, end: datetime, consumer_type: str, *, period_key: str,
+) -> list[dict]:
+    """Only runtime calendar reports choose the tested split-identity SQL."""
+    if _dev_split_distinct_enabled(period_key):
+        return _aggregate_window(
+            conn, start, end, consumer_type, identity_preaggregate=True,
+        )
+    return _aggregate_window(conn, start, end, consumer_type)
+
+
 def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str, *,
                       identity_preaggregate: bool = False) -> list[dict]:
     # DEV 2026-11-05: READY semijoin candidate regressed weekly SQL by 3x-4x.
@@ -1216,7 +1246,11 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             # Monthly reports are separate from rolling-period cached populations.
             # The committed collection anchor invalidates data when a new READY run arrives.
             anchor_key = measure_sql("collection_anchor", lambda: _calendar_month_collection_anchor(conn, start, end))
-            cache_key = (f"custom:{start_date}:{end_date}" if period_key == "custom" else f"week:{week_start}" if week_start else f"month:{month}", type_key, anchor_key)
+            cache_scope = (f"custom:{start_date}:{end_date}" if period_key == "custom"
+                           else f"week:{week_start}" if week_start else f"month:{month}")
+            if _dev_split_distinct_enabled(period_key):
+                cache_scope += ":split_distinct"
+            cache_key = (cache_scope, type_key, anchor_key)
         else:
             # Preserve the existing 1D/7D/30D cache contract exactly:
             # key off the committed evaluation end, independent of page limit.
@@ -1235,8 +1269,17 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0, sql_timings_ms=sql_timings_ms)
         current_quality = measure_sql("current_quality", lambda: _collection_quality(conn, start, end))
         previous_quality = measure_sql("previous_quality", lambda: _collection_quality(conn, previous_start, start))
-        current_rows = measure_sql("current_aggregate", lambda: _aggregate_window(conn, start, end, type_key))
-        previous_rows = measure_sql("previous_aggregate", lambda: _aggregate_window(conn, previous_start, start, type_key))
+        if _dev_split_distinct_enabled(period_key):
+            _EVAL_LOG.warning(
+                "SPHERE_EVAL_AGGREGATE_STRATEGY period=%s strategy=SPLIT_DISTINCT_DEV",
+                period_key,
+            )
+        current_rows = measure_sql("current_aggregate", lambda: _aggregate_window_for_report(
+            conn, start, end, type_key, period_key=period_key,
+        ))
+        previous_rows = measure_sql("previous_aggregate", lambda: _aggregate_window_for_report(
+            conn, previous_start, start, type_key, period_key=period_key,
+        ))
         historical_rows = measure_sql("historical_baseline", lambda: _historical_baseline(conn, start, type_key))
         shift_rows = measure_sql("recent_shift", lambda: _recent_shift_window(conn, end, type_key))
         sampling = measure_sql("sampling_quality", lambda: _sampling_quality(conn, start, end))
