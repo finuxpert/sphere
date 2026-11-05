@@ -67,21 +67,61 @@ Look for `extension_status`:
 
 ## Phase B — package/cluster prerequisites (operator-managed)
 
-To identify the *running* PostgreSQL major and inspect candidates without
-installing anything:
+JAHSVR-SPHERE reports Ubuntu 26.04, PostgreSQL **18.6**, empty
+`shared_preload_libraries`, and neither TimescaleDB extension nor
+`timescaledb-2-postgresql-18` in currently configured APT repositories.
+The last package name is the **vendor** package name, not Ubuntu's native one.
+
+Ubuntu 26.04 `universe` separately publishes **`postgresql-18-timescaledb`**
+(2.25.1+dfsg-1, as of 2026-11-06). The vendor's packagecloud repository also
+publishes `timescaledb-2-postgresql-18` for Ubuntu 26.04. Do not install both
+variants together; use one packaging channel only.
+
+First inspect the current APT candidate, operating-system code name and
+package installation simulation. These are read-only checks and do not
+restart PostgreSQL:
 
 ```bash
-PG_MAJOR="$(runuser -u sphere -- psql -X -At -d sphere_rundeck_dev \
-  -c "SHOW server_version" | sed -E 's/^([0-9]+).*/\1/')"
-echo "RUNNING_PG_MAJOR=$PG_MAJOR"
-apt-cache policy "timescaledb-2-postgresql-$PG_MAJOR"
-apt-get -s install "timescaledb-2-postgresql-$PG_MAJOR"
+. /etc/os-release
+printf 'OS=%s CODENAME=%s\\n' "$PRETTY_NAME" "$VERSION_CODENAME"
+apt-cache policy postgresql-18-timescaledb timescaledb-2-postgresql-18
+apt-cache show postgresql-18-timescaledb 2>/dev/null | \
+  grep -E '^(Package|Version|Depends):' || true
+apt-get -s install --no-install-recommends postgresql-18-timescaledb
 ```
 
-If the package is unavailable, use the vendor's supported OS/repository
-instructions. Do not blindly initialize/replace a PostgreSQL cluster, perform
-a major upgrade, run `timescaledb-tune`, or restart PostgreSQL as part of this
-extension-only change. TimescaleDB binaries must match the *running* PG major.
+If the Ubuntu package has no candidate, examine the APT sources and
+`universe` availability instead of adding an arbitrary package mirror:
+
+```bash
+grep -R -h -E '^(Suites|Components):|^deb ' \
+  /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null || true
+```
+
+Enabling the Ubuntu `universe` component or adding a new vendor repository
+modifies host package-management configuration. Perform it only with operator
+approval and after reviewing package provenance; do not silently change
+existing sources. If necessary, use the vendor's official apt repository
+instructions and verify the exact Ubuntu `resolute` target.
+
+Before any package installation, review `apt-get -s install` output. Reject
+plans proposing a PostgreSQL server removal, server major-version replacement,
+unplanned upgrade, or new database cluster. Installing an extension package
+alone **does not** make `shared_preload_libraries` active. Do not run
+`timescaledb-tune`, edit PostgreSQL config, or restart the shared
+`18/main` cluster as part of this package-preflight phase: that cluster
+also serves database `sphere`.
+
+When package availability is confirmed and maintenance is approved, install
+only the selected compatible extension package separately, then inspect
+`pg_available_extensions` and `shared_preload_libraries` again.
+Do not run `CREATE EXTENSION` until the controller reports
+`READY_FOR_EXTENSION_CREATION`.
+
+References:
+- Ubuntu native package: https://packages.ubuntu.com/resolute/postgresql-18-timescaledb
+- Vendor apt installation: https://www.tigerdata.com/docs/get-started/choose-your-path/install-timescaledb
+- PostgreSQL support matrix: https://www.tigerdata.com/docs/get-started/timescaledb-supported-platforms
 
 ## Phase C — opt-in extension activation (only when prerequisites pass)
 
