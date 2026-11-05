@@ -81,7 +81,9 @@ test('monthly KPI population is independent of table-only type filters', () => {
 test('pressure APP identities and time-correlated evidence remain distinct from historical hosts', () => {
   const pressure = read('backend/rundeck_monthly_pressure.py')
   const ui = read('src/tools/components/RundeckMonthlyReview.jsx')
-  assert.match(pressure, /ABS\(EXTRACT\(EPOCH FROM \(tc\.collected_at - hm\.collected_at\)\)\)/)
+  assert.match(pressure, /hm\\.collected_at >= tc\\.collected_at - \\(:max_skew_seconds \\* INTERVAL '1 second'\\)/)
+  assert.match(pressure, /hm\\.collected_at <= tc\\.collected_at \\+ \\(:max_skew_seconds \\* INTERVAL '1 second'\\)/)
+  assert.doesNotMatch(pressure, /ABS\\(EXTRACT\\(EPOCH FROM/)
   assert.match(pressure, /AS cpu_pressure_hosts/)
   assert.match(pressure, /AS ram_pressure_hosts/)
   assert.match(ui, /pressureHostsFor\(row, metric\)/)
