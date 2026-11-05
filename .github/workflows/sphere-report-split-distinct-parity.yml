@@ -2,10 +2,11 @@ name: SPHERE DEV report split-distinct PostgreSQL parity
 
 on:
   pull_request:
-    branches: [rundeck-sphere-dev]
+    branches: [rundeck-sphere-dev, perf/dev-report-split-distinct-20261105]
     paths:
       - backend/rundeck_evaluation.py
       - backend/tests/test_report_split_distinct_dev.py
+      - backend/tests/test_report_split_distinct_runtime_dev.py
       - ops/rundeck/compare-report-split-distinct-dev.py
       - .github/workflows/sphere-report-split-distinct-parity.yml
   workflow_dispatch:
@@ -43,9 +44,10 @@ jobs:
         run: |
           python -m py_compile backend/rundeck_evaluation.py
           python -m py_compile backend/tests/test_report_split_distinct_dev.py
+          python -m py_compile backend/tests/test_report_split_distinct_runtime_dev.py
           python -m py_compile ops/rundeck/compare-report-split-distinct-dev.py
       - name: PostgreSQL aggregate field parity and legacy fixtures
         env:
           SPHERE_PG_PARITY_URL: postgresql+psycopg://sphere_ci:sphere_ci@localhost:5432/sphere_parity_ci
         run: |
-          python -m unittest -v             backend.tests.test_report_split_distinct_dev             backend.tests.test_report_ready_source_pruning             backend.tests.test_report_workload_window_pruning             backend.tests.test_report_actual_profile_dev
+          python -m unittest -v             backend.tests.test_report_split_distinct_runtime_dev             backend.tests.test_report_split_distinct_dev             backend.tests.test_report_ready_source_pruning             backend.tests.test_report_workload_window_pruning             backend.tests.test_report_actual_profile_dev
