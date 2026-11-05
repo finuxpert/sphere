@@ -230,7 +230,11 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
               JOIN rundeck_collections c ON c.collection_id = tc.collection_id
               JOIN rundeck_host_metrics hm
                 ON hm.collection_id = tc.collection_id AND hm.host = tc.host
-                AND ABS(EXTRACT(EPOCH FROM (tc.collected_at - hm.collected_at))) <= :max_skew_seconds
+                -- Semantically identical to ABS(timestamp delta) <= N seconds,
+                -- but exposes the indexed (collection_id, host, collected_at)
+                -- range instead of applying a function to both timestamps.
+                AND hm.collected_at >= tc.collected_at - (:max_skew_seconds * INTERVAL '1 second')
+                AND hm.collected_at <= tc.collected_at + (:max_skew_seconds * INTERVAL '1 second')
              WHERE {complete_clause}
                AND COALESCE(c.finished_at, c.started_at) >= :start
                AND COALESCE(c.finished_at, c.started_at) < :end
