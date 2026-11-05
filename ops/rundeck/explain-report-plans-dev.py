@@ -107,7 +107,9 @@ def main() -> int:
     probe = SQLCapture()
     evaluation._aggregate_window(probe, start, end, "ALL")
     evaluation._aggregate_window(probe, previous, start, "ALL")
-    source, _scope = evaluation._workload_source_relation(probe)
+    source, _scope = evaluation._workload_source_relation(
+        probe, window=("start", "end"), job_program_only=True,
+    )
     monthly_pressure_observations(
         probe, start, end, source,
         evaluation._complete_collection_clause("c"), include_correlation=True,
