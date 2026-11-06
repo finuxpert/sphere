@@ -94,5 +94,6 @@ jobs:
             backend.tests.test_report_workload_window_pruning \
             backend.tests.test_report_pressure_sql_plan \
             backend.tests.test_rundeck_weekly_report \
+            backend.tests.test_rundeck_availability_report_window \
             backend.tests.test_rundeck_workload_activity \
             backend.tests.test_rundeck_top_consumers
