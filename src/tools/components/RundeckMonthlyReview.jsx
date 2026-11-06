@@ -450,6 +450,14 @@ async function buildManagementMonthlyPng({month,data}) {
         <img src={logo} alt="SPHERE"/>
         <div className="sphereMonthlyPptTitle"><strong>{model.customStart?'SAP Custom Performance Report':model.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report'}</strong>
           <span>{model.period.label}</span></div>
+        <div className="sphereMonthlyPptAvailability" aria-label="Historical SAP Availability">
+          {Array.from({length:5},(_,i)=>{
+            const name='APP'+(i+1)
+            const row=data.monthly_availability?.rows?.find(item=>item.name===name)
+            return <span key={name}><b>{name}</b><strong>{row?.status||'UNKNOWN'}</strong>
+              <small>{row?.checks?row.up+'/'+row.checks+' UP':'No checks'}</small></span>
+          })}
+        </div>
       </header>
       <MonthlyManagementDashboard month={month} weekStart={model.weekStart}
         customStart={model.customStart} customEnd={model.customEnd}
