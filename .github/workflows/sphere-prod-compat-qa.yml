@@ -26,6 +26,7 @@ jobs:
       - name: Validate guarded production release shell
         run: |
           bash -n ops/rundeck/release-prod-compat.sh
+          bash -n ops/rundeck/release-prod-storage-explicit.sh
           ! grep -E 'alembic upgrade|systemctl restart sphere-rundeck-api|git push' ops/rundeck/release-prod-compat.sh
       - name: Compile backend sources
         run: python -m compileall -q backend
