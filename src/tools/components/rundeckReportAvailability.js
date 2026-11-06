@@ -84,12 +84,22 @@ export function summarizeReportAvailability(payload,window) {
   })
   const gapCount=Array.isArray(payload.observation_gaps)
     ?payload.observation_gaps.filter(item=>item.kind==='NO_OBSERVATION').length:0
+  const firstAtMs=allDates.length?Math.min(...allDates):null
+  const lastAtMs=allDates.length?Math.max(...allDates):null
+  const leadingGapSeconds=firstAtMs===null?null:Math.round((firstAtMs-start)/1000)
+  const trailingGapSeconds=lastAtMs===null?null:Math.round((end-lastAtMs)/1000)
+  // Re-check boundaries in the browser too: an older backend could omit
+  // trailing-coverage warnings, but no report may quietly imply full coverage.
+  const limited=Boolean(payload.coverage_limited)||!allDates.length||
+    threshold===null||[leadingGapSeconds,trailingGapSeconds].some(
+      seconds=>seconds!==null&&seconds*1000>threshold)
   return {
     source:AVAILABILITY_SOURCE,sourceStatus:'OK',
     startUtc:window.startUtc,endUtc:window.endUtc,partial:window.partial,
-    rows,totalChecks,firstAt:allDates.length?iso(Math.min(...allDates)):null,
-    lastAt:allDates.length?iso(Math.max(...allDates)):null,
-    gapCount,expectedCadenceSeconds,coverageLimited:Boolean(payload.coverage_limited),
+    rows,totalChecks,firstAt:firstAtMs===null?null:iso(firstAtMs),
+    lastAt:lastAtMs===null?null:iso(lastAtMs),
+    gapCount,expectedCadenceSeconds,coverageLimited:limited,
+    leadingGapSeconds,trailingGapSeconds,
     reason:null,
     note:'Historical port-check observations. UP check rate is not duration uptime. Missing checks never mean SAP DOWN.',
   }
