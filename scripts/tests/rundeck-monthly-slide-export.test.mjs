@@ -122,6 +122,7 @@ test('storage uses source-reported df Use% and suppresses inferred available byt
     assert.ok(noAvailableText.includes(label),'Missing storage report field: '+label)
   }
   assert.ok(!noAvailableText.includes('17.77 GB'),'Inferred storage available must be hidden')
+  assert.ok(noAvailableText.includes('Not retained'),'Missing historical df Avail must be explained')
   assert.ok(!noAvailableText.includes('CPU High Reads'))
   assert.ok(!noAvailableText.includes('Evidence (WIB)'))
   const observed={...payload,monthly_storage:{...payload.monthly_storage,items:[
@@ -136,7 +137,9 @@ test('Report browser labels agree with slide data provenance',()=>{
   assert.ok(source.includes('RAM High Checks'))
   assert.ok(source.includes('Last Seen (WIB)'))
   assert.ok(source.includes('Available (df)'))
-  assert.ok(source.includes("row.availability_source==='EXPLICIT'"))
+  assert.ok(source.includes('monthlyStorageAvailable(row)'))
+  const evidence=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEvidence.js',import.meta.url),'utf8')
+  assert.ok(evidence.includes("row.availability_source !== 'EXPLICIT'"))
   assert.ok(!source.includes('<th>Free Capacity</th>'))
 })
 
