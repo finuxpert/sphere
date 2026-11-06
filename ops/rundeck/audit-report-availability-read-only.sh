@@ -48,6 +48,13 @@ for name,rows in stats.items():
     last=cleaned[-1][0].isoformat() if cleaned else "NONE"
     last_state=cleaned[-1][1] if cleaned else "UNKNOWN"
     print(f"{name} CHECKS={len(cleaned)} UP={counts['UP']} DOWN={counts['DOWN']} FIRST_UTC={first} LAST_UTC={last} LAST_OBSERVED={last_state}")
+    if cleaned:
+        lead=int((cleaned[0][0]-start).total_seconds())
+        trail=int((end-cleaned[-1][0]).total_seconds())
+        deltas=[int((b[0]-a[0]).total_seconds()) for a,b in zip(cleaned,cleaned[1:])]
+        cadence=sorted(deltas)[len(deltas)//2] if deltas else None
+        maximum=max(deltas) if deltas else None
+        print(f"{name} LEADING_UNOBSERVED_SECONDS={lead} TRAILING_UNOBSERVED_SECONDS={trail} MEDIAN_INTERVAL_SECONDS={cadence} MAX_INTERVAL_SECONDS={maximum} PERIOD_COVERAGE=INCOMPLETE" if lead>3600 or trail>3600 else f"{name} LEADING_UNOBSERVED_SECONDS={lead} TRAILING_UNOBSERVED_SECONDS={trail} MEDIAN_INTERVAL_SECONDS={cadence} MAX_INTERVAL_SECONDS={maximum} PERIOD_COVERAGE=CHECK_BOUNDARIES_ONLY")
 print("PERIOD_DATA=" + ("ABSENT" if not any(stats.values()) else
       "PARTIAL" if any(not stats[name] for name in stats) else "ALL_FIVE_OBSERVED"))
 print("NOTE=Port checks are discrete observations; no duration uptime inferred")
