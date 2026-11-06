@@ -332,6 +332,7 @@ function MonthlyAvailabilityStrip({availability,loading=false}) {
     </div>
     <small className="sphereReportAvailabilityFoot">Source: Rundeck Service Availability · UP/DOWN port checks, not duration uptime.
       {availability?.gapCount ? ' '+availability.gapCount+' observation gaps.' : ''}
+      {availability?.coverageLimited ? ' Observation coverage limited.' : ''}
       {availability?.partial ? ' Ongoing period (partial).' : ''}
     </small>
   </section>
