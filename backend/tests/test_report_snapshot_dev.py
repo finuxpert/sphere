@@ -94,8 +94,9 @@ class ReportSnapshotDevTests(unittest.TestCase):
                 snap.save("month", "2026-10", "split_distinct", "run-1", report())
 
     def test_scope_validation_prevents_path_traversal(self):
-        for period, label in (("month", "../etc"), ("week", "2026-10-27"),
-                              ("custom", "2026-10"), ("week", "../../etc")):
+        for period, label in (("month", "../etc"), ("month", "2026-10/../../etc"),
+                              ("week", "2026-10-27"), ("custom", "2026-10"),
+                              ("week", "../../etc")):
             with self.subTest(period=period, label=label), self.assertRaises(ValueError):
                 snap._path(period, label, "split_distinct")
 
