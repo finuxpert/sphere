@@ -78,6 +78,7 @@ jobs:
             backend.tests.test_rundeck_monthly_review \
             backend.tests.test_rundeck_weekly_report \
             backend.tests.test_rundeck_availability_report_window \
+            backend.tests.test_rundeck_availability_coverage \
             backend.tests.test_rundeck_top_consumers \
             backend.tests.test_rundeck_workload_activity \
             backend.tests.test_rundeck_infra
