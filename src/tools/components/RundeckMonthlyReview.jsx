@@ -4,7 +4,6 @@ import { flushSync } from 'react-dom'
 import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod, reportPeakEvidenceWib } from './rundeckMonthlyPeriod.js'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
-import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import { reportAvailabilityWindow, summarizeReportAvailability, unavailableReportAvailability } from './rundeckReportAvailability.js'
 import './RundeckReportAvailability.css'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
@@ -749,7 +748,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           ? buildManagementMonthlyPdf({month,data:exportData})
           : reportType==='print-a3'
             ? buildManagementMonthlyPdf({month,data:exportData,format:'a3'})
-            : buildMonthlyPdf({month,data:exportData}))
+            : (await import('./rundeckMonthlyPdf.js')).buildMonthlyPdf({month,data:exportData}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
