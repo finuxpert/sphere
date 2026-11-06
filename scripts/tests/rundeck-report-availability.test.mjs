@@ -77,3 +77,25 @@ test('ongoing November is capped at now; no future service checks are evaluated'
   assert.equal(current.partial,true)
   assert.equal(current.endUtc,'2026-11-06T09:30:00.000Z')
 })
+
+test('192 positive historical checks per APP still mean incomplete weekly coverage',()=>{
+  // Based on observed 26 Oct - 1 Nov audit timestamps, synthetic execution IDs.
+  const first=Date.parse('2026-10-26T00:00:00Z')
+  const last=Date.parse('2026-10-31T09:00:00Z')
+  const items=[]
+  for(let i=0;i<192;i++){
+    const when=new Date(first+Math.round(i*(last-first)/191)).toISOString()
+    for(const host of REPORT_APPS) items.push(check(host,'UP',when,String(i)))
+  }
+  const model=summarizeReportAvailability(history(items,{
+    expected_cadence_seconds:2400,gap_threshold_seconds:5280,
+    observation_gaps:[],coverage_limited:false, // simulate older API lacking tail check
+  }),window)
+  assert.equal(model.totalChecks,960)
+  assert.ok(model.rows.every(row=>row.checks===192 && row.up===192))
+  assert.ok(model.rows.every(row=>row.status==='STALE'))
+  assert.equal(model.coverageLimited,true)
+  assert.equal(model.leadingGapSeconds,7*3600)
+  assert.equal(model.trailingGapSeconds,32*3600)
+  assert.ok(!Object.hasOwn(model,'uptimePct'))
+})
