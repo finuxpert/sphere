@@ -54,7 +54,7 @@ def strategy_name(split_distinct: bool) -> str:
 
 
 def _path(period: str, label: str, strategy: str) -> Path:
-    if period not in {"month", "week"} or strategy not in {"split_distinct", "baseline"}:
+    if period not in {"month", "week"} or strategy != "baseline":
         raise ValueError("Invalid snapshot scope or SQL strategy")
     if period == "month":
         scope_label(period, label)
