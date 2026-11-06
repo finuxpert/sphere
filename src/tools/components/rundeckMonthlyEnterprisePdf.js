@@ -512,8 +512,11 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       text(x,avY+avH-54,row.lastAt?'Last '+wib(row.lastAt)+' WIB':'No observation time',7.4,'normal','muted')
     })
     text(M+15,avY+5,'Source: Rundeck Service Availability; port-check observations, not duration-based uptime.'+
-      (av?.gapCount?' Observation gaps: '+av.gapCount+'.':'')+
-      (av?.partial?' Ongoing period.':''),7.4,'normal','muted')
+      (av?.gapCount?' Gaps: '+av.gapCount+'.':'')+
+      (av?.coverageLimited?' Coverage limited.':'')+
+      (av?.partial?' Ongoing period.':'')+
+      (av?.firstAt?' First: '+wib(av.firstAt)+' WIB.':'')+
+      (av?.lastAt?' Last: '+wib(av.lastAt)+' WIB.':''),7.4,'normal','muted')
     if(!(fsY+fsH<avY && avY+avH<lowY && lowY+lowH<barY)){
       throw Error('A3 report availability panel overlaps another section')
     }
