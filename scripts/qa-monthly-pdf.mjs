@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { buildMonthlyPdf } from '../src/tools/components/rundeckMonthlyPdf.js'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from '../src/tools/components/rundeckMonthlyEnterprisePdf.js'
+import { reportAvailabilityWindow, summarizeReportAvailability } from '../src/tools/components/rundeckReportAvailability.js'
 
 // Actual jsPDF generation, not a mock of the layout or a regex-only test.
 // Contains long ABAP identifiers and both explicitly dated / snapshot errors.
@@ -45,6 +46,18 @@ const data={
     event_count:2,snapshot_host_checks:3,first_at:'2026-09-18T03:34:00Z'
   }]}
 }
+// Synthetic QA fixture only: this is NOT real SAP Availability evidence.
+const avWindow=reportAvailabilityWindow('2026-09',{},new Date('2026-10-01T00:00:00Z'))
+data.monthly_availability=summarizeReportAvailability({
+  range:'custom',category:'SAP_APP',observation_semantics:'OBSERVED_AVAILABILITY',
+  range_started_at:avWindow.startUtc,window_end:avWindow.endUtc,
+  expected_cadence_seconds:600,gap_threshold_seconds:1320,
+  observation_gaps:[],coverage_limited:false,
+  items:Array.from({length:5},(_,i)=>({
+    host:'APP'+(i+1),status:i===2?'DOWN':'UP',
+    bucket:'2026-09-30T16:55:00Z',execution_id:'qa-sample',
+  })),
+},avWindow)
 const pdf=await buildMonthlyPdf({month:'2026-09',data,returnInstance:true})
 const pageCount=pdf.internal.getNumberOfPages()
 assert.ok(pageCount>=3 && pageCount<=6,'PDF should paginate actual rows without runaway blank pages: '+pageCount)
@@ -93,4 +106,6 @@ console.log('MANAGEMENT_16X9=PASS pages=1 bytes='+executiveBytes.length+' fixtur
 const a3=await buildManagementMonthlyPdf({month:'2026-09',data,format:'a3',returnInstance:true})
 assert.ok(Math.abs(a3.internal.pageSize.getWidth()-1190.55)<.25)
 assert.ok(Math.abs(a3.internal.pageSize.getHeight()-841.89)<.25)
-console.log('MANAGEMENT_A3_OPTION=PASS pages='+a3.internal.getNumberOfPages())
+const a3path=join(process.env.RUNNER_TEMP||tmpdir(),'sphere-monthly-management-a3-qa.pdf')
+writeFileSync(a3path,new Uint8Array(a3.output('arraybuffer')))
+console.log('MANAGEMENT_A3_OPTION=PASS pages='+a3.internal.getNumberOfPages()+' fixture='+a3path)
