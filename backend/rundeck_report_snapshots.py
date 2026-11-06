@@ -53,8 +53,10 @@ def strategy_name(split_distinct: bool) -> str:
 def _path(period: str, label: str, strategy: str) -> Path:
     if period not in {"month", "week"} or strategy not in {"split_distinct", "baseline"}:
         raise ValueError("Invalid snapshot scope or SQL strategy")
-    month = label[:7]
-    scope_label(period, month, label if period == "week" else None)
+    if period == "month":
+        scope_label(period, label)
+    else:
+        scope_label(period, label[:7], label)
     return Path(os.getenv("SPHERE_REPORT_SNAPSHOT_DIR", DEFAULT_DIR)) / (
         f"{period}-{label}-{strategy}-v{SCHEMA}.json.gz"
     )
