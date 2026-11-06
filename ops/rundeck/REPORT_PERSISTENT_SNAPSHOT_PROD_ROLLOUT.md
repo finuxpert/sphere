@@ -38,6 +38,42 @@
     curl --noproxy '*' -fsS --max-time 10 -o /dev/null -w 'PROD_HEALTH=%{http_code} %{time_total}s\n' http://127.0.0.1:8092/health
     systemctl list-timers --all sphere-report-precompute-dev.timer sphere-report-precompute-prod.timer --no-pager
 
+## Bounded live-data parity helper (read-only, BEFORE merge)
+
+The branch includes ops/rundeck/compare-prod-calendar-snapshot-read-only.py. It compares the **existing live PROD API** against candidate PROD-compatible SQL using one *closed* reporting week. Both use the current PROD database configuration, with explicit PostgreSQL read-only sessions on the candidate and the feature flag forced OFF. It checks the source READY anchor before and after, the full population across pages, summary, pressure, errors, daily host trend, and evaluated workload rows. It emits only status/counts and mismatch field names, never raw SAP data or credentials. Candidate SQL still reads the same PostgreSQL database and can be expensive; schedule outside SAP closing/busy windows and check DEV precompute worker is not active.
+
+Run from an authenticated root shell on JAHSVR-SPHERE with existing PROD venv:
+
+~~~bash
+set -Eeuo pipefail
+export TZ=Asia/Jakarta
+REPO=/root/rundeck-sphere-prod
+BRANCH=feat/prod-calendar-snapshot-optin-20261106
+PY=/opt/sphere-rundeck-prod/venv/bin/python
+systemctl is-active --quiet sphere-rundeck-prod-api
+if systemctl is-active --quiet sphere-report-precompute-dev.service; then
+  echo "BLOCKED: DEV worker active, avoid concurrent heavy DB work"; exit 2
+fi
+git -C "$REPO" fetch --no-tags origin "$BRANCH"
+STAGE=$(mktemp -d /tmp/sphere-prod-parity.XXXXXX)
+trap 'rm -rf -- "$STAGE"' EXIT
+chmod 0755 "$STAGE"
+git -C "$REPO" archive FETCH_HEAD | tar -xf - -C "$STAGE"
+test -s "$STAGE/ops/rundeck/compare-prod-calendar-snapshot-read-only.py"
+systemd-run --quiet --wait --pipe --collect --uid=sphere --gid=sphere \
+  --property="EnvironmentFile=/etc/sphere/rundeck-prod.env" \
+  --property="WorkingDirectory=$STAGE" \
+  --property="RuntimeMaxSec=360" \
+  --setenv="PYTHONPATH=$STAGE" \
+  --setenv="PYTHONDONTWRITEBYTECODE=1" \
+  --setenv="PGOPTIONS=-c default_transaction_read_only=on" \
+  --setenv="SPHERE_REPORT_SNAPSHOT_PROD=false" \
+  "$PY" "$STAGE/ops/rundeck/compare-prod-calendar-snapshot-read-only.py" \
+  --month=2026-10 --week-start=2026-10-26
+~~~
+
+**PASS** requires a complete matching workload population, page contract, core report fields, and stable source collection anchor; any mismatch blocks merge/deployment. A transient DB overload, missing SQL source or changed source anchor makes the run **inconclusive**, not parity PASS. This does not deploy code, create snapshots or enable timer.
+
 ## Rollback after a future activation
 
 1. Disable/stop only the PROD snapshot timer. Check whether a PROD worker is still active before stopping it.
