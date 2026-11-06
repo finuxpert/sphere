@@ -1,7 +1,7 @@
 """SPHERE Rundeck API entrypoint with service-availability and job intelligence."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import os
 import secrets
@@ -81,6 +81,24 @@ def history_window_endpoint(
         raise HTTPException(503, f"Custom window evidence unavailable: {type(error).__name__}") from None
 
 
+
+def _validate_availability_report_window(start: datetime, end: datetime) -> tuple[datetime, datetime]:
+    """Independent bounded calendar reporting window, not the 24h incident validator.
+
+    Availability is retained in JSONL rather than guaranteed 90-day SQL retention.
+    Each request is at most 32 days; old periods may legitimately have no samples.
+    """
+    start, end = start.astimezone(timezone.utc), end.astimezone(timezone.utc)
+    now = datetime.now(timezone.utc)
+    if not timedelta(minutes=1) <= end - start <= timedelta(days=32):
+        raise ValueError("Availability custom window must span 1 minute to 32 days")
+    if start < now - timedelta(days=370):
+        raise ValueError("Availability historical window exceeds 370-day query limit")
+    if end > now + timedelta(minutes=1):
+        raise ValueError("Availability window cannot extend into the future")
+    return start, end
+
+
 @app.get("/availability/history")
 def availability_history_endpoint(
     range_key: str = Query("24h", alias="range"),
@@ -92,7 +110,7 @@ def availability_history_endpoint(
         if range_key == "custom":
             if not from_at or not to_at:
                 raise ValueError("Custom availability requires both timestamps")
-            since, until = validate_custom_window(_parse_custom_timestamp(from_at), _parse_custom_timestamp(to_at))
+            since, until = _validate_availability_report_window(_parse_custom_timestamp(from_at), _parse_custom_timestamp(to_at))
             return availability_history(range_key=range_key, category=category, start_at=since, end_at=until)
         if from_at or to_at:
             raise ValueError("Explicit dates require range=custom")
