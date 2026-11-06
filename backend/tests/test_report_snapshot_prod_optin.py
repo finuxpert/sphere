@@ -17,7 +17,7 @@ from backend import rundeck_prod_report_precompute as worker
 from backend import rundeck_prod_report_snapshots as snap
 
 
-DEV = {
+PROD = {
     "SPHERE_REPORT_SNAPSHOT_PROD": "true",
     "SPHERE_REPORT_SNAPSHOT_PROD_WORKER": "true",
     "DB_MODE": "db",
@@ -45,7 +45,7 @@ def report(period="month", month="2026-10", week_start=None):
 class ReportSnapshotProdOptInTests(unittest.TestCase):
     def setUp(self):
         self.folder = tempfile.TemporaryDirectory()
-        self.env = {**DEV, "SPHERE_REPORT_SNAPSHOT_DIR": self.folder.name}
+        self.env = {**PROD, "SPHERE_REPORT_SNAPSHOT_DIR": self.folder.name}
         self.addCleanup(self.folder.cleanup)
         self.patch_default = patch.object(snap, "DEFAULT_DIR", self.folder.name)
         self.patch_default.start()
@@ -128,17 +128,17 @@ class ReportSnapshotProdOptInTests(unittest.TestCase):
         self.assertEqual(response["snapshot"]["status"], "FRESH")
         self.assertIn(("month:2026-10", "ALL", "run-1"), ev._EVALUATION_CACHE)
 
-    def test_stale_snapshot_is_not_inserted_under_current_cache_key(self):
+    def test_stale_snapshot_falls_back_to_sql_without_prod_ui_warning(self):
         snap.save("month", "2026-10", "baseline", "run-1", report())
         engine = MagicMock()
         with patch.object(ev, "get_engine", return_value=engine), \
-             patch.object(ev, "_calendar_month_collection_anchor", return_value="run-2"):
+             patch.object(ev, "_calendar_month_collection_anchor", return_value="run-2"), \
+             patch.object(ev, "_collection_quality", side_effect=RuntimeError("SQL_FALLBACK_REQUIRED")):
             with patch.dict(os.environ, {"SPHERE_REPORT_SNAPSHOT_PROD_WORKER": "false"}):
-                response = ev._evaluation_report_locked(
-                    "month", "ALL", 5, 0, "", "ALL", month="2026-10",
-                )
-        self.assertEqual(response["runtime"]["cache"], "STALE_SNAPSHOT")
-        self.assertEqual(response["snapshot"]["status"], "STALE")
+                with self.assertRaisesRegex(RuntimeError, "SQL_FALLBACK_REQUIRED"):
+                    ev._evaluation_report_locked(
+                        "month", "ALL", 5, 0, "", "ALL", month="2026-10",
+                    )
         self.assertFalse(ev._EVALUATION_CACHE)
 
     def test_worker_isolation_and_anchor_consistency(self):
