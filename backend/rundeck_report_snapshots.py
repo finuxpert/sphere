@@ -96,6 +96,7 @@ def load(
             or (period == "week" and report.get("week_start") != label)
             or not isinstance(report.get("items"), list)
             or not isinstance(report.get("summary"), dict)
+            or len(report["items"]) != report["summary"].get("workloads")
         ):
             return None
         saved_at = datetime.fromisoformat(meta["generated_at"].replace("Z", "+00:00"))
@@ -134,6 +135,8 @@ def save(period: str, label: str, strategy: str, anchor: str, report: dict) -> P
         raise ValueError("Report week mismatch")
     if not isinstance(report.get("items"), list):
         raise ValueError("Report is not a full evaluated population")
+    if len(report["items"]) != (report.get("summary") or {}).get("workloads"):
+        raise ValueError("Report summary population does not match rows")
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o750)
     meta = {
         "schema": SCHEMA,
