@@ -496,7 +496,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
 
   if(!isSlide){
     // Dedicated A3 availability band; existing storage widths are retained.
-    const avY=169,avH=65
+    const avY=165,avH=73
     rect(M,avY,CW,avH,'white',7)
     section(M+15,avY+avH-15,'SAP Availability · Observed Service Checks')
     text(W-M-15,avY+avH-15,avStatus,8.5,'bold',
