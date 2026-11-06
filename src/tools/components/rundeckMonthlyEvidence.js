@@ -39,6 +39,15 @@ export const monthlySize = bytes => {
   const unit=Number(bytes)>=1e12?'TB':'GB'
   return fmt(Number(bytes)/(unit==='TB'?1e12:1e9),2)+' '+unit
 }
+// Saved df Avail is unavailable in legacy collectors. Never substitute Total - Used:
+// reserved filesystem blocks make that an unverified approximation, not df Avail.
+export function monthlyStorageAvailable(row) {
+  if (!row || row.status !== 'COLLECTED') return '—'
+  if (row.availability_source !== 'EXPLICIT' || row.free_bytes === null ||
+      row.free_bytes === undefined || !Number.isFinite(Number(row.free_bytes)) ||
+      Number(row.free_bytes) < 0) return 'Not retained'
+  return monthlySize(row.free_bytes)
+}
 export const MONTHLY_STORAGE_ROWS=['File System OS','FS SAP Archive','Archive INTF','INTF']
 export const MONTHLY_STORAGE_REASON={
   MAPPING_NOT_CONFIGURED:'Host/mount mapping not configured',
@@ -53,7 +62,10 @@ export const monthlyStorageNote=(storage,loading,error)=>{
   if(loading || !storage)return 'Checking historical storage…'
   const rows=storage.items||[]
   const missing=rows.filter(row=>row.status!=='COLLECTED')
-  if(!missing.length)return '4 of 4 filesystems collected'
+  if(!missing.length){
+    const retained=rows.filter(row=>row.availability_source==='NOT_RETAINED').length
+    return '4 of 4 filesystems collected'+(retained?' · df Avail not retained ('+retained+'/4)':'')
+  }
   const missingMap=missing.filter(row=>row.reason==='MAPPING_NOT_CONFIGURED').length
   if(missingMap)return missingMap+' filesystem mapping'+(missingMap===1?'':'s')+' not configured'
   if(!storage.source_rows)return 'No Infrastructure filesystem samples for this '+(storage.start_date?'custom period':storage.week_start?'week':'month')
