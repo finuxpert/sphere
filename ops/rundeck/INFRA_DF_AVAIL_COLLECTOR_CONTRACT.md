@@ -70,39 +70,39 @@ original job's exact command and full-mount output before editing it.
 
 ## Implementation prepared in SPHERE repository
 
-- Helper: \`ops/rundeck/format-df-filesystems-v1.sh\`.
-- Regression: \`scripts/tests/test-infra-df-avail.sh\` (also enforced in DEV maintenance CI).
-- Input: **the original single unmodified GNU \`df -PkT\` output**, including its header and every row selected by the job's existing filters.
-- Output: exactly one existing V1 positional \`filesystem ...\` row per input filesystem plus \`avail_kb=\` copied from the df Available field.
+- Helper: `ops/rundeck/format-df-filesystems-v1.sh`.
+- Regression: `scripts/tests/test-infra-df-avail.sh` (also enforced in DEV maintenance CI).
+- Input: **the original single unmodified GNU `df -PkT` output**, including its header and every row selected by the job's existing filters.
+- Output: exactly one existing V1 positional `filesystem ...` row per input filesystem plus `avail_kb=` copied from the df Available field.
 - Failure: invalid header, malformed filesystem row or empty sample exits nonzero and emits **no partial filesystem rows**.
 - No additional polling, storage mutation, or guessed historical Avail is performed.
 
 Once the **live Rundeck job script has been exported and reviewed**, the proposed
 replacement for the **filesystem section body only** is:
 
-\`\`\`bash
+```bash
 echo '## SPHERE-INFRA-FS-V1-BEGIN'
-# Keep the job's existing \`df\` mount selection and exclusion filters.
+# Keep the job's existing `df` mount selection and exclusion filters.
 # Ensure its output is the GNU "df -PkT" 7-column data format.
 LC_ALL=C df -PkT <existing-original-filesystem-filters> |
   bash /path/to/reviewed/format-df-filesystems-v1.sh
 echo '## SPHERE-INFRA-FS-V1-END'
-\`\`\`
+```
 
 The angle-bracket token is **a review placeholder, not an executable flag**.
 Do **not** paste this block into the active job without replacing it using
 the actual job's existing filters. The helper must be installed on the
 **job's execution node** with an approved read-only file distribution step,
 or its audited AWK body embedded into the Rundeck inline script.
-Never point \`df\` at the SPHERE web/API host to measure SAP APP mounts.
+Never point `df` at the SPHERE web/API host to measure SAP APP mounts.
 
 Perform a dry run from the SAP APP execution context before updating
 the Rundeck job:
 
-\`\`\`bash
+```bash
 LC_ALL=C df -PkT -- / /SAP_ARCH /ArchiveINTF /INTF |
   bash /path/to/reviewed/format-df-filesystems-v1.sh
-\`\`\`
+```
 
 The dry run only previews four mounts; it is **not** a production collector
 replacement, since the real job collects many additional mounts including
