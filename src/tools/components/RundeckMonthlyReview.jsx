@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
 import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod, reportPeakEvidenceWib } from './rundeckMonthlyPeriod.js'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
-import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
+import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, monthlyStorageAvailable, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
 import { reportAvailabilityWindow, summarizeReportAvailability, unavailableReportAvailability } from './rundeckReportAvailability.js'
 import './RundeckReportAvailability.css'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
@@ -424,8 +424,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
           return <tr key={name} title={present ? 'Saved Infrastructure sample · '+when(row.sample_at) : MONTHLY_STORAGE_REASON[row?.reason]||'Historical sample unavailable'}><td>{name}</td>
             <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
             <td>{present?monthlySize(row.total_bytes):'—'}</td><td>{present?monthlySize(row.used_bytes):'—'}</td>
-            <td>{present&&row.availability_source==='EXPLICIT'&&Number.isFinite(Number(row.free_bytes))
-              &&row.free_bytes!==null?monthlySize(row.free_bytes):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
+            <td title={present&&row.availability_source!=='EXPLICIT'?'df Avail was not saved in this historical sample':undefined}>{present?monthlyStorageAvailable(row):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
             <td>{present?when(row.sample_at):'—'}</td></tr>
         })}
       </tbody></table>
