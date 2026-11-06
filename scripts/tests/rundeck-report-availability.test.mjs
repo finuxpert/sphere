@@ -45,7 +45,9 @@ test('missing APP observations are UNKNOWN, not DOWN',()=>{
     check('APP2','UP','2026-11-01T16:55:00Z','one')]),window)
   assert.equal(model.rows[0].status,'UNKNOWN')
   assert.equal(model.rows[0].checks,0)
+  assert.equal(model.rows[0].coverageLimited,true)
   assert.equal(model.rows[1].status,'AVAILABLE')
+  assert.equal(model.coverageLimited,true)
 })
 test('completely empty month is explicitly UNKNOWN with zero evidence',()=>{
   const monthly=reportAvailabilityWindow('2026-10',{},new Date('2026-11-06T09:00:00Z'))
@@ -93,7 +95,7 @@ test('192 positive historical checks per APP still mean incomplete weekly covera
   }),window)
   assert.equal(model.totalChecks,960)
   assert.ok(model.rows.every(row=>row.checks===192 && row.up===192))
-  assert.ok(model.rows.every(row=>row.status==='STALE'))
+  assert.ok(model.rows.every(row=>row.status==='STALE' && row.coverageLimited))
   assert.equal(model.coverageLimited,true)
   assert.equal(model.leadingGapSeconds,7*3600)
   assert.equal(model.trailingGapSeconds,32*3600)
