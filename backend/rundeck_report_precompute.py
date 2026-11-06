@@ -77,13 +77,10 @@ def build(period: str, label: str) -> str:
     if strategy == "split_distinct":
         key_scope += ":split_distinct"
     full = ev._cache_get((key_scope, "ALL", before))
-    if not full or len(full.get("items", [])) != int(
-        (full.get("summary") or {}).get("workloads", -1)
-    ):
-        # The summary's population count can be a different field on older
-        # builds; only require that the full unpaged result exists.
-        if not full or not isinstance(full.get("items"), list) or "page" in full:
-            raise RuntimeError("Full report population missing from worker cache")
+    if not full or not isinstance(full.get("items"), list) or "page" in full:
+        raise RuntimeError("Full report population missing from worker cache")
+    if len(full["items"]) != (full.get("summary") or {}).get("workloads"):
+        raise RuntimeError("Full report workload count differs from summary")
     path = snapshots.save(period, label, strategy, before, full)
     return f"BUILT rows={len(full['items'])} seconds={time.monotonic()-begun:.2f} bytes={path.stat().st_size}"
 
