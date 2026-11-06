@@ -432,7 +432,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max',
       isSlide?['CPU High','Checks']:'CPU High Checks',
       isSlide?['RAM High','Checks']:'RAM High Checks'],
-    srvRows,isSlide?23:25,isSlide?17.4:22.6,isSlide?8.0:8)
+    srvRows,isSlide?23:25,isSlide?17.4:21.7,isSlide?8.0:8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
     return [
