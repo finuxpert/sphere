@@ -1,0 +1,46 @@
+/* Period-scoped SAP service checks: never style missing data as a successful check. */
+.sphereMonthlyReview.is-v2 .sphereReportAvailability{
+  display:grid;gap:4px;min-width:0;padding:7px 10px;
+  border:1px solid var(--mr-border,#364553);border-radius:5px;
+  background:var(--mr-surface,#1c2934);color:var(--mr-text,inherit);
+}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityHeader{
+  display:flex;justify-content:space-between;align-items:baseline;gap:10px;min-width:0;
+}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityHeader strong{font-size:11px;font-weight:700;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailability :is(small){font-size:9px;color:var(--mr-muted,#9cafbd);}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp{
+  display:flex;align-items:center;gap:6px;min-width:0;
+  padding:4px 6px;background:var(--mr-surface-2,#22313b);border-radius:3px;
+  font-size:10px;white-space:nowrap;
+}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp b{font-weight:700;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp strong{font-size:9px;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp small{margin-left:auto;white-space:nowrap;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp .is-available{color:#37ac85;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp .is-unavailable{color:#ea6763;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp .is-stale{color:#d6a450;}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp .is-unknown{color:var(--mr-muted,#9cafbd);}
+.sphereMonthlyReview.is-v2 .sphereReportAvailabilityFoot{line-height:1.2;}
+@media(max-width:1100px){
+ .sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp{flex-wrap:wrap;white-space:normal;}
+ .sphereMonthlyReview.is-v2 .sphereReportAvailabilityApp small{margin:0;width:100%;}
+}
+@media(max-width:650px){
+ .sphereMonthlyReview.is-v2 .sphereReportAvailabilityApps{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .sphereMonthlyReview.is-v2 .sphereReportAvailabilityHeader{flex-direction:column;gap:2px;}
+}
+/* PowerPoint PNG retains the four established content rows; present the same
+   availability evidence in the header rather than introducing a clipped fifth row. */
+.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereReportAvailability{display:none!important;}
+.sphereMonthlyPptExport .sphereMonthlyPptAvailability{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;width:365px;flex:none;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptAvailability span{
+  display:flex;flex-direction:column;gap:3px;font-size:10px;
+  min-width:0;text-align:center;color:#1d3348;
+}
+.sphereMonthlyPptExport .sphereMonthlyPptAvailability b{font-size:10px;}
+.sphereMonthlyPptExport .sphereMonthlyPptAvailability strong{font-size:9px;}
+.sphereMonthlyPptExport .sphereMonthlyPptAvailability small{font-size:8px;color:#52697b;}
