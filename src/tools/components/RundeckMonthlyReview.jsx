@@ -635,13 +635,14 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const changeFilter=(setter,value)=>{pdfGenerationRef.current += 1;setter(value);setPage(0)}
   const preview=matchesScope(hostPreview) ? hostPreview : null
   const completedData=matchesScope(data) ? data : null
+  const staleSnapshot=completedData?.snapshot?.status==='STALE'
   const items=completedData?.items||[]
   const evidence=(completedData||preview)?.monthly_pressure||{}
   const errors=completedData?.monthly_errors||{}
   const total=Number(completedData?.page?.total||0)
   const pages=Math.max(1,Math.ceil(total/PAGE_SIZE))
   const previewPdf=React.useCallback(async(reportType='management')=>{
-    if(!data||loading||pdfBusy||pdfInFlightRef.current)return
+    if(!data||data.snapshot?.status==='STALE'||loading||pdfBusy||pdfInFlightRef.current)return
     pdfInFlightRef.current=true
     const generation=pdfGenerationRef.current
     setPdfBusy(true);setPdfError('')
@@ -719,11 +720,11 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       </div>
       <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
-      <button type="button" className="is-primary" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('management')}>
+      <button type="button" className="is-primary" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('management')}>
         {pdfBusy?'Generating…':'Export PDF 16:9'}
       </button>
-      <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('png')}>Export PNG 16:9</button>
-       <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData} onClick={()=>previewPdf('print-a3')}>PDF A3 (Print)</button>
+      <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('png')}>Export PNG 16:9</button>
+       <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('print-a3')}>PDF A3 (Print)</button>
       {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
          download={pdfMode==='technical'?'SPHERE-Monthly-Technical-Review-'+month+'.pdf'
            :exportStem+(pdfMode==='png'?'-16x9.png':pdfMode==='print-a3'?'-A3.pdf':'-16x9.pdf')}>
@@ -734,6 +735,12 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     </div>
     {reportMode==='custom'&&customDateError(draftStart,draftEnd)&&
       <small className="sphereMonthlyWarning" role="alert">{customDateError(draftStart,draftEnd)}</small>}
+    {staleSnapshot&&<p className="sphereMonthlyWarning" role="status">
+      Showing last completed snapshot from {new Date(completedData.snapshot.generated_at).toLocaleString('en-GB',{timeZone:'Asia/Jakarta'})} WIB.
+      Newer collected data is being prepared. Export is disabled until refreshed.
+      <button type="button" className="btn btn-sm btn-outline-info ms-2"
+        onClick={()=>setEvaluationRetry(value=>value+1)}>Check latest</button>
+    </p>}
     {storageError&&<p className="sphereMonthlyWarning" role="alert">{storageError}</p>}
     {pdfError&&<p className="sphereMonthlyWarning" role="alert">{pdfError}</p>}
     {loading&&!preview&&<div className="sphereMonthlyState" role="status">Loading saved performance…</div>}
@@ -750,7 +757,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       <MonthlyManagementDashboard month={month} weekStart={requestedWeek} customStart={requestedStart} customEnd={requestedEnd} full={completedData} preview={preview} storage={storage} storageError={storageError} loading={loading} evaluationError={error}/>
       {evidenceOpen && <RundeckWorkspaceDrawer title={reportMode==='custom'?'Custom Evidence':reportMode==='week'?'Weekly Evidence':'Monthly Evidence'} subtitle={(requestedStart?requestedStart+' to '+requestedEnd:requestedWeek||month)+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
       <div className="sphereMonthlyReview is-v2 is-evidence-modal">
-      {reportMode==='month' && <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData}
+      {reportMode==='month' && <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData || staleSnapshot}
         onClick={()=>previewPdf('technical')}>Generate Technical PDF</button></div>}
       {completedData ? <div id="sphere-month-panel-evidence" className="sphereMonthlyEvidencePage">
       <div className="sphereMonthlyPanel">

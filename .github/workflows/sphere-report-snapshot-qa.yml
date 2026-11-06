@@ -1,0 +1,41 @@
+name: SPHERE DEV persistent calendar report snapshots QA
+
+on:
+  pull_request:
+    branches: [rundeck-sphere-dev]
+    paths:
+      - 'backend/rundeck_evaluation.py'
+      - 'backend/rundeck_report_snapshots.py'
+      - 'backend/rundeck_report_precompute.py'
+      - 'backend/tests/test_report_snapshot_dev.py'
+      - 'ops/rundeck/sphere-report-precompute-dev.*'
+      - 'src/tools/components/RundeckMonthlyReview.jsx'
+      - '.github/workflows/sphere-report-snapshot-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Compile and test DEV snapshot contracts
+        run: |
+          python -m compileall -q backend
+          python -m unittest -v backend.tests.test_report_snapshot_dev backend.tests.test_report_split_distinct_runtime_dev backend.tests.test_rundeck_weekly_report
+      - name: Guard no production or migration changes
+        run: |
+          ! git diff --name-only origin/rundeck-sphere-dev...HEAD | grep -Eq '(^backend/db/migrations/|^ops/rundeck/.*prod|^ops/rundeck/deploy-prod)'
+          grep -q 'SPHERE_REPORT_SNAPSHOT_DEV' backend/rundeck_report_snapshots.py
+          grep -q 'ReadWritePaths=/var/lib/sphere/report-snapshots-dev' ops/rundeck/sphere-report-precompute-dev.service

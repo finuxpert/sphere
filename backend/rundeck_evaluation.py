@@ -21,6 +21,7 @@ from sqlalchemy import text
 from backend.db.session import get_engine
 from backend.rundeck_consumers import TOP_CONSUMERS_PER_HOST
 from backend.rundeck_monthly_pressure import monthly_pressure_observations
+from backend import rundeck_report_snapshots as report_snapshots
 from backend.rundeck_monthly_errors import monthly_error_evidence
 
 PERIOD_DAYS = {"1d": 1, "7d": 7, "30d": 30}
@@ -1267,6 +1268,29 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
                                     pressure=pressure if period_key in {"month", "week", "custom"} else "ALL",
                                     flag=flag if period_key in {"month", "week", "custom"} else "ALL", consumer_type=requested_type_key)
             return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0, sql_timings_ms=sql_timings_ms)
+        # Optional DEV snapshot read-through. Never read snapshots in the worker:
+        # it must generate real full SQL and atomically replace the saved version.
+        if (period_key in {"month", "week"} and report_snapshots.enabled()
+                and os.getenv("SPHERE_REPORT_SNAPSHOT_WORKER") != "true"):
+            label = week_start if period_key == "week" else str(month)
+            strategy = report_snapshots.strategy_name(_dev_split_distinct_enabled(period_key))
+            saved = report_snapshots.load(period_key, label, strategy, anchor_key)
+            if saved is not None:
+                full, freshness = saved
+                snapshot_full = {**full, "snapshot": freshness}
+                if freshness["status"] == "FRESH":
+                    _cache_put(cache_key, snapshot_full)
+                page = _evaluation_page(
+                    snapshot_full, limit=limit_key, offset=offset_key, query=query_key,
+                    health=health_key, pressure=pressure, flag=flag,
+                    consumer_type=requested_type_key,
+                )
+                return _runtime_payload(
+                    page,
+                    cache="SNAPSHOT" if freshness["status"] == "FRESH" else "STALE_SNAPSHOT",
+                    duration_ms=(time.perf_counter() - started) * 1000.0,
+                    sql_timings_ms=sql_timings_ms,
+                )
         current_quality = measure_sql("current_quality", lambda: _collection_quality(conn, start, end))
         previous_quality = measure_sql("previous_quality", lambda: _collection_quality(conn, previous_start, start))
         if _dev_split_distinct_enabled(period_key):

@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh SPHERE DEV calendar report snapshots every 10 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitInactiveSec=10min
+AccuracySec=30s
+RandomizedDelaySec=15s
+Unit=sphere-report-precompute-dev.service
+
+[Install]
+WantedBy=timers.target
