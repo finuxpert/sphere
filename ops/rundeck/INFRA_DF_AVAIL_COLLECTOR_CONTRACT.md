@@ -68,6 +68,58 @@ The numeric `avail_kb` value therefore comes from the same `df`
 observation (column 5) and is explicitly source-observed. Verify the
 original job's exact command and full-mount output before editing it.
 
+## Verified existing Rundeck command and exact minimal patch (6 Nov 2026)
+
+Read-only audit of the live Rundeck job export (job ID
+`66ffa675-1d77-4fe5-9aec-95ef5e330726`) confirms a **single exec step**
+on APP1–APP5:
+
+```bash
+sudo -u aopadm /usr/bin/bash /SAP_ARCH/tmp_fikri/sphere_infra_v1.sh
+```
+
+APP1's original script hash:
+`3dcb5368f94fcbc4ff1ec320f394c9d01a4d7ca1686e27a78925917f2457b775`.
+
+The original script already obtains all its filesystem values in one `df`
+sample:
+
+```bash
+df -PT -x tmpfs -x devtmpfs 2>/dev/null | awk '
+NR>1 {
+  gsub("%","",$6)
+  printf "filesystem\t%s\t%s\t%s\t%s\t%s\t%s\n",$1,$2,$3,$4,$6,$7
+}'
+```
+
+**The preferred minimal on-node modification** is to replace ONLY the
+`printf` line with:
+
+```awk
+  printf "filesystem\t%s\t%s\t%s\t%s\t%s\t%s\tavail_kb=%s\n",$1,$2,$3,$4,$6,$7,$5
+```
+
+The original `df -PT` provides source `Available` in 1K blocks as
+column 5. The node's script already exports `LC_ALL=C`. No second
+`df` invocation and no formatter dependency on SAP hosts is needed for
+this single-line change.
+
+Do **not** change `df` filters, filesystem mount selection, original six
+positional fields, Section V1 markers, sampling cadence, Network T1/T2,
+Disk T1/T2, or diskmap. Changes to the same file require backing up the
+**script** on every distinct host before replacement. Rundeck job JSON backup
+is separate and does not protect the SAP-host script.
+
+Do not assume that `/SAP_ARCH` is shared across APP1–APP5. Check each
+host's `findmnt`, script hash, owner, symlink target, and exact content.
+With source proof, perform `bash -n` on a staged copy, compare the one-line
+diff, and activate during an approved collector maintenance window using
+owner/mode preserving atomic replacement and an immediate rollback path.
+
+The standalone formatter below remains a verified alternate for a future
+job whose real filesystem section *already* supplies `df -PkT`; it is
+**not required** for this exact existing script.
+
 ## Implementation prepared in SPHERE repository
 
 - Helper: `ops/rundeck/format-df-filesystems-v1.sh`.
