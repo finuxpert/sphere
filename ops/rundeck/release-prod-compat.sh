@@ -34,7 +34,8 @@ echo '=== STATIC / REGRESSION QA ==='
   backend.tests.test_rundeck_workload_activity \
   backend.tests.test_rundeck_top_consumers \
   backend.tests.test_rundeck_network_prod_contract \
-  backend.tests.test_rundeck_evaluation_paging_prod
+  backend.tests.test_rundeck_evaluation_paging_prod \
+  backend.tests.test_report_snapshot_prod_optin
 
 CUTOVER=0
 STAGE=''
