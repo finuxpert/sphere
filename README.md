@@ -90,6 +90,10 @@ SPHERE_DEV_MIGRATION_DECISION=skip bash ops/rundeck/release-dev-fast.sh
 
 The wrapper checks clean branch, fast-forward sync, QA/build, backend tests, migration guard, guarded DEV deployment and health. **Never use migration skip to bypass changed migration scripts.** The deployment result must include `FINAL=PASS`; then verify the active DEV web and API release SHA, public route and visual layout. PROD remains a separate approval. See [Rundeck development](docs/operations/rundeck-development.md).
 
+### DEV report snapshot checkpoint (6 November 2026)
+
+[Persistent Monthly/Weekly snapshot runbook](ops/rundeck/REPORT_PERSISTENT_SNAPSHOT_DEV_ROLLOUT.md) documents the DEV-only worker, file-backed FastAPI read-through cache, stale data handling, timer and rollback. On JAHSVR-SPHERE, release SHA `8c75ec7b` was verified active on 6 Nov 2026 with Monthly October API HTTP **0.132s** (2,249 workloads) and Weekly 26 October HTTP **0.052s** (919 workloads), both `SNAPSHOT`/`FRESH`. Five snapshot files were built; the first timer-triggered refresh returned `SKIP_FRESH` for all five scopes. These are **measured API request times**, not browser render times or proof that SQL itself is faster. Timer status and next execution require live verification; PROD was not changed by the DEV activation.
+
 ## Documentation — source of truth
 
 Start with the [Documentation Index](docs/DOCUMENTATION-INDEX.md). The maintained references are [Current Features & Flow](docs/CURRENT-FLOW-AND-FEATURES.md), [Rundeck DEV/PROD Runbook](docs/operations/rundeck-development.md), [UI and Visual QA](docs/standards/SPHERE-ENTERPRISE-UI-STANDARD.md), and [Operational Safety & Rollback](ops/rundeck/OPERATIONS.md).
