@@ -37,5 +37,5 @@ test('historical df Avail reports source missing instead of guessed Total minus 
   assert.equal(monthlyStorageAvailable({...legacy,status:'NOT_COLLECTED'}),'—')
   assert.equal(monthlyStorageAvailable({...legacy,free_bytes:0,availability_source:'EXPLICIT'}),'0 GB')
   assert.equal(monthlyStorageAvailable({...legacy,free_bytes:300000000000,availability_source:'EXPLICIT'}),'300 GB')
-  assert.match(monthlyStorageNote({source_rows:182369,items:Array.from({length:4},()=>legacy)},false,''),/df Avail not retained \\(4\\/4\\)/)
+  assert.ok(monthlyStorageNote({source_rows:182369,items:Array.from({length:4},()=>legacy)},false,'').includes('df Avail not retained (4/4)'))
 })
