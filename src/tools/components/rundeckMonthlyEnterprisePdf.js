@@ -156,6 +156,7 @@ export function monthlyEnterpriseReportModel(month,data) {
   return {
     month,weekStart,customStart,customEnd,period,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
     observedDays,storage:data.monthly_storage.items,
+    availability:data.monthly_availability||null,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
     sortedCpu:ranking(data.monthly_top_wp_cpu,'peak_cpu_pct'),
     sortedPss:ranking(data.monthly_top_wp_pss,'peak_pss_gb'),
@@ -258,6 +259,31 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   // Period bounds are calendar dates in Asia/Jakarta (exclusive UTC end in the model).
   text(M+(isSlide?129:158),H-(isSlide?22:28),reportTitle,isSlide?14:16,'bold','navy')
   text(M+(isSlide?129:158),H-(isSlide?40:46),periodLabel,isSlide?9.1:9.4,'normal','muted')
+
+  // Availability is independent, period-scoped Rundeck service-check evidence.
+  // Neither UP-check ratio nor last known state proves duration uptime.
+  const av=m.availability
+  const avRows=Array.from({length:5},(_,i)=>av?.rows?.find(row=>row.name==='APP'+(i+1))||
+    {name:'APP'+(i+1),status:'UNKNOWN',up:0,down:0,checks:0,lastAt:null})
+  const avStatus=av?.sourceStatus==='ERROR'?'SOURCE UNAVAILABLE'
+    :av?.sourceStatus==='OK'?'OBSERVED CHECKS':'SOURCE NOT ATTACHED'
+  if(av && (av.startUtc!==m.period.startUtc ||
+      Date.parse(av.endUtc)>Date.parse(m.period.exclusiveEndUtc) ||
+      Date.parse(av.endUtc)<=Date.parse(av.startUtc))) {
+    throw Error('Availability evidence belongs to another reporting period')
+  }
+  if(isSlide){
+    // Compact header uses otherwise unused right-hand horizontal space.
+    text(W-M, H-11,'SAP Availability · '+avStatus,7.2,'bold','navy','right')
+    const cellWidth=73,origin=W-M-5*cellWidth
+    avRows.forEach((row,i)=>{
+      const x=origin+i*cellWidth+4
+      text(x,H-21,row.name,7.4,'bold','navy')
+      text(x,H-31,row.status,6.8,'bold',row.status==='UNAVAILABLE'?'red':
+        row.status==='AVAILABLE'?'green':'amber')
+      text(x,H-41,row.checks?row.up+'/'+row.checks+' UP':'No checks',6.5,'normal','muted')
+    })
+  }
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
   // 16:9 panel bands (PDF bottom-up): storage [8,112], APP/tuning [120,264],
@@ -360,7 +386,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   bars(M+panelW+gap,'Top 5 Workloads by Peak WP Memory',m.sortedPss,
     row=>value(row.peak_pss_gb),' GB')
   // Bottom server + program evaluation tables.
-  const lowY=isSlide?120:172,lowH=isSlide?144:H-427-lowY
+  const lowY=isSlide?120:245,lowH=isSlide?144:170
   const serverW=isSlide?338:376,jobX=M+serverW+(isSlide?10:12)
   const jobW=CW-serverW-(isSlide?10:12)
   rect(M,lowY,serverW,lowH,'white',7)
@@ -406,7 +432,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max',
       isSlide?['CPU High','Checks']:'CPU High Checks',
       isSlide?['RAM High','Checks']:'RAM High Checks'],
-    srvRows,isSlide?23:25,isSlide?17.4:32,isSlide?8.0:8)
+    srvRows,isSlide?23:25,isSlide?17.4:21.7,isSlide?8.0:8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
     return [
@@ -459,7 +485,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       label,(row.mount_point||'—')+' · '+app(row.host),
       bytes(row.total_bytes),bytes(row.used_bytes),
       row.availability_source==='EXPLICIT' && value(row.free_bytes)!==null
-        ?bytes(row.free_bytes):'—',
+        ?bytes(row.free_bytes):'Not retained',
       pct(row.used_pct),wib(row.sample_at)+' WIB',
     ]
   })
@@ -467,6 +493,34 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ['File System','Mounted On / Host','Total Capacity','Used Capacity',
      'Available (df)','Usage %','Sample WIB'],
     fsRows,isSlide?18:23,isSlide?14.4:17.4,isSlide?8.5:7.8)
+
+  if(!isSlide){
+    // Dedicated A3 availability band; existing storage widths are retained.
+    const avY=165,avH=73
+    rect(M,avY,CW,avH,'white',7)
+    section(M+15,avY+avH-15,'SAP Availability · Observed Service Checks')
+    text(W-M-15,avY+avH-15,avStatus,8.5,'bold',
+      av?.sourceStatus==='ERROR'?'red':'muted','right')
+    const x0=M+15,unit=(CW-30)/5
+    avRows.forEach((row,i)=>{
+      const x=x0+i*unit
+      text(x,avY+avH-28,row.name,9,'bold','navy')
+      text(x+41,avY+avH-28,row.status,8.5,'bold',
+        row.status==='AVAILABLE'?'green':row.status==='UNAVAILABLE'?'red':'amber')
+      text(x,avY+avH-42,row.checks ? row.up+'/'+row.checks+' UP checks ('+
+        number(row.checkRatePct,1)+'% of checks)' : 'No retained checks',8.2)
+      text(x,avY+avH-54,row.lastAt?'Last '+wib(row.lastAt)+' WIB':'No observation time',7.4,'normal','muted')
+    })
+    text(M+15,avY+5,'Source: Rundeck Service Availability; port-check observations, not duration-based uptime.'+
+      (av?.gapCount?' Gaps: '+av.gapCount+'.':'')+
+      (av?.coverageLimited?' Coverage limited.':'')+
+      (av?.partial?' Ongoing period.':'')+
+      (av?.firstAt?' First: '+wib(av.firstAt)+' WIB.':'')+
+      (av?.lastAt?' Last: '+wib(av.lastAt)+' WIB.':''),7.4,'normal','muted')
+    if(!(fsY+fsH<avY && avY+avH<lowY && lowY+lowH<barY)){
+      throw Error('A3 report availability panel overlaps another section')
+    }
+  }
   if(isSlide){
     const close=(a,b)=>Math.abs(a-b)<.02
     const columnWidth=spec=>spec.reduce((sum,[width])=>sum+width,0)

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {fmt,pct,wpCoreEq,id,hostLabel,hostsFor,pressureHostsFor,when,relatedMonthlyErrorCodes,monthlySize,MONTHLY_STORAGE_ROWS,MONTHLY_STORAGE_REASON,monthlyStorageNote,savedPeriodPeak} from '../../src/tools/components/rundeckMonthlyEvidence.js'
+import {fmt,pct,wpCoreEq,id,hostLabel,hostsFor,pressureHostsFor,when,relatedMonthlyErrorCodes,monthlySize,monthlyStorageAvailable,MONTHLY_STORAGE_ROWS,MONTHLY_STORAGE_REASON,monthlyStorageNote,savedPeriodPeak} from '../../src/tools/components/rundeckMonthlyEvidence.js'
 test('Monthly retained values, WIB and host identities retain source meaning',()=>{
  assert.equal(fmt(null),'—');assert.equal(pct(12.5),'12,5%');assert.equal(wpCoreEq(200),'2 core eq.');
  assert.equal(id({consumer_type:'JOB',consumer_key:'JOB1'}),'JOB:JOB1');assert.equal(hostLabel('AOPH1PAPPDC'),'APP1');
@@ -28,3 +28,14 @@ test('Storage distinguishes retained capacity, mapping missing and no historical
  assert.equal(monthlyStorageNote({source_rows:5,items:[{status:'MISSING',reason:'MAPPING_NOT_CONFIGURED'}]},false,''),'1 filesystem mapping not configured');
  assert.equal(monthlyStorageNote({source_rows:0,week_start:'2026-10-05',items:[{status:'MISSING',reason:'NO_WEEKLY_INFRA_HISTORY'}]},false,''),'No Infrastructure filesystem samples for this week');
 });
+
+test('historical df Avail reports source missing instead of guessed Total minus Used',()=>{
+  const legacy={status:'COLLECTED',total_bytes:1000,used_bytes:700,
+    free_bytes:null,availability_source:'NOT_RETAINED'}
+  assert.equal(monthlyStorageAvailable(legacy),'Not retained')
+  assert.equal(monthlyStorageAvailable({...legacy,free_bytes:300}),'Not retained')
+  assert.equal(monthlyStorageAvailable({...legacy,status:'NOT_COLLECTED'}),'—')
+  assert.equal(monthlyStorageAvailable({...legacy,free_bytes:0,availability_source:'EXPLICIT'}),'0 GB')
+  assert.equal(monthlyStorageAvailable({...legacy,free_bytes:300000000000,availability_source:'EXPLICIT'}),'300 GB')
+  assert.ok(monthlyStorageNote({source_rows:182369,items:Array.from({length:4},()=>legacy)},false,'').includes('df Avail not retained (4/4)'))
+})

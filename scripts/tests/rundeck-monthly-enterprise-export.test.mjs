@@ -47,7 +47,7 @@ fixture.monthly_top_wp_cpu=fixture.monthly_abap_candidates.filter(r=>r.peak_cpu_
 fixture.monthly_top_wp_pss=fixture.monthly_abap_candidates.filter(r=>r.peak_pss_gb!=null).sort((a,b)=>b.peak_pss_gb-a.peak_pss_gb)
 fixture.monthly_storage={month:'2026-09',items:[
   {category:'File System OS',status:'COLLECTED',host:'AOPH1PAPPDC',mount_point:'/',
-    total_bytes:80e9,used_bytes:60e9,free_bytes:20e9,used_pct:75,
+    total_bytes:80e9,used_bytes:60e9,free_bytes:20e9,availability_source:'NOT_RETAINED',used_pct:75,
     sample_at:'2026-09-24T16:28:00Z'},
   ...['FS SAP Archive','Archive INTF','INTF'].map(category=>({category,status:'NOT_COLLECTED'})),
 ]}
@@ -83,7 +83,7 @@ test('monthly enterprise PDF is exactly one 16:9 landscape page with evidence la
     'SAP Monthly Performance Report','Application Server Performance',
     'Top 5 Tuning Candidates','Top 5 Workloads by Peak WP CPU',
     'Top 5 Workloads by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
-    'Storage Capacity','File System OS','Not Collected',
+    'Storage Capacity','File System OS','Not Collected','Not retained',
   ])assert.ok(stream.includes(token),'Missing PDF label: '+token)
   assert.ok(!stream.includes('PROTOTYPE DATA'),'Live export must not claim simulation')
   assert.ok(!stream.includes('Average Runtime'),'Unknown SM37 duration must not be invented')

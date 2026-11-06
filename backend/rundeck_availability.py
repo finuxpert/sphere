@@ -320,6 +320,7 @@ def availability_observation_profile(
     requested_since: datetime | None = None,
     fallback_seconds: int | None = None,
     cadence_snapshots: list[dict] | None = None,
+    requested_until: datetime | None = None,
 ) -> dict:
     """Describe observation coverage without equating missing samples to DOWN.
 
@@ -370,10 +371,26 @@ def availability_observation_profile(
     history_started = stamps[0] if stamps else None
     latest = stamps[-1] if stamps else None
     requested = requested_since.astimezone(timezone.utc) if requested_since else None
-    coverage_limited = bool(
-        requested and history_started and
-        (history_started - requested).total_seconds() > threshold
-    )
+    until = requested_until.astimezone(timezone.utc) if requested_until else None
+    leading_seconds = max(0, int((history_started - requested).total_seconds())) if requested and history_started else None
+    trailing_seconds = max(0, int((until - latest).total_seconds())) if until and latest else None
+    # No observation is UNKNOWN, including the period boundaries. This is
+    # coverage metadata, never inferred downtime or a duration-based SLA.
+    if leading_seconds is not None and leading_seconds > threshold:
+        gaps.insert(0, {
+            "kind": "NO_OBSERVATION", "boundary": "START",
+            "from": requested.isoformat(), "to": history_started.isoformat(),
+            "duration_seconds": leading_seconds, "estimated_missing_checks": None,
+        })
+    if trailing_seconds is not None and trailing_seconds > threshold:
+        gaps.append({
+            "kind": "NO_OBSERVATION", "boundary": "END",
+            "from": latest.isoformat(), "to": until.isoformat(),
+            "duration_seconds": trailing_seconds, "estimated_missing_checks": None,
+        })
+    coverage_limited = not stamps or any(
+        value is not None and value > threshold for value in (leading_seconds, trailing_seconds)
+    ) or bool(gaps)
     return {
         "expected_cadence_seconds": expected,
         "gap_threshold_seconds": threshold,
@@ -381,6 +398,8 @@ def availability_observation_profile(
         "history_started_at": history_started.isoformat() if history_started else None,
         "latest_observation_at": latest.isoformat() if latest else None,
         "coverage_limited": coverage_limited,
+        "leading_unobserved_seconds": leading_seconds,
+        "trailing_unobserved_seconds": trailing_seconds,
         "range_started_at": requested.isoformat() if requested else None,
         "semantics": "OBSERVED_AVAILABILITY",
     }
@@ -496,11 +515,16 @@ def availability_history(
         snapshots = _history_snapshots(RANGE_HOURS[range_key])
         cadence_hours = max(24, RANGE_HOURS[range_key])
     category_snapshots = _category_snapshots(snapshots, category)
-    cadence_history = _category_snapshots(_history_snapshots(cadence_hours), category)
+    # A historical week can be far older than the last 24h. Derive cadence
+    # from actual in-window executions whenever there are enough samples;
+    # otherwise use recent history before resorting to configured fallback.
+    recent_cadence = _category_snapshots(_history_snapshots(cadence_hours), category)
+    cadence_history = category_snapshots if range_key == "custom" and len(category_snapshots) >= 3 else recent_cadence
     profile = availability_observation_profile(
         category_snapshots,
         requested_since=requested_since,
         cadence_snapshots=cadence_history,
+        requested_until=end_at if range_key == "custom" else datetime.now(timezone.utc),
     )
     items: list[dict] = []
     counters: dict[str, dict[str, int]] = {}
@@ -548,6 +572,8 @@ def availability_history(
         "gap_threshold_seconds": profile["gap_threshold_seconds"],
         "observation_gaps": profile["observation_gaps"],
         "coverage_limited": profile["coverage_limited"],
+        "leading_unobserved_seconds": profile["leading_unobserved_seconds"],
+        "trailing_unobserved_seconds": profile["trailing_unobserved_seconds"],
         "range_started_at": profile["range_started_at"],
         "history_started_at": profile["history_started_at"],
         "latest_observation_at": profile["latest_observation_at"],

@@ -3,8 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
 import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod, reportPeakEvidenceWib } from './rundeckMonthlyPeriod.js'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
-import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
-import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
+import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, monthlyStorageAvailable, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
+import { reportAvailabilityWindow, summarizeReportAvailability, unavailableReportAvailability } from './rundeckReportAvailability.js'
+import './RundeckReportAvailability.css'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
@@ -310,7 +311,33 @@ function MonthlyRanking({ title, rows=[], metric, loading=false, error='' }) {
     </div>
   </section>
 }
-function MonthlyManagementDashboard({month,weekStart=null,customStart=null,customEnd=null,full,preview,storage,storageError='',loading=false,evaluationError=''}) {
+function MonthlyAvailabilityStrip({availability,loading=false}) {
+  const rows=availability?.rows||[]
+  return <section className="sphereReportAvailability" aria-label="SAP Availability historical service checks">
+    <div className="sphereReportAvailabilityHeader">
+      <strong>SAP Availability · Observed Service Checks</strong>
+      <small>{availability?.sourceStatus==='ERROR'
+        ?'SOURCE UNAVAILABLE · '+(availability.reason||'verification failed')
+        :loading?'Loading historical check evidence…'
+          :availability?.lastAt?'Last check '+when(availability.lastAt)+' · '+availability.totalChecks+' checks'
+            :'No retained service checks for period'}</small>
+    </div>
+    <div className="sphereReportAvailabilityApps">
+      {(rows.length?rows:Array.from({length:5},(_,i)=>({name:'APP'+(i+1),status:'UNKNOWN',checks:0}))).map(row=>
+        <span className="sphereReportAvailabilityApp" key={row.name}>
+          <b>{row.name}</b>
+          <strong className={'is-'+row.status.toLowerCase()}>{row.status}</strong>
+          <small>{row.checks ? row.up+'/'+row.checks+' UP checks' : 'No observations'}</small>
+        </span>)}
+    </div>
+    <small className="sphereReportAvailabilityFoot">Source: Rundeck Service Availability · UP/DOWN port checks, not duration uptime.
+      {availability?.gapCount ? ' '+availability.gapCount+' observation gaps.' : ''}
+      {availability?.coverageLimited ? ' Observation coverage limited.' : ''}
+      {availability?.partial ? ' Ongoing period (partial).' : ''}
+    </small>
+  </section>
+}
+function MonthlyManagementDashboard({month,weekStart=null,customStart=null,customEnd=null,full,preview,storage,availability,availabilityLoading=false,storageError='',loading=false,evaluationError=''}) {
   const data=full||preview
   const pressure=data?.monthly_pressure||{}
   const reportWindow=monthlyReportPeriod(month,{weekStart,customStart,customEnd})
@@ -375,6 +402,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
         </table>
       </section>
     </div>
+    <MonthlyAvailabilityStrip availability={availability} loading={availabilityLoading}/>
     <section className="sphereMonthlyManagerPanel is-storage">
       <div className="sphereMonthlyManagerHeading"><h4>{'Storage Capacity'+(()=>{
         const known=[...new Set((storage?.items||[]).map(row=>hostLabel(row.host))
@@ -396,8 +424,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
           return <tr key={name} title={present ? 'Saved Infrastructure sample · '+when(row.sample_at) : MONTHLY_STORAGE_REASON[row?.reason]||'Historical sample unavailable'}><td>{name}</td>
             <td>{present?row.mount_point+' · '+hostLabel(row.host):'Not Collected'}</td>
             <td>{present?monthlySize(row.total_bytes):'—'}</td><td>{present?monthlySize(row.used_bytes):'—'}</td>
-            <td>{present&&row.availability_source==='EXPLICIT'&&Number.isFinite(Number(row.free_bytes))
-              &&row.free_bytes!==null?monthlySize(row.free_bytes):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
+            <td title={present&&row.availability_source!=='EXPLICIT'?'df Avail was not saved in this historical sample':undefined}>{present?monthlyStorageAvailable(row):'—'}</td><td>{present?pct(row.used_pct):'—'}</td>
             <td>{present?when(row.sample_at):'—'}</td></tr>
         })}
       </tbody></table>
@@ -422,10 +449,18 @@ async function buildManagementMonthlyPng({month,data}) {
         <img src={logo} alt="SPHERE"/>
         <div className="sphereMonthlyPptTitle"><strong>{model.customStart?'SAP Custom Performance Report':model.weekStart?'SAP Weekly Performance Report':'SAP Monthly Performance Report'}</strong>
           <span>{model.period.label}</span></div>
+        <div className="sphereMonthlyPptAvailability" aria-label="Historical SAP Availability">
+          {Array.from({length:5},(_,i)=>{
+            const name='APP'+(i+1)
+            const row=data.monthly_availability?.rows?.find(item=>item.name===name)
+            return <span key={name}><b>{name}</b><strong>{row?.status||'UNKNOWN'}</strong>
+              <small>{row?.checks?row.up+'/'+row.checks+' UP':'No checks'}</small></span>
+          })}
+        </div>
       </header>
       <MonthlyManagementDashboard month={month} weekStart={model.weekStart}
         customStart={model.customStart} customEnd={model.customEnd}
-        full={data} preview={null} storage={data.monthly_storage} loading={false}/>
+        full={data} preview={null} storage={data.monthly_storage} availability={data.monthly_availability} loading={false}/>
     </div>))
     const brand=mount.querySelector('.sphereMonthlyPptHeader img')
     if(brand)await brand.decode()
@@ -492,6 +527,8 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const [evaluationRetry,setEvaluationRetry]=React.useState(0)
   const [storage,setStorage]=React.useState(null)
   const [storageError,setStorageError]=React.useState('')
+  const [availability,setAvailability]=React.useState(null)
+  const [availabilityLoading,setAvailabilityLoading]=React.useState(false)
   const [loading,setLoading]=React.useState(true)
   const [error,setError]=React.useState('')
   const [pdfMode,setPdfMode]=React.useState('management')
@@ -524,6 +561,28 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
     })
     return ()=>controller.abort()
   },[reportParams,matchesScope])
+
+  // Existing history endpoint only: independent of performance snapshots and SQL.
+  React.useEffect(()=>{
+    const controller=new AbortController()
+    const window=reportAvailabilityWindow(month,{
+      weekStart:requestedWeek,customStart:requestedStart,customEnd:requestedEnd,
+    })
+    setAvailability(null);setAvailabilityLoading(true)
+    fetch(API+'/availability/history?'+window.params,{cache:'no-store',signal:controller.signal})
+      .then(async response=>{
+        if(!response.ok)throw Error('HTTP '+response.status)
+        return response.json()
+      })
+      .then(payload=>{
+        if(!controller.signal.aborted)setAvailability(summarizeReportAvailability(payload,window))
+      })
+      .catch(failure=>{
+        if(!controller.signal.aborted)setAvailability(unavailableReportAvailability(window,failure.message))
+      })
+      .finally(()=>{if(!controller.signal.aborted)setAvailabilityLoading(false)})
+    return ()=>controller.abort()
+  },[month,requestedWeek,requestedStart,requestedEnd])
   // Render retained monthly CPU/RAM/APP observations independently of the slower
   // full workload classification, correlation and WP error analysis.
   React.useEffect(()=>{
@@ -666,11 +725,22 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       }
       let exportData=reportData
       if(reportType==='management' || reportType==='png' || reportType==='print-a3') {
+        const avWindow=reportAvailabilityWindow(month,{
+          weekStart:requestedWeek,customStart:requestedStart,customEnd:requestedEnd,
+        })
+        let avEvidence
+        try {
+          const avResponse=await fetch(API+'/availability/history?'+avWindow.params,{cache:'no-store'})
+          if(!avResponse.ok)throw Error('HTTP '+avResponse.status)
+          avEvidence=summarizeReportAvailability(await avResponse.json(),avWindow)
+        } catch(avError) {
+          avEvidence=unavailableReportAvailability(avWindow,avError.message)
+        }
         const storageResponse=await fetch(API+'/infra/monthly-storage?'+reportParams(),{cache:'no-store'})
         if(!storageResponse.ok)throw Error('Reporting period storage evidence unavailable (HTTP '+storageResponse.status+')')
         const monthlyStorage=await storageResponse.json()
         if(monthlyStorage.month!==month || !matchesScope(monthlyStorage) || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected reporting period')
-        exportData={...reportData,monthly_storage:monthlyStorage}
+        exportData={...reportData,monthly_storage:monthlyStorage,monthly_availability:avEvidence}
       }
       const blob=await (reportType==='png'
         ? buildManagementMonthlyPng({month,data:exportData})
@@ -678,7 +748,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
           ? buildManagementMonthlyPdf({month,data:exportData})
           : reportType==='print-a3'
             ? buildManagementMonthlyPdf({month,data:exportData,format:'a3'})
-            : buildMonthlyPdf({month,data:exportData}))
+            : (await import('./rundeckMonthlyPdf.js')).buildMonthlyPdf({month,data:exportData}))
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
@@ -754,7 +824,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         onClick={()=>{setError('');setEvaluationRetry(value=>value+1)}}>Retry evaluation</button>
     </div>}
     {(completedData || preview)&&<>
-      <MonthlyManagementDashboard month={month} weekStart={requestedWeek} customStart={requestedStart} customEnd={requestedEnd} full={completedData} preview={preview} storage={storage} storageError={storageError} loading={loading} evaluationError={error}/>
+      <MonthlyManagementDashboard month={month} weekStart={requestedWeek} customStart={requestedStart} customEnd={requestedEnd} full={completedData} preview={preview} storage={storage} availability={availability} availabilityLoading={availabilityLoading} storageError={storageError} loading={loading} evaluationError={error}/>
       {evidenceOpen && <RundeckWorkspaceDrawer title={reportMode==='custom'?'Custom Evidence':reportMode==='week'?'Weekly Evidence':'Monthly Evidence'} subtitle={(requestedStart?requestedStart+' to '+requestedEnd:requestedWeek||month)+' · Jobs, programs, resource pressure and ABAP traces'} size="wide" onClose={()=>setEvidenceOpen(false)}>
       <div className="sphereMonthlyReview is-v2 is-evidence-modal">
       {reportMode==='month' && <div className="sphereMonthlyTechnicalAction"><button type="button" disabled={pdfBusy || !completedData || staleSnapshot}
