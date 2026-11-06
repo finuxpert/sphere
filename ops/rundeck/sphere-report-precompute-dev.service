@@ -11,6 +11,7 @@ Group=sphere
 WorkingDirectory=/opt/sphere-rundeck-dev/current
 Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=SPHERE_REPORT_SNAPSHOT_WORKER=true
+Environment="PGOPTIONS=-c default_transaction_read_only=on"
 Environment=SPHERE_REPORT_SNAPSHOT_DIR=/var/lib/sphere/report-snapshots-dev
 EnvironmentFile=/etc/sphere/rundeck-dev.env
 ExecStart=/opt/sphere-rundeck-dev/venv/bin/python -m backend.rundeck_report_precompute
