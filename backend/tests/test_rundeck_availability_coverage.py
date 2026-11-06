@@ -8,12 +8,19 @@ UTC = timezone.utc
 
 class HistoricalAvailabilityCoverageTests(unittest.TestCase):
     def test_realistic_sparse_week_flags_both_boundaries_and_correct_cadence(self):
-        # 192 in-period checks at 40-minute cadence, all observed UP,
-        # with 7 hours unobserved at start and 32 hours at end.
+        # Exact audit geometry: 192 checks, median interval 30 min,
+        # max internal interval 6 h, 7 h leading and 32 h trailing gaps.
         start = datetime(2026, 10, 25, 17, tzinfo=UTC)
         end = datetime(2026, 11, 1, 17, tzinfo=UTC)
         first = start + timedelta(hours=7)
-        stamps = [first + timedelta(minutes=40 * i) for i in range(192)]
+        deltas = ([timedelta(minutes=30)] * 134 +
+                  [timedelta(hours=1)] * 56 +
+                  [timedelta(hours=6)])
+        stamps = [first]
+        for delta in deltas:
+            stamps.append(stamps[-1] + delta)
+        self.assertEqual(len(stamps), 192)
+        self.assertEqual(stamps[-1], datetime(2026, 10, 31, 9, tzinfo=UTC))
         snapshots = [
             {"collected_at": stamp.isoformat(), "execution_id": str(i),
              "services": [{"category": "SAP_APP", "name": "APP1", "status": "UP"}]}
@@ -23,7 +30,10 @@ class HistoricalAvailabilityCoverageTests(unittest.TestCase):
             snapshots, requested_since=start, requested_until=end,
             cadence_snapshots=snapshots
         )
-        self.assertEqual(result["expected_cadence_seconds"], 2400)
+        self.assertEqual(result["expected_cadence_seconds"], 1800)
+        self.assertEqual(max(int(d.total_seconds()) for d in deltas), 21600)
+        self.assertTrue(any(gap.get("boundary") is None
+                            for gap in result["observation_gaps"]))
         self.assertTrue(result["coverage_limited"])
         boundaries = {row["boundary"]: row for row in result["observation_gaps"]
                       if row.get("boundary")}
