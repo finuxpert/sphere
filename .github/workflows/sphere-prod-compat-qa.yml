@@ -29,6 +29,8 @@ jobs:
           ! grep -E 'alembic upgrade|systemctl restart sphere-rundeck-api|git push' ops/rundeck/release-prod-compat.sh
       - name: Compile backend sources
         run: python -m compileall -q backend
+      - name: Compile bounded read-only PROD comparison helper
+        run: python -m py_compile ops/rundeck/compare-prod-calendar-snapshot-read-only.py
       - name: Validate new read-only routes and legacy production contracts
         run: |
           python -m unittest -v \
