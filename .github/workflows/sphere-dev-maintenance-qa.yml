@@ -18,6 +18,10 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Source-observed df Avail collector formatter regression
+        run: |
+          bash -n ops/rundeck/format-df-filesystems-v1.sh scripts/tests/test-infra-df-avail.sh
+          bash scripts/tests/test-infra-df-avail.sh
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
