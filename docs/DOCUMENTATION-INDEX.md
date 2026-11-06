@@ -1,6 +1,6 @@
 # SPHERE Documentation
 
-**Current scope:** `rundeck-sphere-dev` source, reviewed 30 October 2026. Documentation describes the repository, not necessarily the version running on JAHSVR-SPHERE. Confirm the deployed web/API SHA separately.
+**Current scope:** `rundeck-sphere-dev` source; snapshot operations checkpoint reviewed **6 November 2026**. Documentation describes the repository and dated operator evidence, not necessarily the latest version running on JAHSVR-SPHERE. Confirm deployed web/API SHA separately.
 
 ## Start here
 
@@ -26,6 +26,8 @@
 | [Development Workflow](standards/ai-coding-workflow-style.md) | Change review and validation rules |
 | [Observability](../ops/observability/README.md) | Collector metrics and alert rules |
 | [Offline DEV Deployment](../ops/rundeck/OFFLINE-DEPLOY-DEV.md) | Approved offline contingency, separate from the normal release |
+| [Persistent Report Snapshots V1 — DEV](../ops/rundeck/REPORT_PERSISTENT_SNAPSHOT_DEV_ROLLOUT.md) | **Operational checkpoint 6 Nov 2026**: deployment SHA, five snapshots, measured HTTP latency, scheduled worker, rollback, pending validation |
+| [Split DISTINCT DEV SQL](../ops/rundeck/REPORT_SPLIT_DISTINCT_DEV_ROLLOUT.md) | DEV-only SQL feature gate and query-parity background |
 
 ## Historical records — not active runbooks
 
