@@ -31,16 +31,3 @@
  .sphereMonthlyReview.is-v2 .sphereReportAvailabilityApps{grid-template-columns:repeat(2,minmax(0,1fr));}
  .sphereMonthlyReview.is-v2 .sphereReportAvailabilityHeader{flex-direction:column;gap:2px;}
 }
-/* PowerPoint PNG retains the four established content rows; present the same
-   availability evidence in the header rather than introducing a clipped fifth row. */
-.sphereMonthlyReview.is-v2.sphereMonthlyPptExport .sphereReportAvailability{display:none!important;}
-.sphereMonthlyPptExport .sphereMonthlyPptAvailability{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;width:365px;flex:none;
-}
-.sphereMonthlyPptExport .sphereMonthlyPptAvailability span{
-  display:flex;flex-direction:column;gap:3px;font-size:10px;
-  min-width:0;text-align:center;color:#1d3348;
-}
-.sphereMonthlyPptExport .sphereMonthlyPptAvailability b{font-size:10px;}
-.sphereMonthlyPptExport .sphereMonthlyPptAvailability strong{font-size:9px;}
-.sphereMonthlyPptExport .sphereMonthlyPptAvailability small{font-size:8px;color:#52697b;}
