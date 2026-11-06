@@ -21,6 +21,54 @@ The parser historically populated DB `avail_bytes` from `size_kb-used_kb`
 for old positional lines. **That value is not source-observed `df Avail`**
 and is deliberately excluded by `monthly_storage_evidence()`.
 
+## Actual archived source contract confirmed on APP1
+
+A read-only audit of
+`/var/lib/sphere/infra-ingestion/archive/infra-rundeck-574765-AOPH1PAPPDC.log.gz`
+found four relevant lines (columns are device, fs type, size_kb, used_kb,
+used_pct, mount), with **no source `Avail` field**:
+
+```text
+filesystem /dev/mapper/os_vg-os_lv btrfs 83886080 63048892 76 /
+filesystem /dev/mapper/SAPARCH-SAPARCH xfs 1649922052 1038484488 63 /SAP_ARCH
+filesystem /dev/mapper/ArchiveINTF-ArchiveINTF xfs 752609284 413036372 55 /ArchiveINTF
+filesystem /dev/mapper/intf_vg-intf_lv xfs 838742020 674006816 81 /INTF
+```
+
+The same archived output also includes duplicate Btrfs subvolume mounts, EFI,
+other SAP mounts and NFS. A collector patch must preserve these existing
+lines/categories, not switch to a four-mount-only collector.
+
+### One-shot read-only preflight on the *SAP APP1 host*, not JAHSVR-SPHERE
+
+```bash
+LC_ALL=C df -PkT -- / /SAP_ARCH /ArchiveINTF /INTF |
+awk '
+  NR == 1 { next }
+  NF != 7 || $3 !~ /^[0-9]+$/ || $4 !~ /^[0-9]+$/ ||
+  $5 !~ /^[0-9]+$/ || $6 !~ /^[0-9]+%$/ {
+    print "INVALID_DF_RECORD" > "/dev/stderr"
+    bad = 1
+    next
+  }
+  {
+    pct=$6
+    sub(/%$/, "", pct)
+    printf "filesystem\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\tavail_kb=%s\\n", \\
+      $1,$2,$3,$4,pct,$7,$5
+    n++
+  }
+  END { if (bad || n != 4) exit 2 }
+'
+```
+
+This emits proposed records **only to stdout** and changes no job,
+filesystem or database. The `df -PkT` output columns are
+`Filesystem Type 1024-blocks Used Available Capacity Mounted on`.
+The numeric `avail_kb` value therefore comes from the same `df`
+observation (column 5) and is explicitly source-observed. Verify the
+original job's exact command and full-mount output before editing it.
+
 ## Compatible extension for future Rundeck observations
 
 Inspect the actual Rundeck Infrastructure Collector job definition and command
