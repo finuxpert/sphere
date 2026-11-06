@@ -73,14 +73,18 @@ export function summarizeReportAvailability(payload,window) {
     const checks=groups.get(name).sort((a,b)=>a.checkedAt-b.checkedAt)
     const up=checks.filter(row=>row.status==='UP').length
     const down=checks.length-up
-    const last=checks.at(-1)
+    const first=checks[0],last=checks.at(-1)
     const status=!last?'UNKNOWN':threshold===null||end-last.checkedAt>threshold
       ?'STALE':last.status==='UP'?'AVAILABLE':'UNAVAILABLE'
+    const missingInside=checks.some((check,index)=>index>0 && threshold!==null &&
+      check.checkedAt-checks[index-1].checkedAt>threshold)
+    const limited=!first || threshold===null || first.checkedAt-start>threshold ||
+      end-last.checkedAt>threshold || missingInside
     totalChecks+=checks.length
     allDates.push(...checks.map(check=>check.checkedAt))
-    return {name,status,up,down,checks:checks.length,
+    return {name,status,up,down,checks:checks.length,coverageLimited:limited,
       checkRatePct:checks.length?Math.round(up/checks.length*10000)/100:null,
-      lastAt:last?iso(last.checkedAt):null}
+      firstAt:first?iso(first.checkedAt):null,lastAt:last?iso(last.checkedAt):null}
   })
   const gapCount=Array.isArray(payload.observation_gaps)
     ?payload.observation_gaps.filter(item=>item.kind==='NO_OBSERVATION').length:0
@@ -91,7 +95,8 @@ export function summarizeReportAvailability(payload,window) {
   // Re-check boundaries in the browser too: an older backend could omit
   // trailing-coverage warnings, but no report may quietly imply full coverage.
   const limited=Boolean(payload.coverage_limited)||!allDates.length||
-    threshold===null||[leadingGapSeconds,trailingGapSeconds].some(
+    threshold===null||rows.some(row=>row.coverageLimited)||
+    [leadingGapSeconds,trailingGapSeconds].some(
       seconds=>seconds!==null&&seconds*1000>threshold)
   return {
     source:AVAILABILITY_SOURCE,sourceStatus:'OK',
