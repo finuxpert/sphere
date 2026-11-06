@@ -85,7 +85,14 @@ def _filesystem_rows(lines):
         mount = _mount(row)
         used = _number(row.get("used_pct") or row.get("use_pct") or row.get("capacity_pct"))
         total_bytes = _number(row.get("total_bytes") or row.get("size_bytes"))
+        # New collector contract may append the actual df Avail as a named
+        # field (avail_kb= from df -Pk, or avail_bytes=). Preserve precedence
+        # over legacy positional Total-Used fallback. details retains provenance.
         avail_bytes = _number(row.get("avail_bytes") or row.get("available_bytes"))
+        if avail_bytes is None:
+            explicit_kb = _number(row.get("avail_kb") or row.get("available_kb"))
+            if explicit_kb is not None and explicit_kb >= 0:
+                avail_bytes = int(explicit_kb * 1024)
 
         if len(pos) >= 6:
             device = device or pos[0]
