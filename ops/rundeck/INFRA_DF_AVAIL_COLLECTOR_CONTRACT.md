@@ -54,8 +54,7 @@ awk '
   {
     pct=$6
     sub(/%$/, "", pct)
-    printf "filesystem\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\tavail_kb=%s\\n", \\
-      $1,$2,$3,$4,pct,$7,$5
+    printf "filesystem\t%s\t%s\t%s\t%s\t%s\t%s\tavail_kb=%s\n", $1,$2,$3,$4,pct,$7,$5
     n++
   }
   END { if (bad || n != 4) exit 2 }
