@@ -80,7 +80,7 @@ class ReportSnapshotProdOptInTests(unittest.TestCase):
         self.assertEqual(len(loaded["items"]), 2)
         self.assertEqual(loaded["start"], "2026-10-01T00:00:00+00:00")
         self.assertIsNone(snap.load("week", "2026-10-26", "baseline", "run-1"))
-        self.assertIsNone(snap.load("month", "2026-10", "baseline", "run-1"))
+        self.assertIsNone(snap.load("month", "2026-10", "split_distinct", "run-1"))
         stale = snap.load("month", "2026-10", "baseline", "run-2")
         self.assertEqual(stale[1]["status"], "STALE")
         self.assertEqual(stale[1]["source_anchor"], "run-1")
