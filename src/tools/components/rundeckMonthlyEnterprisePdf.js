@@ -485,7 +485,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       label,(row.mount_point||'—')+' · '+app(row.host),
       bytes(row.total_bytes),bytes(row.used_bytes),
       row.availability_source==='EXPLICIT' && value(row.free_bytes)!==null
-        ?bytes(row.free_bytes):'—',
+        ?bytes(row.free_bytes):'Not retained',
       pct(row.used_pct),wib(row.sample_at)+' WIB',
     ]
   })
