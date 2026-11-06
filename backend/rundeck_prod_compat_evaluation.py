@@ -1029,7 +1029,8 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
         if (period_key in {"month", "week"} and report_snapshots.enabled()
                 and os.getenv("SPHERE_REPORT_SNAPSHOT_PROD_WORKER") != "true"):
             label = week_start if period_key == "week" else str(month)
-            saved = report_snapshots.load(period_key, label, "baseline", anchor_key)
+            # PROD frontend does not yet expose STALE warning/export controls; never serve stale.
+            saved = report_snapshots.load(period_key, label, "baseline", anchor_key, allow_stale=False)
             if saved is not None:
                 full, freshness = saved
                 snapshot_full = {**full, "snapshot": freshness}
