@@ -73,6 +73,23 @@ class InfraParserTests(unittest.TestCase):
         self.assertEqual(root["avail_bytes"],(52428800-39826428)*1024)
         self.assertTrue(root["is_primary"])
 
+    def test_explicit_df_avail_kb_wins_over_legacy_total_minus_used(self):
+        # 1K-blocks reported by df -Pk: 200 free instead of the derived 380.
+        # Do not silently present reserved filesystem blocks as df Avail.
+        raw = POSITIONAL_SAMPLE.replace(
+            b"filesystem /dev/mapper/data_vg1-intf xfs 104857600 33554432 68 /INTF",
+            b"filesystem /dev/mapper/data_vg1-intf xfs 104857600 33554432 68 /INTF avail_kb=200"
+        )
+        fs = next(row for row in parse(raw)["filesystems"] if row["mount"] == "/INTF")
+        self.assertEqual(fs["avail_bytes"], 200 * 1024)
+        self.assertEqual(fs["details"]["avail_kb"], "200")
+        self.assertEqual(_storage_explicit_available_bytes({"details": fs["details"]}), 200 * 1024)
+
+    def test_legacy_missing_df_avail_remains_unverified_in_reporting(self):
+        fs = next(row for row in parse(POSITIONAL_SAMPLE)["filesystems"] if row["mount"] == "/")
+        self.assertGreater(fs["avail_bytes"], 0)  # Existing legacy estimated column unchanged
+        self.assertIsNone(_storage_explicit_available_bytes({"details": fs["details"]}))
+
     def test_positional_network_identity(self):
         result=parse(POSITIONAL_SAMPLE)
         self.assertEqual(result["network"][0]["interface"],"eth0")
