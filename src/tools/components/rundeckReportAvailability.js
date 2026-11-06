@@ -52,7 +52,8 @@ export function summarizeReportAvailability(payload,window) {
   const cadence=Number(payload.expected_cadence_seconds)
   const gap=Number(payload.gap_threshold_seconds)
   const expectedCadenceSeconds=Number.isFinite(cadence)&&cadence>=60?cadence:null
-  const threshold=Number.isFinite(gap)&&gap>=60?gap*1000:null
+  // Do not trust sparse historical data to establish a multi-day 'healthy' cadence.
+  const threshold=Number.isFinite(gap)&&gap>=60?Math.min(gap,3600)*1000:null
   const groups=new Map(REPORT_APPS.map(name=>[name,[]]))
   const seen=new Set()
   for(const item of payload.items){
