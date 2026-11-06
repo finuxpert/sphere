@@ -90,6 +90,46 @@ class InfraParserTests(unittest.TestCase):
         self.assertGreater(fs["avail_bytes"], 0)  # Existing legacy estimated column unchanged
         self.assertIsNone(_storage_explicit_available_bytes({"details": fs["details"]}))
 
+    def test_actual_app1_archive_format_backward_compatible_with_df_avail(self):
+        # Confirmed APP1 sample: 6 Nov audit of archived 1 Nov execution.
+        lines = [
+            "filesystem /dev/mapper/os_vg-os_lv btrfs 83886080 63048892 76 /",
+            "filesystem /dev/mapper/SAPARCH-SAPARCH xfs 1649922052 1038484488 63 /SAP_ARCH",
+            "filesystem /dev/mapper/ArchiveINTF-ArchiveINTF xfs 752609284 413036372 55 /ArchiveINTF",
+            "filesystem /dev/mapper/intf_vg-intf_lv xfs 838742020 674006816 81 /INTF",
+        ]
+        def envelope(rows):
+            return chr(10).join([
+                "## SPHERE-INFRA-V1-BEGIN",
+                "snapshot_ts=2026-11-01T16:58:45Z",
+                "hostname=AOPH1PAPPDC",
+                "sample_seconds=5",
+                "## SPHERE-INFRA-FS-V1-BEGIN",
+                *rows,
+                "## SPHERE-INFRA-FS-V1-END",
+                "## SPHERE-INFRA-NET-V1-BEGIN",
+                "network eth0 rx_mbps=0 tx_mbps=0",
+                "## SPHERE-INFRA-NET-V1-END",
+                "## SPHERE-INFRA-DISK-V1-BEGIN",
+                "disk dm-0 util_pct=0",
+                "## SPHERE-INFRA-DISK-V1-END",
+                "## SPHERE-INFRA-DISKMAP-V1-BEGIN",
+                "diskmap dm-0 /",
+                "## SPHERE-INFRA-DISKMAP-V1-END",
+                "## SPHERE-INFRA-V1-END",
+            ])
+        mounts = ("/", "/SAP_ARCH", "/ArchiveINTF", "/INTF")
+        legacy = parse(envelope(lines))
+        for mount in mounts:
+            fs = next(row for row in legacy["filesystems"] if row["mount"] == mount)
+            self.assertIsNone(_storage_explicit_available_bytes({"details": fs["details"]}))
+        # Future-format synthetic values are for a parser test, not actual df data.
+        future = parse(envelope([line + " avail_kb=2097152" for line in lines]))
+        for mount in mounts:
+            fs = next(row for row in future["filesystems"] if row["mount"] == mount)
+            self.assertEqual(fs["avail_bytes"], 2097152 * 1024)
+            self.assertEqual(_storage_explicit_available_bytes({"details": fs["details"]}), 2097152 * 1024)
+
     def test_positional_network_identity(self):
         result=parse(POSITIONAL_SAMPLE)
         self.assertEqual(result["network"][0]["interface"],"eth0")
