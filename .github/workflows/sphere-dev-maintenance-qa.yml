@@ -2,7 +2,7 @@ name: SPHERE DEV maintenance parity QA
 
 on:
   pull_request:
-    branches: [rundeck-sphere-dev]
+    branches: [rundeck-sphere-dev, perf/dev-report-split-distinct-20261105]
   workflow_dispatch:
 
 permissions:

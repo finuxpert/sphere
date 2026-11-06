@@ -428,7 +428,38 @@ def _complete_collection_clause(alias: str = "c") -> str:
     )
 
 
-def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) -> list[dict]:
+def _dev_split_distinct_enabled(period_key: str) -> bool:
+    """Explicit DEV-only opt-in for calendar aggregation; never activate on PROD DB.
+
+    Off unless the operator sets 'true' and connects to sphere_rundeck_dev.
+    Rolling 1d/7d/30d periods remain unchanged.
+    """
+    if period_key not in {"month", "week", "custom"}:
+        return False
+    if os.getenv("SPHERE_EVAL_SPLIT_DISTINCT_DEV", "").strip().lower() != "true":
+        return False
+    if os.getenv("DB_MODE", "file").strip().lower() not in {"db", "hybrid"}:
+        return False
+    try:
+        from sqlalchemy.engine import make_url
+        return make_url(os.getenv("DATABASE_URL", "")).database == "sphere_rundeck_dev"
+    except Exception:
+        return False
+
+
+def _aggregate_window_for_report(
+    conn, start: datetime, end: datetime, consumer_type: str, *, period_key: str,
+) -> list[dict]:
+    """Only runtime calendar reports choose the tested split-identity SQL."""
+    if _dev_split_distinct_enabled(period_key):
+        return _aggregate_window(
+            conn, start, end, consumer_type, identity_preaggregate=True,
+        )
+    return _aggregate_window(conn, start, end, consumer_type)
+
+
+def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str, *,
+                      identity_preaggregate: bool = False) -> list[dict]:
     # DEV 2026-11-05: READY semijoin candidate regressed weekly SQL by 3x-4x.
     # Keep original source path; experiment only in read-only parity comparator.
     source, _coverage_scope = _workload_source_relation(
@@ -438,6 +469,11 @@ def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) 
     params: dict[str, Any] = {"start": start, "end": end}
     if type_clause:
         params["consumer_type"] = consumer_type
+
+    # Explicit experiment only: the default SQL remains byte-identical to PR #91.
+    # Run parity and buffer profiling on DEV before enabling in the API runtime.
+    if identity_preaggregate:
+        return _aggregate_window_split_distinct(conn, params, source, type_clause)
 
     rows = conn.execute(text(f"""
         WITH complete_collections AS (
@@ -495,6 +531,139 @@ def _aggregate_window(conn, start: datetime, end: datetime, consumer_type: str) 
            AND tc.consumer_type IN ('JOB', 'PROGRAM')
            {type_clause}
          GROUP BY tc.consumer_type, tc.consumer_key
+    """), params)
+    return [dict(row._mapping) for row in rows]
+
+
+
+def _aggregate_window_split_distinct(
+    conn, params: dict[str, Any], source: str, type_clause: str,
+) -> list[dict]:
+    """Opt-in DEV candidate: aggregate scalar values separately from distinct IDs.
+
+    Large COUNT(DISTINCT composite-row) aggregates force a wide sort over
+    observations. Materialize only projected scalar/identity columns once;
+    deduplicate (workload, collection, host), then roll up collection and
+    host counts without COUNT(DISTINCT) in the final aggregate. Do not enable
+    by default until the live DEV SQL result and actual buffer profiles pass.
+    """
+    rows = conn.execute(text(f"""
+        WITH complete_collections AS (
+          SELECT collection_id
+            FROM rundeck_collections c
+           WHERE {_complete_collection_clause('c')}
+             AND COALESCE(c.finished_at, c.started_at) >= :start
+             AND COALESCE(c.finished_at, c.started_at) < :end
+        ),
+        host_signal AS (
+          SELECT hm.collection_id, hm.host,
+                 MAX(COALESCE(hm.wp_critical, 0)) AS wp_critical,
+                 MAX(hm.cpu_pct) AS host_cpu_pct
+            FROM rundeck_host_metrics hm
+            JOIN complete_collections cc ON cc.collection_id = hm.collection_id
+           GROUP BY hm.collection_id, hm.host
+        ),
+        host_baseline AS (
+          SELECT host,
+                 100.0 * COUNT(*) FILTER (WHERE COALESCE(wp_critical, 0) > 0)
+                   / NULLIF(COUNT(*), 0) AS wp_active_pct
+            FROM host_signal
+           GROUP BY host
+        ),
+        input_rows AS MATERIALIZED (
+          SELECT tc.consumer_type, tc.consumer_key, tc.collection_id, tc.host,
+                 tc.collected_at, tc.cpu_pct, tc.rank,
+                 NULLIF(COALESCE(tc.details->>'total_pss_gb', tc.details->>'pss_gb'), '')::double precision AS pss_gb,
+                 NULLIF(tc.details->>'process_count', '')::double precision AS process_count,
+                 hs.host_cpu_pct, hb.wp_active_pct,
+                 COALESCE(hs.wp_critical, 0) > 0 AS critical_wp,
+                 tc.details->>'resource_aggregation' = 'SUM_BY_CONSUMER' AS aggregated_resource
+            FROM {source} tc
+            JOIN complete_collections cc ON cc.collection_id = tc.collection_id
+            LEFT JOIN host_signal hs
+              ON hs.collection_id = tc.collection_id AND hs.host = tc.host
+            LEFT JOIN host_baseline hb ON hb.host = tc.host
+           WHERE tc.collected_at >= :start
+             AND tc.collected_at < :end
+             AND tc.consumer_type IN ('JOB', 'PROGRAM')
+             {type_clause}
+        ),
+        scalar_metrics AS (
+          SELECT consumer_type, consumer_key,
+                 COUNT(*) AS observations,
+                 AVG(cpu_pct) AS avg_cpu_pct,
+                 MAX(cpu_pct) AS peak_cpu_pct,
+                 AVG(pss_gb) AS avg_pss_gb,
+                 MAX(pss_gb) AS peak_pss_gb,
+                 AVG(process_count) AS avg_process_count,
+                 MAX(process_count) AS peak_process_count,
+                 AVG(host_cpu_pct) AS avg_host_cpu_pct,
+                 MAX(host_cpu_pct) AS peak_host_cpu_pct,
+                 MIN(collected_at) AS first_seen,
+                 MAX(collected_at) AS last_seen,
+                 AVG(wp_active_pct) AS app_wp_baseline_pct,
+                 MAX(rank) AS max_rank_seen,
+                 COUNT(*) FILTER (WHERE aggregated_resource) AS aggregate_resource_observations
+            FROM input_rows
+           GROUP BY consumer_type, consumer_key
+        ),
+        collection_host_keys AS MATERIALIZED (
+          SELECT consumer_type, consumer_key, collection_id, host,
+                 BOOL_OR(critical_wp) AS critical_wp
+            FROM input_rows
+           GROUP BY consumer_type, consumer_key, collection_id, host
+        ),
+        collection_host_counts AS (
+          SELECT consumer_type, consumer_key,
+                 COUNT(*) AS host_observations,
+                 COUNT(*) FILTER (WHERE critical_wp) AS critical_wp_host_checks
+            FROM collection_host_keys
+           GROUP BY consumer_type, consumer_key
+        ),
+        collection_counts AS (
+          SELECT consumer_type, consumer_key,
+                 COUNT(collection_id) AS occurrences,
+                 COUNT(collection_id) FILTER (WHERE critical_wp) AS critical_wp_checks
+            FROM (
+              SELECT consumer_type, consumer_key, collection_id,
+                     BOOL_OR(critical_wp) AS critical_wp
+                FROM collection_host_keys
+               GROUP BY consumer_type, consumer_key, collection_id
+            ) unique_collections
+           GROUP BY consumer_type, consumer_key
+        ),
+        host_counts AS (
+          SELECT consumer_type, consumer_key,
+                 COUNT(host) AS app_count,
+                 ARRAY_AGG(host ORDER BY host) AS hosts
+            FROM (
+              SELECT consumer_type, consumer_key, host
+                FROM collection_host_keys
+               GROUP BY consumer_type, consumer_key, host
+            ) unique_hosts
+           GROUP BY consumer_type, consumer_key
+        )
+        SELECT s.consumer_type, s.consumer_key,
+               c.occurrences, s.observations, ch.host_observations,
+               s.avg_cpu_pct, s.peak_cpu_pct,
+               s.avg_pss_gb, s.peak_pss_gb,
+               s.avg_process_count, s.peak_process_count,
+               s.avg_host_cpu_pct, s.peak_host_cpu_pct,
+               h.app_count, h.hosts,
+               s.first_seen, s.last_seen,
+               c.critical_wp_checks, ch.critical_wp_host_checks,
+               s.app_wp_baseline_pct, s.max_rank_seen,
+               s.aggregate_resource_observations
+          FROM scalar_metrics s
+          JOIN collection_counts c
+            ON c.consumer_type = s.consumer_type
+           AND c.consumer_key IS NOT DISTINCT FROM s.consumer_key
+          JOIN collection_host_counts ch
+            ON ch.consumer_type = s.consumer_type
+           AND ch.consumer_key IS NOT DISTINCT FROM s.consumer_key
+          JOIN host_counts h
+            ON h.consumer_type = s.consumer_type
+           AND h.consumer_key IS NOT DISTINCT FROM s.consumer_key
     """), params)
     return [dict(row._mapping) for row in rows]
 
@@ -1077,7 +1246,11 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             # Monthly reports are separate from rolling-period cached populations.
             # The committed collection anchor invalidates data when a new READY run arrives.
             anchor_key = measure_sql("collection_anchor", lambda: _calendar_month_collection_anchor(conn, start, end))
-            cache_key = (f"custom:{start_date}:{end_date}" if period_key == "custom" else f"week:{week_start}" if week_start else f"month:{month}", type_key, anchor_key)
+            cache_scope = (f"custom:{start_date}:{end_date}" if period_key == "custom"
+                           else f"week:{week_start}" if week_start else f"month:{month}")
+            if _dev_split_distinct_enabled(period_key):
+                cache_scope += ":split_distinct"
+            cache_key = (cache_scope, type_key, anchor_key)
         else:
             # Preserve the existing 1D/7D/30D cache contract exactly:
             # key off the committed evaluation end, independent of page limit.
@@ -1096,8 +1269,17 @@ def _evaluation_report_locked(period: str, consumer_type: str, limit: int, offse
             return _runtime_payload(page, cache="HIT", duration_ms=(time.perf_counter() - started) * 1000.0, sql_timings_ms=sql_timings_ms)
         current_quality = measure_sql("current_quality", lambda: _collection_quality(conn, start, end))
         previous_quality = measure_sql("previous_quality", lambda: _collection_quality(conn, previous_start, start))
-        current_rows = measure_sql("current_aggregate", lambda: _aggregate_window(conn, start, end, type_key))
-        previous_rows = measure_sql("previous_aggregate", lambda: _aggregate_window(conn, previous_start, start, type_key))
+        if _dev_split_distinct_enabled(period_key):
+            _EVAL_LOG.warning(
+                "SPHERE_EVAL_AGGREGATE_STRATEGY period=%s strategy=SPLIT_DISTINCT_DEV",
+                period_key,
+            )
+        current_rows = measure_sql("current_aggregate", lambda: _aggregate_window_for_report(
+            conn, start, end, type_key, period_key=period_key,
+        ))
+        previous_rows = measure_sql("previous_aggregate", lambda: _aggregate_window_for_report(
+            conn, previous_start, start, type_key, period_key=period_key,
+        ))
         historical_rows = measure_sql("historical_baseline", lambda: _historical_baseline(conn, start, type_key))
         shift_rows = measure_sql("recent_shift", lambda: _recent_shift_window(conn, end, type_key))
         sampling = measure_sql("sampling_quality", lambda: _sampling_quality(conn, start, end))
