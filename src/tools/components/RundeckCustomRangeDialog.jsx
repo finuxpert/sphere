@@ -60,7 +60,7 @@ export default function RundeckCustomRangeDialog({
             value={start} onChange={event => onStart(event.target.value)} /></label>
           <label>To · WIB<input type="datetime-local" step="60" required
             value={end} onChange={event => onEnd(event.target.value)} /></label>
-          <small className="rundeckCustomRangePending">Up to 180 days (6 months) · automatic chart interval: raw / 1H / 6H / 1D.</small>
+          <small className="rundeckCustomRangePending">Up to 365 days (1 year) · automatic chart interval: raw / 1H / 6H / 1D.</small>
           {visibleError && <p role="alert" className="rundeckCustomRangeError">{visibleError}</p>}
           <div className="rundeckCustomRangeDialogActions">
             <button type="button" onClick={onClose}>Cancel</button>
