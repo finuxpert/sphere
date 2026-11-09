@@ -261,7 +261,7 @@ def history_hosts_latest():
 
 @app.get("/history/trend")
 def history_trend(
-    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d|180d|last_month)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d|180d|365d|last_month)$"),
     bucket: str = Query("auto", pattern="^(auto|10m|30m|1h|6h|1d)$"),
     metric: str = Query("cpu", pattern="^(cpu|ram|load|iowait|swap|wp|network_rx|network_tx)$"),
     from_at: str | None = Query(None, max_length=64),
@@ -284,7 +284,7 @@ def history_trend(
             else:
                 since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
         network = metric in {"network_rx", "network_tx"}
-        # DEV only: a recent precomputed 90D/180D Network payload can be
+        # DEV only: a recent precomputed 90D/180D/365D Network payload can be
         # returned as-is. The worker itself always bypasses snapshot reads.
         if network and bucket == "auto" and until is None and range_key in trend_snapshots.RANGES:
             stored = trend_snapshots.load(range_key, metric)
@@ -314,7 +314,7 @@ def history_trend(
 @app.get("/history/trends")
 def history_trend_bundle(
     metrics: str = Query("cpu,ram,wp", min_length=3, max_length=40),
-    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d|180d|last_month)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(custom|30m|1h|3h|6h|24h|7d|30d|90d|180d|365d|last_month)$"),
     bucket: str = Query("auto", pattern="^(auto|10m|30m|1h|6h|1d)$"),
     from_at: str | None = Query(None, max_length=64),
     to_at: str | None = Query(None, max_length=64),
