@@ -1,5 +1,5 @@
 [Unit]
-Description=Refresh SPHERE DEV 90D/180D historical trends every 5 minutes
+Description=Refresh SPHERE DEV 90D/180D/365D historical trends every 5 minutes
 
 [Timer]
 OnBootSec=2min
