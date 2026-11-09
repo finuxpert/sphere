@@ -528,29 +528,70 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   // full workload classification, correlation and WP error analysis.
   React.useEffect(()=>{
     const controller=new AbortController()
+    let retryTimer=null
     setHostPreview(null)
     setHostPreviewError('')
-    const previewDeadline=AbortSignal.timeout(20_000)
-    fetch(API+'/evaluation/workloads/monthly/hosts?'+reportParams(), {
-      cache:'no-store', signal:AbortSignal.any([controller.signal,previewDeadline]),
+    const waitBeforeHostRetry=()=>new Promise(resolve=>{
+      if(controller.signal.aborted){resolve();return}
+      const done=()=>{
+        if(retryTimer!==null)window.clearTimeout(retryTimer)
+        retryTimer=null
+        controller.signal.removeEventListener('abort',done)
+        resolve()
+      }
+      retryTimer=window.setTimeout(done,1500)
+      controller.signal.addEventListener('abort',done,{once:true})
     })
-      .then(async response=>{
-        if(!response.ok)throw Error('Reporting period host summary unavailable (HTTP '+response.status+')')
-        return response.json()
-      })
-      .then(payload=>{
-        if(controller.signal.aborted)return
-        if(!matchesScope(payload)||payload.preview_only!==true||
-            !payload.monthly_pressure||!payload.quality)
-          throw Error('Reporting period host summary is not verified')
-        setHostPreview(payload)
-      })
-      .catch(failure=>{
-        if(!controller.signal.aborted)setHostPreviewError(previewDeadline.aborted
-          ? 'Host summary exceeded 20 seconds; check API and database'
-          : failure.message||'Reporting period host summary unavailable')
-      })
-    return ()=>controller.abort()
+    const loadHostPreview=async()=>{
+      // A cold request may exceed the 20s browser deadline while the server
+      // warms its DB cache. Retry one transient failure, not invalid data.
+      for(let attempt=0;attempt<2&&!controller.signal.aborted;attempt++){
+        const previewDeadline=AbortSignal.timeout(20_000)
+        const started=window.performance.now()
+        try{
+          const response=await fetch(API+'/evaluation/workloads/monthly/hosts?'+reportParams(),{
+            cache:'no-store',signal:AbortSignal.any([controller.signal,previewDeadline]),
+          })
+          if(!response.ok){
+            const failure=Error('Reporting period host summary unavailable (HTTP '+response.status+')')
+            failure.retryable=[502,503,504].includes(response.status)
+            throw failure
+          }
+          const payload=await response.json()
+          if(controller.signal.aborted)return
+          if(previewDeadline.aborted)throw Error('Host summary request deadline exceeded')
+          if(!matchesScope(payload)||payload.preview_only!==true||
+              !payload.monthly_pressure||!payload.quality)
+            throw Error('Reporting period host summary is not verified')
+          const elapsedMs=Math.round(window.performance.now()-started)
+          if(attempt>0||elapsedMs>=5000)
+            console.info('SPHERE_HOST_PREVIEW', {attempt:attempt+1,duration_ms:elapsedMs})
+          setHostPreview(payload)
+          return
+        }catch(failure){
+          if(controller.signal.aborted)return
+          const timedOut=previewDeadline.aborted
+          const retryable=timedOut||failure instanceof TypeError||failure.retryable===true
+          if(retryable&&attempt===0){
+            console.warn('SPHERE_HOST_PREVIEW_RETRY',{
+              attempt:attempt+1,duration_ms:Math.round(window.performance.now()-started),
+              reason:timedOut?'timeout':failure.message,
+            })
+            await waitBeforeHostRetry()
+            continue
+          }
+          setHostPreviewError(timedOut
+            ? 'Host summary exceeded 20 seconds; check API and database'
+            : failure.message||'Reporting period host summary unavailable')
+          return
+        }
+      }
+    }
+    loadHostPreview()
+    return ()=>{
+      controller.abort()
+      if(retryTimer!==null)window.clearTimeout(retryTimer)
+    }
   },[reportParams,matchesScope,hostPreviewRetry])
   // A boolean dependency avoids re-requesting expensive evidence just because
   // the user switches between Summary, Detailed Evidence and PDF Report.
