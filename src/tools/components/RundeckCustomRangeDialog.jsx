@@ -1,5 +1,6 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
+import { validateCustomRange } from './rundeckCustomRange.js'
 
 /** Small modal instead of a floating form that overlaps charts and controls. */
 export default function RundeckCustomRangeDialog({
@@ -9,6 +10,8 @@ export default function RundeckCustomRangeDialog({
   const closeRef = React.useRef(onClose)
   closeRef.current = onClose
   const descriptionId = React.useId()
+  const inputError = validateCustomRange(start, end).error
+  const visibleError = error || inputError
 
   React.useEffect(() => {
     const focusedBefore = document.activeElement
@@ -57,10 +60,11 @@ export default function RundeckCustomRangeDialog({
             value={start} onChange={event => onStart(event.target.value)} /></label>
           <label>To · WIB<input type="datetime-local" step="60" required
             value={end} onChange={event => onEnd(event.target.value)} /></label>
-          {error && <p role="alert" className="rundeckCustomRangeError">{error}</p>}
+          <small className="rundeckCustomRangePending">Up to 180 days (6 months) · automatic chart interval: raw / 1H / 6H / 1D.</small>
+          {visibleError && <p role="alert" className="rundeckCustomRangeError">{visibleError}</p>}
           <div className="rundeckCustomRangeDialogActions">
             <button type="button" onClick={onClose}>Cancel</button>
-            <button type="submit">Apply range</button>
+            <button type="submit" disabled={Boolean(inputError)}>Apply range</button>
           </div>
         </form>
         <footer>Only saved observations are shown. A missing sample is not zero or downtime.</footer>
