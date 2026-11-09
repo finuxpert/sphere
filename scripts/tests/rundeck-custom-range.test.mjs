@@ -20,15 +20,15 @@ test('custom range rejects future, invalid, reversed, too long and too old windo
   const now=Date.parse('2026-10-15T09:00:00Z')
   const cases=[
     ['2026-10-15T12:52','2026-10-15T12:49'],
-    ['2026-04-15T12:49','2026-10-15T12:52'],
-    ['2026-01-01T12:49','2026-01-01T12:52'],
+    ['2025-10-14T12:49','2026-10-15T12:52'],
+    ['2025-10-01T12:49','2025-10-01T12:52'],
     ['2026-10-15T12:49','2026-10-15T20:52'],
     ['2026-02-30T12:49','2026-02-30T12:52'],
   ]
   for(const [from,to] of cases)assert.ok(validateCustomRange(from,to,now).error,from+' '+to)
 })
 
-test('custom 180-day window and preset-prefilled dates retain inclusive WIB minute semantics', () => {
+test('custom 365-day window and preset-prefilled dates retain inclusive WIB minute semantics', () => {
   const now=Date.parse('2026-10-15T09:00:00Z')
   const thirtyDays=initialCustomRangeInputs('30d',null,now)
   const validated=validateCustomRange(thirtyDays.start,thirtyDays.end,now)
@@ -43,6 +43,11 @@ test('custom 180-day window and preset-prefilled dates retain inclusive WIB minu
   const sixValidated=validateCustomRange(sixMonths.start,sixMonths.end,now)
   assert.equal(sixValidated.error,undefined)
   assert.equal(sixValidated.bucket,'1d')
+  const year=initialCustomRangeInputs('365d',null,now)
+  const yearValidated=validateCustomRange(year.start,year.end,now)
+  assert.equal(yearValidated.error,undefined)
+  assert.equal(yearValidated.bucket,'1d')
+  assert.equal(Date.parse(yearValidated.to_at)-Date.parse(yearValidated.from_at),365*24*60*60*1000)
   assert.equal(customBucketForDuration(24*60*60*1000),'raw')
   assert.equal(customBucketForDuration(7*24*60*60*1000),'1h')
 })
