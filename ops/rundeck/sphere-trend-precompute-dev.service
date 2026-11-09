@@ -1,0 +1,34 @@
+[Unit]
+Description=SPHERE DEV historical trend background precompute (90D/180D)
+After=network-online.target postgresql.service
+Wants=network-online.target
+ConditionPathExists=/etc/sphere/rundeck-dev.env
+
+[Service]
+Type=oneshot
+User=sphere
+Group=sphere
+WorkingDirectory=/opt/sphere-rundeck-dev/current
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=SPHERE_TREND_SNAPSHOT_DEV=true
+Environment=SPHERE_TREND_SNAPSHOT_WORKER=true
+Environment="PGOPTIONS=-c default_transaction_read_only=on"
+Environment=SPHERE_TREND_SNAPSHOT_DIR=/var/lib/sphere/trend-snapshots-dev
+EnvironmentFile=/etc/sphere/rundeck-dev.env
+ExecStart=/opt/sphere-rundeck-dev/venv/bin/python -m backend.rundeck_trend_precompute
+StateDirectory=sphere/trend-snapshots-dev
+StateDirectoryMode=0750
+TimeoutStartSec=300
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/sphere/trend-snapshots-dev
+IPAddressDeny=any
+IPAddressAllow=127.0.0.0/8
+IPAddressAllow=::1/128
+IPAddressAllow=10.14.55.205/32
