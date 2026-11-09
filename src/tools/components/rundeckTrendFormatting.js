@@ -14,10 +14,16 @@ const BUCKET_INTERVAL_MS = {
   '1d': 24 * 60 * 60 * 1000,
 }
 
-export function formatTrendAxis(value, range) {
+export function formatTrendAxis(value, range, bucket = 'raw') {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
   const base = { timeZone: 'Asia/Jakarta', hour12: false }
+  if (range === 'custom') {
+    const day = new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
+    if (bucket === '1d' || bucket === '6h') return day
+    const hour = new Intl.DateTimeFormat('id-ID', { ...base, hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
+    return day + '\n' + hour
+  }
   if (['7d', '30d', 'last_month', '90d', '180d'].includes(range)) {
     return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
   }
