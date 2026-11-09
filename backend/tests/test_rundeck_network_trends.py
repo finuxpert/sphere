@@ -70,6 +70,15 @@ class AppNetworkTrendTests(unittest.TestCase):
         self.assertEqual(result["observed_hosts"], [])
         self.assertEqual(result["expected_hosts"], ["APP1", "APP2", "APP3", "APP4", "APP5"])
 
+    def test_custom_long_window_uses_daily_buckets_not_unbounded_raw_points(self):
+        with patch("backend.rundeck_network_trends.get_engine", return_value=self.engine):
+            result = app_network_trend(self.end - timedelta(days=45), "custom", "auto", "network_rx", self.end)
+        self.assertEqual(result["bucket"], "1d")
+        sql, params = self.execute.call_args.args
+        self.assertIn("date_bin(", str(sql))
+        self.assertIn("s.collected_at < :until", str(sql))
+        self.assertEqual(params["until"], self.end)
+
     def test_gap_query_materializes_ready_collections_without_global_planner_tuning(self):
         with patch("backend.rundeck_network_trends.get_engine", return_value=self.engine):
             app_network_trend(self.start, "180d", "auto", "network_rx")
