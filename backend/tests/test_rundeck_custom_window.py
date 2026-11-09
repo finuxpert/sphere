@@ -25,7 +25,7 @@ class CustomTimeRangeTests(unittest.TestCase):
         cases = [
             (base, base),
             (base + timedelta(minutes=1), base),
-            (base, base + timedelta(hours=25)),
+            (self.now - timedelta(days=181), self.now),
             (self.now - timedelta(days=91), self.now - timedelta(days=90)),
             (self.now, self.now + timedelta(hours=1)),
             (base.replace(tzinfo=None), base + timedelta(minutes=1)),
@@ -34,6 +34,29 @@ class CustomTimeRangeTests(unittest.TestCase):
             with self.subTest(start=start, end=end):
                 with self.assertRaises(ValueError):
                     validate_custom_window(start, end, self.now)
+
+    def test_custom_bucket_resolution_keeps_raw_for_incidents_and_aggregates_long_windows(self):
+        start = self.now - timedelta(days=45)
+        self.assertEqual(resolve_bucket("custom", "auto", since=start, until=self.now)[0], "1d")
+        self.assertEqual(resolve_bucket("custom", "auto", since=self.now - timedelta(days=30), until=self.now)[0], "6h")
+        self.assertEqual(resolve_bucket("custom", "auto", since=self.now - timedelta(days=7), until=self.now)[0], "1h")
+        self.assertEqual(resolve_bucket("custom", "auto", since=self.now - timedelta(hours=24), until=self.now)[0], "raw")
+        with self.assertRaises(ValueError):
+            resolve_bucket("custom", "1h", since=start, until=self.now)
+
+    def test_long_custom_aggregate_respects_exact_sample_window(self):
+        engine = MagicMock()
+        engine.connect.return_value.__enter__.return_value.execute.return_value = []
+        start = self.now - timedelta(days=45)
+        with patch("backend.rundeck_trends.get_engine", return_value=engine):
+            result = trend_series(start, "custom", "auto", "cpu", until=self.now)
+        sql, params = engine.connect.return_value.__enter__.return_value.execute.call_args.args
+        self.assertIn("date_bin(", str(sql))
+        self.assertIn("h.collected_at,", str(sql))
+        self.assertIn("WHERE h.collected_at >= :since", str(sql))
+        self.assertIn("h.collected_at < :until", str(sql))
+        self.assertEqual(params["until"], self.now)
+        self.assertEqual(result["bucket"], "1d")
 
     def test_custom_query_uses_exact_host_sample_timestamps_not_collection_start(self):
         engine = MagicMock()
