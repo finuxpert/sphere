@@ -81,6 +81,27 @@ class TrendSnapshotDevTests(unittest.TestCase):
                              else loaded["series"]["cpu"]["items"][0]["host"], "APP1")
         self.assertFalse(list(self.path.glob("*.tmp")))
 
+    def test_year_snapshot_is_bounded_and_skips_sql_when_fresh(self):
+        self.assertIn(("365d", "cpu,ram,wp"), worker.SCOPES)
+        self.assertIn(("365d", "network_rx"), worker.SCOPES)
+        for metric in ("cpu,ram,wp", "network_rx", "network_tx"):
+            payload = sample(metric, range_key="365d")
+            file = snapshots.save("365d", metric, payload)
+            self.assertTrue(file.is_file())
+            with patch.dict(os.environ, {"SPHERE_TREND_SNAPSHOT_WORKER": "false"}):
+                stored = snapshots.load("365d", metric)
+            self.assertIsNotNone(stored)
+            self.assertEqual(stored[1]["status"], "FRESH")
+        payload = sample("network_rx", range_key="365d")
+        with patch.dict(os.environ, {"SPHERE_TREND_SNAPSHOT_WORKER": "false"}), \
+             patch.object(api, "app_network_trend", side_effect=AssertionError("SQL must be skipped")), \
+             patch.object(snapshots, "load", return_value=(payload, {"status": "FRESH"})):
+            response = api.history_trend(
+                range_key="365d", bucket="auto", metric="network_rx",
+                from_at=None, to_at=None,
+            )
+        self.assertEqual(response["snapshot"]["status"], "FRESH")
+
     def test_snapshot_path_scope_is_strict(self):
         for range_key, metric_key in [
             ("custom", "network_rx"), ("../../", "network_rx"),
