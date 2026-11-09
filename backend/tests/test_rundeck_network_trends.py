@@ -70,6 +70,20 @@ class AppNetworkTrendTests(unittest.TestCase):
         self.assertEqual(result["observed_hosts"], [])
         self.assertEqual(result["expected_hosts"], ["APP1", "APP2", "APP3", "APP4", "APP5"])
 
+    def test_gap_query_materializes_ready_collections_without_global_planner_tuning(self):
+        with patch("backend.rundeck_network_trends.get_engine", return_value=self.engine):
+            app_network_trend(self.start, "180d", "auto", "network_rx")
+        self.assertEqual(self.execute.call_count, 2)
+        gap_sql, gap_params = self.execute.call_args_list[0].args
+        gap_sql = str(gap_sql)
+        self.assertIn("WITH ready_collections AS MATERIALIZED", gap_sql)
+        self.assertIn("SELECT collection_id, execution_id", gap_sql)
+        self.assertIn("JOIN ready_collections c ON c.collection_id = s.collection_id", gap_sql)
+        self.assertIn("GROUP BY c.execution_id ORDER BY observed_at", gap_sql)
+        self.assertIn("s.collected_at >= :since", gap_sql)
+        self.assertNotIn("enable_nestloop", gap_sql)
+        self.assertEqual(gap_params["since"], self.start)
+
     def test_tx_is_distinct_and_window_does_not_use_sap_metrics(self):
         with patch("backend.rundeck_network_trends.get_engine", return_value=self.engine):
             result = app_network_trend(self.start, "3h", "auto", "network_tx")
