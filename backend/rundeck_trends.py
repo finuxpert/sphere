@@ -24,6 +24,7 @@ RANGES = {
     "30d": {"hours": 24 * 30, "auto_bucket": "6h"},
     "90d": {"hours": 24 * 90, "auto_bucket": "1d"},
     "180d": {"hours": 24 * 180, "auto_bucket": "1d"},
+    "365d": {"hours": 24 * 365, "auto_bucket": "1d"},
     "last_month": {"hours": None, "auto_bucket": "1d"},
 }
 
@@ -97,10 +98,10 @@ def validate_custom_window(start: datetime, end: datetime, now: datetime | None 
     now = now or datetime.now(timezone.utc)
     start, end, now = (value.astimezone(timezone.utc) for value in (start, end, now))
     duration = end - start
-    if not timedelta(minutes=1) <= duration <= timedelta(days=180):
-        raise ValueError("Custom window must span between 1 minute and 180 days")
-    if start < now - timedelta(days=180):
-        raise ValueError("Custom start cannot be older than 180 days")
+    if not timedelta(minutes=1) <= duration <= timedelta(days=365):
+        raise ValueError("Custom window must span between 1 minute and 365 days")
+    if start < now - timedelta(days=365):
+        raise ValueError("Custom start cannot be older than 365 days")
     if end > now + timedelta(minutes=1):
         raise ValueError("Custom range cannot extend into the future")
     return start, end
@@ -144,8 +145,8 @@ def resolve_bucket(
                 resolved = "6h"
             else:
                 resolved = "1d"
-    if range_key in {"90d", "180d", "last_month"} and resolved != "1d":
-        raise ValueError("Historical ranges 3M, 6M and Last Month require daily buckets")
+    if range_key in {"90d", "180d", "365d", "last_month"} and resolved != "1d":
+        raise ValueError("Historical ranges 3M, 6M, 1Y and Last Month require daily buckets")
     try:
         return resolved, BUCKETS[resolved]
     except KeyError as error:
