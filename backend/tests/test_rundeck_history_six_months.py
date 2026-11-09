@@ -25,7 +25,7 @@ class HistoricalRangeTests(unittest.TestCase):
         self.assertEqual(end.isoformat(), "2026-12-31T17:00:00+00:00")
 
     def test_long_term_queries_are_daily_only(self):
-        for key in ("last_month", "90d", "180d"):
+        for key in ("last_month", "90d", "180d", "365d"):
             self.assertEqual(resolve_bucket(key, "auto"), ("1d", "1 day"))
             self.assertEqual(resolve_interval_seconds(key, "auto"), 86400)
             for bucket in ("10m", "30m", "1h", "6h"):
@@ -33,6 +33,7 @@ class HistoricalRangeTests(unittest.TestCase):
                     resolve_bucket(key, bucket)
         self.assertEqual(resolve_range("90d")["hours"], 2160)
         self.assertEqual(resolve_range("180d")["hours"], 4320)
+        self.assertEqual(resolve_range("365d")["hours"], 8760)
 
     def test_custom_24_hour_investigation_remains_raw(self):
         self.assertEqual(resolve_bucket("custom", "auto"), ("raw", "raw"))
