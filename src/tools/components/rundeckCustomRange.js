@@ -2,10 +2,10 @@
  * End minute is inclusive in the UI; API end is one minute later, exclusive.
  */
 const MINUTE = 60_000
-const MAX_DURATION = 180 * 24 * 60 * MINUTE
+const MAX_DURATION = 365 * 24 * 60 * MINUTE
 const HISTORY = MAX_DURATION
 const DAY = 24 * 60 * MINUTE
-const RANGE_MINUTES = { '30m': 30, '1h': 60, '3h': 180, '6h': 360, '24h': 1440, '7d': 10080, '30d': 43200, '90d': 129600, '180d': 259200 }
+const RANGE_MINUTES = { '30m': 30, '1h': 60, '3h': 180, '6h': 360, '24h': 1440, '7d': 10080, '30d': 43200, '90d': 129600, '180d': 259200, '365d': 525600 }
 const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
 
 export function wibMinuteInput(value) {
@@ -60,8 +60,8 @@ export function validateCustomRange(startInput, endInput, now = Date.now()) {
   }
   const until = selectedEnd + MINUTE
   if (until - from < MINUTE) return { error: 'Waktu selesai harus sama atau setelah waktu mulai.' }
-  if (until - from > MAX_DURATION) return { error: 'Maksimal rentang custom adalah 180 hari (6 bulan).' }
-  if (from < now - HISTORY) return { error: 'Tanggal mulai maksimal 180 hari sebelum sekarang; data mengikuti retensi yang tersedia.' }
+  if (until - from > MAX_DURATION) return { error: 'Maksimal rentang custom adalah 365 hari (1 tahun).' }
+  if (from < now - HISTORY) return { error: 'Tanggal mulai maksimal 365 hari sebelum sekarang; data mengikuti retensi yang tersedia.' }
   if (until > now + MINUTE) return { error: 'Waktu selesai tidak boleh melebihi waktu sekarang.' }
   return {
     from_at: new Date(from).toISOString(),
