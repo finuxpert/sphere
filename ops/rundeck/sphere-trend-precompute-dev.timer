@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh SPHERE DEV 90D/180D historical trends every 5 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=30s
+RandomizedDelaySec=15s
+Unit=sphere-trend-precompute-dev.service
+
+[Install]
+WantedBy=timers.target
