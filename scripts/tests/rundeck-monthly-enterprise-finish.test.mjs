@@ -94,6 +94,26 @@ test('Monthly Summary prioritizes host preview before full workload evaluation',
 })
 
 
+
+test('Host summary retries one transient cold request and preserves scope validation',()=>{
+  const start=ui.indexOf('const loadHostPreview=async()=>')
+  const end=ui.indexOf('},[reportParams,matchesScope,hostPreviewRetry])',start)
+  assert.ok(start>0&&end>start,'host-only request effect must exist')
+  const host=ui.slice(start,end)
+  assert.match(host,/for\(let attempt=0;attempt<2&&!controller\.signal\.aborted;attempt\+\+\)/)
+  assert.match(host,/const previewDeadline=AbortSignal\.timeout\(20_000\)/)
+  assert.match(host,/const retryable=timedOut\|\|failure instanceof TypeError\|\|failure\.retryable===true/)
+  assert.match(host,/if\(retryable&&attempt===0\)/)
+  assert.match(host,/await waitBeforeHostRetry\(\)/)
+  assert.match(host,/!matchesScope\(payload\)\|\|payload\.preview_only!==true/)
+  assert.match(host,/setHostPreviewError\(timedOut/)
+  assert.match(host,/setHostPreview\(payload\)/)
+  assert.match(ui,/retryTimer=window\.setTimeout\(done,1500\)/)
+  assert.match(ui,/controller\.signal\.removeEventListener\('abort',done\)/)
+  assert.match(ui,/failure\.retryable=\[502,503,504\]\.includes\(response\.status\)/)
+})
+
+
 test('weekly and monthly report show verified host peaks independently of storage and workload evaluation',()=>{
   const modelSource=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEvidence.js',import.meta.url),'utf8')
   assert.match(modelSource,/function savedPeriodPeak\(pressure,metric,month,weekStart,customStart=null,customEnd=null\)/)
