@@ -15,7 +15,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { formatWib, numberText, shortHost, workloadTypeLabel } from './sapUiFormat.js'
 import { hostResourceState } from './rundeckStatusSemantics.js'
 import { resolveOverviewTrendMetrics } from './rundeckTrendPreferences.js'
-import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
+import { wibMinuteInput, validateCustomRange, initialCustomRangeInputs, customRangeSearch, customRangeCaption } from './rundeckCustomRange.js'
 import RundeckCustomWindowDetails from './RundeckCustomWindowDetails.jsx'
 import RundeckCustomRangeDialog from './RundeckCustomRangeDialog.jsx'
 import { savedVortexPeak } from './rundeckTrendAmbientData.js'
@@ -427,7 +427,9 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
   const [windowLoading, setWindowLoading] = React.useState(false)
   const [windowModal, setWindowModal] = React.useState(false)
   const [bucket, setBucket] = React.useState(BUCKETS.some(([key]) => key === saved.bucket) ? saved.bucket : 'auto')
-  const longHistoricalRange = LONG_RANGES.has(range)
+  const customDuration = customWindow ? Date.parse(customWindow.to_at) - Date.parse(customWindow.from_at) : 0
+  const detailedCustomWindow = customDuration > 0 && customDuration <= 24 * 60 * 60 * 1000
+  const longHistoricalRange = LONG_RANGES.has(range) || (range === 'custom' && customDuration > 30 * 24 * 60 * 60 * 1000)
   const [fitObserved, setFitObserved] = React.useState(false)
   const [serverMetric1, setServerMetric1] = React.useState(initialServerMetrics.first)
   const [serverMetric2, setServerMetric2] = React.useState(initialServerMetrics.second)
@@ -494,10 +496,10 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     }
     if (range === 'custom' && !customWindow) return Promise.resolve()
     const category = AVAILABILITY_CATEGORIES[metric]
-    if (category && LONG_RANGES.has(range)) {
+    if (category && (LONG_RANGES.has(range) || (range === 'custom' && customWindow && Date.parse(customWindow.to_at) - Date.parse(customWindow.from_at) > 30 * 24 * 60 * 60 * 1000))) {
       setter(null)
       setLoading(false)
-      setError('This SAP availability source has no verified daily summary for ' + rangeLabel(range) + '. Use 30D or a shorter period.')
+      setError('This SAP availability source has no verified daily summary beyond 30 days. Use 30D or a shorter custom period.')
       return Promise.resolve()
     }
     const queriedMetric = metric === 'network' ? 'network_' + direction : metric
@@ -622,6 +624,12 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
 
   React.useEffect(() => {
     if (range !== 'custom' || !customWindow || !databaseEnabled) return undefined
+    if (!detailedCustomWindow) {
+      setWindowLoading(false)
+      setWindowError('')
+      setWindowEvidence(null)
+      return undefined
+    }
     const controller = new AbortController()
     setWindowLoading(true)
     setWindowError('')
@@ -631,7 +639,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       .catch(failure => { if (!controller.signal.aborted && failure.name !== 'AbortError') setWindowError(failure.message || 'Window evidence unavailable') })
       .finally(() => { if (!controller.signal.aborted) setWindowLoading(false) })
     return () => controller.abort()
-  }, [customWindow, databaseEnabled, range, refreshToken])
+  }, [customWindow, databaseEnabled, range, refreshToken, detailedCustomWindow])
 
   const selectPoint = React.useCallback((point, sourceTrend) => {
     // Network is sourced from Infrastructure snapshots; do not drill into the SAP
@@ -818,7 +826,15 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           </select>
           <button type="button" className={'rundeckCustomRangeToggle' + (range === 'custom' ? ' is-active' : '')}
             aria-pressed={range === 'custom'} aria-expanded={customOpen}
-            onClick={() => { setCustomError(''); setCustomOpen(value => !value) }}
+            onClick={() => {
+              setCustomError('')
+              if (!customOpen) {
+                const initial = initialCustomRangeInputs(range, customWindow)
+                setCustomStart(initial.start)
+                setCustomEnd(initial.end)
+              }
+              setCustomOpen(value => !value)
+            }}
             aria-haspopup="dialog">Custom</button>
           {longHistoricalRange && observedWindow && <span className="rundeckObservedWindowControl" role="group" aria-label="Historical display window">
             <button type="button" aria-pressed={Boolean(displayWindow)}
@@ -832,7 +848,7 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       <div className="rundeckTrendSharedGroup rundeckTrendControlBucket" role="group" aria-label="Bucket interval">
         <span>Interval</span>
         {range === 'custom'
-          ? <strong className="rundeckCustomRangeRaw" title="Custom range uses unaggregated observations">Raw · observed</strong>
+          ? <strong className="rundeckCustomRangeRaw" title="Automatic resolution: raw up to 24h, 1H up to 7d, 6H up to 30d, 1D beyond 30d">Auto · {(serverTrend1?.range === 'custom' ? serverTrend1.bucket : customWindow?.bucket || 'auto').toUpperCase()}</strong>
           : <select className="rundeckTrendBucketSelect form-select form-select-sm" aria-label="Bucket interval"
               title={bucket === 'auto' && serverTrend1?.bucket
                 ? `Automatic bucket · source resolved ${String(serverTrend1.bucket).toUpperCase()}`
@@ -871,8 +887,8 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
     {range === 'custom' && customWindow && <div className="rundeckCustomRangeSummary" role="status">
       <strong>Custom · {customRangeCaption(customWindow)}</strong>
       <span>{windowLoading ? 'Loading saved observations…' : windowError ? windowError :
-        windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
-      <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>
+        !detailedCustomWindow ? 'Aggregated saved observations · raw window details available up to 24h' : windowEvidence ? `${windowEvidence.host_samples.length}${windowEvidence.limited?.host_samples ? '+' : ''} APP samples · ${windowEvidence.workloads.length}${windowEvidence.limited?.workloads ? '+' : ''} workload observations · ${windowEvidence.alerts.length}${windowEvidence.limited?.alerts ? '+' : ''} alerts` : 'Window evidence unavailable'}</span>
+      {detailedCustomWindow && <button type="button" disabled={windowLoading || !windowEvidence} onClick={() => setWindowModal(true)}>Window details</button>}
       <small>Jobs &amp; Programs Current uses latest collection, not this historical window</small>
     </div>}
     {serverTrend1?.items?.length > 0 && !serverTrend1.network_source && serverTrend1.metric !== 'availability' && range !== 'custom' && <div className="rundeckSharedCollectionCoverage" aria-label="Shared server collection coverage">
