@@ -125,11 +125,20 @@ def app_network_trend(
 
     # Independent Infrastructure gap evidence uses the raw collection
     # timestamps rather than bucketed Performance history or bucket centres.
+    # Materialize READY collection keys once. The former direct join led the
+    # planner to run ~61k individual PK lookups on 180d Network history.
+    # DEV EXPLAIN ANALYZE: ~5.27s nested loop -> ~0.49s hash join, without
+    # session-wide planner settings. Keep the exact gap evidence contract.
     gap_sql = f"""
+        WITH ready_collections AS MATERIALIZED (
+          SELECT collection_id, execution_id
+          FROM rundeck_infra_collections
+          WHERE status = 'READY'
+        )
         SELECT c.execution_id, MAX(s.collected_at) AS observed_at
         FROM rundeck_infra_samples s
-        JOIN rundeck_infra_collections c ON c.collection_id = s.collection_id
-        WHERE s.kind = 'network' AND c.status = 'READY'
+        JOIN ready_collections c ON c.collection_id = s.collection_id
+        WHERE s.kind = 'network'
           AND upper(split_part(s.host,'.',1)) ~ '{HOST_PATTERN}'
           AND s.collected_at >= :since
           {bounds}
