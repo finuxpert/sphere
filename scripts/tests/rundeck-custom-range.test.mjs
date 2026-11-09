@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { wibMinuteInput, validateCustomRange, customRangeSearch, customRangeCaption } from '../../src/tools/components/rundeckCustomRange.js'
+import { wibMinuteInput, validateCustomRange, initialCustomRangeInputs, customBucketForDuration, customRangeSearch, customRangeCaption } from '../../src/tools/components/rundeckCustomRange.js'
 import { readFileSync } from 'node:fs'
 
 test('WIB minute picker ignores the browser timezone', () => {
@@ -20,12 +20,31 @@ test('custom range rejects future, invalid, reversed, too long and too old windo
   const now=Date.parse('2026-10-15T09:00:00Z')
   const cases=[
     ['2026-10-15T12:52','2026-10-15T12:49'],
-    ['2026-10-15T12:49','2026-10-17T12:52'],
+    ['2026-04-15T12:49','2026-10-15T12:52'],
     ['2026-01-01T12:49','2026-01-01T12:52'],
     ['2026-10-15T12:49','2026-10-15T20:52'],
     ['2026-02-30T12:49','2026-02-30T12:52'],
   ]
   for(const [from,to] of cases)assert.ok(validateCustomRange(from,to,now).error,from+' '+to)
+})
+
+test('custom 180-day window and preset-prefilled dates retain inclusive WIB minute semantics', () => {
+  const now=Date.parse('2026-10-15T09:00:00Z')
+  const thirtyDays=initialCustomRangeInputs('30d',null,now)
+  const validated=validateCustomRange(thirtyDays.start,thirtyDays.end,now)
+  assert.equal(validated.error,undefined)
+  assert.equal(validated.bucket,'6h')
+  assert.equal(Date.parse(validated.to_at)-Date.parse(validated.from_at),30*24*60*60*1000)
+  assert.equal(initialCustomRangeInputs('custom',validated,now).start,thirtyDays.start)
+  const lastMonth=initialCustomRangeInputs('last_month',null,now)
+  assert.equal(lastMonth.start,'2026-09-01T00:00')
+  assert.equal(lastMonth.end,'2026-09-30T23:59')
+  const sixMonths=initialCustomRangeInputs('180d',null,now)
+  const sixValidated=validateCustomRange(sixMonths.start,sixMonths.end,now)
+  assert.equal(sixValidated.error,undefined)
+  assert.equal(sixValidated.bucket,'1d')
+  assert.equal(customBucketForDuration(24*60*60*1000),'raw')
+  assert.equal(customBucketForDuration(7*24*60*60*1000),'1h')
 })
 
 test('custom API window and UI are wired without defaulting to latest collection', () => {
@@ -38,6 +57,8 @@ test('custom API window and UI are wired without defaulting to latest collection
   assert.match(dialog,/onSubmit=\{onApply\}/)
   assert.match(dialog,/new range not applied/)
   assert.match(dialog,/aria-modal="true"/)
+  assert.match(dialog,/disabled=\{Boolean\(inputError\)\}/)
+  assert.match(trend,/initialCustomRangeInputs\(range, customWindow\)/)
   assert.doesNotMatch(trend,/className="rundeckCustomRangeForm"/)
   assert.match(trend,/Custom<\/button>/)
   assert.match(modal,/No stored APP samples/)
