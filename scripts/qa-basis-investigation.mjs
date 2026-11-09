@@ -738,7 +738,7 @@ const checks = [
   ['Availability exposes coverage start and observed uptime', files.serverTrend.includes('AvailabilityCoverageBand') && files.serverTrend.includes('AvailabilityObservationSummary') && files.availabilityBackend.includes('coverage_limited') && files.availabilityBackend.includes('"uptime": uptime')],
   ['Long range trend axes use WIB date labels',
     files.serverTrend.includes('formatTrendAxis') &&
-    files.trendFormatting.includes("['7d', '30d', 'last_month', '90d', '180d'].includes(range)") &&
+    files.trendFormatting.includes("['7d', '30d', 'last_month', '90d', '180d', '365d'].includes(range)") &&
     files.trendFormatting.includes("range === '24h'") &&
     files.trendFormatting.includes("timeZone: 'Asia/Jakarta'") &&
     files.serverTrend.includes("showMinLabel: true") &&
