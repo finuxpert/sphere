@@ -24,7 +24,7 @@ export function formatTrendAxis(value, range, bucket = 'raw') {
     const hour = new Intl.DateTimeFormat('id-ID', { ...base, hour: '2-digit', minute: '2-digit' }).format(date).replace(/(\d{1,2})\.(\d{2})/g, '$1:$2')
     return day + '\n' + hour
   }
-  if (['7d', '30d', 'last_month', '90d', '180d'].includes(range)) {
+  if (['7d', '30d', 'last_month', '90d', '180d', '365d'].includes(range)) {
     return new Intl.DateTimeFormat('id-ID', { ...base, day: '2-digit', month: 'short' }).format(date)
   }
   if (range === '24h') {
@@ -54,7 +54,7 @@ export function formatSavedBucketWindow(trend, bucket) {
 }
 
 export function trendAxisSplitNumber(range) {
-  if (['30d', 'last_month', '90d', '180d'].includes(range)) return 6
+  if (['30d', 'last_month', '90d', '180d', '365d'].includes(range)) return 6
   if (range === '7d') return 6
   if (range === '24h') return 4
   if (range === '6h') return 6
