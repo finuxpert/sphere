@@ -97,10 +97,10 @@ def validate_custom_window(start: datetime, end: datetime, now: datetime | None 
     now = now or datetime.now(timezone.utc)
     start, end, now = (value.astimezone(timezone.utc) for value in (start, end, now))
     duration = end - start
-    if not timedelta(minutes=1) <= duration <= timedelta(hours=24):
-        raise ValueError("Custom window must span between 1 minute and 24 hours")
-    if start < now - timedelta(days=90):
-        raise ValueError("Custom range exceeds 90-day retention")
+    if not timedelta(minutes=1) <= duration <= timedelta(days=180):
+        raise ValueError("Custom window must span between 1 minute and 180 days")
+    if start < now - timedelta(days=180):
+        raise ValueError("Custom start cannot be older than 180 days")
     if end > now + timedelta(minutes=1):
         raise ValueError("Custom range cannot extend into the future")
     return start, end
@@ -125,9 +125,25 @@ def resolve_range(range_key: str) -> dict:
         raise ValueError(f"Unsupported range: {range_key}") from error
 
 
-def resolve_bucket(range_key: str, bucket_key: str) -> tuple[str, str]:
+def resolve_bucket(
+    range_key: str, bucket_key: str,
+    *, since: datetime | None = None, until: datetime | None = None,
+) -> tuple[str, str]:
     range_config = resolve_range(range_key)
     resolved = range_config["auto_bucket"] if bucket_key == "auto" else bucket_key
+    if range_key == "custom":
+        if bucket_key != "auto":
+            raise ValueError("Custom trend requires bucket=auto")
+        if since is not None and until is not None:
+            duration = until - since
+            if duration <= timedelta(hours=24):
+                resolved = "raw"
+            elif duration <= timedelta(days=7):
+                resolved = "1h"
+            elif duration <= timedelta(days=30):
+                resolved = "6h"
+            else:
+                resolved = "1d"
     if range_key in {"90d", "180d", "last_month"} and resolved != "1d":
         raise ValueError("Historical ranges 3M, 6M and Last Month require daily buckets")
     try:
@@ -173,9 +189,9 @@ def trend_series(
         raise RuntimeError("Database history is not enabled")
 
     metric = resolve_metric(metric_key)
-    resolved_bucket, stride = resolve_bucket(range_key, bucket_key)
-    if range_key == "custom" and (resolved_bucket != "raw" or until is None):
-        raise ValueError("Custom range requires raw samples and an end time")
+    resolved_bucket, stride = resolve_bucket(range_key, bucket_key, since=since, until=until)
+    if range_key == "custom" and until is None:
+        raise ValueError("Custom range requires an end time")
     column = metric["column"]
     sample_time = "h.collected_at" if range_key == "custom" else "COALESCE(c.started_at, c.finished_at, h.collected_at)"
     end_clause = f"AND {sample_time} < :until" if until is not None else ""
@@ -233,7 +249,7 @@ def trend_series(
                 SELECT
                     date_bin(
                         CAST(:stride AS interval),
-                        COALESCE(c.started_at, c.finished_at, h.collected_at),
+                        {sample_time},
                         CAST(:origin AS timestamptz)
                     ) AS bucket,
                     h.collection_id,
@@ -327,9 +343,9 @@ def trend_series_bundle(
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Database history is not enabled")
-    resolved_bucket, stride = resolve_bucket(range_key, bucket_key)
-    if range_key == "custom" and (resolved_bucket != "raw" or until is None):
-        raise ValueError("Custom range requires raw samples and an end time")
+    resolved_bucket, stride = resolve_bucket(range_key, bucket_key, since=since, until=until)
+    if range_key == "custom" and until is None:
+        raise ValueError("Custom range requires an end time")
     sample_time = "h.collected_at" if range_key == "custom" else "COALESCE(c.started_at, c.finished_at, h.collected_at)"
     end_clause = f"AND {sample_time} < :until" if until is not None else ""
     values = ", ".join(
@@ -378,7 +394,7 @@ def trend_series_bundle(
         sql = text(f"""
             WITH expanded AS (
                 SELECT date_bin(CAST(:stride AS interval),
-                           COALESCE(c.started_at, c.finished_at, h.collected_at),
+                           {sample_time},
                            CAST(:origin AS timestamptz)) AS bucket,
                        h.collection_id, h.collected_at, h.host,
                        m.metric, m.value, m.warning
