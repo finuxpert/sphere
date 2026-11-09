@@ -53,9 +53,9 @@ def app_network_trend(
 ) -> dict:
     if metric_key not in DIRECTIONS:
         raise ValueError("Unsupported network metric")
-    resolved, stride = resolve_bucket(range_key, bucket_key)
-    if range_key == "custom" and (resolved != "raw" or until is None):
-        raise ValueError("Custom network range requires raw samples and an end time")
+    resolved, stride = resolve_bucket(range_key, bucket_key, since=since, until=until)
+    if range_key == "custom" and until is None:
+        raise ValueError("Custom network range requires an end time")
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Infrastructure database history is not enabled")
