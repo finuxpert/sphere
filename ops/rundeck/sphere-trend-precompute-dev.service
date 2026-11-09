@@ -1,5 +1,5 @@
 [Unit]
-Description=SPHERE DEV historical trend background precompute (90D/180D)
+Description=SPHERE DEV historical trend background precompute (90D/180D/365D)
 After=network-online.target postgresql.service
 Wants=network-online.target
 ConditionPathExists=/etc/sphere/rundeck-dev.env
