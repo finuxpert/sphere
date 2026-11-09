@@ -91,14 +91,15 @@ class TrendSnapshotDevTests(unittest.TestCase):
 
     def test_corrupt_and_expired_snapshot_fall_back_to_sql(self):
         file = snapshots.save("180d", "network_rx", sample())
+        file.write_bytes(b"corrupt")
         with patch.dict(os.environ, {"SPHERE_TREND_SNAPSHOT_WORKER": "false"}):
-            file.write_bytes(b"corrupt")
             self.assertIsNone(snapshots.load("180d", "network_rx"))
-            snapshots.save("180d", "network_rx", sample())
-            with gzip.open(file, "rb") as stream:
-                envelope = json.loads(stream.read())
-            envelope["meta"]["generated_at"] = "2020-01-01T00:00:00+00:00"
-            file.write_bytes(gzip.compress(json.dumps(envelope).encode()))
+        snapshots.save("180d", "network_rx", sample())
+        with gzip.open(file, "rb") as stream:
+            envelope = json.loads(stream.read())
+        envelope["meta"]["generated_at"] = "2020-01-01T00:00:00+00:00"
+        file.write_bytes(gzip.compress(json.dumps(envelope).encode()))
+        with patch.dict(os.environ, {"SPHERE_TREND_SNAPSHOT_WORKER": "false"}):
             self.assertIsNone(snapshots.load("180d", "network_rx"))
 
     def test_rejects_writes_without_worker_flag(self):
