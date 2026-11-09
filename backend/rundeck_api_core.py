@@ -32,6 +32,7 @@ from backend.rundeck_platform import platform_health
 from backend.rundeck_store import ROOT, collections, identifier
 from backend.rundeck_watchdog import read_events as read_watchdog_events
 from backend.rundeck_network_trends import app_network_trend
+from backend import rundeck_trend_snapshots as trend_snapshots
 from backend.rundeck_trends import (
     collection_timeline,
     collection_timeline_at,
@@ -283,6 +284,13 @@ def history_trend(
             else:
                 since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
         network = metric in {"network_rx", "network_tx"}
+        # DEV only: a recent precomputed 90D/180D Network payload can be
+        # returned as-is. The worker itself always bypasses snapshot reads.
+        if network and bucket == "auto" and until is None and range_key in trend_snapshots.RANGES:
+            stored = trend_snapshots.load(range_key, metric)
+            if stored is not None:
+                payload, freshness = stored
+                return {**payload, "snapshot": freshness}
         series = (app_network_trend(since, range_key, bucket, metric, until=until)
                   if network else trend_series(since, range_key, bucket, metric, until=until))
         latest_row = None if network else _latest_ready()
@@ -334,6 +342,14 @@ def history_trend_bundle(
                 since, until = previous_calendar_month()
             else:
                 since = datetime.now(timezone.utc) - timedelta(hours=range_config["hours"])
+        # Only the default CPU/RAM/WP grouping is precomputed; all custom
+        # combinations retain their existing live, source-backed SQL.
+        if (metric_keys == ["cpu", "ram", "wp"] and bucket == "auto"
+                and until is None and range_key in trend_snapshots.RANGES):
+            stored = trend_snapshots.load(range_key, "cpu,ram,wp")
+            if stored is not None:
+                payload, freshness = stored
+                return {**payload, "snapshot": freshness}
         series = trend_series_bundle(since, range_key, bucket, metric_keys, until=until)
         latest_row = _latest_ready()
         for value in series.values():
