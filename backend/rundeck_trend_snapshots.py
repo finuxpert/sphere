@@ -1,6 +1,6 @@
 """Opt-in DEV-only historical trend snapshots. Reads never mutate PostgreSQL.
 
-A separate worker precomputes expensive 90D/180D history; the API reads only
+A separate worker precomputes expensive 90D/180D/365D history; the API reads only
 recent atomic snapshots, falling back to the existing source-backed SQL.
 Short/live and custom windows are deliberately excluded.
 """
@@ -19,7 +19,7 @@ from sqlalchemy.engine import make_url
 SCHEMA = 1
 CONTRACT = "SPHERE_HISTORICAL_TRENDS_V1"
 DEFAULT_DIR = "/var/lib/sphere/trend-snapshots-dev"
-RANGES = frozenset({"90d", "180d"})
+RANGES = frozenset({"90d", "180d", "365d"})
 METRICS = frozenset({"cpu,ram,wp", "network_rx", "network_tx"})
 MAX_COMPRESSED_BYTES = 5 * 1024 * 1024
 MAX_JSON_BYTES = 12 * 1024 * 1024
