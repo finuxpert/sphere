@@ -38,7 +38,7 @@ export default function TrendChart({ trend, mode, range, onSelect, selectedHost 
     // Focus changes only the visual Y range, never samples, severity thresholds, or source evidence.
     const percentTrend = !availabilityMode && trend?.unit === '%'
     const focusAxisMax = percentTrend ? trendPercentAxisMax(rows, valueKey, scaleMode) : 100
-    const compactPoints = ['custom', '30m', '1h', '3h', '6h'].includes(range)
+    const compactPoints = ['30m', '1h', '3h', '6h'].includes(range) || (range === 'custom' && trend?.bucket === 'raw')
     const { gaps: inferredGaps, rangeStart, rangeEnd } = trendGaps(trend)
     const gaps = trend?.network_source
       ? (trend?.collection_gaps || []).map(gap => [Date.parse(gap.before || ''), Date.parse(gap.after || '')]).filter(([from,to]) => Number.isFinite(from) && Number.isFinite(to) && to > from)
@@ -96,7 +96,7 @@ export default function TrendChart({ trend, mode, range, onSelect, selectedHost 
            const intervalEnd = (typeof bucketAt === 'number' ? bucketAt : Date.parse(bucketAt)) + intervalMs
            const intervalLabel = Number.isFinite(intervalEnd) && Number.isFinite(intervalMs)
              ? ` – ${formatWib(intervalEnd, true)} WIB` : ' WIB'
-            const lines = [trend?.range === 'custom'
+            const lines = [trend?.range === 'custom' && trend?.bucket === 'raw'
               ? `<b>Saved sample · ${formatWib(bucketAt, true)} WIB</b>`
               : `<b>Bucket ${formatWib(bucketAt, true)}${intervalLabel} · ${mode === 'max' ? 'Peak' : 'Avg'}</b>`]
           visible.forEach(point => {
@@ -111,7 +111,7 @@ export default function TrendChart({ trend, mode, range, onSelect, selectedHost 
           })
           if (valid.length && visible.length < hosts.length) lines.push(`${hosts.length - visible.length} APP without samples in this bucket`)
           if (!valid.length) lines.push('No retained sample in bucket')
-          if (trend?.requested_bucket === 'auto' && trend?.range !== 'custom') {
+          if (trend?.requested_bucket === 'auto') {
             const resolvedLabel = trend?.bucket === 'raw'
               ? 'Raw (collector samples)'
               : (BUCKETS.find(([key]) => key === trend?.bucket)?.[1] || 'Unknown')
@@ -120,7 +120,7 @@ export default function TrendChart({ trend, mode, range, onSelect, selectedHost 
           return lines.join('<br/>')
         },
       },
-      xAxis: { type: 'time', minInterval: range === '24h' ? 4 * 3600_000 : undefined, min: displayWindow?.from ?? (Number.isFinite(rangeStart) ? rangeStart : undefined), max: displayWindow?.to ?? rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 11, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
+      xAxis: { type: 'time', minInterval: range === '24h' ? 4 * 3600_000 : undefined, min: displayWindow?.from ?? (Number.isFinite(rangeStart) ? rangeStart : undefined), max: displayWindow?.to ?? rangeEnd, splitNumber: trendAxisSplitNumber(range), axisLabel: { color: colors.muted, fontSize: 11, hideOverlap: true, showMinLabel: true, showMaxLabel: !['7d', '30d'].includes(range), margin: 10, formatter: (value) => formatTrendAxis(value, range, trend?.bucket) }, axisTick: { show: false }, axisLine: { lineStyle: { color: colors.grid } }, splitLine: { show: false } },
       yAxis: { type: 'value', name: '', nameTextStyle: { color: colors.muted, fontSize: 10 }, axisLabel: { color: colors.muted, fontSize: 11, formatter: availabilityMode ? ((value) => Number(value) >= 75 ? 'UP' : Number(value) <= 25 ? 'DOWN' : '') : ((value) => `${value}${trend?.unit === '%' ? '%' : trend?.unit ? ' ' + trend.unit : ''}`) }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { lineStyle: { color: colors.grid } }, min: availabilityMode || trend?.unit === '%' || Boolean(trend?.network_source) ? 0 : undefined, max: availabilityMode || trend?.unit === '%' ? focusAxisMax : (['load','network_rx','network_tx'].includes(trend?.metric) && Number.isFinite(technicalAxisMax) ? technicalAxisMax : undefined), splitNumber: 2 },
       dataZoom: [{ type: 'inside', filterMode: 'none' }],
       series: hosts.map((host, index) => {
