@@ -26,7 +26,7 @@ class CustomTimeRangeTests(unittest.TestCase):
             (base, base),
             (base + timedelta(minutes=1), base),
             (self.now - timedelta(days=181), self.now),
-            (self.now - timedelta(days=91), self.now - timedelta(days=90)),
+            (self.now - timedelta(days=181), self.now - timedelta(days=180)),
             (self.now, self.now + timedelta(hours=1)),
             (base.replace(tzinfo=None), base + timedelta(minutes=1)),
         ]
