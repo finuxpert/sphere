@@ -653,9 +653,15 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
       setTimelineError('')
       return
     }
-    // The normal point timeline spans ±5 minutes. Custom must never show outside-window rows.
+    // Short Custom retains exact window evidence. Long Custom opens a bucket-only
+    // view: do not fetch nearby SAP collections outside the requested window.
     if (range === 'custom') {
-      if (windowEvidence) setWindowModal(true)
+      if (windowEvidence) { setWindowModal(true); return }
+      setSelected({ ...point, customAggregated: true })
+      setSelectedTrend(sourceTrend)
+      setTimeline(null)
+      setTimelineLoading(false)
+      setTimelineError('')
       return
     }
     timelineRequestSequence.current += 1
@@ -1046,7 +1052,13 @@ export default function RundeckServerTrend({ refreshToken = '', databaseEnabled 
           <button data-trend-modal-close type="button" onClick={closeTrendDetails} aria-label="Close Trend Details">×</button>
         </header>
         <div className="rundeckTrendPointModalBody">
-          {selected?.network ? <section className="rundeckNetworkObservation">
+          {selected?.customAggregated ? <section className="rundeckNetworkObservation">
+            <p><strong>Saved historical bucket · {activeTrend?.bucket?.toUpperCase() || 'AUTO'}</strong></p>
+            <p>{formatSavedBucketWindow(activeTrend, selected.bucket)}</p>
+            <p>{selected.peakAtVerified ? 'Peak timestamp: ' + formatWib(selected.at, true) + ' WIB.' : 'Average of retained bucket observations; exact samples remain separate.'}</p>
+            <p>No nearby SAP collection or job execution is inferred from an aggregated bucket. Missing observations are unknown, not zero or downtime.</p>
+            <p>For raw APP and workload evidence, select a Custom interval of 24 hours or less.</p>
+          </section> : selected?.network ? <section className="rundeckNetworkObservation">
             <p><strong>Infrastructure Network · {selected.metricLabel}</strong></p>
             <p>APP {shortHost(selected.host)} · {selected.sourceHost || 'host identity unavailable'}</p>
             <p>{selected.interface ? (activeTrend?.bucket === 'raw' ? 'Observed interface: ' : 'Peak interface in bucket: ') + selected.interface : 'Interface: unverified'} · {selected.value == null ? 'no value' : numberText(selected.value, 2) + ' Mbps'}</p>
