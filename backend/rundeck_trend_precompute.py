@@ -1,4 +1,4 @@
-"""Opt-in DEV worker: prepare 90D/180D historical trends outside FastAPI.
+"""Opt-in DEV worker: prepare 90D/180D/365D historical trends outside FastAPI.
 
 This worker does not change database schema or write SQL. A recent snapshot is
 read by the existing API only when the explicit DEV flag is enabled.
@@ -16,7 +16,7 @@ from backend import rundeck_trend_snapshots as snapshots
 
 SCOPES = [
     (range_key, metric_key)
-    for range_key in ("90d", "180d")
+    for range_key in ("90d", "180d", "365d")
     for metric_key in ("cpu,ram,wp", "network_rx", "network_tx")
 ]
 
