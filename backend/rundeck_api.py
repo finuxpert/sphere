@@ -1,7 +1,7 @@
 """SPHERE Rundeck API entrypoint with service-availability and job intelligence."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import os
 import secrets
@@ -72,6 +72,8 @@ def history_window_endpoint(
 ):
     try:
         since, until = validate_custom_window(_parse_custom_timestamp(from_at), _parse_custom_timestamp(to_at))
+        if until - since > timedelta(hours=24):
+            raise ValueError('Detailed raw window evidence is limited to 24 hours; use aggregated trend charts for longer ranges')
         return saved_window_observations(since, until)
     except ValueError as error:
         raise HTTPException(400, str(error)) from None
@@ -93,6 +95,8 @@ def availability_history_endpoint(
             if not from_at or not to_at:
                 raise ValueError("Custom availability requires both timestamps")
             since, until = validate_custom_window(_parse_custom_timestamp(from_at), _parse_custom_timestamp(to_at))
+            if until - since > timedelta(days=30):
+                raise ValueError('Availability has no verified daily summary beyond 30 days; use a shorter custom range')
             return availability_history(range_key=range_key, category=category, start_at=since, end_at=until)
         if from_at or to_at:
             raise ValueError("Explicit dates require range=custom")
