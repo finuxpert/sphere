@@ -25,8 +25,8 @@ class CustomTimeRangeTests(unittest.TestCase):
         cases = [
             (base, base),
             (base + timedelta(minutes=1), base),
-            (self.now - timedelta(days=181), self.now),
-            (self.now - timedelta(days=181), self.now - timedelta(days=180)),
+            (self.now - timedelta(days=366), self.now),
+            (self.now - timedelta(days=366), self.now - timedelta(days=365)),
             (self.now, self.now + timedelta(hours=1)),
             (base.replace(tzinfo=None), base + timedelta(minutes=1)),
         ]
@@ -34,6 +34,14 @@ class CustomTimeRangeTests(unittest.TestCase):
             with self.subTest(start=start, end=end):
                 with self.assertRaises(ValueError):
                     validate_custom_window(start, end, self.now)
+
+    def test_exact_365_day_window_is_valid_and_366_days_is_rejected(self):
+        start = self.now - timedelta(days=365)
+        actual_start, actual_end = validate_custom_window(start, self.now, self.now)
+        self.assertEqual((actual_start, actual_end), (start, self.now))
+        self.assertEqual(resolve_bucket("custom", "auto", since=start, until=self.now)[0], "1d")
+        with self.assertRaises(ValueError):
+            validate_custom_window(start - timedelta(minutes=1), self.now, self.now)
 
     def test_custom_bucket_resolution_keeps_raw_for_incidents_and_aggregates_long_windows(self):
         start = self.now - timedelta(days=45)
