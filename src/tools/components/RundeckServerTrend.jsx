@@ -31,8 +31,8 @@ const API = `${import.meta.env.BASE_URL}api`
 const DEFAULT_RANGE = '6h'
 const TREND_STORAGE_KEY = 'sphere.live.trend'
 const SHORT_RANGES = [['30m', '30M'], ['1h', '1H'], ['3h', '3H'], ['6h', '6H']]
-const RANGES = [['24h', '1D'], ['7d', '7D'], ['30d', '30D'], ['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M']]
-const HISTORY_RANGES = [['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M']]
+const RANGES = [['24h', '1D'], ['7d', '7D'], ['30d', '30D'], ['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M'], ['365d', '1Y']]
+const HISTORY_RANGES = [['last_month', 'Last Month'], ['90d', '3M'], ['180d', '6M'], ['365d', '1Y']]
 const MORE_RANGES = [...SHORT_RANGES]
 const ALL_RANGES = [...RANGES, ...MORE_RANGES]
 const LONG_RANGES = new Set(HISTORY_RANGES.map(([key]) => key))
