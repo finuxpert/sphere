@@ -1,4 +1,4 @@
-# SPHERE Jump Host — Authenticated Scaffold v0.2.1
+# SPHERE Remote — Authenticated Scaffold v0.2.2
 
 **Standalone prototype**, not yet a functioning SSH/remote-browser gateway. Based on the `finuxpert/sphere` DEV repository structure. No existing SPHERE files are changed. Dev/prod route and service name are kept separate.
 
@@ -9,17 +9,17 @@
 | Repository directory | `apps/jumphost/` |
 | Python namespace | `sphere_jumphost` |
 | Backend entrypoint | `sphere_jumphost.main:app` |
-| UI path (DEV) | `/dev/jumphost/` |
-| UI path (future PROD) | `/jumphost/` |
-| External API path (DEV) | `/dev/jumphost/api/v1/` |
-| External API path (future PROD) | `/jumphost/api/v1/` |
+| UI path (DEV) | `/dev/remote/` |
+| UI path (future PROD) | `/remote/` |
+| External API path (DEV) | `/dev/remote/api/v1/` |
+| External API path (future PROD) | `/remote/api/v1/` |
 | Internal API path | `/api/v1/` |
 | DEV service | `sphere-jumphost-dev-api` |
 | PROD service (future) | `sphere-jumphost-prod-api` |
 | Config prefix | `JUMPHOST_` |
 | Auth database | `/var/lib/sphere-jumphost-{env}/auth.sqlite3` |
 
-## Implemented in v0.2.1
+## Implemented in v0.2.2
 
 - React login UI for an `admin` account, with forced change-password UI for first DEV login.
 - Backend authentication backed by SQLite, 600,000-iteration salted PBKDF2-SHA256 password hashes; no plaintext password storage.
@@ -38,7 +38,7 @@ To activate DEV bootstrap, use `ops/jumphost-dev.env.example` as a reference:
 
 ```env
 JUMPHOST_ENV=dev
-JUMPHOST_PUBLIC_BASE_PATH=/dev/jumphost
+JUMPHOST_PUBLIC_BASE_PATH=/dev/remote
 JUMPHOST_AUTH_DB=/var/lib/sphere-jumphost-dev/auth.sqlite3
 JUMPHOST_DEV_BOOTSTRAP_ADMIN_ADMIN=1
 JUMPHOST_COOKIE_SECURE=1
@@ -103,12 +103,12 @@ In another terminal:
 ```bash
 cd apps/jumphost/web
 npm install
-JUMPHOST_WEB_BASE=/dev/jumphost/ npm run dev
-# Open http://127.0.0.1:5174/dev/jumphost/
+JUMPHOST_WEB_BASE=/dev/remote/ npm run dev
+# Open http://127.0.0.1:5174/dev/remote/
 # Login admin/admin, change password, login again.
 ```
 
-Vite proxies `/jumphost/api/*` to `127.0.0.1:8093/api/*`. Static files do **not** constitute a security boundary: backend endpoints must enforce authentication regardless of what is displayed in UI.
+Vite proxies `/remote/api/*` to `127.0.0.1:8093/api/*`. Static files do **not** constitute a security boundary: backend endpoints must enforce authentication regardless of what is displayed in UI.
 
 ## Offline QA
 
@@ -117,7 +117,7 @@ cd apps/jumphost/api
 python -m unittest discover -s tests -v
 python -m compileall -q sphere_jumphost
 # In apps/jumphost/web after dependencies are available:
-JUMPHOST_WEB_BASE=/dev/jumphost/ npm run build
+JUMPHOST_WEB_BASE=/dev/remote/ npm run build
 ```
 
 ## Safe integration with repo
@@ -133,21 +133,34 @@ Dry run first. The copy tool refuses existing destinations, so it does not overw
 
 ## Remaining mandatory gates
 
-Enterprise identity (SSO/MFA), per-target RBAC and inventory, audit trail, network allowlist, DNS pinning and SSRF protection, SSH host-key verification, isolated Chromium, session controls, release/security review. No remote access traffic is initiated by v0.2.1.
+Enterprise identity (SSO/MFA), per-target RBAC and inventory, audit trail, network allowlist, DNS pinning and SSRF protection, SSH host-key verification, isolated Chromium, session controls, release/security review. No remote access traffic is initiated by v0.2.2.
 
-## DEV routing correction (v0.2.1)
+## DEV routing correction (v0.2.2)
 
 The initial v0.2.0 scaffold hardcoded `/jumphost/` and would conflict with the
-existing SPHERE production vhost fallback. DEV MUST use `/dev/jumphost/`:
+existing SPHERE production vhost fallback. DEV MUST use `/dev/remote/`:
 
 ```bash
 cd apps/jumphost/web
-JUMPHOST_WEB_BASE=/dev/jumphost/ npm run build
+JUMPHOST_WEB_BASE=/dev/remote/ npm run build
 ```
 
-The API service MUST set `JUMPHOST_PUBLIC_BASE_PATH=/dev/jumphost` so the session
+The API service MUST set `JUMPHOST_PUBLIC_BASE_PATH=/dev/remote` so the session
 cookie is scoped only to DEV Jump Host. Reusing the PROD build at this path
 causes broken assets and login. The shipped Nginx template is **deny all**;
 it must not be enabled without a verified corporate access policy. A DEV-only
 `admin/admin` seed is permitted for localhost lab use and must be rotated
 BEFORE any externally reachable Nginx route is enabled.
+
+## Public route contract (v0.2.2)
+
+User-facing product is **SPHERE Remote**. `/remote/` is the canonical final URL;
+`/dev/remote/` is the isolated DEV test URL. The existing Python package and
+service names retain `jumphost` internally for backwards compatibility and to
+avoid touching unrelated monitoring code.
+
+A GitHub merge does **not** deploy the web app or change Nginx. `/remote/` currently
+falls back to the SPHERE Monitoring SPA until its dedicated frontend, API, systemd,
+and Nginx route have been deployed and tested. The production Nginx example at
+`ops/nginx/remote-prod.locations.conf.example` is **deny-all by default**;
+never expose default DEV credentials to the public Internet.

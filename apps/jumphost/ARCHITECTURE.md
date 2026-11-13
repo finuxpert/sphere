@@ -1,8 +1,8 @@
-# SPHERE Jump Host: isolated auth scaffold (v0.2.1)
+# SPHERE Remote: isolated auth scaffold (v0.2.2)
 
 ```text
-Laptop (HTTPS) --> /dev/jumphost/ (DEV React SPA, login + workspace)
-              --> /dev/jumphost/api/v1/* --> Nginx --> 127.0.0.1:8093/api/v1/*
+Laptop (HTTPS) --> /dev/remote/ (DEV React SPA, login + workspace)
+              --> /dev/remote/api/v1/* --> Nginx --> 127.0.0.1:8093/api/v1/*
                                                        |
                                       sphere_jumphost FastAPI
                                                        |
@@ -11,7 +11,7 @@ Laptop (HTTPS) --> /dev/jumphost/ (DEV React SPA, login + workspace)
                            SSH 501 DISABLED / Browser 501 DISABLED
 ```
 
-**Authentication:** HTTP-only, Secure, SameSite Strict session cookie (Path `/dev/jumphost` for DEV, `/jumphost` for future PROD); random token hashed in SQLite; server-side expiry; CSRF token returned on `/api/v1/auth/me` for same-origin UI. Rotating the password destroys all sessions. Weak `admin/admin` is opt-in only for DEV bootstrap, never accepted as PROD bootstrap, and forced to change before accessing protected remote routes. Even authenticated calls return 501 for SSH/browser sessions.
+**Authentication:** HTTP-only, Secure, SameSite Strict session cookie (Path `/dev/remote` for DEV, `/remote` for future PROD); random token hashed in SQLite; server-side expiry; CSRF token returned on `/api/v1/auth/me` for same-origin UI. Rotating the password destroys all sessions. Weak `admin/admin` is opt-in only for DEV bootstrap, never accepted as PROD bootstrap, and forced to change before accessing protected remote routes. Even authenticated calls return 501 for SSH/browser sessions.
 
 **Future SSH remote gateway:** dedicated `sphere_jumphost/ssh_gateway/`, not reused Rundeck API. Needs MFA, host allowlist, role authorization, host-key verification, connection lifecycle and audit.
 

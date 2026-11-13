@@ -35,12 +35,12 @@ class TestAdminAuthentication(unittest.TestCase):
 
     def test_dev_public_cookie_path(self):
         old = os.environ.get("JUMPHOST_PUBLIC_BASE_PATH")
-        os.environ["JUMPHOST_PUBLIC_BASE_PATH"] = "/dev/jumphost"
+        os.environ["JUMPHOST_PUBLIC_BASE_PATH"] = "/dev/remote"
         try:
-            self.assertEqual(get_cookie_path(), "/dev/jumphost")
+            self.assertEqual(get_cookie_path(), "/dev/remote")
             login = self._login()
             self.assertEqual(login.status_code, 200)
-            self.assertIn("path=/dev/jumphost", login.headers["set-cookie"].lower())
+            self.assertIn("path=/dev/remote", login.headers["set-cookie"].lower())
         finally:
             if old is None:
                 os.environ.pop("JUMPHOST_PUBLIC_BASE_PATH", None)
@@ -66,7 +66,7 @@ class TestAdminAuthentication(unittest.TestCase):
         self.assertTrue(initial.cookies.get(COOKIE_NAME))
         self.assertIn("httponly", initial.headers["set-cookie"].lower())
         self.assertIn("samesite=strict", initial.headers["set-cookie"].lower())
-        self.assertIn("path=/jumphost", initial.headers["set-cookie"].lower())
+        self.assertIn("path=/remote", initial.headers["set-cookie"].lower())
         self.assertEqual(os.stat(self.db_path).st_mode & 0o777, 0o600)
         self.assertNotIn(b"admin/admin", self.db_path.read_bytes())
 

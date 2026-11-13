@@ -2,9 +2,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // DEV and PROD are separate builds; do not reuse artifacts across prefixes.
-const publicBase = process.env.JUMPHOST_WEB_BASE || '/jumphost/'
-if (!['/jumphost/', '/dev/jumphost/'].includes(publicBase)) {
-  throw new Error('JUMPHOST_WEB_BASE must be /jumphost/ or /dev/jumphost/')
+const publicBase = process.env.JUMPHOST_WEB_BASE || '/remote/'
+if (!['/remote/', '/dev/remote/'].includes(publicBase)) {
+  throw new Error('JUMPHOST_WEB_BASE must be /remote/ or /dev/remote/')
 }
 const apiPrefix = `${publicBase}api/`
 

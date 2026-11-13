@@ -20,13 +20,13 @@ SESSION_TTL_SECONDS = 8 * 60 * 60
 LOCKOUT_SECONDS = 15 * 60
 MAX_FAILURES = 5
 COOKIE_NAME = "sphere_jumphost_session"
-COOKIE_PATH = "/jumphost"  # Legacy/default production path; do not hard-code for DEV.
+COOKIE_PATH = "/remote"  # Legacy/default production path; do not hard-code for DEV.
 
 
 def get_cookie_path() -> str:
     path = os.getenv("JUMPHOST_PUBLIC_BASE_PATH", COOKIE_PATH).rstrip("/")
-    if path not in {"/jumphost", "/dev/jumphost"}:
-        raise ValueError("JUMPHOST_PUBLIC_BASE_PATH must be /jumphost or /dev/jumphost")
+    if path not in {"/remote", "/dev/remote"}:
+        raise ValueError("JUMPHOST_PUBLIC_BASE_PATH must be /remote or /dev/remote")
     return path
 
 

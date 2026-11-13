@@ -43,7 +43,7 @@ function AuthForm({ isRotating, session, onLogin, onChangePassword, busy, error 
   return (
     <div className="auth-shell">
       <div className="auth-panel">
-        <div className="auth-brand"><div className="brand-mark">S</div><div><strong>SPHERE</strong><span>Jump Host · Admin Access</span></div></div>
+        <div className="auth-brand"><div className="brand-mark">S</div><div><strong>SPHERE</strong><span>Remote · Admin Access</span></div></div>
         <span className="eyebrow">RESTRICTED ACCESS</span>
         <h1>{isRotating ? 'Ubah Password Awal' : 'Admin Login'}</h1>
         <p>{isRotating

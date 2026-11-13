@@ -15,7 +15,7 @@ function TerminalPlaceholder() {
   return (
     <div className="stage terminal" aria-label="Pratinjau terminal tanpa sesi aktif">
       <div className="stage-title"><span className="led neutral" /> Terminal · belum terhubung <span className="stage-tag">STANDBY</span></div>
-      <pre>{`SPHERE JUMP HOST v0.1
+      <pre>{`SPHERE REMOTE v0.2.2
 SSH_ENGINE=NOT_IMPLEMENTED
 SESSION=NOT_STARTED
 
@@ -54,7 +54,7 @@ export default function App() {
     <div className="app">
       <header className="topbar"><div className="brand"><div className="brand-mark">S</div><div><strong>SPHERE</strong><span>Remote Access Portal</span></div></div><div className="top-actions"><span className="status-pill"><span className="led neutral" /> SCAFFOLD · NO CONNECTION</span></div></header>
       <main className="workspace">
-        <div className="intro"><div><span className="eyebrow">ACCESS WORKSPACE / V0.1</span><h1>Jump Host</h1><p>SSH terminal dan browser internal melalui jaringan SPHERE — rancangan awal yang terisolasi dari aplikasi monitoring.</p></div><span className="environment">DEV DESIGN</span></div>
+        <div className="intro"><div><span className="eyebrow">ACCESS WORKSPACE / V0.1</span><h1>SPHERE Remote</h1><p>SSH terminal dan browser internal melalui jaringan SPHERE — rancangan awal yang terisolasi dari aplikasi monitoring.</p></div><span className="environment">DEV DESIGN</span></div>
         <div className="tabs" role="tablist" aria-label="Tipe koneksi">
           <button role="tab" aria-selected={mode === 'ssh'} className={mode === 'ssh' ? 'tab active' : 'tab'} onClick={() => switchMode('ssh')}><TitleIcon type="ssh" /> SSH Terminal</button>
           <button role="tab" aria-selected={mode === 'browser'} className={mode === 'browser' ? 'tab active' : 'tab'} onClick={() => switchMode('browser')}><TitleIcon type="browser" /> Internal Browser</button>
@@ -78,7 +78,7 @@ export default function App() {
             <div className="preview-foot"><span>Integrated interface · Separate backend service</span><span>{mode === 'ssh' ? 'xterm.js · planned' : 'Isolated Chromium · planned'}</span></div>
           </section>
         </div>
-        <footer>SPHERE Jump Host / Standalone Scaffold · Does not modify existing monitoring services</footer>
+        <footer>SPHERE Remote / Standalone Scaffold · Does not modify existing monitoring services</footer>
       </main>
     </div>
   )
