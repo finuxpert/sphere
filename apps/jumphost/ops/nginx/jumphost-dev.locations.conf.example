@@ -1,0 +1,20 @@
+# TEMPLATE ONLY. Do not install until complete nginx -T review and
+# IP/VPN + SSO/MFA policy are approved. Fail closed by default.
+# Insert INSIDE the matching TLS server {} on the existing SPHERE vhost.
+# This DEV path is deliberately distinct from PROD /remote/.
+
+location = /dev/remote { return 308 /dev/remote/; }
+
+location ^~ /dev/remote/api/v1/ {
+    deny all; # MUST remain unless authorized corporate access control is installed
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:8093/api/v1/;
+}
+
+location ^~ /dev/remote/ {
+    deny all; # MUST remain unless authorized corporate access control is installed
+    alias /opt/sphere-jumphost-dev/current/web/dist/;
+    try_files $uri $uri/ /dev/remote/index.html;
+}
