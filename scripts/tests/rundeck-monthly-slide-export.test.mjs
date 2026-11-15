@@ -209,8 +209,9 @@ test('custom two-day report exports actual hourly APP buckets without inventing 
   assert.match(source,/current.at-previous.at<=m.timeIntervalMs\*1\.05/)
   assert.match(source,/timeBased\?xForTime\(point.at\):xFor\(point.day\)/)
   const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
-  assert.match(ui,/function TimeHostTrend/)
-  assert.match(ui,/point.at-points\[k-1\].at<=intervalMs\*1\.05/)
+  assert.match(ui,/React.lazy\(loadTimeHostTrend\)/)
   assert.match(ui,/Array.isArray\(pressure.trend_hosts\)/)
+  const trend=readFileSync(new URL('../../src/tools/components/RundeckMonthlyTimeHostTrend.jsx',import.meta.url),'utf8')
+  assert.match(trend,/point.at-points\[k-1\].at<=intervalMs\*1\.05/)
 })
 
