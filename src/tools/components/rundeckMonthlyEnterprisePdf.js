@@ -153,8 +153,25 @@ export function monthlyEnterpriseReportModel(month,data) {
     .sort((a,b)=>value(b[metric])-value(a[metric]) ||
       String(a.consumer_key).localeCompare(String(b.consumer_key))).slice(0,5)
   const observedDays=dates.filter(date=>dailySource.has(date)).length
+  // Timestamped buckets are independent of the daily evidence retained for
+  // summary statistics. An older backend can still export daily charts.
+  const timeIntervalMs=Number(pressure.trend_bucket_minutes)*60000
+  const timeStart=Date.parse(period.startUtc),timeEnd=Date.parse(period.exclusiveEndUtc)
+  const timeSeries=Array.isArray(pressure.trend_hosts)&&timeIntervalMs>0&&timeEnd>timeStart
+    ? hosts.map(row=>({
+      host:row.host,
+      points:pressure.trend_hosts.filter(item=>app(item.host)===row.host)
+        .map(item=>({
+          at:Date.parse(item.bucket_start),cpu:value(item.peak_cpu_pct),ram:value(item.peak_ram_pct),
+          cpuAt:item.peak_cpu_at||null,ramAt:item.peak_ram_at||null,
+        }))
+        .filter(item=>Number.isFinite(item.at)&&item.at>=timeStart&&item.at<timeEnd)
+        .sort((a,b)=>a.at-b.at),
+    }))
+    : null
   return {
     month,weekStart,customStart,customEnd,period,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
+    timeSeries,timeStart,timeEnd,timeIntervalMs,
     observedDays,storage:data.monthly_storage.items,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
     sortedCpu:ranking(data.monthly_top_wp_cpu,'peak_cpu_pct'),
@@ -276,20 +293,32 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     }
     const px=x+(isSlide?34:43),py=panelY+(isSlide?31:49),pw=panelW-(isSlide?54:68),ph=isSlide?54:90
     const xFor=day=>px+(day-1)*pw/Math.max(1,m.days-1)
+    const timeBased=Array.isArray(m.timeSeries)
+    const xForTime=at=>px+(at-m.timeStart)*pw/(m.timeEnd-m.timeStart)
     const yFor=n=>py+ph*Math.max(0,Math.min(100,n))/100
     for(const level of [0,25,50,75,100]) {
       const yy=yFor(level)
       line(px,yy,px+pw,yy,'rule',.48)
       text(px-10,yy-2,String(level)+'%',7,'normal','muted','right')
     }
-    for(const tick of new Set(m.customStart
-      ? [1,Math.max(1,Math.round(m.days/2)),m.days]
-      :m.weekStart?[1,4,m.days]:[1,10,20,m.days])) {
-      // X-axis labels are daily buckets. Only the recorded peak carries a clock time.
-      const label=new Intl.DateTimeFormat('en-GB',{
-        timeZone:'UTC',day:'2-digit',month:'short',
-      }).format(new Date(m.dates[tick-1]+'T00:00:00Z'))
-      text(xFor(tick),py-15,label,isSlide?8.0:8.4,'bold','ink','center')
+    if(timeBased) {
+      const hours=(m.timeEnd-m.timeStart)/3600000
+      const tickHours=hours<=24?6:hours<=48?12:hours<=168?24:hours<=336?72:168
+      const formatter=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',
+        day:'2-digit',month:'short',...(hours<=168?{hour:'2-digit',minute:'2-digit',hour12:false}:{})})
+      for(let at=m.timeStart;at<m.timeEnd;at+=tickHours*3600000) {
+        text(xForTime(at),py-15,formatter.format(new Date(at)),isSlide?7.3:8.0,'bold','ink',
+          at===m.timeStart?'left':'center')
+      }
+    } else {
+      for(const tick of new Set(m.customStart
+        ? [1,Math.max(1,Math.round(m.days/2)),m.days]
+        :m.weekStart?[1,4,m.days]:[1,10,20,m.days])) {
+        const label=new Intl.DateTimeFormat('en-GB',{
+          timeZone:'UTC',day:'2-digit',month:'short',
+        }).format(new Date(m.dates[tick-1]+'T00:00:00Z'))
+        text(xFor(tick),py-15,label,isSlide?8.0:8.4,'bold','ink','center')
+      }
     }
     if(value(threshold)!==null){
       const ty=yFor(value(threshold))
@@ -303,27 +332,31 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       text(px+pw-7,ty,label,7.1,'normal','amber','right')
     }
     let observed=false
-    m.series.forEach((hostSeries,i)=>{
+    const plotSeries=timeBased?m.timeSeries:m.series
+    plotSeries.forEach((hostSeries,i)=>{
       const color=seriesColors[i]
       let previous=null
-      hostSeries.days.forEach(point=>{
+      const points=timeBased?hostSeries.points:hostSeries.days
+      points.forEach(point=>{
         const reading=point[metric]
         if(reading===null){previous=null;return}
         observed=true
-        const current={x:xFor(point.day),y:yFor(reading)}
-        if(previous)line(previous.x,previous.y,current.x,current.y,color,1.35)
+        const current={x:timeBased?xForTime(point.at):xFor(point.day),
+          y:yFor(reading),at:point.at}
+        if(previous&&(!timeBased||current.at-previous.at<=m.timeIntervalMs*1.05))
+          line(previous.x,previous.y,current.x,current.y,color,1.35)
         previous=current
       })
     })
     if(best){
-      const winner=m.series.find(row=>row.host===best.host)
-      const point=winner?.days.find(point=>
-        point[metric]===best.value &&
+      const winner=plotSeries.find(row=>row.host===best.host)
+      const points=timeBased?winner?.points:winner?.days
+      const point=points?.find(point=>point[metric]===best.value &&
         point[metric+'At']===best.at)
-        || winner?.days.find(point=>point[metric]===best.value)
+        ||points?.find(point=>point[metric]===best.value)
       if(point){
         pdf.setFillColor(...rgb('red'))
-        pdf.circle(xFor(point.day),H-yFor(best.value),3.5,'F')
+        pdf.circle(timeBased?xForTime(point.at):xFor(point.day),H-yFor(best.value),3.5,'F')
       }
     }
     if(!observed)text(x+panelW/2,py+ph/2,'No retained readings',9,'normal','muted','center')
