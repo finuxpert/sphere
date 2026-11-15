@@ -24,6 +24,8 @@ const TODAY_WIB=(()=>{
 })()
 const customDateError=(start,end)=>validateCustomDate(start,end,TODAY_WIB)
 const CHART_COLORS = ['#3dd6dc', '#839af4', '#af90e7', '#e7a364', '#7ac59c']
+const loadTimeHostTrend=()=>import('./RundeckMonthlyTimeHostTrend.jsx')
+const TimeHostTrend=React.lazy(loadTimeHostTrend)
 const PRESSURE_FILTERS = [
   ['ALL', 'All observations'], ['CPU', 'CPU Pressure'], ['RAM', 'RAM Pressure'], ['WP', 'Critical WP'],
 ]
@@ -94,13 +96,14 @@ function HostTrend({ rows = [], month, weekStart = null, customStart = null, cus
     <div className="sphereMonthlyTrendLegend">
       {names.map((name,i)=><span key={name}><i style={{background:CHART_COLORS[i%CHART_COLORS.length]}}/>{name}</span>)}
     </div>
-    <small>Daily peak is the highest saved APP sample per day; gold rings indicate warning readings. Missing dates are not zero.</small>
+    <small>Daily APP peaks; gold rings mark warnings. Missing dates are not zero.</small>
     {firstObservedDay>1 && <small className="sphereMonthlyObservedNote">
       Data starts {dateAt(firstObservedDay)}.
       {fitObserved ? ' Earlier dates are outside this display, not missing-value zeros.' : ' Earlier dates have no retained observations.'}
     </small>}
   </div>
 }
+
 
 
 const DASHBOARD_COLORS = ['#D4A35D', '#4AA9B8', '#57AB89', '#91A0AB']
@@ -340,8 +343,14 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
     <div className="sphereMonthlyManagerPair">
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
         <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><div className="sphereMonthlyManagerPeak">{peak(metric)}</div></div>
-        <HostTrend rows={pressure.daily_hosts||[]} month={month} weekStart={weekStart} customStart={customStart} customEnd={customEnd} metric={metric}
-          fitObserved={false} threshold={pressure.thresholds?.[metric+'_warning_pct']}/>
+        {Array.isArray(pressure.trend_hosts) && Number(pressure.trend_bucket_minutes)>0
+          ? <React.Suspense fallback={null}>
+              <TimeHostTrend rows={pressure.trend_hosts} bucketMinutes={pressure.trend_bucket_minutes}
+                month={month} weekStart={weekStart} customStart={customStart} customEnd={customEnd} metric={metric}
+                threshold={pressure.thresholds?.[metric+'_warning_pct']}/>
+            </React.Suspense>
+          : <HostTrend rows={pressure.daily_hosts||[]} month={month} weekStart={weekStart} customStart={customStart} customEnd={customEnd} metric={metric}
+              fitObserved={false} threshold={pressure.thresholds?.[metric+'_warning_pct']}/>}
       </section>)}
     </div>
     <div className="sphereMonthlyManagerPair">
@@ -409,6 +418,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
 async function buildManagementMonthlyPng({month,data}) {
   if(typeof document==='undefined')throw Error('PNG export requires a browser')
   await import('./RundeckMonthlyPptExport.css')
+  if(Array.isArray(data?.monthly_pressure?.trend_hosts))await loadTimeHostTrend()
   const model=monthlyEnterpriseReportModel(month,data)
   const mount=document.createElement('section')
   mount.className='sphereMonthlyReview is-v2 sphereMonthlyPptExport'
@@ -430,6 +440,9 @@ async function buildManagementMonthlyPng({month,data}) {
     const brand=mount.querySelector('.sphereMonthlyPptHeader img')
     if(brand)await brand.decode()
     await document.fonts.ready
+    // The intraday chunk was preloaded before render; give React its paint frame.
+    if(Array.isArray(data?.monthly_pressure?.trend_hosts))
+      await new Promise(resolve=>window.requestAnimationFrame(resolve))
     // Detect clipped content; refuse a misleading image rather than hiding rows.
     for(const panel of mount.querySelectorAll('.sphereMonthlyManagerPanel')) {
       if(panel.scrollHeight>panel.clientHeight+2 || panel.scrollWidth>panel.clientWidth+2) {
