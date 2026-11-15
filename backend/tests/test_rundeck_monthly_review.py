@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from backend.rundeck_evaluation import calendar_month_bounds, _evaluation_page, _monthly_abap_tuning_candidates, _collection_quality
-from backend.rundeck_monthly_pressure import detect_pressure_episodes, monthly_pressure_observations
+from backend.rundeck_monthly_pressure import detect_pressure_episodes, monthly_pressure_observations, bucketed_host_trend
 from backend.rundeck_monthly_errors import summarize_monthly_wp_errors, classify_error, parse_explicit_error_time, monthly_error_evidence
 from backend.rundeck_workload_observations import parse_workload_observations
 from backend.backfill_monthly_wp_errors import recoverable_archive, backfill, _validate_dev_database
@@ -105,6 +105,37 @@ class CalendarMonthReviewTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     calendar_month_bounds(month, now=now)
 
+
+    def test_intraday_report_buckets_preserve_wib_peaks_and_missing_hours(self):
+        wib = timezone(timedelta(hours=7))
+        start = datetime(2026, 11, 14, tzinfo=wib)
+        end = datetime(2026, 11, 16, tzinfo=wib)
+        def sample(local_hour, minute, cpu, collection_id, host="AOPH2PAPPDC"):
+            return {
+                "host": host, "collection_id": collection_id,
+                "collected_at": datetime(2026, 11, 14, local_hour, minute, tzinfo=wib),
+                "cpu_pct": cpu, "ram_pct": 32,
+            }
+        samples = [
+            sample(7, 5, 80, "a"),
+            sample(7, 45, 98.6, "b"),
+            sample(9, 5, 42, "c"),
+            sample(7, 20, 22, "d", host="AOPH1PAPPDC"),
+        ]
+        interval, rows = bucketed_host_trend(samples, start, end)
+        self.assertEqual(interval, 60)
+        app2 = [row for row in rows if row["host"] == "AOPH2PAPPDC"]
+        self.assertEqual(len(app2), 2)  # 08:00 has no invented sample
+        self.assertEqual(app2[0]["bucket_start"], "2026-11-14T07:00:00+07:00")
+        self.assertEqual(app2[0]["peak_cpu_pct"], 98.6)
+        self.assertEqual(app2[0]["peak_cpu_at"], "2026-11-14T07:45:00+07:00")
+        self.assertEqual(app2[0]["cpu_warning_checks"], 2)
+        self.assertEqual(app2[1]["bucket_start"], "2026-11-14T09:00:00+07:00")
+        self.assertEqual(rows[0]["host"], "AOPH1PAPPDC")
+        one_day, _ = bucketed_host_trend(samples, start, start + timedelta(days=1))
+        month, _ = bucketed_host_trend(samples, start, start + timedelta(days=15))
+        self.assertEqual(one_day, 30)
+        self.assertEqual(month, 360)
 
     def test_pressure_episodes_split_on_normal_and_collector_gap(self):
         host = "app3"
