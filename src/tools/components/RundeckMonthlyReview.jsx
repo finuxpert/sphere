@@ -344,9 +344,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
         <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><div className="sphereMonthlyManagerPeak">{peak(metric)}</div></div>
         {Array.isArray(pressure.trend_hosts) && Number(pressure.trend_bucket_minutes)>0
-          ? <React.Suspense fallback={<HostTrend rows={pressure.daily_hosts||[]} month={month} weekStart={weekStart}
-              customStart={customStart} customEnd={customEnd} metric={metric} fitObserved={false}
-              threshold={pressure.thresholds?.[metric+'_warning_pct']}/>}>
+          ? <React.Suspense fallback={<small>Loading time-series chart…</small>}>
               <TimeHostTrend rows={pressure.trend_hosts} bucketMinutes={pressure.trend_bucket_minutes}
                 month={month} weekStart={weekStart} customStart={customStart} customEnd={customEnd} metric={metric}
                 threshold={pressure.thresholds?.[metric+'_warning_pct']}/>
