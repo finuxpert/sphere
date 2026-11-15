@@ -89,6 +89,63 @@ def detect_pressure_episodes(samples: list[dict], metric: str, warning: float) -
     } for episode in episodes]
 
 
+def bucketed_host_trend(samples: list[dict], start: datetime, end: datetime) -> tuple[int, list[dict]]:
+    """Preserve intra-day APP peaks without extrapolating missing collector buckets.
+
+    The monthly host query has already loaded READY collection samples. Reuse
+    those rows instead of introducing an extra time-series query. Bucket
+    boundaries follow Asia/Jakarta, and each peak retains its source timestamp.
+    """
+    hours = max(0, (end - start).total_seconds() / 3600)
+    bucket_minutes = 30 if hours <= 24 else 60 if hours <= 168 else 360 if hours <= 744 else 1440
+    timezone_wib = ZoneInfo("Asia/Jakarta")
+    buckets: dict[tuple[str, str], dict] = {}
+    for row in samples:
+        if row.get("cpu_pct") is None and row.get("ram_pct") is None:
+            continue
+        at = row["collected_at"].astimezone(timezone_wib)
+        minute_of_day = (at.hour * 60 + at.minute) // bucket_minutes * bucket_minutes
+        bucket_start = at.replace(
+            hour=minute_of_day // 60, minute=minute_of_day % 60,
+            second=0, microsecond=0,
+        ).isoformat()
+        host = str(row["host"])
+        item = buckets.setdefault((bucket_start, host), {
+            "bucket_start": bucket_start, "host": host,
+            "cpu_values": [], "ram_values": [],
+            "_cpu_peak": None, "_ram_peak": None,
+            "peak_cpu_at": None, "peak_ram_at": None,
+            "_cpu_warning_ids": set(), "_ram_warning_ids": set(),
+        })
+        for metric, warning in (("cpu", CPU_WARNING), ("ram", RAM_WARNING)):
+            raw = row.get(metric + "_pct")
+            if raw is None:
+                continue
+            value = float(raw)
+            item[metric + "_values"].append(value)
+            if item["_" + metric + "_peak"] is None or value > item["_" + metric + "_peak"]:
+                item["_" + metric + "_peak"] = value
+                item["peak_" + metric + "_at"] = row["collected_at"].isoformat()
+            if value >= warning:
+                item["_" + metric + "_warning_ids"].add(str(row["collection_id"]))
+    trend_hosts = []
+    for item in buckets.values():
+        cpu, ram = item["cpu_values"], item["ram_values"]
+        trend_hosts.append({
+            "bucket_start": item["bucket_start"], "host": item["host"],
+            "avg_cpu_pct": _rounded(sum(cpu) / len(cpu)) if cpu else None,
+            "peak_cpu_pct": _rounded(max(cpu)) if cpu else None,
+            "avg_ram_pct": _rounded(sum(ram) / len(ram)) if ram else None,
+            "peak_ram_pct": _rounded(max(ram)) if ram else None,
+            "peak_cpu_at": item["peak_cpu_at"],
+            "peak_ram_at": item["peak_ram_at"],
+            "cpu_warning_checks": len(item["_cpu_warning_ids"]),
+            "ram_warning_checks": len(item["_ram_warning_ids"]),
+        })
+    trend_hosts.sort(key=lambda row: (row["bucket_start"], row["host"]))
+    return bucket_minutes, trend_hosts
+
+
 def monthly_pressure_observations(conn, start: datetime, end: datetime, source: str, complete_clause: str, *, include_correlation: bool = True) -> dict:
     """Return resource pressure observations and correlated retained workloads.
 
@@ -189,6 +246,7 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
             "ram_warning_day": bool(item["_ram_warning_ids"]),
         })
     daily_hosts.sort(key=lambda row: (row["day"], row["host"]))
+    trend_bucket_minutes, trend_hosts = bucketed_host_trend(samples, start, end)
 
     host_summary = []
     for values in hosts.values():
@@ -259,6 +317,8 @@ def monthly_pressure_observations(conn, start: datetime, end: datetime, source: 
         },
         "hosts": host_summary,
         "daily_hosts": daily_hosts,
+        "trend_bucket_minutes": trend_bucket_minutes,
+        "trend_hosts": trend_hosts,
         "cpu": {
             "episodes": len(cpu_episodes) if samples else None,
             "peak": cpu_episodes[0] if cpu_episodes else None,
