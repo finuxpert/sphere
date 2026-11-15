@@ -31,6 +31,7 @@ echo '=== STATIC / REGRESSION QA ==='
 "$PY" -m compileall -q backend
 "$PY" -m unittest -q \
   backend.tests.test_rundeck_prod_compat_api \
+  backend.tests.test_rundeck_prod_hourly_pressure \
   backend.tests.test_rundeck_workload_activity \
   backend.tests.test_rundeck_top_consumers \
   backend.tests.test_rundeck_network_prod_contract \
@@ -137,6 +138,9 @@ for name,path,keys in cases:
             obj=json.load(response)
         missing=[k for k in keys if k not in obj]
         ok=code==200 and isinstance(obj,dict) and not missing
+        if name=="MONTHLY_HOSTS":
+            pressure=obj.get("monthly_pressure") or {}
+            ok=ok and isinstance(pressure.get("trend_hosts"),list) and pressure.get("trend_bucket_minutes") in (30,60,360,1440)
         if name=="WORKLOAD_ACTIVITY": ok=ok and obj.get("complete_checks",0)>0 and obj.get("activity_checks",0)>0
         if name=="TOP_CONSUMERS": ok=ok and obj.get("complete_checks",0)>0
         print(f"{name:21} {'PASS' if ok else 'FAIL'} HTTP={code} seconds={time.monotonic()-started:.2f}" + (f" missing={missing}" if missing else ""))

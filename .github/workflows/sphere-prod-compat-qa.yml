@@ -35,6 +35,7 @@ jobs:
         run: |
           python -m unittest -v \
             backend.tests.test_rundeck_prod_compat_api \
+            backend.tests.test_rundeck_prod_hourly_pressure \
             backend.tests.test_rundeck_prod_release_readiness \
             backend.tests.test_rundeck_workload_activity \
             backend.tests.test_rundeck_top_consumers \
