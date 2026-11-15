@@ -26,6 +26,7 @@ jobs:
       - name: Validate guarded production release shell
         run: |
           bash -n ops/rundeck/release-prod-compat.sh
+          bash -n ops/rundeck/release-prod-hourly-pressure-only.sh
           ! grep -E 'alembic upgrade|systemctl restart sphere-rundeck-api|git push' ops/rundeck/release-prod-compat.sh
       - name: Compile backend sources
         run: python -m compileall -q backend
@@ -36,6 +37,7 @@ jobs:
           python -m unittest -v \
             backend.tests.test_rundeck_prod_compat_api \
             backend.tests.test_rundeck_prod_hourly_pressure \
+            backend.tests.test_rundeck_prod_hourly_release_guard \
             backend.tests.test_rundeck_prod_release_readiness \
             backend.tests.test_rundeck_workload_activity \
             backend.tests.test_rundeck_top_consumers \
