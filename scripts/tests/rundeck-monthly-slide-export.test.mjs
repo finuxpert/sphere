@@ -165,3 +165,52 @@ test('16:9 PDF table bands and column widths remain exact, with 8pt gaps',async(
   assert.ok(ui.includes('table-layout:fixed!important'))
   assert.ok(ui.includes('td.is-job{white-space:normal!important'))
 })
+
+test('custom two-day report exports actual hourly APP buckets without inventing gaps',async()=>{
+  const scoped={
+    ...data,month:'2026-11',period:'custom',
+    start_date:'2026-11-14',end_date:'2026-11-15',
+    monthly_storage:{...data.monthly_storage,month:'2026-11',period:'custom',
+      start_date:'2026-11-14',end_date:'2026-11-15'},
+    monthly_pressure:{...data.monthly_pressure,
+      daily_hosts:[
+        {day:'2026-11-14',host:'AOPH2PAPPDC',peak_cpu_pct:80,
+          peak_cpu_at:'2026-11-14T07:05:00+07:00',peak_ram_pct:32,
+          peak_ram_at:'2026-11-14T07:05:00+07:00'},
+        {day:'2026-11-15',host:'AOPH2PAPPDC',peak_cpu_pct:98.6,
+          peak_cpu_at:'2026-11-15T07:59:00+07:00',peak_ram_pct:35,
+          peak_ram_at:'2026-11-15T07:59:00+07:00'},
+      ],
+      trend_bucket_minutes:60,
+      trend_hosts:[
+        {bucket_start:'2026-11-14T07:00:00+07:00',host:'AOPH2PAPPDC',
+          peak_cpu_pct:80,peak_cpu_at:'2026-11-14T07:05:00+07:00',
+          peak_ram_pct:32,peak_ram_at:'2026-11-14T07:05:00+07:00'},
+        {bucket_start:'2026-11-14T09:00:00+07:00',host:'AOPH2PAPPDC',
+          peak_cpu_pct:41,peak_cpu_at:'2026-11-14T09:05:00+07:00',
+          peak_ram_pct:31,peak_ram_at:'2026-11-14T09:05:00+07:00'},
+        {bucket_start:'2026-11-15T07:00:00+07:00',host:'AOPH2PAPPDC',
+          peak_cpu_pct:98.6,peak_cpu_at:'2026-11-15T07:59:00+07:00',
+          peak_ram_pct:35,peak_ram_at:'2026-11-15T07:59:00+07:00'},
+      ],
+    },
+  }
+  const model=monthlyEnterpriseReportModel('2026-11',scoped)
+  assert.equal(model.timeIntervalMs,3600000)
+  assert.equal(model.timeStart,Date.parse('2026-11-14T00:00:00+07:00'))
+  assert.equal(model.timeEnd,Date.parse('2026-11-16T00:00:00+07:00'))
+  const app2=model.timeSeries.find(row=>row.host==='APP2')
+  assert.deepEqual(app2.points.map(row=>row.cpu),[80,41,98.6])
+  assert.equal(app2.points[2].cpuAt,'2026-11-15T07:59:00+07:00')
+  assert.equal(model.cpuPeak.value,98.6)
+  const pdf=await buildManagementMonthlyPdf({month:'2026-11',data:scoped,returnInstance:true})
+  assert.equal(pdf.internal.getNumberOfPages(),1)
+  const source=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
+  assert.match(source,/current.at-previous.at<=m.timeIntervalMs\*1\.05/)
+  assert.match(source,/timeBased\?xForTime\(point.at\):xFor\(point.day\)/)
+  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  assert.match(ui,/function TimeHostTrend/)
+  assert.match(ui,/point.at-points\[k-1\].at<=intervalMs\*1\.05/)
+  assert.match(ui,/Array.isArray\(pressure.trend_hosts\)/)
+})
+
