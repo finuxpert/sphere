@@ -40,3 +40,14 @@
   padding:3px 12px;background:transparent;color:var(--sphere-accent,#68a9de);
   font-size:11px;cursor:pointer;
 }
+
+/* Compact shared historical selector for both observed SAP charts. */
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadHistorySelect{
+  min-width:55px;max-width:69px;padding:2px 3px;
+  border:1px solid var(--sphere-border,#405066);border-radius:4px;
+  background:var(--sphere-surface,#1c2a37);color:inherit;
+  font:inherit;font-size:10px;cursor:pointer;
+}
+.rundeckMonitoring.is-six-chart-layout .sphereWorkloadHistorySelect:focus-visible{
+  outline:2px solid var(--sphere-accent,#68a9de);outline-offset:2px;
+}
