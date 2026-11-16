@@ -2,13 +2,12 @@ import React from 'react'
 import { formatWib } from './sapUiFormat.js'
 import {
   WP_TYPES, WP_COLORS, WORKLOAD_COLORS, niceCountMax,
-  peakActivity, splitActivitySeries, validateActivityTrend,
+  peakActivity, splitActivitySeries, validateActivityTrend, activityGapMs,
 } from './rundeckWorkloadActivityCharts.js'
 import './RundeckSapWorkloadMiniCharts.css'
 
 const API = import.meta.env.BASE_URL + 'api/history/workload/activity'
 const W = 360, H = 108, L = 37, R = 8, T = 9, B = 24
-const GAP_MS = 26 * 60_000
 const countFormat = n => Number(n).toLocaleString('en-US', { maximumFractionDigits: 1 })
 const formatPoint = value => formatWib(value, true) + ' WIB'
 
@@ -39,7 +38,7 @@ function ObservedChart({ data, metric }) {
     : Math.max(0, ...usable.map(p => Math.max(p.jobs || 0, p.programs || 0)))
   const max = niceCountMax(biggest)
   const y = v => T + (1 - Math.max(0, Number(v)) / max) * (H-T-B)
-  const segments = splitActivitySeries(points, p => isWP ? p.wp !== null : p.jobs !== null, GAP_MS)
+  const segments = splitActivitySeries(points, p => isWP ? p.wp !== null : p.jobs !== null, activityGapMs(data))
   return <svg viewBox={'0 0 ' + W + ' ' + H} role="img"
     aria-label={isWP
       ? 'Stacked observed work processes by type; not total work process capacity or utilization'
@@ -81,9 +80,15 @@ function ObservedChart({ data, metric }) {
 }
 
 function TimeSelector({ range, onRange, name }) {
+  const longOptions = [['30d','30D'],['90d','3M'],['180d','6M'],['365d','1Y']]
   return <div className="sphereFleetMiniActions" role="group" aria-label={name+' time range, shared between both observed SAP charts'}>
-    {['6h','24h'].map(v => <button key={v} type="button" aria-pressed={range===v}
-      onClick={() => onRange?.(v)}>{v.toUpperCase()}</button>)}
+    {['6h','24h','7d'].map(v => <button key={v} type="button" aria-pressed={range===v}
+      onClick={() => onRange?.(v)}>{v==='24h'?'1D':v.toUpperCase()}</button>)}
+    <select className="sphereWorkloadHistorySelect" value={longOptions.some(([v])=>v===range)?range:''}
+      onChange={event => onRange?.(event.target.value)} aria-label={name+' longer history'}>
+      <option value="" disabled>More</option>
+      {longOptions.map(([v,label])=><option key={v} value={v}>{label}</option>)}
+    </select>
   </div>
 }
 
@@ -124,8 +129,8 @@ function TrendPanel({ kind, range, onRange, data, loading, error, onRetry }) {
         ? 'Legacy source covers only previously stored top consumers; not the complete observed population'
         : 'Distinct observed identities; WP are deduplicated per host and collection, not total capacity'}>
         {scopeLimited ? 'Limited historic ranking · ' : ''}
-        {peak ? 'Peak '+peak.value+' '+(isWP?'observed WP':'workloads')+' · '+formatPoint(peak.at) : 'No verified peak'}
-        {observed && data.complete_checks > observed ? ' · '+observed+'/'+data.complete_checks+' checks' : ''}
+        {peak ? (data?.snapshot_sampled ? 'Sampled peak ' : 'Peak ')+peak.value+' '+(isWP?'observed WP':'workloads')+' · '+formatPoint(peak.at) : 'No verified peak'}
+        {observed && data.complete_checks > observed ? ' · '+observed+'/'+data.complete_checks+(data.snapshot_sampled?' sampled':'')+' checks' : ''}
       </small>
     </div>
   </section>
