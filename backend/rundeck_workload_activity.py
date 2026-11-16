@@ -17,7 +17,24 @@ from backend.rundeck_evaluation import (
     _complete_collection_clause,
 )
 
-RANGES = {"6h": timedelta(hours=6), "24h": timedelta(hours=24)}
+RANGES = {
+    "6h": timedelta(hours=6),
+    "24h": timedelta(hours=24),
+    "7d": timedelta(days=7),
+    "30d": timedelta(days=30),
+    "90d": timedelta(days=90),
+    "180d": timedelta(days=180),
+    "365d": timedelta(days=365),
+}
+# Long windows select the last READY collection per UTC bucket before
+# expanding wp_signals JSON. <=183 selected snapshots for any window.
+SAMPLE_INTERVAL_SECONDS = {
+    "7d": 3600,
+    "30d": 4 * 3600,
+    "90d": 12 * 3600,
+    "180d": 24 * 3600,
+    "365d": 48 * 3600,
+}
 _CACHE_TTL_SECONDS = 90
 _ACTIVITY_CACHE: dict[tuple[str, str, str], tuple[float, dict]] = {}
 _CACHE_LOCK = Lock()
@@ -51,7 +68,7 @@ def normalize_activity_row(row: dict) -> dict:
 def workload_activity_trends(range_key: str = "24h", *,
                             now: datetime | None = None) -> dict:
     if range_key not in RANGES:
-        raise ValueError("Range must be 6h or 24h")
+        raise ValueError("Unsupported activity time range")
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     engine = get_engine()
     if engine is None:
@@ -77,14 +94,41 @@ def workload_activity_trends(range_key: str = "24h", *,
             return cached[1]
         # Cap database work; never leave the UI spinning on a blocked query.
         conn.execute(text("SET LOCAL statement_timeout = '12000ms'"))
-        rows = conn.execute(text(f"""
-            WITH sampled AS (
+        # Preserve every READY snapshot for 6h/24h. For longer windows,
+        # select a bounded representative snapshot before joining consumer
+        # details and expanding JSON. Never sum WP or distinct job identities
+        # across different collections: those are snapshot counts.
+        sample_seconds = SAMPLE_INTERVAL_SECONDS.get(range_key)
+        sample_cte = f"""
                 SELECT c.collection_id,
                        COALESCE(c.finished_at, c.started_at) AS sampled_at
                 FROM rundeck_collections c
                 WHERE {_complete_collection_clause('c')}
                   AND COALESCE(c.finished_at, c.started_at) >= :start
                   AND COALESCE(c.finished_at, c.started_at) < :end
+        """
+        params = {"start": start, "end": end}
+        if sample_seconds:
+            params["sample_seconds"] = sample_seconds
+            sample_cte = f"""
+                SELECT collection_id, sampled_at
+                FROM (
+                    SELECT c.collection_id,
+                           COALESCE(c.finished_at, c.started_at) AS sampled_at,
+                           ROW_NUMBER() OVER (
+                             PARTITION BY FLOOR(EXTRACT(EPOCH FROM COALESCE(c.finished_at, c.started_at)) / :sample_seconds)
+                             ORDER BY COALESCE(c.finished_at, c.started_at) DESC, c.collection_id DESC
+                           ) AS sample_rank
+                    FROM rundeck_collections c
+                    WHERE {_complete_collection_clause('c')}
+                      AND COALESCE(c.finished_at, c.started_at) >= :start
+                      AND COALESCE(c.finished_at, c.started_at) < :end
+                ) sampled_candidates
+                WHERE sample_rank = 1
+            """
+        rows = conn.execute(text(f"""
+            WITH sampled AS (
+                {sample_cte}
             ),
             observed AS (
                 SELECT o.collection_id, o.host, o.consumer_type,
@@ -155,16 +199,19 @@ def workload_activity_trends(range_key: str = "24h", *,
             LEFT JOIN workloads a ON a.collection_id = c.collection_id
             LEFT JOIN wp_totals w ON w.collection_id = c.collection_id
             ORDER BY c.sampled_at, c.collection_id
-        """), {"start": start, "end": end}).mappings().all()
+        """), params).mappings().all()
     points = [normalize_activity_row(dict(row)) for row in rows]
     result = {
         "range": range_key,
+        "sample_interval_minutes": (sample_seconds // 60 if sample_seconds else 0),
+        "snapshot_sampled": bool(sample_seconds),
         "start": start.isoformat(),
         "end": end.isoformat(),
         "source": "RCA-WP retained complete collections",
         "coverage_scope": coverage,
         "collection_anchor": anchor_id,
         "semantics": {
+            "sampling": ("Latest complete snapshot per UTC bucket; displayed peak is sampled, not the true interval maximum" if sample_seconds else "All complete snapshots in window"),
             "activity": "Distinct JOB/PROGRAM names observed across APP1-APP5 per collection, not job runs",
             "work_process": "Distinct WP IDs per APP and collection from recorded wp_signals; not total WP capacity or utilization",
             "missing": "A collection without respective observations returns null, not zero",
