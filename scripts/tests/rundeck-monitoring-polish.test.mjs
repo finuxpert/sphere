@@ -266,14 +266,20 @@ test('Monitoring heading, KPI and trend controls follow the final compact operat
   assert.match(css,/font-size:12px!important;font-weight:700!important/)
 })
 
-test('6H/24H SAP panels share exactly one request and use real collection samples',()=>{
+test('SAP 6H/1D/7D and long-history panels share one request and real collection samples',()=>{
   const core=read('RundeckMonitoringHistoryCore.jsx')
   const charts=read('RundeckSapWorkloadMiniCharts.jsx')
   const health=read('RundeckWorkloadHealth.jsx')
   assert.match(core,/\[workloadRange, setWorkloadRange\] = React\.useState\('24h'\)/)
   assert.equal((core.match(/<RundeckSapWorkloadMiniCharts/g)||[]).length,1)
   assert.equal((charts.match(/fetch\(API\+/g)||[]).length,1)
-  assert.match(charts,/\['6h','24h'\]/)
+  assert.match(charts,/\['6h','24h','7d'\]/)
+  assert.match(charts,/\['30d','30D'\]/)
+  assert.match(charts,/\['90d','3M'\]/)
+  assert.match(charts,/\['180d','6M'\]/)
+  assert.match(charts,/\['365d','1Y'\]/)
+  assert.match(charts,/activityGapMs\(data\)/)
+  assert.match(charts,/Sampled peak /)
   assert.match(charts,/WP_TYPES\.map/)
   assert.match(charts,/splitActivitySeries\(points/)
   assert.match(charts,/not total work process capacity or utilization/)

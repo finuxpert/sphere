@@ -2,6 +2,10 @@
 export const WP_TYPES = ['DIA', 'BTC', 'UPD', 'ENQ', 'OTHER']
 export const WP_COLORS = { DIA:'#68a9de', BTC:'#63bfac', UPD:'#e2aa60', ENQ:'#a998df', OTHER:'#8296ad' }
 export const WORKLOAD_COLORS = { jobs:'#68a9de', programs:'#63bfac' }
+export const ACTIVITY_RANGES = ['6h','24h','7d','30d','90d','180d','365d']
+export const activityGapMs = (data) => data?.snapshot_sampled
+  ? Math.max(26 * 60_000, Number(data.sample_interval_minutes || 0) * 60_000 * 2.5)
+  : 26 * 60_000
 
 export function niceCountMax(value) {
   if (!Number.isFinite(value) || value <= 0) return 1
@@ -12,13 +16,14 @@ export function niceCountMax(value) {
 const countOrNull = value => value === null ? true : Number.isSafeInteger(value) && value >= 0
 export function validateActivityTrend(payload, range) {
   if (!payload || payload.range !== range ||
-    !['6h', '24h'].includes(range) ||
+    !ACTIVITY_RANGES.includes(range) ||
     !['ALL_OBSERVED_ACTIVE_WORKLOADS', 'TOP_CONSUMERS_ONLY'].includes(payload.coverage_scope) ||
     !Number.isFinite(Date.parse(payload.start || '')) ||
     !Number.isFinite(Date.parse(payload.end || '')) ||
     Date.parse(payload.start) >= Date.parse(payload.end) ||
     !Array.isArray(payload.items) || payload.items.length > 300 ||
     !Number.isSafeInteger(payload.complete_checks) || payload.complete_checks !== payload.items.length ||
+    (payload.snapshot_sampled && (!Number.isSafeInteger(payload.sample_interval_minutes) || payload.sample_interval_minutes <= 0)) ||
     !Number.isSafeInteger(payload.activity_checks) || !Number.isSafeInteger(payload.wp_checks)) return null
   const seen = new Set()
   let activityChecks = 0, wpChecks = 0, previous = -Infinity

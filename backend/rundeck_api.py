@@ -139,7 +139,7 @@ def evidence_timeline_endpoint(
 
 @app.get("/history/workload/activity")
 def workload_activity_endpoint(
-    range_key: str = Query("24h", alias="range", pattern="^(6h|24h)$"),
+    range_key: str = Query("24h", alias="range", pattern="^(6h|24h|7d|30d|90d|180d|365d)$"),
 ):
     try:
         return workload_activity_trends(range_key=range_key)

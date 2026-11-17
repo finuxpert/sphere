@@ -125,6 +125,31 @@ class WorkloadActivityTests(TestCase):
                 "wp_count": 99,
             })
 
+    def test_seven_day_history_selects_one_ready_snapshot_per_hour_before_json(self):
+        conn = _Connection([_point("last", ANCHOR, jobs=10, programs=4)])
+        with patch("backend.rundeck_workload_activity.get_engine", return_value=_Engine(conn)), \
+             patch("backend.rundeck_workload_activity._anchor_collection",
+                   return_value=(ANCHOR, "last")):
+            result = workload_activity_trends("7d", now=NOW)
+        sql, params = conn.queries[-1]
+        self.assertEqual(params["end"] - params["start"], timedelta(days=7))
+        self.assertEqual(params["sample_seconds"], 3600)
+        self.assertIn("ROW_NUMBER() OVER", sql)
+        self.assertIn("WHERE sample_rank = 1", sql)
+        self.assertTrue(result["snapshot_sampled"])
+        self.assertEqual(result["sample_interval_minutes"], 60)
+        self.assertEqual(result["activity_checks"], 1)
+
+    def test_one_year_uses_two_day_sample_buckets(self):
+        conn = _Connection([])
+        with patch("backend.rundeck_workload_activity.get_engine", return_value=_Engine(conn)), \
+             patch("backend.rundeck_workload_activity._anchor_collection",
+                   return_value=(ANCHOR, "last")):
+            result = workload_activity_trends("365d", now=NOW)
+        self.assertEqual(conn.queries[-1][1]["sample_seconds"], 48 * 3600)
+        self.assertEqual(result["sample_interval_minutes"], 48 * 60)
+        self.assertEqual(result["complete_checks"], 0)
+
     def test_range_guard_is_read_only(self):
         with self.assertRaises(ValueError):
-            workload_activity_trends("30d", now=NOW)
+            workload_activity_trends("14d", now=NOW)
