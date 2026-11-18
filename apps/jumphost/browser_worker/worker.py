@@ -15,7 +15,7 @@ import re
 import secrets
 import time
 from typing import Literal
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, quote
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from pydantic import BaseModel, ConfigDict, Field
@@ -188,6 +188,79 @@ async def create_session(data: Start, owner: str = Depends(worker_auth)):
             _sessions[sid] = Session(owner, engine, browser, context, page, asyncio.Lock(), now, now)
             log.info("Browser session created")
             return {"session_id": sid, "width": WIDTH, "height": HEIGHT}
+        except Exception:
+            if browser is not None:
+                await browser.close()
+            await engine.stop()
+            raise
+
+
+
+DEMO_HTML = """<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><title>SPHERE Remote Offline Demo</title>
+<style>
+body{background:#101c2b;color:#e9f3ff;font:24px system-ui;margin:60px}
+h1{font-size:42px}p{color:#b4d3f3}
+input,button{padding:16px;font:22px system-ui;border-radius:9px}
+button{background:#2877c9;color:#fff;border:0;cursor:pointer;margin:12px}
+#result{font-size:24px;color:#a8f0c6;margin-top:30px}
+</style></head><body>
+<h1>SPHERE Remote · Demo Interaktif</h1>
+<p>Ini halaman lokal Chromium, bukan DPA dan tanpa akses jaringan.</p>
+<label for="name">Ketik sesuatu:</label>
+<input id="name" placeholder="Uji keyboard" autocomplete="off">
+<button id="button" onclick="go()">Klik saya</button>
+<p id="result">Menunggu interaksi...</p>
+<script>
+let clicks=0;
+function go(){
+ clicks++;
+ document.getElementById('result').textContent=
+ 'Klik: '+clicks+' | Input: '+document.getElementById('name').value;
+}
+</script></body></html>"""
+
+
+@app.post("/v1/demo", status_code=201)
+async def create_offline_demo(owner: str = Depends(worker_auth)):
+    """Start an authenticated, network-disabled Chromium demo session."""
+    if os.getenv("JUMPHOST_ENV") != "dev":
+        raise HTTPException(503, "Offline browser demo is DEV-only")
+
+    async with _registry_lock:
+        await purge()
+        if _sessions:
+            raise HTTPException(429, "Browser worker is busy (one session maximum)")
+
+        engine = await async_playwright().start()
+        browser = None
+        try:
+            browser = await engine.chromium.launch(headless=True, chromium_sandbox=True)
+            context = await browser.new_context(
+                viewport={"width": WIDTH, "height": HEIGHT},
+                accept_downloads=False, service_workers="block", permissions=[],
+            )
+
+            async def deny_network(route):
+                await route.abort()
+
+            async def deny_websocket(ws):
+                await ws.close()
+
+            await context.route("**/*", deny_network)
+            await context.route_web_socket("**/*", deny_websocket)
+            page = await context.new_page()
+            await page.goto(
+                "data:text/html;charset=utf-8," + quote(DEMO_HTML),
+                wait_until="domcontentloaded", timeout=12000,
+            )
+            sid = secrets.token_urlsafe(24)
+            now = time.monotonic()
+            _sessions[sid] = Session(
+                owner, engine, browser, context, page, asyncio.Lock(), now, now
+            )
+            log.info("Offline Chromium demo session started")
+            return {"session_id": sid, "width": WIDTH, "height": HEIGHT, "demo": True}
         except Exception:
             if browser is not None:
                 await browser.close()
