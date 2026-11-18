@@ -15,3 +15,14 @@
 .auth-panel .auth-footnote{margin:20px 0 0;color:#7890aa;font-size:11px;}
 .auth-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:15px;background:#0b192b;border-bottom:1px solid #334a61;padding:8px clamp(20px,5vw,70px);color:#acc2d8;font-size:12px;}
 .auth-toolbar button{border:1px solid #506f91;color:#eaf3fc;background:#1b3551;border-radius:7px;padding:6px 12px;cursor:pointer;}.auth-toolbar button:hover{background:#254e74;}
+
+
+/* v0.3: Chromium screenshot viewport; aspect ratio stays 1280x720 for accurate clicks. */
+.remote-screen{background:#0a1019;min-height:280px;outline:none;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;}
+.remote-screen:focus-visible{outline:3px solid #78b9ff;outline-offset:-3px;}
+.remote-screen img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;cursor:crosshair;user-select:none;}
+.browser-pending{color:#d4e1f0;font-size:12px;text-align:center;padding:80px 15px;}
+
+/* Offline demo is deliberately separate from the gated real browser button. */
+.demo-button{margin-top:10px;justify-content:center;background:#1a5648;border:1px solid #367b68;}
+.demo-button:hover{background:#267160;}

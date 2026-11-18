@@ -1,5 +1,11 @@
 # SPHERE Remote — Authenticated Scaffold v0.2.2
 
+> **v0.3 DEV browser preview:** See [REMOTE_BROWSER_V030.md](REMOTE_BROWSER_V030.md).
+> This is a separate draft implementation: gated Chromium worker, authenticated
+> screenshot polling and basic mouse/keyboard. It remains disabled by default.
+> Remote browser must not be enabled over company NAT without the required
+> security approvals and controls. Web SSH remains disabled.
+
 **Standalone prototype**, not yet a functioning SSH/remote-browser gateway. Based on the `finuxpert/sphere` DEV repository structure. No existing SPHERE files are changed. Dev/prod route and service name are kept separate.
 
 ## Naming contract

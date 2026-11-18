@@ -91,7 +91,8 @@ class TestAdminAuthentication(unittest.TestCase):
         headers2 = {**self._cookie(login2), "X-Jumphost-CSRF": login2.json()["csrf_token"]}
         self.assertEqual(self.client.get("/api/v1/capabilities", headers=headers2).status_code, 200)
         self.assertEqual(self.client.post("/api/v1/ssh/sessions", json=ssh, headers=headers2).status_code, 501)
-        self.assertEqual(self.client.post("/api/v1/browser/sessions", json={"url":"https://internal.example"}, headers=headers2).status_code, 501)
+        # v0.3 denies browser creation until the separate DEV worker is explicitly approved/enabled.
+        self.assertEqual(self.client.post("/api/v1/browser/sessions", json={"url":"https://internal.example"}, headers=headers2).status_code, 503)
         self.assertEqual(self.client.post("/api/v1/auth/logout", headers=headers2).status_code, 200)
         self.assertEqual(self.client.get("/api/v1/auth/me", headers=self._cookie(login2)).status_code, 401)
 
