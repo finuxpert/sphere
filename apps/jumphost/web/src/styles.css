@@ -22,3 +22,7 @@
 .remote-screen:focus-visible{outline:3px solid #78b9ff;outline-offset:-3px;}
 .remote-screen img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain;cursor:crosshair;user-select:none;}
 .browser-pending{color:#d4e1f0;font-size:12px;text-align:center;padding:80px 15px;}
+
+/* Offline demo is deliberately separate from the gated real browser button. */
+.demo-button{margin-top:10px;justify-content:center;background:#1a5648;border:1px solid #367b68;}
+.demo-button:hover{background:#267160;}
