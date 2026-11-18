@@ -6,6 +6,7 @@ Worker must run under the dedicated sphere-remote-browser Linux identity.
 from __future__ import annotations
 
 import os
+import re
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -36,6 +37,13 @@ def browser_enabled() -> bool:
         and os.environ.get("JUMPHOST_BROWSER_ENABLED", "0") == "1"
         and len(os.environ.get("SPHERE_BROWSER_WORKER_TOKEN", "")) >= 32
     )
+
+
+def safe_session_id(sid: str) -> str:
+    # Base64url of 24 random bytes. Never allow path separators in worker paths.
+    if not re.fullmatch(r"[A-Za-z0-9_-]{32}", sid):
+        raise HTTPException(404, "Session not found")
+    return sid
 
 
 async def forward(method: str, path: str, principal: Principal, data: dict | None = None) -> httpx.Response:
@@ -77,7 +85,7 @@ async def create_browser_session(
 
 @router.get("/sessions/{sid}/frame")
 async def get_browser_frame(sid: str, principal: Principal = Depends(require_session)):
-    r = await forward("GET", "/v1/sessions/" + sid + "/frame", principal)
+    r = await forward("GET", "/v1/sessions/" + safe_session_id(sid) + "/frame", principal)
     if r.headers.get("content-type", "").split(";")[0] != "image/jpeg":
         raise HTTPException(502, "Unexpected browser image format")
     return Response(r.content, media_type="image/jpeg", headers={
@@ -90,11 +98,11 @@ async def get_browser_frame(sid: str, principal: Principal = Depends(require_ses
 async def browser_action(
     sid: str, action: BrowserAction, principal: Principal = Depends(require_ready),
 ):
-    r = await forward("POST", "/v1/sessions/" + sid + "/actions", principal, action.model_dump())
+    r = await forward("POST", "/v1/sessions/" + safe_session_id(sid) + "/actions", principal, action.model_dump())
     return r.json()
 
 
 @router.delete("/sessions/{sid}", status_code=204)
 async def close_browser_session(sid: str, principal: Principal = Depends(require_ready)):
-    await forward("DELETE", "/v1/sessions/" + sid, principal)
+    await forward("DELETE", "/v1/sessions/" + safe_session_id(sid), principal)
     return Response(status_code=204)
