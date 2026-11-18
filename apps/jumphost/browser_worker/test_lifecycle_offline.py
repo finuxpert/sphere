@@ -54,7 +54,9 @@ class ChromiumLifecycleOfflineTests(unittest.TestCase):
         }
         other = {**primary, "X-Sphere-Owner": "b" * 64}
 
-        with patch.object(Page, "goto", no_network_navigation):
+        with patch.object(Page, "goto", no_network_navigation), \
+             patch.object(worker, "WORKER_TOKEN", os.environ["SPHERE_BROWSER_WORKER_TOKEN"]), \
+             patch.object(worker, "TARGET_ORIGIN", DUMMY_ORIGIN):
             with TestClient(worker.app) as client:
                 self.assertEqual(client.get("/health").status_code, 200)
 
