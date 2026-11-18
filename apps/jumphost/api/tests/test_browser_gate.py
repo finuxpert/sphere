@@ -52,5 +52,47 @@ class BrowserGateTests(unittest.TestCase):
             self.assertEqual(r.status_code, 503)
 
 
+    def test_demo_is_off_by_default(self):
+        principal = Principal("admin", False, "csrf", "a" * 64)
+        app.dependency_overrides[require_ready] = lambda: principal
+        with patch.dict(os.environ, {
+            "JUMPHOST_ENV": "dev",
+            "JUMPHOST_BROWSER_ENABLED": "0",
+            "JUMPHOST_BROWSER_DEMO_ENABLED": "0",
+            "SPHERE_BROWSER_WORKER_TOKEN": "x" * 64,
+        }):
+            r = self.client.post("/api/v1/browser/demo")
+            self.assertEqual(r.status_code, 503)
+
+    def test_demo_does_not_unlock_real_internal_browser(self):
+        principal = Principal("admin", False, "csrf", "a" * 64)
+        app.dependency_overrides[require_ready] = lambda: principal
+        with patch.dict(os.environ, {
+            "JUMPHOST_ENV": "dev",
+            "JUMPHOST_BROWSER_ENABLED": "0",
+            "JUMPHOST_BROWSER_DEMO_ENABLED": "1",
+            "SPHERE_BROWSER_WORKER_TOKEN": "x" * 64,
+        }):
+            r = self.client.post("/api/v1/browser/sessions",
+                                 json={"url": "https://10.14.33.64:8124/"})
+            self.assertEqual(r.status_code, 503)
+
+    def test_anonymous_demo_is_denied(self):
+        r = self.client.post("/api/v1/browser/demo")
+        self.assertEqual(r.status_code, 401)
+
+    def test_prod_demo_is_denied(self):
+        principal = Principal("admin", False, "csrf", "a" * 64)
+        app.dependency_overrides[require_ready] = lambda: principal
+        with patch.dict(os.environ, {
+            "JUMPHOST_ENV": "prod",
+            "JUMPHOST_BROWSER_ENABLED": "0",
+            "JUMPHOST_BROWSER_DEMO_ENABLED": "1",
+            "SPHERE_BROWSER_WORKER_TOKEN": "x" * 64,
+        }):
+            r = self.client.post("/api/v1/browser/demo")
+            self.assertEqual(r.status_code, 503)
+
+
 if __name__ == "__main__":
     unittest.main()
