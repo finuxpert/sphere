@@ -1,0 +1,20 @@
+# TEMPLATE ONLY — NOT installed by a git merge. Insert into existing SPHERE
+# TLS server {} only after corporate authentication, MFA, IP/VPN policy review.
+# Fail closed: do not remove deny rules without an approved access gateway.
+# Preserve the existing / monitoring and /dev/ routing unchanged.
+
+location = /remote { return 308 /remote/; }
+
+location ^~ /remote/api/v1/ {
+    deny all;  # SECURITY REVIEW REQUIRED before enablement
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://127.0.0.1:8094/api/v1/;
+}
+
+location ^~ /remote/ {
+    deny all;  # SECURITY REVIEW REQUIRED before enablement
+    alias /opt/sphere-jumphost-prod/current/web/dist/;
+    try_files $uri $uri/ /remote/index.html;
+}

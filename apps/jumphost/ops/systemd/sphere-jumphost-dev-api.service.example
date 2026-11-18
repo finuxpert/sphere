@@ -1,0 +1,24 @@
+# Not installed. Requires a dedicated non-root service identity and policy review.
+[Unit]
+Description=SPHERE Jump Host DEV API (Auth Scaffold, no SSH/Browser execution)
+After=network.target
+
+[Service]
+Type=simple
+User=sphere-jumphost
+Group=sphere-jumphost
+WorkingDirectory=/opt/sphere-jumphost-dev/current/api
+EnvironmentFile=/etc/sphere/jumphost-dev.env
+ExecStart=/opt/sphere-jumphost-dev/venv/bin/uvicorn sphere_jumphost.main:app --host 127.0.0.1 --port 8093 --workers 1
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/sphere-jumphost-dev
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

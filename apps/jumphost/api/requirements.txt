@@ -1,0 +1,5 @@
+# Keep major components aligned with SPHERE DEV runtime at scaffold creation.
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pydantic==2.11.4
+httpx>=0.27,<1.0  # used by test client; can be moved to dev-only later
