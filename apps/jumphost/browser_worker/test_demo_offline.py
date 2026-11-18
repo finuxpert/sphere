@@ -6,6 +6,7 @@ all HTTP and WebSocket requests; the page is a packaged data: HTML document.
 import os
 import secrets
 import unittest
+from unittest.mock import patch
 
 os.environ.update({
     "JUMPHOST_ENV": "dev",
@@ -24,7 +25,9 @@ class OfflineDemoTests(unittest.TestCase):
             "X-Sphere-Worker-Token": os.environ["SPHERE_BROWSER_WORKER_TOKEN"],
             "X-Sphere-Owner": "a" * 64,
         }
-        with TestClient(worker.app) as client:
+        with patch.object(worker, 'WORKER_TOKEN', os.environ['SPHERE_BROWSER_WORKER_TOKEN']), \
+             patch.object(worker, 'TARGET_ORIGIN', 'https://10.14.33.64:8124'), \
+             TestClient(worker.app) as client:
             self.assertEqual(client.post("/v1/demo").status_code, 401)
 
             r = client.post("/v1/demo", headers=headers)
