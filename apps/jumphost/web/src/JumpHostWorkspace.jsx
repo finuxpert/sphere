@@ -128,6 +128,22 @@ export default function JumpHostWorkspace({ session }) {
     }
   }
 
+  async function startDemo() {
+    if (browserSession || mode !== 'browser') return
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      const created = await apiRequest('/demo', 'POST', null, csrf)
+      setBrowserSession({ ...created, demo: true })
+      setNotice('Demo Chromium aktif. Klik input di layar lalu ketik, atau klik tombol. Halaman ini tidak mengakses DPA.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function action(payload) {
     if (!browserSession) return
     try {
@@ -210,6 +226,8 @@ export default function JumpHostWorkspace({ session }) {
                 ? <button type="button" className="connect" disabled={busy} onClick={closeBrowser}>Tutup Browser Session</button>
                 : <button className="connect" type="submit" disabled={busy}>{busy ? 'Menghubungkan…' : mode === 'ssh' ? 'Preview SSH Request' : 'Open Remote Browser'}</button>}
             </form>
+            {mode === 'browser' && !browserSession &&
+              <button className="connect demo-button" type="button" disabled={busy} onClick={startDemo}>Coba Demo Browser (Offline)</button>}
             {notice && <p className="notice" role="status">{notice}</p>}
             {error && <p className="auth-error" role="alert">{error}</p>}
             <div className="safety-note"><strong>Security gate</strong>
@@ -219,7 +237,7 @@ export default function JumpHostWorkspace({ session }) {
             <div className="preview-head"><div><span className="eyebrow">SESSION VIEW</span><h2>{mode === 'ssh' ? 'Terminal Preview' : 'Remote Browser'}</h2></div>
               <span className="ready-tag">{mode === 'browser' && browserSession ? 'ACTIVE' : 'INACTIVE'}</span></div>
             {mode === 'ssh' ? <TerminalPlaceholder /> : <BrowserView browserSession={browserSession} frame={frame}
-              browserUrl={browserUrl} onClick={handleClick} onKeyDown={handleKeyDown} onWheel={handleWheel} />}
+              browserUrl={browserSession?.demo ? 'SPHERE Offline Demo — tanpa akses jaringan' : browserUrl} onClick={handleClick} onKeyDown={handleKeyDown} onWheel={handleWheel} />}
             <div className="preview-foot"><span>Isolated worker · HTTPS through SPHERE</span>
               <span>{mode === 'browser' ? 'Chromium sandbox · screenshot polling' : 'SSH disabled'}</span></div>
           </section>
