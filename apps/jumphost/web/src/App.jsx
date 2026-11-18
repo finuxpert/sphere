@@ -108,5 +108,5 @@ export default function App() {
 
   if (checking) return <div className="auth-shell"><div className="auth-panel" role="status">Memeriksa sesi administrator…</div></div>
   if (!session || session.must_change_password) return <AuthForm isRotating={Boolean(session?.must_change_password)} session={session} onLogin={login} onChangePassword={rotate} busy={busy} error={error} />
-  return <div className="authenticated-app"><div className="auth-toolbar"><span>Authenticated: <strong>{session.username}</strong></span><button type="button" onClick={logout} disabled={busy}>Logout</button></div><JumpHostWorkspace /></div>
+  return <div className="authenticated-app"><div className="auth-toolbar"><span>Authenticated: <strong>{session.username}</strong></span><button type="button" onClick={logout} disabled={busy}>Logout</button></div><JumpHostWorkspace session={session} /></div>
 }
