@@ -10,7 +10,10 @@ test('Monitoring does not eagerly load manual parser or resource ranking', () =>
     assert.equal(eagerImports.length, 0, specifier + ' must not be loaded during initial Monitoring render')
     assert.ok(src.includes("import('" + specifier + "')"), specifier + ' must remain available on demand')
   }
-  assert.match(src, /source === 'automatic' && <RundeckSource onCollection=\{upload\}/)
+  assert.match(src, /source === 'automatic' && <RundeckSource \/>/)
+  assert.doesNotMatch(src, /<RundeckSource onCollection=/)
+  assert.match(src, /source === 'manual' && <label className="logV2Upload"/)
+  assert.match(src, /onChange=\{\(event\) => upload\(event\.target\.files\)\}/)
 })
 
 test('Manual upload preserves worker-first parsing, fallback and source-backed ranking', () => {
