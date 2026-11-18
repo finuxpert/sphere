@@ -82,3 +82,27 @@ Set JUMPHOST_BROWSER_ENABLED=0 and restart standalone DEV API.
 Stop and disable sphere-remote-browser-dev.service. Restore previous
 /opt/sphere-jumphost-dev/current release for UI regressions, keeping auth DB.
 No Nginx changes required for rollback.
+
+
+## v0.3.1 offline interactive demo (NO internal target)
+
+A separate **Coba Demo Browser (Offline)** button can exercise the actual
+Chromium screenshot, mouse and keyboard path without accessing DPA or any
+other network destination. The worker opens a self-contained data: HTML page
+and aborts all HTTP/WebSocket requests. Real browser sessions are independently
+gated by JUMPHOST_BROWSER_ENABLED=0 and worker service egress remains
+localhost-only. This is not a substitute for authorized internal access.
+
+- API EnvironmentFile (currently /etc/sphere/remote-dev.env): add
+  JUMPHOST_BROWSER_DEMO_ENABLED=1
+- Worker EnvironmentFile remains unchanged. It already runs under
+  JUMPHOST_ENV=dev and requires the shared secret.
+- Update approved DEV API and isolated Chromium worker source from this branch;
+  build/publish updated React frontend; restart only standalone API and worker.
+- Test that **Open Remote Browser** still returns 503, while the separate
+  offline demo creates a session. The page contains a local text input and
+  button. Screenshot frames, clicks and typing are real Playwright actions.
+- To disable the demo, set JUMPHOST_BROWSER_DEMO_ENABLED=0, restart only the
+  standalone DEV API, and close any running demo worker session.
+- Neither the new demo nor the worker unit makes network access to
+  10.14.33.64:8124. IT/security review is still required for DPA access.
