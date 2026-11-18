@@ -39,6 +39,15 @@ def browser_enabled() -> bool:
     )
 
 
+def demo_enabled() -> bool:
+    """Independent flag for a completely offline demo (no internal network access)."""
+    return (
+        os.environ.get("JUMPHOST_ENV") == "dev"
+        and os.environ.get("JUMPHOST_BROWSER_DEMO_ENABLED", "0") == "1"
+        and len(os.environ.get("SPHERE_BROWSER_WORKER_TOKEN", "")) >= 32
+    )
+
+
 def safe_session_id(sid: str) -> str:
     # Base64url of 24 random bytes. Never allow path separators in worker paths.
     if not re.fullmatch(r"[A-Za-z0-9_-]{32}", sid):
@@ -49,7 +58,7 @@ def safe_session_id(sid: str) -> str:
 async def forward(method: str, path: str, principal: Principal, data: dict | None = None) -> httpx.Response:
     if principal.must_change_password:
         raise HTTPException(403, "Password rotation required")
-    if not browser_enabled():
+    if not (browser_enabled() or demo_enabled()):
         raise HTTPException(503, "Remote browser is disabled until approved")
 
     headers = {
@@ -74,11 +83,21 @@ async def forward(method: str, path: str, principal: Principal, data: dict | Non
     return r
 
 
+@router.post("/demo", status_code=201)
+async def start_offline_demo(principal: Principal = Depends(require_ready)):
+    if not demo_enabled():
+        raise HTTPException(503, "Offline demo is disabled")
+    r = await forward("POST", "/v1/demo", principal)
+    return r.json()
+
+
 @router.post("/sessions", status_code=201)
 async def create_browser_session(
     request: BrowserSessionRequest,
     principal: Principal = Depends(require_ready),
 ):
+    if not browser_enabled():
+        raise HTTPException(503, "Remote browser is disabled until approved")
     r = await forward("POST", "/v1/sessions", principal, request.model_dump())
     return r.json()
 
