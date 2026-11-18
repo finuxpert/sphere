@@ -168,13 +168,14 @@ async def create_session(data: Start, owner: str = Depends(worker_auth)):
                 await route.abort()
 
             async def guard_websocket(ws):
-                try:
-                    if origin(ws.url) == expected:
-                        await ws.connect_to_server()
-                        return
-                except (ValueError, ipaddress.AddressValueError):
-                    pass
-                await ws.close()
+                # HTTPS pages use WSS, not HTTPS, for WebSocket URLs.
+                w = urlsplit(ws.url)
+                if (w.scheme == "wss" and w.username is None and w.password is None
+                        and w.hostname == urlsplit(expected).hostname
+                        and w.port == urlsplit(expected).port):
+                    await ws.connect_to_server()
+                else:
+                    await ws.close()
 
             await context.route("**/*", guard)
             await context.route_web_socket("**/*", guard_websocket)
@@ -210,7 +211,7 @@ async def action(sid: str, data: Action, owner: str = Depends(worker_auth)):
     s = session_for(sid, owner)
     async with s.lock:
         if data.type == "click":
-            await s.page.mouse.click(data.x, data.y, timeout=5000)
+            await s.page.mouse.click(data.x, data.y)
         elif data.type == "scroll":
             await s.page.mouse.wheel(0, data.delta_y)
         elif data.type == "text":
