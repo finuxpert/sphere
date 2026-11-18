@@ -236,8 +236,30 @@ async def close(sid: str, owner: str = Depends(worker_auth)):
     return Response(status_code=204)
 
 
+_reaper_task = None
+
+
+async def reap_idle_sessions():
+    while True:
+        await asyncio.sleep(15)
+        try:
+            async with _registry_lock:
+                await purge()
+        except Exception:
+            log.exception("Browser session cleanup failed")
+
+
+@app.on_event("startup")
+async def startup():
+    global _reaper_task
+    _reaper_task = asyncio.create_task(reap_idle_sessions())
+
+
 @app.on_event("shutdown")
 async def shutdown():
+    if _reaper_task is not None:
+        _reaper_task.cancel()
+        await asyncio.gather(_reaper_task, return_exceptions=True)
     async with _registry_lock:
         for sid, s in list(_sessions.items()):
             del _sessions[sid]
