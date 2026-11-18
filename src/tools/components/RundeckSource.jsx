@@ -8,6 +8,7 @@ import SphereIcon from './SphereIcon.jsx'
 import { APP_DISPLAY_VERSION, APP_TAGLINE } from '../../app/version.js'
 import { formatWib, numberText, shortHost } from './sapUiFormat.js'
 import { coalesceAsyncRefresh } from './rundeckRefreshCoordinator.js'
+import { publishOnResolve } from './rundeckProgressiveRefresh.js'
 import { formatTime, metric, ageLabel, clipped, availabilityStatus, availabilityServiceImpact, issueSignalText } from './rundeckSourcePresentation.js'
 import { systemHealthState } from './rundeckSystemHealth.js'
 import { assessRundeckDataQuality, retainedReadyCollectionGaps, dataGapDuration, monitoringFreshnessMessage } from './rundeckDataQuality.js'
@@ -53,7 +54,7 @@ function pdfStatusColor(status) {
   return [41, 131, 91]
 }
 
-export default function RundeckSource({ onCollection }) {
+export default function RundeckSource() {
   const [headerView, setHeaderView] = React.useState(performanceViewFromHash)
   React.useEffect(() => {
     const sync = () => setHeaderView(performanceViewFromHash())
@@ -87,13 +88,7 @@ export default function RundeckSource({ onCollection }) {
   const [selectedJob, setSelectedJob] = React.useState(null)
   const [incidentSummary, setIncidentSummary] = React.useState(null)
   const [, setTrendContext] = React.useState({ metricLabel: 'CPU', rangeLabel: '6H', mode: 'max' })
-  const loaded = React.useRef('')
   const panelRef = React.useRef(null)
-  const onCollectionRef = React.useRef(onCollection)
-
-  React.useEffect(() => {
-    onCollectionRef.current = onCollection
-  }, [onCollection])
 
   React.useEffect(() => () => {
     if (pdfPreview?.url) URL.revokeObjectURL(pdfPreview.url)
@@ -130,48 +125,41 @@ export default function RundeckSource({ onCollection }) {
     })
   }, [])
 
+  // The monitoring page consumes server-backed snapshots. Raw LOG parsing and
+  // DuckDB ranking belong to explicit Manual Upload, never initial monitoring.
   const loadLatest = React.useCallback(async () => {
     const response = await fetch(`${API}/collections/latest`, { cache: 'no-store' })
     if (response.status === 404) return
     if (!response.ok) throw new Error('Unable to load Rundeck data.')
     const collection = await response.json()
     if (collection.status !== 'READY') throw new Error('Latest Rundeck run is not ready.')
-
     setLatest(collection)
-
-    if (loaded.current !== collection.collection_id) {
-      const raw = await fetch(`${API}/collections/${encodeURIComponent(collection.collection_id)}/raw`, { cache: 'no-store' })
-      if (!raw.ok) throw new Error('Unable to download Rundeck data.')
-      const blob = await raw.blob()
-      await onCollectionRef.current?.([
-        new File([blob], `${collection.collection_id}.log`, { type: 'text/plain' }),
-      ])
-      loaded.current = collection.collection_id
-    }
   }, [])
 
+  // Publish each verified endpoint as it resolves. Previously the six results
+  // were only committed after the slowest endpoint finished, leaving otherwise
+  // available landscape/history data behind a global loading barrier.
   const refreshMeta = React.useCallback(async () => {
     const [healthResult, hostsResult, historyResult, runResult, platformResult, availabilityResult] = await Promise.allSettled([
-      json(`${API}/health`),
-      json(`${API}/history/hosts/latest`),
-      json(`${API}/history/collections?days=90&limit=80`),
-      json(`${API}/collect-now/status`),
-      json(`${API}/platform/health`),
-      json(`${API}/availability/latest`),
+      publishOnResolve(json(`${API}/health`), setHealth),
+      publishOnResolve(json(`${API}/history/hosts/latest`), (snapshot) => {
+        setHosts(snapshot.items || [])
+        setHostSnapshot(snapshot)
+      }),
+      publishOnResolve(json(`${API}/history/collections?days=90&limit=80`), (snapshot) => {
+        setHistory(snapshot.items || [])
+      }),
+      publishOnResolve(json(`${API}/collect-now/status`), setRunState),
+      publishOnResolve(json(`${API}/platform/health`), setPlatform),
+      publishOnResolve(json(`${API}/availability/latest`), setAvailabilitySnapshot),
     ])
 
+    // Failure flags remain conservative: an unavailable source must never be
+    // reported as fresh simply because a different request returned early.
     setMetaRefreshFailed(healthResult.status !== 'fulfilled' || platformResult.status !== 'fulfilled' || hostsResult.status !== 'fulfilled')
-    if (healthResult.status === 'fulfilled') setHealth(healthResult.value)
-    if (hostsResult.status === 'fulfilled') {
-      setHosts(hostsResult.value.items || [])
-      setHostSnapshot(hostsResult.value)
-    }
     setHistoryRefreshFailed(historyResult.status !== 'fulfilled')
-    if (historyResult.status === 'fulfilled') setHistory(historyResult.value.items || [])
-    if (runResult.status === 'fulfilled') setRunState(runResult.value)
-    if (platformResult.status === 'fulfilled') setPlatform(platformResult.value)
     setAvailabilityRefreshFailed(availabilityResult.status !== 'fulfilled')
-    setAvailabilitySnapshot(availabilityResult.status === 'fulfilled' ? availabilityResult.value : null)
+    if (availabilityResult.status !== 'fulfilled') setAvailabilitySnapshot(null)
   }, [])
 
   // Timer and collection_ready may fire together. Only one source refresh
