@@ -2,6 +2,7 @@
 import os
 import sys
 import unittest
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -9,17 +10,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fastapi.testclient import TestClient
 from sphere_jumphost.main import app
-from sphere_jumphost.security.auth_store import Principal
-from sphere_jumphost.security.dependencies import require_ready
+from sphere_jumphost.security.auth_store import Principal, AuthSettings, AuthStore
+from sphere_jumphost.security.dependencies import require_ready, get_auth_store
 
 
 class BrowserGateTests(unittest.TestCase):
     def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.store = AuthStore(AuthSettings("dev", Path(self.tmp.name) / "auth.db", True, False))
+        app.dependency_overrides[get_auth_store] = lambda: self.store
         self.client = TestClient(app)
 
     def tearDown(self):
         app.dependency_overrides.clear()
         self.client.close()
+        self.tmp.cleanup()
 
     def test_no_anonymous_browser_creation(self):
         r = self.client.post("/api/v1/browser/sessions", json={"url": "https://10.14.33.64:8124/"})
