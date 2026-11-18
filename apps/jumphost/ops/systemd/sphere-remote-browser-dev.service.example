@@ -9,7 +9,7 @@ After=network.target
 Type=simple
 User=sphere-remote-browser
 Group=sphere-remote-browser
-WorkingDirectory=/opt/sphere-jumphost-dev/current/browser_worker
+WorkingDirectory=/opt/sphere-remote-browser-lab/worker
 EnvironmentFile=/etc/sphere/remote-browser-dev.env
 Environment=PLAYWRIGHT_BROWSERS_PATH=/opt/sphere-remote-browser-lab/browsers
 Environment=HOME=/var/lib/sphere-remote-browser
