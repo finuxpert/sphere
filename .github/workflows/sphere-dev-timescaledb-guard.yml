@@ -1,0 +1,30 @@
+name: SPHERE DEV TimescaleDB extension-only guard
+
+on:
+  pull_request:
+    branches: [rundeck-sphere-dev]
+    paths:
+      - ops/rundeck/timescaledb-dev-control.py
+      - ops/rundeck/TIMESCALEDB_DEV_EXTENSION.md
+      - backend/tests/test_timescaledb_dev_control.py
+      - .github/workflows/sphere-dev-timescaledb-guard.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extension-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile-only check (no PostgreSQL access)
+        run: |
+          python -m py_compile ops/rundeck/timescaledb-dev-control.py
+          python -m py_compile backend/tests/test_timescaledb_dev_control.py
+      - name: DEV-only activation guard tests
+        run: python -m unittest -v backend.tests.test_timescaledb_dev_control
