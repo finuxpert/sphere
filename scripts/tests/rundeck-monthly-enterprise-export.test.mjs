@@ -80,10 +80,10 @@ test('monthly enterprise PDF is exactly one 16:9 landscape page with evidence la
   assert.ok(Math.abs(h-540)<.25,'16:9 landscape height: '+h)
   const stream=pdf.internal.pages.slice(1).flat().join('\n')
   for(const token of [
-    'SAP Monthly Performance Report','Application Server Performance',
-    'Top 5 Tuning Candidates','Top 5 Workloads by Peak WP CPU',
-    'Top 5 Workloads by Peak WP Memory','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
-    'Storage Capacity','File System OS','Not Collected',
+    'SAP Monthly Performance Report','Application Server Utilization',
+    'Top 5 Workloads for Review','Top 5 Workloads - Peak WP CPU',
+    'Top 5 Workloads - Peak PSS','ZCPU_INTENSIVE','ZMEMORY_INTENSIVE',
+    'Filesystem Capacity','File System OS','Not Collected',
   ])assert.ok(stream.includes(token),'Missing PDF label: '+token)
   assert.ok(!stream.includes('PROTOTYPE DATA'),'Live export must not claim simulation')
   assert.ok(!stream.includes('Average Runtime'),'Unknown SM37 duration must not be invented')
@@ -99,9 +99,9 @@ test('monthly enterprise PDF is exactly one 16:9 landscape page with evidence la
   for(const expected of [
     'APP1','APP2','APP3','APP4','APP5',
     'CPU High','RAM High','Checks',
-    'Peak','Limit 75%','Limit 80%',
+    'Peak','Warning 75%','Warning 80%',
     '0%','25%','50%','75%','100%',
-    '30 Sep','Storage Capacity','Available','Last Seen',
+    '30 Sep','Filesystem Capacity','Available','Last Seen',
   ])assert.ok(stream.includes(expected),'Missing reviewed label: '+expected)
   const bytes=new Uint8Array(pdf.output('arraybuffer'))
   assert.equal(String.fromCharCode(...bytes.slice(0,5)),'%PDF-')
@@ -185,7 +185,7 @@ test('technical PDF code is loaded on demand rather than in initial report bundl
 
 test('management PDF uses explicit PSS and WP CPU naming without an unapproved storage warning threshold',()=>{
   const source=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
-  assert.match(source,/Top 5 Workloads by Peak WP Memory \(PSS\)/)
+  assert.match(source,/Top 5 Workloads - Peak PSS \(PSS\)/)
   assert.match(source,/\['WP CPU','cores'\]/)
   assert.match(source,/const highestStorage=m\.storage\.filter/)
   assert.doesNotMatch(source,/Number\(highestStorage\.used_pct\)>=85/)
@@ -201,7 +201,7 @@ test('enterprise export states snapshot provenance and preparation time without 
     'Application Server Utilization','Filesystem Capacity',
     'Observations','Suggested','Review','Warning 75%',
   ])assert.ok(stream.includes(label),'Missing source-semantic PDF copy: '+label)
-  assert.ok(!stream.includes('Limit 75%'),'warning threshold is not a hard resource limit')
+  assert.ok(!stream.includes('Warning 75%'),'warning threshold is not a hard resource limit')
 })
 
 test('enterprise PDF still shows unavailable PSS as N/A, not invented 0 GB',async()=>{
