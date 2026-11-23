@@ -18,7 +18,7 @@ test('monthly workload API is additive; existing rolling review remains unchange
   assert.match(api, /@app.get\("\/evaluation\/workloads\/monthly"\)/)
   assert.match(monthly, /pressure: str = Query\("ALL", pattern="\^\(ALL\|CPU\|RAM\|WP\)\$"\)/)
   assert.match(monthly, /flag: str = Query\("ALL", pattern="\^\(ALL\|HIGH_CPU\|HIGH_MEMORY\|RECURRING\)\$"\)/)
-  const evalSource = read('backend/rundeck_evaluation.py')
+  const evalSource = (read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py'))
   assert.match(evalSource, /anchor_key = f"\{anchor_id\}@\{end\.isoformat\(\)\}"/)
   assert.match(evalSource, /cache_key = \(period_key, type_key, anchor_key\)/)
   assert.match(evalSource, /_calendar_month_collection_anchor\(conn, start, end\)/)
@@ -55,7 +55,7 @@ test('monthly report keeps source-backed CPU RAM WP without optional appendix', 
 
 test('monthly ABAP errors use only scoped source-backed WP trace evidence', () => {
   const backend = read('backend/rundeck_monthly_errors.py')
-  const evaluation = read('backend/rundeck_evaluation.py')
+  const evaluation = (read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py'))
   const ui = reportSource()
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.match(backend, /tc\.collected_at >= :start AND tc\.collected_at < :end/)
@@ -75,7 +75,7 @@ test('monthly ABAP errors use only scoped source-backed WP trace evidence', () =
 
 
 test('monthly KPI population is independent of table-only type filters', () => {
-  const evaluation = read('backend/rundeck_evaluation.py')
+  const evaluation = (read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py'))
   const ui = reportSource()
   assert.match(evaluation, /requested_type_key = type_key/)
   assert.match(evaluation, /if period_key == "month":\s+type_key = "ALL"/)
@@ -127,7 +127,7 @@ test('monthly errors preserve source availability and WP diagnostic-only state',
   assert.match(backend, /MAX_MONTHLY_ERROR_ROWS/)
   assert.match(backend, /ERROR_WINDOW_DAYS/)
   assert.match(backend, /slice_start/)
-  assert.doesNotMatch(read('backend/rundeck_evaluation.py'), /error_attribution": "CONFIRMED"/)
+  assert.doesNotMatch((read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py')), /error_attribution": "CONFIRMED"/)
   assert.match(backend, /tc\.consumer_type IN \('JOB', 'PROGRAM', 'PROCESS'\)/)
   assert.match(backend, /RABAX and RXMSG tail counts are diagnostic evidence/)
   assert.match(ui, /WP Trace Signals for ABAP Review/)
@@ -143,7 +143,7 @@ test('monthly report automatically includes review priorities without optional s
 })
 
 test('ABAP tuning candidates are source-backed and never treated as confirmed errors', () => {
-  const evaluation = read('backend/rundeck_evaluation.py')
+  const evaluation = (read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py'))
   const ui = reportSource()
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.match(evaluation, /"monthly_abap_candidates": monthly_abap_candidates/)
@@ -177,7 +177,7 @@ test('management trends preserve dated peaks, WIB threshold and month scope', ()
 test('monthly management website uses compact four-row layout and canonical source fields', () => {
   const ui=reportSource()
   const css=read('src/tools/components/RundeckMonthlyFinal20261030.css')
-  const evaluation=read('backend/rundeck_evaluation.py')
+  const evaluation=(read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py'))
   for(const label of ['APP CPU Utilization','APP Memory Utilization',
     'Top 5 Workloads — Peak WP CPU','Top 5 Workloads — Peak PSS',
     'Application Server Utilization','Top 5 Workloads for Review',
@@ -218,7 +218,7 @@ test('WP CPU report displays logical core-equivalents without inventing a 28-vCP
   assert.equal(wpCpuCoreEquivalent(-3), null)
   const ui = reportSource()
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
-  const evaluation = read('backend/rundeck_evaluation.py')
+  const evaluation = (read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py'))
   assert.match(ui, /Peak WP CPU/)
   assert.match(ui, /Avg \/ Peak WP CPU/)
   assert.ok(ui.includes('100% = 1 logical CPU core'), 'WP CPU label must describe one logical CPU core')
@@ -252,7 +252,7 @@ test('management PDF has no generic findings and retains technical source separa
   const management=read('src/tools/components/rundeckMonthlyEnterprisePdf.js')
   const technical=read('src/tools/components/rundeckMonthlyPdf.js')
   const ui=reportSource()
-  const evaluation=read('backend/rundeck_evaluation.py')
+  const evaluation=(read('backend/rundeck_evaluation.py') + '\n' + read('backend/rundeck_evaluation_view.py'))
   assert.doesNotMatch(management,/Operational Findings|MONITORING COVERAGE|AOP Production|JOBS & PROGRAMS EVALUATED/)
   assert.match(management,/sphere-logo-horizontal-light\.png/)
   assert.match(management,/Not Collected/)
