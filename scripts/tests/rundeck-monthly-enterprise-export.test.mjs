@@ -182,3 +182,11 @@ test('technical PDF code is loaded on demand rather than in initial report bundl
   assert.match(ui,/const \{buildMonthlyPdf\}=await import\('\.\/rundeckMonthlyPdf\.js'\)/)
   assert.match(ui,/return buildMonthlyPdf\(\{month,data:exportData\}\)/)
 })
+
+test('management PDF uses explicit PSS and WP CPU naming without an unapproved storage warning threshold',()=>{
+  const source=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
+  assert.match(source,/Top 5 Workloads by Peak WP Memory \(PSS\)/)
+  assert.match(source,/\['WP CPU','cores'\]/)
+  assert.match(source,/const highestStorage=m\.storage\.filter/)
+  assert.doesNotMatch(source,/Number\(highestStorage\.used_pct\)>=85/)
+})
