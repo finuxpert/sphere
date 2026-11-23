@@ -65,11 +65,11 @@ test('PDF evidence is unfiltered, selected-period scoped and not reused from tab
   assert.match(css, /68dvh/)
 })
 
-test('Monthly Report is a single-view overview with an evidence popup and direct PDF actions', () => {
+test('Monthly Report is a single-view overview with explicit generate and download actions', () => {
   assert.match(ui, /is-single-page/)
   assert.match(ui, /sphereMonthlyOnePageActions/)
   assert.match(ui, /evidenceOpen && <RundeckWorkspaceDrawer/)
-  assert.match(ui, /Download \{pdfMode==='png'\?'PNG':'PDF'\}/)
+  assert.match(ui, /Download \{pdfMode==='png'\?'PNG 16:9':pdfMode==='print-a3'\?'PDF A3'/)
   assert.doesNotMatch(ui, /sphereMonthlyTabs|sphere-month-tab-/)
 })
 
