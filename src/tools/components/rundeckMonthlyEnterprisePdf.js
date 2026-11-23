@@ -179,6 +179,22 @@ export function monthlyEnterpriseReportModel(month,data) {
   }
 }
 
+export function enterpriseTrendTicks(start, end) {
+  const hours = (end - start) / 3600000
+  if (!Number.isFinite(hours) || hours <= 0) return []
+  // Keep sub-two-day time detail, but use compact dates for week/month charts.
+  const stepHours = hours <= 24 ? 6 : hours <= 48 ? 12 : hours <= 168 ? 24 : hours <= 336 ? 72 : 168
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short',
+    ...(hours <= 48 ? {hour: '2-digit', minute: '2-digit', hour12: false} : {}),
+  })
+  const ticks = []
+  for (let at = start; at < end; at += stepHours * 3600000) {
+    ticks.push({at, label: formatter.format(new Date(at))})
+  }
+  return ticks
+}
+
 export async function buildManagementMonthlyPdf({month,data,returnInstance=false,format=null}) {
   const outputFormat=format||'16:9'
   if(!['16:9','a3'].includes(outputFormat))throw Error('Unsupported management PDF format')
@@ -302,13 +318,9 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       text(px-10,yy-2,String(level)+'%',7,'normal','muted','right')
     }
     if(timeBased) {
-      const hours=(m.timeEnd-m.timeStart)/3600000
-      const tickHours=hours<=24?6:hours<=48?12:hours<=168?24:hours<=336?72:168
-      const formatter=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',
-        day:'2-digit',month:'short',...(hours<=168?{hour:'2-digit',minute:'2-digit',hour12:false}:{})})
-      for(let at=m.timeStart;at<m.timeEnd;at+=tickHours*3600000) {
-        text(xForTime(at),py-15,formatter.format(new Date(at)),isSlide?7.3:8.0,'bold','ink',
-          at===m.timeStart?'left':'center')
+      for (const tick of enterpriseTrendTicks(m.timeStart, m.timeEnd)) {
+        text(xForTime(tick.at),py-15,tick.label,isSlide?7.3:8.0,'bold','ink',
+          tick.at===m.timeStart?'left':'center')
       }
     } else {
       for(const tick of new Set(m.customStart
@@ -474,6 +486,20 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   const storageTitle='Storage Capacity'+(scopedStorageHosts.length===1
     ? ' · '+scopedStorageHosts[0] : '')
   section(M+15,fsY+fsH-(isSlide?17:22),storageTitle)
+  // Present the highest source-backed storage utilization without inventing
+  // a filesystem threshold or declaring missing mounts healthy.
+  const highestStorage=m.storage.filter(row=>
+    row.status==='COLLECTED' && value(row.used_pct)!==null &&
+    Number.isFinite(Date.parse(row.sample_at)) &&
+    Date.parse(row.sample_at)>=Date.parse(m.period.startUtc) &&
+    Date.parse(row.sample_at)<Date.parse(m.period.exclusiveEndUtc))
+    .sort((a,b)=>Number(b.used_pct)-Number(a.used_pct))[0]
+  if(highestStorage) {
+    const storageLabel='Highest use: '+(highestStorage.mount_point||highestStorage.category)+
+      ' · '+app(highestStorage.host)+' '+pct(highestStorage.used_pct)
+    text(M+CW-15,fsY+fsH-(isSlide?17:22),storageLabel,isSlide?8:9,'bold',
+      Number(highestStorage.used_pct)>=85?'amber':'muted','right',isSlide?325:430)
+  }
   const fsSpec=isSlide?[[150,'left'],[205,'left'],[110,'right'],[110,'right'],[110,'right'],[70,'right'],[145,'right']]:[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
   const bytes=n=>{
     if(value(n)===null)return 'Not Collected'
