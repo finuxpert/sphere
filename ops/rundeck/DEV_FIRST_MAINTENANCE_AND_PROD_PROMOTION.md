@@ -4,6 +4,8 @@
 **Current phase:** **DEV MAINTENANCE / VALIDATION**  
 **PROD promotion:** **NOT APPROVED**. This document is planning and operational guidance, not permission to update PROD.
 
+> **Current checkpoint (24 November 2026 WIB):** Last operator-confirmed DEV **UI-only** release: `5978b757` (`FINAL=PASS`, backend/pollers/PROD unchanged). GitHub DEV has subsequent backend source-only merges PR #118 and #119, which have **not been verified active** on the DEV API. The earlier failed full-stack/rollback incident described in §2 is **historical** and was superseded by the successful UI-only releases documented in §7. Finish approved DEV cleanup, retain mandatory automated CI, and perform one final combined operator QA before considering any PROD release. See the [24 Nov documentation/branch audit](../../docs/operations/REPOSITORY_HYGIENE_20261124.md).
+
 ## 1. Environment and change boundary
 
 | Field | DEV | PROD |
@@ -16,7 +18,7 @@
 
 Only DEV code, docs, tests, and **approved DEV-only** runtime configuration may be maintained during this phase. PROD code, branch, processes, Nginx routes, credentials, timers, database migration state and public root-path assets must remain unchanged. Do not use DEV artifacts directly in PROD.
 
-## 2. Last operator-evidenced state — 23 Nov 2026
+## 2. Historical DEV full-stack rollback incident — 23 Nov 2026 (superseded)
 
 **Source/CI and active runtime are different states** and must be measured separately.
 
@@ -25,7 +27,7 @@ Only DEV code, docs, tests, and **approved DEV-only** runtime configuration may 
 - **Full-stack DEV release attempt at HEAD:** `SOURCE=PASS`, `QA=PASS BUILD=PASS`, `BACKEND_TESTS=PASS`, but `FINAL=FAIL STAGE=DEPLOY EXIT=28`. Release script rolled DEV API/web back to `81c85e62`.
 - **The specific blocker:** `PROD_COLLECTIONS` cross-environment read-only smoke timed out twice (`curl: (28)`, 15 s each, HTTP 000). Other observed steps passed: DEV 1d cold evaluation HTTP 200 in ~20.74 s, DEV web, collections, metrics, watchdog, network and custom-window smoke.
 - **Subsequent *single* read-only PROD retest:** `127.0.0.1:8092/collections/latest` HTTP 200 in ~7.16 s; Nginx `/api/collections/latest` HTTP 200 in ~1.14 s. This is **not proof that intermittent PROD latency is fixed**.
-- A **DEV UI-only release** was proposed for the front-end-only commit, but **no successful UI-only deployment output has yet been provided**. Do not declare `599c21a1` live until the web release symlink, page asset SHA and actual `/dev/` UI are verified.
+- **At this incident checkpoint**, no successful UI-only deployment output had yet been provided. Subsequent operator-confirmed UI-only releases superseded this statement; see §7 and the current checkpoint above.
 
 The cross-environment smoke is a safety guard. **Do not disable it, hard-code success, increase timeout to disguise latency, change PROD, or force a symlink to make DEV release pass.** A failing PROD probe warrants investigation, not a bypass.
 
@@ -117,3 +119,5 @@ See [DEV development runbook](../../docs/operations/rundeck-development.md), [re
 5. Remain in `DEV MAINTENANCE` until open P1/P2, performance risks, and release guard evidence are assessed. **PROD promotion requires separate approval, PR, rollback owner and maintenance window.**
 
 This policy changes only the **cadence of operator QA**; it does **not** waive CI, rollback, source provenance or performance budgets.
+
+**Repository housekeeping:** keep protected/default, both DEV/PROD integration branches, legacy runtime branches, all open PR heads/bases and closed-unmerged work. A merged-PR branch may be deleted only after a live branch/PR audit; use [dry-run-first cleanup](../../docs/operations/REPOSITORY_HYGIENE_20261124.md) and never confuse remote Git branch deletion with deployment rollback.
