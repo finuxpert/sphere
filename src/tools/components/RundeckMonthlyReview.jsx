@@ -1,8 +1,7 @@
 import React from 'react'
 import { monthOptions, weekOptions, customDateError as validateCustomDate } from './rundeckMonthlyPeriod.js'
 import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes } from './rundeckMonthlyEvidence.js'
-import { buildManagementMonthlyPdf } from './rundeckMonthlyEnterprisePdf.js'
-import { buildManagementMonthlyPng } from './RundeckMonthlyPngExport.jsx'
+import { buildMonthlyReportArtifact } from './rundeckMonthlyExport.js'
 import MonthlyManagementDashboard from './RundeckMonthlyManagement.jsx'
 import RundeckMonthlyReportHeader from './RundeckMonthlyReportHeader.jsx'
 import { WorkloadDistribution, PressureRows, PressureObservations, MonthlyErrorAnalysis } from './RundeckMonthlyEvidencePanels.jsx'
@@ -297,17 +296,7 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       }
       // Load the large technical PDF exporter only when that export is requested.
       // Keep summary/report navigation free from this extra initial JS payload.
-      const technicalPdf=async()=>{
-        const {buildMonthlyPdf}=await import('./rundeckMonthlyPdf.js')
-        return buildMonthlyPdf({month,data:exportData})
-      }
-      const blob=await (reportType==='png'
-        ? buildManagementMonthlyPng({month,data:exportData})
-        : reportType==='management'
-          ? buildManagementMonthlyPdf({month,data:exportData})
-          : reportType==='print-a3'
-            ? buildManagementMonthlyPdf({month,data:exportData,format:'a3'})
-            : technicalPdf())
+      const blob=await buildMonthlyReportArtifact({reportType,month,exportData})
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
