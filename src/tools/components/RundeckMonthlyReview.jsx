@@ -354,7 +354,7 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
     </div>
     <div className="sphereMonthlyManagerPair">
       <MonthlyRanking title="Top 5 Workloads by Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
-      <MonthlyRanking title="Top 5 Workloads by Peak WP Memory" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 5 Workloads by Peak WP Memory (PSS)" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
     </div>
     <div className="sphereMonthlyManagerPair is-tables">
       <section className="sphereMonthlyManagerPanel">
@@ -369,9 +369,9 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>
       <section className="sphereMonthlyManagerPanel">
         <h4>Top 5 Tuning Candidates</h4>
-        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th>CPU cores</th><th>PSS GB</th><th>Last Seen (WIB)</th><th>Tuning action</th></tr></thead>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th title="Peak WP CPU in logical CPU core-equivalents">WP CPU</th><th title="Peak Proportional Set Size memory in gigabytes">PSS GB</th><th>Last Seen (WIB)</th><th>Tuning action</th></tr></thead>
           <tbody>{candidates.map((row,index)=><tr key={id(row)}>
-            <td>{index+1}</td><td className="is-job">{row.consumer_key}</td>
+            <td>{index+1}</td><td className="is-job"><span className="sphereMonthlyJobName" title={row.consumer_key}>{row.consumer_key}</span></td>
             <td>{hostsFor(row)||'—'}</td><td>{fmt(row.observations,0)}</td>
             <td>{wpCoreEq(row.peak_cpu_pct)}</td><td>{fmt(row.peak_pss_gb,2)}</td>
             <td>{when(row.last_seen)}</td>
@@ -474,11 +474,16 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
   const requestedWeek=reportMode==='week'?weekStart:null
   const requestedStart=reportMode==='custom'?customStart:null
   const requestedEnd=reportMode==='custom'?customEnd:null
+  // Include both ends and the calendar timezone in downloaded report filenames.
+  // A weekly report is Monday through Sunday in WIB, even across month boundaries.
+  const weeklyEnd=requestedWeek
+    ?new Date(Date.parse(requestedWeek+'T00:00:00Z')+6*86400000).toISOString().slice(0,10)
+    :null
   const exportStem=requestedStart
-    ?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd
+    ?'SPHERE-Custom-SAP-Performance-Report-'+requestedStart+'-to-'+requestedEnd+'-WIB'
     :requestedWeek
-      ?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek
-      :'SPHERE-Monthly-SAP-Performance-Report-'+month
+      ?'SPHERE-Weekly-SAP-Performance-Report-'+requestedWeek+'-to-'+weeklyEnd+'-WIB'
+      :'SPHERE-Monthly-SAP-Performance-Report-'+month+'-WIB'
   const reportParams=React.useCallback(()=>new URLSearchParams({month,
     ...(requestedWeek?{week_start:requestedWeek}:{}),
     ...(requestedStart?{start_date:requestedStart,end_date:requestedEnd}:{})}),
@@ -780,14 +785,14 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
       <div className="sphereMonthlyReportActions sphereMonthlyOnePageActions" role="group" aria-label="Report actions">
       <button type="button" className="btn btn-sm" onClick={() => setEvidenceOpen(true)} disabled={!completedData}>Detailed Evidence</button>
       <button type="button" className="is-primary" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('management')}>
-        {pdfBusy?'Generating…':'Export PDF 16:9'}
+        {pdfBusy?'Generating…':'Generate PDF 16:9'}
       </button>
-      <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('png')}>Export PNG 16:9</button>
-       <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('print-a3')}>PDF A3 (Print)</button>
+      <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('png')}>Generate PNG 16:9</button>
+       <button type="button" className="btn btn-sm" disabled={pdfBusy || !completedData || staleSnapshot} onClick={()=>previewPdf('print-a3')}>Generate PDF A3</button>
       {pdfUrl && <a className="sphereMonthlyDownload" href={pdfUrl}
          download={pdfMode==='technical'?'SPHERE-Monthly-Technical-Review-'+month+'.pdf'
            :exportStem+(pdfMode==='png'?'-16x9.png':pdfMode==='print-a3'?'-A3.pdf':'-16x9.pdf')}>
-         Download {pdfMode==='png'?'PNG':'PDF'}</a>}
+         Download {pdfMode==='png'?'PNG 16:9':pdfMode==='print-a3'?'PDF A3':pdfMode==='technical'?'Technical PDF':'PDF 16:9'}</a>}
       </div>
       {loading&&preview&&<small className="sphereMonthlyInlineStatus" role="status">Loading Jobs & Programs…</small>}
       </div>

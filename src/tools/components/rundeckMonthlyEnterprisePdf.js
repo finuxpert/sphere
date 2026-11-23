@@ -402,7 +402,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   }
   bars(M,'Top 5 Workloads by Peak WP CPU',m.sortedCpu,
     row=>value(wpCpuCoreEquivalent(row.peak_cpu_pct)),' cores')
-  bars(M+panelW+gap,'Top 5 Workloads by Peak WP Memory',m.sortedPss,
+  bars(M+panelW+gap,'Top 5 Workloads by Peak WP Memory (PSS)',m.sortedPss,
     row=>value(row.peak_pss_gb),' GB')
   // Bottom server + program evaluation tables.
   const lowY=isSlide?120:172,lowH=isSlide?144:H-427-lowY
@@ -472,7 +472,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   jobSpec[jobSpec.length-1][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
   table(jobX+10,lowY+lowH-(isSlide?30:36),jobW-20,jobSpec,
     ['No','Program / Job','APP','Samples',
-      isSlide?['CPU','cores']:'CPU cores',isSlide?['PSS','GB']:'PSS GB',
+      isSlide?['WP CPU','cores']:'WP CPU cores',isSlide?['PSS','GB']:'PSS GB',
       isSlide?['Last Seen','(WIB)']:'Last Seen (WIB)',
       isSlide?['Tuning','action']:'Tuning action'],
     jobRows,isSlide?23:25,isSlide?17.4:17.8,isSlide?7.6:7.5)
@@ -498,7 +498,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     const storageLabel='Highest use: '+(highestStorage.mount_point||highestStorage.category)+
       ' · '+app(highestStorage.host)+' '+pct(highestStorage.used_pct)
     text(M+CW-15,fsY+fsH-(isSlide?17:22),storageLabel,isSlide?8:9,'bold',
-      Number(highestStorage.used_pct)>=85?'amber':'muted','right',isSlide?325:430)
+      'muted','right',isSlide?325:430)
   }
   const fsSpec=isSlide?[[150,'left'],[205,'left'],[110,'right'],[110,'right'],[110,'right'],[70,'right'],[145,'right']]:[[150,'left'],[250,'left'],[128,'right'],[128,'right'],[128,'right'],[93,'right'],[CW-20-877,'right']]
   const bytes=n=>{
