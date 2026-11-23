@@ -90,6 +90,7 @@ Validate public `/dev/`, version/build SHA, APP identity and source freshness, f
 - Bootstrap 5.3.8 is imported as a low-priority CSS foundation; the Bootstrap responsive grid handles the four trend charts. The lower Jobs & Programs / System Health panels use a dedicated 58/42 CSS Grid at desktop widths ≥1200px, not Bootstrap columns. Application-specific styling remains; a complete Bootstrap redesign has **not** been implemented.
 - Jobs & Programs has Current, Review and Search; historical investigation uses saved data, drilldowns and source-aware periods.
 - Data Collection separates Rundeck/Automatic, Manual Upload and collection history; Reports includes Monthly Review/PDF.
+- **Reports frontend ownership (DEV maintenance, phase 2):** `RundeckMonthlyReview.jsx` owns API/snapshot source guards, period/filter state, evidence drawer and export-generation lifecycle; `RundeckMonthlyManagement.jsx` owns summary panels; `RundeckMonthlyEvidencePanels.jsx` owns pressure/errors; `RundeckMonthlyReportHeader.jsx` owns controlled selectors/actions; `rundeckMonthlyExport.js` and `RundeckMonthlyPngExport.jsx` own the format dispatch and PNG capture. Existing PDF renderer files, CSS cascade, output contracts and backend remain unchanged. See [phase-2 Reports refactor validation](../../ops/rundeck/REPORT_FRONTEND_REFACTOR_PHASE2_20261123.md).
 
 Detailed feature contract: [CURRENT-FLOW-AND-FEATURES.md](../CURRENT-FLOW-AND-FEATURES.md).
 

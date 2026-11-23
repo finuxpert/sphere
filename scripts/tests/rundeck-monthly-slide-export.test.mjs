@@ -65,7 +65,9 @@ test('16:9 PDF is single page, has five-ranked workloads and excludes out-of-win
 })
 
 test('PowerPoint PNG export uses the exact report model with enforced 1920x1080 dimensions',()=>{
-  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  const ui=['RundeckMonthlyReview.jsx','RundeckMonthlyReportHeader.jsx',
+    'RundeckMonthlyPngExport.jsx','rundeckMonthlyExport.js']
+    .map(name=>readFileSync(new URL('../../src/tools/components/'+name,import.meta.url),'utf8')).join('\n')
   const css=readFileSync(new URL('../../src/tools/components/RundeckMonthlyPptExport.css',import.meta.url),'utf8')
   assert.match(ui,/async function buildManagementMonthlyPng/)
   assert.match(ui,/monthlyEnterpriseReportModel\(month,data\)/)

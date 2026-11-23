@@ -3,7 +3,9 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 
 const component = name => readFileSync(new URL('../../src/tools/components/' + name, import.meta.url), 'utf8')
-const ui = component('RundeckMonthlyReview.jsx') + '\n' + component('RundeckMonthlyManagement.jsx')
+const ui = ['RundeckMonthlyReview.jsx','RundeckMonthlyManagement.jsx',
+  'RundeckMonthlyEvidencePanels.jsx','RundeckMonthlyReportHeader.jsx',
+  'RundeckMonthlyPngExport.jsx','rundeckMonthlyExport.js'].map(component).join('\n')
 const css = component('RundeckMonthlyFinal20261030.css')
 
 test('Monthly Report has four dense report rows plus evidence popup',()=>{

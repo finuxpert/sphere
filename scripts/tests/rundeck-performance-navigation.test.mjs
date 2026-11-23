@@ -46,9 +46,11 @@ test('fleet mode disables moving orbit controls and retains source-backed select
 test('new UI scope does not remove evidence and infrastructure provenance', () => {
   const app = read('RundeckUnifiedAppInfrastructure.jsx')
   const review = read('RundeckMonthlyReview.jsx')
+  const exporter = read('rundeckMonthlyExport.js')
   assert.match(app, /infraHostVerified/)
   assert.match(app, /fsFresh/)
-  assert.match(review, /buildMonthlyPdf/)
+  assert.match(review, /buildMonthlyReportArtifact/)
+  assert.match(exporter, /buildMonthlyPdf/)
 })
 
 test('performance cockpit is a normal-flow stack; APP fleet, Trends, and Workload cannot share grid cells', () => {
