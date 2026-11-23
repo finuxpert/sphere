@@ -25,8 +25,12 @@ export default function TimeHostTrend({rows=[],bucketMinutes,month,weekStart=nul
     .sort((a,b)=>a.at-b.at))
   const ticks=[]
   if(validWindow)for(let at=from;at<to;at+=tickHours*3600000)ticks.push(at)
-  const timeLabel=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',
-    day:'2-digit',month:'short',...(hours<=168?{hour:'2-digit',minute:'2-digit',hour12:false}:{})})
+  // Weekly/monthly axis uses compact WIB dates, matching the saved 16:9 PDF.
+  // Keep precise intraday timestamps in individual sample tooltips.
+  const axisLabel=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',
+    day:'2-digit',month:'short',...(hours<=48?{hour:'2-digit',minute:'2-digit',hour12:false}:{})})
+  const tooltipLabel=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',
+    day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})
   const hasPoints=plotted.some(points=>points.length>0)
   const showThreshold=threshold!=null&&Number.isFinite(Number(threshold))
   return <div className="sphereMonthlyTrend" role="group" aria-label={metric.toUpperCase()+' time-of-day APP peak trend'}>
@@ -39,7 +43,7 @@ export default function TimeHostTrend({rows=[],bucketMinutes,month,weekStart=nul
       </g>)}
       {ticks.map(at=><text key={at} x={xFor(at)} y="155" fontSize="9" fontWeight="600"
         fill="currentColor" opacity=".92" textAnchor={at===from?'start':'middle'}>
-        {timeLabel.format(new Date(at))}
+        {axisLabel.format(new Date(at))}
       </text>)}
       {showThreshold&&<g>
         <line x1={left} x2={left+plotW} y1={yFor(threshold)} y2={yFor(threshold)}
@@ -58,7 +62,7 @@ export default function TimeHostTrend({rows=[],bucketMinutes,month,weekStart=nul
           {point.warningChecks>0&&<circle cx={xFor(point.at)} cy={yFor(point.value)}
             r="5.5" fill="none" stroke="#e6ad67" strokeWidth="1.3"/>}
           <circle cx={xFor(point.at)} cy={yFor(point.value)} r="2.9" fill={CHART_COLORS[i]}>
-            <title>{names[i]} · {timeLabel.format(new Date(point.at))} WIB · peak {pct(point.value)} {metric.toUpperCase()} · {point.warningChecks} warning host-checks{point.peakAt?' · Actual peak '+when(point.peakAt):''}</title>
+            <title>{names[i]} · {tooltipLabel.format(new Date(point.at))} WIB · peak {pct(point.value)} {metric.toUpperCase()} · {point.warningChecks} warning host-checks{point.peakAt?' · Actual peak '+when(point.peakAt):''}</title>
           </circle>
         </g>)}
       </g>)}
