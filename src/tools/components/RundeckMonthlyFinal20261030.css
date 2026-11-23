@@ -412,7 +412,7 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
   overflow:hidden;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerPanel h4{
-  font-size:11px;
+  font-size:12.5px;
   font-weight:700;
   line-height:1.2;
   margin:0 0 6px;
@@ -424,6 +424,25 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
   justify-content:space-between;
   gap:6px;
   min-width:0;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyHeadingCopy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyChartSubtitle{
+  font-size:10px;
+  line-height:1.25;
+  color:var(--mr-muted,#9cafbd);
+}
+.sphereMonthlyReview.is-v2 .sphereMonthlyReviewBasis{
+  display:block;
+  margin-top:2px;
+  color:var(--mr-muted,#9cafbd);
+  font-size:9.5px;
+  line-height:1.3;
+  overflow-wrap:anywhere;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerHeading strong{
   font-size:10px;
@@ -459,8 +478,8 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
   align-items:center;
   gap:7px;
   min-width:0;
-  line-height:1.1;
-  font-size:9.5px;
+  line-height:1.25;
+  font-size:10.5px;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerJob{
   min-width:0;
@@ -480,7 +499,7 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerBar b{
   text-align:right;
-  font-size:9px;
+  font-size:10px;
   font-variant-numeric:tabular-nums;
   white-space:nowrap;
 }
@@ -492,14 +511,14 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
   border-collapse:collapse;
   table-layout:fixed;
   width:100%;
-  font-size:9px;
-  line-height:1.1;
+  font-size:10.5px;
+  line-height:1.3;
   margin:0;
   font-variant-numeric:tabular-nums;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerTable th,
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerTable td{
-  padding:3px 4px;
+  padding:4px 5px;
   vertical-align:top;
   overflow-wrap:anywhere;
   border-bottom:1px solid var(--mr-border,#364553);
@@ -525,7 +544,7 @@ html[data-theme="light"] .sphereMonthlyReview.is-v2
   font-weight:600;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair.is-tables .sphereMonthlyManagerPanel:last-child .sphereMonthlyManagerTable{
-  font-size:8.2px;
+  font-size:10px;
 }
 .sphereMonthlyReview.is-v2 .sphereMonthlyManagerPair.is-tables .sphereMonthlyManagerPanel:last-child .sphereMonthlyManagerTable th:nth-child(2){
   width:23%;
