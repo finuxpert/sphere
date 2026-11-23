@@ -1,6 +1,6 @@
 # SPHERE — Current Flow and Features
 
-**Scope:** `rundeck-sphere-dev` source-level behavior as reviewed on 30 October 2026. Always verify current HEAD before using version-specific details. This describes repository behavior, **not** a verified deployment to the DEV host. Application version comes from `src/app/version.js`, not this file.
+**Scope:** Source-level feature reference, originally reviewed 30 October 2026, with Reports maintenance addendum on **24 November 2026**. Always inspect current `rundeck-sphere-dev` HEAD before using version-specific details. This is **not** a claim about DEV runtime activation; the application version is sourced from `src/app/version.js`.
 
 ## Product workflow
 
@@ -77,6 +77,14 @@ Observed DEV API responses: October monthly, 2,249 workloads, HTTP 0.131767s; we
 - Historical buckets retain `bucket`, `peak_at`, `peak_value` and peak collection identity; clicking a bucket must not substitute a nearest sample.
 - WP `Latest Trace Error` may be historical; `Error at Snapshot` requires matching snapshot-recency evidence.
 - SM37 is authoritative for background-job execution, and source omissions never become NORMAL, UP, zero, or success.
+
+## Reports module ownership — November maintenance
+
+The Reports frontend has been split across `RundeckMonthlyReview.jsx` (data fetching, source-scoped validation, filters and export lifecycle), `RundeckMonthlyManagement.jsx` (management panels), `RundeckMonthlyEvidencePanels.jsx` (pressure and ABAP error evidence), `RundeckMonthlyReportHeader.jsx` (controlled period selectors and actions), `RundeckMonthlyPngExport.jsx` (PNG screenshot renderer) and `rundeckMonthlyExport.js` (PDF/PNG format dispatch). Report visuals expose PDF 16:9, PNG 16:9 and PDF A3 actions; the monthly Detailed Evidence also exposes the technical PDF. Missing PSS/CPU or historical availability stays explicitly unavailable, not fabricated as zero/UP.
+
+The Python source was further organized via `backend/rundeck_reporting_periods.py` (WIB month/week/custom boundary helpers) and `backend/rundeck_evaluation_view.py` (full-population pagination, health summary and ABAP review candidates). These files were merged in GitHub but had **not** been confirmed active on the DEV API when audited on 24 Nov. The 6 Nov snapshot figures above remain a **historical** checkpoint, not a current performance result.
+
+Maintenance source of truth: [DEV-first release gate](../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md) and [Documentation Index](DOCUMENTATION-INDEX.md).
 
 ## Main source modules
 
