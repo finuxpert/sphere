@@ -190,3 +190,23 @@ test('management PDF uses explicit PSS and WP CPU naming without an unapproved s
   assert.match(source,/const highestStorage=m\.storage\.filter/)
   assert.doesNotMatch(source,/Number\(highestStorage\.used_pct\)>=85/)
 })
+
+test('enterprise export states snapshot provenance and preparation time without changing history',async()=>{
+  const snapshotData={...fixture,snapshot:{status:'FRESH',generated_at:'2026-09-25T01:15:00Z'}}
+  const pdf=await buildManagementMonthlyPdf({month:'2026-09',data:snapshotData,returnInstance:true})
+  const stream=pdf.internal.pages.slice(1).flat().join('\n')
+  for(const label of [
+    'Snapshot: FRESH', 'Prepared:', 'APP CPU Utilization','APP Memory Utilization',
+    'Top 5 Workloads - Peak PSS','Top 5 Workloads for Review',
+    'Application Server Utilization','Filesystem Capacity',
+    'Observations','Suggested','Review','Warning 75%',
+  ])assert.ok(stream.includes(label),'Missing source-semantic PDF copy: '+label)
+  assert.ok(!stream.includes('Limit 75%'),'warning threshold is not a hard resource limit')
+})
+
+test('enterprise PDF still shows unavailable PSS as N/A, not invented 0 GB',async()=>{
+  const pdf=await buildManagementMonthlyPdf({month:'2026-09',data:fixture,returnInstance:true})
+  const stream=pdf.internal.pages.slice(1).flat().join('\n')
+  assert.ok(stream.includes('ZNO_MEMORY'),'null-memory candidate remains identified')
+  assert.ok(stream.includes('N/A'),'missing historical evidence must stay unavailable')
+})
