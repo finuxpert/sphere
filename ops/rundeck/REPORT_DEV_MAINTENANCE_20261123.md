@@ -3,6 +3,14 @@
 **Date:** 23 November 2026 (WIB)  
 **Target:** DEV application/API only. PROD (port 8092, Nginx `/api/`, deployment and runtime configuration) must remain unchanged.
 
+## DEV-first operational hold — 23 November 2026
+
+**Decision:** Continue maintenance, bug fixes and verification on `rundeck-sphere-dev`. **PROD promotion is deferred** until all explicitly reviewed acceptance gates are satisfied and a separate PROD change is approved. [Formal DEV-first maintenance / PROD promotion runbook](DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md).
+
+**Release checkpoint:** PR #113 was merged as `599c21a1` and GitHub QA passed, but full DEV deploy failed `STAGE=DEPLOY EXIT=28` on two `PROD_COLLECTIONS` read-only smoke timeouts. The release script rolled DEV API and web back to the previously verified `81c85e62`; DEV `/health` returned HTTP 200 after rollback. Subsequent one-off PROD HTTP 200 measurements do **not** confirm the intermittent timeout is resolved. A proposed UI-only deployment has **not** been confirmed successful in the operator logs yet. Do not treat the GitHub SHA as active server state.
+
+**Rule:** Do not bypass PROD guard probes, force activation, perform unreviewed DB migrations or silently increase timeouts to get a PASS. Presentation-only DEV changes can use the documented UI-only release after verifying its exact SHA and cross-environment smoke health.
+
 ## Source-verified report
 
 Report period: **16–22 November 2026 (WIB)**.
