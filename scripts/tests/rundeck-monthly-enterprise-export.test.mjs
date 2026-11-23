@@ -177,7 +177,9 @@ test('weekly enterprise export labels highest source-backed filesystem utilizati
 })
 
 test('technical PDF code is loaded on demand rather than in initial report bundle',()=>{
-  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  const ui=readFileSync(new URL('../../src/tools/components/rundeckMonthlyExport.js',import.meta.url),'utf8')
+  const controller=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  assert.match(controller,/buildMonthlyReportArtifact\(\{reportType,month,exportData\}\)/)
   assert.doesNotMatch(ui,/^import \{ buildMonthlyPdf \} from/m)
   assert.match(ui,/const \{buildMonthlyPdf\}=await import\('\.\/rundeckMonthlyPdf\.js'\)/)
   assert.match(ui,/return buildMonthlyPdf\(\{month,data:exportData\}\)/)
