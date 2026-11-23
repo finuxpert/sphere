@@ -4,6 +4,12 @@ import { test } from 'node:test'
 import { wpCpuCoreEquivalent } from '../../src/tools/components/monthlyCpuMetrics.js'
 
 const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'utf8')
+const reportSource=()=>[
+  'RundeckMonthlyReview.jsx','RundeckMonthlyManagement.jsx',
+  'RundeckMonthlyEvidencePanels.jsx','RundeckMonthlyReportHeader.jsx',
+  'RundeckMonthlyPngExport.jsx','rundeckMonthlyExport.js',
+].map(name=>read('src/tools/components/'+name)).join('\n')
+
 
 test('monthly workload API is additive; existing rolling review remains unchanged', () => {
   const api = read('backend/rundeck_api_core.py')
@@ -30,7 +36,7 @@ test('monthly pressure queries remain complete-collection and APP-specific', () 
 })
 
 test('monthly report keeps source-backed CPU RAM WP without optional appendix', () => {
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   assert.doesNotMatch(ui, /Basis Assessment|Not assessed|Reviewed by|Manual SAP Basis Assessment/)
   for (const term of ['CPU Pressure', 'RAM Pressure', 'Critical WP', 'Detailed Evidence', 'Generate PDF 16:9']) assert.ok(ui.includes(term), term)
   assert.match(ui, /buildMonthlyPdf/)
@@ -50,7 +56,7 @@ test('monthly report keeps source-backed CPU RAM WP without optional appendix', 
 test('monthly ABAP errors use only scoped source-backed WP trace evidence', () => {
   const backend = read('backend/rundeck_monthly_errors.py')
   const evaluation = read('backend/rundeck_evaluation.py')
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.match(backend, /tc\.collected_at >= :start AND tc\.collected_at < :end/)
   assert.match(backend, /COALESCE\(c\.finished_at, c\.started_at\) >= :start/)
@@ -70,7 +76,7 @@ test('monthly ABAP errors use only scoped source-backed WP trace evidence', () =
 
 test('monthly KPI population is independent of table-only type filters', () => {
   const evaluation = read('backend/rundeck_evaluation.py')
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   assert.match(evaluation, /requested_type_key = type_key/)
   assert.match(evaluation, /if period_key == "month":\s+type_key = "ALL"/)
   assert.match(evaluation, /consumer_type=requested_type_key/)
@@ -80,7 +86,7 @@ test('monthly KPI population is independent of table-only type filters', () => {
 
 test('pressure APP identities and time-correlated evidence remain distinct from historical hosts', () => {
   const pressure = read('backend/rundeck_monthly_pressure.py')
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   assert.ok(pressure.includes("hm.collected_at >= tc.collected_at - (:max_skew_seconds * INTERVAL '1 second')"))
   assert.ok(pressure.includes("hm.collected_at <= tc.collected_at + (:max_skew_seconds * INTERVAL '1 second')"))
   assert.ok(!pressure.includes('ABS(EXTRACT(EPOCH FROM'))
@@ -93,7 +99,7 @@ test('pressure APP identities and time-correlated evidence remain distinct from 
 
 test('monthly errors preserve source availability and WP diagnostic-only state', () => {
   const backend = read('backend/rundeck_monthly_errors.py')
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.match(backend, /"ERROR_SOURCE_NOT_RETAINED"/)
   assert.match(backend, /"WP_SIGNALS_ONLY"/)
@@ -138,7 +144,7 @@ test('monthly report automatically includes review priorities without optional s
 
 test('ABAP tuning candidates are source-backed and never treated as confirmed errors', () => {
   const evaluation = read('backend/rundeck_evaluation.py')
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   assert.match(evaluation, /"monthly_abap_candidates": monthly_abap_candidates/)
   assert.match(evaluation, /item\.get\("status"\) != "REVIEW REQUIRED"/)
@@ -154,7 +160,7 @@ test('ABAP tuning candidates are source-backed and never treated as confirmed er
 })
 
 test('management trends preserve dated peaks, WIB threshold and month scope', () => {
-  const ui=(read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui=reportSource()
   const enterprise=read('src/tools/components/rundeckMonthlyEnterprisePdf.js')
   const backend=read('backend/rundeck_monthly_errors.py')
   assert.match(ui,/MonthlyManagementDashboard/)
@@ -169,7 +175,7 @@ test('management trends preserve dated peaks, WIB threshold and month scope', ()
 })
 
 test('monthly management website uses compact four-row layout and canonical source fields', () => {
-  const ui=(read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui=reportSource()
   const css=read('src/tools/components/RundeckMonthlyFinal20261030.css')
   const evaluation=read('backend/rundeck_evaluation.py')
   for(const label of ['APP CPU Utilization','APP Memory Utilization',
@@ -189,7 +195,7 @@ test('monthly management website uses compact four-row layout and canonical sour
 test('RAM warning counts, APP peak and thresholds use saved host samples', () => {
   const pressure=read('backend/rundeck_monthly_pressure.py')
   const pdf=read('src/tools/components/rundeckMonthlyEnterprisePdf.js')
-  const ui=(read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui=reportSource()
   const unit=read('backend/tests/test_rundeck_monthly_review.py')
   assert.match(pressure,/"ram_warning_checks": len\(item\["_ram_warning_ids"\]\)/)
   assert.match(pressure,/"ram_warning_day": bool\(item\["_ram_warning_ids"\]\)/)
@@ -210,7 +216,7 @@ test('WP CPU report displays logical core-equivalents without inventing a 28-vCP
   assert.equal(wpCpuCoreEquivalent(''), null)
   assert.equal(wpCpuCoreEquivalent('bad'), null)
   assert.equal(wpCpuCoreEquivalent(-3), null)
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   const pdf = read('src/tools/components/rundeckMonthlyPdf.js')
   const evaluation = read('backend/rundeck_evaluation.py')
   assert.match(ui, /Peak WP CPU/)
@@ -230,7 +236,7 @@ test('WP CPU report displays logical core-equivalents without inventing a 28-vCP
 
 test('management PDF uses four reporting rows rather than technical appendix', () => {
   const pdf=read('src/tools/components/rundeckMonthlyEnterprisePdf.js')
-  const ui=(read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui=reportSource()
   assert.match(pdf,/format:outputFormat==='16:9'\?\[960,540\]:'a3'/)
   for(const phrase of ['APP CPU Utilization','APP Memory Utilization',
     'Top 5 Workloads - Peak WP CPU','Top 5 Workloads - Peak PSS',
@@ -245,7 +251,7 @@ test('management PDF uses four reporting rows rather than technical appendix', (
 test('management PDF has no generic findings and retains technical source separately', () => {
   const management=read('src/tools/components/rundeckMonthlyEnterprisePdf.js')
   const technical=read('src/tools/components/rundeckMonthlyPdf.js')
-  const ui=(read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui=reportSource()
   const evaluation=read('backend/rundeck_evaluation.py')
   assert.doesNotMatch(management,/Operational Findings|MONITORING COVERAGE|AOP Production|JOBS & PROGRAMS EVALUATED/)
   assert.match(management,/sphere-logo-horizontal-light\.png/)
@@ -257,7 +263,7 @@ test('management PDF has no generic findings and retains technical source separa
 })
 
 test('monthly fixed evidence keeps error provenance and repairs donut navigation', () => {
-  const ui = (read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui = reportSource()
   const css = read('src/tools/components/RundeckEnterpriseCompactV144.css')
   const trend = read('src/tools/components/RundeckServerTrendChart.jsx')
   assert.match(ui, /setEvidenceOpen\(true\)/)
@@ -273,7 +279,7 @@ test('monthly fixed evidence keeps error provenance and repairs donut navigation
 
 
 test('source states stay distinct from report and infrastructure data gaps', () => {
-  const ui=(read('src/tools/components/RundeckMonthlyReview.jsx') + '\n' + read('src/tools/components/RundeckMonthlyManagement.jsx'))
+  const ui=reportSource()
   const infra=read('backend/rundeck_infra_api.py')
   const source=read('src/tools/components/RundeckSource.jsx')
   const health=read('src/tools/components/RundeckSystemHealth.jsx')
