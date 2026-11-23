@@ -185,7 +185,7 @@ test('technical PDF code is loaded on demand rather than in initial report bundl
 
 test('management PDF uses explicit PSS and WP CPU naming without an unapproved storage warning threshold',()=>{
   const source=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
-  assert.match(source,/Top 5 Workloads - Peak PSS \(PSS\)/)
+  assert.match(source,/Top 5 Workloads - Peak PSS/)
   assert.match(source,/\['WP CPU','cores'\]/)
   assert.match(source,/const highestStorage=m\.storage\.filter/)
   assert.doesNotMatch(source,/Number\(highestStorage\.used_pct\)>=85/)
@@ -201,7 +201,7 @@ test('enterprise export states snapshot provenance and preparation time without 
     'Application Server Utilization','Filesystem Capacity',
     'Observations','Suggested','Review','Warning 75%',
   ])assert.ok(stream.includes(label),'Missing source-semantic PDF copy: '+label)
-  assert.ok(!stream.includes('Warning 75%'),'warning threshold is not a hard resource limit')
+  assert.ok(!stream.includes('Limit 75%'),'warning threshold is not a hard resource limit')
 })
 
 test('enterprise PDF still shows unavailable PSS as N/A, not invented 0 GB',async()=>{
