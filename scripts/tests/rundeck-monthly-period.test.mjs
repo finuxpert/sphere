@@ -44,7 +44,7 @@ test('custom date validation preserves WIB future gate, 31-day limit and date or
 })
 
 test('monthly UI keeps the existing closed-over WIB date and all period inputs', () => {
-  const ui = readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx', import.meta.url), 'utf8')
+  const ui = readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx', import.meta.url), 'utf8') + '\n' + readFileSync(new URL('../../src/tools/components/RundeckMonthlyManagement.jsx', import.meta.url), 'utf8')
   assert.match(ui, /const MONTHS = monthOptions\(\)/)
   assert.match(ui, /const WEEKS = weekOptions\(\)/)
   assert.match(ui, /validateCustomDate\(start,end,TODAY_WIB\)/)

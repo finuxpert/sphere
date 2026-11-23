@@ -96,7 +96,7 @@ test('report peak timestamps are exact Asia/Jakarta instants, not inferred from 
 })
 test('slide PDF and PNG omit coverage header but preserve coverage in the data model',()=>{
   const pdfSource=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
-  const uiSource=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  const uiSource=readFileSync(new URL('../../src/tools/components/RundeckMonthlyManagement.jsx',import.meta.url),'utf8')
   const css=readFileSync(new URL('../../src/tools/components/RundeckMonthlyPptExport.css',import.meta.url),'utf8')
   assert.doesNotMatch(pdfSource,/['"]Observed days /)
   assert.doesNotMatch(uiSource,/<small>Observed days/)
@@ -131,7 +131,7 @@ test('storage uses source-reported df Use% and suppresses inferred available byt
   assert.ok(real.internal.pages[1].join('\n').includes('17.77 GB'),'Explicit df available should be visible')
 })
 test('Report browser labels agree with slide data provenance',()=>{
-  const source=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  const source=readFileSync(new URL('../../src/tools/components/RundeckMonthlyManagement.jsx',import.meta.url),'utf8')
   assert.ok(source.includes('CPU Warning Checks'))
   assert.ok(source.includes('RAM Warning Checks'))
   assert.ok(source.includes('Last Seen (WIB)'))
@@ -208,7 +208,7 @@ test('custom two-day report exports actual hourly APP buckets without inventing 
   const source=readFileSync(new URL('../../src/tools/components/rundeckMonthlyEnterprisePdf.js',import.meta.url),'utf8')
   assert.match(source,/current.at-previous.at<=m.timeIntervalMs\*1\.05/)
   assert.match(source,/timeBased\?xForTime\(point.at\):xFor\(point.day\)/)
-  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyManagement.jsx',import.meta.url),'utf8')
   assert.match(ui,/React.lazy\(loadTimeHostTrend\)/)
   assert.match(ui,/Array.isArray\(pressure.trend_hosts\)/)
   const trend=readFileSync(new URL('../../src/tools/components/RundeckMonthlyTimeHostTrend.jsx',import.meta.url),'utf8')
