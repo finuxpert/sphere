@@ -173,7 +173,7 @@ test('monthly management website uses compact four-row layout and canonical sour
   const css=read('src/tools/components/RundeckMonthlyFinal20261030.css')
   const evaluation=read('backend/rundeck_evaluation.py')
   for(const label of ['APP CPU Utilization','APP Memory Utilization',
-    'Top 5 Workloads - Peak WP CPU','Top 5 Workloads - Peak PSS',
+    'Top 5 Workloads — Peak WP CPU','Top 5 Workloads — Peak PSS',
     'Application Server Utilization','Top 5 Workloads for Review',
     'Filesystem Capacity'])assert.ok(ui.includes(label),label)
   assert.match(ui,/pressure\.hosts/)
