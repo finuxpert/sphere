@@ -4,7 +4,7 @@ import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, re
 import { buildMonthlyReportArtifact } from './rundeckMonthlyExport.js'
 import MonthlyManagementDashboard from './RundeckMonthlyManagement.jsx'
 import RundeckMonthlyReportHeader from './RundeckMonthlyReportHeader.jsx'
-import { WorkloadDistribution, PressureRows, PressureObservations, MonthlyErrorAnalysis } from './RundeckMonthlyEvidencePanels.jsx'
+import { PressureRows, PressureObservations, MonthlyErrorAnalysis } from './RundeckMonthlyEvidencePanels.jsx'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
 import RundeckWorkspaceDrawer from './RundeckWorkspaceDrawer.jsx'
