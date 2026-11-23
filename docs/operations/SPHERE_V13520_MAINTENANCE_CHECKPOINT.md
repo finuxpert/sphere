@@ -1,5 +1,7 @@
 # SPHERE v1.35.20 — maintenance checkpoint (3 November 2026)
 
+> **HISTORICAL CHECKPOINT, NOT CURRENT RUNTIME (reviewed 24 Nov 2026).** SHA values, DEV/PROD deployment constraints and measurements below describe the state **on 3 November 2026 only**. The source and operator-confirmed DEV state have since advanced. Do not execute a dated release procedure or use this file to infer live service health. Use the [current DEV-first maintenance gates](../../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md), [Rundeck Development](rundeck-development.md) and [Documentation Index](../DOCUMENTATION-INDEX.md).
+
 ## Released baseline — do not mutate during maintenance
 
 | Layer | Release / source | Deployment rule |
