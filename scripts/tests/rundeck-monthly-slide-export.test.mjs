@@ -58,8 +58,8 @@ test('16:9 PDF is single page, has five-ranked workloads and excludes out-of-win
   assert.ok(Math.abs(pdf.internal.pageSize.getWidth()-960)<.25)
   assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-540)<.25)
   const stream=pdf.internal.pages[1].join('\n')
-  for(const label of ['Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
-    'Top 5 Tuning Candidates','Not Collected','09 Oct 2026, 14:00 WIB'])assert.ok(stream.includes(label),label)
+  for(const label of ['Top 5 Workloads - Peak WP CPU','Top 5 Workloads - Peak PSS',
+    'Top 5 Workloads for Review','Not Collected','09 Oct 2026, 14:00 WIB'])assert.ok(stream.includes(label),label)
   assert.ok(!stream.includes('Top 10 Tuning Candidates'))
   await assert.rejects(buildManagementMonthlyPdf({month:'2026-10',data,format:'letter'}),/Unsupported/)
 })
@@ -118,7 +118,7 @@ test('storage uses source-reported df Use% and suppresses inferred available byt
   ]}}
   const noAvailable=await buildManagementMonthlyPdf({month:'2026-10',data:payload,returnInstance:true})
   const noAvailableText=noAvailable.internal.pages[1].join('\n')
-  for(const label of ['Storage Capacity','APP1','Available','76%','Last Seen','CPU High','RAM High','Checks']){
+  for(const label of ['Filesystem Capacity','APP1','Available','76%','Last Seen','CPU Warning','RAM Warning','Checks']){
     assert.ok(noAvailableText.includes(label),'Missing storage report field: '+label)
   }
   assert.ok(!noAvailableText.includes('17.77 GB'),'Inferred storage available must be hidden')
@@ -132,8 +132,8 @@ test('storage uses source-reported df Use% and suppresses inferred available byt
 })
 test('Report browser labels agree with slide data provenance',()=>{
   const source=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
-  assert.ok(source.includes('CPU High Checks'))
-  assert.ok(source.includes('RAM High Checks'))
+  assert.ok(source.includes('CPU Warning Checks'))
+  assert.ok(source.includes('RAM Warning Checks'))
   assert.ok(source.includes('Last Seen (WIB)'))
   assert.ok(source.includes('Available (df)'))
   assert.ok(source.includes("row.availability_source==='EXPLICIT'"))
