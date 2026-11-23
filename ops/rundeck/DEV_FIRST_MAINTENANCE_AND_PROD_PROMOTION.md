@@ -92,3 +92,28 @@ curl --noproxy '*' -sS --max-time 10 -o /dev/null \
 | 23 Nov 2026 | Operator chooses DEV maintenance first; PROD only after validated readiness | **PROD promotion on hold; use this gate checklist** |
 
 See [DEV development runbook](../../docs/operations/rundeck-development.md), [report UI/UX audit](REPORT_UI_UX_BUG_AUDIT_20261123.md), [report semantic audit](REPORT_SEMANTICS_AUDIT_20261123.md), and [performance issue #111](https://github.com/finuxpert/sphere/issues/111).
+
+## 7. DEV cleanup batch checkpoint — 23 Nov 2026 (WIB)
+
+**Operator decision:** Finish approved DEV code/structure maintenance first, and perform **one consolidated manual/live functional + visual QA** after the technical cleanup batch is genuinely ready. GitHub PR **automated** QA/build/parity remains mandatory on every change and is **not deferred**.
+
+| Workstream | GitHub code state | Runtime / next action |
+|---|---|---|
+| Reports presentation, PR #115 | Merged `6fdaf4f1`; PR CI PASS | DEV UI-only deployed and operator confirmed |
+| Reports evidence/header/exports, PR #116 | Merged `5978b757`; PR CI + release PASS | DEV UI-only deployed: `FINAL=PASS MODE=DEV_UI_ONLY`; backend unchanged |
+| Pure WIB reporting dates, PR #118 | Merged `9d36862c`; 3 PR workflows PASS | **Not deployed** on DEV backend; future guarded full-stack release only |
+| Pure evaluation pagination/review helpers, PR #119 | Merged `56c473ae`; 3 PR workflows PASS | **Not deployed** on DEV backend; future guarded full-stack release only |
+| Reports CSS source split, PR #117 | **Closed, never merged** | Bundle regression (27,984 then 43,416 bytes vs 20,000 budget). Retain previously approved CSS; do not inflate budget |
+| Cold SQL workload / performance, Issue #111 | Open engineering work | Profile DEV read-only; optimize with measured plans and parity; no guessed indexes or timeouts |
+
+**Latest operator-proven DEV web SHA:** `5978b757`, deployed UI-only. **Latest GitHub DEV source after backend extraction:** `56c473ae`. These differ legitimately. A GitHub merge never proves runtime activation. The DEV backend and PROD remain unchanged by the operator's last UI-only release.
+
+### One final operator QA gate (only after all approved code maintenance)
+
+1. Review and fix remaining release-blocking issues, including CSS bundle regression or explicitly defer CSS scope without claiming it is finished.
+2. Inspect the cumulative DEV backend/frontend diff and migrations. Use the maintained **guarded full-stack DEV** release for the source that includes backend refactors; **never** use UI-only for a Python backend change.
+3. Record exact active DEV API and web SHA, runtime health and unaffected PROD release identity; keep mandatory PROD cross-environment smoke and automatic rollback.
+4. Once the final DEV candidate is active, run a single coordinated manual QA cycle: Monthly/Weekly/Custom, 16–22 Nov saved reference, APP1–5, ABAP/PSS/CPU semantics, source freshness, Detailed Evidence, PDF 16:9/PNG/A3, dark/light/mobile, frontend console/network and report performance/stability.
+5. Remain in `DEV MAINTENANCE` until open P1/P2, performance risks, and release guard evidence are assessed. **PROD promotion requires separate approval, PR, rollback owner and maintenance window.**
+
+This policy changes only the **cadence of operator QA**; it does **not** waive CI, rollback, source provenance or performance budgets.
