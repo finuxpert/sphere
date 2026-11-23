@@ -163,7 +163,7 @@ test('management trends preserve dated peaks, WIB threshold and month scope', ()
   assert.match(enterprise,/peak_cpu_at/)
   assert.match(enterprise,/peak_ram_at/)
   assert.match(enterprise,/month\+'-'/)
-  assert.match(enterprise,/Limit '\+pct\(threshold\)/)
+  assert.match(enterprise,/Warning '\+pct\(threshold\)/)
   assert.match(enterprise,/monthName\(month\)/)
   assert.match(backend,/"error_program_count": len\(known_programs\)/)
 })
@@ -172,10 +172,10 @@ test('monthly management website uses compact four-row layout and canonical sour
   const ui=read('src/tools/components/RundeckMonthlyReview.jsx')
   const css=read('src/tools/components/RundeckMonthlyFinal20261030.css')
   const evaluation=read('backend/rundeck_evaluation.py')
-  for(const label of ['CPU Utilization Trend','Memory Utilization Trend',
-    'Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
-    'Application Server Performance','Top 5 Tuning Candidates',
-    'Storage Capacity'])assert.ok(ui.includes(label),label)
+  for(const label of ['APP CPU Utilization','APP Memory Utilization',
+    'Top 5 Workloads - Peak WP CPU','Top 5 Workloads - Peak PSS',
+    'Application Server Utilization','Top 5 Workloads for Review',
+    'Filesystem Capacity'])assert.ok(ui.includes(label),label)
   assert.match(ui,/pressure\.hosts/)
   assert.match(ui,/monthly_top_wp_cpu/)
   assert.match(ui,/monthly_top_wp_pss/)
@@ -232,9 +232,9 @@ test('management PDF uses four reporting rows rather than technical appendix', (
   const pdf=read('src/tools/components/rundeckMonthlyEnterprisePdf.js')
   const ui=read('src/tools/components/RundeckMonthlyReview.jsx')
   assert.match(pdf,/format:outputFormat==='16:9'\?\[960,540\]:'a3'/)
-  for(const phrase of ['CPU Utilization Trend','Memory Utilization Trend',
-    'Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
-    'Application Server Performance','Top 5 Tuning Candidates','Storage Capacity'])
+  for(const phrase of ['APP CPU Utilization','APP Memory Utilization',
+    'Top 5 Workloads - Peak WP CPU','Top 5 Workloads - Peak PSS',
+    'Application Server Utilization','Top 5 Workloads for Review','Filesystem Capacity'])
     assert.ok(pdf.includes(phrase),phrase)
   assert.match(pdf,/monthly_top_wp_cpu/)
   assert.match(pdf,/monthly_storage/)
