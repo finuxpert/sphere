@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
-import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from '../../src/tools/components/rundeckMonthlyEnterprisePdf.js'
+import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel, enterpriseTrendTicks } from '../../src/tools/components/rundeckMonthlyEnterprisePdf.js'
 
 const fixture={
   month:'2026-09',
@@ -142,4 +142,36 @@ test('A3 remains an explicit optional export format',async()=>{
   assert.equal(pdf.internal.getNumberOfPages(),1)
   assert.ok(Math.abs(pdf.internal.pageSize.getWidth()-1190.55)<.25)
   assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-841.89)<.25)
+})
+
+test('weekly PDF uses readable WIB date ticks without repeated midnight labels',()=>{
+  const start=Date.parse('2026-11-15T17:00:00Z')
+  const end=Date.parse('2026-11-22T17:00:00Z')
+  const weekly=enterpriseTrendTicks(start,end)
+  assert.deepEqual(weekly.map(tick=>tick.label),[
+    '16 Nov','17 Nov','18 Nov','19 Nov','20 Nov','21 Nov','22 Nov',
+  ])
+  assert.equal(weekly[0].at,start)
+  assert.ok(weekly.every(tick=>!tick.label.includes(':')))
+  const daily=enterpriseTrendTicks(start,start+24*3600000)
+  assert.ok(daily.some(tick=>tick.label.includes(':')),'short ranges retain time detail')
+  assert.deepEqual(enterpriseTrendTicks(start,start),[])
+})
+
+test('weekly enterprise export labels highest source-backed filesystem utilization',async()=>{
+  const fsItem={
+    category:'INTF',status:'COLLECTED',host:'AOPH1PAPPDC',
+    mount_point:'/INTF',total_bytes:900e9,used_bytes:774e9,free_bytes:126e9,
+    used_pct:86,availability_source:'EXPLICIT',
+    sample_at:'2026-09-24T16:28:00Z',
+  }
+  const data={...fixture,monthly_storage:{
+    ...fixture.monthly_storage,
+    items:[...fixture.monthly_storage.items.filter(row=>row.category!=='INTF'),fsItem],
+  }}
+  const pdf=await buildManagementMonthlyPdf({month:'2026-09',data,returnInstance:true})
+  const page=pdf.internal.pages[1].join('\n')
+  assert.ok(page.includes('Highest use: /INTF'),'storage attention must name actual mount')
+  assert.ok(page.includes('86%'),'storage attention must show saved utilization')
+  assert.ok(!page.includes('Critical storage'),'undefined operational threshold must not be asserted')
 })
