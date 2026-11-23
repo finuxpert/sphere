@@ -175,3 +175,10 @@ test('weekly enterprise export labels highest source-backed filesystem utilizati
   assert.ok(page.includes('86%'),'storage attention must show saved utilization')
   assert.ok(!page.includes('Critical storage'),'undefined operational threshold must not be asserted')
 })
+
+test('technical PDF code is loaded on demand rather than in initial report bundle',()=>{
+  const ui=readFileSync(new URL('../../src/tools/components/RundeckMonthlyReview.jsx',import.meta.url),'utf8')
+  assert.doesNotMatch(ui,/^import \{ buildMonthlyPdf \} from/m)
+  assert.match(ui,/const \{buildMonthlyPdf\}=await import\('\.\/rundeckMonthlyPdf\.js'\)/)
+  assert.match(ui,/return buildMonthlyPdf\(\{month,data:exportData\}\)/)
+})
