@@ -122,6 +122,15 @@ The output includes API request latency P50/P95/P99, HTTP failures and response 
 
 On 6 November 2026 the DEV-only persistent report snapshot feature was deployed and enabled at verified API release `8c75ec7b`. The worker is a separate oneshot systemd service (`sphere-report-precompute-dev.service`) and the refresh timer is `sphere-report-precompute-dev.timer`. The API flag `SPHERE_REPORT_SNAPSHOT_DEV=true` is DEV-only; the SQL strategy flag `SPHERE_EVAL_SPLIT_DISTINCT_DEV=true` remains active. The worker is **not** automatically installed or enabled by the standard DEV deploy script; activation/rollback is a separate operator action. Check systemd status and journal independently. The observed initial worker took 3m35s wall time to build five snapshots; subsequent unchanged READY collection anchors generated five `SKIP_FRESH` outcomes in 921ms. A completed oneshot worker showing `inactive (dead)` and `Result=success` is healthy. The API serves snapshot-backed Monthly and Weekly responses in observed subsecond timings, with explicit stale-state handling; this does not prove browser render latency. See [the verified snapshot runbook](../../ops/rundeck/REPORT_PERSISTENT_SNAPSHOT_DEV_ROLLOUT.md) for source paths, timestamps, daily checks and safe rollback.
 
+## GitHub repository housekeeping (24 November 2026)
+
+Remote branch housekeeping and documentation curation are **not** a release and must not run migrations, edit active symlinks or restart any service. See [Repository Hygiene — branch audit, keep rules and dry-run cleanup](REPOSITORY_HYGIENE_20261124.md) and the [current documentation index](../DOCUMENTATION-INDEX.md).
+
+- Preserve `rundeck-sphere-dev`, `rundeck-sphere-prod`, `sphere-dev`, `sphere-prod`, GitHub default branch and all open PR heads/bases.
+- Preserve any closed **unmerged** PR work; in particular, CSS refactor #117 was intentionally closed **without merge** because it breached the Reports CSS bundle budget.
+- Delete merged-PR heads only after the tool independently revalidates the remote SHA, merge state and absence of open-PR dependencies. The cleanup script defaults to a **read-only dry-run**; actual deletion needs `--apply` and GitHub Contents write permission.
+- Dated release and recovery documents are historical evidence, not the latest deployed state; the last operator-confirmed DEV UI-only SHA is `5978b757`, and later merged backend source changes still require guarded full-stack DEV deployment.
+
 ## Production promotion
 
 **Hold:** DEV maintenance must be signed off before any PROD proposal. See the mandatory [DEV-first PROD eligibility checklist](../../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md#5-prod-promotion-eligibility--all-gates-must-pass) for required functional, report, visual, performance, reliability, security, rollback, and stakeholder approvals.
