@@ -679,5 +679,39 @@ class ReportPeriodModuleParityTests(unittest.TestCase):
         self.assertEqual(week_end, datetime(2026, 11, 22, 17, tzinfo=timezone.utc))
 
 
+class ReportEvaluationViewCompatibilityTests(unittest.TestCase):
+    def test_evaluation_helpers_keep_import_identity_after_extraction(self):
+        from backend import rundeck_evaluation as evaluation
+        from backend import rundeck_evaluation_view as view
+        for name in (
+            "_monthly_abap_tuning_candidates", "_evaluation_page",
+            "_evaluation_health", "_evaluation_health_summary",
+        ):
+            self.assertIs(getattr(evaluation, name), getattr(view, name))
+
+    def test_filters_are_applied_to_full_population_before_pagination(self):
+        from backend.rundeck_evaluation_view import _evaluation_page
+        report = {
+            "period": "month", "type": "ALL",
+            "items": [
+                {"consumer_type": "PROGRAM", "consumer_key": "A_REVIEW",
+                 "status": "REVIEW REQUIRED",
+                 "signals": {"high_memory": True},
+                 "pressure_overlap": {"ram_pressure_host_checks": 2}},
+                {"consumer_type": "PROGRAM", "consumer_key": "B_NORMAL",
+                 "status": "NORMAL", "signals": {},
+                 "pressure_overlap": {}},
+            ],
+        }
+        result = _evaluation_page(
+            report, limit=1, offset=0, query="A_REVIEW",
+            health="REVIEW", pressure="RAM", flag="HIGH_MEMORY",
+        )
+        self.assertEqual(result["page"]["total"], 1)
+        self.assertEqual(result["page"]["scope"], "FULL_EVALUATED_POPULATION")
+        self.assertEqual(result["items"][0]["consumer_key"], "A_REVIEW")
+        self.assertEqual(len(report["items"]), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
