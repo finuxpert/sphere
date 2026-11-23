@@ -29,18 +29,17 @@ test('Reports enterprise theme and management concatenate to original pre-refact
   assert.equal(fnv32(concat),'21e7e2bf')
 })
 
-test('Reports stylesheet injection preserves all four original cascade sections',()=>{
+test('Reports CSS bundles preserve the two original Vite chunk boundaries and source order',()=>{
   const source=read('RundeckMonthlyReview','jsx')
-  const files=[
-    'RundeckMonthlyCore.css',
-    'RundeckMonthlyReview.css',
-    'RundeckMonthlyFinal20261030.css',
-    'RundeckMonthlyManagement.css',
-  ]
-  const locations=files.map(file=>source.indexOf("import './"+file+"'"))
-  for(let i=0;i<locations.length;i++){
-    assert.ok(locations[i]>=0,'Missing stylesheet import: '+files[i])
-    if(i)assert.ok(locations[i]>locations[i-1],'CSS cascade order changed: '+files[i])
-  }
-  assert.equal((source.match(/import '\.\/RundeckMonthly[^']+\.css'/g)||[]).length,files.length)
+  const base=read('RundeckMonthlyStyleBundle')
+  const enterprise=read('RundeckMonthlyEnterpriseStyleBundle')
+  const baseImport="import './RundeckMonthlyStyleBundle.css'"
+  const enterpriseImport="import './RundeckMonthlyEnterpriseStyleBundle.css'"
+  const a=source.indexOf(baseImport)
+  const b=source.indexOf(enterpriseImport)
+  const c=source.indexOf("import './RundeckUnifiedExperience20261030.css'")
+  assert.ok(a>=0 && b>a && c>b,'Report CSS entry order must remain original')
+  assert.match(base,/@import '\.\/RundeckMonthlyCore\.css';[\s\S]*@import '\.\/RundeckMonthlyReview\.css';/)
+  assert.match(enterprise,/@import '\.\/RundeckMonthlyFinal20261030\.css';[\s\S]*@import '\.\/RundeckMonthlyManagement\.css';/)
+  assert.equal((source.match(/import '\.\/RundeckMonthly[^']+\.css'/g)||[]).length,2)
 })
