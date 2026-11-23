@@ -1,5 +1,8 @@
 # Rundeck Development — Current DEV/PROD Runbook
 
+> **Operational decision (23 Nov 2026): SPHERE is DEV MAINTENANCE FIRST. PROD promotion is ON HOLD until source-backed DEV testing, performance/reliability review and separate change approval are complete.** The release/failure chronology, DEV-only UI release procedure and formal production gates live in [DEV-first maintenance and PROD promotion gates](../../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md). This document grants no PROD modification.
+
+
 This is the **maintained deployment contract** for the Rundeck-integrated SPHERE lines. Older per-version UI notes and build-only shortcuts are not approved release runbooks.
 
 ## Runtime and isolation
@@ -14,7 +17,7 @@ A source commit/CI PASS does not establish the active server release. Verify sym
 
 ## Fast DEV deployment — operator runbook
 
-**Standard route:** guarded full-stack DEV release for frontend or backend changes. Perform a **migration diff review** first. When the candidate requires no schema migration:
+**Standard full-stack route:** guarded DEV release for backend or combined changes. For **frontend/PDF/CSS-only** changes, review the documented DEV **UI-only** release first; it avoids unnecessary backend/poller restarts but retains PROD health guards. Perform a **migration diff review** before full-stack deployment. When the candidate requires no schema migration:
 
 ```bash
 cd /root/rundeck-sphere-dev
@@ -42,6 +45,21 @@ FINAL=PASS DEV_SHA=<sha> PROD=UNCHANGED_BY_RELEASE_GUARDS
 ```
 
 `FINAL=PASS` verifies the release script's conditions, **not** desktop/mobile visual sign-off.
+
+### DEV UI-only release for presentation changes
+
+When the diff contains **only frontend/PDF/CSS/tests/docs**, and the exact source SHA has passed GitHub QA, use the DEV UI-only script **after checking PROD smoke health**:
+
+```bash
+cd /root/rundeck-sphere-dev
+test "$(git branch --show-current)" = rundeck-sphere-dev
+test -z "$(git status --porcelain)"
+bash ops/rundeck/release-ui-dev.sh "$(git rev-parse HEAD)"
+```
+
+This script runs guarded QA/build, switches only `/var/www/sphere-dev/current` and verifies DEV API, PROD routes, and unchanged PROD files. It does not restart DEV backend, start pollers, or migrate the DB. The release SHA being present in Git or a passed GitHub workflow is **not** evidence of a successful server cutover. Inspect the script's `FINAL=PASS MODE=DEV_UI_ONLY` and the active symlink after execution.
+
+**Current incident checkpoint (23 Nov):** full deploy of commit `599c21a1` passed SOURCE/QA/backend tests and DEV checks, but rollback occurred on two `PROD_COLLECTIONS` 15s curl timeouts (exit 28). The last operator-verified DEV API and web remained at `81c85e62`. A later isolated PROD retry returned HTTP 200 but did not establish sustained performance. **Do not bypass or remove the PROD cross-smoke to get a green deploy.** Complete history and read-only checks: [DEV-first maintenance runbook](../../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md).
 
 ### Failure triage
 
@@ -104,5 +122,8 @@ The output includes API request latency P50/P95/P99, HTTP failures and response 
 On 6 November 2026 the DEV-only persistent report snapshot feature was deployed and enabled at verified API release `8c75ec7b`. The worker is a separate oneshot systemd service (`sphere-report-precompute-dev.service`) and the refresh timer is `sphere-report-precompute-dev.timer`. The API flag `SPHERE_REPORT_SNAPSHOT_DEV=true` is DEV-only; the SQL strategy flag `SPHERE_EVAL_SPLIT_DISTINCT_DEV=true` remains active. The worker is **not** automatically installed or enabled by the standard DEV deploy script; activation/rollback is a separate operator action. Check systemd status and journal independently. The observed initial worker took 3m35s wall time to build five snapshots; subsequent unchanged READY collection anchors generated five `SKIP_FRESH` outcomes in 921ms. A completed oneshot worker showing `inactive (dead)` and `Result=success` is healthy. The API serves snapshot-backed Monthly and Weekly responses in observed subsecond timings, with explicit stale-state handling; this does not prove browser render latency. See [the verified snapshot runbook](../../ops/rundeck/REPORT_PERSISTENT_SNAPSHOT_DEV_ROLLOUT.md) for source paths, timestamps, daily checks and safe rollback.
 
 ## Production promotion
+
+**Hold:** DEV maintenance must be signed off before any PROD proposal. See the mandatory [DEV-first PROD eligibility checklist](../../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md#5-prod-promotion-eligibility--all-gates-must-pass) for required functional, report, visual, performance, reliability, security, rollback, and stakeholder approvals.
+
 
 Do **not** merge DEV inside the PROD checkout, force-reset PROD, or copy `/dev/` build artifacts directly to root-path PROD. Production branch updates require explicit review/approval, branch-specific build and guarded PROD release. Preserve PROD-only deploy, routing, service and security files. Consult [OPERATIONS.md](../../ops/rundeck/OPERATIONS.md) and the specialized frontend-only promotion guidance if that route is explicitly approved. This runbook authorizes **no** PROD change.
