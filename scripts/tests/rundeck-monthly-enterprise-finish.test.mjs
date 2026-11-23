@@ -157,3 +157,33 @@ test('System Health combines five APPs and matching Infrastructure without redun
   assert.match(styles,/@media\(max-width:700px\)/)
 })
 
+
+test('weekly live chart uses compact WIB date labels without losing timestamp tooltips',()=>{
+  const trend=component('RundeckMonthlyTimeHostTrend.jsx')
+  assert.match(trend,/const axisLabel=new Intl\.DateTimeFormat/)
+  assert.match(trend,/hours<=48\?\{hour:'2-digit',minute:'2-digit',hour12:false\}/)
+  assert.match(trend,/\{axisLabel\.format\(new Date\(at\)\)\}/)
+  assert.match(trend,/const tooltipLabel=new Intl\.DateTimeFormat/)
+  assert.match(trend,/\{tooltipLabel\.format\(new Date\(point\.at\)\)\} WIB/)
+  assert.doesNotMatch(trend,/hours<=168\?\{hour:/)
+})
+
+test('report title is separated from its period and ABAP names retain accessible full text',()=>{
+  assert.match(ui,/<strong>SAP Performance Report<\/strong><small>/)
+  assert.match(css,/\.sphereMonthlyReportTitle\{[\s\S]*?flex-direction:column/)
+  assert.match(css,/\.sphereMonthlyReportTitle small\{/)
+  assert.match(ui,/className="sphereMonthlyJobName" title=\{row\.consumer_key\}/)
+  assert.match(css,/\.sphereMonthlyJobName\{[\s\S]*?-webkit-line-clamp:2/)
+})
+
+test('report export UI describes two-step generation and period-scoped filenames',()=>{
+  for (const label of ['Generate PDF 16:9','Generate PNG 16:9','Generate PDF A3',
+    'Download PDF 16:9','Download PDF A3','Download PNG 16:9']) {
+    assert.ok(ui.includes(label),'Export or download label absent: '+label)
+  }
+  assert.match(ui,/const weeklyEnd=requestedWeek/)
+  assert.match(ui,/requestedWeek\+'-to-'\+weeklyEnd\+'-WIB'/)
+  assert.match(ui,/requestedStart\+'-to-'\+requestedEnd\+'-WIB'/)
+  assert.match(ui,/Top 5 Workloads by Peak WP Memory \(PSS\)/)
+  assert.match(ui,/Peak WP CPU in logical CPU core-equivalents/)
+})
