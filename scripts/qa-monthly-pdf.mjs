@@ -70,11 +70,11 @@ assert.equal(executive.internal.getNumberOfPages(),1,'Management PDF must be one
 assert.ok(Math.abs(executive.internal.pageSize.getWidth()-960)<.25)
 assert.ok(Math.abs(executive.internal.pageSize.getHeight()-540)<.25)
 const executivePage=executive.internal.pages[1].join('\n')
-for(const label of ['SAP Monthly Performance Report','CPU Utilization Trend',
-  'Memory Utilization Trend','Top 5 Workloads by Peak WP CPU','Top 5 Workloads by Peak WP Memory',
-  'Application Server Performance','Top 5 Tuning Candidates','Storage Capacity',
+for(const label of ['SAP Monthly Performance Report','APP CPU Utilization',
+  'APP Memory Utilization','Top 5 Workloads - Peak WP CPU','Top 5 Workloads - Peak PSS',
+  'Application Server Utilization','Top 5 Workloads for Review','Filesystem Capacity',
   'File System OS','Not Collected']) {
-  assert.ok(executivePage.includes(label),'Missing A3 management content: '+label)
+  assert.ok(executivePage.includes(label),'Missing 16:9 management content: '+label)
 }
 const ranked=monthlyEnterpriseReportModel('2026-09',data)
 assert.equal(ranked.candidates.length,5,'Only five tuning candidates')

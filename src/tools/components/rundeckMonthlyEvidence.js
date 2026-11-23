@@ -52,8 +52,12 @@ export const monthlyStorageNote=(storage,loading,error)=>{
   if(error)return 'Storage source unavailable'
   if(loading || !storage)return 'Checking historical storage…'
   const rows=storage.items||[]
+  if(!rows.length)return 'No filesystem mapping evidence for this reporting period'
   const missing=rows.filter(row=>row.status!=='COLLECTED')
-  if(!missing.length)return '4 of 4 filesystems collected'
+  const collected=rows.filter(row=>row.status==='COLLECTED')
+  const hosts=[...new Set(collected.map(row=>hostLabel(row.host)).filter(host=>/^APP[1-5]$/.test(host)))]
+  const hostScope=hosts.length===1?hosts[0]+' · ':''
+  if(!missing.length)return hostScope+collected.length+'/'+rows.length+' mapped filesystems collected'
   const missingMap=missing.filter(row=>row.reason==='MAPPING_NOT_CONFIGURED').length
   if(missingMap)return missingMap+' filesystem mapping'+(missingMap===1?'':'s')+' not configured'
   if(!storage.source_rows)return 'No Infrastructure filesystem samples for this '+(storage.start_date?'custom period':storage.week_start?'week':'month')

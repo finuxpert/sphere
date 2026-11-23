@@ -2,7 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
 import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod, reportPeakEvidenceWib } from './rundeckMonthlyPeriod.js'
-import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
+import { monthlyRankMetricValue, monthlyTrendIntervalLabel, monthlyReviewBasis } from './rundeckMonthlyPresentation.js'
 import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
@@ -294,7 +294,7 @@ function MonthlyErrorAnalysis({ evidence }) {
 
 
 function MonthlyRanking({ title, rows=[], metric, loading=false, error='' }) {
-  const values=rows.map(row=>metric==='cpu'?wpCpuCoreEquivalent(row.peak_cpu_pct):Number(row.peak_pss_gb))
+  const values=rows.map(row=>monthlyRankMetricValue(row,metric))
   const top=Math.max(0,...values.filter(v=>v!==null && Number.isFinite(v)))
   return <section className="sphereMonthlyManagerPanel" aria-label={title}>
     <h4>{title}</h4>
@@ -341,7 +341,14 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
   return <div className="sphereMonthlyManagement" aria-label={customStart?"SAP Custom Performance Report":weekStart?"SAP Weekly Performance Report":"SAP Monthly Performance Report"}>
     <div className="sphereMonthlyManagerPair">
       {['cpu','ram'].map(metric=><section className="sphereMonthlyManagerPanel" key={metric}>
-        <div className="sphereMonthlyManagerHeading"><h4>{metric==='cpu'?'CPU Utilization Trend':'Memory Utilization Trend'}</h4><div className="sphereMonthlyManagerPeak">{peak(metric)}</div></div>
+        <div className="sphereMonthlyManagerHeading">
+          <div className="sphereMonthlyHeadingCopy">
+            <h4>{metric==='cpu'?'APP CPU Utilization':'APP Memory Utilization'}</h4>
+            <small className="sphereMonthlyChartSubtitle">{Array.isArray(pressure.trend_hosts) && Number(pressure.trend_bucket_minutes)>0
+              ?monthlyTrendIntervalLabel(pressure.trend_bucket_minutes):'Daily peak per APP · WIB'}</small>
+          </div>
+          <div className="sphereMonthlyManagerPeak">{peak(metric)}</div>
+        </div>
         {Array.isArray(pressure.trend_hosts) && Number(pressure.trend_bucket_minutes)>0
           ? <React.Suspense fallback={null}>
               <TimeHostTrend rows={pressure.trend_hosts} bucketMinutes={pressure.trend_bucket_minutes}
@@ -353,13 +360,15 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>)}
     </div>
     <div className="sphereMonthlyManagerPair">
-      <MonthlyRanking title="Top 5 Workloads by Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
-      <MonthlyRanking title="Top 5 Workloads by Peak WP Memory (PSS)" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 5 Workloads — Peak WP CPU" metric="cpu" rows={cpuRanking} loading={loading} error={evaluationError}/>
+      <MonthlyRanking title="Top 5 Workloads — Peak PSS" metric="ram" rows={memoryRanking} loading={loading} error={evaluationError}/>
     </div>
     <div className="sphereMonthlyManagerPair is-tables">
       <section className="sphereMonthlyManagerPanel">
-        <h4>Application Server Performance</h4>
-        <table className="sphereMonthlyManagerTable"><thead><tr><th>APP</th><th>CPU Avg</th><th>CPU Max</th><th>RAM Avg</th><th>RAM Max</th><th>CPU High Checks</th><th>RAM High Checks</th></tr></thead>
+        <h4>Application Server Utilization</h4>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>APP</th><th title="APP host CPU average (%)">CPU Avg</th><th title="APP host peak CPU utilization (%)">CPU Peak</th><th title="APP host RAM average (%)">RAM Avg</th><th title="APP host peak RAM utilization (%)">RAM Peak</th>
+              <th title={'Number of APP host checks at or above '+pct(pressure.thresholds?.cpu_warning_pct)+' CPU warning threshold'}>CPU Warning Checks</th>
+              <th title={'Number of APP host checks at or above '+pct(pressure.thresholds?.ram_warning_pct)+' RAM warning threshold'}>RAM Warning Checks</th></tr></thead>
           <tbody>{hosts.map(row=><tr key={row.host}>
             <td>{hostLabel(row.host)}</td><td>{pct(row.avg_cpu_pct)}</td><td>{pct(row.peak_cpu_pct)}</td>
             <td>{pct(row.avg_ram_pct)}</td><td>{pct(row.peak_ram_pct)}</td>
@@ -368,14 +377,17 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
         </table>
       </section>
       <section className="sphereMonthlyManagerPanel">
-        <h4>Top 5 Tuning Candidates</h4>
-        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th>Samples</th><th title="Peak WP CPU in logical CPU core-equivalents">WP CPU</th><th title="Peak Proportional Set Size memory in gigabytes">PSS GB</th><th>Last Seen (WIB)</th><th>Tuning action</th></tr></thead>
+        <h4>Top 5 Workloads for Review</h4>
+        <table className="sphereMonthlyManagerTable"><thead><tr><th>No</th><th>Program / Job</th><th>APP</th><th title="Saved workload observations, not SM37 job executions">Observations</th><th title="Peak WP CPU in logical CPU core-equivalents">WP CPU</th><th title="Peak Proportional Set Size memory in gigabytes">PSS GB</th><th>Last Seen (WIB)</th><th title="Signal-based review suggestion; validate with SAP diagnostics">Suggested Review</th></tr></thead>
           <tbody>{candidates.map((row,index)=><tr key={id(row)}>
             <td>{index+1}</td><td className="is-job"><span className="sphereMonthlyJobName" title={row.consumer_key}>{row.consumer_key}</span></td>
             <td>{hostsFor(row)||'—'}</td><td>{fmt(row.observations,0)}</td>
             <td>{wpCoreEq(row.peak_cpu_pct)}</td><td>{fmt(row.peak_pss_gb,2)}</td>
             <td>{when(row.last_seen)}</td>
-            <td>{row.signals?.high_memory?'Review memory use':row.signals?.sustained_high_cpu||row.signals?.cpu_spike?'Review processing':row.signals?.baseline_anomaly?'Check workload change':'Review in SAP'}</td>
+            <td title={'Source-backed review basis: '+monthlyReviewBasis(row)+'; verify before tuning'}>
+                {row.signals?.high_memory?'Review memory use':row.signals?.sustained_high_cpu||row.signals?.cpu_spike?'Review processing':row.signals?.baseline_anomaly?'Check workload change':'Review in SAP'}
+                <small className="sphereMonthlyReviewBasis">{monthlyReviewBasis(row)}</small>
+              </td>
           </tr>)}
           {!full&&<tr><td colSpan="8">{loading?'Loading saved evaluation…':evaluationError?'Evaluation unavailable. Retry to load tuning candidates.':'Waiting for evaluated workloads…'}</td></tr>}
           {full&&!candidates.length&&<tr><td colSpan="8">No candidates observed for this period</td></tr>}
@@ -384,14 +396,14 @@ function MonthlyManagementDashboard({month,weekStart=null,customStart=null,custo
       </section>
     </div>
     <section className="sphereMonthlyManagerPanel is-storage">
-      <div className="sphereMonthlyManagerHeading"><h4>{'Storage Capacity'+(()=>{
+      <div className="sphereMonthlyManagerHeading"><h4>{'Filesystem Capacity'+(()=>{
         const known=[...new Set((storage?.items||[]).map(row=>hostLabel(row.host))
           .filter(label=>/^APP[1-5]$/.test(label)))]
         return known.length===1?' · '+known[0]:''
       })()}</h4>
         <small className="sphereMonthlyStorageNote" role="status">{monthlyStorageNote(storage, !storage && !storageError, storageError)}</small>
       </div>
-      <table className="sphereMonthlyManagerTable"><thead><tr><th>File System</th><th>Mounted On / Host</th><th>Total Capacity</th><th>Used Capacity</th><th title="Source-reported df available blocks only">Available (df)</th><th>Usage %</th><th>Sample WIB</th></tr></thead><tbody>
+      <table className="sphereMonthlyManagerTable"><thead><tr><th>Filesystem</th><th>Mounted On / Host</th><th>Total</th><th>Used</th><th title="Source-reported df available blocks only">Available (df)</th><th>Used (%)</th><th>Last Sample (WIB)</th></tr></thead><tbody>
         {MONTHLY_STORAGE_ROWS.map(name=>{
           const row=storage?.month===month &&
             (weekStart?storage?.week_start===weekStart:!storage?.week_start) &&

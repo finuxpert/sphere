@@ -172,7 +172,7 @@ export function monthlyEnterpriseReportModel(month,data) {
   return {
     month,weekStart,customStart,customEnd,period,dates,quality,summary,pressure,candidates,hosts,daily,days,series,
     timeSeries,timeStart,timeEnd,timeIntervalMs,
-    observedDays,storage:data.monthly_storage.items,
+    observedDays,storage:data.monthly_storage.items,snapshot:data.snapshot||null,
     cpuPeak:maximum('cpu'),ramPeak:maximum('ram'),
     sortedCpu:ranking(data.monthly_top_wp_cpu,'peak_cpu_pct'),
     sortedPss:ranking(data.monthly_top_wp_pss,'peak_pss_gb'),
@@ -291,6 +291,14 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   // Period bounds are calendar dates in Asia/Jakarta (exclusive UTC end in the model).
   text(M+(isSlide?129:158),H-(isSlide?22:28),reportTitle,isSlide?14:16,'bold','navy')
   text(M+(isSlide?129:158),H-(isSlide?40:46),periodLabel,isSlide?9.1:9.4,'normal','muted')
+  // Report preparation time and snapshot provenance are separate facts.
+  // Do not label a plain API/fixture response FRESH without snapshot evidence.
+  const snapshotLabel=m.snapshot?.generated_at
+    ?'Snapshot: '+String(m.snapshot.status||'UNKNOWN')+' · '+wib(m.snapshot.generated_at,true)+' WIB'
+    :'Evidence: retained reporting-period records'
+  text(W-M,H-(isSlide?22:28),snapshotLabel,isSlide?7.1:8.0,'normal','muted','right',isSlide?310:400)
+  text(W-M,H-(isSlide?40:46),'Prepared: '+wib(new Date().toISOString(),true)+' WIB',
+    isSlide?7.1:8.0,'normal','muted','right')
   // Five stable APP-specific series; missing days cause real gaps in each line.
   // Peak values and timestamps are in the header, never floating above the plot.
   // 16:9 panel bands (PDF bottom-up): storage [8,112], APP/tuning [120,264],
@@ -337,7 +345,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       pdf.setLineDashPattern([3,3],0)
       line(px,ty,px+pw,ty,'amber',.8)
       pdf.setLineDashPattern([],0)
-      const label='Limit '+pct(threshold)
+      const label='Warning '+pct(threshold)
       font('normal',7.1)
       const width=pdf.getTextWidth(label)+9
       fillRect(px+pw-width-3,ty-4,width,13,'white',2)
@@ -379,8 +387,8 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       text(lx+15,ly-1,item.host,7.4,'normal','muted')
     })
   }
-  trend(M,'CPU Utilization Trend','cpu',m.pressure.thresholds?.cpu_warning_pct)
-  trend(M+panelW+gap,'Memory Utilization Trend','ram',m.pressure.thresholds?.ram_warning_pct)
+  trend(M,'APP CPU Utilization','cpu',m.pressure.thresholds?.cpu_warning_pct)
+  trend(M+panelW+gap,'APP Memory Utilization','ram',m.pressure.thresholds?.ram_warning_pct)
   // Independent five-entry rankings from the full evaluated population.
   const barY=isSlide?272:H-413,barH=isSlide?86:154
   function bars(x,title,rows,metric,labelSuffix) {
@@ -395,14 +403,14 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
       fitText(x+(isSlide?11:16),yy,row.consumer_key,isSlide?223:259,'left',isSlide?7.3:7.25)
       fillRect(bx,yy-2,bw,7.2,'header',2)
       const n=metric(row)
-      if(n!==null && max>0)fillRect(bx,yy-2,bw*n/max,7.2,i===0?'red':'blue',2)
+      if(n!==null && max>0)fillRect(bx,yy-2,bw*n/max,7.2,'blue',2)
       text(x+panelW-10,yy,n===null?'N/A':number(n,2)+labelSuffix,isSlide?7.6:7.7,'normal','ink','right')
     })
     if(!rows.length)text(x+panelW/2,barY+barH/2,'No workloads recorded',9,'normal','muted','center')
   }
-  bars(M,'Top 5 Workloads by Peak WP CPU',m.sortedCpu,
+  bars(M,'Top 5 Workloads - Peak WP CPU',m.sortedCpu,
     row=>value(wpCpuCoreEquivalent(row.peak_cpu_pct)),' cores')
-  bars(M+panelW+gap,'Top 5 Workloads by Peak WP Memory (PSS)',m.sortedPss,
+  bars(M+panelW+gap,'Top 5 Workloads - Peak PSS',m.sortedPss,
     row=>value(row.peak_pss_gb),' GB')
   // Bottom server + program evaluation tables.
   const lowY=isSlide?120:172,lowH=isSlide?144:H-427-lowY
@@ -410,8 +418,10 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   const jobW=CW-serverW-(isSlide?10:12)
   rect(M,lowY,serverW,lowH,'white',7)
   rect(jobX,lowY,jobW,lowH,'white',7)
-  section(M+15,lowY+lowH-(isSlide?20:23),'Application Server Performance')
-  section(jobX+15,lowY+lowH-(isSlide?20:23),'Top 5 Tuning Candidates')
+  section(M+15,lowY+lowH-(isSlide?20:23),'Application Server Utilization')
+  section(jobX+15,lowY+lowH-(isSlide?20:23),'Top 5 Workloads for Review')
+  text(jobX+jobW-15,lowY+lowH-(isSlide?20:23),'Signal-based · verify in SAP',
+    isSlide?7:8,'normal','muted','right')
   function table(x,top,width,spec,head,rows,headH,rowH,size) {
     fillRect(x,top-headH,width,headH,'header',3)
     rows.forEach((_,i)=>{
@@ -448,9 +458,9 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   ])
   const srvSpec=isSlide?[[30,'left'],[40,'right'],[40,'right'],[40,'right'],[40,'right'],[64,'right'],[64,'right']]:[[40,'left'],[45,'right'],[45,'right'],[45,'right'],[45,'right'],[68,'right'],[68,'right']]
   table(M+10,lowY+lowH-(isSlide?30:36),serverW-20,srvSpec,
-    ['APP','CPU Avg','CPU Max','RAM Avg','RAM Max',
-      isSlide?['CPU High','Checks']:'CPU High Checks',
-      isSlide?['RAM High','Checks']:'RAM High Checks'],
+    ['APP','CPU Avg','CPU Peak','RAM Avg','RAM Peak',
+      isSlide?['CPU Warning','Checks']:'CPU Warning Checks',
+      isSlide?['RAM Warning','Checks']:'RAM Warning Checks'],
     srvRows,isSlide?23:25,isSlide?17.4:32,isSlide?8.0:8)
   const jobRows=m.candidates.map((row,i)=>{
     const hostList=(row.hosts||[]).map(app)
@@ -466,15 +476,15 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ]
   })
   const jobSpec=isSlide
-    ?[[18,'center'],[212,'left'],[32,'center'],[35,'right'],[48,'right'],[45,'right'],[85,'center'],[77,'left']]
-    :[[24,'center'],[252,'left'],[40,'center'],[48,'right'],[70,'right'],[58,'right'],[92,'center'],[134,'left']]
+    ?[[18,'center'],[195,'left'],[32,'center'],[52,'right'],[48,'right'],[45,'right'],[85,'center'],[77,'left']]
+    :[[24,'center'],[238,'left'],[40,'center'],[62,'right'],[70,'right'],[58,'right'],[92,'center'],[134,'left']]
   const fixedWidth=jobW-20
   jobSpec[jobSpec.length-1][0]+=fixedWidth-jobSpec.reduce((sum,c)=>sum+c[0],0)
   table(jobX+10,lowY+lowH-(isSlide?30:36),jobW-20,jobSpec,
-    ['No','Program / Job','APP','Samples',
+    ['No','Program / Job','APP','Observations',
       isSlide?['WP CPU','cores']:'WP CPU cores',isSlide?['PSS','GB']:'PSS GB',
       isSlide?['Last Seen','(WIB)']:'Last Seen (WIB)',
-      isSlide?['Tuning','action']:'Tuning action'],
+      isSlide?['Suggested','Review']:'Suggested Review'],
     jobRows,isSlide?23:25,isSlide?17.4:17.8,isSlide?7.6:7.5)
 
   // Four verified mount-category rows. Absence of a correctly mapped READY
@@ -483,7 +493,7 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
   rect(M,fsY,CW,fsH,'white',7)
   const scopedStorageHosts=[...new Set(m.storage.map(row=>app(row.host))
     .filter(host=>/^APP[1-5]$/.test(host)))]
-  const storageTitle='Storage Capacity'+(scopedStorageHosts.length===1
+  const storageTitle='Filesystem Capacity'+(scopedStorageHosts.length===1
     ? ' · '+scopedStorageHosts[0] : '')
   section(M+15,fsY+fsH-(isSlide?17:22),storageTitle)
   // Present the highest source-backed storage utilization without inventing
@@ -523,8 +533,8 @@ export async function buildManagementMonthlyPdf({month,data,returnInstance=false
     ]
   })
   table(M+10,fsY+fsH-(isSlide?27:32),CW-20,fsSpec,
-    ['File System','Mounted On / Host','Total Capacity','Used Capacity',
-     'Available (df)','Usage %','Sample WIB'],
+    ['Filesystem','Mounted On / Host','Total','Used',
+     'Available (df)','Used (%)','Last Sample (WIB)'],
     fsRows,isSlide?18:23,isSlide?14.4:17.4,isSlide?8.5:7.8)
   if(isSlide){
     const close=(a,b)=>Math.abs(a-b)<.02

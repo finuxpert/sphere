@@ -24,7 +24,7 @@ test('Storage distinguishes retained capacity, mapping missing and no historical
  assert.equal(MONTHLY_STORAGE_ROWS.length,4);assert.ok(MONTHLY_STORAGE_REASON.MAPPING_NOT_CONFIGURED);
  assert.equal(monthlySize(null),'Not Collected');assert.equal(monthlySize(1.5e9),'1,5 GB');assert.equal(monthlySize(2e12),'2 TB');
  assert.equal(monthlyStorageNote(null,true,''),'Checking historical storage…');assert.equal(monthlyStorageNote(null,false,'HTTP 503'),'Storage source unavailable');
- assert.equal(monthlyStorageNote({source_rows:10,items:Array.from({length:4},()=>({status:'COLLECTED'}))},false,''),'4 of 4 filesystems collected');
+ assert.equal(monthlyStorageNote({source_rows:10,items:Array.from({length:4},()=>({status:'COLLECTED'}))},false,''),'4/4 mapped filesystems collected');
  assert.equal(monthlyStorageNote({source_rows:5,items:[{status:'MISSING',reason:'MAPPING_NOT_CONFIGURED'}]},false,''),'1 filesystem mapping not configured');
  assert.equal(monthlyStorageNote({source_rows:0,week_start:'2026-10-05',items:[{status:'MISSING',reason:'NO_WEEKLY_INFRA_HISTORY'}]},false,''),'No Infrastructure filesystem samples for this week');
 });
