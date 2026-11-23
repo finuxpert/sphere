@@ -4,7 +4,6 @@ import { flushSync } from 'react-dom'
 import { monthOptions, weekOptions, customDateError as validateCustomDate, customDayCount, monthlyReportPeriod, reportPeakEvidenceWib } from './rundeckMonthlyPeriod.js'
 import { wpCpuCoreEquivalent } from './monthlyCpuMetrics.js'
 import { fmt, pct, wpCoreEq, id, hostLabel, hostsFor, pressureHostsFor, when, relatedMonthlyErrorCodes, monthlySize, MONTHLY_STORAGE_ROWS, MONTHLY_STORAGE_REASON, monthlyStorageNote, savedPeriodPeak } from './rundeckMonthlyEvidence.js'
-import { buildMonthlyPdf } from './rundeckMonthlyPdf.js'
 import { buildManagementMonthlyPdf, monthlyEnterpriseReportModel } from './rundeckMonthlyEnterprisePdf.js'
 import './RundeckMonthlyReview.css'
 import './RundeckMonthlyFinal20261030.css'
@@ -726,13 +725,19 @@ export default function RundeckMonthlyReview({ showTitle = true }) {
         if(monthlyStorage.month!==month || !matchesScope(monthlyStorage) || !Array.isArray(monthlyStorage.items))throw Error('Storage evidence is not from selected reporting period')
         exportData={...reportData,monthly_storage:monthlyStorage}
       }
+      // Load the large technical PDF exporter only when that export is requested.
+      // Keep summary/report navigation free from this extra initial JS payload.
+      const technicalPdf=async()=>{
+        const {buildMonthlyPdf}=await import('./rundeckMonthlyPdf.js')
+        return buildMonthlyPdf({month,data:exportData})
+      }
       const blob=await (reportType==='png'
         ? buildManagementMonthlyPng({month,data:exportData})
         : reportType==='management'
           ? buildManagementMonthlyPdf({month,data:exportData})
           : reportType==='print-a3'
             ? buildManagementMonthlyPdf({month,data:exportData,format:'a3'})
-            : buildMonthlyPdf({month,data:exportData}))
+            : technicalPdf())
       if(generation!==pdfGenerationRef.current)return
       const url=URL.createObjectURL(blob)
       if(pdfRef.current)URL.revokeObjectURL(pdfRef.current)
