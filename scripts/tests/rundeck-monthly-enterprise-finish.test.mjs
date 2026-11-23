@@ -178,9 +178,10 @@ test('report title is separated from its period and ABAP names retain accessible
 
 test('report export UI describes two-step generation and period-scoped filenames',()=>{
   for (const label of ['Generate PDF 16:9','Generate PNG 16:9','Generate PDF A3',
-    'Download PDF 16:9','Download PDF A3','Download PNG 16:9']) {
+    "'PNG 16:9'", "'PDF A3'", "'PDF 16:9'"]) {
     assert.ok(ui.includes(label),'Export or download label absent: '+label)
   }
+  assert.match(ui,/Download \{pdfMode==='png'/)
   assert.match(ui,/const weeklyEnd=requestedWeek/)
   assert.match(ui,/requestedWeek\+'-to-'\+weeklyEnd\+'-WIB'/)
   assert.match(ui,/requestedStart\+'-to-'\+requestedEnd\+'-WIB'/)
