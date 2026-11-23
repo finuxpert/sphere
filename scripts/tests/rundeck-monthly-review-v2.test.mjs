@@ -176,7 +176,7 @@ test('management trends preserve dated peaks, WIB threshold and month scope', ()
 
 test('monthly management website uses compact four-row layout and canonical source fields', () => {
   const ui=reportSource()
-  const css=read('src/tools/components/RundeckMonthlyFinal20261030.css')
+  const css=read('src/tools/components/RundeckMonthlyFinal20261030.css') + '\n' + read('src/tools/components/RundeckMonthlyManagement.css')
   const evaluation=read('backend/rundeck_evaluation.py')
   for(const label of ['APP CPU Utilization','APP Memory Utilization',
     'Top 5 Workloads — Peak WP CPU','Top 5 Workloads — Peak PSS',
