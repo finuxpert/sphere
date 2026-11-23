@@ -38,6 +38,7 @@ test('the monitoring UI avoids duplicate labels while preserving verified states
 test('embedded reports and collector tabs do not repeat panel titles', () => {
   const monitor = read('RundeckMonitoringHistory')
   const monthly = read('RundeckMonthlyReview')
+  const header = read('RundeckMonthlyReportHeader')
   const collector = read('RundeckSystemData')
   const manual = read('RundeckDataCollection')
   const styles = read('RundeckSystemData', 'css')
@@ -45,10 +46,11 @@ test('embedded reports and collector tabs do not repeat panel titles', () => {
   assert.equal((monitor.match(/<RundeckMonthlyReview /g) || []).length, 2)
   assert.match(monitor, /<RundeckMonthlyReview[^>]*showTitle=\{false\}/)
   assert.match(monthly, /showTitle = true/)
-  assert.match(monthly, /showTitle && <div className="sphereMonthlyReportTitle"><strong>SAP Performance Report<\/strong><small>/)
-  assert.match(monthly, /sphereMonthlyHeaderControls/)
-  assert.match(monthly, /sphereMonthlyInlineStatus/)
-  assert.match(monthly, /<option value="month">Monthly<\/option><option value="week">Weekly<\/option><option value="custom">Custom<\/option>/)
+  assert.match(monthly, /<RundeckMonthlyReportHeader/)
+  assert.match(header, /showTitle && <div className="sphereMonthlyReportTitle"><strong>SAP Performance Report<\/strong><small>/)
+  assert.match(header, /sphereMonthlyHeaderControls/)
+  assert.match(header, /sphereMonthlyInlineStatus/)
+  assert.match(header, /<option value="month">Monthly<\/option><option value="week">Weekly<\/option><option value="custom">Custom<\/option>/)
 
   assert.match(collector, /hideTabs && <strong>Collection History<\/strong>/)
   assert.match(collector, /hideTabs && <strong>SPHERE Services<\/strong>/)
