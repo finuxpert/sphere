@@ -658,5 +658,26 @@ class CalendarMonthReviewTests(unittest.TestCase):
         self.assertEqual(sum(row["ram_warning_days"] for row in hosts.values()),
                          report["ram"]["observed_warning_app_days"])
 
+class ReportPeriodModuleParityTests(unittest.TestCase):
+    def test_calendar_helpers_remain_reexported_by_evaluation_api(self):
+        from backend import rundeck_evaluation as evaluation
+        from backend import rundeck_reporting_periods as periods
+
+        self.assertIs(evaluation.calendar_month_bounds, periods.calendar_month_bounds)
+        self.assertIs(evaluation.calendar_week_bounds, periods.calendar_week_bounds)
+        self.assertIs(evaluation.calendar_custom_bounds, periods.calendar_custom_bounds)
+
+    def test_wib_week_and_month_boundaries_are_stable_after_refactor(self):
+        from zoneinfo import ZoneInfo
+        from backend.rundeck_reporting_periods import calendar_month_bounds, calendar_week_bounds
+        now = datetime(2026, 11, 23, 22, 30, tzinfo=ZoneInfo("Asia/Jakarta"))
+        month_start, month_end, _ = calendar_month_bounds("2026-10", now)
+        self.assertEqual(month_start, datetime(2026, 9, 30, 17, tzinfo=timezone.utc))
+        self.assertEqual(month_end, datetime(2026, 10, 31, 17, tzinfo=timezone.utc))
+        week_start, week_end, _ = calendar_week_bounds("2026-11-16", now)
+        self.assertEqual(week_start, datetime(2026, 11, 15, 17, tzinfo=timezone.utc))
+        self.assertEqual(week_end, datetime(2026, 11, 22, 17, tzinfo=timezone.utc))
+
+
 if __name__ == "__main__":
     unittest.main()
