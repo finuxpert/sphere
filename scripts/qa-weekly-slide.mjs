@@ -64,9 +64,9 @@ assert.ok(Math.abs(pdf.internal.pageSize.getWidth()-960)<.25)
 assert.ok(Math.abs(pdf.internal.pageSize.getHeight()-540)<.25)
 const stream=pdf.internal.pages[1].join('\n')
 for(const label of ['SAP Weekly Performance Report','Period: 26 Oct 2026 - 01 Nov 2026',
-  '29 Oct 2026, 13:00 WIB','01 Nov 2026, 23:00 WIB','Top 5 Workloads by Peak WP CPU',
-  'Top 5 Workloads by Peak WP Memory','Top 5 Tuning Candidates',
-  'Application Server Performance','Storage Capacity','01 Nov, 23:59 WIB']) {
+  '29 Oct 2026, 13:00 WIB','01 Nov 2026, 23:00 WIB','Top 5 Workloads - Peak WP CPU',
+  'Top 5 Workloads - Peak PSS','Top 5 Workloads for Review',
+  'Application Server Utilization','Filesystem Capacity','01 Nov, 23:59 WIB']) {
   assert.ok(stream.includes(label),'Missing Weekly 16:9 PDF label: '+label)
 }
 assert.ok(!stream.includes('Top 10 Tuning Candidates'))
