@@ -6,7 +6,7 @@ const component = name => readFileSync(new URL('../../src/tools/components/' + n
 const ui = ['RundeckMonthlyReview.jsx','RundeckMonthlyManagement.jsx',
   'RundeckMonthlyEvidencePanels.jsx','RundeckMonthlyReportHeader.jsx',
   'RundeckMonthlyPngExport.jsx','rundeckMonthlyExport.js'].map(component).join('\n')
-const css = component('RundeckMonthlyFinal20261030.css')
+const css = component('RundeckMonthlyFinal20261030.css') + '\n' + component('RundeckMonthlyManagement.css')
 
 test('Monthly Report has four dense report rows plus evidence popup',()=>{
   assert.match(ui,/sphereMonthlyManagement/)
