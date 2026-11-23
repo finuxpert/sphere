@@ -185,6 +185,6 @@ test('report export UI describes two-step generation and period-scoped filenames
   assert.match(ui,/const weeklyEnd=requestedWeek/)
   assert.match(ui,/requestedWeek\+'-to-'\+weeklyEnd\+'-WIB'/)
   assert.match(ui,/requestedStart\+'-to-'\+requestedEnd\+'-WIB'/)
-  assert.match(ui,/Top 5 Workloads by Peak WP Memory \(PSS\)/)
+  assert.match(ui,/Top 5 Workloads — Peak PSS/)
   assert.match(ui,/Peak WP CPU in logical CPU core-equivalents/)
 })
