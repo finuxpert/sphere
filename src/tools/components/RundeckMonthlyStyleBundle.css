@@ -1,0 +1,3 @@
+/* Preserve original report CSS order and Vite CSS chunk boundary. */
+@import './RundeckMonthlyCore.css';
+@import './RundeckMonthlyReview.css';
