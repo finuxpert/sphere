@@ -5,6 +5,7 @@ on:
     branches: [rundeck-sphere-dev]
     paths:
       - 'backend/rundeck_evaluation.py'
+      - 'backend/rundeck_workload_assessment.py'
       - 'backend/rundeck_report_snapshots.py'
       - 'backend/rundeck_report_precompute.py'
       - 'backend/tests/test_report_snapshot_dev.py'
