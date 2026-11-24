@@ -74,6 +74,23 @@ The SPHERE server currently reports `gh: command not found`, so **no branch or r
 
 Do not delete/rewrite GitHub Actions run history linked to active migrations, deploy approvals or incidents without an explicitly reviewed retention decision.
 
+## One entrypoint for the complete audit / cleanup
+
+A single guarded entrypoint calls the branch cleanup and Actions-run cleanup in order, but **defaults to audit-only**:
+
+```bash
+cd /root/rundeck-sphere-dev
+git pull --ff-only origin rundeck-sphere-dev
+
+# Audit: no remote mutations
+bash ops/rundeck/github-hygiene.sh --audit
+
+# Apply after inspecting the two sets of candidates and the retention manifest
+bash ops/rundeck/github-hygiene.sh --apply --max-delete=150
+```
+
+The `--apply` pass deletes only merged PR heads that remain eligible and older completed Actions runs passing the retention rules. Repeat the Actions phase in bounded batches as needed; keep the JSON manifest as change evidence. The wrapper refuses wrong checkout, dirty worktree, missing `gh`, failed authentication or mismatched repository identity.
+
 ## Canonical documentation ownership
 
 | Class | Canonical reference | Rule |
