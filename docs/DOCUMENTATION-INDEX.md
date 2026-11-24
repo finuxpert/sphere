@@ -7,7 +7,7 @@
 | Reference | Purpose |
 |---|---|
 | [Current DEV maintenance / PROD release gate](../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md) | **Primary change status:** cleanup first, consolidated operator QA later; PROD ON HOLD |
-| [GitHub branch and documentation hygiene](operations/REPOSITORY_HYGIENE_20261124.md) | **24 Nov audit:** 54 branches, 40 merged-PR cleanup candidates; safe deletion policy and dry-run script |
+| [GitHub branch and documentation hygiene](operations/REPOSITORY_HYGIENE_20261124.md) | **Current operator checkpoint:** `sadmin@mail` has an authenticated `gh` and a clone at `/home/sadmin/sphere-hygiene.puI4zt`; cleanup audit/apply not yet confirmed. Earlier counts are historical; re-audit before deletion |
 | [Repository audit — 3 November 2026](architecture/REPOSITORY-AUDIT-20261103.md) | Historical measured tree/dependency audit, not a 24 Nov live inventory |
 | [Project README](../README.md) | Architecture, environment boundaries and quick start |
 | [Current Features & Flow](CURRENT-FLOW-AND-FEATURES.md) | Current operator workflow and evidence semantics |
