@@ -39,6 +39,58 @@ Run `--apply` only when deletion is intended. The script fetches **all paginated
 
 For a workstation without `gh`, use GitHub's *Branches* page manually after checking each PR and base dependency. Do not place tokens in scripts, chat, or command arguments. Never replace deletion with force-reset or move a reference to a different commit.
 
+## GitHub Actions cleanup — audit on 24 Nov 2026
+
+- **974** GitHub Actions runs were returned by the live repository run listing, largely accumulated during repeated DEV QA/PR iterations.
+- All **four** workflow definitions under `.github/workflows/` are currently used and must remain enabled:
+  - `sphere-dev-ui-qa.yml`: DEV push build, browser checks, backend regression and offline artifact;
+  - `sphere-dev-maintenance-qa.yml`: DEV pull-request parity and reports/PDF/backend regression;
+  - `sphere-report-snapshot-qa.yml`: source-scoped persistent snapshot checks;
+  - `sphere-report-split-distinct-parity.yml`: PostgreSQL split DISTINCT parity on impacted code.
+- No workflow YAML file is obsolete just because a run completed, failed or was cancelled. Do not disable these tests to reduce history.
+- Run retention for generated PDF artifacts is already **3 days** for maintenance QA and **14 days** for DEV offline release; those artifacts are evidence for their valid QA window.
+
+### Selective historical run cleanup
+
+Use the dedicated script for **completed GitHub Actions runs attached to merged PR branches no longer in active use**; it never prunes runs on active DEV/PROD/legacy branches, open PR heads/bases, or closed-but-unmerged work. It preserves each merged branch's most recent run per workflow, all manually dispatched runs, and recent failure history. Actual deletion irreversibly removes that run's logs and associated artifacts.
+
+```bash
+# On a trusted administrative machine with GitHub CLI already installed:
+cd /root/rundeck-sphere-dev
+gh auth status
+
+# Inspect and store local JSON manifest, no deletions by default
+python3 ops/rundeck/cleanup-github-actions-runs.py
+
+# Only after checking the manifest and authorized cleanup scope:
+python3 ops/rundeck/cleanup-github-actions-runs.py --apply --max-delete 150
+```
+
+Defaults: successful runs at least **14 days** old, cancelled/skipped at least **7 days** old, failed at least **30 days** old. Manual workflow dispatches, incomplete runs and each branch/workflow's latest run are preserved; the script writes an audit manifest under `/tmp` and rechecks run identities before DELETE. Execute additional batches only if desired; do not automatically delete recent failure evidence or Actions artifacts still needed for a release.
+
+### GitHub CLI dependency and credentials
+
+The SPHERE server currently reports `gh: command not found`, so **no branch or run deletion was performed**. On a trusted Ubuntu admin host, install with `apt-get update && apt-get install -y gh` and authenticate interactively with `gh auth login --hostname github.com --git-protocol https --web`. The authenticated identity needs **Contents write** for branch deletion and **Actions write** for run deletion. GitHub credentials must not be stored inside the repository, CI logs or chat. Prefer a trusted workstation if the SPHERE runtime host should not store an administrative token.
+
+Do not delete/rewrite GitHub Actions run history linked to active migrations, deploy approvals or incidents without an explicitly reviewed retention decision.
+
+## One entrypoint for the complete audit / cleanup
+
+A single guarded entrypoint calls the branch cleanup and Actions-run cleanup in order, but **defaults to audit-only**:
+
+```bash
+cd /root/rundeck-sphere-dev
+git pull --ff-only origin rundeck-sphere-dev
+
+# Audit: no remote mutations
+bash ops/rundeck/github-hygiene.sh --audit
+
+# Apply after inspecting the two sets of candidates and the retention manifest
+bash ops/rundeck/github-hygiene.sh --apply --max-delete=150
+```
+
+The `--apply` pass deletes only merged PR heads that remain eligible and older completed Actions runs passing the retention rules. Repeat the Actions phase in bounded batches as needed; keep the JSON manifest as change evidence. The wrapper refuses wrong checkout, dirty worktree, missing `gh`, failed authentication or mismatched repository identity.
+
 ## Canonical documentation ownership
 
 | Class | Canonical reference | Rule |
