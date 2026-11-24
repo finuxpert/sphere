@@ -78,6 +78,21 @@ moving, renaming, extracting or deleting code.
 
 Duplicate basenames alone do not prove duplicated logic.
 
+### Infrastructure cascade consolidation
+
+At integrated DEV baseline `a4a8888e`, six rules in `RundeckInfrastructure.css` had identical later copies under the same selectors and media conditions. Remove the earlier copies and two media wrappers that then become empty. Infrastructure keeps one stylesheet owner. A PostCSS comparison confirmed that the ordered rule list after dropping the shadowed copies matches the candidate.
+
+| Metric | DEV baseline | Candidate |
+| --- | ---: | ---: |
+| Tracked files / source files / CSS files | 648 / 513 / 112 | 648 / 513 / 112 |
+| Source lines / CSS lines | 105,086 / 45,082 | 105,063 / 45,059 |
+| Infrastructure CSS lines | 1,001 | 978 |
+| Written `!important` declarations | 11,658 | 11,649 |
+| Infrastructure same-context extra rule blocks | 97 | 91 |
+| Direct frontend dependencies | 15 | 15 |
+
+All 33 focused cascade, bundle and Infrastructure-formatting tests passed. Chromium 131 matched all computed properties and bounds for the chart, grid and table cells in the offline fixture at five mobile/desktop sizes, including both responsive boundaries, with dark/light themes and source/minified CSS. The isolated minified stylesheet fell from 36,912 to 36,643 bytes. This scope is independent of the stylesheet parsing fix. GitHub's existing full QA and bundle gates verify the assembled application. Rollback is a source revert.
+
 ## Execution roadmap
 
 - [x] Repository hygiene Phase 1 and Phase 2.
