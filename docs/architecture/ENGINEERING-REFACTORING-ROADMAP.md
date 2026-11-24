@@ -117,7 +117,7 @@ The review branch is `refactor/dev-workload-assessment`, tracked in [PR #128](ht
 
 The evidence contracts retain APP and collection identity, missing-evidence handling, confidence limits and the distinction between sampled WP signals and authoritative SM37 execution. No performance measurement was taken for this extraction. Source rollback is a revert of the refactor commit.
 
-Final review extended the existing workflow path filters to cover changes confined to the assessment module. DEV maintenance CI also runs the existing workload classification suites on each DEV pull request. The resulting backend test list passed all 90 tests locally. Engineering-owner approval governs the merge of PR #128.
+Final review extended the existing workflow path filters to cover changes confined to the assessment module. DEV maintenance CI also runs the existing workload classification suites on each DEV pull request. The resulting backend test list passed all 90 tests locally. PR #128 was squash-merged after engineering-owner approval.
 
 After review of this scope, assess the remaining SQL and cache ownership independently. Keep Issue #111 performance work measured and separate. Defer CSS relocation until the import and selector audit identifies a bounded change that can satisfy the current bundle budget and visual parity gates.
 
@@ -153,7 +153,7 @@ The candidate reduces direct runtime dependencies from 20 to 15 and package-lock
 
 `npm ci`, lint and all 22 focused frontend tests passed in the isolated worktree. The [PR #130 maintenance workflow](https://github.com/finuxpert/sphere/actions/runs/45340731707) passed the clean Node 26 locked install, full QA, Vite build and browser smoke at `ff718f24acc9692f771b7e2cf39c24ccbfbf75fe`. All five budgeted assets had the same byte sizes as the [PR #129 baseline](https://github.com/finuxpert/sphere/actions/runs/45340260338). Reports JS measured 67,978 bytes and Reports CSS 18,464 bytes in both runs. Application performance was outside this measurement.
 
-[PR #129](https://github.com/finuxpert/sphere/pull/129) covers the CSS audit correction. [PR #130](https://github.com/finuxpert/sphere/pull/130) changes the build dependency manifest and lockfile. Both await engineering-owner approval. Release requires separate approval. Source rollback is a revert of the relevant commit.
+[PR #129](https://github.com/finuxpert/sphere/pull/129) covers the CSS audit correction. [PR #130](https://github.com/finuxpert/sphere/pull/130) changes the build dependency manifest and lockfile. Both were squash-merged after validation against the current DEV base for each PR. Release requires separate approval. Source rollback is a revert of the relevant commit.
 
 ## Current operational checkpoint
 
@@ -184,7 +184,7 @@ before continuing this roadmap.
 
 ## DEV source assessment and CSS audit checkpoint
 
-The assessment used DEV source `cb490c36382ab73eec890d41eec7203ac5182a3b` after standards PR #127 merged. [PR #128](https://github.com/finuxpert/sphere/pull/128) completed final review at `5c1f8f5069b0ca16e52b222cf8276e441dcd6d14` with maintenance, PostgreSQL parity and snapshot CI passing. Its merge awaits engineering-owner approval. The CSS audit correction is independently based on DEV.
+The assessment used DEV source `cb490c36382ab73eec890d41eec7203ac5182a3b` after standards PR #127 merged. [PR #128](https://github.com/finuxpert/sphere/pull/128) completed final review at `5c1f8f5069b0ca16e52b222cf8276e441dcd6d14` with maintenance, PostgreSQL parity and snapshot CI passing. The CSS audit correction was independently based on DEV.
 
 | Metric | DEV baseline | After audit correction |
 | --- | ---: | ---: |
@@ -211,3 +211,28 @@ The change adds a 16-line QA fixture. A property-name suffix could previously ma
 | Backend ownership and performance | Assess report SQL and cache/locking after PR #128 lands. Use the existing query and snapshot parity suites. Establish a controlled cold/warm benchmark with fixtures before claiming performance gains. Record API P50/P95, query work, payload, cache behavior, CPU, memory and frontend load/render metrics in the scope that measures them. |
 
 Application deployment and live runtime validation are outside this source checkpoint. PROD remains ON HOLD.
+
+## DEV integration and stylesheet parsing checkpoint
+
+| Squash order | DEV commit | Validation against the current DEV base |
+| --- | --- | --- |
+| #128 | `5f5569e0` | Maintenance, PostgreSQL parity and snapshot CI passed at `5c1f8f50`, based on `cb490c36`. |
+| #129 | `7e092cb7` | [Maintenance QA](https://github.com/finuxpert/sphere/actions/runs/45347376109) passed at `70c3938d`, which included DEV at `5f5569e0`. |
+| #130 | `a4a8888e` | [Maintenance QA](https://github.com/finuxpert/sphere/actions/runs/45347867678) passed at `70a434e7`, which included DEV at `7e092cb7`. |
+
+Each refreshed candidate applied without a source conflict and retained its original changed-file scope. The combined DEV tree has 648 tracked files, 513 tracked CSS/Python/JS source files and 105,086 source lines. The previous DEV baseline had 647 tracked files, 512 tracked source files and 105,038 source lines. Direct frontend dependencies fell from 20 to 15. The stylesheet count, 45,082 CSS lines and 11,658 `!important` declarations carried forward into the stylesheet parsing baseline.
+
+The stylesheet parsing scope removes 13 malformed declarations and one resulting empty rule from Job History, Monitoring History and Source. Chromium discarded each malformed declaration, including the continuation after the line break. The change removes that entire invalid segment and preserves the valid declarations that follow it.
+
+| Metric | At `a4a8888e` | Parsing candidate |
+| --- | ---: | ---: |
+| Tracked files / source files | 648 / 513 | 648 / 513 |
+| Source lines | 105,086 | 105,058 |
+| CSS files / CSS lines | 112 / 45,082 | 112 / 45,054 |
+| Written `!important` declarations | 11,658 | 11,647 |
+| CSS syntax warnings in the three isolated stylesheet builds | 13 | 0 |
+| Direct frontend dependencies | 15 | 15 |
+
+PostCSS parsed all three changed stylesheets. The 29 existing cascade and bundle-check regression tests passed. Chromium 131 produced the same effective CSS rules and computed geometry and styles in the local fixture for source and minified CSS at 393×852, 1536×960 and 1920×1080 in dark and light themes. The 11 removed `!important` declarations were invalid and had no effect on the cascade. Existing CI verifies the complete build, browser smoke and bundle budgets. Rollback is a source revert.
+
+The next CSS scope should consolidate provably shadowed rules under an existing domain owner and preserve source order, layer and media-query behavior. Release, live runtime validation and PROD promotion remain separately governed.

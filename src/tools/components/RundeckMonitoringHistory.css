@@ -1415,8 +1415,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   border-top:1px solid rgba(126,147,158,.055)!important;
 }
 .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryAnalysis button{
-  min-
-  height:48px!important;
   padding:6px 10px!important;
   background:transparent!important;
 }
@@ -1484,8 +1482,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     min-height:58px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard {
-    min-
-    height:58px!important;
     padding:5px 7px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCardTitle {
@@ -1512,8 +1508,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     min-height:42px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis button {
-    min-
-    height:42px!important;
     padding:4px 7px!important;
     column-gap:6px!important;
   }
@@ -1555,8 +1549,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     min-height:54px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedOperationalEvidence .rundeckEvidenceCard {
-    min-
-    height:54px!important;
     padding:4px 7px!important;
     grid-template-rows:auto auto minmax(0,1fr)!important;
   }
@@ -1576,8 +1568,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
     min-height:40px!important;
   }
   .appShell:has(.rundeckPanel) .rundeckSelectedStack .rundeckSelectedSecondaryAnalysis button {
-    min-
-    height:40px!important;
     padding:3px 7px!important;
   }
 
@@ -1786,8 +1776,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   padding-top:0!important;
 }
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckEvidenceCard{
-  min-
-  height:40px!important;
   padding:4px 6px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis{
@@ -1797,8 +1785,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
   margin-top:0!important;
 }
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedSecondaryAnalysis button{
-  min-
-  height:36px!important;
   padding:3px 6px!important;
 }
 .appShell:has(.rundeckPanel) .rundeckBottomBandV13454 .rundeckSelectedOperationalEvidence .rundeckEvidenceCard b,
@@ -2179,8 +2165,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 }
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button{
-  min-
-  height:44px!important;
   border-right-color:rgba(126,147,158,.045)!important;
 }
 @media(max-width:1280px){
@@ -2401,8 +2385,6 @@ html[data-theme="light"] .appShell:has(.rundeckPanel) .rundeckSelectedSecondaryA
 }
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckEvidenceCard,
 .appShell:has(.rundeckPanel) .rundeckAnalysisRailV13456 .rundeckSelectedSecondaryAnalysis>button{
-  min-
-  height:46px!important;
   padding:5px 7px!important;
   border-right-color:rgba(126,147,158,.028)!important;
 }
