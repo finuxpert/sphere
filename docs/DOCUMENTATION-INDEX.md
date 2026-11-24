@@ -4,10 +4,12 @@
 
 ## Start here
 
+All coding assistants must first read [Repository Instructions](../AGENTS.md).
+
 | Reference | Purpose |
 |---|---|
 | [Current DEV maintenance / PROD release gate](../ops/rundeck/DEV_FIRST_MAINTENANCE_AND_PROD_PROMOTION.md) | **Primary change status:** cleanup first, consolidated operator QA later; PROD ON HOLD |
-| [GitHub branch and documentation hygiene](operations/REPOSITORY_HYGIENE_20261124.md) | **Current operator checkpoint:** `sadmin@mail` has an authenticated `gh` and a clone at `/home/sadmin/sphere-hygiene.puI4zt`; cleanup audit/apply not yet confirmed. Earlier counts are historical; re-audit before deletion |
+| [GitHub branch and documentation hygiene](operations/REPOSITORY_HYGIENE_20261124.md) | **Current operator checkpoint:** `sadmin@mail` has an authenticated `gh` and a clone at `/home/sadmin/sphere-hygiene.puI4zt`; Phase 1/2 complete; PR #126 merged; weekly systemd audit enabled. Additional cleanup is not required |
 | [Repository audit — 3 November 2026](architecture/REPOSITORY-AUDIT-20261103.md) | Historical measured tree/dependency audit, not a 24 Nov live inventory |
 | [Project README](../README.md) | Architecture, environment boundaries and quick start |
 | [Current Features & Flow](CURRENT-FLOW-AND-FEATURES.md) | Current operator workflow and evidence semantics |
@@ -15,6 +17,16 @@
 | [Operations & Rollback](../ops/rundeck/OPERATIONS.md) | Production safety, credentials, recovery and rollback |
 | [Enterprise UI Standard](standards/SPHERE-ENTERPRISE-UI-STANDARD.md) | Layout, terminology, responsive rules and data integrity |
 | [Visual QA](standards/VISUAL-QA.md) | Browser, viewport, interactions and accessibility acceptance |
+
+
+## Canonical engineering standards
+
+- [Engineering Principles](standards/ENGINEERING-PRINCIPLES.md)
+- [Repository Architecture and Naming](standards/REPOSITORY-ARCHITECTURE.md)
+- [Engineering Refactoring Roadmap](architecture/ENGINEERING-REFACTORING-ROADMAP.md)
+
+These documents define permanent engineering conventions,
+not temporary release-specific instructions.
 
 ## Technical references
 

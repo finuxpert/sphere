@@ -11,7 +11,7 @@ This is the **maintained deployment contract** for the Rundeck-integrated SPHERE
 - DEV: `/root/rundeck-sphere-dev`, `https://sphere.astraotoparts.co.id/dev/`, API `127.0.0.1:8091`, web `/var/www/sphere-dev/current`, API `/opt/sphere-rundeck-dev/current`, systemd `sphere-rundeck-api.service`.
 - PROD: `/root/rundeck-sphere-prod`, `https://sphere.astraotoparts.co.id/`, API `127.0.0.1:8092`, web `/var/www/sphere.astraotoparts.co.id/current`, API `/opt/sphere-rundeck-prod/current`, systemd `sphere-rundeck-prod-api.service`.
 - DEV Vite base `/dev/`; PROD `/`. The two runtimes share `JAHSVR-SPHERE` but must remain isolated by branch, release, port, service and Nginx route.
-- `sphere-dev` and `sphere-prod` are separate Manual Upload Logs branches. Retained ingestion evidence is outside Git under `/var/lib/sphere/ingestion`.
+- Legacy sphere-dev and sphere-prod branches were archived and removed on 24 November 2026. Retained ingestion evidence is outside Git under `/var/lib/sphere/ingestion`.
 
 A source commit/CI PASS does not establish the active server release. Verify symlinks, API and public UI separately.
 
@@ -128,7 +128,7 @@ Remote branch housekeeping and documentation curation are **not** a release and 
 
 - Preserve `rundeck-sphere-dev`, `rundeck-sphere-prod`, `sphere-dev`, `sphere-prod`, GitHub default branch and all open PR heads/bases.
 - Preserve any closed **unmerged** PR work; in particular, CSS refactor #117 was intentionally closed **without merge** because it breached the Reports CSS bundle budget.
-- Delete merged-PR heads only after the tool independently revalidates the remote SHA, merge state and absence of open-PR dependencies. The cleanup script defaults to a **read-only dry-run**; actual deletion needs `--apply` and GitHub Contents write permission.
+- Delete merged-PR heads only after the tool independently revalidates the remote SHA, merge state and absence of open-PR dependencies. The cleanup script defaults to a **read-only dry-run**; actual deletion requires an explicitly approved manifest and the guarded hygiene wrapper.
 - Dated release and recovery documents are historical evidence, not the latest deployed state; the last operator-confirmed DEV UI-only SHA is `5978b757`, and later merged backend source changes still require guarded full-stack DEV deployment.
 
 ## Production promotion

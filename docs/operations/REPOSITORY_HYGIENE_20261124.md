@@ -1,3 +1,55 @@
+# Current operational checkpoint
+
+Date: 24 November 2026 WIB.
+
+- PR #126 merged at DEV source checkpoint 7378c36.
+- GitHub CI PASS and 28 offline regression tests PASS.
+- Live GitHub audit PASS on Python 3.6.8.
+- Six branches, four open draft PRs, five active workflows.
+- 371 Actions runs scanned; zero cleanup candidates.
+- Additional repository cleanup is not required.
+
+## Automatic GitHub maintenance
+
+Status: ENABLED / INITIAL AUDIT PASS.
+
+Host: mail, AlmaLinux 8.10.
+Execution user: sadmin.
+Schedule: Sunday 03:00 Asia/Jakarta.
+First scheduled run: 29 November 2026, 03:00 WIB.
+
+Service: sphere-github-maintenance.service.
+Timer: sphere-github-maintenance.timer.
+Workspace: /home/sadmin/sphere-auto-maintenance.
+Entry point: run-audit.sh.
+Audit manifests: audits/.
+Execution logs: logs/.
+
+The timer performs a read-only GitHub audit.
+Source updates require fast-forward synchronization.
+Changes to hygiene executable scripts require operator review.
+Local audit log retention is 90 days.
+Audit manifests are retained separately.
+No automatic remote deletion or application deployment.
+
+Monitoring commands:
+
+    systemctl status sphere-github-maintenance.timer
+    systemctl list-timers --all
+    sudo journalctl -u sphere-github-maintenance.service -n 50
+    sudo systemctl start sphere-github-maintenance.service
+
+Disable scheduler if required:
+
+    sudo systemctl disable --now sphere-github-maintenance.timer
+
+Initial automatic audit completed at 11:18:03 WIB.
+GitHub deletion NONE. Deployment NONE. PROD UNCHANGED.
+
+Historical cleanup counts below are retained as evidence.
+
+---
+
 # SPHERE - Repository Hygiene Closeout
 
 Date: 24 November 2026 (WIB)
