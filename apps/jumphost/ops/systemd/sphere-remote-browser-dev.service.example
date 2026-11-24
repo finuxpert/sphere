@@ -1,0 +1,35 @@
+# DEV ONLY. Worker account owns Chromium; never put this service behind Nginx.
+# /etc/sphere/remote-browser-dev.env must be root:sphere-remote-browser 0640.
+# Add an approved destination IPAddressAllow=<single-target-IP>/32 drop-in before network QA.
+[Unit]
+Description=SPHERE Remote DEV Chromium Worker (gated)
+After=network.target
+
+[Service]
+Type=simple
+User=sphere-remote-browser
+Group=sphere-remote-browser
+WorkingDirectory=/opt/sphere-remote-browser-lab/worker
+EnvironmentFile=/etc/sphere/remote-browser-dev.env
+Environment=PLAYWRIGHT_BROWSERS_PATH=/opt/sphere-remote-browser-lab/browsers
+Environment=HOME=/var/lib/sphere-remote-browser
+ExecStart=/opt/sphere-remote-browser-lab/venv/bin/python -m uvicorn worker:app --host 127.0.0.1 --port 8094 --workers 1 --no-access-log
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+ReadWritePaths=/var/lib/sphere-remote-browser
+MemoryMax=1536M
+TasksMax=120
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
