@@ -117,6 +117,8 @@ The review branch is `refactor/dev-workload-assessment`, tracked in [PR #128](ht
 
 The evidence contracts retain APP and collection identity, missing-evidence handling, confidence limits and the distinction between sampled WP signals and authoritative SM37 execution. No performance measurement was taken for this extraction. Source rollback is a revert of the refactor commit.
 
+Final review extended the existing workflow path filters to cover changes confined to the assessment module. DEV maintenance CI also runs the existing workload classification suites on each DEV pull request. The resulting backend test list passed all 90 tests locally. Engineering-owner approval governs the merge of PR #128.
+
 After review of this scope, assess the remaining SQL and cache ownership independently. Keep Issue #111 performance work measured and separate. Defer CSS relocation until the import and selector audit identifies a bounded change that can satisfy the current bundle budget and visual parity gates.
 
 ## Acceptance criteria
