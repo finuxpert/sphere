@@ -5,6 +5,7 @@ on:
     branches: [rundeck-sphere-dev, perf/dev-report-split-distinct-20261105]
     paths:
       - backend/rundeck_evaluation.py
+      - backend/rundeck_workload_assessment.py
       - backend/tests/test_report_split_distinct_dev.py
       - backend/tests/test_report_split_distinct_runtime_dev.py
       - ops/rundeck/compare-report-split-distinct-dev.py
@@ -43,6 +44,7 @@ jobs:
       - name: Compile changed Python modules
         run: |
           python -m py_compile backend/rundeck_evaluation.py
+          python -m py_compile backend/rundeck_workload_assessment.py
           python -m py_compile backend/tests/test_report_split_distinct_dev.py
           python -m py_compile backend/tests/test_report_split_distinct_runtime_dev.py
           python -m py_compile ops/rundeck/compare-report-split-distinct-dev.py

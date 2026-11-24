@@ -82,12 +82,14 @@ jobs:
           cache: pip
       - name: Install backend dependencies
         run: python -m pip install -r backend/requirements.txt
-      - name: Backend monthly-storage and monthly-report regression
+      - name: Backend report and workload assessment regression
         run: |
           python ops/rundeck/test_github_hygiene.py -v
           python -m compileall -q backend
           python -m unittest -v \
             backend.tests.test_rundeck_infra \
+            backend.tests.test_rundeck_evaluation_v1194 \
+            backend.tests.test_rundeck_v120 \
             backend.tests.test_rundeck_monthly_review \
             backend.tests.test_report_ready_source_pruning \
             backend.tests.test_report_collection_date_plan \
