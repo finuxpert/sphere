@@ -95,6 +95,14 @@ Do not claim source cleanup is a deployed runtime change.
 
 Record before/after measurements for each optimization.
 
+### Frontend dependency cleanup checkpoint
+
+At DEV baseline `cb490c36382ab73eec890d41eec7203ac5182a3b`, the tracked source, worker, CSS, HTML, QA and release references did not use `date-fns`, `dexie`, `framer-motion`, `idb-keyval` or `sql.js`. Remove these five direct runtime declarations and their orphaned lock entries. Retain `react-is` for the Recharts peer dependency.
+
+The candidate reduces direct runtime dependencies from 20 to 15 and package-lock entries from 375 to 368. No retained lock entry changed. The dependency manifests removed 80 physical lines. The 512 tracked CSS, Python and JS/JSX/MJS source files, their 105,038 lines at this independent baseline, and the application import graph are unchanged.
+
+The existing DEV maintenance workflow validates a clean locked install, regression QA, browser smoke and Vite build. Compare all five bundle sizes against the same Node 26 gate at the DEV baseline used in PR #129. Record the comparison in the dependency PR. The scope changes the build dependency manifest and lockfile. Release requires separate approval. Source rollback is a revert of the cleanup commit.
+
 ## Current operational checkpoint
 
 Repository hygiene is complete.
