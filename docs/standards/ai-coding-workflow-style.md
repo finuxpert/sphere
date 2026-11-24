@@ -32,6 +32,14 @@ Rundeck collects SAP-side telemetry; Python ingestion normalizes retained eviden
 - `npm run perf:baseline:dev -- --samples=10`: sequential read-only DEV API baseline; do not call it a real-world page load score.
 - Verify source branch, DEV API/web active SHA, public route, and no unexpected PROD changes.
 
+## Engineering agent execution
+
+- Work autonomously from `rundeck-sphere-dev` on one scoped review branch at a time. Own source and dependency assessment, refactoring, performance verification, builds, regression tests, commits, pushes, PRs, CI monitoring and documentation.
+- Inspect Git, Node.js/npm, Python, the virtual environment and development dependencies against the repository manifests and CI versions. Use isolated development tooling and locked dependencies where provided. Investigate local failures and use the existing GitHub Actions gates when a local check cannot run.
+- Record source validation, offline regression tests, build and bundle checks, GitHub CI, and live runtime validation separately. Offline source work uses local fixtures and disposable test resources. Defer live validation when unavailable or outside scope and continue independent engineering work.
+- Involve the operator for restricted access or installation, unavailable credentials, infrastructure changes, major architectural decisions, or actions affecting an active environment. Deployment, database migration and service restart require explicit approval. PROD remains ON HOLD.
+- Record the source SHA, evidence, QA outcomes, PR and next checkpoint in the engineering roadmap as each scope is validated. Communicate with the operator in Bahasa Indonesia while retaining English technical terminology and repository naming.
+
 For reviewed **no-migration** DEV releases, use the single guarded `ops/rundeck/release-dev-fast.sh` wrapper. Never bypass required migration review, forcibly reset a checkout or substitute frontend-only deployment when backend code changed.
 
 ## Documentation contract
