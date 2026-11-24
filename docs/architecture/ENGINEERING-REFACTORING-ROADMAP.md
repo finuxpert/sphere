@@ -37,7 +37,7 @@ The GitHub DEV tip matched the requested baseline at checkout. `git ls-files` re
 
 The listed hotspots retain their reported LOC. They represent different boundaries. `RundeckMonitoringHistory.jsx` composes several domains and lazy-loads Reports. `RundeckJobHistory.jsx` and `RundeckSource.jsx` each import their corresponding stylesheet. CSS dependency review must still trace selector ownership, cascade and emitted chunks. PR #117 is the measured precedent for preserving the existing Reports CSS budget.
 
-`rundeck_evaluation.py` still combines report orchestration, SQL, cache/locking and deterministic assessment after the period and view extractions in PRs #118 and #119. The assessment function consumes normalized observations without database access. Its environment-backed thresholds are also emitted in report metadata, so they must retain a single definition. Numeric helpers with the same name in other backend modules require a separate contract comparison before consolidation.
+At this baseline, `rundeck_evaluation.py` combined report orchestration, SQL, cache/locking and deterministic assessment after the period and view extractions in PRs #118 and #119. The assessment function consumes normalized observations without database access. Its environment-backed thresholds are also emitted in report metadata, so they must retain a single definition. Numeric helpers with the same name in other backend modules require a separate contract comparison before consolidation.
 
 ## Current source ownership
 
@@ -51,7 +51,7 @@ The listed hotspots retain their reported LOC. They represent different boundari
 | ST03N Analysis | `ToolSt03nAnalysis2026.jsx`, `st03nParser.worker.js`, `st03nParser.js` and `st03nAnalysis2026.js` own the browser analysis path. |
 | Workload Intelligence | `rundeck_workload_observations.py`, `rundeck_workload_explorer.py`, `rundeck_workload_activity.py` and `rundeck_job_intelligence.py` serve workload observations and distinct SM37 execution evidence. |
 | Performance Intelligence | `rundeck_monitoring.py`, `rundeck_trends.py`, `rundeck_network_trends.py` and `rundeck_top_consumers.py` own monitoring and historical analysis. |
-| Report Engine | `rundeck_api_core.py` exposes report routes. `rundeck_evaluation.py` orchestrates SQL, assessment, cache and response assembly with reporting periods, evaluation view and monthly pressure/error modules. |
+| Report Engine | `rundeck_api_core.py` exposes report routes. `rundeck_evaluation.py` owns SQL, cache/locking and response assembly, and calls the reporting period, evaluation view, and monthly pressure/error modules. `rundeck_workload_assessment.py` owns deterministic classification of normalized SAP observations and the shared thresholds used in report metadata. |
 | Availability Engine | `rundeck_availability.py` owns service availability separately from performance samples. |
 | Evidence Engine | `rundeck_evidence.py` composes saved operational evidence. `evidence_api.py` and the `evidence_*_service.py` modules own analysis history and uploads. |
 | Snapshot Engine | `rundeck_report_snapshots.py` and `rundeck_trend_snapshots.py` own snapshot read/freshness behavior. Their respective precompute modules build snapshots. |
@@ -89,6 +89,7 @@ Duplicate basenames alone do not prove duplicated logic.
 - [x] Map existing frontend and backend ownership.
 - [ ] Establish naming migration plan.
 - [ ] Extract coherent backend responsibilities.
+  - [x] Extract and validate deterministic workload assessment in the source of PR #128.
 - [ ] Incrementally modularize frontend domains.
 - [ ] Consolidate CSS with visual and bundle parity.
 - [ ] Review dependencies and dead-code candidates.
@@ -100,11 +101,21 @@ Duplicate basenames alone do not prove duplicated logic.
 
 ## Selected scope
 
-Extract the deterministic workload assessment into `backend/rundeck_workload_assessment.py`. Keep the existing `rundeck_evaluation.assess_workload` import and reuse the same thresholds for classification and report metadata. The report service retains SQL, cache, period handling and response assembly. This boundary keeps evidence rules together without introducing a service or changing the existing API, data or bundle contracts.
+The extraction moved deterministic workload assessment into `backend/rundeck_workload_assessment.py` (280 lines). `rundeck_evaluation.py` now has 1,092 lines, down from 1,340 at baseline. It still exposes `assess_workload` at its original import path. Both classification and report metadata use the same thresholds. SQL, cache, period handling and response assembly remain in the report service.
 
-The review branch is `refactor/dev-workload-assessment`. Rollback before release is a source revert of the refactor commit. The source change is backend-only with documentation, requiring the guarded full-stack DEV process if separately authorized for release. Live runtime validation is pending and PROD remains ON HOLD.
+The review branch is `refactor/dev-workload-assessment`, tracked in [PR #128](https://github.com/finuxpert/sphere/pull/128). The recovered local source and the published extraction at `185c6ae6c61ae942eb4160608521c09c8f482a0a` had the same Git tree. The [development workflow](../standards/ai-coding-workflow-style.md#engineering-agent-execution) records autonomous execution and operator approval boundaries.
 
-Source validation confirmed AST parity for all 27 original evaluation functions and all top-level assignment expressions across the two modules. The legacy assessment import resolves to the extracted callable. Review requires existing workload classification, report regression, PostgreSQL parity and build/bundle gates. Capture their results on the PR at the tested SHA. The extraction makes no performance claim.
+### Validation checkpoint
+
+| Scope | Evidence |
+| --- | --- |
+| Source | AST parity for all 27 original module-level functions and 28 top-level assignments across the two modules. The original import resolves to the extracted callable. The assessment module imports only Python standard-library modules. |
+| Offline backend | Python 3.12 in the isolated virtual environment passed compilation. Targeted classification, paging, weekly/monthly report, snapshot and workload regression ran 83 tests with 82 passes and one PostgreSQL fixture skip. |
+| Offline build and bundle | The full `npm run qa` chain passed on Node 20.19.4, including Vite and all five bundle checks. Reports used 68,004 of 78,000 bytes for JS and 18,464 of 20,000 bytes for CSS. The sandboxed attempt failed on subprocess permissions. Node 26 ran in GitHub Actions because the local host lacks `libatomic.so.1`. |
+| GitHub CI | At `185c6ae6c61ae942eb4160608521c09c8f482a0a`, [maintenance parity](https://github.com/finuxpert/sphere/actions/runs/45329539089) passed full Node 26 QA, Vite build, all five bundle checks, browser smoke, PDF regression and backend report regression. Reports used 67,978 of 78,000 bytes for JS and 18,464 of 20,000 bytes for CSS. [PostgreSQL aggregate parity](https://github.com/finuxpert/sphere/actions/runs/45329539073) and [snapshot contracts](https://github.com/finuxpert/sphere/actions/runs/45329539057) passed separately. |
+| Live runtime | Pending for this candidate. This is a backend source change with documentation. Any separately authorized release uses the guarded full-stack DEV process. PROD remains ON HOLD. |
+
+The evidence contracts retain APP and collection identity, missing-evidence handling, confidence limits and the distinction between sampled WP signals and authoritative SM37 execution. No performance measurement was taken for this extraction. Source rollback is a revert of the refactor commit.
 
 After review of this scope, assess the remaining SQL and cache ownership independently. Keep Issue #111 performance work measured and separate. Defer CSS relocation until the import and selector audit identifies a bounded change that can satisfy the current bundle budget and visual parity gates.
 
