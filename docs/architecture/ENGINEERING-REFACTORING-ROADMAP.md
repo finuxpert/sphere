@@ -101,7 +101,9 @@ At DEV baseline `cb490c36382ab73eec890d41eec7203ac5182a3b`, the tracked source, 
 
 The candidate reduces direct runtime dependencies from 20 to 15 and package-lock entries from 375 to 368. No retained lock entry changed. The dependency manifests removed 80 physical lines. The 512 tracked CSS, Python and JS/JSX/MJS source files, their 105,038 lines at this independent baseline, and the application import graph are unchanged.
 
-The existing DEV maintenance workflow validates a clean locked install, regression QA, browser smoke and Vite build. Compare all five bundle sizes against the same Node 26 gate at the DEV baseline used in PR #129. Record the comparison in the dependency PR. The scope changes the build dependency manifest and lockfile. Release requires separate approval. Source rollback is a revert of the cleanup commit.
+`npm ci`, lint and all 22 focused frontend tests passed in the isolated worktree. The [PR #130 maintenance workflow](https://github.com/finuxpert/sphere/actions/runs/45340731707) passed the clean Node 26 locked install, full QA, Vite build and browser smoke at `ff718f24acc9692f771b7e2cf39c24ccbfbf75fe`. All five budgeted assets had the same byte sizes as the [PR #129 baseline](https://github.com/finuxpert/sphere/actions/runs/45340260338). Reports JS measured 67,978 bytes and Reports CSS 18,464 bytes in both runs. Application performance was outside this measurement.
+
+[PR #129](https://github.com/finuxpert/sphere/pull/129) covers the CSS audit correction. [PR #130](https://github.com/finuxpert/sphere/pull/130) changes the build dependency manifest and lockfile. Both await engineering-owner approval. Release requires separate approval. Source rollback is a revert of the relevant commit.
 
 ## Current operational checkpoint
 
