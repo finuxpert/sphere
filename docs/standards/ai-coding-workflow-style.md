@@ -8,7 +8,7 @@ This is the maintained coding and review guidance for `finuxpert/sphere`. DEV an
 Audit source → isolate requirement → edit DEV → regression QA → browser review → guarded DEV release → verify active SHA → separate PROD approval
 ```
 
-- DEV branch `rundeck-sphere-dev`, PROD branch `rundeck-sphere-prod`; `sphere-dev`/`sphere-prod` belong to the separate Manual Upload Logs line.
+- DEV branch `rundeck-sphere-dev`, PROD branch `rundeck-sphere-prod`; Legacy sphere-dev/sphere-prod were archived and removed on 24 Nov 2026.
 - Preserve raw SAP evidence, stable APP/collection identity, independent freshness, SM37 authority and missing-data semantics.
 - Do not fabricate backend measurements, issue verdicts or performance-improvement claims.
 - Prefer small, reversible changes with an explicit rollback path. Avoid new CSS override layers when an existing component/style can be consolidated safely.
@@ -48,3 +48,28 @@ Versioned design experiments and build-only shortcut notes are **not** active ru
 ## Change record format
 
 Record: branch, source commit, files affected, behavior changed, QA result, live deployment status, measured result (if any), PROD impact, rollback, outstanding issue. Use clear commit messages such as `docs: sync current DEV contract and remove superseded UI notes`.
+
+
+## Mandatory repository entrypoint
+
+Read [AGENTS.md](../../AGENTS.md) before each new coding task.
+Use the existing release scripts, not new ad hoc deployment methods.
+
+Classify deployment by cumulative diff against the actual active release.
+Documentation and hygiene changes require no application deployment.
+Automated QA is mandatory for each PR.
+Consolidated manual QA follows the approved DEV maintenance plan.
+PROD approval remains separate.
+
+## Architecture-first engineering
+
+Follow the canonical standards:
+
+- [Engineering Principles](ENGINEERING-PRINCIPLES.md)
+- [Repository Architecture](REPOSITORY-ARCHITECTURE.md)
+- [Engineering Roadmap](../architecture/ENGINEERING-REFACTORING-ROADMAP.md)
+
+Do not implement ad hoc features, arbitrary naming,
+or duplicate architectural layers.
+
+New work must improve or preserve architectural coherence.
