@@ -4,6 +4,44 @@
 **Repository:** `finuxpert/sphere`  
 **Scope:** GitHub repository maintenance only; **no server deployment, database write or PROD promotion**.
 
+## Operator handoff — last observed shell state, 24 Nov 2026 WIB
+
+**Most recent operator evidence (supersedes older examples below):**
+- Machine: `mail`, login: `sadmin`, shell prompt `[sadmin@mail sphere-hygiene.puI4zt]# SPHERE — GitHub branch and documentation hygiene
+
+**Audit date:** 24 November 2026 (WIB)  
+**Repository:** `finuxpert/sphere`  
+.
+- GitHub CLI **is installed and authenticated for `sadmin`** as GitHub user `finuxpert`. `gh auth status` showed git protocol HTTPS and scopes `repo`, `workflow`, `read:org`, `gist`. **Never paste an unmasked token.**
+- Working clone created successfully under `/home/sadmin/sphere-hygiene.puI4zt`, using `git clone --depth 1 --branch rundeck-sphere-dev --single-branch https://github.com/finuxpert/sphere.git "$WORKDIR"`. `git branch --show-current` previously reported `rundeck-sphere-dev`. `ops/rundeck/github-hygiene.sh` is present in the cloned GitHub source.
+- Earlier attempts as `root` on `mail` from `~` failed because `ops/rundeck/github-hygiene.sh` was not under the current directory. `gh` was also **not** present/authenticated in the `root` shell. These are **not** problems in the `sadmin` shell; do not reinstall or reauthenticate `sadmin`.
+- **Last observed step:** `sadmin` ran `gh auth status` successfully after cloning. There is **no operator-provided output** showing `bash ops/rundeck/github-hygiene.sh --audit` or `--apply` succeeding yet. **No GitHub branch or Actions run deletion is confirmed.** Do not mark cleanup complete until actual deletion output and post-cleanup GitHub counts have been verified.
+- User intent: eliminate stale merged-PR branches and expendable Actions run history, preserve open PRs and default/DEV/PROD/legacy refs, preserve audit evidence under retention. No application deployment or final functional QA is requested by this housekeeping activity.
+
+**Resume directly here (as `sadmin`, not `root`):**
+
+```bash
+cd /home/sadmin/sphere-hygiene.puI4zt
+pwd
+git branch --show-current
+git status --short
+gh auth status
+
+# First show eligibility; no deletion in audit mode:
+bash ops/rundeck/github-hygiene.sh --audit
+
+# Only after reviewing the reported candidate list and audit manifest:
+bash ops/rundeck/github-hygiene.sh --apply --max-delete=150
+
+# Verify remaining branches, including pagination:
+gh api --paginate 'repos/finuxpert/sphere/branches?per_page=100' --jq '.[].name'
+```
+
+If the clone is no longer present, locate it under `/home/sadmin/sphere-hygiene.*` or re-clone as `sadmin` before running the script. Do **not** run the relative path from `~`, change PROD branches, disable CI, or restart services. Report actual `TOTAL_BRANCHES`, `ELIGIBLE`, `CANDIDATE_RUNS`, `DELETED`, `SKIPPED` and `FINAL` from the tools; values can differ from the historical snapshots below. The script requires the source working tree to be clean.
+
+**Known repository checkpoint before operator-side deletion:** integrated DEV source at `6ddc4aa658c3ff5b90dc947d8463cfa94770f4c4` (PR #122 merged; CI passed). This GitHub commit does **not** prove any server deployment. Earlier GitHub audit counted 56 remote branches, 42 merged-PR cleanup candidates, 14 to keep, 7 open PRs, and 4 active Actions workflows; GitHub run history was about 976. These are audit-time estimates only. Subsequent documentation commits may add temporary branches.
+
+
 ## Branch inventory (audited snapshot)
 
 | Classification | Branches | Policy |
@@ -70,7 +108,7 @@ Defaults: successful runs at least **14 days** old, cancelled/skipped at least *
 
 ### GitHub CLI dependency and credentials
 
-The SPHERE server currently reports `gh: command not found`, so **no branch or run deletion was performed**. On a trusted Ubuntu admin host, install with `apt-get update && apt-get install -y gh` and authenticate interactively with `gh auth login --hostname github.com --git-protocol https --web`. The authenticated identity needs **Contents write** for branch deletion and **Actions write** for run deletion. GitHub credentials must not be stored inside the repository, CI logs or chat. Prefer a trusted workstation if the SPHERE runtime host should not store an administrative token.
+**Older root-shell limitation, now resolved for the operator's `sadmin` shell:** `root@mail` previously reported `gh: command not found`, but `sadmin@mail` subsequently confirmed an authenticated `gh` login as `finuxpert`. Use that already-authenticated `sadmin` session and its cloned repository rather than installing or signing in again. Deleting branch refs requires Contents write permission, and deleting Actions runs requires Actions write permission; verify permissions from actual API operations and never assume success from listed token scopes alone. Do not store GitHub tokens in repository files, logs, or chat.
 
 Do not delete/rewrite GitHub Actions run history linked to active migrations, deploy approvals or incidents without an explicitly reviewed retention decision.
 
