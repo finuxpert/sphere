@@ -31,6 +31,14 @@ expectations for future source revisions.
 The baseline includes tracked tests and tooling.
 The LOC totals exclude other language categories.
 
+### Unused PDF exporters
+
+At integrated DEV baseline `a4a8888e`, the tracked import graph and repository references had no callers for `src/features/pdf/structuredPdf.js` or `src/tools/components/rundeckMonthlyManagementPdf.js`. The former's last import was removed by `3bf03f33`. The monthly exporter was replaced by the enterprise renderer in `ec6a0d0b`. The current Reports export controller uses the enterprise renderer for Management and A3 and retains the lazy technical export. The historical modules were outside the public asset tree and the Vite entrypoints.
+
+Removing both files reduces tracked files from 648 to 646, tracked source files from 513 to 511 and source lines from 105,086 to 104,256. Relative to this independent baseline, the candidate retains 112 stylesheets, 45,082 CSS lines, 11,658 written `!important` declarations and 15 direct frontend dependencies.
+
+All 39 focused report and code-split tests passed offline. The existing monthly technical, 16:9 Management, A3 and weekly slide fixtures generated expected PDFs. GitHub maintenance CI validates production bundles and browser smoke. Rollback is a source revert.
+
 ### Validation at DEV source `cb490c36382ab73eec890d41eec7203ac5182a3b`
 
 The GitHub DEV tip matched the requested baseline at checkout. `git ls-files` reports 647 tracked files, including 280 under `src`, 232 under `src/tools`, 123 under `backend`, 92 under `scripts` and 75 under `ops`. The difference from 643 is the four files introduced by standards PR #127. The tracked extension counts remain 112 CSS, 137 Python and 263 JS/JSX/MJS.
