@@ -21,6 +21,22 @@ test('exact adjacent CSS duplicates are identified but distinct cascade override
   assert.equal(duplicateDeclarations('.x{color:red}@media(min-width:800px){.x{color:red}}').length,0)
 })
 
+test('CSS property names are matched in full, including prefixes',()=>{
+  const source = `.x {
+  border-color: red;
+  color: red;
+  min-height: 116px!important;
+  height: 116px!important;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  --color: red;
+  color: red;
+  padding: 8px;
+  padding: 8px;
+}`
+  assert.deepEqual(duplicateDeclarations(source), [{ property: 'padding', value: '8px', line: 10 }])
+})
+
 for(const file of cssFiles){
   test('no exact adjacent duplicate CSS declarations in '+file,()=>{
     const source=readFileSync(new URL('../../src/tools/components/'+file,import.meta.url),'utf8')
