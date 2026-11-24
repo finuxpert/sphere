@@ -31,6 +31,33 @@ expectations for future source revisions.
 The baseline includes tracked tests and tooling.
 The LOC totals exclude other language categories.
 
+### Validation at DEV source `cb490c36382ab73eec890d41eec7203ac5182a3b`
+
+The GitHub DEV tip matched the requested baseline at checkout. `git ls-files` reports 647 tracked files, including 280 under `src`, 232 under `src/tools`, 123 under `backend`, 92 under `scripts` and 75 under `ops`. The difference from 643 is the four files introduced by standards PR #127. The tracked extension counts remain 112 CSS, 137 Python and 263 JS/JSX/MJS.
+
+The listed hotspots retain their reported LOC. They represent different boundaries. `RundeckMonitoringHistory.jsx` composes several domains and lazy-loads Reports. `RundeckJobHistory.jsx` and `RundeckSource.jsx` each import their corresponding stylesheet. CSS dependency review must still trace selector ownership, cascade and emitted chunks. PR #117 is the measured precedent for preserving the existing Reports CSS budget.
+
+`rundeck_evaluation.py` still combines report orchestration, SQL, cache/locking and deterministic assessment after the period and view extractions in PRs #118 and #119. The assessment function consumes normalized observations without database access. Its environment-backed thresholds are also emitted in report metadata, so they must retain a single definition. Numeric helpers with the same name in other backend modules require a separate contract comparison before consolidation.
+
+## Current source ownership
+
+| Domain or responsibility | Existing owners and dependencies |
+| --- | --- |
+| Application Shell | `src/main.jsx`, `src/App.jsx`, `src/app/useRoute.js` and the tool registry in `src/tools/index.js` own boot, hash routing and tool loading. |
+| Monitoring | `RundeckMonitoringHistory.jsx` coordinates navigation and detail views. `RundeckMonitoringHistoryCore.jsx`, `RundeckServerTrend.jsx`, `RundeckLiveOverview.jsx` and System Health components own Monitoring presentation. |
+| Jobs & Programs | `RundeckJobsProgramsWorkspace.jsx` and `RundeckJobHistory.jsx` compose Current, Review and Search with workload and SM37 drilldowns. |
+| Reports | `RundeckMonthlyReview.jsx` owns state, requests and lifecycle. Management, evidence, header and PDF/PNG modules already own their respective presentation and exports. |
+| Data Collection | `RundeckDataCollection.jsx`, `RundeckSource.jsx` and `RundeckSystemData.jsx` cover source, collection history and manual-upload entry points. |
+| ST03N Analysis | `ToolSt03nAnalysis2026.jsx`, `st03nParser.worker.js`, `st03nParser.js` and `st03nAnalysis2026.js` own the browser analysis path. |
+| Workload Intelligence | `rundeck_workload_observations.py`, `rundeck_workload_explorer.py`, `rundeck_workload_activity.py` and `rundeck_job_intelligence.py` serve workload observations and distinct SM37 execution evidence. |
+| Performance Intelligence | `rundeck_monitoring.py`, `rundeck_trends.py`, `rundeck_network_trends.py` and `rundeck_top_consumers.py` own monitoring and historical analysis. |
+| Report Engine | `rundeck_api_core.py` exposes report routes. `rundeck_evaluation.py` orchestrates SQL, assessment, cache and response assembly with reporting periods, evaluation view and monthly pressure/error modules. |
+| Availability Engine | `rundeck_availability.py` owns service availability separately from performance samples. |
+| Evidence Engine | `rundeck_evidence.py` composes saved operational evidence. `evidence_api.py` and the `evidence_*_service.py` modules own analysis history and uploads. |
+| Snapshot Engine | `rundeck_report_snapshots.py` and `rundeck_trend_snapshots.py` own snapshot read/freshness behavior. Their respective precompute modules build snapshots. |
+| Telemetry Pipeline and Persistence Layer | `rundeck_runner.py`, pollers and store modules handle collection and ingest. `backend/db` owns session, models, repositories and migrations. Several domain modules still issue SQL directly. |
+| Release Pipeline, Quality Gates and Repository Maintenance | `ops/rundeck` owns guarded releases and repository maintenance. `scripts`, `backend/tests` and `.github/workflows` own build and regression gates. |
+
 ## Priority hotspots
 
 | File | LOC |
@@ -57,9 +84,9 @@ Duplicate basenames alone do not prove duplicated logic.
 - [x] Permanent hygiene guardrails.
 - [x] Weekly OS-level GitHub audit.
 - [x] Initial architecture inventory.
-- [ ] Merge canonical engineering standards.
+- [x] Merge canonical engineering standards in PR #127.
 - [ ] Complete dependency and duplicate assessment.
-- [ ] Map existing frontend and backend ownership.
+- [x] Map existing frontend and backend ownership.
 - [ ] Establish naming migration plan.
 - [ ] Extract coherent backend responsibilities.
 - [ ] Incrementally modularize frontend domains.
@@ -70,6 +97,16 @@ Duplicate basenames alone do not prove duplicated logic.
 - [ ] Perform guarded consolidated DEV release.
 - [ ] Complete integrated functional and visual QA.
 - [ ] Evaluate separate PROD approval.
+
+## Selected scope
+
+Extract the deterministic workload assessment into `backend/rundeck_workload_assessment.py`. Keep the existing `rundeck_evaluation.assess_workload` import and reuse the same thresholds for classification and report metadata. The report service retains SQL, cache, period handling and response assembly. This boundary keeps evidence rules together without introducing a service or changing the existing API, data or bundle contracts.
+
+The review branch is `refactor/dev-workload-assessment`. Rollback before release is a source revert of the refactor commit. The source change is backend-only with documentation, requiring the guarded full-stack DEV process if separately authorized for release. Live runtime validation is pending and PROD remains ON HOLD.
+
+Source validation confirmed AST parity for all 27 original evaluation functions and all top-level assignment expressions across the two modules. The legacy assessment import resolves to the extracted callable. Review requires existing workload classification, report regression, PostgreSQL parity and build/bundle gates. Capture their results on the PR at the tested SHA. The extraction makes no performance claim.
+
+After review of this scope, assess the remaining SQL and cache ownership independently. Keep Issue #111 performance work measured and separate. Defer CSS relocation until the import and selector audit identifies a bounded change that can satisfy the current bundle budget and visual parity gates.
 
 ## Acceptance criteria
 
