@@ -7,8 +7,8 @@
 ## Final operator execution — 24 November 2026 WIB (supersedes earlier pending status)
 
 - Host mail, user sadmin, AlmaLinux 8.10, Python 3.6.8. Original wrapper audit blocked by unsupported future annotations. Temporary compatibility copies in /tmp/sphere-hygiene-py36.A9CJk0 successfully audited and applied; system Python and repository source were unchanged.
-- Branch audit: 57 total, 43 eligible, 14 retained. Apply returned FINAL=APPLY DELETED=43 SKIPPED=0. Final audit displayed no candidates; 14 remaining is reconciled, pending explicit final inventory count from full log.
-- Actions: 977 before, 960 after; 36 original candidates, 19 remain deliberately retained. Net reduction 17; exact apply deleted/errors counters pending confirmation from actions-apply.json.
+- Branch audit: 57 total, 43 eligible, 14 retained. Apply returned FINAL=APPLY DELETED=43 SKIPPED=0. Final audit displayed no candidates; final inventory explicitly confirmed TOTAL_BRANCHES=14 ELIGIBLE=0 RETAINED=14.
+- Actions: 977 before, 960 after; 36 original candidates, 19 remain deliberately retained. Operator apply log confirmed ALL_CANDIDATES=36 APPROVED_RUNS=17 EXCLUDED_RUNS=19 and FINAL=APPLY DELETED=17 ERRORS=0 REMAINING_ESTIMATE=0 (allowlist scope).
 - Seven existing draft PRs remain: #95, #96, #101, #102, #103, #108, #109. Final GitHub workflow registry lists seven active workflows (not four): maintenance parity QA, TimescaleDB shadow POC guard, TimescaleDB extension-only guard, DEV UI QA, PROD compatibility preflight, persistent calendar snapshots QA, split-distinct PostgreSQL parity.
 - Final operator verification printed VERIFICATION=PASS, DEPLOYMENT=NONE, PROD_RUNTIME=UNCHANGED. Branch apply also reported RESTART=NONE and DATABASE_CHANGES=NONE.
 - Evidence: /home/sadmin/sphere-branch-cleanup-20261124-091211.log; /home/sadmin/sphere-post-cleanup-20261124-091705.log; /home/sadmin/sphere-hygiene-evidence-20261124/{actions-before.json,actions-apply.json,actions-apply.log,actions-after.json,final-verification.log}.
