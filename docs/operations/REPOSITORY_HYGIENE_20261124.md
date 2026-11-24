@@ -1,3 +1,132 @@
+# SPHERE - Repository Hygiene Closeout
+
+Date: 24 November 2026 (WIB)
+Repository: finuxpert/sphere
+
+## Phase 2 final closeout
+
+Status: COMPLETE / PASS
+
+| Metric | Before | After |
+|---|---:|---:|
+| Remote branches | 57 | 6 |
+| Open draft PRs | 7 | 4 |
+| Active workflows | 7 | 5 |
+| Actions runs | 977 | 369 |
+| Branches deleted | 0 | 51 |
+| Actions runs deleted | 0 | 611 |
+| New archive tags | 0 | 8 |
+| Total archive tags | - | 15 |
+| Evidence storage | - | 47 MB |
+
+### Actions execution
+
+- Phase 1: 17 deleted.
+- Phase 2 cancelled: 195 deleted.
+- Phase 2 failure: 270 deleted, 1 error.
+- Phase 2 success: 129 deleted.
+- Final: 267 success, 67 failure, 35 cancelled.
+- Run 41592947150 retained after error.
+- All 399 deleted Phase 2 failure/success runs passed log backup.
+- Net reduction: 608 runs; three additional runs appeared.
+
+### Final repository structure
+
+Default branch: rundeck-sphere-dev.
+
+Retained branches:
+
+- rundeck-sphere-dev
+- rundeck-sphere-prod
+- feat/remote-browser-v030-gated
+- fix/dev-report-availability-evidence-20261106
+- fix/prod-storage-explicit-available-20261107
+- perf/monitoring-progressive-load-20261118
+
+Open draft PRs: #101, #102, #108, #109.
+
+PR #103 archived and consolidated into #108.
+PR #95 and #96 archived and closed.
+PR #67 and #117 remain closed and unmerged.
+
+### Workflow status
+
+Active: 405724816, 398084766, 405672519,
+409004726, 408314957.
+
+Disabled manually: 408746624, 408714400.
+
+No workflow definitions deleted.
+
+### Permanent hygiene tooling
+
+- Python 3.6.8 compatible.
+- Audit-only default.
+- Separate branch and Actions apply modes.
+- Approved manifests mandatory.
+- Run and branch identity validation.
+- 30 protected Actions evidence IDs.
+- PROD workflow and branch protection.
+- Artifact and release SHA protection.
+- Mandatory backup before Actions deletion.
+- Post-backup revalidation.
+- Serial execution for routine maintenance.
+- Offline and mocked apply QA PASS.
+- Remote CI and merge remain pending.
+
+### Default retention policy
+
+- Success: 14 days.
+- Cancelled: 7 days.
+- Failure: 30 days.
+- Keep five latest runs per workflow/branch.
+- Maximum branch deletions: 20.
+- Maximum Actions deletions: 150.
+- Routine cleanup: merged eligible PR branches only.
+- Active DEV/PROD history retained.
+
+### Operator commands
+
+Audit:
+
+    bash ops/rundeck/github-hygiene.sh --audit
+
+Branch apply, future approved maintenance only:
+
+    bash ops/rundeck/github-hygiene.sh --apply-branches --approved-manifest branches-approved.json
+
+Actions apply, future approved maintenance only:
+
+    bash ops/rundeck/github-hygiene.sh --apply-actions --approved-manifest actions-approved.json
+
+Do not run apply during this closeout.
+
+### Evidence location
+
+Host: mail
+User: sadmin
+
+/home/sadmin/sphere-hygiene-evidence-20261124
+
+Preserve local evidence securely.
+Do not commit raw logs or credentials.
+
+### Final operational status
+
+- REPOSITORY_CLEANUP=PASS
+- ADDITIONAL_CLEANUP=NOT_REQUIRED
+- DEPLOYMENT=NONE
+- RESTART=NONE
+- DATABASE_CHANGES=NONE
+- PROD_RUNTIME=UNCHANGED
+
+---
+
+## Historical Phase 1 checkpoint
+
+The following historical content is superseded by
+the Phase 2 inventory and tooling status above.
+
 # SPHERE — Repository hygiene final closeout
 
 **Date:** 24 November 2026 (WIB)  

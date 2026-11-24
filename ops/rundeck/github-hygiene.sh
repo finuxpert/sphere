@@ -1,53 +1,151 @@
 #!/usr/bin/env bash
-# SPHERE GitHub remote hygiene: inventory only unless --apply is provided.
-# No live DEV/PROD, git worktree, DB, Nginx or Rundeck mutation.
+# SPHERE GitHub repository hygiene.
+# Audit by default. Explicit manifests required for deletion.
 set -Eeuo pipefail
+umask 077
 
 usage() {
-  echo "Usage: bash ops/rundeck/github-hygiene.sh [--audit|--apply] [--max-delete=N]" >&2
-  exit 2
+    cat <<'EOF'
+Usage:
+  github-hygiene.sh --audit [--output-dir DIR]
+  github-hygiene.sh --apply-branches --approved-manifest FILE
+  github-hygiene.sh --apply-actions --approved-manifest FILE
+
+Options:
+  --output-dir DIR
+  --max-delete N
+  --help
+
+No application deployment or runtime changes.
+EOF
 }
 
 MODE="--audit"
-if [[ $# -ge 1 ]]; then MODE="$1"; fi
-[[ "$MODE" == "--audit" || "$MODE" == "--apply" ]] || usage
-MAX_DELETE=150
-if [[ $# -gt 1 ]]; then
-  [[ "$2" =~ ^--max-delete=[0-9]+$ ]] || usage
-  MAX_DELETE="$(printf '%s' "$2" | cut -d= -f2)"
+APPROVED=""
+MAX_DELETE=""
+OUT="$HOME/sphere-hygiene-$(date +%Y%m%d-%H%M%S)"
+
+if [[ $# -gt 0 ]]; then
+    MODE="$1"
+    shift
 fi
-[[ "$MAX_DELETE" -ge 1 ]] || usage
+
+case "$MODE" in
+    --audit|--apply-branches|--apply-actions) ;;
+    --help|-h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+esac
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --approved-manifest)
+            [[ $# -ge 2 ]] || exit 2
+            APPROVED="$2"
+            shift 2
+            ;;
+        --output-dir)
+            [[ $# -ge 2 ]] || exit 2
+            OUT="$2"
+            shift 2
+            ;;
+        --max-delete)
+            [[ $# -ge 2 ]] || exit 2
+            MAX_DELETE="$2"
+            shift 2
+            ;;
+        *)
+            echo "BLOCKED: Unknown option $1" >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [[ "$MODE" != "--audit" ]]; then
+    if [[ -z "$APPROVED" || ! -f "$APPROVED" ]]; then
+        echo "BLOCKED: approved manifest required" >&2
+        exit 2
+    fi
+
+    APPROVED="$(realpath "$APPROVED")"
+fi
+
+if [[ -n "$MAX_DELETE" ]]; then
+    [[ "$MAX_DELETE" =~ ^[1-9][0-9]*$ ]] || exit 2
+
+    case "$MODE" in
+        --apply-branches)
+            [[ "$MAX_DELETE" -le 20 ]] || exit 2
+            ;;
+        *)
+            [[ "$MAX_DELETE" -le 150 ]] || exit 2
+            ;;
+    esac
+fi
+
+OUT="$(realpath -m "$OUT")"
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
-if [[ "$(git branch --show-current)" != "rundeck-sphere-dev" ]]; then
-  echo "BLOCKED: check out rundeck-sphere-dev, do not use PROD checkout." >&2
-  exit 2
-fi
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "BLOCKED: working tree is not clean." >&2
-  exit 2
-fi
-if ! command -v gh >/dev/null 2>&1; then
-  echo "BLOCKED: gh not installed. On trusted Ubuntu admin host: apt-get update && apt-get install -y gh" >&2
-  exit 2
-fi
-if ! gh auth status; then
-  echo "BLOCKED: authenticate with gh auth login --hostname github.com --git-protocol https --web" >&2
-  exit 2
-fi
-if [[ "$(gh repo view finuxpert/sphere --json nameWithOwner --jq .nameWithOwner)" != "finuxpert/sphere" ]]; then
-  echo "BLOCKED: GitHub repository identity check failed." >&2
-  exit 2
+if [[ "$(git rev-parse --abbrev-ref HEAD)" != \
+"rundeck-sphere-dev" ]]; then
+    echo "BLOCKED: use clean rundeck-sphere-dev checkout" >&2
+    exit 2
 fi
 
-echo "REPOSITORY=finuxpert/sphere MODE=$MODE"
-if [[ "$MODE" == "--apply" ]]; then
-  python3 ops/rundeck/cleanup-merged-github-branches.py --apply
-  python3 ops/rundeck/cleanup-github-actions-runs.py --apply --max-delete "$MAX_DELETE"
-else
-  python3 ops/rundeck/cleanup-merged-github-branches.py
-  python3 ops/rundeck/cleanup-github-actions-runs.py --max-delete "$MAX_DELETE"
+if [[ -n "$(git status --porcelain)" ]]; then
+    echo "BLOCKED: working tree is not clean" >&2
+    exit 2
 fi
-echo "HYGIENE_MODE=$MODE COMPLETED=YES (see per-tool output)"
+
+command -v gh >/dev/null
+command -v python3 >/dev/null
+
+gh auth status
+
+[[ "$(gh repo view finuxpert/sphere \
+    --json nameWithOwner --jq .nameWithOwner)" \
+    == "finuxpert/sphere" ]]
+
+mkdir -p "$OUT"
+
+echo "REPOSITORY=finuxpert/sphere"
+echo "MODE=$MODE"
+echo "OUTPUT_DIR=$OUT"
+
+case "$MODE" in
+    --audit)
+        BRANCH_LIMIT=20
+        ACTION_LIMIT="${MAX_DELETE:-150}"
+
+        python3 ops/rundeck/cleanup-merged-github-branches.py \
+            --max-delete "$BRANCH_LIMIT" \
+            --manifest "$OUT/branches-audit.json"
+
+        python3 ops/rundeck/cleanup-github-actions-runs.py \
+            --max-delete "$ACTION_LIMIT" \
+            --manifest "$OUT/actions-audit.json"
+        ;;
+
+    --apply-branches)
+        python3 ops/rundeck/cleanup-merged-github-branches.py \
+            --apply \
+            --approved-manifest "$APPROVED" \
+            --max-delete "${MAX_DELETE:-20}" \
+            --manifest "$OUT/branches-execution.json"
+        ;;
+
+    --apply-actions)
+        python3 ops/rundeck/cleanup-github-actions-runs.py \
+            --apply \
+            --approved-manifest "$APPROVED" \
+            --max-delete "${MAX_DELETE:-150}" \
+            --backup-dir "$OUT/actions-logs" \
+            --manifest "$OUT/actions-execution.json"
+        ;;
+esac
+
+echo "HYGIENE_MODE=$MODE"
+echo "COMPLETED=YES"
+echo "DEPLOYMENT=NONE"
+echo "DATABASE_CHANGES=NONE"
